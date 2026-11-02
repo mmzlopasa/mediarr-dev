@@ -19,6 +19,12 @@ docker compose up -d
 
 Aplikacija se otvara na `http://IP-servera:9851`, bez domene. Domenu i HTTPS korisnik po želji rješava sam, vlastitim reverse proxyjem ispred. Direktoriji iz `UPLOAD_LOCATION` i `CACHE_LOCATION` moraju pripadati korisniku `PUID:PGID`. `--profile ml` uključuje ML servis.
 
+Zaboravljena lozinka ili izgubljen 2FA postavljaju se iz naredbene linije (lozinka se čita sa stdin, a 2FA se isključuje):
+
+```sh
+docker compose exec -T server /mediarr user upsert ime@primjer.hr "Ime" --admin
+```
+
 ## Razvoj i demo
 
 ```sh

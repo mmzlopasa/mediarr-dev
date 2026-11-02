@@ -27,6 +27,8 @@ const (
 	staleUploadAge   = 7 * 24 * time.Hour
 	cleanupInterval  = 6 * time.Hour
 	shutdownDeadline = 30 * time.Second
+	// Longer than any job's timeout, so a killed worker's jobs restart without cutting off a slow one.
+	rescueStuckAfter = 15 * time.Minute
 )
 
 // MetadataArgs reads a file's metadata. It runs first and queues the other jobs.
@@ -94,9 +96,10 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{
-		MaxAttempts: maxAttempts,
-		Queues:      map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: opts.Concurrency}},
-		Workers:     workers,
+		MaxAttempts:          maxAttempts,
+		RescueStuckJobsAfter: rescueStuckAfter,
+		Queues:               map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: opts.Concurrency}},
+		Workers:              workers,
 		PeriodicJobs: []*river.PeriodicJob{
 			river.NewPeriodicJob(river.PeriodicInterval(cleanupInterval),
 				func() (river.JobArgs, *river.InsertOpts) { return CleanupArgs{}, nil },

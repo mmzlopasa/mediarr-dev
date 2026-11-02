@@ -21,6 +21,9 @@ linters:
     rules:
       - path: _test\.go
         linters: [gosec, bodyclose]
+      # A test tool whose request helper closes the body itself.
+      - path: cmd/uploadtest
+        linters: [gosec, bodyclose]
 formatters:
   enable:
     - gofumpt

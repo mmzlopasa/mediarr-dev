@@ -42,6 +42,7 @@ uploadtest:
 	cd server && UPLOADTEST_PASSWORD=$(E2E_PASSWORD) go run ./cmd/uploadtest -dir "$(TESTDATA)" -email uploadtest@example.com
 
 # Tests the newest migration going down and up on 100k assets, in a separate database.
+seed-large: SHELL := /bin/bash
 seed-large:
 	$(DEV_COMPOSE) exec -T db psql -q -U mediarr -d postgres -c "DROP DATABASE IF EXISTS seed_large WITH (FORCE)" -c "CREATE DATABASE seed_large"
 	$(DEV_COMPOSE) exec -T -e DATABASE_URL=postgres://mediarr:mediarr@db:5432/seed_large server /tmp/air/mediarr migrate

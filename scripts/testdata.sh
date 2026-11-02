@@ -43,7 +43,7 @@ gen_jpeg() {
 	1) exiftool -q -overwrite_original "-DateTimeOriginal=$year:$month:15 12:00:00" "-OffsetTimeOriginal=+02:00" -Make=Apple "-Model=iPhone 15" "-GPSLatitude=45.81" -GPSLatitudeRef=N "-GPSLongitude=15.98" -GPSLongitudeRef=E "$f" ;;
 	2) exiftool -q -overwrite_original "-DateTimeOriginal=$year:$month:20 23:59:30" -Make=Canon "-Model=EOS R6" -Orientation#=6 "$f" ;;
 	3) exiftool -q -overwrite_original "-DateTimeOriginal=$year:$month:01 00:00:10" "-OffsetTimeOriginal=-07:00" -Make=Sony -Orientation#=3 "$f" ;;
-	4) exiftool -q -overwrite_original "-DateTimeOriginal=0000:00:00 00:00:00" -Orientation#=8 "$f" ;;
+	4) exiftool -q -q -m -overwrite_original "-DateTimeOriginal=0000:00:00 00:00:00" -Orientation#=8 "$f" ;;
 	5) exiftool -q -overwrite_original "-Comment=Šišmiš na plaži" "-DateTimeOriginal=$year:$month:10 08:30:00" "$f" ;;
 	esac
 }
