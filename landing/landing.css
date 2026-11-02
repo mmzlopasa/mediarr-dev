@@ -1,0 +1,30 @@
+/* Logo rules from the app's extras.css; everything else comes from the app's dash.css. */
+.logo {
+	text-decoration: none;
+}
+.logo-svg {
+	flex: none;
+}
+.logo-word,
+.logo-dot {
+	fill: var(--gold);
+}
+html[data-theme='light'] .logo-word {
+	fill: var(--ink);
+}
+html[data-theme='light'] .logo-dot {
+	fill: var(--gold-3);
+}
+
+.auth-card {
+	display: grid;
+	justify-items: start;
+	gap: 14px;
+}
+.auth-h,
+.auth-p {
+	margin: 0;
+}
+.auth-h {
+	font-size: clamp(2rem, 7vw, 2.6rem);
+}

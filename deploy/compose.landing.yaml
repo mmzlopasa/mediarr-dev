@@ -1,0 +1,56 @@
+# The public site on mediarr.app. Not part of the app that users install. Run through `make landing`.
+name: mediarr-landing
+
+services:
+  landing:
+    image: nginx:alpine
+    ports:
+      - "127.0.0.1:9851:80"
+    volumes:
+      - ../landing:/usr/share/nginx/html:ro
+      # Outside the read-only html mount, because Docker cannot create mount points inside it.
+      - ../web/src/lib/design/dash.css:/srv/design/dash.css:ro
+      - ../web/src/lib/design/fonts:/srv/design/fonts:ro
+      - ../web/static/favicon.svg:/srv/favicon.svg:ro
+    configs:
+      - source: nginx
+        target: /etc/nginx/conf.d/default.conf
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+configs:
+  nginx:
+    content: |
+      server {
+          listen 80;
+          server_name _;
+          server_tokens off;
+          root /usr/share/nginx/html;
+
+          add_header X-Content-Type-Options nosniff always;
+          add_header Referrer-Policy strict-origin-when-cross-origin always;
+
+          location = /health {
+              access_log off;
+              default_type application/json;
+              return 200 '{"status":"ok"}';
+          }
+
+          location /design/ {
+              alias /srv/design/;
+          }
+
+          location = /favicon.svg {
+              alias /srv/favicon.svg;
+          }
+
+          # Until the real landing page exists, every page is the coming soon page.
+          location / {
+              try_files $$uri /index.html;
+          }
+      }
