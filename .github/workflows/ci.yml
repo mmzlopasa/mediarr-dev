@@ -80,5 +80,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose -f deploy/compose.yaml --env-file deploy/.env.example config --quiet
+      - run: cp deploy/.env.example deploy/.env
+      - run: docker compose -f deploy/compose.yaml config --quiet
       - run: docker compose -f deploy/compose.dev.yaml config --quiet
