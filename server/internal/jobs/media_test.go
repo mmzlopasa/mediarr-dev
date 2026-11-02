@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -133,6 +135,9 @@ func TestPipelineOnRealFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if result.Ratio < 1.99 || result.Ratio > 2.01 {
+		t.Errorf("ratio %f, want 2", result.Ratio)
+	}
 	if result.Small.Size == 0 || result.Large.Size == 0 || result.Blurhash == "" {
 		t.Errorf("result: %+v", result)
 	}
@@ -222,6 +227,34 @@ func TestFileNamesAreNotParsedAsOptions(t *testing.T) {
 	}
 	if result.Small.Size == 0 {
 		t.Error("empty thumbnail")
+	}
+}
+
+func Test16BitImageStaysBright(t *testing.T) {
+	requireTools(t)
+	dir := t.TempDir()
+	raw := filepath.Join(dir, "noise.v")
+	if out, err := exec.Command("vips", "gaussnoise", raw, "300", "200", "--mean", "40000", "--sigma", "100").CombinedOutput(); err != nil {
+		t.Fatalf("%v: %s", err, out)
+	}
+	path := filepath.Join(dir, "deep.png")
+	if out, err := exec.Command("vips", "cast", raw, path, "ushort").CombinedOutput(); err != nil {
+		t.Fatalf("%v: %s", err, out)
+	}
+	result, err := MakeThumbnails(context.Background(), path, "photo", filepath.Join(dir, "t"), "d")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := exec.Command("vips", "avg", result.Small.Path).CombinedOutput()
+	if err != nil {
+		t.Fatalf("%v: %s", err, out)
+	}
+	average, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if average < 100 {
+		t.Errorf("average brightness %f: a 16-bit image came out dark", average)
 	}
 }
 

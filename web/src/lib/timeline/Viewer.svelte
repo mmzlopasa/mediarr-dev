@@ -1,0 +1,394 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { api, formatBytes, type AssetDetail } from '#lib/api.ts';
+	import Alert from '#lib/design/components/Alert.svelte';
+	import Button from '#lib/design/components/Button.svelte';
+	import Dialog from '#lib/design/components/Dialog.svelte';
+	import Icon from '#lib/design/components/Icon.svelte';
+	import Kv from '#lib/design/components/Kv.svelte';
+	import { showToast } from '#lib/design/components/toast.svelte.ts';
+	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { formatDateTime } from './layout.ts';
+
+	const MIN_SCALE = 1;
+	const MAX_SCALE = 6;
+	const SWIPE_DISTANCE = 60;
+
+	let {
+		id,
+		onClose,
+		onNavigate,
+		onChanged
+	}: {
+		id: string;
+		onClose: () => void;
+		onNavigate: (id: string) => void;
+		onChanged: () => void;
+	} = $props();
+
+	let detail = $state<AssetDetail>();
+	let failed = $state(false);
+	let videoFailed = $state(false);
+	let showInfo = $state(false);
+	let confirmDelete = $state(false);
+	let dialog = $state<HTMLDivElement>();
+
+	let scale = $state(1);
+	let x = $state(0);
+	let y = $state(0);
+	let stage = $state<HTMLDivElement>();
+
+	const locale = $derived(lang() === 'hr' ? 'hr-HR' : 'en-GB');
+
+	$effect(() => {
+		const current = id;
+		detail = undefined;
+		failed = false;
+		videoFailed = false;
+		scale = 1;
+		x = 0;
+		y = 0;
+		let stale = false;
+		api
+			.asset(current)
+			.then((loaded) => {
+				if (stale) return;
+				detail = loaded;
+				// Next and previous photos open at once.
+				for (const neighbour of [loaded.newerId, loaded.olderId]) {
+					if (neighbour) new Image().src = `/api/assets/${neighbour}/thumbnail?size=large`;
+				}
+			})
+			.catch(() => {
+				if (!stale) failed = true;
+			});
+		return () => {
+			stale = true;
+		};
+	});
+
+	onMount(() => {
+		const previous = document.activeElement as HTMLElement | null;
+		document.body.classList.add('viewer-open');
+		dialog?.focus();
+		return () => {
+			document.body.classList.remove('viewer-open');
+			previous?.focus?.();
+		};
+	});
+
+	const go = (target: string | undefined) => {
+		if (target) onNavigate(target);
+	};
+
+	function onKey(event: KeyboardEvent) {
+		if (confirmDelete) return;
+		if (event.key === 'Escape') {
+			if (showInfo) showInfo = false;
+			else onClose();
+		} else if (event.key === 'ArrowLeft') go(detail?.newerId);
+		else if (event.key === 'ArrowRight') go(detail?.olderId);
+		else if (event.key === 'i') showInfo = !showInfo;
+	}
+
+	function zoomTo(next: number, cx: number, cy: number) {
+		const clamped = Math.min(MAX_SCALE, Math.max(MIN_SCALE, next));
+		const box = stage?.getBoundingClientRect();
+		if (!box) return;
+		const originX = cx - box.left - box.width / 2;
+		const originY = cy - box.top - box.height / 2;
+		const factor = clamped / scale;
+		x = clamped === 1 ? 0 : originX - (originX - x) * factor;
+		y = clamped === 1 ? 0 : originY - (originY - y) * factor;
+		scale = clamped;
+	}
+
+	function wheel(event: WheelEvent) {
+		event.preventDefault();
+		zoomTo(scale * Math.exp(-event.deltaY * 0.002), event.clientX, event.clientY);
+	}
+
+	// Not reactive on purpose: only the gesture code reads this.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	const pointers = new Map<number, { x: number; y: number }>();
+	let pinchStart = { distance: 0, scale: 1 };
+	let dragStart: { x: number; y: number; originX: number; originY: number } | null = null;
+	let lastTap = 0;
+
+	function down(event: PointerEvent) {
+		if (detail?.kind === 'video') return;
+		stage?.setPointerCapture(event.pointerId);
+		pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+		if (pointers.size === 2) {
+			const [a, b] = [...pointers.values()];
+			pinchStart = { distance: Math.hypot(a.x - b.x, a.y - b.y), scale };
+			dragStart = null;
+		} else if (pointers.size === 1) {
+			dragStart = { x: event.clientX, y: event.clientY, originX: x, originY: y };
+		}
+	}
+
+	function move(event: PointerEvent) {
+		if (!pointers.has(event.pointerId)) return;
+		pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+		if (pointers.size === 2) {
+			const [a, b] = [...pointers.values()];
+			const distance = Math.hypot(a.x - b.x, a.y - b.y);
+			if (pinchStart.distance > 0) {
+				zoomTo(
+					(pinchStart.scale * distance) / pinchStart.distance,
+					(a.x + b.x) / 2,
+					(a.y + b.y) / 2
+				);
+			}
+		} else if (dragStart && scale > 1) {
+			x = dragStart.originX + event.clientX - dragStart.x;
+			y = dragStart.originY + event.clientY - dragStart.y;
+		}
+	}
+
+	function up(event: PointerEvent) {
+		pointers.delete(event.pointerId);
+		const start = dragStart;
+		dragStart = null;
+		if (pointers.size > 0 || !start) return;
+		const dx = event.clientX - start.x;
+		const dy = event.clientY - start.y;
+		if (scale === 1 && Math.abs(dx) > SWIPE_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.5) {
+			go(dx > 0 ? detail?.newerId : detail?.olderId);
+			return;
+		}
+		if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
+			const now = Date.now();
+			if (now - lastTap < 300) {
+				zoomTo(scale > 1 ? 1 : 2.5, event.clientX, event.clientY);
+				lastTap = 0;
+			} else {
+				lastTap = now;
+			}
+		}
+	}
+
+	function cancel(event: PointerEvent) {
+		pointers.delete(event.pointerId);
+		dragStart = null;
+	}
+
+	async function toggleFavorite() {
+		if (!detail) return;
+		const next = !detail.isFavorite;
+		try {
+			await api.bulk([detail.id], next ? 'favorite' : 'unfavorite');
+			detail = { ...detail, isFavorite: next };
+			onChanged();
+		} catch {
+			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		}
+	}
+
+	async function remove() {
+		if (!detail) return;
+		const { id: removed, olderId, newerId } = detail;
+		try {
+			await api.bulk([removed], 'delete');
+			confirmDelete = false;
+			onChanged();
+			showToast('ok', tr('Obrisano.', 'Deleted.'));
+			const next = olderId ?? newerId;
+			if (next) onNavigate(next);
+			else onClose();
+		} catch {
+			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		}
+	}
+
+	const settings = $derived.by(() => {
+		if (!detail) return '';
+		const parts = [
+			detail.fNumber ? `f/${detail.fNumber}` : '',
+			detail.exposureTime ? `${exposure(detail.exposureTime)} s` : '',
+			detail.focalLength ? `${detail.focalLength} mm` : '',
+			detail.iso ? `ISO ${detail.iso}` : ''
+		];
+		return parts.filter(Boolean).join(' · ');
+	});
+
+	function exposure(value: string) {
+		const seconds = Number(value);
+		return seconds > 0 && seconds < 1 ? `1/${Math.round(1 / seconds)}` : value;
+	}
+</script>
+
+<!-- eslint-disable svelte/no-navigation-without-resolve -- downloads are API files, not pages -->
+<svelte:window onkeydown={onKey} />
+
+<div
+	bind:this={dialog}
+	class="viewer"
+	role="dialog"
+	aria-modal="true"
+	aria-label={detail?.originalName ?? tr('Fotka', 'Photo')}
+	tabindex="-1"
+>
+	<div class="viewer-main">
+		<div class="viewer-top">
+			<button type="button" class="icon-btn" aria-label={tr('Zatvori', 'Close')} onclick={onClose}
+				><Icon name="back" /></button
+			>
+			<div class="viewer-acts">
+				{#if detail}
+					<button
+						type="button"
+						class="icon-btn"
+						class:viewer-on={detail.isFavorite}
+						class:viewer-fav={detail.isFavorite}
+						aria-pressed={detail.isFavorite}
+						aria-label={tr('Favorit', 'Favorite')}
+						title={tr('Favorit', 'Favorite')}
+						onclick={toggleFavorite}><Icon name="star" /></button
+					>
+					<a
+						class="icon-btn"
+						href="/api/assets/{detail.id}/original?download=true"
+						download
+						aria-label={tr('Preuzmi original', 'Download the original')}
+						title={tr('Preuzmi original', 'Download the original')}
+						data-sveltekit-reload><Icon name="download" /></a
+					>
+					<button
+						type="button"
+						class="icon-btn"
+						class:viewer-on={showInfo}
+						aria-pressed={showInfo}
+						aria-label={tr('Podaci', 'Details')}
+						title={tr('Podaci', 'Details')}
+						onclick={() => (showInfo = !showInfo)}><Icon name="info" /></button
+					>
+					<button
+						type="button"
+						class="icon-btn"
+						aria-label={tr('Obriši', 'Delete')}
+						title={tr('Obriši', 'Delete')}
+						onclick={() => (confirmDelete = true)}><Icon name="trash" /></button
+					>
+				{/if}
+			</div>
+		</div>
+
+		<div
+			bind:this={stage}
+			class="viewer-stage"
+			role="presentation"
+			onwheel={wheel}
+			onpointerdown={down}
+			onpointermove={move}
+			onpointerup={up}
+			onpointercancel={cancel}
+		>
+			{#if failed}
+				<div class="viewer-msg">
+					<Alert kind="err">{tr('Ova fotka nije dostupna.', 'This photo is not available.')}</Alert>
+				</div>
+			{:else if detail?.kind === 'video' && !videoFailed}
+				<!-- svelte-ignore a11y_media_has_caption -->
+				<video
+					class="viewer-media"
+					controls
+					playsinline
+					preload="metadata"
+					poster="/api/assets/{id}/thumbnail?size=large"
+					src="/api/assets/{id}/original"
+					onerror={() => (videoFailed = true)}
+				></video>
+			{:else if detail?.kind === 'video'}
+				<div class="viewer-msg">
+					<Alert kind="warn"
+						>{tr(
+							'Preglednik ne može pustiti ovaj video. Možete ga preuzeti.',
+							'This browser cannot play this video. You can download it.'
+						)}</Alert
+					>
+					<a
+						class="btn gold"
+						href="/api/assets/{id}/original?download=true"
+						download
+						data-sveltekit-reload><Icon name="download" size={14} /> {tr('Preuzmi', 'Download')}</a
+					>
+				</div>
+			{:else if detail}
+				<img
+					class="viewer-media"
+					src="/api/assets/{id}/thumbnail?size=large"
+					alt={detail.originalName}
+					draggable="false"
+					style="transform:translate({x}px,{y}px) scale({scale})"
+				/>
+			{/if}
+			{#if detail?.newerId && scale === 1}
+				<button
+					type="button"
+					class="icon-btn viewer-nav viewer-prev"
+					aria-label={tr('Novija', 'Newer')}
+					onpointerdown={(event) => event.stopPropagation()}
+					onclick={() => go(detail?.newerId)}><Icon name="back" /></button
+				>
+			{/if}
+			{#if detail?.olderId && scale === 1}
+				<button
+					type="button"
+					class="icon-btn viewer-nav viewer-next"
+					aria-label={tr('Starija', 'Older')}
+					onpointerdown={(event) => event.stopPropagation()}
+					onclick={() => go(detail?.olderId)}><Icon name="forward" /></button
+				>
+			{/if}
+		</div>
+	</div>
+
+	{#if showInfo && detail}
+		<aside class="viewer-info" aria-label={tr('Podaci', 'Details')}>
+			<div class="dlg-h">
+				<h2>{tr('Podaci', 'Details')}</h2>
+				<button
+					type="button"
+					class="icon-btn sm"
+					aria-label={tr('Zatvori podatke', 'Close details')}
+					onclick={() => (showInfo = false)}>✕</button
+				>
+			</div>
+			<div class="dlg-b">
+				<Kv label={tr('Naziv', 'Name')} value={detail.originalName} />
+				<Kv
+					label={detail.hasCaptureTime ? tr('Snimljeno', 'Taken') : tr('Dodano', 'Added')}
+					value={formatDateTime(detail.localAt, locale)}
+				/>
+				{#if detail.width && detail.height}
+					<Kv label={tr('Dimenzije', 'Dimensions')} value="{detail.width} × {detail.height}" />
+				{/if}
+				<Kv label={tr('Veličina', 'Size')} value={formatBytes(detail.sizeBytes)} />
+				{#if detail.camera}<Kv label={tr('Kamera', 'Camera')} value={detail.camera} />{/if}
+				{#if detail.lens}<Kv label={tr('Objektiv', 'Lens')} value={detail.lens} />{/if}
+				{#if settings}<Kv label={tr('Postavke', 'Settings')} value={settings} />{/if}
+				{#if detail.latitude !== undefined && detail.longitude !== undefined}
+					<Kv
+						label={tr('Lokacija', 'Location')}
+						value="{detail.latitude.toFixed(5)}, {detail.longitude.toFixed(5)}"
+					/>
+				{/if}
+			</div>
+		</aside>
+	{/if}
+</div>
+
+<Dialog title={tr('Obrisati fotku?', 'Delete this photo?')} bind:open={confirmDelete}>
+	<p>
+		{tr(
+			'Nestat će iz prikaza. Smeće s vraćanjem stiže u kasnijoj verziji, a do tada se vraća samo ponovnim uploadom iste datoteke.',
+			'It will disappear from view. A trash with restore arrives in a later version; until then, uploading the same file again brings it back.'
+		)}
+	</p>
+	{#snippet footer()}
+		<Button onclick={() => (confirmDelete = false)}>{tr('Odustani', 'Cancel')}</Button>
+		<Button variant="danger" onclick={remove}>{tr('Obriši', 'Delete')}</Button>
+	{/snippet}
+</Dialog>

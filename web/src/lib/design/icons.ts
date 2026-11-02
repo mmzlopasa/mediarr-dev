@@ -48,7 +48,13 @@ export const icons = {
 		'<rect x="7" y="3" width="14" height="14" rx="2"/><path d="M3 7v12a2 2 0 0 0 2 2h12"/><path d="M7 13l3.5-3.5L14 13l2-2 5 5"/>',
 	share:
 		'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/>',
-	upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>'
+	upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+	download: '<path d="M12 4v12M7 11l5 5 5-5M4 20h16"/>',
+	star: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2-5.5-2.9L6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+	info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
+	back: '<path d="M15 5l-7 7 7 7"/>',
+	forward: '<path d="M9 5l7 7-7 7"/>',
+	play: '<path d="M7 4.5v15l12-7.5z"/>'
 } as const;
 
 export type IconName = keyof typeof icons;

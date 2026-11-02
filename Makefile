@@ -11,7 +11,7 @@ GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down deploy landing testdata uploadtest seed-large clean-test-users gen web-build lint test e2e lighthouse
+.PHONY: dev down deploy landing testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e lighthouse
 
 dev:
 	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache
@@ -52,6 +52,11 @@ seed-large:
 	$(DEV_COMPOSE) exec -T db psql -q -U mediarr -d seed_large -Atc "SELECT to_regclass('assets') IS NULL AS assets_removed"
 	time -p $(DEV_COMPOSE) exec -T -e DATABASE_URL=postgres://mediarr:mediarr@db:5432/seed_large server /tmp/air/mediarr migrate
 	$(DEV_COMPOSE) exec -T db psql -q -U mediarr -d postgres -c "DROP DATABASE seed_large WITH (FORCE)"
+
+# Measures the timeline against the performance targets, on a temporary install.
+bench:
+	mkdir -p .dev
+	BENCH_SKIP_FPS=$(BENCH_SKIP_FPS) scripts/bench.sh
 
 gen:
 	cd server && $(GO_TOOL) oapi-codegen -config oapi-codegen.yaml ../api/openapi.yaml

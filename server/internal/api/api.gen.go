@@ -16,19 +16,19 @@ import (
 
 // Defines values for AssetKind.
 const (
-	Photo   AssetKind = "photo"
-	Unknown AssetKind = "unknown"
-	Video   AssetKind = "video"
+	AssetKindPhoto   AssetKind = "photo"
+	AssetKindUnknown AssetKind = "unknown"
+	AssetKindVideo   AssetKind = "video"
 )
 
 // Valid indicates whether the value is a known member of the AssetKind enum.
 func (e AssetKind) Valid() bool {
 	switch e {
-	case Photo:
+	case AssetKindPhoto:
 		return true
-	case Unknown:
+	case AssetKindUnknown:
 		return true
-	case Video:
+	case AssetKindVideo:
 		return true
 	default:
 		return false
@@ -56,6 +56,72 @@ func (e AssetStatus) Valid() bool {
 	}
 }
 
+// Defines values for AssetDetailKind.
+const (
+	AssetDetailKindPhoto   AssetDetailKind = "photo"
+	AssetDetailKindUnknown AssetDetailKind = "unknown"
+	AssetDetailKindVideo   AssetDetailKind = "video"
+)
+
+// Valid indicates whether the value is a known member of the AssetDetailKind enum.
+func (e AssetDetailKind) Valid() bool {
+	switch e {
+	case AssetDetailKindPhoto:
+		return true
+	case AssetDetailKindUnknown:
+		return true
+	case AssetDetailKindVideo:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AssetDetailStatus.
+const (
+	AssetDetailStatusFailed     AssetDetailStatus = "failed"
+	AssetDetailStatusProcessing AssetDetailStatus = "processing"
+	AssetDetailStatusReady      AssetDetailStatus = "ready"
+)
+
+// Valid indicates whether the value is a known member of the AssetDetailStatus enum.
+func (e AssetDetailStatus) Valid() bool {
+	switch e {
+	case AssetDetailStatusFailed:
+		return true
+	case AssetDetailStatusProcessing:
+		return true
+	case AssetDetailStatusReady:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BulkRequestAction.
+const (
+	Archive    BulkRequestAction = "archive"
+	Delete     BulkRequestAction = "delete"
+	Favorite   BulkRequestAction = "favorite"
+	Unfavorite BulkRequestAction = "unfavorite"
+)
+
+// Valid indicates whether the value is a known member of the BulkRequestAction enum.
+func (e BulkRequestAction) Valid() bool {
+	switch e {
+	case Archive:
+		return true
+	case Delete:
+		return true
+	case Favorite:
+		return true
+	case Unfavorite:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for HealthStatus.
 const (
 	Ok          HealthStatus = "ok"
@@ -68,6 +134,27 @@ func (e HealthStatus) Valid() bool {
 	case Ok:
 		return true
 	case Unavailable:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TimelineItemKind.
+const (
+	TimelineItemKindPhoto   TimelineItemKind = "photo"
+	TimelineItemKindUnknown TimelineItemKind = "unknown"
+	TimelineItemKindVideo   TimelineItemKind = "video"
+)
+
+// Valid indicates whether the value is a known member of the TimelineItemKind enum.
+func (e TimelineItemKind) Valid() bool {
+	switch e {
+	case TimelineItemKindPhoto:
+		return true
+	case TimelineItemKindUnknown:
+		return true
+	case TimelineItemKindVideo:
 		return true
 	default:
 		return false
@@ -89,6 +176,24 @@ func (e ListAssetsParamsStatus) Valid() bool {
 	case ListAssetsParamsStatusProcessing:
 		return true
 	case ListAssetsParamsStatusReady:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetAssetThumbnailParamsSize.
+const (
+	Large GetAssetThumbnailParamsSize = "large"
+	Small GetAssetThumbnailParamsSize = "small"
+)
+
+// Valid indicates whether the value is a known member of the GetAssetThumbnailParamsSize enum.
+func (e GetAssetThumbnailParamsSize) Valid() bool {
+	switch e {
+	case Large:
+		return true
+	case Small:
 		return true
 	default:
 		return false
@@ -141,6 +246,40 @@ type AssetKind string
 // AssetStatus defines model for Asset.Status.
 type AssetStatus string
 
+// AssetDetail defines model for AssetDetail.
+type AssetDetail struct {
+	Camera         *string             `json:"camera,omitempty"`
+	CreatedAt      time.Time           `json:"createdAt"`
+	ExposureTime   *string             `json:"exposureTime,omitempty"`
+	FNumber        *float64            `json:"fNumber,omitempty"`
+	FocalLength    *float64            `json:"focalLength,omitempty"`
+	HasCaptureTime *bool               `json:"hasCaptureTime,omitempty"`
+	Height         *int                `json:"height,omitempty"`
+	Id             openapi_types.UUID  `json:"id"`
+	IsArchived     bool                `json:"isArchived"`
+	IsFavorite     bool                `json:"isFavorite"`
+	Iso            *int                `json:"iso,omitempty"`
+	Kind           AssetDetailKind     `json:"kind"`
+	Latitude       *float64            `json:"latitude,omitempty"`
+	Lens           *string             `json:"lens,omitempty"`
+	LocalAt        string              `json:"localAt"`
+	Longitude      *float64            `json:"longitude,omitempty"`
+	MimeType       *string             `json:"mimeType,omitempty"`
+	NewerId        *openapi_types.UUID `json:"newerId,omitempty"`
+	OffsetMinutes  *int                `json:"offsetMinutes,omitempty"`
+	OlderId        *openapi_types.UUID `json:"olderId,omitempty"`
+	OriginalName   string              `json:"originalName"`
+	SizeBytes      int64               `json:"sizeBytes"`
+	Status         AssetDetailStatus   `json:"status"`
+	Width          *int                `json:"width,omitempty"`
+}
+
+// AssetDetailKind defines model for AssetDetail.Kind.
+type AssetDetailKind string
+
+// AssetDetailStatus defines model for AssetDetail.Status.
+type AssetDetailStatus string
+
 // AssetList defines model for AssetList.
 type AssetList struct {
 	Failed     int64   `json:"failed"`
@@ -153,6 +292,20 @@ type AssetList struct {
 type AuthStatus struct {
 	SetupRequired bool  `json:"setupRequired"`
 	User          *User `json:"user,omitempty"`
+}
+
+// BulkRequest defines model for BulkRequest.
+type BulkRequest struct {
+	Action BulkRequestAction    `json:"action"`
+	Ids    []openapi_types.UUID `json:"ids"`
+}
+
+// BulkRequestAction defines model for BulkRequest.Action.
+type BulkRequestAction string
+
+// BulkResponse defines model for BulkResponse.
+type BulkResponse struct {
+	Changed int64 `json:"changed"`
 }
 
 // ChangePasswordRequest defines model for ChangePasswordRequest.
@@ -217,6 +370,37 @@ type SetupRequest struct {
 	Password string `json:"password"`
 }
 
+// TimelineBucket defines model for TimelineBucket.
+type TimelineBucket struct {
+	Items []TimelineItem `json:"items"`
+	Month string         `json:"month"`
+}
+
+// TimelineBuckets defines model for TimelineBuckets.
+type TimelineBuckets struct {
+	Buckets []struct {
+		Count int64  `json:"count"`
+		Month string `json:"month"`
+	} `json:"buckets"`
+}
+
+// TimelineItem defines model for TimelineItem.
+type TimelineItem struct {
+	Blurhash   *string            `json:"blurhash,omitempty"`
+	Id         openapi_types.UUID `json:"id"`
+	IsFavorite bool               `json:"isFavorite"`
+	Kind       TimelineItemKind   `json:"kind"`
+
+	// LocalAt Local capture time without a zone: 2006-01-02T15:04:05
+	LocalAt string `json:"localAt"`
+
+	// Ratio Width divided by height, as displayed
+	Ratio float32 `json:"ratio"`
+}
+
+// TimelineItemKind defines model for TimelineItem.Kind.
+type TimelineItemKind string
+
 // TotpCode defines model for TotpCode.
 type TotpCode struct {
 	Code string `json:"code"`
@@ -246,8 +430,30 @@ type ListAssetsParams struct {
 // ListAssetsParamsStatus defines parameters for ListAssets.
 type ListAssetsParamsStatus string
 
+// DownloadAssetsParams defines parameters for DownloadAssets.
+type DownloadAssetsParams struct {
+	// Ids Comma-separated asset IDs, at most 100
+	Ids string `form:"ids" json:"ids"`
+}
+
+// GetAssetOriginalParams defines parameters for GetAssetOriginal.
+type GetAssetOriginalParams struct {
+	Download *bool `form:"download,omitempty" json:"download,omitempty"`
+}
+
+// GetAssetThumbnailParams defines parameters for GetAssetThumbnail.
+type GetAssetThumbnailParams struct {
+	Size *GetAssetThumbnailParamsSize `form:"size,omitempty" json:"size,omitempty"`
+}
+
+// GetAssetThumbnailParamsSize defines parameters for GetAssetThumbnail.
+type GetAssetThumbnailParamsSize string
+
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
+
+// BulkAssetsJSONRequestBody defines body for BulkAssets for application/json ContentType.
+type BulkAssetsJSONRequestBody = BulkRequest
 
 // CheckAssetsJSONRequestBody defines body for CheckAssets for application/json ContentType.
 type CheckAssetsJSONRequestBody = ChecksumCheckRequest
@@ -281,9 +487,24 @@ type ServerInterface interface {
 	// ListAssets List the current user's most recent assets and their processing status
 	// (GET /api/assets)
 	ListAssets(w http.ResponseWriter, r *http.Request, params ListAssetsParams)
+	// BulkAssets Apply an action to several of the current user's assets. Other assets are ignored.
+	// (POST /api/assets/bulk)
+	BulkAssets(w http.ResponseWriter, r *http.Request)
 	// CheckAssets Report which SHA-256 checksums the current user already has, so uploads can be skipped
 	// (POST /api/assets/check)
 	CheckAssets(w http.ResponseWriter, r *http.Request)
+	// DownloadAssets Download several originals as one uncompressed ZIP file
+	// (GET /api/assets/download)
+	DownloadAssets(w http.ResponseWriter, r *http.Request, params DownloadAssetsParams)
+	// GetAsset Read an asset's details and its neighbours on the timeline
+	// (GET /api/assets/{id})
+	GetAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetAssetOriginal Read the unmodified original. Supports Range requests for video.
+	// (GET /api/assets/{id}/original)
+	GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams)
+	// GetAssetThumbnail Read a WebP thumbnail
+	// (GET /api/assets/{id}/thumbnail)
+	GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetThumbnailParams)
 	// Login Sign in with email, password and, when enabled, a TOTP code
 	// (POST /api/auth/login)
 	Login(w http.ResponseWriter, r *http.Request)
@@ -308,6 +529,12 @@ type ServerInterface interface {
 	// SetupTotp Generate a TOTP secret. It takes effect only after confirmation.
 	// (POST /api/me/totp/setup)
 	SetupTotp(w http.ResponseWriter, r *http.Request)
+	// GetTimelineBuckets List the months that have photos, newest first
+	// (GET /api/timeline/buckets)
+	GetTimelineBuckets(w http.ResponseWriter, r *http.Request)
+	// GetTimelineBucket List one month's assets, newest first
+	// (GET /api/timeline/buckets/{month})
+	GetTimelineBucket(w http.ResponseWriter, r *http.Request, month string)
 	// CreateUpload Create a resumable upload (tus 1.0)
 	// (POST /api/uploads)
 	CreateUpload(w http.ResponseWriter, r *http.Request)
@@ -353,9 +580,39 @@ func (_ Unimplemented) ListAssets(w http.ResponseWriter, r *http.Request, params
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// BulkAssets Apply an action to several of the current user's assets. Other assets are ignored.
+// (POST /api/assets/bulk)
+func (_ Unimplemented) BulkAssets(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // CheckAssets Report which SHA-256 checksums the current user already has, so uploads can be skipped
 // (POST /api/assets/check)
 func (_ Unimplemented) CheckAssets(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DownloadAssets Download several originals as one uncompressed ZIP file
+// (GET /api/assets/download)
+func (_ Unimplemented) DownloadAssets(w http.ResponseWriter, r *http.Request, params DownloadAssetsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAsset Read an asset's details and its neighbours on the timeline
+// (GET /api/assets/{id})
+func (_ Unimplemented) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAssetOriginal Read the unmodified original. Supports Range requests for video.
+// (GET /api/assets/{id}/original)
+func (_ Unimplemented) GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAssetThumbnail Read a WebP thumbnail
+// (GET /api/assets/{id}/thumbnail)
+func (_ Unimplemented) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetThumbnailParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -404,6 +661,18 @@ func (_ Unimplemented) EnableTotp(w http.ResponseWriter, r *http.Request) {
 // SetupTotp Generate a TOTP secret. It takes effect only after confirmation.
 // (POST /api/me/totp/setup)
 func (_ Unimplemented) SetupTotp(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetTimelineBuckets List the months that have photos, newest first
+// (GET /api/timeline/buckets)
+func (_ Unimplemented) GetTimelineBuckets(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetTimelineBucket List one month's assets, newest first
+// (GET /api/timeline/buckets/{month})
+func (_ Unimplemented) GetTimelineBucket(w http.ResponseWriter, r *http.Request, month string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -534,11 +803,168 @@ func (siw *ServerInterfaceWrapper) ListAssets(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// BulkAssets operation middleware
+func (siw *ServerInterfaceWrapper) BulkAssets(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BulkAssets(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CheckAssets operation middleware
 func (siw *ServerInterfaceWrapper) CheckAssets(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CheckAssets(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DownloadAssets operation middleware
+func (siw *ServerInterfaceWrapper) DownloadAssets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DownloadAssetsParams
+
+	// ------------- Required query parameter "ids" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "ids", r.URL.Query(), &params.Ids, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "ids"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "ids", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DownloadAssets(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAsset operation middleware
+func (siw *ServerInterfaceWrapper) GetAsset(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAsset(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAssetOriginal operation middleware
+func (siw *ServerInterfaceWrapper) GetAssetOriginal(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAssetOriginalParams
+
+	// ------------- Optional query parameter "download" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "download", r.URL.Query(), &params.Download, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "download"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "download", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAssetOriginal(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAssetThumbnail operation middleware
+func (siw *ServerInterfaceWrapper) GetAssetThumbnail(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAssetThumbnailParams
+
+	// ------------- Optional query parameter "size" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "size", r.URL.Query(), &params.Size, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "size"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "size", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAssetThumbnail(w, r, id, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -651,6 +1077,46 @@ func (siw *ServerInterfaceWrapper) SetupTotp(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SetupTotp(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTimelineBuckets operation middleware
+func (siw *ServerInterfaceWrapper) GetTimelineBuckets(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTimelineBuckets(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTimelineBucket operation middleware
+func (siw *ServerInterfaceWrapper) GetTimelineBucket(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "month" -------------
+	var month string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "month", chi.URLParam(r, "month"), &month, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTimelineBucket(w, r, month)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -917,6 +1383,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/assets", wrapper.ListAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/assets/bulk", wrapper.BulkAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/download", wrapper.DownloadAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}", wrapper.GetAsset)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}/thumbnail", wrapper.GetAssetThumbnail)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}/original", wrapper.GetAssetOriginal)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/timeline/buckets", wrapper.GetTimelineBuckets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/timeline/buckets/{month}", wrapper.GetTimelineBucket)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/assets/check", wrapper.CheckAssets)

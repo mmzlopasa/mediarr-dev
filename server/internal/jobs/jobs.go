@@ -218,7 +218,11 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 				return err
 			}
 		}
-		return q.MarkAssetReady(ctx, db.MarkAssetReadyParams{ID: id, Blurhash: pgtype.Text{String: result.Blurhash, Valid: true}})
+		return q.MarkAssetReady(ctx, db.MarkAssetReadyParams{
+			ID:          id,
+			Blurhash:    pgtype.Text{String: result.Blurhash, Valid: true},
+			AspectRatio: pgtype.Float4{Float32: result.Ratio, Valid: result.Ratio > 0},
+		})
 	})
 }
 

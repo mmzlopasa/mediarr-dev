@@ -174,7 +174,11 @@ func (s *apiServer) storeAsset(ctx context.Context, userID pgtype.UUID, sum []by
 		if db.IsNotFound(err) {
 			duplicate = true
 			assetID, err = q.GetAssetIDByChecksum(ctx, db.GetAssetIDByChecksumParams{UserID: userID, Checksum: sum})
-			return err
+			if err != nil {
+				return err
+			}
+			// Uploading a deleted file again brings it back, instead of leaving it hidden.
+			return q.RestoreDeletedAsset(ctx, assetID)
 		}
 		if err != nil {
 			return fmt.Errorf("insert asset: %w", err)

@@ -19,7 +19,8 @@ SELECT * FROM assets WHERE id = $1;
 
 -- name: ListAssets :many
 SELECT * FROM assets
-WHERE user_id = sqlc.arg('user_id') AND (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status'))
+WHERE user_id = sqlc.arg('user_id') AND deleted_at IS NULL
+  AND (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status'))
 ORDER BY created_at DESC, id DESC
 LIMIT sqlc.arg('row_limit');
 
@@ -27,10 +28,10 @@ LIMIT sqlc.arg('row_limit');
 SELECT count(*) AS total,
        count(*) FILTER (WHERE status = 'processing') AS processing,
        count(*) FILTER (WHERE status = 'failed') AS failed
-FROM assets WHERE user_id = $1;
+FROM assets WHERE user_id = $1 AND deleted_at IS NULL;
 
 -- name: FindExistingChecksums :many
-SELECT checksum FROM assets WHERE user_id = $1 AND checksum = ANY($2::bytea[]);
+SELECT checksum FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checksum = ANY($2::bytea[]);
 
 -- name: UpdateAssetMetadata :exec
 UPDATE assets
@@ -55,7 +56,7 @@ ON CONFLICT (asset_id, kind) DO UPDATE SET path = EXCLUDED.path, size_bytes = EX
 SELECT * FROM asset_files WHERE asset_id = $1 ORDER BY kind;
 
 -- name: MarkAssetReady :exec
-UPDATE assets SET status = 'ready', blurhash = $2, error = NULL, updated_at = now() WHERE id = $1;
+UPDATE assets SET status = 'ready', blurhash = $2, aspect_ratio = $3, error = NULL, updated_at = now() WHERE id = $1;
 
 -- name: MarkAssetFailed :exec
 UPDATE assets SET status = 'failed', error = $2, updated_at = now() WHERE id = $1;
@@ -67,10 +68,64 @@ SELECT (SELECT count(*) FROM users) AS users,
        count(*) FILTER (WHERE status = 'processing') AS processing,
        count(*) FILTER (WHERE status = 'failed') AS failed,
        coalesce(sum(size_bytes), 0)::bigint AS library_bytes
-FROM assets;
+FROM assets WHERE deleted_at IS NULL;
 
 -- name: DeleteUserAssets :exec
 DELETE FROM assets WHERE user_id = $1;
 
 -- name: DeleteUser :exec
 DELETE FROM users WHERE id = $1;
+
+-- name: RestoreDeletedAsset :exec
+UPDATE assets SET deleted_at = NULL, updated_at = now() WHERE id = $1 AND deleted_at IS NOT NULL;
+
+-- name: TimelineBuckets :many
+SELECT to_char(date_trunc('month', local_at), 'YYYY-MM')::text AS month, count(*) AS count
+FROM assets
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+GROUP BY 1
+ORDER BY 1 DESC;
+
+-- name: TimelineBucket :many
+SELECT id, kind, width, height, aspect_ratio, blurhash, is_favorite, local_at
+FROM assets
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+  AND local_at >= sqlc.arg('from_at') AND local_at < sqlc.arg('to_at')
+ORDER BY local_at DESC, id DESC;
+
+-- name: GetOwnedAsset :one
+SELECT * FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL;
+
+-- name: NewerAsset :one
+SELECT id FROM assets
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+  AND (local_at, id) > (sqlc.arg('local_at')::timestamp, sqlc.arg('id')::uuid)
+ORDER BY local_at ASC, id ASC LIMIT 1;
+
+-- name: OlderAsset :one
+SELECT id FROM assets
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+  AND (local_at, id) < (sqlc.arg('local_at')::timestamp, sqlc.arg('id')::uuid)
+ORDER BY local_at DESC, id DESC LIMIT 1;
+
+-- name: GetExif :one
+SELECT * FROM exif WHERE asset_id = $1;
+
+-- name: GetOwnedAssetFile :one
+SELECT f.path FROM asset_files f JOIN assets a ON a.id = f.asset_id
+WHERE f.asset_id = $1 AND f.kind = $2 AND a.user_id = $3 AND a.deleted_at IS NULL;
+
+-- name: ListOwnedAssets :many
+SELECT * FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY(sqlc.arg('ids')::uuid[]);
+
+-- name: SetFavorite :execrows
+UPDATE assets SET is_favorite = $3, updated_at = now()
+WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[]);
+
+-- name: ArchiveAssets :execrows
+UPDATE assets SET archived_at = now(), updated_at = now()
+WHERE user_id = $1 AND deleted_at IS NULL AND archived_at IS NULL AND id = ANY($2::uuid[]);
+
+-- name: SoftDeleteAssets :execrows
+UPDATE assets SET deleted_at = now(), updated_at = now()
+WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[]);

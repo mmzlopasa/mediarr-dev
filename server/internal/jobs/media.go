@@ -18,12 +18,14 @@ import (
 
 	"github.com/bbrks/go-blurhash"
 	"github.com/jackc/pgx/v5/pgtype"
+	"golang.org/x/image/webp"
 
 	"github.com/mmzlopasa/mediarr-app/server/db"
 )
 
 const (
-	thumbSmall   = 250
+	// Larger than the plan's 250 px, which looked blurry on wide tiles and on high-density phones.
+	thumbSmall   = 500
 	thumbLarge   = 1440
 	toolTimeout  = 5 * time.Minute
 	maxToolError = 300
@@ -297,6 +299,8 @@ type ThumbResult struct {
 	Small    ThumbFile
 	Large    ThumbFile
 	Blurhash string
+	// Ratio is width divided by height as displayed, read from the thumbnail after rotation.
+	Ratio float32
 }
 
 // MakeThumbnails generates both thumbnails and the blurhash. It can safely run again after a crash.
@@ -326,7 +330,11 @@ func MakeThumbnails(ctx context.Context, original, kind, dir, name string) (*Thu
 	if err != nil {
 		return nil, err
 	}
-	return &ThumbResult{Small: small, Large: large, Blurhash: hash}, nil
+	ratio, err := imageRatio(small.Path)
+	if err != nil {
+		return nil, err
+	}
+	return &ThumbResult{Small: small, Large: large, Blurhash: hash, Ratio: ratio}, nil
 }
 
 // thumbnailSource returns a file libvips can read: the original, a video frame or a RAW preview.
@@ -393,6 +401,22 @@ func makeThumb(ctx context.Context, source, work, dir, name string, size int) (T
 		return ThumbFile{}, err
 	}
 	return ThumbFile{Path: dest, Size: info.Size()}, nil
+}
+
+func imageRatio(path string) (float32, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = f.Close() }()
+	config, err := webp.DecodeConfig(f)
+	if err != nil {
+		return 0, fmt.Errorf("read thumbnail size: %w", err)
+	}
+	if config.Height == 0 {
+		return 0, nil
+	}
+	return float32(config.Width) / float32(config.Height), nil
 }
 
 func makeBlurhash(ctx context.Context, thumb, work string) (string, error) {

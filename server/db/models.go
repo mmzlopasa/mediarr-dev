@@ -36,6 +36,11 @@ type Asset struct {
 	TakenOffsetMinutes pgtype.Int4
 	CreatedAt          pgtype.Timestamptz
 	UpdatedAt          pgtype.Timestamptz
+	IsFavorite         bool
+	ArchivedAt         pgtype.Timestamptz
+	DeletedAt          pgtype.Timestamptz
+	AspectRatio        pgtype.Float4
+	LocalAt            pgtype.Timestamp
 }
 
 type AssetFile struct {

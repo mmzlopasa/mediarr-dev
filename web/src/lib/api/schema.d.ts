@@ -209,6 +209,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply an action to several of the current user's assets. Other assets are ignored. */
+        post: operations["bulkAssets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download several originals as one uncompressed ZIP file */
+        get: operations["downloadAssets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an asset's details and its neighbours on the timeline */
+        get: operations["getAsset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a WebP thumbnail */
+        get: operations["getAssetThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/original": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the unmodified original. Supports Range requests for video. */
+        get: operations["getAssetOriginal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/timeline/buckets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the months that have photos, newest first */
+        get: operations["getTimelineBuckets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/timeline/buckets/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List one month's assets, newest first */
+        get: operations["getTimelineBucket"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assets/check": {
         parameters: {
             query?: never;
@@ -374,6 +493,78 @@ export interface components {
             takenAt?: string;
             /** Format: date-time */
             createdAt: string;
+        };
+        TimelineBuckets: {
+            buckets: {
+                month: string;
+                /** Format: int64 */
+                count: number;
+            }[];
+        };
+        TimelineItem: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "unknown" | "photo" | "video";
+            /**
+             * Format: float
+             * @description Width divided by height, as displayed
+             */
+            ratio: number;
+            blurhash?: string;
+            isFavorite: boolean;
+            /** @description Local capture time without a zone: 2006-01-02T15:04:05 */
+            localAt: string;
+        };
+        TimelineBucket: {
+            month: string;
+            items: components["schemas"]["TimelineItem"][];
+        };
+        AssetDetail: {
+            /** Format: uuid */
+            id: string;
+            originalName: string;
+            /** @enum {string} */
+            kind: "unknown" | "photo" | "video";
+            /** @enum {string} */
+            status: "processing" | "ready" | "failed";
+            mimeType?: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            width?: number;
+            height?: number;
+            isFavorite: boolean;
+            isArchived: boolean;
+            localAt: string;
+            offsetMinutes?: number;
+            hasCaptureTime?: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            newerId?: string;
+            /** Format: uuid */
+            olderId?: string;
+            camera?: string;
+            lens?: string;
+            iso?: number;
+            /** Format: double */
+            fNumber?: number;
+            exposureTime?: string;
+            /** Format: double */
+            focalLength?: number;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+        };
+        BulkRequest: {
+            ids: string[];
+            /** @enum {string} */
+            action: "favorite" | "unfavorite" | "archive" | "delete";
+        };
+        BulkResponse: {
+            /** Format: int64 */
+            changed: number;
         };
         AssetList: {
             items: components["schemas"]["Asset"][];
@@ -722,6 +913,187 @@ export interface operations {
                     "application/json": components["schemas"]["AssetList"];
                 };
             };
+            401: components["responses"]["Error"];
+        };
+    };
+    bulkAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkRequest"];
+            };
+        };
+        responses: {
+            /** @description How many assets changed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResponse"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    downloadAssets: {
+        parameters: {
+            query: {
+                /** @description Comma-separated asset IDs, at most 100 */
+                ids: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ZIP file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The asset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetail"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAssetThumbnail: {
+        parameters: {
+            query?: {
+                size?: "small" | "large";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The thumbnail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": string;
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAssetOriginal: {
+        parameters: {
+            query?: {
+                download?: boolean;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The original file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Part of the original file */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getTimelineBuckets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Months and how many assets each has */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBuckets"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    getTimelineBucket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description YYYY-MM */
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The month's assets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBucket"];
+                };
+            };
+            400: components["responses"]["Error"];
             401: components["responses"]["Error"];
         };
     };

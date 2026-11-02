@@ -1,0 +1,607 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+// @dart=2.18
+
+// ignore_for_file: unused_element, unused_import
+// ignore_for_file: always_put_required_named_parameters_first
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: lines_longer_than_80_chars
+
+part of openapi.api;
+
+class AssetDetail {
+  /// Returns a new [AssetDetail] instance.
+  AssetDetail({
+    required this.id,
+    required this.originalName,
+    required this.kind,
+    required this.status,
+    this.mimeType,
+    required this.sizeBytes,
+    this.width,
+    this.height,
+    required this.isFavorite,
+    required this.isArchived,
+    required this.localAt,
+    this.offsetMinutes,
+    this.hasCaptureTime,
+    required this.createdAt,
+    this.newerId,
+    this.olderId,
+    this.camera,
+    this.lens,
+    this.iso,
+    this.fNumber,
+    this.exposureTime,
+    this.focalLength,
+    this.latitude,
+    this.longitude,
+  });
+
+  String id;
+
+  String originalName;
+
+  AssetDetailKindEnum kind;
+
+  AssetDetailStatusEnum status;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? mimeType;
+
+  int sizeBytes;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? width;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? height;
+
+  bool isFavorite;
+
+  bool isArchived;
+
+  String localAt;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? offsetMinutes;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? hasCaptureTime;
+
+  DateTime createdAt;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? newerId;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? olderId;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? camera;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? lens;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? iso;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  double? fNumber;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? exposureTime;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  double? focalLength;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  double? latitude;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  double? longitude;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetDetail &&
+          other.id == id &&
+          other.originalName == originalName &&
+          other.kind == kind &&
+          other.status == status &&
+          other.mimeType == mimeType &&
+          other.sizeBytes == sizeBytes &&
+          other.width == width &&
+          other.height == height &&
+          other.isFavorite == isFavorite &&
+          other.isArchived == isArchived &&
+          other.localAt == localAt &&
+          other.offsetMinutes == offsetMinutes &&
+          other.hasCaptureTime == hasCaptureTime &&
+          other.createdAt == createdAt &&
+          other.newerId == newerId &&
+          other.olderId == olderId &&
+          other.camera == camera &&
+          other.lens == lens &&
+          other.iso == iso &&
+          other.fNumber == fNumber &&
+          other.exposureTime == exposureTime &&
+          other.focalLength == focalLength &&
+          other.latitude == latitude &&
+          other.longitude == longitude;
+
+  @override
+  int get hashCode =>
+      // ignore: unnecessary_parenthesis
+      (id.hashCode) +
+      (originalName.hashCode) +
+      (kind.hashCode) +
+      (status.hashCode) +
+      (mimeType == null ? 0 : mimeType!.hashCode) +
+      (sizeBytes.hashCode) +
+      (width == null ? 0 : width!.hashCode) +
+      (height == null ? 0 : height!.hashCode) +
+      (isFavorite.hashCode) +
+      (isArchived.hashCode) +
+      (localAt.hashCode) +
+      (offsetMinutes == null ? 0 : offsetMinutes!.hashCode) +
+      (hasCaptureTime == null ? 0 : hasCaptureTime!.hashCode) +
+      (createdAt.hashCode) +
+      (newerId == null ? 0 : newerId!.hashCode) +
+      (olderId == null ? 0 : olderId!.hashCode) +
+      (camera == null ? 0 : camera!.hashCode) +
+      (lens == null ? 0 : lens!.hashCode) +
+      (iso == null ? 0 : iso!.hashCode) +
+      (fNumber == null ? 0 : fNumber!.hashCode) +
+      (exposureTime == null ? 0 : exposureTime!.hashCode) +
+      (focalLength == null ? 0 : focalLength!.hashCode) +
+      (latitude == null ? 0 : latitude!.hashCode) +
+      (longitude == null ? 0 : longitude!.hashCode);
+
+  @override
+  String toString() =>
+      'AssetDetail[id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{};
+    json[r'id'] = this.id;
+    json[r'originalName'] = this.originalName;
+    json[r'kind'] = this.kind;
+    json[r'status'] = this.status;
+    if (this.mimeType != null) {
+      json[r'mimeType'] = this.mimeType;
+    } else {
+      json[r'mimeType'] = null;
+    }
+    json[r'sizeBytes'] = this.sizeBytes;
+    if (this.width != null) {
+      json[r'width'] = this.width;
+    } else {
+      json[r'width'] = null;
+    }
+    if (this.height != null) {
+      json[r'height'] = this.height;
+    } else {
+      json[r'height'] = null;
+    }
+    json[r'isFavorite'] = this.isFavorite;
+    json[r'isArchived'] = this.isArchived;
+    json[r'localAt'] = this.localAt;
+    if (this.offsetMinutes != null) {
+      json[r'offsetMinutes'] = this.offsetMinutes;
+    } else {
+      json[r'offsetMinutes'] = null;
+    }
+    if (this.hasCaptureTime != null) {
+      json[r'hasCaptureTime'] = this.hasCaptureTime;
+    } else {
+      json[r'hasCaptureTime'] = null;
+    }
+    json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
+    if (this.newerId != null) {
+      json[r'newerId'] = this.newerId;
+    } else {
+      json[r'newerId'] = null;
+    }
+    if (this.olderId != null) {
+      json[r'olderId'] = this.olderId;
+    } else {
+      json[r'olderId'] = null;
+    }
+    if (this.camera != null) {
+      json[r'camera'] = this.camera;
+    } else {
+      json[r'camera'] = null;
+    }
+    if (this.lens != null) {
+      json[r'lens'] = this.lens;
+    } else {
+      json[r'lens'] = null;
+    }
+    if (this.iso != null) {
+      json[r'iso'] = this.iso;
+    } else {
+      json[r'iso'] = null;
+    }
+    if (this.fNumber != null) {
+      json[r'fNumber'] = this.fNumber;
+    } else {
+      json[r'fNumber'] = null;
+    }
+    if (this.exposureTime != null) {
+      json[r'exposureTime'] = this.exposureTime;
+    } else {
+      json[r'exposureTime'] = null;
+    }
+    if (this.focalLength != null) {
+      json[r'focalLength'] = this.focalLength;
+    } else {
+      json[r'focalLength'] = null;
+    }
+    if (this.latitude != null) {
+      json[r'latitude'] = this.latitude;
+    } else {
+      json[r'latitude'] = null;
+    }
+    if (this.longitude != null) {
+      json[r'longitude'] = this.longitude;
+    } else {
+      json[r'longitude'] = null;
+    }
+    return json;
+  }
+
+  /// Returns a new [AssetDetail] instance and imports its values from
+  /// [value] if it's a [Map], null otherwise.
+  // ignore: prefer_constructors_over_static_methods
+  static AssetDetail? fromJson(dynamic value) {
+    if (value is Map) {
+      final json = value.cast<String, dynamic>();
+
+      // Ensure that the map contains the required keys.
+      // Note 1: the values aren't checked for validity beyond being non-null.
+      // Note 2: this code is stripped in release mode!
+      assert(() {
+        requiredKeys.forEach((key) {
+          assert(json.containsKey(key),
+              'Required key "AssetDetail[$key]" is missing from JSON.');
+          assert(json[key] != null,
+              'Required key "AssetDetail[$key]" has a null value in JSON.');
+        });
+        return true;
+      }());
+
+      return AssetDetail(
+        id: mapValueOfType<String>(json, r'id')!,
+        originalName: mapValueOfType<String>(json, r'originalName')!,
+        kind: AssetDetailKindEnum.fromJson(json[r'kind'])!,
+        status: AssetDetailStatusEnum.fromJson(json[r'status'])!,
+        mimeType: mapValueOfType<String>(json, r'mimeType'),
+        sizeBytes: mapValueOfType<int>(json, r'sizeBytes')!,
+        width: mapValueOfType<int>(json, r'width'),
+        height: mapValueOfType<int>(json, r'height'),
+        isFavorite: mapValueOfType<bool>(json, r'isFavorite')!,
+        isArchived: mapValueOfType<bool>(json, r'isArchived')!,
+        localAt: mapValueOfType<String>(json, r'localAt')!,
+        offsetMinutes: mapValueOfType<int>(json, r'offsetMinutes'),
+        hasCaptureTime: mapValueOfType<bool>(json, r'hasCaptureTime'),
+        createdAt: mapDateTime(json, r'createdAt', r'')!,
+        newerId: mapValueOfType<String>(json, r'newerId'),
+        olderId: mapValueOfType<String>(json, r'olderId'),
+        camera: mapValueOfType<String>(json, r'camera'),
+        lens: mapValueOfType<String>(json, r'lens'),
+        iso: mapValueOfType<int>(json, r'iso'),
+        fNumber: mapValueOfType<double>(json, r'fNumber'),
+        exposureTime: mapValueOfType<String>(json, r'exposureTime'),
+        focalLength: mapValueOfType<double>(json, r'focalLength'),
+        latitude: mapValueOfType<double>(json, r'latitude'),
+        longitude: mapValueOfType<double>(json, r'longitude'),
+      );
+    }
+    return null;
+  }
+
+  static List<AssetDetail> listFromJson(
+    dynamic json, {
+    bool growable = false,
+  }) {
+    final result = <AssetDetail>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = AssetDetail.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
+
+  static Map<String, AssetDetail> mapFromJson(dynamic json) {
+    final map = <String, AssetDetail>{};
+    if (json is Map && json.isNotEmpty) {
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = AssetDetail.fromJson(entry.value);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
+    }
+    return map;
+  }
+
+  // maps a json object with a list of AssetDetail-objects as value to a dart map
+  static Map<String, List<AssetDetail>> mapListFromJson(
+    dynamic json, {
+    bool growable = false,
+  }) {
+    final map = <String, List<AssetDetail>>{};
+    if (json is Map && json.isNotEmpty) {
+      // ignore: parameter_assignments
+      json = json.cast<String, dynamic>();
+      for (final entry in json.entries) {
+        map[entry.key] = AssetDetail.listFromJson(
+          entry.value,
+          growable: growable,
+        );
+      }
+    }
+    return map;
+  }
+
+  /// The list of required keys that must be present in a JSON.
+  static const requiredKeys = <String>{
+    'id',
+    'originalName',
+    'kind',
+    'status',
+    'sizeBytes',
+    'isFavorite',
+    'isArchived',
+    'localAt',
+    'createdAt',
+  };
+}
+
+class AssetDetailKindEnum {
+  /// Instantiate a new enum with the provided [value].
+  const AssetDetailKindEnum._(this.value);
+
+  /// The underlying value of this enum member.
+  final String value;
+
+  @override
+  String toString() => value;
+
+  String toJson() => value;
+
+  static const unknown = AssetDetailKindEnum._(r'unknown');
+  static const photo = AssetDetailKindEnum._(r'photo');
+  static const video = AssetDetailKindEnum._(r'video');
+
+  /// List of all possible values in this [enum][AssetDetailKindEnum].
+  static const values = <AssetDetailKindEnum>[
+    unknown,
+    photo,
+    video,
+  ];
+
+  static AssetDetailKindEnum? fromJson(dynamic value) =>
+      AssetDetailKindEnumTypeTransformer().decode(value);
+
+  static List<AssetDetailKindEnum> listFromJson(
+    dynamic json, {
+    bool growable = false,
+  }) {
+    final result = <AssetDetailKindEnum>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = AssetDetailKindEnum.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
+}
+
+/// Transformation class that can [encode] an instance of [AssetDetailKindEnum] to String,
+/// and [decode] dynamic data back to [AssetDetailKindEnum].
+class AssetDetailKindEnumTypeTransformer {
+  factory AssetDetailKindEnumTypeTransformer() =>
+      _instance ??= const AssetDetailKindEnumTypeTransformer._();
+
+  const AssetDetailKindEnumTypeTransformer._();
+
+  String encode(AssetDetailKindEnum data) => data.value;
+
+  /// Decodes a [dynamic value][data] to a AssetDetailKindEnum.
+  ///
+  /// If [allowNull] is true and the [dynamic value][data] cannot be decoded successfully,
+  /// then null is returned. However, if [allowNull] is false and the [dynamic value][data]
+  /// cannot be decoded successfully, then an [UnimplementedError] is thrown.
+  ///
+  /// The [allowNull] is very handy when an API changes and a new enum value is added or removed,
+  /// and users are still using an old app with the old code.
+  AssetDetailKindEnum? decode(dynamic data, {bool allowNull = true}) {
+    if (data != null) {
+      switch (data) {
+        case r'unknown':
+          return AssetDetailKindEnum.unknown;
+        case r'photo':
+          return AssetDetailKindEnum.photo;
+        case r'video':
+          return AssetDetailKindEnum.video;
+        default:
+          if (!allowNull) {
+            throw ArgumentError('Unknown enum value to decode: $data');
+          }
+      }
+    }
+    return null;
+  }
+
+  /// Singleton [AssetDetailKindEnumTypeTransformer] instance.
+  static AssetDetailKindEnumTypeTransformer? _instance;
+}
+
+class AssetDetailStatusEnum {
+  /// Instantiate a new enum with the provided [value].
+  const AssetDetailStatusEnum._(this.value);
+
+  /// The underlying value of this enum member.
+  final String value;
+
+  @override
+  String toString() => value;
+
+  String toJson() => value;
+
+  static const processing = AssetDetailStatusEnum._(r'processing');
+  static const ready = AssetDetailStatusEnum._(r'ready');
+  static const failed = AssetDetailStatusEnum._(r'failed');
+
+  /// List of all possible values in this [enum][AssetDetailStatusEnum].
+  static const values = <AssetDetailStatusEnum>[
+    processing,
+    ready,
+    failed,
+  ];
+
+  static AssetDetailStatusEnum? fromJson(dynamic value) =>
+      AssetDetailStatusEnumTypeTransformer().decode(value);
+
+  static List<AssetDetailStatusEnum> listFromJson(
+    dynamic json, {
+    bool growable = false,
+  }) {
+    final result = <AssetDetailStatusEnum>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = AssetDetailStatusEnum.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
+}
+
+/// Transformation class that can [encode] an instance of [AssetDetailStatusEnum] to String,
+/// and [decode] dynamic data back to [AssetDetailStatusEnum].
+class AssetDetailStatusEnumTypeTransformer {
+  factory AssetDetailStatusEnumTypeTransformer() =>
+      _instance ??= const AssetDetailStatusEnumTypeTransformer._();
+
+  const AssetDetailStatusEnumTypeTransformer._();
+
+  String encode(AssetDetailStatusEnum data) => data.value;
+
+  /// Decodes a [dynamic value][data] to a AssetDetailStatusEnum.
+  ///
+  /// If [allowNull] is true and the [dynamic value][data] cannot be decoded successfully,
+  /// then null is returned. However, if [allowNull] is false and the [dynamic value][data]
+  /// cannot be decoded successfully, then an [UnimplementedError] is thrown.
+  ///
+  /// The [allowNull] is very handy when an API changes and a new enum value is added or removed,
+  /// and users are still using an old app with the old code.
+  AssetDetailStatusEnum? decode(dynamic data, {bool allowNull = true}) {
+    if (data != null) {
+      switch (data) {
+        case r'processing':
+          return AssetDetailStatusEnum.processing;
+        case r'ready':
+          return AssetDetailStatusEnum.ready;
+        case r'failed':
+          return AssetDetailStatusEnum.failed;
+        default:
+          if (!allowNull) {
+            throw ArgumentError('Unknown enum value to decode: $data');
+          }
+      }
+    }
+    return null;
+  }
+
+  /// Singleton [AssetDetailStatusEnumTypeTransformer] instance.
+  static AssetDetailStatusEnumTypeTransformer? _instance;
+}

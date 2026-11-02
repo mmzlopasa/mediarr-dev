@@ -6,6 +6,11 @@ export type AssetList = components['schemas']['AssetList'];
 export type AuthStatus = components['schemas']['AuthStatus'];
 export type TotpSetup = components['schemas']['TotpSetup'];
 export type AdminOverview = components['schemas']['AdminOverview'];
+export type TimelineItem = components['schemas']['TimelineItem'];
+export type TimelineBucket = components['schemas']['TimelineBucket'];
+export type TimelineBuckets = components['schemas']['TimelineBuckets'];
+export type AssetDetail = components['schemas']['AssetDetail'];
+export type BulkAction = components['schemas']['BulkRequest']['action'];
 
 export class ApiError extends Error {
 	status: number;
@@ -54,7 +59,13 @@ export const api = {
 	listUsers: () => request<User[]>(fetch, '/api/admin/users'),
 	createUser: (body: { email: string; name: string; password: string; isAdmin: boolean }) =>
 		request<User>(fetch, '/api/admin/users', body),
-	listAssets: () => request<AssetList>(fetch, '/api/assets?limit=200')
+	listProblems: () => request<AssetList>(fetch, '/api/assets?limit=200&status=failed'),
+	timelineBuckets: () => request<TimelineBuckets>(fetch, '/api/timeline/buckets'),
+	timelineBucket: (month: string) =>
+		request<TimelineBucket>(fetch, `/api/timeline/buckets/${month}`),
+	asset: (id: string) => request<AssetDetail>(fetch, `/api/assets/${id}`),
+	bulk: (ids: string[], action: BulkAction) =>
+		request<{ changed: number }>(fetch, '/api/assets/bulk', { ids, action })
 };
 
 export function initialsOf(name: string) {

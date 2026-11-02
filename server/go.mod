@@ -15,6 +15,7 @@ require (
 	github.com/tus/tusd/v2 v2.10.1
 	golang.org/x/crypto v0.58.0
 	golang.org/x/exp v0.0.0-20261011100332-faecfb24eb49
+	golang.org/x/image v0.47.0
 )
 
 require (

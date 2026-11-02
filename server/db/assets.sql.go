@@ -18,7 +18,7 @@ SELECT (SELECT count(*) FROM users) AS users,
        count(*) FILTER (WHERE status = 'processing') AS processing,
        count(*) FILTER (WHERE status = 'failed') AS failed,
        coalesce(sum(size_bytes), 0)::bigint AS library_bytes
-FROM assets
+FROM assets WHERE deleted_at IS NULL
 `
 
 type AdminCountsRow struct {
@@ -44,11 +44,29 @@ func (q *Queries) AdminCounts(ctx context.Context) (AdminCountsRow, error) {
 	return i, err
 }
 
+const archiveAssets = `-- name: ArchiveAssets :execrows
+UPDATE assets SET archived_at = now(), updated_at = now()
+WHERE user_id = $1 AND deleted_at IS NULL AND archived_at IS NULL AND id = ANY($2::uuid[])
+`
+
+type ArchiveAssetsParams struct {
+	UserID  pgtype.UUID
+	Column2 []pgtype.UUID
+}
+
+func (q *Queries) ArchiveAssets(ctx context.Context, arg ArchiveAssetsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, archiveAssets, arg.UserID, arg.Column2)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const countAssetStatus = `-- name: CountAssetStatus :one
 SELECT count(*) AS total,
        count(*) FILTER (WHERE status = 'processing') AS processing,
        count(*) FILTER (WHERE status = 'failed') AS failed
-FROM assets WHERE user_id = $1
+FROM assets WHERE user_id = $1 AND deleted_at IS NULL
 `
 
 type CountAssetStatusRow struct {
@@ -93,7 +111,7 @@ func (q *Queries) DeleteUserAssets(ctx context.Context, userID pgtype.UUID) erro
 }
 
 const findExistingChecksums = `-- name: FindExistingChecksums :many
-SELECT checksum FROM assets WHERE user_id = $1 AND checksum = ANY($2::bytea[])
+SELECT checksum FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checksum = ANY($2::bytea[])
 `
 
 type FindExistingChecksumsParams struct {
@@ -122,7 +140,7 @@ func (q *Queries) FindExistingChecksums(ctx context.Context, arg FindExistingChe
 }
 
 const getAsset = `-- name: GetAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at FROM assets WHERE id = $1
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at FROM assets WHERE id = $1
 `
 
 func (q *Queries) GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error) {
@@ -147,6 +165,11 @@ func (q *Queries) GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error) {
 		&i.TakenOffsetMinutes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsFavorite,
+		&i.ArchivedAt,
+		&i.DeletedAt,
+		&i.AspectRatio,
+		&i.LocalAt,
 	)
 	return i, err
 }
@@ -165,6 +188,87 @@ func (q *Queries) GetAssetIDByChecksum(ctx context.Context, arg GetAssetIDByChec
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
+}
+
+const getExif = `-- name: GetExif :one
+SELECT asset_id, make, model, lens, iso, f_number, exposure_time, focal_length, latitude, longitude, raw FROM exif WHERE asset_id = $1
+`
+
+func (q *Queries) GetExif(ctx context.Context, assetID pgtype.UUID) (Exif, error) {
+	row := q.db.QueryRow(ctx, getExif, assetID)
+	var i Exif
+	err := row.Scan(
+		&i.AssetID,
+		&i.Make,
+		&i.Model,
+		&i.Lens,
+		&i.Iso,
+		&i.FNumber,
+		&i.ExposureTime,
+		&i.FocalLength,
+		&i.Latitude,
+		&i.Longitude,
+		&i.Raw,
+	)
+	return i, err
+}
+
+const getOwnedAsset = `-- name: GetOwnedAsset :one
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+`
+
+type GetOwnedAssetParams struct {
+	ID     pgtype.UUID
+	UserID pgtype.UUID
+}
+
+func (q *Queries) GetOwnedAsset(ctx context.Context, arg GetOwnedAssetParams) (Asset, error) {
+	row := q.db.QueryRow(ctx, getOwnedAsset, arg.ID, arg.UserID)
+	var i Asset
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.LibraryID,
+		&i.Checksum,
+		&i.OriginalName,
+		&i.OriginalPath,
+		&i.SizeBytes,
+		&i.MimeType,
+		&i.Kind,
+		&i.Status,
+		&i.Error,
+		&i.Width,
+		&i.Height,
+		&i.Blurhash,
+		&i.TakenAt,
+		&i.TakenOffsetMinutes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsFavorite,
+		&i.ArchivedAt,
+		&i.DeletedAt,
+		&i.AspectRatio,
+		&i.LocalAt,
+	)
+	return i, err
+}
+
+const getOwnedAssetFile = `-- name: GetOwnedAssetFile :one
+SELECT f.path FROM asset_files f JOIN assets a ON a.id = f.asset_id
+WHERE f.asset_id = $1 AND f.kind = $2 AND a.user_id = $3 AND a.deleted_at IS NULL
+`
+
+type GetOwnedAssetFileParams struct {
+	AssetID pgtype.UUID
+	Kind    string
+	UserID  pgtype.UUID
+}
+
+func (q *Queries) GetOwnedAssetFile(ctx context.Context, arg GetOwnedAssetFileParams) (string, error) {
+	row := q.db.QueryRow(ctx, getOwnedAssetFile, arg.AssetID, arg.Kind, arg.UserID)
+	var path string
+	err := row.Scan(&path)
+	return path, err
 }
 
 const getUploadLibrary = `-- name: GetUploadLibrary :one
@@ -239,8 +343,9 @@ func (q *Queries) ListAssetFiles(ctx context.Context, assetID pgtype.UUID) ([]As
 }
 
 const listAssets = `-- name: ListAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at FROM assets
-WHERE user_id = $1 AND ($2::text IS NULL OR status = $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at FROM assets
+WHERE user_id = $1 AND deleted_at IS NULL
+  AND ($2::text IS NULL OR status = $2)
 ORDER BY created_at DESC, id DESC
 LIMIT $3
 `
@@ -279,6 +384,64 @@ func (q *Queries) ListAssets(ctx context.Context, arg ListAssetsParams) ([]Asset
 			&i.TakenOffsetMinutes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsFavorite,
+			&i.ArchivedAt,
+			&i.DeletedAt,
+			&i.AspectRatio,
+			&i.LocalAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOwnedAssets = `-- name: ListOwnedAssets :many
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
+`
+
+type ListOwnedAssetsParams struct {
+	UserID pgtype.UUID
+	Ids    []pgtype.UUID
+}
+
+func (q *Queries) ListOwnedAssets(ctx context.Context, arg ListOwnedAssetsParams) ([]Asset, error) {
+	rows, err := q.db.Query(ctx, listOwnedAssets, arg.UserID, arg.Ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Asset
+	for rows.Next() {
+		var i Asset
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.LibraryID,
+			&i.Checksum,
+			&i.OriginalName,
+			&i.OriginalPath,
+			&i.SizeBytes,
+			&i.MimeType,
+			&i.Kind,
+			&i.Status,
+			&i.Error,
+			&i.Width,
+			&i.Height,
+			&i.Blurhash,
+			&i.TakenAt,
+			&i.TakenOffsetMinutes,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.IsFavorite,
+			&i.ArchivedAt,
+			&i.DeletedAt,
+			&i.AspectRatio,
+			&i.LocalAt,
 		); err != nil {
 			return nil, err
 		}
@@ -305,17 +468,191 @@ func (q *Queries) MarkAssetFailed(ctx context.Context, arg MarkAssetFailedParams
 }
 
 const markAssetReady = `-- name: MarkAssetReady :exec
-UPDATE assets SET status = 'ready', blurhash = $2, error = NULL, updated_at = now() WHERE id = $1
+UPDATE assets SET status = 'ready', blurhash = $2, aspect_ratio = $3, error = NULL, updated_at = now() WHERE id = $1
 `
 
 type MarkAssetReadyParams struct {
-	ID       pgtype.UUID
-	Blurhash pgtype.Text
+	ID          pgtype.UUID
+	Blurhash    pgtype.Text
+	AspectRatio pgtype.Float4
 }
 
 func (q *Queries) MarkAssetReady(ctx context.Context, arg MarkAssetReadyParams) error {
-	_, err := q.db.Exec(ctx, markAssetReady, arg.ID, arg.Blurhash)
+	_, err := q.db.Exec(ctx, markAssetReady, arg.ID, arg.Blurhash, arg.AspectRatio)
 	return err
+}
+
+const newerAsset = `-- name: NewerAsset :one
+SELECT id FROM assets
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+  AND (local_at, id) > ($2::timestamp, $3::uuid)
+ORDER BY local_at ASC, id ASC LIMIT 1
+`
+
+type NewerAssetParams struct {
+	UserID  pgtype.UUID
+	LocalAt pgtype.Timestamp
+	ID      pgtype.UUID
+}
+
+func (q *Queries) NewerAsset(ctx context.Context, arg NewerAssetParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, newerAsset, arg.UserID, arg.LocalAt, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const olderAsset = `-- name: OlderAsset :one
+SELECT id FROM assets
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+  AND (local_at, id) < ($2::timestamp, $3::uuid)
+ORDER BY local_at DESC, id DESC LIMIT 1
+`
+
+type OlderAssetParams struct {
+	UserID  pgtype.UUID
+	LocalAt pgtype.Timestamp
+	ID      pgtype.UUID
+}
+
+func (q *Queries) OlderAsset(ctx context.Context, arg OlderAssetParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, olderAsset, arg.UserID, arg.LocalAt, arg.ID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const restoreDeletedAsset = `-- name: RestoreDeletedAsset :exec
+UPDATE assets SET deleted_at = NULL, updated_at = now() WHERE id = $1 AND deleted_at IS NOT NULL
+`
+
+func (q *Queries) RestoreDeletedAsset(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, restoreDeletedAsset, id)
+	return err
+}
+
+const setFavorite = `-- name: SetFavorite :execrows
+UPDATE assets SET is_favorite = $3, updated_at = now()
+WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
+`
+
+type SetFavoriteParams struct {
+	UserID     pgtype.UUID
+	Column2    []pgtype.UUID
+	IsFavorite bool
+}
+
+func (q *Queries) SetFavorite(ctx context.Context, arg SetFavoriteParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setFavorite, arg.UserID, arg.Column2, arg.IsFavorite)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const softDeleteAssets = `-- name: SoftDeleteAssets :execrows
+UPDATE assets SET deleted_at = now(), updated_at = now()
+WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
+`
+
+type SoftDeleteAssetsParams struct {
+	UserID  pgtype.UUID
+	Column2 []pgtype.UUID
+}
+
+func (q *Queries) SoftDeleteAssets(ctx context.Context, arg SoftDeleteAssetsParams) (int64, error) {
+	result, err := q.db.Exec(ctx, softDeleteAssets, arg.UserID, arg.Column2)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const timelineBucket = `-- name: TimelineBucket :many
+SELECT id, kind, width, height, aspect_ratio, blurhash, is_favorite, local_at
+FROM assets
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+  AND local_at >= $2 AND local_at < $3
+ORDER BY local_at DESC, id DESC
+`
+
+type TimelineBucketParams struct {
+	UserID pgtype.UUID
+	FromAt pgtype.Timestamp
+	ToAt   pgtype.Timestamp
+}
+
+type TimelineBucketRow struct {
+	ID          pgtype.UUID
+	Kind        string
+	Width       pgtype.Int4
+	Height      pgtype.Int4
+	AspectRatio pgtype.Float4
+	Blurhash    pgtype.Text
+	IsFavorite  bool
+	LocalAt     pgtype.Timestamp
+}
+
+func (q *Queries) TimelineBucket(ctx context.Context, arg TimelineBucketParams) ([]TimelineBucketRow, error) {
+	rows, err := q.db.Query(ctx, timelineBucket, arg.UserID, arg.FromAt, arg.ToAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TimelineBucketRow
+	for rows.Next() {
+		var i TimelineBucketRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Kind,
+			&i.Width,
+			&i.Height,
+			&i.AspectRatio,
+			&i.Blurhash,
+			&i.IsFavorite,
+			&i.LocalAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const timelineBuckets = `-- name: TimelineBuckets :many
+SELECT to_char(date_trunc('month', local_at), 'YYYY-MM')::text AS month, count(*) AS count
+FROM assets
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+GROUP BY 1
+ORDER BY 1 DESC
+`
+
+type TimelineBucketsRow struct {
+	Month string
+	Count int64
+}
+
+func (q *Queries) TimelineBuckets(ctx context.Context, userID pgtype.UUID) ([]TimelineBucketsRow, error) {
+	rows, err := q.db.Query(ctx, timelineBuckets, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TimelineBucketsRow
+	for rows.Next() {
+		var i TimelineBucketsRow
+		if err := rows.Scan(&i.Month, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateAssetMetadata = `-- name: UpdateAssetMetadata :exec

@@ -59,16 +59,23 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+*DefaultApi* | [**bulkAssets**](doc//DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
 *DefaultApi* | [**cancelUpload**](doc//DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
 *DefaultApi* | [**changePassword**](doc//DefaultApi.md#changepassword) | **POST** /api/me/password | Change the current user's password and end their other sessions
 *DefaultApi* | [**checkAssets**](doc//DefaultApi.md#checkassets) | **POST** /api/assets/check | Report which SHA-256 checksums the current user already has, so uploads can be skipped
 *DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0)
 *DefaultApi* | [**createUser**](doc//DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
 *DefaultApi* | [**disableTotp**](doc//DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
+*DefaultApi* | [**downloadAssets**](doc//DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
 *DefaultApi* | [**enableTotp**](doc//DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
 *DefaultApi* | [**getAdminOverview**](doc//DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
+*DefaultApi* | [**getAsset**](doc//DefaultApi.md#getasset) | **GET** /api/assets/{id} | Read an asset's details and its neighbours on the timeline
+*DefaultApi* | [**getAssetOriginal**](doc//DefaultApi.md#getassetoriginal) | **GET** /api/assets/{id}/original | Read the unmodified original. Supports Range requests for video.
+*DefaultApi* | [**getAssetThumbnail**](doc//DefaultApi.md#getassetthumbnail) | **GET** /api/assets/{id}/thumbnail | Read a WebP thumbnail
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
+*DefaultApi* | [**getTimelineBucket**](doc//DefaultApi.md#gettimelinebucket) | **GET** /api/timeline/buckets/{month} | List one month's assets, newest first
+*DefaultApi* | [**getTimelineBuckets**](doc//DefaultApi.md#gettimelinebuckets) | **GET** /api/timeline/buckets | List the months that have photos, newest first
 *DefaultApi* | [**getUploadOffset**](doc//DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 *DefaultApi* | [**listAssets**](doc//DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 *DefaultApi* | [**listUsers**](doc//DefaultApi.md#listusers) | **GET** /api/admin/users | List users
@@ -83,8 +90,11 @@ Class | Method | HTTP request | Description
  - [AdminOverview](doc//AdminOverview.md)
  - [AdminOverviewJobs](doc//AdminOverviewJobs.md)
  - [Asset](doc//Asset.md)
+ - [AssetDetail](doc//AssetDetail.md)
  - [AssetList](doc//AssetList.md)
  - [AuthStatus](doc//AuthStatus.md)
+ - [BulkRequest](doc//BulkRequest.md)
+ - [BulkResponse](doc//BulkResponse.md)
  - [ChangePasswordRequest](doc//ChangePasswordRequest.md)
  - [ChecksumCheckRequest](doc//ChecksumCheckRequest.md)
  - [ChecksumCheckResponse](doc//ChecksumCheckResponse.md)
@@ -95,6 +105,10 @@ Class | Method | HTTP request | Description
  - [LoginRequest](doc//LoginRequest.md)
  - [PasswordConfirm](doc//PasswordConfirm.md)
  - [SetupRequest](doc//SetupRequest.md)
+ - [TimelineBucket](doc//TimelineBucket.md)
+ - [TimelineBuckets](doc//TimelineBuckets.md)
+ - [TimelineBucketsBucketsInner](doc//TimelineBucketsBucketsInner.md)
+ - [TimelineItem](doc//TimelineItem.md)
  - [TotpCode](doc//TotpCode.md)
  - [TotpSetup](doc//TotpSetup.md)
  - [User](doc//User.md)

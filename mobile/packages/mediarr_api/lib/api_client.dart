@@ -235,10 +235,16 @@ class ApiClient {
           return AdminOverviewJobs.fromJson(value);
         case 'Asset':
           return Asset.fromJson(value);
+        case 'AssetDetail':
+          return AssetDetail.fromJson(value);
         case 'AssetList':
           return AssetList.fromJson(value);
         case 'AuthStatus':
           return AuthStatus.fromJson(value);
+        case 'BulkRequest':
+          return BulkRequest.fromJson(value);
+        case 'BulkResponse':
+          return BulkResponse.fromJson(value);
         case 'ChangePasswordRequest':
           return ChangePasswordRequest.fromJson(value);
         case 'ChecksumCheckRequest':
@@ -259,6 +265,14 @@ class ApiClient {
           return PasswordConfirm.fromJson(value);
         case 'SetupRequest':
           return SetupRequest.fromJson(value);
+        case 'TimelineBucket':
+          return TimelineBucket.fromJson(value);
+        case 'TimelineBuckets':
+          return TimelineBuckets.fromJson(value);
+        case 'TimelineBucketsBucketsInner':
+          return TimelineBucketsBucketsInner.fromJson(value);
+        case 'TimelineItem':
+          return TimelineItem.fromJson(value);
         case 'TotpCode':
           return TotpCode.fromJson(value);
         case 'TotpSetup':

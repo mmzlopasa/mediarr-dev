@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api, formatBytes, type AssetList } from '#lib/api.ts';
+	import { pushState, replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { api, type AssetList } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Badge from '#lib/design/components/Badge.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
@@ -10,42 +13,49 @@
 	import UploadButton from '#lib/design/components/UploadButton.svelte';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
+	import Timeline from '#lib/timeline/Timeline.svelte';
+	import Viewer from '#lib/timeline/Viewer.svelte';
 	import { clearFinishedUploads, uploads, type UploadStatus } from '#lib/uploads.svelte.ts';
 
-	const POLL_MS = 2000;
+	const BUSY_POLL_MS = 2000;
+	const IDLE_POLL_MS = 30000;
 	const item = appNav[0];
 
-	let list = $state<AssetList>();
-	let loadFailed = $state(false);
+	let timeline = $state<Timeline>();
+	let total = $state<number | undefined>();
+	let problems = $state<AssetList>();
+	let showProblems = $state(false);
 
-	const hasWork = $derived(
-		(list?.processing ?? 0) > 0 ||
-			uploads().some((upload) => upload.status === 'queued' || upload.status === 'uploading')
+	const processing = $derived(problems?.processing ?? 0);
+	const uploading = $derived(
+		uploads().some((upload) => upload.status === 'queued' || upload.status === 'uploading')
 	);
-	let lastFinished = $derived(
+	const finished = $derived(
 		uploads().filter((upload) => upload.status === 'done' || upload.status === 'duplicate').length
 	);
 
 	async function refresh() {
 		try {
-			list = await api.listAssets();
-			loadFailed = false;
+			problems = await api.listProblems();
 		} catch {
-			loadFailed = true;
+			// The timeline reports a server that does not answer.
 		}
+		await timeline?.refresh();
 	}
 
-	onMount(refresh);
+	onMount(() => {
+		refresh();
+	});
 
 	$effect(() => {
-		if (!hasWork) return;
-		const timer = setInterval(refresh, POLL_MS);
+		const delay = processing > 0 || uploading ? BUSY_POLL_MS : IDLE_POLL_MS;
+		const timer = setInterval(refresh, delay);
 		return () => clearInterval(timer);
 	});
 
 	// A finished upload creates an asset, so show it right away.
 	$effect(() => {
-		if (lastFinished > 0) refresh();
+		if (finished > 0) refresh();
 	});
 
 	const uploadLabels: Record<UploadStatus, [string, string]> = {
@@ -55,18 +65,24 @@
 		duplicate: ['Već postoji', 'Already exists'],
 		failed: ['Nije uspjelo', 'Failed']
 	};
+
+	// The viewer opens over the timeline as shallow routing, so the scroll position survives.
+	function open(id: string) {
+		pushState(resolve('/(app)/photos/[id]', { id }), { viewer: id });
+	}
 </script>
 
 <svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
 
 <div class="ph">
 	<div><h1>{tr(item.hr, item.en)}</h1></div>
-	<div class="ph-a"><UploadButton /></div>
+	<div class="ph-a">
+		{#if processing > 0}
+			<Badge kind="warn">{tr(`Obrađuje se: ${processing}`, `Processing: ${processing}`)}</Badge>
+		{/if}
+		<UploadButton />
+	</div>
 </div>
-
-{#if loadFailed}
-	<Alert kind="err">{tr('Fotke se nisu učitale.', 'Photos could not be loaded.')}</Alert>
-{/if}
 
 {#if uploads().length > 0}
 	<Card title={tr('Upload', 'Upload')}>
@@ -89,44 +105,49 @@
 	</Card>
 {/if}
 
-{#if list && list.total > 0}
-	<Card title={tr(`Datoteke: ${list.total}`, `Files: ${list.total}`)}>
-		<div class="tbl-w">
-			<table class="tbl">
-				<thead>
-					<tr>
-						<th>{tr('Naziv', 'Name')}</th>
-						<th>{tr('Status', 'Status')}</th>
-						<th class="ta-r">{tr('Veličina', 'Size')}</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each list.items as asset (asset.id)}
-						<tr>
-							<td data-l={tr('Naziv', 'Name')}><b>{asset.originalName}</b></td>
-							<td data-l={tr('Status', 'Status')}>
-								{#if asset.status === 'ready'}
-									<Badge kind="ok">{tr('Spremno', 'Ready')}</Badge>
-								{:else if asset.status === 'failed'}
-									<Badge kind="bad">{tr('Greška', 'Error')}</Badge>
-									{#if asset.error}<small class="hint"> {asset.error}</small>{/if}
-								{:else}
-									<Badge kind="warn">{tr('Obrađuje se', 'Processing')}</Badge>
-								{/if}
-							</td>
-							<td data-l={tr('Veličina', 'Size')} class="ta-r">{formatBytes(asset.sizeBytes)}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	</Card>
-{:else if list && list.total === 0}
-	{#if uploads().length === 0}
-		<section class="card glass">
-			<div class="card-b">
-				<EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} />
+{#if problems && problems.failed > 0}
+	<Alert kind="warn">
+		{tr(
+			`Datoteke koje se nisu mogle obraditi: ${problems.failed}.`,
+			`Files that could not be processed: ${problems.failed}.`
+		)}
+		<button type="button" class="linkish" onclick={() => (showProblems = !showProblems)}>
+			{showProblems ? tr('Sakrij', 'Hide') : tr('Prikaži', 'Show')}
+		</button>
+	</Alert>
+	{#if showProblems}
+		<Card title={tr('Neobrađene datoteke', 'Unprocessed files')}>
+			<div class="tbl-w">
+				<table class="tbl">
+					<tbody>
+						{#each problems.items as asset (asset.id)}
+							<tr>
+								<td data-l={tr('Naziv', 'Name')}><b>{asset.originalName}</b></td>
+								<td data-l={tr('Greška', 'Error')}>{asset.error ?? ''}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
-		</section>
+		</Card>
 	{/if}
+{/if}
+
+{#if total === 0 && uploads().length === 0 && processing === 0}
+	<section class="card glass">
+		<div class="card-b">
+			<EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} />
+		</div>
+	</section>
+{/if}
+
+<Timeline bind:this={timeline} onOpen={open} onCount={(count) => (total = count)} />
+
+{#if page.state.viewer}
+	<Viewer
+		id={page.state.viewer}
+		onClose={() => history.back()}
+		onNavigate={(id) => replaceState(resolve('/(app)/photos/[id]', { id }), { viewer: id })}
+		onChanged={() => timeline?.reloadLoaded()}
+	/>
 {/if}

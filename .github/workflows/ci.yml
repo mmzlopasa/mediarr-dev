@@ -91,3 +91,19 @@ jobs:
       - run: docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml config --quiet
       - run: docker compose -f deploy/compose.dev.yaml config --quiet
       - run: docker compose -f deploy/compose.landing.yaml config --quiet
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+      - run: docker build -t mediarr-dev-go -f deploy/dev.Dockerfile deploy
+      # Frame rates on shared runners are too noisy to fail a build; load times are checked.
+      - run: make bench BENCH_SKIP_FPS=1

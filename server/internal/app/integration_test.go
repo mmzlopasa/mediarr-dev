@@ -665,8 +665,11 @@ func TestAssetsAreListedOnlyForTheirOwner(t *testing.T) {
 func TestMigrationsGoDownAndUp(t *testing.T) {
 	s := newStack(t)
 	ctx := context.Background()
-	if err := db.MigrateDown(ctx, s.dbURL); err != nil {
-		t.Fatal(err)
+	// Every schema migration after the first must be able to go down.
+	for range 2 {
+		if err := db.MigrateDown(ctx, s.dbURL); err != nil {
+			t.Fatal(err)
+		}
 	}
 	var exists bool
 	if err := s.pool.QueryRow(ctx, "SELECT to_regclass('assets') IS NOT NULL").Scan(&exists); err != nil {
@@ -740,7 +743,7 @@ func TestWorkerProcessesUploads(t *testing.T) {
 		t.Fatalf("upload: %d", resp.StatusCode)
 	}
 	asset := waitForAsset(t, c, "photo.jpg")
-	if asset.Status != api.AssetStatusReady || asset.Kind != api.Photo || asset.Blurhash == nil || asset.Width == nil || *asset.Width != 1600 {
+	if asset.Status != api.AssetStatusReady || asset.Kind != api.AssetKindPhoto || asset.Blurhash == nil || asset.Width == nil || *asset.Width != 1600 {
 		t.Fatalf("asset: %+v, error %v", asset, asset.Error)
 	}
 	if asset.TakenAt == nil || !asset.TakenAt.Equal(time.Date(2024, 5, 6, 5, 8, 9, 0, time.UTC)) {

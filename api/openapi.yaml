@@ -184,6 +184,112 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/AssetList" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/assets/bulk:
+    post:
+      operationId: bulkAssets
+      summary: Apply an action to several of the current user's assets. Other assets are ignored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BulkRequest" }
+      responses:
+        "200":
+          description: How many assets changed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/assets/download:
+    get:
+      operationId: downloadAssets
+      summary: Download several originals as one uncompressed ZIP file
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: Comma-separated asset IDs, at most 100
+          schema: { type: string }
+      responses:
+        "200":
+          description: ZIP file
+          content:
+            application/zip:
+              schema: { type: string, format: binary }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}:
+    get:
+      operationId: getAsset
+      summary: Read an asset's details and its neighbours on the timeline
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetDetail" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/thumbnail:
+    get:
+      operationId: getAssetThumbnail
+      summary: Read a WebP thumbnail
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: size, in: query, schema: { type: string, enum: [small, large], default: small } }
+      responses:
+        "200":
+          description: The thumbnail
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/original:
+    get:
+      operationId: getAssetOriginal
+      summary: Read the unmodified original. Supports Range requests for video.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: download, in: query, schema: { type: boolean, default: false } }
+      responses:
+        "200":
+          description: The original file
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "206": { description: Part of the original file }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/timeline/buckets:
+    get:
+      operationId: getTimelineBuckets
+      summary: List the months that have photos, newest first
+      responses:
+        "200":
+          description: Months and how many assets each has
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBuckets" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/timeline/buckets/{month}:
+    get:
+      operationId: getTimelineBucket
+      summary: List one month's assets, newest first
+      parameters:
+        - { name: month, in: path, required: true, description: YYYY-MM, schema: { type: string } }
+      responses:
+        "200":
+          description: The month's assets
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBucket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/assets/check:
     post:
       operationId: checkAssets
@@ -353,6 +459,78 @@ components:
         blurhash: { type: string }
         takenAt: { type: string, format: date-time }
         createdAt: { type: string, format: date-time }
+    TimelineBuckets:
+      type: object
+      required: [buckets]
+      properties:
+        buckets:
+          type: array
+          items:
+            type: object
+            required: [month, count]
+            properties:
+              month: { type: string }
+              count: { type: integer, format: int64 }
+    TimelineItem:
+      type: object
+      required: [id, kind, ratio, isFavorite, localAt]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [unknown, photo, video] }
+        ratio: { type: number, format: float, description: "Width divided by height, as displayed" }
+        blurhash: { type: string }
+        isFavorite: { type: boolean }
+        localAt: { type: string, description: "Local capture time without a zone: 2006-01-02T15:04:05" }
+    TimelineBucket:
+      type: object
+      required: [month, items]
+      properties:
+        month: { type: string }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TimelineItem" }
+    AssetDetail:
+      type: object
+      required: [id, originalName, kind, status, sizeBytes, isFavorite, isArchived, localAt, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        originalName: { type: string }
+        kind: { type: string, enum: [unknown, photo, video] }
+        status: { type: string, enum: [processing, ready, failed] }
+        mimeType: { type: string }
+        sizeBytes: { type: integer, format: int64 }
+        width: { type: integer }
+        height: { type: integer }
+        isFavorite: { type: boolean }
+        isArchived: { type: boolean }
+        localAt: { type: string }
+        offsetMinutes: { type: integer }
+        hasCaptureTime: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        newerId: { type: string, format: uuid }
+        olderId: { type: string, format: uuid }
+        camera: { type: string }
+        lens: { type: string }
+        iso: { type: integer }
+        fNumber: { type: number, format: double }
+        exposureTime: { type: string }
+        focalLength: { type: number, format: double }
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+    BulkRequest:
+      type: object
+      required: [ids, action]
+      properties:
+        ids:
+          type: array
+          maxItems: 1000
+          items: { type: string, format: uuid }
+        action: { type: string, enum: [favorite, unfavorite, archive, delete] }
+    BulkResponse:
+      type: object
+      required: [changed]
+      properties:
+        changed: { type: integer, format: int64 }
     AssetList:
       type: object
       required: [items, total, processing, failed]

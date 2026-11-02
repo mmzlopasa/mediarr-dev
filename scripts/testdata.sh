@@ -21,7 +21,8 @@ image() {
 	w=$1 h=$2 out=$3
 	# The seed matters: vips otherwise repeats the same noise, which would create duplicate files.
 	vips gaussnoise "$out.v" "$w" "$h" --sigma 22 --mean 120 --seed "$(od -An -N3 -tu4 /dev/urandom | tr -d ' ')"
-	vips copy "$out.v" "$out"
+	# 8-bit, because noise around 120 in a 16-bit PNG would be almost black.
+	vips cast "$out.v" "$out" uchar
 	rm -f "$out.v"
 }
 

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { signIn, users } from './helpers';
 
 test.beforeEach(async ({ page }) => {
@@ -182,40 +182,144 @@ test('an administrator can see the users', async ({ page }) => {
 	await expect(page.getByRole('cell', { name: users.user })).toBeVisible();
 });
 
-test('uploading shows progress, finishes processing and deduplicates', async ({ page }) => {
-	await signIn(page, 'uploader');
-	await page.goto('/');
-	await page.locator('main').waitFor();
-
-	// A tiny valid PNG, made unique so that every run starts as a new file.
-	const png = Buffer.from(
-		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEBgIApD5fRAAAAABJRU5ErkJggg==',
+// A small real JPEG, made unique so that every run starts as a new file.
+function photo(name: string) {
+	const jpeg = Buffer.from(
+		'/9j/4QC8RXhpZgAASUkqAAgAAAAGABIBAwABAAAAAQAAABoBBQABAAAAVgAAABsBBQABAAAAXgAAACgBAwABAAAAAgAAABMCAwABAAAAAQAAAGmHBAABAAAAZgAAAAAAAAA4YwAA6AMAADhjAADoAwAABgAAkAcABAAAADAyMTABkQcABAAAAAECAwAAoAcABAAAADAxMDABoAMAAQAAAP//AAACoAQAAQAAADwAAAADoAQAAQAAACgAAAAAAAAA/9sAQwAIBgYHBgUIBwcHCQkICgwUDQwLCwwZEhMPFB0aHx4dGhwcICQuJyAiLCMcHCg3KSwwMTQ0NB8nOT04MjwuMzQy/8AACwgAKAA8AQERAP/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/aAAgBAQAAPwBLmGL94Y51N8Nil3kwofoCrd23LJ6kEHvUUcUkixNDJiSDLqJFyCcrgnnHBJ9sjkejhKkp8iSWUS7wCGYkdSD/ABcYI5Pfnrg02KUqjwuqiRmeVi7sxhPBGSeCMYHbqfvVakjVUV2knR5FCOXJwBubnGc/wgdjgdD0Nbb5d6Ijp0CwSL80EhBIJGXViO20Y75xnByBU72qWkamYs4ABUKSDEuASCRjJ+9weuAoJwAVMcd2Fc+UxUbdxnRScdM/MM8YGe+KfAWJiYXCbORIPlJLEsOcE9TngHkYP1pwzSmJzIkYQAsSOwBBIBxz2J2j+Iin3kUq3jxOgkjYeabkDG5Q2Qq8EqcE+nTnIFTQXX7lwJgSFVQr7v3agdyT98cHrnp1xST3P+nQTwpIJG/fGXBYyIVOWAbvgbT/AF7xzPOsEiyPIJMqokdyWfglXBzkgjnnJyF/CSOSUWP2d4VAKGVwFIZFIYf3gCc5wc8An1GblnevpizK0ErmaQy+ZJboxbOBnOTxxgegArPLfYpIt9yHgjbmRYmL4B3457buM8EdRySKk82VbdoZR806I+3AJA3csCxAJxgHHTgA1VVZJLmMxkzqkjAocLk9jtBJPXIxzwc+tTzSRzMsbXjF5TgqQBIPlIzgEYGex4JzzgkEt3PniSIARkqVy+AgHJJ9SvzEcduT81PWQpbXCEySsDtm3SZJH8KgZHBwc7snnJPGTTe5RVUrCqbhlVOTnBOfoccduw+i3Ece9dyT8jIaIoFIyezY6dPTinW0AhkLhXKCX51BPzgqOCTgjpyPQNxV9GkhRneSMPGS4KSYjIOSPuk84BHcYO7nnMNwjXSSQW8ZnhYErNuKhGI7r7qQO/UAkkcV44h5saFMhGHmGBgWmBOCOCM447DHI6Uss0q2oM8vmxpuhjC7mweGzgngcA8kADstNKJutyNwclm3ox2suSTsHGACGz7dcVdfAYRASAI+ZmyBgHJJBXoMkHvwB6iprayW4EjsyIN2EDtECVwDk7iM9eoGPSqYFv8AaBGg+ckscPksDg/K2O+eg75PHd0wzG8cly4jklm5hg5iOCpJBbHAU+owAc+rN5gYQK0kgjXGVlbdxyu3DDsScdxnoTUSvNcgzsiyxjnaVG1doK4bJwMA8knndj3M8acYkhCvuC+USgAP8iSx4PBPB56mOaxjEb5iVvNyrMDheQWT7hGRuzxtGcZ5IFF1GrQSyvLGd0iBY0jxiNQAWXpwAQOPQZxkmmz3VlayG3mhhZ4iULSO5Y4J5JVCP8OnbNf/2Q==',
 		'base64'
 	);
-	const unique = Buffer.concat([png, Buffer.from(String(Date.now()))]);
-	const name = `e2e-${Date.now()}.png`;
-	const input = page.locator('input[type=file]');
-
-	await input.setInputFiles({ name, mimeType: 'image/png', buffer: unique });
-	const row = page.getByRole('row', { name: new RegExp(name) });
-	await expect(row.getByText('Spremno')).toBeVisible({ timeout: 30000 });
-
-	await input.setInputFiles({ name: `copy-${name}`, mimeType: 'image/png', buffer: unique });
-	await expect(page.getByText('Već postoji')).toBeVisible({ timeout: 30000 });
-});
-
-test('a damaged file shows an error instead of hanging', async ({ page }) => {
-	await signIn(page, 'uploader');
-	await page.goto('/');
-	await page.locator('main').waitFor();
-	const name = `broken-${Date.now()}.jpg`;
-	await page.locator('input[type=file]').setInputFiles({
+	return {
 		name,
 		mimeType: 'image/jpeg',
-		buffer: Buffer.from(`not an image ${Date.now()}`)
+		buffer: Buffer.concat([jpeg, Buffer.from(`${name}${Math.random()}`)])
+	};
+}
+
+async function uploadPhoto(page: Page, name: string) {
+	const file = photo(name);
+	await page.locator('input[type=file]').setInputFiles(file);
+	return file;
+}
+
+test.describe('timeline', () => {
+	test.describe.configure({ mode: 'serial' });
+
+	test('an uploaded photo appears on the timeline, and a copy is deduplicated', async ({
+		page
+	}) => {
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		await page.locator('main').waitFor();
+		const before = await page.locator('.tl-tile').count();
+		const file = await uploadPhoto(page, `e2e-${Date.now()}.jpg`);
+		await expect(page.locator('.tl-tile')).toHaveCount(before + 1, { timeout: 45000 });
+		const image = page.locator('.tl-tile img').first();
+		await expect(image).toHaveJSProperty('complete', true);
+		expect(await image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+
+		await page.locator('input[type=file]').setInputFiles({ ...file, name: `copy-${file.name}` });
+		await expect(page.getByText('Već postoji')).toBeVisible({ timeout: 30000 });
 	});
-	await expect(page.getByRole('row', { name: new RegExp(name) }).getByText('Greška')).toBeVisible({
-		timeout: 30000
+
+	test('the viewer opens, shows details, closes and keeps the scroll position', async ({
+		page
+	}) => {
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		await page.locator('.tl-tile').first().click();
+		await expect(page).toHaveURL(/\/photos\//);
+		const viewer = page.getByRole('dialog');
+		await expect(viewer.locator('img.viewer-media')).toBeVisible();
+		await viewer.getByRole('button', { name: 'Podaci' }).click();
+		await expect(viewer.locator('.kv', { hasText: 'Veličina' })).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(viewer.locator('.viewer-info')).toHaveCount(0);
+		await page.keyboard.press('Escape');
+		await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
+		await expect(viewer).toHaveCount(0);
+	});
+
+	test('the arrow keys move between photos, and a viewer link works directly', async ({ page }) => {
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		await page.locator('main').waitFor();
+		await uploadPhoto(page, `e2e-second-${Date.now()}.jpg`);
+		await expect(page.locator('.tl-tile').nth(1)).toBeVisible({ timeout: 45000 });
+		await page.locator('.tl-tile').first().click();
+		await expect(page).toHaveURL(/\/photos\//);
+		const first = page.url();
+		await expect(page.getByRole('dialog').locator('img.viewer-media')).toBeVisible();
+		await page.keyboard.press('ArrowRight');
+		await expect(page).not.toHaveURL(first);
+		const second = page.url();
+		await page.goto(second);
+		await expect(page.getByRole('dialog').locator('img.viewer-media')).toBeVisible();
+		await page.keyboard.press('ArrowLeft');
+		await expect(page).toHaveURL(first);
+	});
+
+	test('favorite and delete work from the selection toolbar', async ({ page }) => {
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		const tile = page.locator('.tl-tile').first();
+		await tile.hover();
+		await tile.locator('.tl-check').click();
+		const bar = page.getByRole('toolbar');
+		await expect(bar.locator('.selbar-n')).toHaveText('1');
+		await bar.getByRole('button', { name: 'Dodaj u favorite' }).click();
+		await expect(page.locator('.tl-fav').first()).toBeVisible();
+
+		const before = await page.locator('.tl-tile').count();
+		await tile.hover();
+		await tile.locator('.tl-check').click();
+		await bar.getByRole('button', { name: 'Obriši' }).click();
+		await page.getByRole('dialog').getByRole('button', { name: 'Obriši' }).click();
+		await expect(page.locator('.tl-tile')).toHaveCount(before - 1);
+	});
+
+	test('a damaged file is reported with an error', async ({ page }) => {
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		await page.locator('main').waitFor();
+		const name = `broken-${Date.now()}.jpg`;
+		await page.locator('input[type=file]').setInputFiles({
+			name,
+			mimeType: 'image/jpeg',
+			buffer: Buffer.from(`not an image ${Date.now()}`)
+		});
+		await expect(page.getByText('Datoteke koje se nisu mogle obraditi')).toBeVisible({
+			timeout: 45000
+		});
+		await page.getByRole('button', { name: 'Prikaži' }).click();
+		await expect(page.getByRole('cell', { name })).toBeVisible();
+	});
+
+	test('a long press selects a photo on a touch screen', async ({ browser }) => {
+		const context = await browser.newContext({
+			baseURL: 'http://127.0.0.1:9852',
+			hasTouch: true,
+			isMobile: true,
+			viewport: { width: 390, height: 800 }
+		});
+		const page = await context.newPage();
+		await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'hr'));
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		const tile = page.locator('.tl-tile').first();
+		await tile.waitFor();
+		const box = await tile.boundingBox();
+		const client = await context.newCDPSession(page);
+		const point = { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 };
+		await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
+		await page.waitForTimeout(600);
+		await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+		await expect(page.getByRole('toolbar').locator('.selbar-n')).toHaveText('1');
+		await expect(page).not.toHaveURL(/\/photos\//);
+		const overflow = await page.evaluate(
+			() => document.documentElement.scrollWidth - document.documentElement.clientWidth
+		);
+		expect(overflow).toBeLessThanOrEqual(0);
+		await context.close();
 	});
 });
 
