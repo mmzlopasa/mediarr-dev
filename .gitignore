@@ -1,6 +1,20 @@
 .env
 .env.*
 !.env.example
+.dev/
 node_modules/
 dist/
+!server/internal/webui/dist/
+server/internal/webui/dist/*
+!server/internal/webui/dist/.gitkeep
 *.log
+
+# Python
+.venv/
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+
+# Playwright
+test-results/
+playwright-report/

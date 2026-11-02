@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Mediarr API
+  version: 0.1.0
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Report whether the server can reach its database
+      security: []
+      responses:
+        "200":
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: Server cannot reach its database
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+components:
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok, unavailable]

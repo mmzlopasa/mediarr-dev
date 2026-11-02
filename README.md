@@ -1,34 +1,34 @@
 # Mediarr
 
-Monorepo for Mediarr (mediarr.app).
+
+## Tok zahtjeva
 
 ```
-apps/       deployable applications
-packages/   shared code
-deploy/     nginx configuration (host site and Compose container)
+internet -> host nginx (80/443, TLS) -> 127.0.0.1:9851 -> nginx (Compose) -> server
 ```
 
-## Request flow
-
-```
-internet -> host nginx (80/443, TLS) -> 127.0.0.1:9851 -> nginx (Compose) -> services
-```
-
-Host nginx also serves other sites on this server, so Mediarr does not bind 80 or 443.
-
-## Run
+## Razvoj
 
 ```sh
-docker compose up -d
+make dev     # http://127.0.0.1:9852
+make lint test e2e
+make down
+```
+
+## Produkcija
+
+Jednom, u `deploy/`: kopiraj `.env.example` u `.env` i upiši vrijednosti. Direktoriji iz `UPLOAD_LOCATION` i `CACHE_LOCATION` moraju pripadati korisniku `PUID:PGID`.
+
+```sh
+docker compose -f deploy/compose.yaml up -d --build --wait
 curl http://127.0.0.1:9851/health
 ```
 
-## Install the nginx site (once, requires sudo)
+## Host nginx site (jednom, traži sudo)
 
 ```sh
 sudo cp deploy/nginx/mediarr.app.conf /etc/nginx/sites-available/mediarr.app
 sudo ln -s /etc/nginx/sites-available/mediarr.app /etc/nginx/sites-enabled/mediarr.app
 sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d mediarr.app -d www.mediarr.app
-curl https://mediarr.app/health
 ```

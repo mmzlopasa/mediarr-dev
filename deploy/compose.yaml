@@ -1,0 +1,78 @@
+name: mediarr
+
+x-server: &server
+  image: ghcr.io/mmzlopasa/mediarr-server:${MEDIARR_VERSION:-latest}
+  build:
+    context: ..
+    dockerfile: server/Dockerfile
+  env_file: .env
+  environment:
+    DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/mediarr
+  user: ${PUID:-10001}:${PGID:-10001}
+  volumes:
+    - ${UPLOAD_LOCATION}:/data/library
+    - ${CACHE_LOCATION}:/data/cache
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  server:
+    <<: *server
+    command: ["serve"]
+    healthcheck:
+      test: ["CMD", "/mediarr", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  worker:
+    <<: *server
+    command: ["worker"]
+
+  ml:
+    image: ghcr.io/mmzlopasa/mediarr-ml:${MEDIARR_VERSION:-latest}
+    build: ../ml
+    profiles: ["ml"]
+    volumes:
+      - model-cache:/models
+    restart: unless-stopped
+
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: mediarr
+    volumes:
+      - ${DB_LOCATION}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d mediarr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    shm_size: 256mb
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      # Docker-published ports bypass ufw. A reverse proxy in front handles TLS.
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-9851}:80"
+    volumes:
+      - ./nginx/container.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/nginx-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  model-cache:

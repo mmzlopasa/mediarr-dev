@@ -1,0 +1,9 @@
+root = "."
+tmp_dir = "/tmp/air"
+
+[build]
+cmd = "go build -o /tmp/air/mediarr ./cmd/mediarr"
+entrypoint = ["/tmp/air/mediarr"]
+include_ext = ["go", "sql"]
+exclude_dir = ["internal/webui/dist"]
+delay = 500
