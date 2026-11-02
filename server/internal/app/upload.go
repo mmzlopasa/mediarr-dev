@@ -159,7 +159,12 @@ func (s *apiServer) storeAsset(ctx context.Context, userID pgtype.UUID, sum []by
 	duplicate := false
 	err := pgx.BeginFunc(ctx, s.Pool, func(tx pgx.Tx) error {
 		q := s.queries.WithTx(tx)
-		library, err := q.EnsureUploadLibrary(ctx, userID)
+		// Two statements on purpose: an insert that lost a race to a simultaneous upload waits for it,
+		// and only a new statement can see the row that upload committed.
+		if err := q.CreateUploadLibrary(ctx, userID); err != nil {
+			return fmt.Errorf("create library: %w", err)
+		}
+		library, err := q.GetUploadLibrary(ctx, userID)
 		if err != nil {
 			return fmt.Errorf("find library: %w", err)
 		}
@@ -251,7 +256,11 @@ func (s *apiServer) ListAssets(w http.ResponseWriter, r *http.Request, params ap
 	if params.Limit != nil {
 		limit = min(max(*params.Limit, 1), maxAssetListLen)
 	}
-	rows, err := s.queries.ListAssets(r.Context(), db.ListAssetsParams{UserID: user.ID, Limit: int32(limit)}) //nolint:gosec // Bounded above.
+	filter := pgtype.Text{}
+	if params.Status != nil {
+		filter = pgtype.Text{String: string(*params.Status), Valid: true}
+	}
+	rows, err := s.queries.ListAssets(r.Context(), db.ListAssetsParams{UserID: user.ID, Status: filter, RowLimit: int32(limit)}) //nolint:gosec // Bounded above.
 	if err != nil {
 		internalError(w, r, err)
 		return

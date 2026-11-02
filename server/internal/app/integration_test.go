@@ -569,6 +569,35 @@ func TestDedup(t *testing.T) {
 	}
 }
 
+func TestFirstUploadsOfANewUserCanRunTogether(t *testing.T) {
+	s := newStack(t)
+	admin := s.admin()
+	user := s.user(admin, "ana@example.com")
+
+	const uploads = 8
+	var wg sync.WaitGroup
+	codes := make([]int, uploads)
+	for i := range uploads {
+		data := randomBytes(t, 2048)
+		wg.Go(func() {
+			codes[i] = user.upload(fmt.Sprintf("%d.jpg", i), data, nil).StatusCode
+		})
+	}
+	wg.Wait()
+	for i, code := range codes {
+		if code != http.StatusNoContent {
+			t.Errorf("upload %d: status %d", i, code)
+		}
+	}
+	var libraries int
+	if err := s.pool.QueryRow(context.Background(), "SELECT count(*) FROM libraries").Scan(&libraries); err != nil {
+		t.Fatal(err)
+	}
+	if libraries != 1 {
+		t.Errorf("%d libraries, want 1", libraries)
+	}
+}
+
 func TestChecksumMismatchIsRejected(t *testing.T) {
 	s := newStack(t)
 	c := s.admin()
@@ -663,7 +692,7 @@ func waitForAsset(t *testing.T, c *client, name string) api.Asset {
 			t.Fatal(err)
 		}
 		for _, asset := range list.Items {
-			if asset.OriginalName == name && asset.Status != api.Processing {
+			if asset.OriginalName == name && asset.Status != api.AssetStatusProcessing {
 				return asset
 			}
 		}
@@ -674,7 +703,7 @@ func waitForAsset(t *testing.T, c *client, name string) api.Asset {
 }
 
 func TestWorkerProcessesUploads(t *testing.T) {
-	if _, err := exec.LookPath("vipsthumbnail"); err != nil {
+	if _, err := exec.LookPath("vips"); err != nil {
 		t.Skip("media tools are not installed; run through `make test`")
 	}
 	s := newStack(t)
@@ -711,7 +740,7 @@ func TestWorkerProcessesUploads(t *testing.T) {
 		t.Fatalf("upload: %d", resp.StatusCode)
 	}
 	asset := waitForAsset(t, c, "photo.jpg")
-	if asset.Status != api.Ready || asset.Kind != api.Photo || asset.Blurhash == nil || asset.Width == nil || *asset.Width != 1600 {
+	if asset.Status != api.AssetStatusReady || asset.Kind != api.Photo || asset.Blurhash == nil || asset.Width == nil || *asset.Width != 1600 {
 		t.Fatalf("asset: %+v, error %v", asset, asset.Error)
 	}
 	if asset.TakenAt == nil || !asset.TakenAt.Equal(time.Date(2024, 5, 6, 5, 8, 9, 0, time.UTC)) {
@@ -738,7 +767,7 @@ func TestWorkerProcessesUploads(t *testing.T) {
 		t.Fatalf("upload: %d", resp.StatusCode)
 	}
 	broken := waitForAsset(t, c, "broken.jpg")
-	if broken.Status != api.Failed || broken.Error == nil {
+	if broken.Status != api.AssetStatusFailed || broken.Error == nil {
 		t.Errorf("broken: %+v", broken)
 	}
 

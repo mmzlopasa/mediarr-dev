@@ -1,6 +1,6 @@
 # Testni podaci
 
-`make testdata` slaže oko 2.000 mješovitih datoteka u `TESTDATA` (zadano `.dev/testdata`). Ne idu u repo.
+`make testdata` slaže oko 100 mješovitih datoteka u `TESTDATA` (zadano `.dev/testdata`). `make testdata SCALE=100` slaže punih 2.000. Ne idu u repo.
 
 Većina je generirana, s Gaussovim šumom koji se komprimira slično kao prave fotke. Svaka datoteka je jedinstvena.
 

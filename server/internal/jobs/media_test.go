@@ -13,7 +13,7 @@ import (
 
 func requireTools(t *testing.T) {
 	t.Helper()
-	for _, tool := range []string{"exiftool", "vips", "vipsthumbnail", "ffmpeg"} {
+	for _, tool := range []string{"exiftool", "vips", "ffmpeg", "dcraw_emu"} {
 		if _, err := exec.LookPath(tool); err != nil {
 			t.Skipf("%s is not installed; run through `make test`", tool)
 		}
@@ -206,6 +206,44 @@ func TestCorruptFileIsPermanentFailure(t *testing.T) {
 	}
 	if entries, _ := os.ReadDir(filepath.Join(dir, "t")); len(entries) != 0 {
 		t.Errorf("left files behind: %v", entries)
+	}
+}
+
+func TestFileNamesAreNotParsedAsOptions(t *testing.T) {
+	requireTools(t)
+	dir := t.TempDir()
+	path := filepath.Join(dir, "holiday [1] 100%.jpg")
+	if out, err := exec.Command("vips", "gaussnoise", path, "300", "200").CombinedOutput(); err != nil {
+		t.Fatalf("%v: %s", err, out)
+	}
+	result, err := MakeThumbnails(context.Background(), path, "photo", filepath.Join(dir, "t"), "b")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Small.Size == 0 {
+		t.Error("empty thumbnail")
+	}
+}
+
+func TestTruncatedImageIsReported(t *testing.T) {
+	requireTools(t)
+	dir := t.TempDir()
+	whole := filepath.Join(dir, "whole.jpg")
+	if out, err := exec.Command("vips", "gaussnoise", whole, "2000", "1500").CombinedOutput(); err != nil {
+		t.Fatalf("%v: %s", err, out)
+	}
+	data, err := os.ReadFile(whole)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cut := filepath.Join(dir, "cut.jpg")
+	if err := os.WriteFile(cut, data[:len(data)/2], 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err = MakeThumbnails(context.Background(), cut, "photo", filepath.Join(dir, "t"), "c")
+	var bad *badFileError
+	if !errors.As(err, &bad) {
+		t.Fatalf("got %v", err)
 	}
 }
 

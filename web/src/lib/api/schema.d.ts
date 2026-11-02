@@ -705,6 +705,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: number;
+                status?: "processing" | "ready" | "failed";
             };
             header?: never;
             path?: never;

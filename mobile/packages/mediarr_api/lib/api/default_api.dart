@@ -610,8 +610,11 @@ class DefaultApi {
   /// Parameters:
   ///
   /// * [int] limit:
+  ///
+  /// * [String] status:
   Future<Response> listAssetsWithHttpInfo({
     int? limit,
+    String? status,
   }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/assets';
@@ -625,6 +628,9 @@ class DefaultApi {
 
     if (limit != null) {
       queryParams.addAll(_queryParams('', 'limit', limit));
+    }
+    if (status != null) {
+      queryParams.addAll(_queryParams('', 'status', status));
     }
 
     const contentTypes = <String>[];
@@ -645,11 +651,15 @@ class DefaultApi {
   /// Parameters:
   ///
   /// * [int] limit:
+  ///
+  /// * [String] status:
   Future<AssetList?> listAssets({
     int? limit,
+    String? status,
   }) async {
     final response = await listAssetsWithHttpInfo(
       limit: limit,
+      status: status,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

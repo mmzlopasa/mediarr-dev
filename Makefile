@@ -29,14 +29,15 @@ landing:
 	docker compose -f deploy/compose.landing.yaml up -d --wait
 
 TESTDATA ?= $(CURDIR)/.dev/testdata
-SCALE ?= 100
+SCALE ?= 5
+JOBS ?= 2
 
 testdata:
 	mkdir -p "$(TESTDATA)"
-	docker run --rm --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e RAW_LIST=/scripts/raw-samples.txt \
+	docker run --rm --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e RAW_LIST=/scripts/raw-samples.txt -e JOBS=$(JOBS) \
 		-v "$(CURDIR)/scripts:/scripts:ro" -v "$(TESTDATA):/out" mediarr-dev-go sh /scripts/testdata.sh /out $(SCALE)
 
-# Uploads TESTDATA through the API twice and checks the phase 2 gate.
+# Uploads TESTDATA through the API twice and checks the upload gate.
 uploadtest:
 	@printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert uploadtest@example.com "Upload test"
 	cd server && UPLOADTEST_PASSWORD=$(E2E_PASSWORD) go run ./cmd/uploadtest -dir "$(TESTDATA)" -email uploadtest@example.com

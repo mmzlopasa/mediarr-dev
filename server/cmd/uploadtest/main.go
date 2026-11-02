@@ -117,15 +117,17 @@ func (t *tester) uploadAll(ctx context.Context, files []string, parallel int) *p
 	return result
 }
 
+type asset struct {
+	OriginalName string `json:"originalName"`
+	Error        string `json:"error"`
+	Status       string `json:"status"`
+}
+
 type assetList struct {
-	Items []struct {
-		OriginalName string `json:"originalName"`
-		Error        string `json:"error"`
-		Status       string `json:"status"`
-	} `json:"items"`
-	Total      int64 `json:"total"`
-	Processing int64 `json:"processing"`
-	Failed     int64 `json:"failed"`
+	Items      []asset `json:"items"`
+	Total      int64   `json:"total"`
+	Processing int64   `json:"processing"`
+	Failed     int64   `json:"failed"`
 }
 
 func (t *tester) status(ctx context.Context) (*assetList, error) {
@@ -138,6 +140,19 @@ func (t *tester) status(ctx context.Context) (*assetList, error) {
 	}
 	var list assetList
 	return &list, json.Unmarshal(body, &list)
+}
+
+func (t *tester) failedNames(ctx context.Context) ([]asset, error) {
+	resp, body, err := t.request(ctx, http.MethodGet, "/api/assets?limit=200&status=failed", nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("list: %d %s", resp.StatusCode, body)
+	}
+	var list assetList
+	err = json.Unmarshal(body, &list)
+	return list.Items, err
 }
 
 func collect(dir string) (good, broken []string, err error) {
@@ -222,6 +237,26 @@ func run() error {
 	fmt.Printf("second pass: %d new, %d duplicates, %d failed\n", second.uploaded.Load(), second.duplicates.Load(), second.failed.Load())
 
 	var problems []string
+	failed, err := t.failedNames(ctx)
+	if err != nil {
+		return err
+	}
+	expected := map[string]bool{}
+	for _, path := range broken {
+		expected[filepath.Base(path)] = true
+	}
+	for _, asset := range failed {
+		fmt.Printf("failed: %s: %s\n", asset.OriginalName, asset.Error)
+		if !expected[asset.OriginalName] {
+			problems = append(problems, asset.OriginalName+" failed, but it is not broken on purpose")
+		}
+		if strings.Contains(asset.Error, "/data/") {
+			problems = append(problems, asset.OriginalName+" shows an internal path in its error")
+		}
+	}
+	if len(broken) > 0 && len(failed) == 0 {
+		problems = append(problems, "no broken file was reported as failed")
+	}
 	if first.failed.Load() != 0 {
 		problems = append(problems, "the first pass had failed uploads")
 	}
@@ -231,8 +266,8 @@ func run() error {
 	if second.failed.Load() != 0 {
 		problems = append(problems, "the second pass had failed uploads")
 	}
-	if list.Failed-before.Failed > int64(len(broken)) {
-		problems = append(problems, fmt.Sprintf("%d assets failed, but only %d are broken on purpose", list.Failed-before.Failed, len(broken)))
+	if int64(len(failed)) != list.Failed {
+		problems = append(problems, fmt.Sprintf("%d failed assets were checked, out of %d; the list limit is too small", len(failed), list.Failed))
 	}
 	if len(problems) > 0 {
 		return errors.New(strings.Join(problems, "; "))

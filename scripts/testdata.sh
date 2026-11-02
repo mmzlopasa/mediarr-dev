@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds the mixed test library. Runs in the dev image: `make testdata TESTDATA=/path SCALE=100`.
+# Builds the mixed test library. Runs in the dev image through `make testdata`.
 # SCALE is a percentage of the full set of about 2,000 files.
 set -eu
 
@@ -19,7 +19,8 @@ count() { echo $(($1 * SCALE / 100 + 1)); }
 # Noise over a gradient: unique per file, and as hard to compress as real photos.
 image() {
 	w=$1 h=$2 out=$3
-	vips gaussnoise "$out.v" "$w" "$h" --sigma 22 --mean 120
+	# The seed matters: vips otherwise repeats the same noise, which would create duplicate files.
+	vips gaussnoise "$out.v" "$w" "$h" --sigma 22 --mean 120 --seed "$(od -An -N3 -tu4 /dev/urandom | tr -d ' ')"
 	vips copy "$out.v" "$out"
 	rm -f "$out.v"
 }
@@ -152,7 +153,7 @@ run live "$(count 130)"
 if [ -f "${RAW_LIST:-/dev/null}" ]; then
 	while read -r sum url; do
 		[ -n "$sum" ] || continue
-		f=$OUT/raw/$(basename "$url")
+		f=$OUT/raw/$(basename "$url" | sed "s/%20/ /g")
 		[ -e "$f" ] || curl -fsSL --max-time 300 "$url" -o "$f"
 		echo "$sum  $f" | sha256sum -c - >/dev/null
 	done <"$RAW_LIST"

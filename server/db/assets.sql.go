@@ -64,6 +64,16 @@ func (q *Queries) CountAssetStatus(ctx context.Context, userID pgtype.UUID) (Cou
 	return i, err
 }
 
+const createUploadLibrary = `-- name: CreateUploadLibrary :exec
+INSERT INTO libraries (user_id, name, kind) VALUES ($1, 'Uploads', 'upload')
+ON CONFLICT (user_id) WHERE kind = 'upload' DO NOTHING
+`
+
+func (q *Queries) CreateUploadLibrary(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, createUploadLibrary, userID)
+	return err
+}
+
 const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM users WHERE id = $1
 `
@@ -80,25 +90,6 @@ DELETE FROM assets WHERE user_id = $1
 func (q *Queries) DeleteUserAssets(ctx context.Context, userID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteUserAssets, userID)
 	return err
-}
-
-const ensureUploadLibrary = `-- name: EnsureUploadLibrary :one
-WITH inserted AS (
-    INSERT INTO libraries (user_id, name, kind) VALUES ($1, 'Uploads', 'upload')
-    ON CONFLICT (user_id) WHERE kind = 'upload' DO NOTHING
-    RETURNING id
-)
-SELECT id FROM inserted
-UNION ALL
-SELECT l.id FROM libraries l WHERE l.user_id = $1 AND l.kind = 'upload'
-LIMIT 1
-`
-
-func (q *Queries) EnsureUploadLibrary(ctx context.Context, userID pgtype.UUID) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, ensureUploadLibrary, userID)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
 }
 
 const findExistingChecksums = `-- name: FindExistingChecksums :many
@@ -176,6 +167,17 @@ func (q *Queries) GetAssetIDByChecksum(ctx context.Context, arg GetAssetIDByChec
 	return id, err
 }
 
+const getUploadLibrary = `-- name: GetUploadLibrary :one
+SELECT id FROM libraries WHERE user_id = $1 AND kind = 'upload'
+`
+
+func (q *Queries) GetUploadLibrary(ctx context.Context, userID pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getUploadLibrary, userID)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const insertAsset = `-- name: InsertAsset :one
 INSERT INTO assets (user_id, library_id, checksum, original_name, original_path, size_bytes)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -237,16 +239,20 @@ func (q *Queries) ListAssetFiles(ctx context.Context, assetID pgtype.UUID) ([]As
 }
 
 const listAssets = `-- name: ListAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at FROM assets WHERE user_id = $1 ORDER BY created_at DESC, id DESC LIMIT $2
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at FROM assets
+WHERE user_id = $1 AND ($2::text IS NULL OR status = $2)
+ORDER BY created_at DESC, id DESC
+LIMIT $3
 `
 
 type ListAssetsParams struct {
-	UserID pgtype.UUID
-	Limit  int32
+	UserID   pgtype.UUID
+	Status   pgtype.Text
+	RowLimit int32
 }
 
 func (q *Queries) ListAssets(ctx context.Context, arg ListAssetsParams) ([]Asset, error) {
-	rows, err := q.db.Query(ctx, listAssets, arg.UserID, arg.Limit)
+	rows, err := q.db.Query(ctx, listAssets, arg.UserID, arg.Status, arg.RowLimit)
 	if err != nil {
 		return nil, err
 	}

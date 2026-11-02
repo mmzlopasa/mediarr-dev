@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -33,6 +34,14 @@ type badFileError struct{ msg string }
 
 func (e *badFileError) Error() string { return e.msg }
 
+// toolProblems are what a user sees. The tools' own output can hold internal paths, so it only goes to the log.
+var toolProblems = map[string]string{
+	"exiftool":  "the file is damaged or not a supported format",
+	"vips":      "the image could not be read; it may be damaged",
+	"ffmpeg":    "the video could not be read; it may be damaged",
+	"dcraw_emu": "the RAW file could not be read; it may be damaged or from an unsupported camera",
+}
+
 func runTool(ctx context.Context, name string, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, toolTimeout)
 	defer cancel()
@@ -47,7 +56,8 @@ func runTool(ctx context.Context, name string, args ...string) ([]byte, error) {
 	}
 	var exit *exec.ExitError
 	if errors.As(err, &exit) {
-		return stdout.Bytes(), &badFileError{msg: fmt.Sprintf("%s: %s", name, truncate(strings.TrimSpace(stderr.String()), maxToolError))}
+		slog.Warn("media tool rejected a file", "tool", name, "output", truncate(strings.TrimSpace(stderr.String()), maxToolError))
+		return stdout.Bytes(), &badFileError{msg: toolProblems[name]}
 	}
 	if err != nil {
 		return nil, fmt.Errorf("run %s: %w", name, err)
@@ -109,8 +119,8 @@ func parseMetadata(row map[string]any) (*Metadata, error) {
 		Height:       int32(firstNumber(row, "ImageHeight", "ExifImageHeight")),
 		Raw:          raw,
 	}
-	if message := text(row, "Error"); message != "" {
-		return nil, &badFileError{msg: truncate(message, maxToolError)}
+	if text(row, "Error") != "" {
+		return nil, &badFileError{msg: toolProblems["exiftool"]}
 	}
 	switch {
 	case strings.HasPrefix(meta.MIMEType, "image/"):
@@ -329,7 +339,12 @@ func thumbnailSource(ctx context.Context, original, kind, work string) (string, 
 		return frame, nil
 	}
 	if !isRaw(original) {
-		return original, nil
+		// A fixed link name, because libvips reads "[...]" in a file name as load options.
+		link := filepath.Join(work, "source"+strings.ToLower(filepath.Ext(original)))
+		if err := os.Symlink(original, link); err != nil {
+			return "", fmt.Errorf("link original: %w", err)
+		}
+		return link, nil
 	}
 	for _, tag := range []string{"-JpgFromRaw", "-PreviewImage", "-OtherImage"} {
 		preview, err := runTool(ctx, "exiftool", "-b", tag, original)
@@ -344,7 +359,12 @@ func thumbnailSource(ctx context.Context, original, kind, work string) (string, 
 			return path, nil
 		}
 	}
-	return "", &badFileError{msg: "RAW file has no embedded preview"}
+	// No embedded preview, as in some DNG files: decode the sensor data at half size.
+	decoded := filepath.Join(work, "decoded.tiff")
+	if _, err := runTool(ctx, "dcraw_emu", "-w", "-h", "-T", "-Z", decoded, original); err != nil {
+		return "", err
+	}
+	return decoded, nil
 }
 
 func isRaw(path string) bool {
@@ -358,9 +378,10 @@ func isRaw(path string) bool {
 func makeThumb(ctx context.Context, source, work, dir, name string, size int) (ThumbFile, error) {
 	file := fmt.Sprintf("%s-%d.webp", name, size)
 	tmp := filepath.Join(work, file)
-	// ">" never enlarges; libvips also applies EXIF rotation and picks the first page or frame.
-	dimensions := fmt.Sprintf("%dx%d>", size, size)
-	if _, err := runTool(ctx, "vipsthumbnail", source, "--size", dimensions, "-o", tmp+"[Q=82,strip]"); err != nil {
+	// "down" never enlarges, and "truncated" reports damaged files as errors instead of half-empty
+	// thumbnails. libvips also applies EXIF rotation and picks the first page or frame.
+	if _, err := runTool(ctx, "vips", "thumbnail", source, tmp+"[Q=82,strip]", strconv.Itoa(size),
+		"--height", strconv.Itoa(size), "--size", "down", "--fail-on", "truncated"); err != nil {
 		return ThumbFile{}, err
 	}
 	dest := filepath.Join(dir, file)
@@ -376,7 +397,7 @@ func makeThumb(ctx context.Context, source, work, dir, name string, size int) (T
 
 func makeBlurhash(ctx context.Context, thumb, work string) (string, error) {
 	tiny := filepath.Join(work, "tiny.png")
-	if _, err := runTool(ctx, "vipsthumbnail", thumb, "--size", "32x32", "-o", tiny); err != nil {
+	if _, err := runTool(ctx, "vips", "thumbnail", thumb, tiny, "32", "--height", "32"); err != nil {
 		return "", err
 	}
 	f, err := os.Open(tiny)

@@ -37,19 +37,19 @@ func (e AssetKind) Valid() bool {
 
 // Defines values for AssetStatus.
 const (
-	Failed     AssetStatus = "failed"
-	Processing AssetStatus = "processing"
-	Ready      AssetStatus = "ready"
+	AssetStatusFailed     AssetStatus = "failed"
+	AssetStatusProcessing AssetStatus = "processing"
+	AssetStatusReady      AssetStatus = "ready"
 )
 
 // Valid indicates whether the value is a known member of the AssetStatus enum.
 func (e AssetStatus) Valid() bool {
 	switch e {
-	case Failed:
+	case AssetStatusFailed:
 		return true
-	case Processing:
+	case AssetStatusProcessing:
 		return true
-	case Ready:
+	case AssetStatusReady:
 		return true
 	default:
 		return false
@@ -68,6 +68,27 @@ func (e HealthStatus) Valid() bool {
 	case Ok:
 		return true
 	case Unavailable:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListAssetsParamsStatus.
+const (
+	ListAssetsParamsStatusFailed     ListAssetsParamsStatus = "failed"
+	ListAssetsParamsStatusProcessing ListAssetsParamsStatus = "processing"
+	ListAssetsParamsStatusReady      ListAssetsParamsStatus = "ready"
+)
+
+// Valid indicates whether the value is a known member of the ListAssetsParamsStatus enum.
+func (e ListAssetsParamsStatus) Valid() bool {
+	switch e {
+	case ListAssetsParamsStatusFailed:
+		return true
+	case ListAssetsParamsStatusProcessing:
+		return true
+	case ListAssetsParamsStatusReady:
 		return true
 	default:
 		return false
@@ -218,8 +239,12 @@ type User struct {
 
 // ListAssetsParams defines parameters for ListAssets.
 type ListAssetsParams struct {
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Limit  *int                    `form:"limit,omitempty" json:"limit,omitempty"`
+	Status *ListAssetsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
 }
+
+// ListAssetsParamsStatus defines parameters for ListAssets.
+type ListAssetsParamsStatus string
 
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
@@ -481,6 +506,19 @@ func (siw *ServerInterfaceWrapper) ListAssets(w http.ResponseWriter, r *http.Req
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "status" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "status", r.URL.Query(), &params.Status, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "status"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "status", Err: err})
 		}
 		return
 	}

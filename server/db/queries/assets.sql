@@ -1,13 +1,9 @@
--- name: EnsureUploadLibrary :one
-WITH inserted AS (
-    INSERT INTO libraries (user_id, name, kind) VALUES ($1, 'Uploads', 'upload')
-    ON CONFLICT (user_id) WHERE kind = 'upload' DO NOTHING
-    RETURNING id
-)
-SELECT id FROM inserted
-UNION ALL
-SELECT l.id FROM libraries l WHERE l.user_id = $1 AND l.kind = 'upload'
-LIMIT 1;
+-- name: CreateUploadLibrary :exec
+INSERT INTO libraries (user_id, name, kind) VALUES ($1, 'Uploads', 'upload')
+ON CONFLICT (user_id) WHERE kind = 'upload' DO NOTHING;
+
+-- name: GetUploadLibrary :one
+SELECT id FROM libraries WHERE user_id = $1 AND kind = 'upload';
 
 -- name: InsertAsset :one
 INSERT INTO assets (user_id, library_id, checksum, original_name, original_path, size_bytes)
@@ -22,7 +18,10 @@ SELECT id FROM assets WHERE user_id = $1 AND checksum = $2;
 SELECT * FROM assets WHERE id = $1;
 
 -- name: ListAssets :many
-SELECT * FROM assets WHERE user_id = $1 ORDER BY created_at DESC, id DESC LIMIT $2;
+SELECT * FROM assets
+WHERE user_id = sqlc.arg('user_id') AND (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status'))
+ORDER BY created_at DESC, id DESC
+LIMIT sqlc.arg('row_limit');
 
 -- name: CountAssetStatus :one
 SELECT count(*) AS total,

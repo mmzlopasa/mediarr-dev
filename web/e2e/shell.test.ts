@@ -129,7 +129,7 @@ test('single photo view has a clean background', async ({ page }) => {
 });
 
 test('production hides the development pages', async ({ page }) => {
-	test.skip(!process.env.E2E_PROD_URL, 'needs E2E_PROD_URL');
+	test.skip(!process.env.E2E_PROD_URL, 'needs E2E_PROD_URL, the address of a production image');
 	await page.goto(`${process.env.E2E_PROD_URL}/dev/components`);
 	await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
 });
