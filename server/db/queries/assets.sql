@@ -60,3 +60,18 @@ UPDATE assets SET status = 'ready', blurhash = $2, error = NULL, updated_at = no
 
 -- name: MarkAssetFailed :exec
 UPDATE assets SET status = 'failed', error = $2, updated_at = now() WHERE id = $1;
+
+-- name: AdminCounts :one
+SELECT (SELECT count(*) FROM users) AS users,
+       count(*) FILTER (WHERE kind = 'photo') AS photos,
+       count(*) FILTER (WHERE kind = 'video') AS videos,
+       count(*) FILTER (WHERE status = 'processing') AS processing,
+       count(*) FILTER (WHERE status = 'failed') AS failed,
+       coalesce(sum(size_bytes), 0)::bigint AS library_bytes
+FROM assets;
+
+-- name: DeleteUserAssets :exec
+DELETE FROM assets WHERE user_id = $1;
+
+-- name: DeleteUser :exec
+DELETE FROM users WHERE id = $1;

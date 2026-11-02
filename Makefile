@@ -11,7 +11,7 @@ GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down deploy landing testdata uploadtest seed-large gen web-build lint test e2e lighthouse
+.PHONY: dev down deploy landing testdata uploadtest seed-large clean-test-users gen web-build lint test e2e lighthouse
 
 dev:
 	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache
@@ -86,7 +86,14 @@ e2e:
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-uploader@example.com "Demo korisnik"
 	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e E2E_PASSWORD=$(E2E_PASSWORD) \
 		-v "$(CURDIR)/web:/web" -w /web mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
-		node_modules/.bin/playwright test
+		node_modules/.bin/playwright test; status=$$?; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader"; exit $$status
+
+# Test accounts must not stay in the demo database, where they would appear as real data.
+TEST_USERS ?= e2e-admin e2e-user e2e-uploader uploadtest
+clean-test-users:
+	for email in $(TEST_USERS); do \
+		$(DEV_COMPOSE) exec -T server /tmp/air/mediarr user delete $$email@example.com; \
+	done
 
 lighthouse:
 	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp \

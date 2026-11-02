@@ -154,6 +154,18 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/admin/overview:
+    get:
+      operationId: getAdminOverview
+      summary: Live statistics of the whole server, read from the database and the library disk
+      responses:
+        "200":
+          description: Current statistics
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminOverview" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/assets:
     get:
       operationId: listAssets
@@ -300,6 +312,28 @@ components:
       required: [password]
       properties:
         password: { type: string }
+    AdminOverview:
+      type: object
+      required: [users, photos, videos, processing, failed, libraryBytes, diskTotalBytes, diskFreeBytes, jobs, version, databaseVersion]
+      properties:
+        users: { type: integer, format: int64 }
+        photos: { type: integer, format: int64 }
+        videos: { type: integer, format: int64 }
+        processing: { type: integer, format: int64 }
+        failed: { type: integer, format: int64 }
+        libraryBytes: { type: integer, format: int64, description: Total size of all originals }
+        diskTotalBytes: { type: integer, format: int64 }
+        diskFreeBytes: { type: integer, format: int64 }
+        jobs:
+          type: object
+          required: [queued, running, completed, failed]
+          properties:
+            queued: { type: integer, format: int64 }
+            running: { type: integer, format: int64 }
+            completed: { type: integer, format: int64 }
+            failed: { type: integer, format: int64 }
+        version: { type: string }
+        databaseVersion: { type: string }
     Asset:
       type: object
       required: [id, originalName, kind, status, sizeBytes, checksum, createdAt]

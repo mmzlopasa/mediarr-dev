@@ -12,10 +12,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/mmzlopasa/mediarr-app/server/db"
@@ -157,6 +159,9 @@ func worker(ctx context.Context, cfg config.Config) error {
 // upsertUser creates a user or resets their password and two-factor sign-in from the command line,
 // which is how a self-hosted administrator recovers access. The password comes from stdin.
 func upsertUser(ctx context.Context, cfg config.Config, args []string) error {
+	if len(args) == 2 && args[0] == "delete" {
+		return deleteUser(ctx, cfg, args[1])
+	}
 	if len(args) < 3 || args[0] != "upsert" {
 		return errors.New(usage)
 	}
@@ -186,6 +191,45 @@ func upsertUser(ctx context.Context, cfg config.Config, args []string) error {
 	defer pool.Close()
 	_, err = db.New(pool).UpsertUser(ctx, db.UpsertUserParams{Email: email, Name: args[2], PasswordHash: hash, IsAdmin: isAdmin})
 	return err
+}
+
+// deleteUser removes a user with all their assets and files. It cannot be undone.
+func deleteUser(ctx context.Context, cfg config.Config, rawEmail string) error {
+	email, err := auth.NormalizeEmail(rawEmail)
+	if err != nil {
+		return err
+	}
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+	defer pool.Close()
+	queries := db.New(pool)
+
+	user, err := queries.GetUserByEmail(ctx, email)
+	if db.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if err := queries.DeleteUserAssets(ctx, user.ID); err != nil {
+		return fmt.Errorf("delete assets: %w", err)
+	}
+	if err := queries.DeleteUser(ctx, user.ID); err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+	id := uuid.UUID(user.ID.Bytes).String()
+	for _, dir := range []string{
+		filepath.Join(cfg.LibraryPath, id),
+		filepath.Join(storage.SidecarDir(cfg.LibraryPath), id),
+		filepath.Join(cfg.CachePath, "thumbs", id),
+	} {
+		if err := os.RemoveAll(dir); err != nil {
+			return fmt.Errorf("delete files: %w", err)
+		}
+	}
+	return nil
 }
 
 func healthcheck(ctx context.Context, cfg config.Config) error {

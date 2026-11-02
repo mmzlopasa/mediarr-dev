@@ -211,3 +211,14 @@ html[data-theme='light'] .logo-dot {
 	font-weight: 600;
 	pointer-events: none;
 }
+
+/*
+ * iOS zooms the page when an input with text under 16px gets focus, and stays zoomed.
+ * The only intended difference from the reference design, applied on touch-sized screens.
+ */
+@media (max-width: 900px) {
+	.in,
+	.as-in:not(.code-in) {
+		font-size: 16px;
+	}
+}

@@ -5,6 +5,7 @@ export type Asset = components['schemas']['Asset'];
 export type AssetList = components['schemas']['AssetList'];
 export type AuthStatus = components['schemas']['AuthStatus'];
 export type TotpSetup = components['schemas']['TotpSetup'];
+export type AdminOverview = components['schemas']['AdminOverview'];
 
 export class ApiError extends Error {
 	status: number;
@@ -49,6 +50,7 @@ export const api = {
 	setupTotp: () => request<TotpSetup>(fetch, '/api/me/totp/setup', {}),
 	enableTotp: (code: string) => request<void>(fetch, '/api/me/totp/enable', { code }),
 	disableTotp: (password: string) => request<void>(fetch, '/api/me/totp/disable', { password }),
+	adminOverview: () => request<AdminOverview>(fetch, '/api/admin/overview'),
 	listUsers: () => request<User[]>(fetch, '/api/admin/users'),
 	createUser: (body: { email: string; name: string; password: string; isAdmin: boolean }) =>
 		request<User>(fetch, '/api/admin/users', body),

@@ -74,6 +74,28 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// AdminOverview defines model for AdminOverview.
+type AdminOverview struct {
+	DatabaseVersion string `json:"databaseVersion"`
+	DiskFreeBytes   int64  `json:"diskFreeBytes"`
+	DiskTotalBytes  int64  `json:"diskTotalBytes"`
+	Failed          int64  `json:"failed"`
+	Jobs            struct {
+		Completed int64 `json:"completed"`
+		Failed    int64 `json:"failed"`
+		Queued    int64 `json:"queued"`
+		Running   int64 `json:"running"`
+	} `json:"jobs"`
+
+	// LibraryBytes Total size of all originals
+	LibraryBytes int64  `json:"libraryBytes"`
+	Photos       int64  `json:"photos"`
+	Processing   int64  `json:"processing"`
+	Users        int64  `json:"users"`
+	Version      string `json:"version"`
+	Videos       int64  `json:"videos"`
+}
+
 // Asset defines model for Asset.
 type Asset struct {
 	Blurhash *string `json:"blurhash,omitempty"`
@@ -222,6 +244,9 @@ type EnableTotpJSONRequestBody = TotpCode
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// GetAdminOverview Live statistics of the whole server, read from the database and the library disk
+	// (GET /api/admin/overview)
+	GetAdminOverview(w http.ResponseWriter, r *http.Request)
 	// ListUsers List users
 	// (GET /api/admin/users)
 	ListUsers(w http.ResponseWriter, r *http.Request)
@@ -278,6 +303,12 @@ type ServerInterface interface {
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// GetAdminOverview Live statistics of the whole server, read from the database and the library disk
+// (GET /api/admin/overview)
+func (_ Unimplemented) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // ListUsers List users
 // (GET /api/admin/users)
@@ -389,6 +420,20 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetAdminOverview operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAdminOverview(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // ListUsers operation middleware
 func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Request) {
@@ -828,6 +873,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/admin/users", wrapper.CreateUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/overview", wrapper.GetAdminOverview)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/assets", wrapper.ListAssets)

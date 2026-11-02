@@ -229,6 +229,10 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
+        case 'AdminOverview':
+          return AdminOverview.fromJson(value);
+        case 'AdminOverviewJobs':
+          return AdminOverviewJobs.fromJson(value);
         case 'Asset':
           return Asset.fromJson(value);
         case 'AssetList':

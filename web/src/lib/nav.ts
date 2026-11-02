@@ -15,8 +15,8 @@ export const appNav: NavItem[] = [
 		icon: 'photo',
 		hr: 'Fotke',
 		en: 'Photos',
-		emptyHr: 'Još nema fotki. Povucite ih ovdje za upload.',
-		emptyEn: 'No photos yet. Drag them here to upload.'
+		emptyHr: 'Još nema fotki. Dodajte prve gumbom Upload.',
+		emptyEn: 'No photos yet. Add your first ones with the Upload button.'
 	},
 	{
 		path: '/search',
@@ -106,24 +106,24 @@ export const adminNav: NavItem[] = [
 		icon: 'users',
 		hr: 'Korisnici',
 		en: 'Users',
-		emptyHr: 'Upravljanje korisnicima stiže u kasnijoj fazi.',
-		emptyEn: 'User management arrives in a later phase.'
+		emptyHr: '',
+		emptyEn: ''
 	},
 	{
 		path: '/admin/jobs',
 		icon: 'list',
 		hr: 'Poslovi',
 		en: 'Jobs',
-		emptyHr: 'Nema poslova u redu.',
-		emptyEn: 'There are no queued jobs.'
+		emptyHr: '',
+		emptyEn: ''
 	},
 	{
 		path: '/admin/storage',
 		icon: 'db',
 		hr: 'Pohrana',
 		en: 'Storage',
-		emptyHr: 'Statistika pohrane stiže u kasnijoj fazi.',
-		emptyEn: 'Storage statistics arrive in a later phase.'
+		emptyHr: '',
+		emptyEn: ''
 	},
 	{
 		path: '/admin/settings',
@@ -138,15 +138,15 @@ export const adminNav: NavItem[] = [
 		icon: 'shield',
 		hr: 'Dnevnik aktivnosti',
 		en: 'Activity log',
-		emptyHr: 'Dnevnik je prazan.',
-		emptyEn: 'The log is empty.'
+		emptyHr: 'Dnevnik aktivnosti stiže u kasnijoj fazi.',
+		emptyEn: 'The activity log arrives in a later phase.'
 	},
 	{
 		path: '/admin/health',
 		icon: 'pulse',
 		hr: 'Zdravlje',
 		en: 'Health',
-		emptyHr: 'Detaljno zdravlje sustava stiže u kasnijoj fazi.',
-		emptyEn: 'Detailed system health arrives in a later phase.'
+		emptyHr: '',
+		emptyEn: ''
 	}
 ];

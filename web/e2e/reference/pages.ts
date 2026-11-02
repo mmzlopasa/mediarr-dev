@@ -22,7 +22,7 @@ const langMenu = `<details class="langdd "><summary aria-label="Language">HR<i a
 const themeBtn = `<button type="button" class="icon-btn" data-theme-btn aria-label="t"><span class="i-sun">${ico('sun')}</span><span class="i-moon">${ico('moon')}</span></button>`;
 
 const document = (theme: string, bodyClass: string, body: string) =>
-	`<!DOCTYPE html><html lang="hr" data-theme="${theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="stylesheet" href="/css/dash.css"><style>.logo{text-decoration:none}.logo-svg{flex:none}.logo-word,.logo-dot{fill:var(--gold)}html[data-theme=light] .logo-word{fill:var(--ink)}html[data-theme=light] .logo-dot{fill:var(--gold-3)}</style></head><body class="${bodyClass}"><div class="sky" aria-hidden="true"></div>${body}</body></html>`;
+	`<!DOCTYPE html><html lang="hr" data-theme="${theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="stylesheet" href="/css/dash.css"><style>.logo{text-decoration:none}.logo-svg{flex:none}.logo-word,.logo-dot{fill:var(--gold)}html[data-theme=light] .logo-word{fill:var(--ink)}html[data-theme=light] .logo-dot{fill:var(--gold-3)}@media(max-width:900px){.in,.as-in:not(.code-in){font-size:16px}}</style></head><body class="${bodyClass}"><div class="sky" aria-hidden="true"></div>${body}</body></html>`;
 
 function shell(
 	theme: string,
@@ -96,8 +96,8 @@ export function adminPage(theme: string) {
 			['photo', 'Fotografije']
 		],
 		titleRow('Dobrodošli', 'Stanje biblioteke i poslužitelja na jednom mjestu.') +
-			`<div class="stats">${stat('Korisnici', '0')}${stat('Fotke', '0')}${stat('Videi', '0')}${stat('Pohrana', '0 GB', '', 0)}</div>` +
-			`<div class="grid2">${card('Poslovi', emptyState('list', 'Nema poslova u redu.'))}${card('Sustav', kv('Verzija', '0.1.0') + kv('Baza', 'PostgreSQL 17'))}</div>`
+			`<div class="stats">${stat('Korisnici', '0')}${stat('Fotke', '0')}${stat('Videi', '0')}${stat('Pohrana', '0 B', '', 0)}</div>` +
+			`<div class="grid2">${card('Poslovi', emptyState('list', 'Nema poslova u redu.'))}${card('Sustav', kv('Verzija', 'test') + kv('Baza', 'PostgreSQL 17.0') + kv('Slobodno na disku', '0 B'))}</div>`
 	);
 }
 

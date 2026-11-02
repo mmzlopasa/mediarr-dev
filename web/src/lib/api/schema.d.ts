@@ -175,6 +175,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Live statistics of the whole server, read from the database and the library disk */
+        get: operations["getAdminOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assets": {
         parameters: {
             query?: never;
@@ -303,6 +320,39 @@ export interface components {
         };
         PasswordConfirm: {
             password: string;
+        };
+        AdminOverview: {
+            /** Format: int64 */
+            users: number;
+            /** Format: int64 */
+            photos: number;
+            /** Format: int64 */
+            videos: number;
+            /** Format: int64 */
+            processing: number;
+            /** Format: int64 */
+            failed: number;
+            /**
+             * Format: int64
+             * @description Total size of all originals
+             */
+            libraryBytes: number;
+            /** Format: int64 */
+            diskTotalBytes: number;
+            /** Format: int64 */
+            diskFreeBytes: number;
+            jobs: {
+                /** Format: int64 */
+                queued: number;
+                /** Format: int64 */
+                running: number;
+                /** Format: int64 */
+                completed: number;
+                /** Format: int64 */
+                failed: number;
+            };
+            version: string;
+            databaseVersion: string;
         };
         Asset: {
             /** Format: uuid */
@@ -627,6 +677,28 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    getAdminOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current statistics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOverview"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     listAssets: {

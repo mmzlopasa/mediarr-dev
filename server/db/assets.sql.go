@@ -11,6 +11,39 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const adminCounts = `-- name: AdminCounts :one
+SELECT (SELECT count(*) FROM users) AS users,
+       count(*) FILTER (WHERE kind = 'photo') AS photos,
+       count(*) FILTER (WHERE kind = 'video') AS videos,
+       count(*) FILTER (WHERE status = 'processing') AS processing,
+       count(*) FILTER (WHERE status = 'failed') AS failed,
+       coalesce(sum(size_bytes), 0)::bigint AS library_bytes
+FROM assets
+`
+
+type AdminCountsRow struct {
+	Users        int64
+	Photos       int64
+	Videos       int64
+	Processing   int64
+	Failed       int64
+	LibraryBytes int64
+}
+
+func (q *Queries) AdminCounts(ctx context.Context) (AdminCountsRow, error) {
+	row := q.db.QueryRow(ctx, adminCounts)
+	var i AdminCountsRow
+	err := row.Scan(
+		&i.Users,
+		&i.Photos,
+		&i.Videos,
+		&i.Processing,
+		&i.Failed,
+		&i.LibraryBytes,
+	)
+	return i, err
+}
+
 const countAssetStatus = `-- name: CountAssetStatus :one
 SELECT count(*) AS total,
        count(*) FILTER (WHERE status = 'processing') AS processing,
@@ -29,6 +62,24 @@ func (q *Queries) CountAssetStatus(ctx context.Context, userID pgtype.UUID) (Cou
 	var i CountAssetStatusRow
 	err := row.Scan(&i.Total, &i.Processing, &i.Failed)
 	return i, err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUser, id)
+	return err
+}
+
+const deleteUserAssets = `-- name: DeleteUserAssets :exec
+DELETE FROM assets WHERE user_id = $1
+`
+
+func (q *Queries) DeleteUserAssets(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUserAssets, userID)
+	return err
 }
 
 const ensureUploadLibrary = `-- name: EnsureUploadLibrary :one

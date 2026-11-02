@@ -15,7 +15,9 @@ COPY server/go.mod server/go.sum ./
 RUN go mod download
 COPY server/ ./
 COPY --from=web /src/web/build/ ./internal/webui/dist/
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /mediarr ./cmd/mediarr
+ARG MEDIARR_VERSION=dev
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath \
+    -ldflags="-s -w -X github.com/mmzlopasa/mediarr-app/server/internal/app.Version=$MEDIARR_VERSION" -o /mediarr ./cmd/mediarr
 
 FROM alpine:3
 RUN apk add --no-cache vips-tools vips-heif exiftool ffmpeg && adduser -D -u 10001 mediarr

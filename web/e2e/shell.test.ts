@@ -218,3 +218,58 @@ test('a damaged file shows an error instead of hanging', async ({ page }) => {
 		timeout: 30000
 	});
 });
+
+test('the admin overview shows live numbers from the server', async ({ page }) => {
+	await signIn(page, 'admin');
+	const response = await page.request.get('/api/admin/overview');
+	const overview = await response.json();
+	expect(overview.users).toBeGreaterThan(0);
+	expect(overview.diskTotalBytes).toBeGreaterThan(0);
+
+	await page.goto('/admin');
+	const users = page.locator('.stat', { hasText: 'Korisnici' }).locator('.stat-v');
+	await expect(users).toHaveText(String(overview.users));
+	await expect(page.locator('.kv', { hasText: 'Baza' })).toContainText(overview.databaseVersion);
+
+	for (const [path, text] of [
+		['/admin/jobs', 'Dovršeno'],
+		['/admin/storage', 'Slobodno na disku'],
+		['/admin/health', 'Baza']
+	]) {
+		await page.goto(path);
+		await expect(page.locator('.kv', { hasText: text }).first()).toBeVisible();
+	}
+});
+
+test('input text is large enough that iOS does not zoom on focus', async ({ page }) => {
+	await signIn(page, 'admin');
+	await page.setViewportSize({ width: 390, height: 800 });
+	await page.goto('/account');
+	await page.locator('main .in').first().waitFor();
+	const sizes = await page
+		.locator('main input.in')
+		.evaluateAll((inputs) => inputs.map((input) => parseFloat(getComputedStyle(input).fontSize)));
+	expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16);
+});
+
+test('no page scrolls sideways on a phone', async ({ page }) => {
+	await signIn(page, 'admin');
+	await page.setViewportSize({ width: 320, height: 700 });
+	for (const path of [
+		'/',
+		'/albums',
+		'/account',
+		'/admin',
+		'/admin/users',
+		'/admin/jobs',
+		'/admin/storage',
+		'/admin/health'
+	]) {
+		await page.goto(path);
+		await page.locator('main').first().waitFor();
+		const overflow = await page.evaluate(
+			() => document.documentElement.scrollWidth - document.documentElement.clientWidth
+		);
+		expect(overflow, path).toBeLessThanOrEqual(0);
+	}
+});

@@ -30,6 +30,8 @@ part 'auth/http_bearer_auth.dart';
 
 part 'api/default_api.dart';
 
+part 'model/admin_overview.dart';
+part 'model/admin_overview_jobs.dart';
 part 'model/asset.dart';
 part 'model/asset_list.dart';
 part 'model/auth_status.dart';

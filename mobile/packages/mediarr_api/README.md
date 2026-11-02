@@ -66,6 +66,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**createUser**](doc//DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
 *DefaultApi* | [**disableTotp**](doc//DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 *DefaultApi* | [**enableTotp**](doc//DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
+*DefaultApi* | [**getAdminOverview**](doc//DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
 *DefaultApi* | [**getUploadOffset**](doc//DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
@@ -79,6 +80,8 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AdminOverview](doc//AdminOverview.md)
+ - [AdminOverviewJobs](doc//AdminOverviewJobs.md)
  - [Asset](doc//Asset.md)
  - [AssetList](doc//AssetList.md)
  - [AuthStatus](doc//AuthStatus.md)

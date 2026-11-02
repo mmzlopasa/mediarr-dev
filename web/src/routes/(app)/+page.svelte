@@ -121,7 +121,7 @@
 			</table>
 		</div>
 	</Card>
-{:else if !list || list.total === 0}
+{:else if list && list.total === 0}
 	{#if uploads().length === 0}
 		<section class="card glass">
 			<div class="card-b">

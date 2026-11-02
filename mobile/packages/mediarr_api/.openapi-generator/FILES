@@ -3,6 +3,8 @@
 .travis.yml
 README.md
 analysis_options.yaml
+doc/AdminOverview.md
+doc/AdminOverviewJobs.md
 doc/Asset.md
 doc/AssetList.md
 doc/AuthStatus.md
@@ -31,6 +33,8 @@ lib/auth/authentication.dart
 lib/auth/http_basic_auth.dart
 lib/auth/http_bearer_auth.dart
 lib/auth/oauth.dart
+lib/model/admin_overview.dart
+lib/model/admin_overview_jobs.dart
 lib/model/asset.dart
 lib/model/asset_list.dart
 lib/model/auth_status.dart
@@ -48,6 +52,8 @@ lib/model/totp_code.dart
 lib/model/totp_setup.dart
 lib/model/user.dart
 pubspec.yaml
+test/admin_overview_jobs_test.dart
+test/admin_overview_test.dart
 test/asset_list_test.dart
 test/asset_test.dart
 test/auth_status_test.dart

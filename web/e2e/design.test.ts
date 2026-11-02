@@ -45,8 +45,27 @@ async function shootMediarr(page: Page, path: string, theme: string, selector?: 
 		localStorage.setItem('mediarr_lang', 'hr');
 	}, theme);
 	if (path !== '/login' && !path.startsWith('/dev/')) await signIn(page, 'admin');
+	// The comparison needs fixed numbers. Only this test sees them; the app reads the real ones.
+	await page.route('**/api/admin/overview', (route) =>
+		route.fulfill({
+			json: {
+				users: 0,
+				photos: 0,
+				videos: 0,
+				processing: 0,
+				failed: 0,
+				libraryBytes: 0,
+				diskTotalBytes: 0,
+				diskFreeBytes: 0,
+				jobs: { queued: 0, running: 0, completed: 0, failed: 0 },
+				version: 'test',
+				databaseVersion: '17.0'
+			}
+		})
+	);
 	await page.goto(path);
 	await page.locator(selector ?? 'main').waitFor();
+	await page.waitForLoadState('networkidle');
 	return shoot(page, selector);
 }
 
