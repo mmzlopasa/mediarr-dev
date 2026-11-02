@@ -1,0 +1,12 @@
+# Builds the images from this repository instead of pulling them. Run through `make deploy`.
+services:
+  server:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+  worker:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+  ml:
+    build: ../ml

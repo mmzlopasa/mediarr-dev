@@ -16,6 +16,10 @@ export default defineConfig({
 			adapter: adapter({ fallback: 'index.html' })
 		})
 	],
+	server: {
+		// The development stack is what demo.mediarr.app serves.
+		allowedHosts: ['demo.mediarr.app']
+	},
 	test: {
 		include: ['src/**/*.test.ts']
 	}

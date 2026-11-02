@@ -1,19 +1,19 @@
-export const languages = { hr: 'Hrvatski', en: 'English' } as const;
+export const languages = { en: 'English', hr: 'Hrvatski' } as const;
 export type Lang = keyof typeof languages;
 
 const KEY = 'mediarr_lang';
 
-export function parseLang(stored: string | null, browser: string | undefined): Lang {
-	if (stored === 'hr' || stored === 'en') return stored;
-	return browser?.toLowerCase().startsWith('hr') ? 'hr' : 'en';
+/** English is the main language; other languages apply only when chosen in the menu. */
+export function parseLang(stored: string | null): Lang {
+	return stored === 'hr' ? 'hr' : 'en';
 }
 
 function initial(): Lang {
-	if (typeof localStorage === 'undefined') return 'hr';
+	if (typeof localStorage === 'undefined') return 'en';
 	try {
-		return parseLang(localStorage.getItem(KEY), navigator.language);
+		return parseLang(localStorage.getItem(KEY));
 	} catch {
-		return parseLang(null, navigator.language);
+		return 'en';
 	}
 }
 

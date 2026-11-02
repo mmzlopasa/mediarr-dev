@@ -7,7 +7,7 @@ GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down gen web-build lint test e2e lighthouse
+.PHONY: dev down deploy gen web-build lint test e2e lighthouse
 
 dev:
 	mkdir -p .dev/cache .dev/web-node_modules
@@ -15,6 +15,10 @@ dev:
 
 down:
 	$(DEV_COMPOSE) down
+
+# Builds production (mediarr.app) from this checkout.
+deploy:
+	docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml up -d --build --wait
 
 gen:
 	cd server && $(GO_TOOL) oapi-codegen -config oapi-codegen.yaml ../api/openapi.yaml

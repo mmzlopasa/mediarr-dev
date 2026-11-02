@@ -4,6 +4,13 @@ test.beforeEach(async ({ page }) => {
 	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'hr'));
 });
 
+test('the interface defaults to English', async ({ page }) => {
+	await page.addInitScript(() => localStorage.removeItem('mediarr_lang'));
+	await page.goto('/');
+	await expect(page.getByRole('heading', { name: 'Photos' })).toBeVisible();
+	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+});
+
 test('app sidebar has the planned sections and navigates', async ({ page }) => {
 	await page.goto('/');
 	const nav = page.getByRole('navigation').first();

@@ -5,7 +5,7 @@
 </script>
 
 <a class="logo" href={resolve('/(app)')} aria-label="Mediarr">
-	<!-- Same 131x34 box as the ScyHost logo in the reference design, so the layout does not shift. -->
+	<!-- Same 131x34 box as the logo in the reference design, so the layout does not shift. -->
 	<svg class="logo-svg" width="131" height="34" viewBox="0 0 171 34" aria-hidden="true">
 		<defs>
 			<clipPath id="logo-disc"><circle cx="32" cy="32" r="30" /></clipPath>
