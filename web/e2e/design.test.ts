@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
+import { signIn } from './helpers';
 import { adminPage, appPage, componentsPage, loginPage } from './reference/pages';
 
 const REF_ORIGIN = 'http://reference.test';
@@ -43,6 +44,7 @@ async function shootMediarr(page: Page, path: string, theme: string, selector?: 
 		localStorage.setItem('mediarr_theme', t);
 		localStorage.setItem('mediarr_lang', 'hr');
 	}, theme);
+	if (path !== '/login' && !path.startsWith('/dev/')) await signIn(page, 'admin');
 	await page.goto(path);
 	await page.locator(selector ?? 'main').waitFor();
 	return shoot(page, selector);

@@ -3,3 +3,95 @@
 //   sqlc v1.31.1
 
 package db
+
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type ApiKey struct {
+	ID         pgtype.UUID
+	UserID     pgtype.UUID
+	Name       string
+	KeyHash    []byte
+	CreatedAt  pgtype.Timestamptz
+	LastUsedAt pgtype.Timestamptz
+}
+
+type Asset struct {
+	ID                 pgtype.UUID
+	UserID             pgtype.UUID
+	LibraryID          pgtype.UUID
+	Checksum           []byte
+	OriginalName       string
+	OriginalPath       string
+	SizeBytes          int64
+	MimeType           pgtype.Text
+	Kind               string
+	Status             string
+	Error              pgtype.Text
+	Width              pgtype.Int4
+	Height             pgtype.Int4
+	Blurhash           pgtype.Text
+	TakenAt            pgtype.Timestamptz
+	TakenOffsetMinutes pgtype.Int4
+	CreatedAt          pgtype.Timestamptz
+	UpdatedAt          pgtype.Timestamptz
+}
+
+type AssetFile struct {
+	AssetID   pgtype.UUID
+	Kind      string
+	Path      string
+	SizeBytes int64
+	CreatedAt pgtype.Timestamptz
+}
+
+type Exif struct {
+	AssetID      pgtype.UUID
+	Make         pgtype.Text
+	Model        pgtype.Text
+	Lens         pgtype.Text
+	Iso          pgtype.Int4
+	FNumber      pgtype.Float8
+	ExposureTime pgtype.Text
+	FocalLength  pgtype.Float8
+	Latitude     pgtype.Float8
+	Longitude    pgtype.Float8
+	Raw          []byte
+}
+
+type Library struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	Name      string
+	Kind      string
+	Path      pgtype.Text
+	CreatedAt pgtype.Timestamptz
+}
+
+type Session struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	TokenHash []byte
+	CreatedAt pgtype.Timestamptz
+	ExpiresAt pgtype.Timestamptz
+}
+
+type SystemState struct {
+	Key       string
+	Value     string
+	UpdatedAt pgtype.Timestamptz
+}
+
+type User struct {
+	ID           pgtype.UUID
+	Email        string
+	Name         string
+	PasswordHash string
+	IsAdmin      bool
+	TotpSecret   pgtype.Text
+	TotpEnabled  bool
+	TotpLastStep int64
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}

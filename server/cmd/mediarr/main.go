@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -18,9 +20,16 @@ import (
 
 	"github.com/mmzlopasa/mediarr-app/server/db"
 	"github.com/mmzlopasa/mediarr-app/server/internal/app"
+	"github.com/mmzlopasa/mediarr-app/server/internal/auth"
+	"github.com/mmzlopasa/mediarr-app/server/internal/config"
+	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
+	"github.com/mmzlopasa/mediarr-app/server/internal/storage"
 )
 
-const usage = "usage: mediarr <serve|worker|healthcheck|migrate>"
+const (
+	usage             = "usage: mediarr <serve|worker|healthcheck|migrate [down]|user upsert <email> <name> [--admin]>"
+	stateStorageReady = "storage_initialized"
+)
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -33,38 +42,76 @@ func main() {
 }
 
 func run(ctx context.Context, args []string) error {
-	if len(args) != 1 {
+	if len(args) == 0 {
 		return errors.New(usage)
 	}
+	cfg := config.Load()
 
 	switch args[0] {
 	case "serve":
-		return serve(ctx)
+		return serve(ctx, cfg)
 	case "worker":
-		return worker(ctx)
+		return worker(ctx, cfg)
 	case "healthcheck":
-		return healthcheck(ctx)
+		return healthcheck(ctx, cfg)
 	case "migrate":
-		return db.Migrate(ctx, databaseURL())
+		if len(args) > 1 && args[1] == "down" {
+			return db.MigrateDown(ctx, cfg.DatabaseURL)
+		}
+		return db.Migrate(ctx, cfg.DatabaseURL)
+	case "user":
+		return upsertUser(ctx, cfg, args[1:])
 	default:
 		return errors.New(usage)
 	}
 }
 
-func serve(ctx context.Context) error {
-	if err := db.Migrate(ctx, databaseURL()); err != nil {
+// prepareStorage checks both directories, and remembers that it did so: from then on a missing
+// marker means the disk is not mounted, and starting would write to the wrong disk.
+func prepareStorage(ctx context.Context, cfg config.Config, queries *db.Queries) error {
+	_, err := queries.GetState(ctx, stateStorageReady)
+	if err != nil && !db.IsNotFound(err) {
+		return fmt.Errorf("read storage state: %w", err)
+	}
+	initialized := err == nil
+	for _, dir := range []string{cfg.LibraryPath, cfg.CachePath} {
+		if err := storage.Prepare(dir, initialized); err != nil {
+			return err
+		}
+	}
+	if initialized {
+		return nil
+	}
+	return queries.SetState(ctx, db.SetStateParams{Key: stateStorageReady, Value: "true"})
+}
+
+func serve(ctx context.Context, cfg config.Config) error {
+	if err := db.Migrate(ctx, cfg.DatabaseURL); err != nil {
 		return err
 	}
 
-	pool, err := pgxpool.New(ctx, databaseURL())
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
 	defer pool.Close()
 
+	queries := db.New(pool)
+	if err := prepareStorage(ctx, cfg, queries); err != nil {
+		return err
+	}
+	inserter, err := jobs.NewInserter(pool)
+	if err != nil {
+		return fmt.Errorf("create job client: %w", err)
+	}
+	handler, err := app.NewHandler(app.Deps{Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath})
+	if err != nil {
+		return err
+	}
+
 	srv := &http.Server{
-		Addr:              listenAddr(),
-		Handler:           app.NewHandler(db.New(pool)),
+		Addr:              cfg.ListenAddr,
+		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -83,9 +130,8 @@ func serve(ctx context.Context) error {
 	return srv.Shutdown(shutdownCtx)
 }
 
-// worker only verifies database access for now; River jobs arrive in phase 2.
-func worker(ctx context.Context) error {
-	pool, err := pgxpool.New(ctx, databaseURL())
+func worker(ctx context.Context, cfg config.Config) error {
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
 	}
@@ -94,14 +140,56 @@ func worker(ctx context.Context) error {
 	if err := pool.Ping(ctx); err != nil {
 		return fmt.Errorf("ping database: %w", err)
 	}
-	slog.Info("worker ready")
-
-	<-ctx.Done()
-	return nil
+	// The server prepares storage before it reports healthy, and the worker starts after that.
+	for _, dir := range []string{cfg.LibraryPath, cfg.CachePath} {
+		if err := storage.CheckMarker(dir); err != nil {
+			return err
+		}
+	}
+	client, err := jobs.NewWorker(pool, jobs.Options{Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath})
+	if err != nil {
+		return fmt.Errorf("create worker: %w", err)
+	}
+	slog.Info("worker ready", "concurrency", cfg.WorkerConcurrency)
+	return jobs.Run(ctx, client)
 }
 
-func healthcheck(ctx context.Context) error {
-	_, port, err := net.SplitHostPort(listenAddr())
+// upsertUser creates a user or resets their password and two-factor sign-in from the command line,
+// which is how a self-hosted administrator recovers access. The password comes from stdin.
+func upsertUser(ctx context.Context, cfg config.Config, args []string) error {
+	if len(args) < 3 || args[0] != "upsert" {
+		return errors.New(usage)
+	}
+	email, err := auth.NormalizeEmail(args[1])
+	if err != nil {
+		return err
+	}
+	isAdmin := len(args) > 3 && args[3] == "--admin"
+
+	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	if err != nil && !errors.Is(err, io.EOF) {
+		return fmt.Errorf("read password: %w", err)
+	}
+	password := strings.TrimRight(line, "\r\n")
+	if err := auth.ValidatePassword(password); err != nil {
+		return err
+	}
+	hash, err := auth.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+	defer pool.Close()
+	_, err = db.New(pool).UpsertUser(ctx, db.UpsertUserParams{Email: email, Name: args[2], PasswordHash: hash, IsAdmin: isAdmin})
+	return err
+}
+
+func healthcheck(ctx context.Context, cfg config.Config) error {
+	_, port, err := net.SplitHostPort(cfg.ListenAddr)
 	if err != nil {
 		return fmt.Errorf("parse LISTEN_ADDR: %w", err)
 	}
@@ -126,15 +214,4 @@ func healthcheck(ctx context.Context) error {
 		return fmt.Errorf("health returned %d", resp.StatusCode)
 	}
 	return nil
-}
-
-func listenAddr() string {
-	if addr := os.Getenv("LISTEN_ADDR"); addr != "" {
-		return addr
-	}
-	return ":8080"
-}
-
-func databaseURL() string {
-	return os.Getenv("DATABASE_URL")
 }

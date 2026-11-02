@@ -1,17 +1,22 @@
 import { expect, test } from '@playwright/test';
+import { signIn, users } from './helpers';
 
 test.beforeEach(async ({ page }) => {
-	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'hr'));
+	await page.addInitScript(() => {
+		if (!localStorage.getItem('mediarr_lang')) localStorage.setItem('mediarr_lang', 'hr');
+	});
 });
 
 test('the interface defaults to English', async ({ page }) => {
-	await page.addInitScript(() => localStorage.removeItem('mediarr_lang'));
+	await signIn(page, 'admin');
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', ''));
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Photos' })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 
 test('app sidebar has the planned sections and navigates', async ({ page }) => {
+	await signIn(page, 'admin');
 	await page.goto('/');
 	const nav = page.getByRole('navigation').first();
 	for (const label of [
@@ -35,11 +40,13 @@ test('app sidebar has the planned sections and navigates', async ({ page }) => {
 });
 
 test('unknown section is a 404', async ({ page }) => {
+	await signIn(page, 'admin');
 	await page.goto('/nope');
 	await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
 });
 
 test('admin has its tag, the app does not', async ({ page }) => {
+	await signIn(page, 'admin');
 	await page.goto('/admin');
 	await expect(page.locator('.logo-tag')).toHaveText('ADMIN');
 	await page.goto('/');
@@ -47,6 +54,7 @@ test('admin has its tag, the app does not', async ({ page }) => {
 });
 
 test('theme toggle persists across reloads', async ({ page }) => {
+	await signIn(page, 'admin');
 	await page.addInitScript(() => {
 		if (!sessionStorage.getItem('seeded')) {
 			sessionStorage.setItem('seeded', '1');
@@ -61,6 +69,7 @@ test('theme toggle persists across reloads', async ({ page }) => {
 });
 
 test('language menu switches the interface', async ({ page }) => {
+	await signIn(page, 'admin');
 	await page.goto('/');
 	await page.locator('.langdd summary').click();
 	await page.getByRole('menuitem', { name: /English/ }).click();
@@ -69,6 +78,7 @@ test('language menu switches the interface', async ({ page }) => {
 });
 
 test('command palette opens with Ctrl+K and navigates', async ({ page }) => {
+	await signIn(page, 'admin');
 	await page.goto('/');
 	await page.locator('main').waitFor();
 	await page.keyboard.press('Control+k');
@@ -80,6 +90,7 @@ test('command palette opens with Ctrl+K and navigates', async ({ page }) => {
 });
 
 test('mobile menu opens and closes', async ({ page }) => {
+	await signIn(page, 'admin');
 	await page.setViewportSize({ width: 390, height: 800 });
 	await page.goto('/');
 	await page.getByRole('button', { name: 'Otvori izbornik' }).click();
@@ -121,4 +132,89 @@ test('production hides the development pages', async ({ page }) => {
 	test.skip(!process.env.E2E_PROD_URL, 'needs E2E_PROD_URL');
 	await page.goto(`${process.env.E2E_PROD_URL}/dev/components`);
 	await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
+});
+
+test('pages require signing in and return afterwards', async ({ page }) => {
+	await page.goto('/albums');
+	await expect(page).toHaveURL(/\/login\?next=%2Falbums$/);
+	await page.getByLabel('E-adresa').fill(users.user);
+	await page.getByLabel('Lozinka', { exact: true }).fill(process.env.E2E_PASSWORD!);
+	await page.getByRole('button', { name: 'Prijavi se' }).click();
+	await expect(page).toHaveURL(/\/albums$/);
+});
+
+test('a wrong password shows an error', async ({ page }) => {
+	await page.goto('/login');
+	await page.getByLabel('E-adresa').fill('nobody@example.com');
+	await page.getByLabel('Lozinka', { exact: true }).fill('not the right password');
+	await page.getByRole('button', { name: 'Prijavi se' }).click();
+	await expect(page.getByRole('alert')).toContainText('Pogrešna');
+});
+
+test('a sign-in link cannot redirect to another site', async ({ page }) => {
+	await page.goto('/login?next=//example.com');
+	await page.getByLabel('E-adresa').fill(users.user);
+	await page.getByLabel('Lozinka', { exact: true }).fill(process.env.E2E_PASSWORD!);
+	await page.getByRole('button', { name: 'Prijavi se' }).click();
+	await expect(page.getByRole('heading', { name: 'Fotke' })).toBeVisible();
+	expect(new URL(page.url()).host).not.toBe('example.com');
+});
+
+test('signing out ends the session', async ({ page }) => {
+	await signIn(page, 'user');
+	await page.goto('/');
+	await page.getByRole('button', { name: 'Odjava' }).click();
+	await expect(page).toHaveURL(/\/login$/);
+	await page.goto('/');
+	await expect(page).toHaveURL(/\/login/);
+});
+
+test('administration is closed to normal users', async ({ page }) => {
+	await signIn(page, 'user');
+	await page.goto('/admin');
+	await expect(page.getByRole('heading', { name: 'Fotke' })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Administracija' })).toHaveCount(0);
+});
+
+test('an administrator can see the users', async ({ page }) => {
+	await signIn(page, 'admin');
+	await page.goto('/admin/users');
+	await expect(page.getByRole('cell', { name: users.user })).toBeVisible();
+});
+
+test('uploading shows progress, finishes processing and deduplicates', async ({ page }) => {
+	await signIn(page, 'uploader');
+	await page.goto('/');
+	await page.locator('main').waitFor();
+
+	// A tiny valid PNG, made unique so that every run starts as a new file.
+	const png = Buffer.from(
+		'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEBgIApD5fRAAAAABJRU5ErkJggg==',
+		'base64'
+	);
+	const unique = Buffer.concat([png, Buffer.from(String(Date.now()))]);
+	const name = `e2e-${Date.now()}.png`;
+	const input = page.locator('input[type=file]');
+
+	await input.setInputFiles({ name, mimeType: 'image/png', buffer: unique });
+	const row = page.getByRole('row', { name: new RegExp(name) });
+	await expect(row.getByText('Spremno')).toBeVisible({ timeout: 30000 });
+
+	await input.setInputFiles({ name: `copy-${name}`, mimeType: 'image/png', buffer: unique });
+	await expect(page.getByText('Već postoji')).toBeVisible({ timeout: 30000 });
+});
+
+test('a damaged file shows an error instead of hanging', async ({ page }) => {
+	await signIn(page, 'uploader');
+	await page.goto('/');
+	await page.locator('main').waitFor();
+	const name = `broken-${Date.now()}.jpg`;
+	await page.locator('input[type=file]').setInputFiles({
+		name,
+		mimeType: 'image/jpeg',
+		buffer: Buffer.from(`not an image ${Date.now()}`)
+	});
+	await expect(page.getByRole('row', { name: new RegExp(name) }).getByText('Greška')).toBeVisible({
+		timeout: 30000
+	});
 });

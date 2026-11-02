@@ -4,11 +4,57 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Defines values for AssetKind.
+const (
+	Photo   AssetKind = "photo"
+	Unknown AssetKind = "unknown"
+	Video   AssetKind = "video"
+)
+
+// Valid indicates whether the value is a known member of the AssetKind enum.
+func (e AssetKind) Valid() bool {
+	switch e {
+	case Photo:
+		return true
+	case Unknown:
+		return true
+	case Video:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AssetStatus.
+const (
+	Failed     AssetStatus = "failed"
+	Processing AssetStatus = "processing"
+	Ready      AssetStatus = "ready"
+)
+
+// Valid indicates whether the value is a known member of the AssetStatus enum.
+func (e AssetStatus) Valid() bool {
+	switch e {
+	case Failed:
+		return true
+	case Processing:
+		return true
+	case Ready:
+		return true
+	default:
+		return false
+	}
+}
 
 // Defines values for HealthStatus.
 const (
@@ -28,6 +74,73 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Asset defines model for Asset.
+type Asset struct {
+	Blurhash *string `json:"blurhash,omitempty"`
+
+	// Checksum Lowercase hex SHA-256
+	Checksum     string             `json:"checksum"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	Error        *string            `json:"error,omitempty"`
+	Height       *int               `json:"height,omitempty"`
+	Id           openapi_types.UUID `json:"id"`
+	Kind         AssetKind          `json:"kind"`
+	OriginalName string             `json:"originalName"`
+	SizeBytes    int64              `json:"sizeBytes"`
+	Status       AssetStatus        `json:"status"`
+	TakenAt      *time.Time         `json:"takenAt,omitempty"`
+	Width        *int               `json:"width,omitempty"`
+}
+
+// AssetKind defines model for Asset.Kind.
+type AssetKind string
+
+// AssetStatus defines model for Asset.Status.
+type AssetStatus string
+
+// AssetList defines model for AssetList.
+type AssetList struct {
+	Failed     int64   `json:"failed"`
+	Items      []Asset `json:"items"`
+	Processing int64   `json:"processing"`
+	Total      int64   `json:"total"`
+}
+
+// AuthStatus defines model for AuthStatus.
+type AuthStatus struct {
+	SetupRequired bool  `json:"setupRequired"`
+	User          *User `json:"user,omitempty"`
+}
+
+// ChangePasswordRequest defines model for ChangePasswordRequest.
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}
+
+// ChecksumCheckRequest defines model for ChecksumCheckRequest.
+type ChecksumCheckRequest struct {
+	Checksums []string `json:"checksums"`
+}
+
+// ChecksumCheckResponse defines model for ChecksumCheckResponse.
+type ChecksumCheckResponse struct {
+	Existing []string `json:"existing"`
+}
+
+// CreateUserRequest defines model for CreateUserRequest.
+type CreateUserRequest struct {
+	Email    string `json:"email"`
+	IsAdmin  bool   `json:"isAdmin"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+// Error defines model for Error.
+type Error struct {
+	Message string `json:"message"`
+}
+
 // Health defines model for Health.
 type Health struct {
 	Status HealthStatus `json:"status"`
@@ -36,8 +149,127 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// LoginError defines model for LoginError.
+type LoginError struct {
+	Message      string `json:"message"`
+	TotpRequired bool   `json:"totpRequired"`
+}
+
+// LoginRequest defines model for LoginRequest.
+type LoginRequest struct {
+	Email    string  `json:"email"`
+	Password string  `json:"password"`
+	TotpCode *string `json:"totpCode,omitempty"`
+}
+
+// PasswordConfirm defines model for PasswordConfirm.
+type PasswordConfirm struct {
+	Password string `json:"password"`
+}
+
+// SetupRequest defines model for SetupRequest.
+type SetupRequest struct {
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+// TotpCode defines model for TotpCode.
+type TotpCode struct {
+	Code string `json:"code"`
+}
+
+// TotpSetup defines model for TotpSetup.
+type TotpSetup struct {
+	Secret string `json:"secret"`
+	Uri    string `json:"uri"`
+}
+
+// User defines model for User.
+type User struct {
+	Email       string             `json:"email"`
+	Id          openapi_types.UUID `json:"id"`
+	IsAdmin     bool               `json:"isAdmin"`
+	Name        string             `json:"name"`
+	TotpEnabled bool               `json:"totpEnabled"`
+}
+
+// ListAssetsParams defines parameters for ListAssets.
+type ListAssetsParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
+type CreateUserJSONRequestBody = CreateUserRequest
+
+// CheckAssetsJSONRequestBody defines body for CheckAssets for application/json ContentType.
+type CheckAssetsJSONRequestBody = ChecksumCheckRequest
+
+// LoginJSONRequestBody defines body for Login for application/json ContentType.
+type LoginJSONRequestBody = LoginRequest
+
+// SetupJSONRequestBody defines body for Setup for application/json ContentType.
+type SetupJSONRequestBody = SetupRequest
+
+// ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
+type ChangePasswordJSONRequestBody = ChangePasswordRequest
+
+// DisableTotpJSONRequestBody defines body for DisableTotp for application/json ContentType.
+type DisableTotpJSONRequestBody = PasswordConfirm
+
+// EnableTotpJSONRequestBody defines body for EnableTotp for application/json ContentType.
+type EnableTotpJSONRequestBody = TotpCode
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ListUsers List users
+	// (GET /api/admin/users)
+	ListUsers(w http.ResponseWriter, r *http.Request)
+	// CreateUser Create a user
+	// (POST /api/admin/users)
+	CreateUser(w http.ResponseWriter, r *http.Request)
+	// ListAssets List the current user's most recent assets and their processing status
+	// (GET /api/assets)
+	ListAssets(w http.ResponseWriter, r *http.Request, params ListAssetsParams)
+	// CheckAssets Report which SHA-256 checksums the current user already has, so uploads can be skipped
+	// (POST /api/assets/check)
+	CheckAssets(w http.ResponseWriter, r *http.Request)
+	// Login Sign in with email, password and, when enabled, a TOTP code
+	// (POST /api/auth/login)
+	Login(w http.ResponseWriter, r *http.Request)
+	// Logout End the current session
+	// (POST /api/auth/logout)
+	Logout(w http.ResponseWriter, r *http.Request)
+	// Setup Create the first administrator. Closed once any user exists.
+	// (POST /api/auth/setup)
+	Setup(w http.ResponseWriter, r *http.Request)
+	// GetAuthStatus Report whether setup is needed and who is signed in
+	// (GET /api/auth/status)
+	GetAuthStatus(w http.ResponseWriter, r *http.Request)
+	// ChangePassword Change the current user's password and end their other sessions
+	// (POST /api/me/password)
+	ChangePassword(w http.ResponseWriter, r *http.Request)
+	// DisableTotp Turn off TOTP
+	// (POST /api/me/totp/disable)
+	DisableTotp(w http.ResponseWriter, r *http.Request)
+	// EnableTotp Confirm a code and turn on TOTP
+	// (POST /api/me/totp/enable)
+	EnableTotp(w http.ResponseWriter, r *http.Request)
+	// SetupTotp Generate a TOTP secret. It takes effect only after confirmation.
+	// (POST /api/me/totp/setup)
+	SetupTotp(w http.ResponseWriter, r *http.Request)
+	// CreateUpload Create a resumable upload (tus 1.0)
+	// (POST /api/uploads)
+	CreateUpload(w http.ResponseWriter, r *http.Request)
+	// CancelUpload Cancel an upload (tus 1.0)
+	// (DELETE /api/uploads/{id})
+	CancelUpload(w http.ResponseWriter, r *http.Request, id string)
+	// GetUploadOffset Read how much of an upload has arrived (tus 1.0)
+	// (HEAD /api/uploads/{id})
+	GetUploadOffset(w http.ResponseWriter, r *http.Request, id string)
+	// AppendUpload Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+	// (PATCH /api/uploads/{id})
+	AppendUpload(w http.ResponseWriter, r *http.Request, id string)
 	// GetHealth Report whether the server can reach its database
 	// (GET /health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
@@ -46,6 +278,102 @@ type ServerInterface interface {
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// ListUsers List users
+// (GET /api/admin/users)
+func (_ Unimplemented) ListUsers(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateUser Create a user
+// (POST /api/admin/users)
+func (_ Unimplemented) CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAssets List the current user's most recent assets and their processing status
+// (GET /api/assets)
+func (_ Unimplemented) ListAssets(w http.ResponseWriter, r *http.Request, params ListAssetsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CheckAssets Report which SHA-256 checksums the current user already has, so uploads can be skipped
+// (POST /api/assets/check)
+func (_ Unimplemented) CheckAssets(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Login Sign in with email, password and, when enabled, a TOTP code
+// (POST /api/auth/login)
+func (_ Unimplemented) Login(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Logout End the current session
+// (POST /api/auth/logout)
+func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Setup Create the first administrator. Closed once any user exists.
+// (POST /api/auth/setup)
+func (_ Unimplemented) Setup(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAuthStatus Report whether setup is needed and who is signed in
+// (GET /api/auth/status)
+func (_ Unimplemented) GetAuthStatus(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ChangePassword Change the current user's password and end their other sessions
+// (POST /api/me/password)
+func (_ Unimplemented) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DisableTotp Turn off TOTP
+// (POST /api/me/totp/disable)
+func (_ Unimplemented) DisableTotp(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// EnableTotp Confirm a code and turn on TOTP
+// (POST /api/me/totp/enable)
+func (_ Unimplemented) EnableTotp(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetupTotp Generate a TOTP secret. It takes effect only after confirmation.
+// (POST /api/me/totp/setup)
+func (_ Unimplemented) SetupTotp(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateUpload Create a resumable upload (tus 1.0)
+// (POST /api/uploads)
+func (_ Unimplemented) CreateUpload(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CancelUpload Cancel an upload (tus 1.0)
+// (DELETE /api/uploads/{id})
+func (_ Unimplemented) CancelUpload(w http.ResponseWriter, r *http.Request, id string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetUploadOffset Read how much of an upload has arrived (tus 1.0)
+// (HEAD /api/uploads/{id})
+func (_ Unimplemented) GetUploadOffset(w http.ResponseWriter, r *http.Request, id string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AppendUpload Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+// (PATCH /api/uploads/{id})
+func (_ Unimplemented) AppendUpload(w http.ResponseWriter, r *http.Request, id string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // GetHealth Report whether the server can reach its database
 // (GET /health)
@@ -61,6 +389,285 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// ListUsers operation middleware
+func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListUsers(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateUser operation middleware
+func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAssets operation middleware
+func (siw *ServerInterfaceWrapper) ListAssets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAssetsParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAssets(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CheckAssets operation middleware
+func (siw *ServerInterfaceWrapper) CheckAssets(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CheckAssets(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// Login operation middleware
+func (siw *ServerInterfaceWrapper) Login(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Login(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// Logout operation middleware
+func (siw *ServerInterfaceWrapper) Logout(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Logout(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// Setup operation middleware
+func (siw *ServerInterfaceWrapper) Setup(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Setup(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAuthStatus operation middleware
+func (siw *ServerInterfaceWrapper) GetAuthStatus(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAuthStatus(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ChangePassword operation middleware
+func (siw *ServerInterfaceWrapper) ChangePassword(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ChangePassword(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DisableTotp operation middleware
+func (siw *ServerInterfaceWrapper) DisableTotp(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DisableTotp(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// EnableTotp operation middleware
+func (siw *ServerInterfaceWrapper) EnableTotp(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EnableTotp(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetupTotp operation middleware
+func (siw *ServerInterfaceWrapper) SetupTotp(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetupTotp(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateUpload operation middleware
+func (siw *ServerInterfaceWrapper) CreateUpload(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateUpload(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelUpload operation middleware
+func (siw *ServerInterfaceWrapper) CancelUpload(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelUpload(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetUploadOffset operation middleware
+func (siw *ServerInterfaceWrapper) GetUploadOffset(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetUploadOffset(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AppendUpload operation middleware
+func (siw *ServerInterfaceWrapper) AppendUpload(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AppendUpload(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // GetHealth operation middleware
 func (siw *ServerInterfaceWrapper) GetHealth(w http.ResponseWriter, r *http.Request) {
@@ -191,6 +798,54 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/health", wrapper.GetHealth)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/auth/status", wrapper.GetAuthStatus)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/setup", wrapper.Setup)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/login", wrapper.Login)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/logout", wrapper.Logout)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/me/password", wrapper.ChangePassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/me/totp/setup", wrapper.SetupTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/me/totp/enable", wrapper.EnableTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/me/totp/disable", wrapper.DisableTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/users", wrapper.ListUsers)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/users", wrapper.CreateUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets", wrapper.ListAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/assets/check", wrapper.CheckAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/uploads", wrapper.CreateUpload)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/uploads/{id}", wrapper.CancelUpload)
+	})
+	r.Group(func(r chi.Router) {
+		r.Head(options.BaseURL+"/api/uploads/{id}", wrapper.GetUploadOffset)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/uploads/{id}", wrapper.AppendUpload)
 	})
 
 	return r

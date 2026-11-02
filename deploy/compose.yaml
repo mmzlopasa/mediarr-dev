@@ -30,9 +30,13 @@ services:
       retries: 3
       start_period: 10s
 
+  # Starts after the server, which applies migrations and prepares storage.
   worker:
     <<: *server
     command: ["worker"]
+    depends_on:
+      server:
+        condition: service_healthy
 
   ml:
     image: ghcr.io/mmzlopasa/mediarr-ml:${MEDIARR_VERSION:-latest}
@@ -114,8 +118,10 @@ configs:
               set $$upstream http://server:8080;
               proxy_pass $$upstream;
               proxy_http_version 1.1;
+              proxy_read_timeout 1h;
 
-              proxy_set_header Host $$host;
+              # $$http_host keeps the port, which resumable upload URLs need when opened by IP.
+              proxy_set_header Host $$http_host;
               proxy_set_header Upgrade $$http_upgrade;
               proxy_set_header Connection $$connection_upgrade;
               proxy_set_header X-Real-IP $$remote_addr;

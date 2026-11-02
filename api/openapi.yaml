@@ -1,32 +1,343 @@
 openapi: 3.0.3
 info:
   title: Mediarr API
-  version: 0.1.0
+  version: 0.2.0
 paths:
   /health:
     get:
       operationId: getHealth
       summary: Report whether the server can reach its database
-      security: []
       responses:
         "200":
           description: Server is healthy
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/Health"
+              schema: { $ref: "#/components/schemas/Health" }
         "503":
           description: Server cannot reach its database
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+  /api/auth/status:
+    get:
+      operationId: getAuthStatus
+      summary: Report whether setup is needed and who is signed in
+      responses:
+        "200":
+          description: Current status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthStatus" }
+  /api/auth/setup:
+    post:
+      operationId: setup
+      summary: Create the first administrator. Closed once any user exists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SetupRequest" }
+      responses:
+        "201":
+          description: Administrator created and signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/auth/login:
+    post:
+      operationId: login
+      summary: Sign in with email, password and, when enabled, a TOTP code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401":
+          description: Wrong credentials, or a TOTP code is required
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LoginError" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/auth/logout:
+    post:
+      operationId: logout
+      summary: End the current session
+      responses:
+        "204": { description: Signed out }
+  /api/me/password:
+    post:
+      operationId: changePassword
+      summary: Change the current user's password and end their other sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChangePasswordRequest" }
+      responses:
+        "204": { description: Password changed }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/me/totp/setup:
+    post:
+      operationId: setupTotp
+      summary: Generate a TOTP secret. It takes effect only after confirmation.
+      responses:
+        "200":
+          description: Secret to add to an authenticator app
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TotpSetup" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/me/totp/enable:
+    post:
+      operationId: enableTotp
+      summary: Confirm a code and turn on TOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TotpCode" }
+      responses:
+        "204": { description: TOTP enabled }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/me/totp/disable:
+    post:
+      operationId: disableTotp
+      summary: Turn off TOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordConfirm" }
+      responses:
+        "204": { description: TOTP disabled }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/admin/users:
+    get:
+      operationId: listUsers
+      summary: List users
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/Health"
+                type: array
+                items: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createUser
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateUserRequest" }
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/assets:
+    get:
+      operationId: listAssets
+      summary: List the current user's most recent assets and their processing status
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: Assets, newest first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetList" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/assets/check:
+    post:
+      operationId: checkAssets
+      summary: Report which SHA-256 checksums the current user already has, so uploads can be skipped
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChecksumCheckRequest" }
+      responses:
+        "200":
+          description: Checksums that already exist
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChecksumCheckResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/uploads:
+    post:
+      operationId: createUpload
+      summary: Create a resumable upload (tus 1.0)
+      responses:
+        "201": { description: Upload created; see the Location header }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/uploads/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    head:
+      operationId: getUploadOffset
+      summary: Read how much of an upload has arrived (tus 1.0)
+      responses:
+        "200": { description: See the Upload-Offset header }
+        "404": { description: No such upload }
+    patch:
+      operationId: appendUpload
+      summary: Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+      responses:
+        "204": { description: Data stored }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: cancelUpload
+      summary: Cancel an upload (tus 1.0)
+      responses:
+        "204": { description: Upload cancelled }
+        "404": { $ref: "#/components/responses/Error" }
 components:
+  responses:
+    Error:
+      description: The request failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
   schemas:
     Health:
       type: object
       required: [status]
       properties:
-        status:
-          type: string
-          enum: [ok, unavailable]
+        status: { type: string, enum: [ok, unavailable] }
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    LoginError:
+      type: object
+      required: [message, totpRequired]
+      properties:
+        message: { type: string }
+        totpRequired: { type: boolean }
+    AuthStatus:
+      type: object
+      required: [setupRequired]
+      properties:
+        setupRequired: { type: boolean }
+        user: { $ref: "#/components/schemas/User" }
+    User:
+      type: object
+      required: [id, email, name, isAdmin, totpEnabled]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        name: { type: string }
+        isAdmin: { type: boolean }
+        totpEnabled: { type: boolean }
+    SetupRequest:
+      type: object
+      required: [email, name, password]
+      properties:
+        email: { type: string }
+        name: { type: string }
+        password: { type: string }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+        totpCode: { type: string }
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string }
+    CreateUserRequest:
+      type: object
+      required: [email, name, password, isAdmin]
+      properties:
+        email: { type: string }
+        name: { type: string }
+        password: { type: string }
+        isAdmin: { type: boolean }
+    TotpSetup:
+      type: object
+      required: [secret, uri]
+      properties:
+        secret: { type: string }
+        uri: { type: string }
+    TotpCode:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string }
+    PasswordConfirm:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string }
+    Asset:
+      type: object
+      required: [id, originalName, kind, status, sizeBytes, checksum, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        originalName: { type: string }
+        kind: { type: string, enum: [unknown, photo, video] }
+        status: { type: string, enum: [processing, ready, failed] }
+        error: { type: string }
+        sizeBytes: { type: integer, format: int64 }
+        checksum: { type: string, description: Lowercase hex SHA-256 }
+        width: { type: integer }
+        height: { type: integer }
+        blurhash: { type: string }
+        takenAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    AssetList:
+      type: object
+      required: [items, total, processing, failed]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Asset" }
+        total: { type: integer, format: int64 }
+        processing: { type: integer, format: int64 }
+        failed: { type: integer, format: int64 }
+    ChecksumCheckRequest:
+      type: object
+      required: [checksums]
+      properties:
+        checksums:
+          type: array
+          maxItems: 1000
+          items: { type: string }
+    ChecksumCheckResponse:
+      type: object
+      required: [existing]
+      properties:
+        existing:
+          type: array
+          items: { type: string }

@@ -31,7 +31,7 @@ function shell(
 	tag: string,
 	role: string,
 	footLabel: string,
-	foot: [IconName, string],
+	foot: [IconName, string][],
 	main: string
 ) {
 	const items = nav
@@ -43,7 +43,7 @@ function shell(
 	return document(
 		theme,
 		'app',
-		`<a class="skip" href="#main">Preskoči na sadržaj</a><div class="layout"><aside class="side glass" id="side"><div class="side-top">${logo(tag)}<button class="icon-btn side-x" type="button">✕</button></div><nav class="nav">${items}</nav><div class="side-foot"><a class="nav-i" href="#"><span class="ic">${ico(foot[0])}</span><span>${foot[1]}</span></a></div></aside><div class="scrim"></div>` +
+		`<a class="skip" href="#main">Preskoči na sadržaj</a><div class="layout"><aside class="side glass" id="side"><div class="side-top">${logo(tag)}<button class="icon-btn side-x" type="button">✕</button></div><nav class="nav">${items}</nav><div class="side-foot">${foot.map(([icon, label]) => `<a class="nav-i" href="#"><span class="ic">${ico(icon)}</span><span>${label}</span></a>`).join('')}</div></aside><div class="scrim"></div>` +
 			`<div class="main-col"><header class="topbar"><button class="icon-btn menu-btn" type="button">${ico('menu')}</button><form class="gs" role="search"><label class="sr" for="gs-q">Traži</label>${ico('search', 16)}<input id="gs-q" class="in" name="q" type="search" placeholder="Traži fotke, osobe, mjesta…" autocomplete="off"></form><div class="top-r">${langMenu}${themeBtn}<div class="me"><span class="av" aria-hidden="true">DK</span><span class="me-t"><b>Demo korisnik</b><small>${role}</small></span></div><form class="inl"><button class="icon-btn">${ico('out')}</button></form></div></header>` +
 			`<main id="main" class="main" tabindex="-1">${main}</main><footer class="foot">© ${new Date().getFullYear()} Mediarr · ${footLabel}</footer></div></div>`
 	);
@@ -74,8 +74,11 @@ export function appPage(theme: string) {
 		'',
 		'Korisnik',
 		'Fotografije',
-		['shield', 'Administracija'],
-		titleRow(item.hr) +
+		[
+			['user', 'Račun'],
+			['shield', 'Administracija']
+		],
+		`<div class="ph"><div><h1>${item.hr}</h1></div><div class="ph-a"><button class="btn gold sm">${ico('upload', 14)} Upload</button><input class="sr" type="file" multiple tabindex="-1"></div></div>` +
 			`<section class="card glass"><div class="card-b">${emptyState(item.icon, item.emptyHr)}</div></section>`
 	);
 }
@@ -88,7 +91,10 @@ export function adminPage(theme: string) {
 		'ADMIN',
 		'Administrator',
 		'Administracija',
-		['photo', 'Fotografije'],
+		[
+			['user', 'Račun'],
+			['photo', 'Fotografije']
+		],
 		titleRow('Dobrodošli', 'Stanje biblioteke i poslužitelja na jednom mjestu.') +
 			`<div class="stats">${stat('Korisnici', '0')}${stat('Fotke', '0')}${stat('Videi', '0')}${stat('Pohrana', '0 GB', '', 0)}</div>` +
 			`<div class="grid2">${card('Poslovi', emptyState('list', 'Nema poslova u redu.'))}${card('Sustav', kv('Verzija', '0.1.0') + kv('Baza', 'PostgreSQL 17'))}</div>`

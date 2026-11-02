@@ -30,7 +30,22 @@ part 'auth/http_bearer_auth.dart';
 
 part 'api/default_api.dart';
 
+part 'model/asset.dart';
+part 'model/asset_list.dart';
+part 'model/auth_status.dart';
+part 'model/change_password_request.dart';
+part 'model/checksum_check_request.dart';
+part 'model/checksum_check_response.dart';
+part 'model/create_user_request.dart';
+part 'model/error.dart';
 part 'model/health.dart';
+part 'model/login_error.dart';
+part 'model/login_request.dart';
+part 'model/password_confirm.dart';
+part 'model/setup_request.dart';
+part 'model/totp_code.dart';
+part 'model/totp_setup.dart';
+part 'model/user.dart';
 
 /// An [ApiClient] instance that uses the default values obtained from
 /// the OpenAPI specification file.

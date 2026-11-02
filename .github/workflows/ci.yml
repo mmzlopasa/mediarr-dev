@@ -23,7 +23,13 @@ jobs:
             server/go.sum
             server/tools.sum
       - run: go tool -modfile=tools.mod golangci-lint run ./...
-      - run: go test ./...
+      - name: Start the dev database and tools
+        working-directory: .
+        run: |
+          mkdir -p .dev/cache .dev/library .dev/media-cache
+          docker compose -f deploy/compose.dev.yaml build server
+          docker compose -f deploy/compose.dev.yaml up -d --wait db
+          docker compose -f deploy/compose.dev.yaml run --rm --no-deps --user "$(id -u):$(id -g)" server go test ./...
 
   ml:
     runs-on: ubuntu-latest

@@ -18,7 +18,7 @@ COPY --from=web /src/web/build/ ./internal/webui/dist/
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /mediarr ./cmd/mediarr
 
 FROM alpine:3
-RUN adduser -D -u 10001 mediarr
+RUN apk add --no-cache vips-tools vips-heif exiftool ffmpeg && adduser -D -u 10001 mediarr
 COPY --from=server /mediarr /mediarr
 USER 10001
 EXPOSE 8080

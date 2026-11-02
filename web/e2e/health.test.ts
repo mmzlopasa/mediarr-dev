@@ -8,7 +8,7 @@ test('health endpoint answers through nginx', async ({ request }) => {
 });
 
 test('web client loads through nginx', async ({ page }) => {
-	await page.goto('/');
+	await page.goto('/login');
 
-	await expect(page.getByRole('heading', { name: /Fotke|Photos/ })).toBeVisible();
+	await expect(page.getByRole('heading', { name: /Dobrodošli|Welcome/ })).toBeVisible();
 });

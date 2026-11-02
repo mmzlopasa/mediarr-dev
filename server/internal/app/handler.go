@@ -6,33 +6,98 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
+	tusd "github.com/tus/tusd/v2/pkg/handler"
 
+	"github.com/mmzlopasa/mediarr-app/server/db"
 	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mmzlopasa/mediarr-app/server/internal/auth"
+	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
 	"github.com/mmzlopasa/mediarr-app/server/internal/webui"
 )
 
-const healthTimeout = 2 * time.Second
+const (
+	healthTimeout     = 2 * time.Second
+	sessionCookie     = "mediarr_session"
+	sessionLifetime   = 30 * 24 * time.Hour
+	apiKeyHeader      = "X-Api-Key" //nolint:gosec // A header name, not a credential.
+	loginWindow       = 15 * time.Minute
+	loginFailuresUser = 10
+	loginFailuresIP   = 50
+	maxJSONBody       = 64 * 1024
+)
 
 // Pinger reports whether the database answers a query.
 type Pinger interface {
 	Ping(ctx context.Context) (int32, error)
 }
 
-// NewHandler returns the root HTTP handler.
-func NewHandler(pinger Pinger) http.Handler {
-	r := chi.NewRouter()
-	r.Use(middleware.Recoverer)
-	r.NotFound(webui.Handler().ServeHTTP)
-	api.HandlerFromMux(&apiServer{pinger: pinger}, r)
-	return r
+// Deps are what the handlers need. Only Pinger is required for the health endpoint.
+type Deps struct {
+	Pinger      Pinger
+	Pool        *pgxpool.Pool
+	Inserter    *jobs.Inserter
+	LibraryPath string
 }
 
 type apiServer struct {
-	pinger Pinger
+	Deps
+	queries     *db.Queries
+	userLimiter *auth.Limiter
+	ipLimiter   *auth.Limiter
+	uploads     *tusd.UnroutedHandler
+}
+
+// NewHandler returns the root HTTP handler.
+func NewHandler(deps Deps) (http.Handler, error) {
+	server := &apiServer{
+		Deps:        deps,
+		userLimiter: auth.NewLimiter(loginFailuresUser, loginWindow),
+		ipLimiter:   auth.NewLimiter(loginFailuresIP, loginWindow),
+	}
+	if deps.Pool != nil {
+		server.queries = db.New(deps.Pool)
+		uploads, err := server.newUploadHandler()
+		if err != nil {
+			return nil, err
+		}
+		server.uploads = uploads
+	}
+
+	r := chi.NewRouter()
+	r.Use(middleware.Recoverer)
+	r.Use(requireJSONForWrites)
+	if server.queries != nil {
+		r.Use(server.loadUser)
+	}
+	r.NotFound(notFound)
+	api.HandlerFromMux(server, r)
+	return r, nil
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		writeError(w, http.StatusNotFound, "not found")
+		return
+	}
+	webui.Handler().ServeHTTP(w, r)
+}
+
+// requireJSONForWrites stops cross-site forms, which cannot send JSON, from reaching the JSON API.
+func requireJSONForWrites(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/") && r.URL.Path != "/api/uploads" &&
+			r.ContentLength != 0 && !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+			writeError(w, http.StatusUnsupportedMediaType, "expected application/json")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *apiServer) GetHealth(w http.ResponseWriter, r *http.Request) {
@@ -40,14 +105,35 @@ func (s *apiServer) GetHealth(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	code, status := http.StatusOK, api.Ok
-	if _, err := s.pinger.Ping(ctx); err != nil {
+	if _, err := s.Pinger.Ping(ctx); err != nil {
 		slog.Error("health check failed", "error", err)
 		code, status = http.StatusServiceUnavailable, api.Unavailable
 	}
+	writeJSON(w, code, api.Health{Status: status})
+}
 
+func writeJSON(w http.ResponseWriter, code int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	if err := json.NewEncoder(w).Encode(api.Health{Status: status}); err != nil {
-		slog.Error("write health response", "error", err)
+	if err := json.NewEncoder(w).Encode(body); err != nil {
+		slog.Error("write response", "error", err)
 	}
+}
+
+func writeError(w http.ResponseWriter, code int, message string) {
+	writeJSON(w, code, api.Error{Message: message})
+}
+
+func internalError(w http.ResponseWriter, r *http.Request, err error) {
+	slog.Error("request failed", "path", r.URL.Path, "error", err)
+	writeError(w, http.StatusInternalServerError, "something went wrong")
+}
+
+func readJSON(w http.ResponseWriter, r *http.Request, target any) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
+	if err := json.NewDecoder(r.Body).Decode(target); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return false
+	}
+	return true
 }

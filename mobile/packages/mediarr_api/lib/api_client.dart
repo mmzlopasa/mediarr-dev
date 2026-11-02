@@ -229,8 +229,38 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
+        case 'Asset':
+          return Asset.fromJson(value);
+        case 'AssetList':
+          return AssetList.fromJson(value);
+        case 'AuthStatus':
+          return AuthStatus.fromJson(value);
+        case 'ChangePasswordRequest':
+          return ChangePasswordRequest.fromJson(value);
+        case 'ChecksumCheckRequest':
+          return ChecksumCheckRequest.fromJson(value);
+        case 'ChecksumCheckResponse':
+          return ChecksumCheckResponse.fromJson(value);
+        case 'CreateUserRequest':
+          return CreateUserRequest.fromJson(value);
+        case 'Error':
+          return Error.fromJson(value);
         case 'Health':
           return Health.fromJson(value);
+        case 'LoginError':
+          return LoginError.fromJson(value);
+        case 'LoginRequest':
+          return LoginRequest.fromJson(value);
+        case 'PasswordConfirm':
+          return PasswordConfirm.fromJson(value);
+        case 'SetupRequest':
+          return SetupRequest.fromJson(value);
+        case 'TotpCode':
+          return TotpCode.fromJson(value);
+        case 'TotpSetup':
+          return TotpSetup.fromJson(value);
+        case 'User':
+          return User.fromJson(value);
         default:
           dynamic match;
           if (value is List &&

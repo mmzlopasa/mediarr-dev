@@ -2,16 +2,20 @@ export PATH := $(HOME)/.local/bin:$(PATH)
 export DEV_UID := $(shell id -u)
 export DEV_GID := $(shell id -g)
 
+# Optional per-machine settings, such as DEV_LIBRARY on a separate disk.
+-include deploy/.env.dev
+export DEV_LIBRARY DEV_MEDIA_CACHE
+
 DEV_COMPOSE := docker compose -f deploy/compose.dev.yaml
 GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down deploy landing gen web-build lint test e2e lighthouse
+.PHONY: dev down deploy landing testdata uploadtest seed-large gen web-build lint test e2e lighthouse
 
 dev:
-	mkdir -p .dev/cache .dev/web-node_modules
-	$(DEV_COMPOSE) up -d --wait
+	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache
+	$(DEV_COMPOSE) up -d --build --wait
 
 down:
 	$(DEV_COMPOSE) down
@@ -23,6 +27,29 @@ deploy:
 # Publishes landing/ on mediarr.app.
 landing:
 	docker compose -f deploy/compose.landing.yaml up -d --wait
+
+TESTDATA ?= $(CURDIR)/.dev/testdata
+SCALE ?= 100
+
+testdata:
+	mkdir -p "$(TESTDATA)"
+	docker run --rm --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e RAW_LIST=/scripts/raw-samples.txt \
+		-v "$(CURDIR)/scripts:/scripts:ro" -v "$(TESTDATA):/out" mediarr-dev-go sh /scripts/testdata.sh /out $(SCALE)
+
+# Uploads TESTDATA through the API twice and checks the phase 2 gate.
+uploadtest:
+	@printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert uploadtest@example.com "Upload test"
+	cd server && UPLOADTEST_PASSWORD=$(E2E_PASSWORD) go run ./cmd/uploadtest -dir "$(TESTDATA)" -email uploadtest@example.com
+
+# Tests the newest migration going down and up on 100k assets, in a separate database.
+seed-large:
+	$(DEV_COMPOSE) exec -T db psql -q -U mediarr -d postgres -c "DROP DATABASE IF EXISTS seed_large WITH (FORCE)" -c "CREATE DATABASE seed_large"
+	$(DEV_COMPOSE) exec -T -e DATABASE_URL=postgres://mediarr:mediarr@db:5432/seed_large server /tmp/air/mediarr migrate
+	$(DEV_COMPOSE) exec -T db psql -q -U mediarr -d seed_large < server/db/seed/large.sql
+	time -p $(DEV_COMPOSE) exec -T -e DATABASE_URL=postgres://mediarr:mediarr@db:5432/seed_large server /tmp/air/mediarr migrate down
+	$(DEV_COMPOSE) exec -T db psql -q -U mediarr -d seed_large -Atc "SELECT to_regclass('assets') IS NULL AS assets_removed"
+	time -p $(DEV_COMPOSE) exec -T -e DATABASE_URL=postgres://mediarr:mediarr@db:5432/seed_large server /tmp/air/mediarr migrate
+	$(DEV_COMPOSE) exec -T db psql -q -U mediarr -d postgres -c "DROP DATABASE seed_large WITH (FORCE)"
 
 gen:
 	cd server && $(GO_TOOL) oapi-codegen -config oapi-codegen.yaml ../api/openapi.yaml
@@ -45,14 +72,18 @@ lint:
 	cd mobile && flutter analyze --suppress-analytics
 
 test:
-	cd server && go test ./...
+	$(DEV_COMPOSE) exec -T server go test ./...
 	cd ml && uv run pytest
 	cd web && pnpm test
 	cd mobile && flutter test --suppress-analytics
 
 # Runs in the Playwright image, so the host needs no browser or system libraries.
+E2E_PASSWORD := $(shell openssl rand -hex 16)
 e2e:
-	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp \
+	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-admin@example.com "Demo korisnik" --admin
+	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-user@example.com "Demo korisnik"
+	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-uploader@example.com "Demo korisnik"
+	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e E2E_PASSWORD=$(E2E_PASSWORD) \
 		-v "$(CURDIR)/web:/web" -w /web mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
 		node_modules/.bin/playwright test
 

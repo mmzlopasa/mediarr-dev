@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.svelte.ts';
+	import { addUploads } from '#lib/uploads.svelte.ts';
 	import Icon from './Icon.svelte';
-	import { showToast } from './toast.svelte';
 
 	let depth = $state(0);
 
@@ -23,7 +23,7 @@
 		if (!hasFiles(event)) return;
 		event.preventDefault();
 		depth = 0;
-		showToast('warn', tr('Upload još nije dostupan.', 'Upload is not available yet.'));
+		addUploads(event.dataTransfer?.files ?? []);
 	}
 </script>
 

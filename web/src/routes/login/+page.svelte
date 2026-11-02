@@ -1,92 +1,141 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { api, ApiError } from '#lib/api.ts';
+	import Alert from '#lib/design/components/Alert.svelte';
+	import AuthLayout from '#lib/design/components/AuthLayout.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
-	import LangMenu from '#lib/design/components/LangMenu.svelte';
-	import Logo from '#lib/design/components/Logo.svelte';
-	import ThemeButton from '#lib/design/components/ThemeButton.svelte';
-	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 
+	const CODE_PATTERN = '[0-9 ]{6,7}';
+
+	let email = $state('');
+	let password = $state('');
+	let code = $state('');
+	let needsCode = $state(false);
 	let visible = $state(false);
+	let error = $state('');
+	let showForgot = $state(false);
+	let busy = $state(false);
 
-	$effect.pre(() => {
-		document.body.className = 'auth-page auth-split';
-		return () => {
-			document.body.className = '';
-		};
-	});
+	// Only local paths, so a crafted link cannot send the user to another site after sign-in.
+	function nextPath() {
+		const next = page.url.searchParams.get('next') ?? '';
+		return next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '/';
+	}
 
-	function submit(event: SubmitEvent) {
+	async function submit(event: SubmitEvent) {
 		event.preventDefault();
-		showToast('warn', tr('Prijava još nije dostupna.', 'Sign-in is not available yet.'));
+		busy = true;
+		error = '';
+		try {
+			await api.login({ email, password, totpCode: needsCode ? code : undefined });
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- validated local path
+			await goto(nextPath(), { invalidateAll: true });
+		} catch (cause) {
+			if (cause instanceof ApiError && cause.totpRequired) {
+				if (needsCode) error = tr('Kod nije točan.', 'The code is wrong.');
+				needsCode = true;
+				code = '';
+			} else if (cause instanceof ApiError && cause.status === 429) {
+				error = tr('Previše pokušaja. Pokušajte kasnije.', 'Too many attempts. Try again later.');
+			} else if (cause instanceof ApiError && cause.status === 401) {
+				error = tr('Pogrešna e-adresa ili lozinka.', 'Wrong email or password.');
+			} else {
+				error = tr('Prijava nije uspjela. Pokušajte ponovno.', 'Sign-in failed. Please try again.');
+			}
+		} finally {
+			busy = false;
+		}
 	}
 </script>
 
 <svelte:head><title>{tr('Prijava', 'Sign in')} — Mediarr</title></svelte:head>
 
-<main class="as" id="main">
-	<section class="as-l">
-		<div class="as-top">
-			<Logo />
-			<div class="auth-tools as-tools-m"><LangMenu /><ThemeButton /></div>
-		</div>
-		<div class="as-form">
-			<h1 class="as-h">{tr('Dobrodošli', 'Welcome')}</h1>
-			<p class="as-p">{tr('Prijavite se svojim računom.', 'Sign in with your account.')}</p>
-			<form class="as-f" autocomplete="on" onsubmit={submit}>
-				<label class="as-fl">
-					<span>{tr('E-adresa', 'Email')}</span>
+<AuthLayout>
+	{#if error}<Alert kind="err">{error}</Alert>{/if}
+	{#if needsCode}
+		<h1 class="as-h">{tr('Dvofaktorska prijava', 'Two-factor sign-in')}</h1>
+		<p class="as-p">
+			{tr(
+				'Unesite 6-znamenkasti kod iz aplikacije za autentifikaciju.',
+				'Enter the 6-digit code from your authenticator app.'
+			)}
+		</p>
+		<form class="as-f" autocomplete="off" onsubmit={submit}>
+			<label class="as-fl">
+				<span>{tr('Kod', 'Code')}</span>
+				<input
+					class="as-in code-in"
+					name="code"
+					inputmode="numeric"
+					pattern={CODE_PATTERN}
+					maxlength="7"
+					required
+					autocomplete="one-time-code"
+					bind:value={code}
+				/>
+			</label>
+			<button class="as-btn" type="submit" disabled={busy}>{tr('Potvrdi', 'Verify')}</button>
+		</form>
+		<p class="as-links">
+			<a href={resolve('/login')} onclick={() => (needsCode = false)}>{tr('← Natrag', '← Back')}</a>
+		</p>
+	{:else}
+		<h1 class="as-h">{tr('Dobrodošli', 'Welcome')}</h1>
+		<p class="as-p">{tr('Prijavite se svojim računom.', 'Sign in with your account.')}</p>
+		<form class="as-f" autocomplete="on" onsubmit={submit}>
+			<label class="as-fl">
+				<span>{tr('E-adresa', 'Email')}</span>
+				<input
+					class="as-in"
+					type="email"
+					name="email"
+					required
+					autocomplete="username"
+					inputmode="email"
+					bind:value={email}
+				/>
+			</label>
+			<label class="as-fl">
+				<span>{tr('Lozinka', 'Password')}</span>
+				<span class="as-pw">
 					<input
 						class="as-in"
-						type="email"
-						name="email"
+						type={visible ? 'text' : 'password'}
+						name="password"
 						required
-						autocomplete="username"
-						inputmode="email"
+						autocomplete="current-password"
+						bind:value={password}
 					/>
-				</label>
-				<label class="as-fl">
-					<span>{tr('Lozinka', 'Password')}</span>
-					<span class="as-pw">
-						<input
-							class="as-in"
-							type={visible ? 'text' : 'password'}
-							name="password"
-							required
-							autocomplete="current-password"
-						/>
-						<button
-							type="button"
-							class="as-eye"
-							aria-label={tr('Prikaži lozinku', 'Show password')}
-							aria-pressed={visible}
-							onclick={() => (visible = !visible)}><Icon name="eye" /></button
-						>
-					</span>
-				</label>
-				<button class="as-btn" type="submit">{tr('Prijavi se', 'Sign in')}</button>
-			</form>
-			<p class="as-links">
-				<a href="#forgot">{tr('Zaboravljena lozinka?', 'Forgot your password?')}</a>
-			</p>
-			<p class="as-legal"><a href="https://mediarr.app">← mediarr.app</a></p>
-		</div>
-	</section>
-	<aside class="as-r" aria-label="Mediarr">
-		<div class="as-rtop">
-			<LangMenu />
-			<ThemeButton />
-			<a class="as-cta" href="https://mediarr.app">mediarr.app</a>
-		</div>
-		<div class="as-globe" aria-hidden="true"></div>
-		<div class="as-promo">
-			<span class="as-eb">Mediarr</span>
-			<h2>
+					<button
+						type="button"
+						class="as-eye"
+						aria-label={tr('Prikaži lozinku', 'Show password')}
+						aria-pressed={visible}
+						onclick={() => (visible = !visible)}><Icon name="eye" /></button
+					>
+				</span>
+			</label>
+			<button class="as-btn" type="submit" disabled={busy}>{tr('Prijavi se', 'Sign in')}</button>
+		</form>
+		<p class="as-links">
+			<a
+				href="#forgot"
+				onclick={(event) => {
+					event.preventDefault();
+					showForgot = true;
+				}}>{tr('Zaboravljena lozinka?', 'Forgot your password?')}</a
+			>
+		</p>
+		{#if showForgot}
+			<p class="as-p">
 				{tr(
-					'Sve vaše fotke i videi, na vašem poslužitelju.',
-					'All your photos and videos, on your own server.'
+					'Administrator poslužitelja može je postaviti naredbom: mediarr user upsert',
+					'The server administrator can reset it with the command: mediarr user upsert'
 				)}
-			</h2>
-			<p>{tr('Fotke · albumi · ljudi · karta', 'Photos · albums · people · map')}</p>
-		</div>
-	</aside>
-</main>
+			</p>
+		{/if}
+	{/if}
+</AuthLayout>

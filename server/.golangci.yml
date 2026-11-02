@@ -7,8 +7,20 @@ linters:
     - misspell
     - revive
     - unconvert
+  settings:
+    gosec:
+      excludes:
+        - G204 # Fixed media tools, with absolute paths as arguments.
+        - G301 # The library is shared with the owner's group by design.
+        - G302
+        - G304 # Paths are built by the storage package, not taken from clients.
+        - G306
+        - G124 # Secure is set per request, because Mediarr must also work over HTTP by IP.
   exclusions:
     generated: strict
+    rules:
+      - path: _test\.go
+        linters: [gosec, bodyclose]
 formatters:
   enable:
     - gofumpt

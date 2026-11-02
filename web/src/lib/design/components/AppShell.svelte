@@ -3,6 +3,8 @@
 	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { api, initialsOf, type User } from '#lib/api.ts';
+	import type { IconName } from '../icons.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import type { NavItem } from '#lib/nav.ts';
 	import Avatar from './Avatar.svelte';
@@ -15,16 +17,18 @@
 	let {
 		nav,
 		tag,
+		user,
 		roleLabel,
 		footLabel,
-		footLink,
+		footLinks,
 		children
 	}: {
 		nav: NavItem[];
 		tag?: string;
+		user: User;
 		roleLabel: string;
 		footLabel: string;
-		footLink: { href: string; icon: 'photo' | 'shield'; label: string };
+		footLinks: { href: string; icon: IconName; label: string }[];
 		children: Snippet;
 	} = $props();
 
@@ -40,6 +44,12 @@
 			closeSide();
 		};
 	});
+
+	async function signOut(event: SubmitEvent) {
+		event.preventDefault();
+		await api.logout();
+		await goto(resolve('/login'), { invalidateAll: true });
+	}
 
 	function search(event: SubmitEvent) {
 		event.preventDefault();
@@ -74,11 +84,13 @@
 			{/each}
 		</nav>
 		<div class="side-foot">
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved href -->
-			<a class="nav-i" href={footLink.href}>
-				<span class="ic"><Icon name={footLink.icon} /></span>
-				<span>{footLink.label}</span>
-			</a>
+			{#each footLinks as link (link.href)}
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved href -->
+				<a class="nav-i" href={link.href}>
+					<span class="ic"><Icon name={link.icon} /></span>
+					<span>{link.label}</span>
+				</a>
+			{/each}
 		</div>
 	</aside>
 	<div class="scrim" role="presentation" onclick={closeSide}></div>
@@ -106,12 +118,10 @@
 				<LangMenu />
 				<ThemeButton />
 				<div class="me">
-					<Avatar initials="DK" />
-					<span class="me-t"
-						><b>{tr('Demo korisnik', 'Demo user')}</b><small>{roleLabel}</small></span
-					>
+					<Avatar initials={initialsOf(user.name)} />
+					<span class="me-t"><b>{user.name}</b><small>{roleLabel}</small></span>
 				</div>
-				<form class="inl" method="get" action={resolve('/login')}>
+				<form class="inl" onsubmit={signOut}>
 					<button
 						class="icon-btn"
 						title={tr('Odjava', 'Sign out')}
