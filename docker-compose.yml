@@ -1,0 +1,18 @@
+name: mediarr
+
+services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      # Localhost only: host nginx terminates TLS and proxies here.
+      # Docker-published ports bypass ufw, so never bind this publicly.
+      - "127.0.0.1:9851:80"
+    volumes:
+      - ./deploy/nginx/container.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
