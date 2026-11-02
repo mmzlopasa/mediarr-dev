@@ -1,1 +1,7 @@
-@import 'tailwindcss';
+/* No Tailwind preflight: its reset would change the reference design in dash.css. */
+@layer theme, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@import './lib/design/dash.css';
+@import './lib/design/extras.css';

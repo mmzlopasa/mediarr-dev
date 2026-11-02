@@ -7,7 +7,7 @@ GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down gen web-build lint test e2e
+.PHONY: dev down gen web-build lint test e2e lighthouse
 
 dev:
 	mkdir -p .dev/cache .dev/web-node_modules
@@ -47,3 +47,8 @@ e2e:
 	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp \
 		-v "$(CURDIR)/web:/web" -w /web mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
 		node_modules/.bin/playwright test
+
+lighthouse:
+	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp \
+		-v "$(CURDIR)/web:/web" -w /web mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
+		sh e2e/lighthouse.sh

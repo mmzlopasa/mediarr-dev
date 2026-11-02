@@ -1,0 +1,213 @@
+/*
+ * Mediarr additions that the reference design (dash.css) does not contain.
+ * Everything here is built from its tokens. Do not restyle dash.css classes here.
+ */
+
+/* Logo */
+.logo {
+	text-decoration: none;
+}
+.logo-svg {
+	flex: none;
+}
+.logo-word {
+	fill: var(--gold);
+}
+.logo-dot {
+	fill: var(--gold);
+}
+html[data-theme='light'] .logo-word {
+	fill: var(--ink);
+}
+html[data-theme='light'] .logo-dot {
+	fill: var(--gold-3);
+}
+
+/* Single photo view: clean background, so colours around a photo do not affect it. */
+.plain-view .sky {
+	display: none;
+}
+.plain-stage {
+	min-height: 100vh;
+	display: grid;
+	place-items: center;
+	background: var(--bg);
+	color: var(--haze);
+}
+
+/* Dialog and Sheet */
+.dlg {
+	width: min(520px, calc(100vw - 32px));
+	padding: 0;
+	color: var(--ink);
+	background: var(--pop);
+}
+.dlg::backdrop,
+.sheet::backdrop {
+	background: #06051a8c;
+}
+.dlg-h {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--line);
+}
+.dlg-h h2 {
+	font-size: 1.15rem;
+}
+.dlg-b {
+	padding: 18px 20px;
+}
+.dlg-f {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	padding: 0 20px 18px;
+}
+.sheet {
+	width: min(420px, 92vw);
+	height: 100dvh;
+	max-height: none;
+	margin: 0 0 0 auto;
+	padding: 0;
+	color: var(--ink);
+	background: var(--pop);
+	border-radius: var(--r-l) 0 0 var(--r-l);
+}
+.sheet[open] {
+	animation: sheet-in 0.3s var(--ease);
+}
+@keyframes sheet-in {
+	from {
+		translate: 100% 0;
+	}
+}
+
+/* Toast */
+.toasts {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	z-index: 200;
+	display: grid;
+	gap: 10px;
+	width: min(380px, calc(100vw - 32px));
+}
+.toast {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+	padding: 12px 16px;
+	border-radius: var(--r-s);
+	background: var(--pop);
+	font-size: 0.92rem;
+}
+.toast svg {
+	flex: none;
+	margin-top: 2px;
+}
+.toast.ok svg {
+	color: var(--ok);
+}
+.toast.err svg {
+	color: var(--err);
+}
+.toast.warn svg {
+	color: var(--warn);
+}
+
+/* Tooltip */
+.tip {
+	position: relative;
+	display: inline-flex;
+}
+.tip-b {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	left: 50%;
+	translate: -50% 0;
+	z-index: 50;
+	padding: 5px 10px;
+	border-radius: 10px;
+	border: 1px solid var(--line-2);
+	background: var(--pop);
+	color: var(--ink);
+	font-size: 0.78rem;
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s;
+}
+.tip:hover .tip-b,
+.tip:focus-within .tip-b {
+	opacity: 1;
+}
+
+/* Skeleton */
+.skel {
+	display: block;
+	border-radius: var(--r-s);
+	background: linear-gradient(90deg, var(--soft), var(--soft-3), var(--soft));
+	background-size: 200% 100%;
+	animation: skel 1.4s linear infinite;
+}
+@keyframes skel {
+	to {
+		background-position: -200% 0;
+	}
+}
+
+/* Command palette */
+.cmd {
+	width: min(600px, calc(100vw - 32px));
+	margin: 12vh auto auto;
+	padding: 0;
+	color: var(--ink);
+	background: var(--pop);
+}
+.cmd::backdrop {
+	background: #06051a8c;
+}
+.cmd-in {
+	padding: 12px;
+	border-bottom: 1px solid var(--line);
+}
+.cmd-l {
+	display: grid;
+	gap: 3px;
+	max-height: 50vh;
+	overflow: auto;
+	margin: 0;
+	padding: 10px;
+	list-style: none;
+}
+.cmd-i {
+	width: 100%;
+	border: 0;
+	background: transparent;
+	text-align: left;
+	cursor: pointer;
+}
+.cmd-i.on {
+	background: var(--soft-2);
+	color: var(--ink);
+}
+
+/* Upload dropzone */
+.drop {
+	position: fixed;
+	inset: 12px;
+	z-index: 150;
+	display: grid;
+	place-items: center;
+	border-radius: var(--r-m);
+	border: 2px dashed var(--gold);
+	background: var(--nav-bg);
+	-webkit-backdrop-filter: var(--lg-blur);
+	backdrop-filter: var(--lg-blur);
+	font-size: 1.15rem;
+	font-weight: 600;
+	pointer-events: none;
+}

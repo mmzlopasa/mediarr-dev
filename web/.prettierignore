@@ -2,3 +2,6 @@ build/
 .svelte-kit/
 pnpm-lock.yaml
 src/lib/api/schema.d.ts
+e2e/reference/css/
+test-results/
+playwright-report/
