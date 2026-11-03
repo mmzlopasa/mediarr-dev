@@ -39,6 +39,33 @@ enum BackupRequest {
     return request
   }
 
+  /// Asks whether the server already has a file, so nothing is sent twice.
+  static func check(
+    server: String, key: String, checksum: String, allowsCellular: Bool
+  ) -> URLRequest? {
+    guard let url = URL(string: server + "/api/assets/check"),
+      let body = try? JSONSerialization.data(withJSONObject: ["checksums": [checksum]])
+    else { return nil }
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.timeoutInterval = 20
+    request.allowsCellularAccess = allowsCellular
+    request.setValue(key, forHTTPHeaderField: "X-Api-Key")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = body
+    return request
+  }
+
+  /// False also when the answer cannot be read: the upload then goes ahead, and the server still
+  /// stores no duplicate. Only the data is spent.
+  static func serverHasFile(status: Int, body: Data?, checksum: String) -> Bool {
+    guard status == 200, let body,
+      let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+      let existing = json["existing"] as? [String]
+    else { return false }
+    return existing.contains(checksum)
+  }
+
   static func encode(_ metadata: [(String, String)]) -> String {
     metadata
       .map { "\($0.0) \(Data($0.1.utf8).base64EncodedString())" }

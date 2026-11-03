@@ -10,17 +10,28 @@ enum BackupChannel {
       let arguments = call.arguments as? [String: Any] ?? [:]
       switch call.method {
       case "enable":
-        guard let server = arguments["server"] as? String, let key = arguments["key"] as? String
+        guard let server = arguments["server"] as? String, let key = arguments["key"] as? String,
+          arguments["albumId"] is String || !(arguments["albumName"] as? String ?? "").isEmpty
         else {
-          result(FlutterError(code: "arguments", message: "server and key are required", details: nil))
+          result(FlutterError(code: "arguments", message: "server, key and album are required", details: nil))
           return
         }
         engine.enable(
           server: server,
           key: key,
           wifiOnly: arguments["wifiOnly"] as? Bool ?? true,
+          onlyNew: arguments["onlyNew"] as? Bool ?? false,
+          albumID: arguments["albumId"] as? String,
+          albumName: arguments["albumName"] as? String ?? "")
+        result(nil)
+      case "setAlbum":
+        engine.setAlbum(
+          albumID: arguments["albumId"] as? String,
+          albumName: arguments["albumName"] as? String ?? "",
           onlyNew: arguments["onlyNew"] as? Bool ?? false)
         result(nil)
+      case "albums":
+        engine.albums { value in DispatchQueue.main.async { result(value) } }
       case "disable":
         engine.disable()
         result(nil)

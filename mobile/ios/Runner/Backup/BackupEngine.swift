@@ -8,6 +8,28 @@ import UIKit
 /// Backs up the photo library through a background URLSession, which iOS keeps running after the
 /// app is suspended. Exporting files and starting transfers needs the app to be awake, so it runs
 /// whenever iOS wakes it: when a transfer ends, or through background tasks.
+/// A photo album on the device.
+struct BackupAlbum: Equatable {
+  let id: String
+  let title: String
+  let count: Int
+}
+
+enum BackupAlbumFinder {
+  /// The chosen album, or the one with the typed name if it was renamed or recreated.
+  /// Nil means no album: nothing is sent, and it never falls back to the whole library.
+  static func find(id: String?, name: String?, in albums: [BackupAlbum]) -> BackupAlbum? {
+    if let id, let match = albums.first(where: { $0.id == id }) { return match }
+    guard let wanted = normalize(name), !wanted.isEmpty else { return nil }
+    return albums.first { normalize($0.title) == wanted }
+  }
+
+  private static func normalize(_ value: String?) -> String? {
+    value?.trimmingCharacters(in: .whitespacesAndNewlines)
+      .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+  }
+}
+
 final class BackupEngine: NSObject {
   static let shared = BackupEngine()
 
@@ -16,12 +38,15 @@ final class BackupEngine: NSObject {
   private static let sessionID = "app.mediarr.backup"
   private static let maxQueued = 6
   private static let maxAttempts = 5
+  private static let checkInterval: TimeInterval = 60
 
   private enum Keys {
     static let enabled = "backup.enabled"
     static let server = "backup.server"
     static let wifiOnly = "backup.wifiOnly"
-    static let since = "backup.since"
+    static let albumID = "backup.albumID"
+    static let albumName = "backup.albumName"
+    static let onlyNewPending = "backup.onlyNewPending"
     static let unauthorized = "backup.unauthorized"
   }
 
@@ -30,10 +55,13 @@ final class BackupEngine: NSObject {
   private let pathMonitor = NWPathMonitor()
   private var networkIsCheap = true
   private var exporting = 0
+  private var pendingChecks = 0
   private var observing = false
   private var recovered = false
   private var idleHandlers: [() -> Void] = []
   private var store: BackupStore?
+  private var timer: DispatchSourceTimer?
+  private let checkSession = URLSession(configuration: .ephemeral)
 
   var backgroundCompletion: (() -> Void)?
 
@@ -84,40 +112,106 @@ final class BackupEngine: NSObject {
     _ = session
     queue.async { [self] in
       guard enabled else { return }
+      // An older version could back up everything. Without a chosen album, nothing may be sent.
+      guard defaults.string(forKey: Keys.albumID) != nil || defaults.string(forKey: Keys.albumName) != nil
+      else {
+        stopSending()
+        return
+      }
       startObserving()
+      startTimer()
       recoverThenWork()
     }
     scheduleBackgroundWork()
   }
 
-  func enable(server: String, key: String, wifiOnly: Bool, onlyNew: Bool) {
+  /// Looks for new photos every minute, for as long as iOS lets the app run.
+  private func startTimer() {
+    guard timer == nil else { return }
+    let source = DispatchSource.makeTimerSource(queue: queue)
+    source.schedule(
+      deadline: .now() + BackupEngine.checkInterval, repeating: BackupEngine.checkInterval, leeway: .seconds(5))
+    source.setEventHandler { [weak self] in
+      self?.scan()
+      self?.pump()
+    }
+    source.resume()
+    timer = source
+  }
+
+  private func stopSending() {
+    timer?.cancel()
+    timer = nil
+    defaults.set(false, forKey: Keys.enabled)
+    openStore()?.forgetUnfinished()
+    if observing {
+      PHPhotoLibrary.shared().unregisterChangeObserver(self)
+      observing = false
+    }
+    session.getAllTasks { tasks in tasks.forEach { $0.cancel() } }
+    BGTaskScheduler.shared.cancelAllTaskRequests()
+    BackupKeychain.delete()
+  }
+
+  func enable(
+    server: String, key: String, wifiOnly: Bool, onlyNew: Bool, albumID: String?, albumName: String
+  ) {
     BackupKeychain.save(key)
     queue.async { [self] in
       defaults.set(server, forKey: Keys.server)
       defaults.set(wifiOnly, forKey: Keys.wifiOnly)
       defaults.set(true, forKey: Keys.enabled)
       defaults.set(false, forKey: Keys.unauthorized)
-      if defaults.object(forKey: Keys.since) == nil || onlyNew {
-        defaults.set(onlyNew ? Date().timeIntervalSince1970 : 0, forKey: Keys.since)
-      }
       startObserving()
-      recoverThenWork()
+      startTimer()
+      choose(albumID: albumID, albumName: albumName, onlyNew: onlyNew)
     }
     scheduleBackgroundWork()
   }
 
-  func disable() {
-    BackupKeychain.delete()
-    queue.async { [self] in
-      defaults.set(false, forKey: Keys.enabled)
-      defaults.removeObject(forKey: Keys.since)
-      if observing {
-        PHPhotoLibrary.shared().unregisterChangeObserver(self)
-        observing = false
-      }
+  /// Switching album stops whatever the old album had queued, before anything new starts.
+  func setAlbum(albumID: String?, albumName: String, onlyNew: Bool) {
+    queue.async { [self] in choose(albumID: albumID, albumName: albumName, onlyNew: onlyNew) }
+  }
+
+  private func choose(albumID: String?, albumName: String, onlyNew: Bool) {
+    defaults.set(albumID, forKey: Keys.albumID)
+    defaults.set(albumName, forKey: Keys.albumName)
+    defaults.set(onlyNew, forKey: Keys.onlyNewPending)
+    openStore()?.forgetUnfinished()
+    session.getAllTasks { [self] tasks in
+      tasks.forEach { $0.cancel() }
+      queue.async { [self] in recoverThenWork() }
     }
-    session.getAllTasks { tasks in tasks.forEach { $0.cancel() } }
-    BGTaskScheduler.shared.cancelAllTaskRequests()
+  }
+
+  func disable() {
+    queue.async { [self] in
+      defaults.removeObject(forKey: Keys.albumID)
+      defaults.removeObject(forKey: Keys.albumName)
+      defaults.removeObject(forKey: Keys.onlyNewPending)
+      stopSending()
+    }
+  }
+
+  /// The user's own albums.
+  private func loadAlbums(counting: Bool = false) -> [BackupAlbum] {
+    let collections = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: nil)
+    var albums: [BackupAlbum] = []
+    collections.enumerateObjects { collection, _, _ in
+      guard let title = collection.localizedTitle else { return }
+      albums.append(
+        BackupAlbum(
+          id: collection.localIdentifier, title: title,
+          count: counting ? PHAsset.fetchAssets(in: collection, options: nil).count : 0))
+    }
+    return albums.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+  }
+
+  func albums(reply: @escaping ([[String: Any]]) -> Void) {
+    queue.async { [self] in
+      reply(loadAlbums(counting: true).map { ["id": $0.id, "title": $0.title, "count": $0.count] })
+    }
   }
 
   func setWifiOnly(_ value: Bool) {
@@ -170,19 +264,29 @@ final class BackupEngine: NSObject {
 
   // MARK: Finding photos
 
+  private func currentAlbum() -> BackupAlbum? {
+    BackupAlbumFinder.find(
+      id: defaults.string(forKey: Keys.albumID),
+      name: defaults.string(forKey: Keys.albumName),
+      in: loadAlbums())
+  }
+
+  /// Only the chosen album. Without one there is nothing to scan, ever.
   private func scan() {
     guard enabled, let store = openStore() else { return }
     let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
     guard status == .authorized || status == .limited else { return }
-
-    let options = PHFetchOptions()
-    options.includeAssetSourceTypes = [.typeUserLibrary, .typeiTunesSynced]
-    let since = defaults.double(forKey: Keys.since)
-    if since > 0 {
-      options.predicate = NSPredicate(
-        format: "creationDate >= %@", Date(timeIntervalSince1970: since) as NSDate)
+    guard let album = currentAlbum(),
+      let collection = PHAssetCollection.fetchAssetCollections(
+        withLocalIdentifiers: [album.id], options: nil
+      ).firstObject
+    else {
+      store.forgetPending(notIn: [])
+      return
     }
-    let result = PHAsset.fetchAssets(with: options)
+    defaults.set(album.id, forKey: Keys.albumID)
+
+    let result = PHAsset.fetchAssets(in: collection, options: nil)
     var found: [(id: String, created: Date)] = []
     found.reserveCapacity(result.count)
     result.enumerateObjects { asset, _, _ in
@@ -190,6 +294,12 @@ final class BackupEngine: NSObject {
         found.append((asset.localIdentifier, asset.creationDate ?? Date(timeIntervalSince1970: 0)))
       }
     }
+    if defaults.bool(forKey: Keys.onlyNewPending) {
+      // What is in the album right now stays on the device. Only what is added later is sent.
+      store.addSkipped(found.map(\.id))
+      defaults.set(false, forKey: Keys.onlyNewPending)
+    }
+    store.forgetPending(notIn: Set(found.map(\.id)))
     store.add(found)
   }
 
@@ -204,7 +314,7 @@ final class BackupEngine: NSObject {
     session.getAllTasks { [self] tasks in
       queue.async { [self] in
         guard let store = openStore() else { return }
-        var room = BackupEngine.maxQueued - tasks.count - exporting
+        var room = BackupEngine.maxQueued - tasks.count - exporting - pendingChecks
         while room > 0, let item = store.nextPending() {
           store.setStatus(.exporting, assetID: item.assetID, part: item.part)
           exporting += 1
@@ -217,7 +327,7 @@ final class BackupEngine: NSObject {
   }
 
   private func finishIfIdle() {
-    guard exporting == 0, !idleHandlers.isEmpty else { return }
+    guard exporting == 0, pendingChecks == 0, !idleHandlers.isEmpty else { return }
     let handlers = idleHandlers
     idleHandlers = []
     handlers.forEach { $0() }
@@ -303,6 +413,11 @@ final class BackupEngine: NSObject {
   }
 
   private func send(_ item: BackupItem, file: URL, name: String, created: Date?) {
+    // The album may have changed while the file was being read.
+    guard openStore()?.isExporting(assetID: item.assetID, part: item.part) == true else {
+      try? FileManager.default.removeItem(at: file)
+      return
+    }
     guard
       let server = defaults.string(forKey: Keys.server),
       let key = BackupKeychain.read(),
@@ -318,10 +433,40 @@ final class BackupEngine: NSObject {
         limit: BackupEngine.maxAttempts)
       return
     }
-    let task = session.uploadTask(with: request, fromFile: file)
-    task.taskDescription = TaskInfo(assetID: item.assetID, part: item.part, path: file.path).description
-    openStore()?.setStatus(.uploading, assetID: item.assetID, part: item.part)
-    task.resume()
+    // A file already on the server is not sent again, which also saves the data.
+    pendingChecks += 1
+    let finishCheck: (Bool) -> Void = { [self] exists in
+      queue.async { [self] in
+        pendingChecks -= 1
+        defer { finishIfIdle() }
+        guard openStore()?.isExporting(assetID: item.assetID, part: item.part) == true else {
+          try? FileManager.default.removeItem(at: file)
+          return
+        }
+        if exists {
+          try? FileManager.default.removeItem(at: file)
+          openStore()?.markVerified(assetID: item.assetID, part: item.part, remoteID: nil)
+          pump()
+          return
+        }
+        let task = session.uploadTask(with: request, fromFile: file)
+        task.taskDescription =
+          TaskInfo(assetID: item.assetID, part: item.part, path: file.path).description
+        openStore()?.setStatus(.uploading, assetID: item.assetID, part: item.part)
+        task.resume()
+      }
+    }
+    guard let check = BackupRequest.check(
+      server: server, key: key, checksum: checksum, allowsCellular: !wifiOnly)
+    else {
+      finishCheck(false)
+      return
+    }
+    checkSession.dataTask(with: check) { data, response, _ in
+      finishCheck(
+        BackupRequest.serverHasFile(
+          status: (response as? HTTPURLResponse)?.statusCode ?? 0, body: data, checksum: checksum))
+    }.resume()
   }
 
   /// Streams through the file, because a video can be far larger than the available memory.
@@ -362,6 +507,9 @@ final class BackupEngine: NSObject {
         "verified": counts["verified"] ?? 0,
         "failed": counts["failed"] ?? 0,
         "failures": openStore()?.failures(limit: 20) ?? [],
+        "albumName": defaults.string(forKey: Keys.albumName) ?? "",
+        "albumFound": currentAlbum() != nil,
+        "limitedAccess": PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited,
       ]
       if let last = openStore()?.lastFinished() {
         out["lastFinished"] = last
@@ -389,13 +537,14 @@ final class BackupEngine: NSObject {
   func scheduleBackgroundWork() {
     guard defaults.bool(forKey: Keys.enabled) else { return }
     let refresh = BGAppRefreshTaskRequest(identifier: BackupEngine.refreshTaskID)
-    refresh.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
+    // A request, not a promise: iOS decides the real time, usually much later.
+    refresh.earliestBeginDate = Date(timeIntervalSinceNow: BackupEngine.checkInterval)
     try? BGTaskScheduler.shared.submit(refresh)
 
     let processing = BGProcessingTaskRequest(identifier: BackupEngine.processingTaskID)
     processing.requiresNetworkConnectivity = true
     processing.requiresExternalPower = false
-    processing.earliestBeginDate = Date(timeIntervalSinceNow: 30 * 60)
+    processing.earliestBeginDate = Date(timeIntervalSinceNow: BackupEngine.checkInterval)
     try? BGTaskScheduler.shared.submit(processing)
   }
 
@@ -406,6 +555,7 @@ final class BackupEngine: NSObject {
     queue.async { [self] in
       idleHandlers.append { state.finish(success: true) }
       startObserving()
+      startTimer()
       recoverThenWork()
     }
   }
@@ -478,7 +628,11 @@ extension BackupEngine: URLSessionDataDelegate {
 
       if let error {
         let code = (error as? URLError)?.code
-        if code == .cancelled || code == .networkConnectionLost || code == .notConnectedToInternet {
+        // A cancelled transfer may belong to an album no longer chosen, so the next scan decides.
+        if code == .cancelled {
+          store.forgetCancelled(assetID: info.assetID, part: info.part)
+          scan()
+        } else if code == .networkConnectionLost || code == .notConnectedToInternet {
           // Not the file's fault: it simply goes back in the queue.
           store.setStatus(.pending, assetID: info.assetID, part: info.part)
         } else {

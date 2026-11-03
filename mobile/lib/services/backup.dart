@@ -5,6 +5,14 @@ import 'package:mediarr_api/api.dart';
 
 import 'session.dart';
 
+class BackupAlbum {
+  BackupAlbum({required this.id, required this.title, required this.count});
+
+  final String id;
+  final String title;
+  final int count;
+}
+
 class BackupFailure {
   BackupFailure(this.assetId, this.error);
 
@@ -24,6 +32,9 @@ class BackupStatus {
     this.failed = 0,
     this.lastFinished,
     this.failures = const [],
+    this.albumName = '',
+    this.albumFound = false,
+    this.limitedAccess = false,
   });
 
   factory BackupStatus.fromMap(Map<Object?, Object?> map) => BackupStatus(
@@ -40,6 +51,9 @@ class BackupStatus {
       ),
       _ => null,
     },
+    albumName: map['albumName']?.toString() ?? '',
+    albumFound: map['albumFound'] == true,
+    limitedAccess: map['limitedAccess'] == true,
     failures: [
       for (final raw in (map['failures'] as List<Object?>?) ?? const [])
         if (raw is Map)
@@ -59,6 +73,9 @@ class BackupStatus {
   final int failed;
   final DateTime? lastFinished;
   final List<BackupFailure> failures;
+  final String albumName;
+  final bool albumFound;
+  final bool limitedAccess;
 
   int get total => pending + working + verified + failed;
 }
@@ -88,6 +105,8 @@ class BackupService {
     Session session, {
     required bool wifiOnly,
     required bool onlyNew,
+    required String? albumId,
+    required String albumName,
   }) async {
     final key = await session.api.createDeviceKey(
       CreateDeviceKeyRequest(name: 'iPhone'),
@@ -101,8 +120,33 @@ class BackupService {
       'key': key.key,
       'wifiOnly': wifiOnly,
       'onlyNew': onlyNew,
+      'albumId': albumId,
+      'albumName': albumName,
     });
   }
+
+  Future<List<BackupAlbum>> albums() async {
+    final list = await _channel.invokeListMethod<Object?>('albums');
+    return [
+      for (final raw in list ?? const <Object?>[])
+        if (raw is Map)
+          BackupAlbum(
+            id: raw['id']?.toString() ?? '',
+            title: raw['title']?.toString() ?? '',
+            count: (raw['count'] as num?)?.toInt() ?? 0,
+          ),
+    ];
+  }
+
+  Future<void> setAlbum({
+    required String? albumId,
+    required String albumName,
+    required bool onlyNew,
+  }) => _channel.invokeMethod<void>('setAlbum', {
+    'albumId': albumId,
+    'albumName': albumName,
+    'onlyNew': onlyNew,
+  });
 
   /// Stops the backup and removes the key from the device and the server.
   Future<void> disable(Session? session) async {

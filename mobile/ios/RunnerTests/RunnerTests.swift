@@ -63,6 +63,62 @@ final class BackupStoreTests: XCTestCase {
     XCTAssertEqual(store.lastFinished(), 50)
   }
 
+  func testOnlyNewSkipsWhatIsAlreadyInTheAlbum() {
+    store.addSkipped(["old"])
+    store.add([("old", date(1)), ("new", date(2))])
+    XCTAssertEqual(store.nextPending()?.assetID, "new")
+    store.markVerified(assetID: "new", part: BackupPart.main, remoteID: nil)
+    XCTAssertNil(store.nextPending())
+    XCTAssertEqual(store.counts()["skipped"], 1)
+    XCTAssertNil(store.statuses(assetIDs: ["old"])["old"])
+  }
+
+  func testChangingAlbumForgetsWaitingFilesButNotSentOnes() {
+    store.add([("sent", date(1)), ("waiting", date(2))])
+    store.markVerified(assetID: "sent", part: BackupPart.main, remoteID: nil)
+    store.forgetUnfinished()
+    XCTAssertNil(store.nextPending())
+    XCTAssertEqual(store.counts()["verified"], 1)
+    store.add([("sent", date(1))])
+    XCTAssertNil(store.nextPending(), "A file already sent must not be sent again")
+  }
+
+  func testLivePhotoWithUnsentVideoIsFoundAgainAfterChangingAlbum() {
+    store.add([("live", date(1))])
+    store.markVerified(assetID: "live", part: BackupPart.main, remoteID: nil)
+    store.add([("live", date(1))], part: BackupPart.paired)
+    store.forgetUnfinished()
+    store.add([("live", date(1))])
+    XCTAssertEqual(store.nextPending()?.part, BackupPart.main)
+  }
+
+  func testCancelledTransferIsForgottenButSkippedAndSentFilesAreNot() {
+    store.add([("sent", date(1)), ("cancelled", date(2))])
+    store.addSkipped(["old"])
+    store.markVerified(assetID: "sent", part: BackupPart.main, remoteID: nil)
+    store.setStatus(.uploading, assetID: "cancelled", part: BackupPart.main)
+    for id in ["sent", "cancelled", "old"] {
+      store.forgetCancelled(assetID: id, part: BackupPart.main)
+    }
+    XCTAssertEqual(store.counts(), ["verified": 1, "skipped": 1])
+  }
+
+  func testOnlyAFileStillExportingMayBeSent() {
+    store.add([("a", date(1))])
+    XCTAssertFalse(store.isExporting(assetID: "a", part: BackupPart.main))
+    store.setStatus(.exporting, assetID: "a", part: BackupPart.main)
+    XCTAssertTrue(store.isExporting(assetID: "a", part: BackupPart.main))
+    store.forgetUnfinished()
+    XCTAssertFalse(store.isExporting(assetID: "a", part: BackupPart.main))
+  }
+
+  func testFilesRemovedFromTheAlbumStopWaiting() {
+    store.add([("stays", date(1)), ("removed", date(2))])
+    store.forgetPending(notIn: ["stays"])
+    XCTAssertEqual(store.nextPending()?.assetID, "stays")
+    XCTAssertEqual(store.counts()["pending"], 1)
+  }
+
   func testLivePhotoIsVerifiedOnlyWithBothFiles() {
     store.add([("live", date(1))])
     store.add([("live", date(1))], part: BackupPart.paired)
@@ -73,7 +129,48 @@ final class BackupStoreTests: XCTestCase {
   }
 }
 
+final class BackupAlbumTests: XCTestCase {
+  private let albums = [
+    BackupAlbum(id: "1", title: "Backup", count: 3),
+    BackupAlbum(id: "2", title: "Šišmiš ", count: 1),
+  ]
+
+  func testFindsByIDOrTypedNameIgnoringCaseAndAccents() {
+    XCTAssertEqual(BackupAlbumFinder.find(id: "2", name: nil, in: albums)?.id, "2")
+    XCTAssertEqual(BackupAlbumFinder.find(id: nil, name: " backup ", in: albums)?.id, "1")
+    XCTAssertEqual(BackupAlbumFinder.find(id: nil, name: "sismis", in: albums)?.id, "2")
+    XCTAssertEqual(BackupAlbumFinder.find(id: "gone", name: "Backup", in: albums)?.id, "1")
+  }
+
+  /// Nothing found must mean nothing sent, never the whole library.
+  func testNoMatchMeansNoAlbum() {
+    XCTAssertNil(BackupAlbumFinder.find(id: nil, name: nil, in: albums))
+    XCTAssertNil(BackupAlbumFinder.find(id: nil, name: "   ", in: albums))
+    XCTAssertNil(BackupAlbumFinder.find(id: "gone", name: "Other", in: albums))
+    XCTAssertNil(BackupAlbumFinder.find(id: "1", name: "Backup", in: []))
+  }
+}
+
 final class BackupRequestTests: XCTestCase {
+  func testServerAnswerAboutAnExistingFile() {
+    let yes = Data(#"{"existing":["abc"]}"#.utf8)
+    XCTAssertTrue(BackupRequest.serverHasFile(status: 200, body: yes, checksum: "abc"))
+    XCTAssertFalse(BackupRequest.serverHasFile(status: 200, body: yes, checksum: "other"))
+    XCTAssertFalse(BackupRequest.serverHasFile(status: 500, body: yes, checksum: "abc"))
+    XCTAssertFalse(BackupRequest.serverHasFile(status: 200, body: Data("x".utf8), checksum: "abc"))
+    XCTAssertFalse(BackupRequest.serverHasFile(status: 200, body: nil, checksum: "abc"))
+  }
+
+  func testCheckRequestAsksAboutOneFile() throws {
+    let request = try XCTUnwrap(BackupRequest.check(server: "http://s", key: "k", checksum: "abc", allowsCellular: false))
+    XCTAssertFalse(request.allowsCellularAccess)
+    XCTAssertEqual(request.url?.absoluteString, "http://s/api/assets/check")
+    XCTAssertEqual(request.value(forHTTPHeaderField: "X-Api-Key"), "k")
+    let body = try XCTUnwrap(request.httpBody)
+    let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: [String]])
+    XCTAssertEqual(json["checksums"], ["abc"])
+  }
+
   func testRequestIsAWholeFileUpload() throws {
     let request = try XCTUnwrap(
       BackupRequest.make(

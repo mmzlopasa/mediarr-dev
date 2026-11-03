@@ -67,52 +67,83 @@ class _BackupCardState extends ConsumerState<BackupCard> {
     }
   }
 
-  Future<bool?> _askScope() => showDialog<bool>(
+  Future<bool?> _askScope(String album) => showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('What should be backed up?'),
+      title: Text('Back up "$album"'),
       content: const Text(
-        'Backing up everything can take a while. Files already on the server are not stored twice.',
+        'Should photos already in this album be sent? Anything already on the server is '
+        'never sent twice.',
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Only new photos'),
+          child: const Text('Only photos added from now'),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('All photos'),
+          child: const Text('Also the ones in it now'),
         ),
       ],
     ),
   );
 
-  Future<void> _toggle(bool value) async {
+  Future<AlbumChoice?> _pickAlbum() async {
+    final albums = await ref.read(backupProvider).albums();
+    if (!mounted) {
+      return null;
+    }
+    return showModalBottomSheet<AlbumChoice>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => AlbumPicker(albums: albums),
+    );
+  }
+
+  /// Backup only ever runs with a chosen album, so choosing comes first.
+  Future<bool> _chooseAndApply({required bool enable}) async {
     final session = ref.read(sessionProvider).value;
     final service = ref.read(backupProvider);
+    final permission = await PhotoManager.requestPermissionExtend();
+    if (permission != PermissionState.authorized) {
+      setState(
+        () => _error = 'Albums need access to all photos. Allow it in Settings: Mediarr > Photos > Full Access.',
+      );
+      return false;
+    }
+    final album = await _pickAlbum();
+    if (album == null) {
+      return false;
+    }
+    final onlyNew = await _askScope(album.name);
+    if (onlyNew == null || session == null) {
+      return false;
+    }
+    if (enable) {
+      await service.enable(
+        session,
+        wifiOnly: _status?.wifiOnly ?? true,
+        onlyNew: onlyNew,
+        albumId: album.id,
+        albumName: album.name,
+      );
+    } else {
+      await service.setAlbum(
+        albumId: album.id,
+        albumName: album.name,
+        onlyNew: onlyNew,
+      );
+    }
+    return true;
+  }
+
+  Future<void> _run(Future<void> Function() action) async {
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      if (value) {
-        final permission = await PhotoManager.requestPermissionExtend();
-        if (!permission.hasAccess) {
-          setState(() => _error = 'Allow access to your photos in Settings.');
-          return;
-        }
-        final onlyNew = await _askScope();
-        if (onlyNew == null || session == null) {
-          return;
-        }
-        await service.enable(
-          session,
-          wifiOnly: _status?.wifiOnly ?? true,
-          onlyNew: onlyNew,
-        );
-      } else {
-        await service.disable(session);
-      }
+      await action();
       await _refresh();
     } on ApiException catch (cause) {
       if (mounted) {
@@ -122,11 +153,23 @@ class _BackupCardState extends ConsumerState<BackupCard> {
         );
       }
     } on PlatformException catch (cause) {
-      if (mounted) setState(() => _error = cause.message);
+      if (mounted) {
+        setState(() => _error = cause.message);
+      }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() => _busy = false);
+      }
     }
   }
+
+  Future<void> _toggle(bool value) => _run(() async {
+    if (value) {
+      await _chooseAndApply(enable: true);
+    } else {
+      await ref.read(backupProvider).disable(ref.read(sessionProvider).value);
+    }
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +201,36 @@ class _BackupCardState extends ConsumerState<BackupCard> {
             ],
           ),
           if (status.enabled) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Album: ${status.albumName}',
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodyLarge,
+                  ),
+                ),
+                TextButton(
+                  onPressed: _busy
+                      ? null
+                      : () => _run(() async {
+                          await _chooseAndApply(enable: false);
+                        }),
+                  child: const Text('Change'),
+                ),
+              ],
+            ),
+            if (!status.albumFound)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  status.limitedAccess
+                      ? 'Albums need access to all photos. Allow it in Settings: '
+                            'Mediarr > Photos > Full Access. Nothing is being sent.'
+                      : 'No album with this name on the device. Nothing is being sent.',
+                  style: text.bodySmall?.copyWith(color: Palette.warn),
+                ),
+              ),
             Row(
               children: [
                 Expanded(child: Text('Only on Wi-Fi', style: text.bodyMedium)),
@@ -223,8 +296,9 @@ class _BackupCardState extends ConsumerState<BackupCard> {
               ),
           ] else
             Text(
-              'Sends your photos to your server, also while the app is closed. iOS decides when, '
-              'and stops it if you swipe the app away, until you open it again.',
+              'Sends one album of your choice, and nothing else. Checks for new photos every minute '
+              'while the app is open. When it is closed, iOS decides when, often much later, and '
+              'stops it if you swipe the app away.',
               style: text.bodySmall,
             ),
           if (_error != null)
@@ -236,6 +310,112 @@ class _BackupCardState extends ConsumerState<BackupCard> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class AlbumChoice {
+  AlbumChoice({required this.id, required this.name});
+
+  final String? id;
+  final String name;
+}
+
+/// Lists the device's albums, and also takes a typed name for an album that may not exist yet.
+class AlbumPicker extends StatefulWidget {
+  const AlbumPicker({super.key, required this.albums});
+
+  final List<BackupAlbum> albums;
+
+  @override
+  State<AlbumPicker> createState() => _AlbumPickerState();
+}
+
+class _AlbumPickerState extends State<AlbumPicker> {
+  final _name = TextEditingController();
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final typed = _name.text.trim();
+    final matches = widget.albums
+        .where(
+          (album) => album.title.toLowerCase().contains(typed.toLowerCase()),
+        )
+        .toList();
+    final exact = matches.any(
+      (album) => album.title.toLowerCase() == typed.toLowerCase(),
+    );
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.7,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                child: Text('Which album?', style: text.titleLarge),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextField(
+                  controller: _name,
+                  autocorrect: false,
+                  decoration: const InputDecoration(labelText: 'Album name'),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Expanded(
+                child: ListView(
+                  children: [
+                    if (typed.isNotEmpty && !exact)
+                      ListTile(
+                        leading: const Icon(Icons.edit_outlined),
+                        title: Text('Use the name "$typed"'),
+                        subtitle: const Text(
+                          'Starts when an album with this name exists',
+                        ),
+                        onTap: () => Navigator.pop(
+                          context,
+                          AlbumChoice(id: null, name: typed),
+                        ),
+                      ),
+                    for (final album in matches)
+                      ListTile(
+                        leading: const Icon(Icons.photo_album_outlined),
+                        title: Text(album.title),
+                        trailing: Text('${album.count}', style: text.bodySmall),
+                        onTap: () => Navigator.pop(
+                          context,
+                          AlbumChoice(id: album.id, name: album.title),
+                        ),
+                      ),
+                    if (widget.albums.isEmpty && typed.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Text(
+                          'No albums on this device yet. Create one in Photos.',
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

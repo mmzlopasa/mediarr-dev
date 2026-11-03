@@ -4,6 +4,8 @@ import SQLite3
 /// What happened to one file on its way to the server.
 enum BackupStatus: String {
   case pending, exporting, uploading, verified, failed
+  /// Was already in the album when backup started with "only new". Never sent.
+  case skipped
 }
 
 /// One file to back up. A Live Photo has two: the photo and its paired video.
@@ -99,6 +101,77 @@ final class BackupStore {
           .text(asset.id), .text(part), .text(BackupStatus.pending.rawValue),
           .double(asset.created.timeIntervalSince1970),
         ])
+    }
+    run("COMMIT")
+  }
+
+  /// Marks files as already handled, so they are never sent. Files with a state keep it.
+  func addSkipped(_ assetIDs: [String]) {
+    guard !assetIDs.isEmpty else { return }
+    run("BEGIN")
+    for id in assetIDs {
+      run(
+        "INSERT OR IGNORE INTO items (asset_id, part, status, created) VALUES (?, ?, ?, 0)",
+        [.text(id), .text(BackupPart.main), .text(BackupStatus.skipped.rawValue)])
+    }
+    run("COMMIT")
+  }
+
+  /// Forgets everything not yet sent, so changing the album can never send the old album's files.
+  /// Verified files stay: they are on the server and must not be sent again.
+  /// A Live Photo whose video was not sent is forgotten whole, so the video is found again later.
+  /// Its photo is then only checked with the server, not sent twice.
+  func forgetUnfinished() {
+    let verified = BackupStatus.verified.rawValue
+    run(
+      """
+      DELETE FROM items WHERE asset_id IN (
+        SELECT asset_id FROM items WHERE status <> ?
+      )
+      """, [.text(verified)])
+  }
+
+  /// True while this file is still meant to be sent. False once its album was changed or backup
+  /// was turned off, and whatever was still on its way must then be dropped.
+  func isExporting(assetID: String, part: String) -> Bool {
+    guard
+      let statement = prepare(
+        "SELECT 1 FROM items WHERE asset_id = ? AND part = ? AND status = ?",
+        [.text(assetID), .text(part), .text(BackupStatus.exporting.rawValue)])
+    else { return false }
+    defer { sqlite3_finalize(statement) }
+    return sqlite3_step(statement) == SQLITE_ROW
+  }
+
+  /// A cancelled transfer: the whole asset is forgotten, for the same reason as in forgetUnfinished.
+  func forgetCancelled(assetID: String, part: String) {
+    run(
+      """
+      DELETE FROM items WHERE asset_id = ? AND EXISTS (
+        SELECT 1 FROM items WHERE asset_id = ? AND part = ? AND status IN (?, ?, ?)
+      )
+      """,
+      [
+        .text(assetID), .text(assetID), .text(part), .text(BackupStatus.pending.rawValue),
+        .text(BackupStatus.exporting.rawValue), .text(BackupStatus.uploading.rawValue),
+      ])
+  }
+
+  /// Forgets waiting files that are no longer in the album.
+  func forgetPending(notIn keep: Set<String>) {
+    var gone: [String] = []
+    if let statement = prepare(
+      "SELECT asset_id FROM items WHERE status IN (?, ?)",
+      [.text(BackupStatus.pending.rawValue), .text(BackupStatus.failed.rawValue)])
+    {
+      while sqlite3_step(statement) == SQLITE_ROW {
+        if let id = text(statement, 0), !keep.contains(id) { gone.append(id) }
+      }
+      sqlite3_finalize(statement)
+    }
+    run("BEGIN")
+    for id in gone {
+      run("DELETE FROM items WHERE asset_id = ?", [.text(id)])
     }
     run("COMMIT")
   }
@@ -208,12 +281,15 @@ final class BackupStore {
   func statuses(assetIDs: [String]) -> [String: String] {
     var out: [String: String] = [:]
     let rank: [String: Int] = ["verified": 0, "pending": 1, "exporting": 2, "uploading": 2, "failed": 3]
+    let hidden = BackupStatus.skipped.rawValue
     for id in assetIDs {
       guard let statement = prepare("SELECT status FROM items WHERE asset_id = ?", [.text(id)]) else {
         continue
       }
       while sqlite3_step(statement) == SQLITE_ROW {
-        if let status = text(statement, 0), rank[status, default: 0] >= rank[out[id] ?? "verified", default: 0] {
+        if let status = text(statement, 0), status != hidden,
+          rank[status, default: 0] >= rank[out[id] ?? "verified", default: 0]
+        {
           out[id] = status
         }
       }

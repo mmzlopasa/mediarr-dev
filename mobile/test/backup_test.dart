@@ -91,12 +91,15 @@ void main() {
     await show(tester);
     expect(find.text('Automatic backup'), findsOneWidget);
     expect(find.textContaining('swipe the app away'), findsOneWidget);
+    expect(find.textContaining('one album'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('when it is on, the real counts are shown', (tester) async {
     reply({
       'enabled': true,
+      'albumName': 'Backup',
+      'albumFound': true,
       'pending': 3,
       'working': 2,
       'verified': 5,
@@ -105,7 +108,57 @@ void main() {
     await show(tester);
     expect(find.text('5 of 11 verified on the server'), findsOneWidget);
     expect(find.textContaining('2 sending'), findsOneWidget);
+    expect(find.text('Album: Backup'), findsOneWidget);
+    expect(find.textContaining('Nothing is being sent'), findsNothing);
     expect(find.text('Try the 1 failed again'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a missing album is reported, because nothing is sent then', (
+    tester,
+  ) async {
+    reply({'enabled': true, 'albumName': 'Gone', 'albumFound': false});
+    await show(tester);
+    expect(find.textContaining('Nothing is being sent'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('an album can be picked from the list or by a typed name', (
+    tester,
+  ) async {
+    AlbumChoice? choice;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildTheme(),
+        home: Builder(
+          builder: (context) => TextButton(
+            child: const Text('open'),
+            onPressed: () async {
+              choice = await showModalBottomSheet<AlbumChoice>(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => AlbumPicker(
+                  albums: [BackupAlbum(id: '1', title: 'Backup', count: 3)],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Backup'));
+    await tester.pumpAndSettle();
+    expect(choice?.id, '1');
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Putovanje');
+    await tester.pump();
+    await tester.tap(find.text('Use the name "Putovanje"'));
+    await tester.pumpAndSettle();
+    expect(choice?.id, isNull);
+    expect(choice?.name, 'Putovanje');
   });
 }
