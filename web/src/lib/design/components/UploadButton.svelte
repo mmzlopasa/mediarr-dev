@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.svelte.ts';
-	import { addUploads, setPreparingUpload, trace } from '#lib/uploads.svelte.ts';
+	import { addUploads, setPreparingUpload } from '#lib/uploads.svelte.ts';
 	import Icon from './Icon.svelte';
 
 	// Listed so that iOS sends HEIC originals instead of converting them to JPEG.
@@ -14,14 +14,12 @@
 
 	function chosen(event: Event) {
 		const input = event.currentTarget as HTMLInputElement;
-		trace(`change ${input.files?.length ?? 'none'}`);
 		if (input.files?.length) addUploads(input.files);
 		else setPreparingUpload(false);
 		inputs = [...inputs, active + 1];
 	}
 
 	function opening() {
-		trace('picker opened');
 		setPreparingUpload(true);
 	}
 
@@ -55,9 +53,6 @@
 		tabindex="-1"
 		aria-label={tr('Odaberi datoteke', 'Choose files')}
 		onchange={chosen}
-		oncancel={() => {
-			trace('picker cancelled');
-			setPreparingUpload(false);
-		}}
+		oncancel={() => setPreparingUpload(false)}
 	/>
 {/each}

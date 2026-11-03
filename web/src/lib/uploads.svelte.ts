@@ -25,12 +25,6 @@ let preparingTimer = 0;
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const files = new Map<number, File>();
 
-/** Temporary, development builds only: shows in the dev nginx log what a real phone does. */
-export function trace(message: string) {
-	if (!import.meta.env.DEV) return;
-	navigator.sendBeacon?.(`/__diag?m=${encodeURIComponent(message.slice(0, 400))}`);
-}
-
 export function uploads() {
 	return items;
 }
@@ -55,7 +49,6 @@ function update(id: number, changes: Partial<UploadItem>) {
 }
 
 function fail(id: number, message: string) {
-	trace(`fail ${id}: ${message}`);
 	files.delete(id);
 	update(id, { status: 'failed', error: message });
 	pump();
@@ -71,7 +64,6 @@ async function start(item: UploadItem) {
 	const file = files.get(item.id);
 	if (!file) return;
 	update(item.id, { status: 'uploading' });
-	trace(`start ${item.id} ${file.name} ${file.size} ${file.type}`);
 
 	let duplicate = false;
 	try {
@@ -86,7 +78,6 @@ async function start(item: UploadItem) {
 				if (response.getHeader('X-Asset-Duplicate') === 'true') duplicate = true;
 			},
 			onSuccess: () => {
-				trace(`done ${item.id}`);
 				files.delete(item.id);
 				update(item.id, { status: duplicate ? 'duplicate' : 'done', loaded: file.size });
 				pump();

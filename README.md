@@ -63,3 +63,7 @@ sudo certbot --nginx -d mediarr.app -d www.mediarr.app
 sudo certbot --nginx -d demo.mediarr.app
 sudo certbot --nginx -d cdn.mediarr.app
 ```
+
+## Licenca
+
+Sva prava pridržana. Vidi `LICENSE`.

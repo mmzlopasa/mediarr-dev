@@ -1,0 +1,26 @@
+Copyright (c) 2026 SCYDE. All rights reserved.
+
+This software and its source code, design and documentation are the property
+of SCYDE. The source code is visible for reference only. Being able to see it
+does not give anyone a licence to use it.
+
+Without prior written permission from SCYDE, you may not:
+
+  - copy, modify, merge, translate or create derivative works of it, in whole
+    or in part;
+  - publish, distribute, sublicense, sell or rent it, or offer it as a service
+    to others;
+  - remove or change this notice.
+
+You may install and run the official builds published by SCYDE for your own
+use, without any fee, until SCYDE withdraws this permission.
+
+Third-party components keep their own licences, which this notice does not
+change. This includes the Sora, Geist Mono and Doto fonts (SIL Open Font
+License 1.1) and the libraries listed in the project's dependency files.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL SCYDE BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+Contact: dev@scyde.dev
