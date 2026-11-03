@@ -132,7 +132,7 @@ func TestPipelineOnRealFiles(t *testing.T) {
 		t.Errorf("metadata: %+v", meta)
 	}
 
-	result, err := MakeThumbnails(ctx, jpeg, meta.Kind, filepath.Join(dir, "thumbs"), "asset")
+	result, err := MakeThumbnails(ctx, jpeg, meta.Kind, filepath.Join(dir, "thumbs"), "asset", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestPipelineOnRealFiles(t *testing.T) {
 	}
 
 	// Running again after a crash must work.
-	if _, err := MakeThumbnails(ctx, jpeg, meta.Kind, filepath.Join(dir, "thumbs"), "asset"); err != nil {
+	if _, err := MakeThumbnails(ctx, jpeg, meta.Kind, filepath.Join(dir, "thumbs"), "asset", nil); err != nil {
 		t.Errorf("second run: %v", err)
 	}
 
@@ -193,7 +193,7 @@ func TestVideoThumbnail(t *testing.T) {
 	if meta.Kind != "video" {
 		t.Errorf("kind %q", meta.Kind)
 	}
-	if _, err := MakeThumbnails(ctx, video, meta.Kind, filepath.Join(dir, "t"), "v"); err != nil {
+	if _, err := MakeThumbnails(ctx, video, meta.Kind, filepath.Join(dir, "t"), "v", nil); err != nil {
 		t.Error(err)
 	}
 }
@@ -205,7 +205,7 @@ func TestCorruptFileIsPermanentFailure(t *testing.T) {
 	if err := os.WriteFile(path, []byte{0xff, 0xd8, 0xff, 0xe0, 1, 2, 3}, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	_, err := MakeThumbnails(context.Background(), path, "photo", filepath.Join(dir, "t"), "b")
+	_, err := MakeThumbnails(context.Background(), path, "photo", filepath.Join(dir, "t"), "b", nil)
 	var bad *badFileError
 	if !errors.As(err, &bad) {
 		t.Fatalf("got %v", err)
@@ -222,7 +222,7 @@ func TestFileNamesAreNotParsedAsOptions(t *testing.T) {
 	if out, err := exec.Command("vips", "gaussnoise", path, "300", "200").CombinedOutput(); err != nil {
 		t.Fatalf("%v: %s", err, out)
 	}
-	result, err := MakeThumbnails(context.Background(), path, "photo", filepath.Join(dir, "t"), "b")
+	result, err := MakeThumbnails(context.Background(), path, "photo", filepath.Join(dir, "t"), "b", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -242,7 +242,7 @@ func Test16BitImageStaysBright(t *testing.T) {
 	if out, err := exec.Command("vips", "cast", raw, path, "ushort").CombinedOutput(); err != nil {
 		t.Fatalf("%v: %s", err, out)
 	}
-	result, err := MakeThumbnails(context.Background(), path, "photo", filepath.Join(dir, "t"), "d")
+	result, err := MakeThumbnails(context.Background(), path, "photo", filepath.Join(dir, "t"), "d", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -274,7 +274,7 @@ func TestTruncatedImageIsReported(t *testing.T) {
 	if err := os.WriteFile(cut, data[:len(data)/2], 0o600); err != nil {
 		t.Fatal(err)
 	}
-	_, err = MakeThumbnails(context.Background(), cut, "photo", filepath.Join(dir, "t"), "c")
+	_, err = MakeThumbnails(context.Background(), cut, "photo", filepath.Join(dir, "t"), "c", nil)
 	var bad *badFileError
 	if !errors.As(err, &bad) {
 		t.Fatalf("got %v", err)

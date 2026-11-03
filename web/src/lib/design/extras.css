@@ -1004,3 +1004,100 @@ video.viewer-media {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+
+/* Photo editor */
+.editor {
+	position: fixed;
+	inset: 0;
+	z-index: 310;
+	display: flex;
+	background: #000;
+	color: #fff;
+}
+.editor-stage {
+	flex: 1;
+	min-width: 0;
+	display: grid;
+	place-items: center;
+	padding: 20px;
+}
+.editor-frame {
+	position: relative;
+	display: inline-block;
+	line-height: 0;
+	touch-action: none;
+}
+.editor-frame canvas {
+	max-width: calc(100vw - 400px);
+	max-height: calc(100vh - 40px);
+}
+.editor-crop {
+	position: absolute;
+	box-shadow: 0 0 0 9999px #000a;
+	outline: 1px solid #fff;
+	clip-path: none;
+}
+.editor-frame {
+	overflow: hidden;
+}
+.editor-handle {
+	position: absolute;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	background: #fff;
+	border: 0;
+	border-radius: 50%;
+	cursor: grab;
+	touch-action: none;
+}
+.editor-handle.tl {
+	left: 0;
+	top: 0;
+}
+.editor-handle.tr {
+	right: 0;
+	top: 0;
+}
+.editor-handle.bl {
+	left: 0;
+	bottom: 0;
+}
+.editor-handle.br {
+	right: 0;
+	bottom: 0;
+}
+.editor-tools {
+	flex: none;
+	width: 320px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 20px;
+	overflow: auto;
+	background: var(--bg-2);
+	color: var(--ink);
+}
+.editor-tools label {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.editor-acts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: auto;
+}
+@media (max-width: 760px) {
+	.editor {
+		flex-direction: column;
+	}
+	.editor-tools {
+		width: auto;
+	}
+	.editor-frame canvas {
+		max-width: calc(100vw - 40px);
+		max-height: 50vh;
+	}
+}

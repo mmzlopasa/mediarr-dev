@@ -30,7 +30,8 @@ const (
 	localTimeLayout = "2006-01-02T15:04:05"
 	maxBulkIDs      = 1000
 	maxZipIDs       = 100
-	thumbCacheAge   = "private, max-age=31536000, immutable"
+	// A day, not forever, because editing a photo changes its previews on all of the user's devices.
+	thumbCacheAge = "private, max-age=86400"
 )
 
 var bucketMonth = regexp.MustCompile(`^\d{4}-(0[1-9]|1[0-2])$`)
@@ -211,6 +212,13 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 		}
 		detail.Tags = &tags
 		detail.IsMissing = optional(true, row.MissingAt.Valid)
+		edits, err := jobs.ParseEdits(row.Edits)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		detail.Edits = editsToAPI(edits)
+		detail.IsEditing = optional(true, row.EditRevision != row.EditApplied)
 		stack, err := s.stackOf(ctx, &row)
 		if err != nil {
 			internalError(w, r, err)
@@ -339,6 +347,10 @@ func (s *apiServer) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id
 	if user == nil {
 		return
 	}
+	if params.Size != nil && *params.Size == api.GetAssetThumbnailParamsSizeSource {
+		s.serveSourcePreview(w, r, id, user.ID)
+		return
+	}
 	kind := "thumb_small"
 	if params.Size != nil && *params.Size == api.GetAssetThumbnailParamsSizeLarge {
 		kind = "thumb_large"
@@ -399,6 +411,26 @@ func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, row
 	serveFile(w, r, path)
 }
 
+func (s *apiServer) makeSourcePreview(ctx context.Context, row *db.Asset) (string, error) {
+	select {
+	case s.fullPreviews <- struct{}{}:
+		defer func() { <-s.fullPreviews }()
+	case <-ctx.Done():
+		return "", ctx.Err()
+	}
+	id := uuid.UUID(row.ID.Bytes).String()
+	dest := filepath.Join(s.CachePath, "thumbs", uuid.UUID(row.UserID.Bytes).String(), id[:2], id+"-source.webp")
+	if err := jobs.MakeFullPreview(ctx, row.OriginalPath, dest, nil); err != nil {
+		return "", err
+	}
+	info, err := os.Stat(dest) //nolint:gosec // Built from the cache folder and IDs from the database.
+	if err != nil {
+		return "", err
+	}
+	err = s.queries.UpsertAssetFile(ctx, db.UpsertAssetFileParams{AssetID: row.ID, Kind: "thumb_source", Path: dest, SizeBytes: info.Size()})
+	return dest, err
+}
+
 func (s *apiServer) makeFullPreview(ctx context.Context, row *db.Asset) (string, error) {
 	select {
 	case s.fullPreviews <- struct{}{}:
@@ -412,7 +444,11 @@ func (s *apiServer) makeFullPreview(ctx context.Context, row *db.Asset) (string,
 	}
 	id := uuid.UUID(row.ID.Bytes).String()
 	dest := filepath.Join(s.CachePath, "thumbs", uuid.UUID(row.UserID.Bytes).String(), id[:2], id+"-full.webp")
-	if err := jobs.MakeFullPreview(ctx, row.OriginalPath, dest); err != nil {
+	edits, err := jobs.ParseEdits(row.Edits)
+	if err != nil {
+		return "", err
+	}
+	if err := jobs.MakeFullPreview(ctx, row.OriginalPath, dest, edits); err != nil {
 		return "", err
 	}
 	info, err := os.Stat(dest) //nolint:gosec // Built from the cache folder and IDs from the database.

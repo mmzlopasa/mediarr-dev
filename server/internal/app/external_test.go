@@ -296,3 +296,26 @@ func TestExternalSettingsAreForAdmins(t *testing.T) {
 		t.Fatalf("%s", body)
 	}
 }
+
+func TestAnInterruptedJobIsHandedBack(t *testing.T) {
+	s := newStack(t)
+	ctx := context.Background()
+	rows := map[string]int{"available": 1, "discarded": 25}
+	for want, attempt := range rows {
+		var id int64
+		if err := s.pool.QueryRow(ctx, `INSERT INTO river_job (kind, args, state, attempt, max_attempts, attempted_at, queue, priority)
+			VALUES ('external_scan', '{}', 'running', $1, 25, now(), 'default', 1) RETURNING id`, attempt).Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		if err := jobs.ReleaseInterrupted(ctx, s.pool); err != nil {
+			t.Fatal(err)
+		}
+		var state string
+		if err := s.pool.QueryRow(ctx, "SELECT state::text FROM river_job WHERE id=$1", id).Scan(&state); err != nil {
+			t.Fatal(err)
+		}
+		if state != want {
+			t.Fatalf("attempt %d: %s", attempt, state)
+		}
+	}
+}

@@ -13,6 +13,7 @@ doc/AlbumUpdate.md
 doc/AnalysisProgress.md
 doc/Asset.md
 doc/AssetDetail.md
+doc/AssetEdits.md
 doc/AssetIds.md
 doc/AssetList.md
 doc/AssetTagChange.md
@@ -26,6 +27,7 @@ doc/Comment.md
 doc/CommentCreate.md
 doc/CreateDeviceKeyRequest.md
 doc/CreateUserRequest.md
+doc/CropBox.md
 doc/DefaultApi.md
 doc/DeviceKey.md
 doc/DuplicateGroup.md
@@ -98,6 +100,7 @@ lib/model/album_update.dart
 lib/model/analysis_progress.dart
 lib/model/asset.dart
 lib/model/asset_detail.dart
+lib/model/asset_edits.dart
 lib/model/asset_ids.dart
 lib/model/asset_list.dart
 lib/model/asset_tag_change.dart
@@ -111,6 +114,7 @@ lib/model/comment.dart
 lib/model/comment_create.dart
 lib/model/create_device_key_request.dart
 lib/model/create_user_request.dart
+lib/model/crop_box.dart
 lib/model/device_key.dart
 lib/model/duplicate_group.dart
 lib/model/duplicate_item.dart
@@ -161,3 +165,5 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
+test/asset_edits_test.dart
+test/crop_box_test.dart

@@ -213,7 +213,7 @@ func TestFullPreviewKeepsFullSize(t *testing.T) {
 		t.Fatalf("%v: %s", err, out)
 	}
 	dest := filepath.Join(dir, "out", "full.webp")
-	if err := MakeFullPreview(context.Background(), path, dest); err != nil {
+	if err := MakeFullPreview(context.Background(), path, dest, nil); err != nil {
 		t.Fatal(err)
 	}
 	meta, err := ReadMetadata(context.Background(), dest)

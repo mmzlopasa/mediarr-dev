@@ -266,7 +266,7 @@ paths:
       summary: Read a WebP thumbnail
       parameters:
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
-        - { name: size, in: query, schema: { type: string, enum: [small, large, full], default: small } }
+        - { name: size, in: query, description: "source is the unedited picture, for its owner", schema: { type: string, enum: [small, large, full, source], default: small } }
       responses:
         "200":
           description: The thumbnail
@@ -1430,6 +1430,33 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Folder" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/edits:
+    put:
+      operationId: setAssetEdits
+      summary: Replace the list of edits of a photo. The original is never changed
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetEdits" }
+      responses:
+        "204": { description: Saved. New previews follow shortly }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: clearAssetEdits
+      summary: Go back to the photo as it was taken
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Cleared. New previews follow shortly }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
   /api/memories:
     get:
       operationId: listMemories
@@ -1559,6 +1586,23 @@ components:
         name: { type: string }
         count: { type: integer, format: int64, description: "Photos anywhere inside it" }
         coverId: { type: string, format: uuid }
+    AssetEdits:
+      type: object
+      properties:
+        rotate: { type: integer, description: "Clockwise: 0, 90, 180 or 270" }
+        crop: { $ref: "#/components/schemas/CropBox" }
+        brightness: { type: integer, minimum: -100, maximum: 100 }
+        contrast: { type: integer, minimum: -100, maximum: 100 }
+        saturation: { type: integer, minimum: -100, maximum: 100 }
+    CropBox:
+      type: object
+      description: A part of the rotated picture, in fractions of its sides
+      required: [x, y, width, height]
+      properties:
+        x: { type: number, format: double }
+        y: { type: number, format: double }
+        width: { type: number, format: double }
+        height: { type: number, format: double }
     Memory:
       type: object
       required: [kind, title, items]
@@ -2009,6 +2053,8 @@ components:
       properties:
         isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
+        edits: { $ref: "#/components/schemas/AssetEdits" }
+        isEditing: { type: boolean, description: "New previews are being made after an edit" }
         isMissing: { type: boolean, description: "The file of an external library was not found on the last scan" }
         tags: { type: array, items: { type: string }, description: "Only for the owner" }
         stack: { type: array, items: { type: string, format: uuid }, description: "All shots of its stack, the main one first. Only for the owner" }

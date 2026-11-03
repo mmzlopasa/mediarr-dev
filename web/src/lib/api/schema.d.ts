@@ -1563,6 +1563,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/{id}/edits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace the list of edits of a photo. The original is never changed */
+        put: operations["setAssetEdits"];
+        post?: never;
+        /** Go back to the photo as it was taken */
+        delete: operations["clearAssetEdits"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/memories": {
         parameters: {
             query?: never;
@@ -1699,6 +1717,25 @@ export interface components {
             count: number;
             /** Format: uuid */
             coverId: string;
+        };
+        AssetEdits: {
+            /** @description Clockwise: 0, 90, 180 or 270 */
+            rotate?: number;
+            crop?: components["schemas"]["CropBox"];
+            brightness?: number;
+            contrast?: number;
+            saturation?: number;
+        };
+        /** @description A part of the rotated picture, in fractions of its sides */
+        CropBox: {
+            /** Format: double */
+            x: number;
+            /** Format: double */
+            y: number;
+            /** Format: double */
+            width: number;
+            /** Format: double */
+            height: number;
         };
         Memory: {
             /** @enum {string} */
@@ -2128,6 +2165,9 @@ export interface components {
             isOwner?: boolean;
             /** @description False on a public link that does not allow downloads */
             downloadAllowed?: boolean;
+            edits?: components["schemas"]["AssetEdits"];
+            /** @description New previews are being made after an edit */
+            isEditing?: boolean;
             /** @description The file of an external library was not found on the last scan */
             isMissing?: boolean;
             /** @description Only for the owner */
@@ -2679,7 +2719,8 @@ export interface operations {
     getAssetThumbnail: {
         parameters: {
             query?: {
-                size?: "small" | "large" | "full";
+                /** @description source is the unedited picture, for its owner */
+                size?: "small" | "large" | "full" | "source";
             };
             header?: never;
             path: {
@@ -4776,6 +4817,57 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
+        };
+    };
+    setAssetEdits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetEdits"];
+            };
+        };
+        responses: {
+            /** @description Saved. New previews follow shortly */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    clearAssetEdits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cleared. New previews follow shortly */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     listMemories: {

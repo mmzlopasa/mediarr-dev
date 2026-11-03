@@ -67,6 +67,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**changeAssetTags**](doc//DefaultApi.md#changeassettags) | **POST** /api/assets/tags | Add a tag to the user's own assets, or remove it
 *DefaultApi* | [**changePassword**](doc//DefaultApi.md#changepassword) | **POST** /api/me/password | Change the current user's password and end their other sessions
 *DefaultApi* | [**checkAssets**](doc//DefaultApi.md#checkassets) | **POST** /api/assets/check | Report which SHA-256 checksums the current user already has, so uploads can be skipped
+*DefaultApi* | [**clearAssetEdits**](doc//DefaultApi.md#clearassetedits) | **DELETE** /api/assets/{id}/edits | Go back to the photo as it was taken
 *DefaultApi* | [**createAlbum**](doc//DefaultApi.md#createalbum) | **POST** /api/albums | Create an album. With rules it is a smart album.
 *DefaultApi* | [**createAlbumComment**](doc//DefaultApi.md#createalbumcomment) | **POST** /api/albums/{id}/comments | Comment on an album or on a photo in it
 *DefaultApi* | [**createAlbumLink**](doc//DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
@@ -155,6 +156,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
 *DefaultApi* | [**setAlbumHeart**](doc//DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
+*DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 *DefaultApi* | [**setMapStyle**](doc//DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
@@ -182,6 +184,7 @@ Class | Method | HTTP request | Description
  - [AnalysisProgress](doc//AnalysisProgress.md)
  - [Asset](doc//Asset.md)
  - [AssetDetail](doc//AssetDetail.md)
+ - [AssetEdits](doc//AssetEdits.md)
  - [AssetIds](doc//AssetIds.md)
  - [AssetList](doc//AssetList.md)
  - [AssetTagChange](doc//AssetTagChange.md)
@@ -195,6 +198,7 @@ Class | Method | HTTP request | Description
  - [CommentCreate](doc//CommentCreate.md)
  - [CreateDeviceKeyRequest](doc//CreateDeviceKeyRequest.md)
  - [CreateUserRequest](doc//CreateUserRequest.md)
+ - [CropBox](doc//CropBox.md)
  - [DeviceKey](doc//DeviceKey.md)
  - [DuplicateGroup](doc//DuplicateGroup.md)
  - [DuplicateItem](doc//DuplicateItem.md)

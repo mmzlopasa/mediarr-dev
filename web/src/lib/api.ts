@@ -23,6 +23,7 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type AssetEdits = components['schemas']['AssetEdits'];
 export type Folder = components['schemas']['Folder'];
 export type ExternalLibrary = components['schemas']['ExternalLibrary'];
 export type Duplicates = components['schemas']['Duplicates'];
@@ -182,6 +183,9 @@ export const api = {
 	setExternalOwner: (ownerId: string) =>
 		request<ExternalLibrary>(fetch, '/api/admin/external', { ownerId }, 'PUT'),
 	scanExternal: () => request<void>(fetch, '/api/admin/external/scan', {}),
+	setEdits: (id: string, edits: AssetEdits) =>
+		request<void>(fetch, `/api/assets/${id}/edits`, edits, 'PUT'),
+	clearEdits: (id: string) => request<void>(fetch, `/api/assets/${id}/edits`, undefined, 'DELETE'),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>

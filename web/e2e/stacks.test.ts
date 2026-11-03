@@ -82,3 +82,39 @@ test('a burst shows as one photo, and can be looked through and split', async ({
 	await page.goto('/');
 	await expect(page.locator('.tl-tile')).toHaveCount(before + 3);
 });
+
+test('a photo is edited and goes back, and its original stays', async ({ page }) => {
+	await signIn(page, 'stacker');
+	await page.goto('/');
+	await page.waitForLoadState('networkidle');
+	await page.locator('.tl-tile').first().click();
+	await page.getByRole('button', { name: 'Edit' }).click();
+	const editor = page.getByRole('dialog', { name: 'Edit the photo' });
+	await expect(editor.locator('.editor-handle')).toHaveCount(4);
+
+	const detailRequest = page.waitForResponse((response) =>
+		/\/api\/assets\/[0-9a-f-]+$/.test(new URL(response.url()).pathname)
+	);
+	await editor.getByRole('button', { name: 'Rotate' }).click();
+	await editor.getByRole('button', { name: 'Save' }).click();
+	const detail = await (await detailRequest).json();
+	await expect(editor).toHaveCount(0, { timeout: 40000 });
+
+	const size = async (url: string) =>
+		page.evaluate(async (address) => {
+			const image = new Image();
+			image.src = address;
+			await image.decode();
+			return { width: image.naturalWidth, height: image.naturalHeight };
+		}, url);
+	const large = `/api/assets/${detail.id}/thumbnail?size=large`;
+	const turned = await size(large);
+	const source = await size(`/api/assets/${detail.id}/thumbnail?size=source`);
+	expect(turned.width > turned.height).toBe(source.width < source.height);
+
+	await page.getByRole('button', { name: 'Edit' }).click();
+	await editor.getByRole('button', { name: 'Back to the original' }).click();
+	await expect(editor).toHaveCount(0, { timeout: 40000 });
+	const original = await (await page.request.get(`/api/assets/${detail.id}`)).json();
+	expect(original.edits).toBeUndefined();
+});

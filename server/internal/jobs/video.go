@@ -278,7 +278,7 @@ func ExtractMotionVideo(original, dest string, offsetFromEnd int64) (bool, error
 }
 
 // MakeFullPreview writes a full resolution WebP that browsers can show: for HEIC, AVIF and RAW.
-func MakeFullPreview(ctx context.Context, original, dest string) error {
+func MakeFullPreview(ctx context.Context, original, dest string, edits *Edits) error {
 	if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil {
 		return err
 	}
@@ -299,6 +299,10 @@ func MakeFullPreview(ctx context.Context, original, dest string) error {
 		return err
 	}
 
+	source, err = applyEdits(ctx, source, work, edits)
+	if err != nil {
+		return err
+	}
 	tmp := filepath.Join(work, "full.webp")
 	size := strconv.Itoa(FullPreviewSize)
 	if _, err := runTool(ctx, "vips", "thumbnail", source, tmp+"[Q=88,strip]", size, "--height", size, "--size", "down", "--fail-on", "truncated"); err != nil {

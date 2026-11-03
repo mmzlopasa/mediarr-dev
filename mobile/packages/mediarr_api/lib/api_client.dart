@@ -251,6 +251,8 @@ class ApiClient {
           return Asset.fromJson(value);
         case 'AssetDetail':
           return AssetDetail.fromJson(value);
+        case 'AssetEdits':
+          return AssetEdits.fromJson(value);
         case 'AssetIds':
           return AssetIds.fromJson(value);
         case 'AssetList':
@@ -277,6 +279,8 @@ class ApiClient {
           return CreateDeviceKeyRequest.fromJson(value);
         case 'CreateUserRequest':
           return CreateUserRequest.fromJson(value);
+        case 'CropBox':
+          return CropBox.fromJson(value);
         case 'DeviceKey':
           return DeviceKey.fromJson(value);
         case 'DuplicateGroup':

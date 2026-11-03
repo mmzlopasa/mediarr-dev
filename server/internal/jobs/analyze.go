@@ -35,6 +35,8 @@ const (
 // AnalyzeArgs reads a picture for search and for faces.
 type AnalyzeArgs struct {
 	AssetID uuid.UUID `json:"asset_id"`
+	// Revision makes an edited photo count as a new picture, because its faces moved.
+	Revision int32 `json:"revision,omitempty"`
 }
 
 // Kind identifies the job in the queue.

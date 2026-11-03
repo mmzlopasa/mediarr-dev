@@ -10,6 +10,7 @@ import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'asset_picture.dart';
 import 'duplicates_screen.dart';
+import 'photo_editor_screen.dart';
 
 /// A full screen view on a clean black background: colors around a photo must not affect it.
 class ViewerScreen extends ConsumerStatefulWidget {
@@ -41,6 +42,7 @@ class ViewerScreen extends ConsumerStatefulWidget {
 }
 
 class _ViewerScreenState extends ConsumerState<ViewerScreen> {
+  int _revision = 0;
   late final PageController _pages = PageController(
     initialPage: widget.initialIndex,
   );
@@ -219,6 +221,22 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
               ),
               onPressed: () => _favorite(current),
             ),
+          if (mine && current.kind == TimelineItemKindEnum.photo)
+            IconButton(
+              tooltip: 'Edit',
+              icon: const Icon(Icons.tune),
+              onPressed: () async {
+                final changed = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        PhotoEditorScreen(session: session, id: current.id),
+                  ),
+                );
+                if (changed != true) return;
+                await store.refresh(reloadLoaded: true);
+                if (mounted) setState(() => _revision++);
+              },
+            ),
           IconButton(
             tooltip: 'Details',
             icon: const Icon(Icons.info_outline),
@@ -263,7 +281,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
             );
           }
           return _PhotoPage(
-            key: ValueKey(item.id),
+            key: ValueKey('${item.id}-$_revision'),
             session: session,
             id: item.id,
             onZoom: (zoomed) {

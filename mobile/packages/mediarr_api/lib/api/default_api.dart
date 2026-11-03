@@ -410,6 +410,55 @@ class DefaultApi {
     return null;
   }
 
+  /// Go back to the photo as it was taken
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> clearAssetEditsWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/{id}/edits'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Go back to the photo as it was taken
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> clearAssetEdits(
+    String id,
+  ) async {
+    final response = await clearAssetEditsWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Create an album. With rules it is a smart album.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1858,6 +1907,7 @@ class DefaultApi {
   /// * [String] id (required):
   ///
   /// * [String] size:
+  ///   source is the unedited picture, for its owner
   Future<Response> getAssetThumbnailWithHttpInfo(
     String id, {
     String? size,
@@ -1896,6 +1946,7 @@ class DefaultApi {
   /// * [String] id (required):
   ///
   /// * [String] size:
+  ///   source is the unedited picture, for its owner
   Future<MultipartFile?> getAssetThumbnail(
     String id, {
     String? size,
@@ -5545,6 +5596,62 @@ class DefaultApi {
       id,
       userId,
       memberRole,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Replace the list of edits of a photo. The original is never changed
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetEdits] assetEdits (required):
+  Future<Response> setAssetEditsWithHttpInfo(
+    String id,
+    AssetEdits assetEdits,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/{id}/edits'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetEdits;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Replace the list of edits of a photo. The original is never changed
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetEdits] assetEdits (required):
+  Future<void> setAssetEdits(
+    String id,
+    AssetEdits assetEdits,
+  ) async {
+    final response = await setAssetEditsWithHttpInfo(
+      id,
+      assetEdits,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

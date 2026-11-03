@@ -382,9 +382,10 @@ func (e ListAssetsParamsStatus) Valid() bool {
 
 // Defines values for GetAssetThumbnailParamsSize.
 const (
-	GetAssetThumbnailParamsSizeFull  GetAssetThumbnailParamsSize = "full"
-	GetAssetThumbnailParamsSizeLarge GetAssetThumbnailParamsSize = "large"
-	GetAssetThumbnailParamsSizeSmall GetAssetThumbnailParamsSize = "small"
+	GetAssetThumbnailParamsSizeFull   GetAssetThumbnailParamsSize = "full"
+	GetAssetThumbnailParamsSizeLarge  GetAssetThumbnailParamsSize = "large"
+	GetAssetThumbnailParamsSizeSmall  GetAssetThumbnailParamsSize = "small"
+	GetAssetThumbnailParamsSizeSource GetAssetThumbnailParamsSize = "source"
 )
 
 // Valid indicates whether the value is a known member of the GetAssetThumbnailParamsSize enum.
@@ -395,6 +396,8 @@ func (e GetAssetThumbnailParamsSize) Valid() bool {
 	case GetAssetThumbnailParamsSizeLarge:
 		return true
 	case GetAssetThumbnailParamsSizeSmall:
+		return true
+	case GetAssetThumbnailParamsSizeSource:
 		return true
 	default:
 		return false
@@ -731,12 +734,13 @@ type AssetDetail struct {
 	CreatedAt time.Time `json:"createdAt"`
 
 	// DownloadAllowed False on a public link that does not allow downloads
-	DownloadAllowed *bool    `json:"downloadAllowed,omitempty"`
-	DurationMs      *int64   `json:"durationMs,omitempty"`
-	ExposureTime    *string  `json:"exposureTime,omitempty"`
-	FNumber         *float64 `json:"fNumber,omitempty"`
-	FocalLength     *float64 `json:"focalLength,omitempty"`
-	HasCaptureTime  *bool    `json:"hasCaptureTime,omitempty"`
+	DownloadAllowed *bool       `json:"downloadAllowed,omitempty"`
+	DurationMs      *int64      `json:"durationMs,omitempty"`
+	Edits           *AssetEdits `json:"edits,omitempty"`
+	ExposureTime    *string     `json:"exposureTime,omitempty"`
+	FNumber         *float64    `json:"fNumber,omitempty"`
+	FocalLength     *float64    `json:"focalLength,omitempty"`
+	HasCaptureTime  *bool       `json:"hasCaptureTime,omitempty"`
 
 	// HasMotion An Android Motion Photo, with its video at /motion
 	HasMotion *bool `json:"hasMotion,omitempty"`
@@ -746,7 +750,10 @@ type AssetDetail struct {
 	HlsReady   *bool              `json:"hlsReady,omitempty"`
 	Id         openapi_types.UUID `json:"id"`
 	IsArchived bool               `json:"isArchived"`
-	IsFavorite bool               `json:"isFavorite"`
+
+	// IsEditing New previews are being made after an edit
+	IsEditing  *bool `json:"isEditing,omitempty"`
+	IsFavorite bool  `json:"isFavorite"`
 
 	// IsMissing The file of an external library was not found on the last scan
 	IsMissing *bool `json:"isMissing,omitempty"`
@@ -789,6 +796,19 @@ type AssetDetailKind string
 
 // AssetDetailStatus defines model for AssetDetail.Status.
 type AssetDetailStatus string
+
+// AssetEdits defines model for AssetEdits.
+type AssetEdits struct {
+	Brightness *int `json:"brightness,omitempty"`
+	Contrast   *int `json:"contrast,omitempty"`
+
+	// Crop A part of the rotated picture, in fractions of its sides
+	Crop *CropBox `json:"crop,omitempty"`
+
+	// Rotate Clockwise: 0, 90, 180 or 270
+	Rotate     *int `json:"rotate,omitempty"`
+	Saturation *int `json:"saturation,omitempty"`
+}
 
 // AssetIds defines model for AssetIds.
 type AssetIds struct {
@@ -873,6 +893,14 @@ type CreateUserRequest struct {
 	IsAdmin  bool   `json:"isAdmin"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
+}
+
+// CropBox A part of the rotated picture, in fractions of its sides
+type CropBox struct {
+	Height float64 `json:"height"`
+	Width  float64 `json:"width"`
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
 }
 
 // DeviceKey defines model for DeviceKey.
@@ -1309,6 +1337,7 @@ type GetAssetOriginalParams struct {
 
 // GetAssetThumbnailParams defines parameters for GetAssetThumbnail.
 type GetAssetThumbnailParams struct {
+	// Size source is the unedited picture, for its owner
 	Size *GetAssetThumbnailParamsSize `form:"size,omitempty" json:"size,omitempty"`
 }
 
@@ -1420,6 +1449,9 @@ type CheckAssetsJSONRequestBody = ChecksumCheckRequest
 
 // ChangeAssetTagsJSONRequestBody defines body for ChangeAssetTags for application/json ContentType.
 type ChangeAssetTagsJSONRequestBody = AssetTagChange
+
+// SetAssetEditsJSONRequestBody defines body for SetAssetEdits for application/json ContentType.
+type SetAssetEditsJSONRequestBody = AssetEdits
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
@@ -1570,6 +1602,12 @@ type ServerInterface interface {
 	// GetAsset Read an asset's details and its neighbours on the timeline
 	// (GET /api/assets/{id})
 	GetAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ClearAssetEdits Go back to the photo as it was taken
+	// (DELETE /api/assets/{id}/edits)
+	ClearAssetEdits(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// SetAssetEdits Replace the list of edits of a photo. The original is never changed
+	// (PUT /api/assets/{id}/edits)
+	SetAssetEdits(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetAssetMotion Read the video embedded in an Android Motion Photo
 	// (GET /api/assets/{id}/motion)
 	GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -1993,6 +2031,18 @@ func (_ Unimplemented) ChangeAssetTags(w http.ResponseWriter, r *http.Request) {
 // GetAsset Read an asset's details and its neighbours on the timeline
 // (GET /api/assets/{id})
 func (_ Unimplemented) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ClearAssetEdits Go back to the photo as it was taken
+// (DELETE /api/assets/{id}/edits)
+func (_ Unimplemented) ClearAssetEdits(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetAssetEdits Replace the list of edits of a photo. The original is never changed
+// (PUT /api/assets/{id}/edits)
+func (_ Unimplemented) SetAssetEdits(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3267,6 +3317,58 @@ func (siw *ServerInterfaceWrapper) GetAsset(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAsset(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ClearAssetEdits operation middleware
+func (siw *ServerInterfaceWrapper) ClearAssetEdits(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ClearAssetEdits(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetAssetEdits operation middleware
+func (siw *ServerInterfaceWrapper) SetAssetEdits(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetAssetEdits(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5596,6 +5698,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/folders", wrapper.GetFolder)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/assets/{id}/edits", wrapper.ClearAssetEdits)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/assets/{id}/edits", wrapper.SetAssetEdits)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/memories", wrapper.ListMemories)

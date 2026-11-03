@@ -153,3 +153,14 @@ SELECT path FROM asset_files WHERE asset_id = $1 AND kind = $2;
 
 -- name: ListReadyAssetIDs :many
 SELECT id FROM assets WHERE status = 'ready' AND deleted_at IS NULL;
+
+-- name: SetAssetEdits :exec
+UPDATE assets
+SET edits = $2, edit_revision = edit_revision + 1, phash = NULL, sharpness = NULL, organized_at = NULL, updated_at = now()
+WHERE id = $1;
+
+-- name: MarkEditApplied :exec
+UPDATE assets SET edit_applied = $2 WHERE id = $1;
+
+-- name: DeleteAssetFile :exec
+DELETE FROM asset_files WHERE asset_id = $1 AND kind = $2;

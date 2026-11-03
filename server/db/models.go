@@ -100,6 +100,9 @@ type Asset struct {
 	Sharpness          pgtype.Float4
 	OrganizedAt        pgtype.Timestamptz
 	MissingAt          pgtype.Timestamptz
+	Edits              []byte
+	EditRevision       int32
+	EditApplied        int32
 }
 
 type AssetFile struct {

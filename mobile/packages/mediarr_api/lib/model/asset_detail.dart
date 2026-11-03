@@ -15,6 +15,8 @@ class AssetDetail {
   AssetDetail({
     this.isOwner,
     this.downloadAllowed,
+    this.edits,
+    this.isEditing,
     this.isMissing,
     this.tags = const [],
     this.stack = const [],
@@ -71,6 +73,23 @@ class AssetDetail {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   bool? downloadAllowed;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  AssetEdits? edits;
+
+  /// New previews are being made after an edit
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? isEditing;
 
   /// The file of an external library was not found on the last scan
   ///
@@ -309,6 +328,8 @@ class AssetDetail {
       other is AssetDetail &&
           other.isOwner == isOwner &&
           other.downloadAllowed == downloadAllowed &&
+          other.edits == edits &&
+          other.isEditing == isEditing &&
           other.isMissing == isMissing &&
           _deepEquality.equals(other.tags, tags) &&
           _deepEquality.equals(other.stack, stack) &&
@@ -352,6 +373,8 @@ class AssetDetail {
       // ignore: unnecessary_parenthesis
       (isOwner == null ? 0 : isOwner!.hashCode) +
       (downloadAllowed == null ? 0 : downloadAllowed!.hashCode) +
+      (edits == null ? 0 : edits!.hashCode) +
+      (isEditing == null ? 0 : isEditing!.hashCode) +
       (isMissing == null ? 0 : isMissing!.hashCode) +
       (tags.hashCode) +
       (stack.hashCode) +
@@ -392,7 +415,7 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, isMissing=$isMissing, tags=$tags, stack=$stack, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, edits=$edits, isEditing=$isEditing, isMissing=$isMissing, tags=$tags, stack=$stack, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -405,6 +428,16 @@ class AssetDetail {
       json[r'downloadAllowed'] = this.downloadAllowed;
     } else {
       json[r'downloadAllowed'] = null;
+    }
+    if (this.edits != null) {
+      json[r'edits'] = this.edits;
+    } else {
+      json[r'edits'] = null;
+    }
+    if (this.isEditing != null) {
+      json[r'isEditing'] = this.isEditing;
+    } else {
+      json[r'isEditing'] = null;
     }
     if (this.isMissing != null) {
       json[r'isMissing'] = this.isMissing;
@@ -569,6 +602,8 @@ class AssetDetail {
       return AssetDetail(
         isOwner: mapValueOfType<bool>(json, r'isOwner'),
         downloadAllowed: mapValueOfType<bool>(json, r'downloadAllowed'),
+        edits: AssetEdits.fromJson(json[r'edits']),
+        isEditing: mapValueOfType<bool>(json, r'isEditing'),
         isMissing: mapValueOfType<bool>(json, r'isMissing'),
         tags: json[r'tags'] is Iterable
             ? (json[r'tags'] as Iterable).cast<String>().toList(growable: false)

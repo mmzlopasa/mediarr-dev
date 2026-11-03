@@ -11,6 +11,7 @@
 	import { formatDateTime, formatDuration } from './layout.ts';
 	import VideoPlayer from './VideoPlayer.svelte';
 	import AlbumActivity from './AlbumActivity.svelte';
+	import PhotoEditor from '#lib/edit/PhotoEditor.svelte';
 
 	const MIN_SCALE = 1;
 	const MAX_SCALE = 6;
@@ -58,6 +59,8 @@
 	let showInfo = $state(false);
 	let showActivity = $state(false);
 	let confirmDelete = $state(false);
+	let editing = $state(false);
+	let revision = $state(0);
 	let dialog = $state<HTMLDivElement>();
 
 	let scale = $state(1);
@@ -117,7 +120,7 @@
 	};
 
 	function onKey(event: KeyboardEvent) {
-		if (confirmDelete) return;
+		if (confirmDelete || editing) return;
 		if (event.key === 'Escape') {
 			if (showInfo) showInfo = false;
 			else if (showActivity) showActivity = false;
@@ -368,6 +371,13 @@
 							showActivity = false;
 						}}><Icon name="info" /></button
 					>
+					{#if detail.isOwner && detail.kind === 'photo' && base === '/api' && !previewOnly}<button
+							type="button"
+							class="icon-btn"
+							aria-label={tr('Uredi', 'Edit')}
+							title={tr('Uredi', 'Edit')}
+							onclick={() => (editing = true)}><Icon name="cog" /></button
+						>{/if}
 					{#if detail.isOwner}<button
 							type="button"
 							class="icon-btn"
@@ -421,13 +431,14 @@
 						>{/if}
 				</div>
 			{:else if detail}
-				<img
-					class="viewer-media"
-					src="{base}/assets/{id}/thumbnail?size=large"
-					alt={detail.originalName}
-					draggable="false"
-					style="transform:translate({x}px,{y}px) scale({scale})"
-				/>
+				{#key revision}<img
+						class="viewer-media"
+						src="{base}/assets/{id}/thumbnail?size=large"
+						alt={detail.originalName}
+						draggable="false"
+						style="transform:translate({x}px,{y}px) scale({scale})"
+					/>
+				{/key}
 				{#if fullWanted}
 					<img
 						class="viewer-media viewer-full"
@@ -573,6 +584,19 @@
 		</aside>
 	{/if}
 </div>
+
+{#if editing && detail}
+	<PhotoEditor
+		{detail}
+		onClose={() => (editing = false)}
+		onSaved={async () => {
+			editing = false;
+			revision += 1;
+			detail = await load(id);
+			onChanged();
+		}}
+	/>
+{/if}
 
 <Dialog title={tr('Obrisati fotku?', 'Delete this photo?')} bind:open={confirmDelete}>
 	<p>

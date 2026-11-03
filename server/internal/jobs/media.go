@@ -328,7 +328,7 @@ type ThumbResult struct {
 }
 
 // MakeThumbnails generates both thumbnails and the blurhash. It can safely run again after a crash.
-func MakeThumbnails(ctx context.Context, original, kind, dir, name string) (*ThumbResult, error) {
+func MakeThumbnails(ctx context.Context, original, kind, dir, name string, edits *Edits) (*ThumbResult, error) {
 	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return nil, fmt.Errorf("create thumbnail directory: %w", err)
 	}
@@ -339,6 +339,10 @@ func MakeThumbnails(ctx context.Context, original, kind, dir, name string) (*Thu
 	defer func() { _ = os.RemoveAll(work) }()
 
 	source, err := thumbnailSource(ctx, original, kind, work)
+	if err != nil {
+		return nil, err
+	}
+	source, err = applyEdits(ctx, source, work, edits)
 	if err != nil {
 		return nil, err
 	}

@@ -30,7 +30,9 @@ const (
 	shutdownDeadline = 30 * time.Second
 	videoQueue       = "video"
 	// Longer than any job's timeout, so a killed worker's jobs restart without cutting off a slow one.
-	rescueStuckAfter = 15 * time.Minute
+	// Longer than the longest job, which would otherwise run twice. Jobs that a restart interrupted
+	// do not wait for this: ReleaseInterrupted hands them back at once.
+	rescueStuckAfter = externalScanTimeout + time.Hour
 )
 
 // MetadataArgs reads a file's metadata. It runs first and queues the other jobs.
@@ -146,6 +148,23 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	return client, err
 }
 
+// ReleaseInterrupted hands back what the previous run was doing when it stopped. An installation has
+// one worker, so a job still marked as running when it starts has nobody working on it, and a job
+// that allows one copy at a time would otherwise block new ones. A job that used up its attempts,
+// perhaps by bringing the worker down each time, is given up on.
+func ReleaseInterrupted(ctx context.Context, pool *pgxpool.Pool) error {
+	_, err := pool.Exec(ctx, `
+		UPDATE river_job
+		SET state = CASE WHEN attempt >= max_attempts THEN 'discarded' ELSE 'available' END::river_job_state,
+		    finalized_at = CASE WHEN attempt >= max_attempts THEN now() END,
+		    scheduled_at = now()
+		WHERE state = 'running'`)
+	if err != nil {
+		return fmt.Errorf("release interrupted jobs: %w", err)
+	}
+	return nil
+}
+
 // Run starts the worker and blocks until ctx ends, then finishes running jobs.
 func Run(ctx context.Context, client *river.Client[pgx.Tx]) error {
 	if err := client.Start(ctx); err != nil {
@@ -257,7 +276,11 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 
 	assetID := uuidString(id)
 	dir := filepath.Join(w.opts.CachePath, "thumbs", uuidString(asset.UserID), assetID[:2])
-	result, err := MakeThumbnails(ctx, asset.OriginalPath, asset.Kind, dir, assetID)
+	edits, err := ParseEdits(asset.Edits)
+	if err != nil {
+		return w.failOrRetry(ctx, id, job.Attempt, err)
+	}
+	result, err := MakeThumbnails(ctx, asset.OriginalPath, asset.Kind, dir, assetID, edits)
 	if err != nil {
 		return w.failOrRetry(ctx, id, job.Attempt, err)
 	}
@@ -286,6 +309,9 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 				return err
 			}
 		}
+		if err := q.MarkEditApplied(ctx, db.MarkEditAppliedParams{ID: id, EditApplied: asset.EditRevision}); err != nil {
+			return err
+		}
 		if err := q.MarkAssetReady(ctx, db.MarkAssetReadyParams{
 			ID:          id,
 			Blurhash:    pgtype.Text{String: result.Blurhash, Valid: true},
@@ -296,7 +322,7 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 		if w.opts.MLURL == "" {
 			return nil
 		}
-		_, err := w.client().InsertTx(ctx, tx, AnalyzeArgs{AssetID: job.Args.AssetID}, nil)
+		_, err := w.client().InsertTx(ctx, tx, AnalyzeArgs{AssetID: job.Args.AssetID, Revision: asset.EditRevision}, nil)
 		return err
 	})
 }
