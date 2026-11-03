@@ -1,0 +1,38 @@
+name: iOS integration tests
+
+# Runs the app and its native backup on a simulator. Separate from the build, so that the .ipa is
+# still published if the simulator has a bad day; the result of this run is what counts for the gate.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - mobile/**
+      - .github/workflows/ios-integration.yml
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.9
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Start a simulator, with access to photos
+        run: |
+          DEVICE=$(xcrun simctl list devices available | grep -m1 -E 'iPhone' | grep -oE '[0-9A-F-]{36}')
+          xcrun simctl boot "$DEVICE"
+          xcrun simctl bootstatus "$DEVICE"
+          xcrun simctl privacy "$DEVICE" grant all app.mediarr.mediarr
+          echo "DEVICE=$DEVICE" >> "$GITHUB_ENV"
+      - run: flutter test integration_test --device-id "$DEVICE" --suppress-analytics
