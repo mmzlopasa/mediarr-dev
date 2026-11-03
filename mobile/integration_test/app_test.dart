@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,15 @@ import 'fake_server.dart';
 
 /// A real picture for the phone's library: larger than the tiny one, and new on every run.
 Future<AssetEntity> addPhotoToAlbum(String albumName) async {
+  if (Platform.isAndroid) {
+    // On Android an album is the folder a photo is in.
+    return PhotoManager.editor.saveImage(
+      base64Decode(tinyJpeg),
+      filename: 'phone.jpg',
+      title: 'phone.jpg',
+      relativePath: 'Pictures/$albumName',
+    );
+  }
   final album = await PhotoManager.editor.darwin.createAlbum(albumName);
   final saved = await PhotoManager.editor.saveImage(
     base64Decode(tinyJpeg),

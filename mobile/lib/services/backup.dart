@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -151,7 +153,7 @@ class BackupService {
     required String albumName,
   }) async {
     final key = await session.api.createDeviceKey(
-      CreateDeviceKeyRequest(name: 'iPhone'),
+      CreateDeviceKeyRequest(name: Platform.isIOS ? 'iPhone' : 'Android'),
     );
     if (key == null) {
       throw ApiException(500, 'The server did not create a device key.');
