@@ -1168,6 +1168,59 @@ paths:
               schema: { $ref: "#/components/schemas/BulkResponse" }
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/map/points:
+    get:
+      operationId: getMapPoints
+      summary: Photos with a location that this user may see, oldest first
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Parallel lists, which stay small for a large library
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MapPoints" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/map/trips:
+    get:
+      operationId: getMapTrips
+      summary: Journeys found from the time and distance between photos
+      responses:
+        "200":
+          description: Trips, newest first
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Trip" } }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/map/style:
+    get:
+      operationId: getMapStyle
+      summary: Where the map's background comes from
+      responses:
+        "200":
+          description: Style addresses
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MapStyle" }
+        "401": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setMapStyle
+      summary: Choose the map's background. Administrators only. Empty goes back to the default.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MapStyle" }
+      responses:
+        "200":
+          description: Style addresses
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MapStyle" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
 components:
   responses:
     Error:
@@ -1176,6 +1229,31 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    MapPoints:
+      type: object
+      required: [ids, kinds, lats, lons]
+      properties:
+        ids: { type: array, items: { type: string, format: uuid } }
+        kinds: { type: array, items: { type: string } }
+        lats: { type: array, items: { type: number, format: double } }
+        lons: { type: array, items: { type: number, format: double } }
+    Trip:
+      type: object
+      required: [from, to, count, coverId, lat, lon, places]
+      properties:
+        from: { type: string, description: "Local date: 2006-01-02" }
+        to: { type: string, description: "Local date: 2006-01-02" }
+        count: { type: integer }
+        coverId: { type: string, format: uuid }
+        lat: { type: number, format: double }
+        lon: { type: number, format: double }
+        places: { type: array, items: { type: string } }
+    MapStyle:
+      type: object
+      required: [light, dark]
+      properties:
+        light: { type: string }
+        dark: { type: string }
     VaultStatus:
       type: object
       required: [hasPin, unlocked]
@@ -1531,6 +1609,9 @@ components:
         isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
         tags: { type: array, items: { type: string }, description: "Only for the owner" }
+        city: { type: string }
+        state: { type: string }
+        country: { type: string }
         id: { type: string, format: uuid }
         originalName: { type: string }
         kind: { type: string, enum: [unknown, photo, video] }

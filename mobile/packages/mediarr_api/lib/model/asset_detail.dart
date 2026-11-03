@@ -16,6 +16,9 @@ class AssetDetail {
     this.isOwner,
     this.downloadAllowed,
     this.tags = const [],
+    this.city,
+    this.state,
+    this.country,
     required this.id,
     required this.originalName,
     required this.kind,
@@ -68,6 +71,30 @@ class AssetDetail {
 
   /// Only for the owner
   List<String> tags;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? city;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? state;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? country;
 
   String id;
 
@@ -265,6 +292,9 @@ class AssetDetail {
           other.isOwner == isOwner &&
           other.downloadAllowed == downloadAllowed &&
           _deepEquality.equals(other.tags, tags) &&
+          other.city == city &&
+          other.state == state &&
+          other.country == country &&
           other.id == id &&
           other.originalName == originalName &&
           other.kind == kind &&
@@ -302,6 +332,9 @@ class AssetDetail {
       (isOwner == null ? 0 : isOwner!.hashCode) +
       (downloadAllowed == null ? 0 : downloadAllowed!.hashCode) +
       (tags.hashCode) +
+      (city == null ? 0 : city!.hashCode) +
+      (state == null ? 0 : state!.hashCode) +
+      (country == null ? 0 : country!.hashCode) +
       (id.hashCode) +
       (originalName.hashCode) +
       (kind.hashCode) +
@@ -335,7 +368,7 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, tags=$tags, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, tags=$tags, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -350,6 +383,21 @@ class AssetDetail {
       json[r'downloadAllowed'] = null;
     }
     json[r'tags'] = this.tags;
+    if (this.city != null) {
+      json[r'city'] = this.city;
+    } else {
+      json[r'city'] = null;
+    }
+    if (this.state != null) {
+      json[r'state'] = this.state;
+    } else {
+      json[r'state'] = null;
+    }
+    if (this.country != null) {
+      json[r'country'] = this.country;
+    } else {
+      json[r'country'] = null;
+    }
     json[r'id'] = this.id;
     json[r'originalName'] = this.originalName;
     json[r'kind'] = this.kind;
@@ -493,6 +541,9 @@ class AssetDetail {
         tags: json[r'tags'] is Iterable
             ? (json[r'tags'] as Iterable).cast<String>().toList(growable: false)
             : const [],
+        city: mapValueOfType<String>(json, r'city'),
+        state: mapValueOfType<String>(json, r'state'),
+        country: mapValueOfType<String>(json, r'country'),
         id: mapValueOfType<String>(json, r'id')!,
         originalName: mapValueOfType<String>(json, r'originalName')!,
         kind: AssetDetailKindEnum.fromJson(json[r'kind'])!,

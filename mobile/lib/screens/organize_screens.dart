@@ -11,6 +11,7 @@ import '../services/session.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import 'album_sheets.dart';
+import 'map_screen.dart';
 import 'timeline_screen.dart';
 import 'viewer_screen.dart';
 
@@ -38,6 +39,12 @@ class OrganizeLinks extends StatelessWidget {
             .push(MaterialPageRoute<void>(builder: (_) => screen));
     return Column(
       children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.map_outlined),
+          title: const Text('Map'),
+          onTap: () => open(const MapScreen()),
+        ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.archive_outlined),

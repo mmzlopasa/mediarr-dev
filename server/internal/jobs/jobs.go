@@ -197,6 +197,9 @@ func (w *metadataWorker) Work(ctx context.Context, job *river.Job[MetadataArgs])
 		if err := q.UpsertExif(ctx, meta.exifParams(id)); err != nil {
 			return err
 		}
+		if err := q.GeocodeAsset(ctx, id); err != nil {
+			return err
+		}
 		// Live Photo files can arrive in either order, so both try to link.
 		if meta.ContentID != "" {
 			if err := q.LinkLivePhoto(ctx, db.LinkLivePhotoParams{UserID: asset.UserID, ContentID: pgText(meta.ContentID)}); err != nil {
@@ -392,6 +395,9 @@ func (w *cleanupWorker) Work(ctx context.Context, _ *river.Job[CleanupArgs]) err
 	if err := PurgeExpiredTrash(ctx, w.queries, w.opts.CachePath, time.Now()); err != nil {
 		return err
 	}
+	if err := GeocodePending(ctx, w.queries); err != nil {
+		return err
+	}
 	return removeStaleUploads(storage.TmpDir(w.opts.LibraryPath), time.Now().Add(-staleUploadAge))
 }
 
@@ -418,4 +424,26 @@ func removeStaleUploads(dir string, cutoff time.Time) error {
 		}
 	}
 	return nil
+}
+
+// GeocodePending names the places of photos that do not have a name yet, such as older photos.
+func GeocodePending(ctx context.Context, q *db.Queries) error {
+	places, err := q.CountPlaces(ctx)
+	if err != nil || places == 0 {
+		return err
+	}
+	for {
+		ids, err := q.ListGeocodePending(ctx)
+		if err != nil {
+			return err
+		}
+		if len(ids) == 0 {
+			return nil
+		}
+		for _, id := range ids {
+			if err := q.GeocodeAsset(ctx, id); err != nil {
+				return fmt.Errorf("name a place: %w", err)
+			}
+		}
+	}
 }

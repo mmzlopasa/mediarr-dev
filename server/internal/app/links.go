@@ -345,7 +345,9 @@ func (s *apiServer) GetPublicAsset(w http.ResponseWriter, r *http.Request, token
 	detail.IsFavorite, detail.IsArchived = false, false
 	detail.DownloadAllowed = optional(downloadsLeft(link), true)
 	if !link.ShowLocation {
+		// A place name says where the photo was as well as coordinates do.
 		detail.Latitude, detail.Longitude = nil, nil
+		detail.City, detail.State, detail.Country = nil, nil, nil
 	}
 	if link.Watermark.Valid {
 		// Only the marked previews exist on such a link, so nothing plays or opens unmarked.

@@ -1255,10 +1255,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/map/points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Photos with a location that this user may see, oldest first */
+        get: operations["getMapPoints"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/map/trips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Journeys found from the time and distance between photos */
+        get: operations["getMapTrips"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/map/style": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Where the map's background comes from */
+        get: operations["getMapStyle"];
+        /** Choose the map's background. Administrators only. Empty goes back to the default. */
+        put: operations["setMapStyle"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        MapPoints: {
+            ids: string[];
+            kinds: string[];
+            lats: number[];
+            lons: number[];
+        };
+        Trip: {
+            /** @description Local date: 2006-01-02 */
+            from: string;
+            /** @description Local date: 2006-01-02 */
+            to: string;
+            count: number;
+            /** Format: uuid */
+            coverId: string;
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lon: number;
+            places: string[];
+        };
+        MapStyle: {
+            light: string;
+            dark: string;
+        };
         VaultStatus: {
             hasPin: boolean;
             unlocked: boolean;
@@ -1595,6 +1671,9 @@ export interface components {
             downloadAllowed?: boolean;
             /** @description Only for the owner */
             tags?: string[];
+            city?: string;
+            state?: string;
+            country?: string;
             /** Format: uuid */
             id: string;
             originalName: string;
@@ -3760,6 +3839,99 @@ export interface operations {
             };
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
+        };
+    };
+    getMapPoints: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Parallel lists, which stay small for a large library */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapPoints"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    getMapTrips: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trips, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Trip"][];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    getMapStyle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Style addresses */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapStyle"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    setMapStyle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MapStyle"];
+            };
+        };
+        responses: {
+            /** @description Style addresses */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapStyle"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
 }

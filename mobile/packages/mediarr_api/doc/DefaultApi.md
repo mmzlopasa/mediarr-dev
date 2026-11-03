@@ -49,6 +49,9 @@ Method | HTTP request | Description
 [**getCollectionThumbnail**](DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 [**getCollectionVideoFile**](DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
 [**getHealth**](DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
+[**getMapPoints**](DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
+[**getMapStyle**](DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
+[**getMapTrips**](DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
 [**getPartnerBucket**](DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 [**getPartnerBuckets**](DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
 [**getPublicAsset**](DefaultApi.md#getpublicasset) | **GET** /api/public/{token}/assets/{id} | An asset in a public album, without what the link does not allow
@@ -84,6 +87,7 @@ Method | HTTP request | Description
 [**revokeDeviceKey**](DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 [**setAlbumHeart**](DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
+[**setMapStyle**](DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
 [**setPartner**](DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 [**setPartnerTimeline**](DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
 [**setVaultPin**](DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
@@ -1738,6 +1742,123 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getMapPoints**
+> MapPoints getMapPoints(from, to)
+
+Photos with a location that this user may see, oldest first
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final from = 2013-10-20; // DateTime | 
+final to = 2013-10-20; // DateTime | 
+
+try {
+    final result = api_instance.getMapPoints(from, to);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getMapPoints: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **from** | **DateTime**|  | [optional] 
+ **to** | **DateTime**|  | [optional] 
+
+### Return type
+
+[**MapPoints**](MapPoints.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getMapStyle**
+> MapStyle getMapStyle()
+
+Where the map's background comes from
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getMapStyle();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getMapStyle: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**MapStyle**](MapStyle.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getMapTrips**
+> List<Trip> getMapTrips()
+
+Journeys found from the time and distance between photos
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getMapTrips();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getMapTrips: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<Trip>**](Trip.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getPartnerBucket**
 > TimelineBucket getPartnerBucket(userId, month)
 
@@ -3154,6 +3275,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setMapStyle**
+> MapStyle setMapStyle(mapStyle)
+
+Choose the map's background. Administrators only. Empty goes back to the default.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final mapStyle = MapStyle(); // MapStyle | 
+
+try {
+    final result = api_instance.setMapStyle(mapStyle);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setMapStyle: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **mapStyle** | [**MapStyle**](MapStyle.md)|  | 
+
+### Return type
+
+[**MapStyle**](MapStyle.md)
 
 ### Authorization
 

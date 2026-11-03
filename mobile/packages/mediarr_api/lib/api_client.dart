@@ -287,6 +287,10 @@ class ApiClient {
           return LoginError.fromJson(value);
         case 'LoginRequest':
           return LoginRequest.fromJson(value);
+        case 'MapPoints':
+          return MapPoints.fromJson(value);
+        case 'MapStyle':
+          return MapStyle.fromJson(value);
         case 'MemberRole':
           return MemberRole.fromJson(value);
         case 'PartnerEntry':
@@ -323,6 +327,8 @@ class ApiClient {
           return TotpCode.fromJson(value);
         case 'TotpSetup':
           return TotpSetup.fromJson(value);
+        case 'Trip':
+          return Trip.fromJson(value);
         case 'User':
           return User.fromJson(value);
         case 'UserRef':

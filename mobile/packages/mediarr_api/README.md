@@ -100,6 +100,9 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getCollectionThumbnail**](doc//DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 *DefaultApi* | [**getCollectionVideoFile**](doc//DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
+*DefaultApi* | [**getMapPoints**](doc//DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
+*DefaultApi* | [**getMapStyle**](doc//DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
+*DefaultApi* | [**getMapTrips**](doc//DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
 *DefaultApi* | [**getPartnerBucket**](doc//DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 *DefaultApi* | [**getPartnerBuckets**](doc//DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
 *DefaultApi* | [**getPublicAsset**](doc//DefaultApi.md#getpublicasset) | **GET** /api/public/{token}/assets/{id} | An asset in a public album, without what the link does not allow
@@ -135,6 +138,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 *DefaultApi* | [**setAlbumHeart**](doc//DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
+*DefaultApi* | [**setMapStyle**](doc//DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 *DefaultApi* | [**setPartnerTimeline**](doc//DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
 *DefaultApi* | [**setVaultPin**](doc//DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
@@ -176,6 +180,8 @@ Class | Method | HTTP request | Description
  - [LinkPassword](doc//LinkPassword.md)
  - [LoginError](doc//LoginError.md)
  - [LoginRequest](doc//LoginRequest.md)
+ - [MapPoints](doc//MapPoints.md)
+ - [MapStyle](doc//MapStyle.md)
  - [MemberRole](doc//MemberRole.md)
  - [PartnerEntry](doc//PartnerEntry.md)
  - [PartnerShare](doc//PartnerShare.md)
@@ -194,6 +200,7 @@ Class | Method | HTTP request | Description
  - [TimelineItem](doc//TimelineItem.md)
  - [TotpCode](doc//TotpCode.md)
  - [TotpSetup](doc//TotpSetup.md)
+ - [Trip](doc//Trip.md)
  - [User](doc//User.md)
  - [UserRef](doc//UserRef.md)
  - [VaultPinChange](doc//VaultPinChange.md)

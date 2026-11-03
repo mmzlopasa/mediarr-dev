@@ -677,6 +677,8 @@ type AssetStatus string
 // AssetDetail defines model for AssetDetail.
 type AssetDetail struct {
 	Camera    *string   `json:"camera,omitempty"`
+	City      *string   `json:"city,omitempty"`
+	Country   *string   `json:"country,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
 
 	// DownloadAllowed False on a public link that does not allow downloads
@@ -715,6 +717,7 @@ type AssetDetail struct {
 	OriginalName  string              `json:"originalName"`
 	SizeBytes     int64               `json:"sizeBytes"`
 	Sprite        *Sprite             `json:"sprite,omitempty"`
+	State         *string             `json:"state,omitempty"`
 	Status        AssetDetailStatus   `json:"status"`
 
 	// Tags Only for the owner
@@ -849,6 +852,20 @@ type LoginRequest struct {
 	Email    string  `json:"email"`
 	Password string  `json:"password"`
 	TotpCode *string `json:"totpCode,omitempty"`
+}
+
+// MapPoints defines model for MapPoints.
+type MapPoints struct {
+	Ids   []openapi_types.UUID `json:"ids"`
+	Kinds []string             `json:"kinds"`
+	Lats  []float64            `json:"lats"`
+	Lons  []float64            `json:"lons"`
+}
+
+// MapStyle defines model for MapStyle.
+type MapStyle struct {
+	Dark  string `json:"dark"`
+	Light string `json:"light"`
 }
 
 // MemberRole defines model for MemberRole.
@@ -1002,6 +1019,21 @@ type TotpSetup struct {
 	Uri    string `json:"uri"`
 }
 
+// Trip defines model for Trip.
+type Trip struct {
+	Count   int                `json:"count"`
+	CoverId openapi_types.UUID `json:"coverId"`
+
+	// From Local date: 2006-01-02
+	From   string   `json:"from"`
+	Lat    float64  `json:"lat"`
+	Lon    float64  `json:"lon"`
+	Places []string `json:"places"`
+
+	// To Local date: 2006-01-02
+	To string `json:"to"`
+}
+
 // User defines model for User.
 type User struct {
 	Email       string             `json:"email"`
@@ -1114,6 +1146,12 @@ type GetCollectionBucketsParamsScope string
 // GetCollectionBucketParamsScope defines parameters for GetCollectionBucket.
 type GetCollectionBucketParamsScope string
 
+// GetMapPointsParams defines parameters for GetMapPoints.
+type GetMapPointsParams struct {
+	From *openapi_types.Date `form:"from,omitempty" json:"from,omitempty"`
+	To   *openapi_types.Date `form:"to,omitempty" json:"to,omitempty"`
+}
+
 // GetPublicOriginalParams defines parameters for GetPublicOriginal.
 type GetPublicOriginalParams struct {
 	Download *bool `form:"download,omitempty" json:"download,omitempty"`
@@ -1165,6 +1203,9 @@ type LoginJSONRequestBody = LoginRequest
 
 // SetupJSONRequestBody defines body for Setup for application/json ContentType.
 type SetupJSONRequestBody = SetupRequest
+
+// SetMapStyleJSONRequestBody defines body for SetMapStyle for application/json ContentType.
+type SetMapStyleJSONRequestBody = MapStyle
 
 // CreateDeviceKeyJSONRequestBody defines body for CreateDeviceKey for application/json ContentType.
 type CreateDeviceKeyJSONRequestBody = CreateDeviceKeyRequest
@@ -1327,6 +1368,18 @@ type ServerInterface interface {
 	// GetCollectionBucket Assets of one month in a collection
 	// (GET /api/collections/{scope}/buckets/{month})
 	GetCollectionBucket(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketParamsScope, month string)
+	// GetMapPoints Photos with a location that this user may see, oldest first
+	// (GET /api/map/points)
+	GetMapPoints(w http.ResponseWriter, r *http.Request, params GetMapPointsParams)
+	// GetMapStyle Where the map's background comes from
+	// (GET /api/map/style)
+	GetMapStyle(w http.ResponseWriter, r *http.Request)
+	// SetMapStyle Choose the map's background. Administrators only. Empty goes back to the default.
+	// (PUT /api/map/style)
+	SetMapStyle(w http.ResponseWriter, r *http.Request)
+	// GetMapTrips Journeys found from the time and distance between photos
+	// (GET /api/map/trips)
+	GetMapTrips(w http.ResponseWriter, r *http.Request)
 	// CreateDeviceKey Create a long-lived key for this device, used by background backup
 	// (POST /api/me/device-keys)
 	CreateDeviceKey(w http.ResponseWriter, r *http.Request)
@@ -1711,6 +1764,30 @@ func (_ Unimplemented) GetCollectionBuckets(w http.ResponseWriter, r *http.Reque
 // GetCollectionBucket Assets of one month in a collection
 // (GET /api/collections/{scope}/buckets/{month})
 func (_ Unimplemented) GetCollectionBucket(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketParamsScope, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetMapPoints Photos with a location that this user may see, oldest first
+// (GET /api/map/points)
+func (_ Unimplemented) GetMapPoints(w http.ResponseWriter, r *http.Request, params GetMapPointsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetMapStyle Where the map's background comes from
+// (GET /api/map/style)
+func (_ Unimplemented) GetMapStyle(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetMapStyle Choose the map's background. Administrators only. Empty goes back to the default.
+// (PUT /api/map/style)
+func (_ Unimplemented) SetMapStyle(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetMapTrips Journeys found from the time and distance between photos
+// (GET /api/map/trips)
+func (_ Unimplemented) GetMapTrips(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3206,6 +3283,94 @@ func (siw *ServerInterfaceWrapper) GetCollectionBucket(w http.ResponseWriter, r 
 	handler.ServeHTTP(w, r)
 }
 
+// GetMapPoints operation middleware
+func (siw *ServerInterfaceWrapper) GetMapPoints(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetMapPointsParams
+
+	// ------------- Optional query parameter "from" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: "date"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "from"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "from", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: "date"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "to"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "to", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMapPoints(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMapStyle operation middleware
+func (siw *ServerInterfaceWrapper) GetMapStyle(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMapStyle(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetMapStyle operation middleware
+func (siw *ServerInterfaceWrapper) SetMapStyle(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetMapStyle(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMapTrips operation middleware
+func (siw *ServerInterfaceWrapper) GetMapTrips(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMapTrips(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateDeviceKey operation middleware
 func (siw *ServerInterfaceWrapper) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
 
@@ -4502,6 +4667,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/assets/tags", wrapper.ChangeAssetTags)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/map/points", wrapper.GetMapPoints)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/map/trips", wrapper.GetMapTrips)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/map/style", wrapper.GetMapStyle)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/map/style", wrapper.SetMapStyle)
 	})
 
 	return r

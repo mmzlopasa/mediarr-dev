@@ -32,6 +32,8 @@ doc/Health.md
 doc/LinkPassword.md
 doc/LoginError.md
 doc/LoginRequest.md
+doc/MapPoints.md
+doc/MapStyle.md
 doc/MemberRole.md
 doc/PartnerEntry.md
 doc/PartnerShare.md
@@ -50,6 +52,7 @@ doc/TimelineBucketsBucketsInner.md
 doc/TimelineItem.md
 doc/TotpCode.md
 doc/TotpSetup.md
+doc/Trip.md
 doc/User.md
 doc/UserRef.md
 doc/VaultPinChange.md
@@ -96,6 +99,8 @@ lib/model/health.dart
 lib/model/link_password.dart
 lib/model/login_error.dart
 lib/model/login_request.dart
+lib/model/map_points.dart
+lib/model/map_style.dart
 lib/model/member_role.dart
 lib/model/partner_entry.dart
 lib/model/partner_share.dart
@@ -114,6 +119,7 @@ lib/model/timeline_buckets_buckets_inner.dart
 lib/model/timeline_item.dart
 lib/model/totp_code.dart
 lib/model/totp_setup.dart
+lib/model/trip.dart
 lib/model/user.dart
 lib/model/user_ref.dart
 lib/model/vault_pin_change.dart
@@ -121,9 +127,6 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
-test/asset_tag_change_test.dart
-test/tag_test.dart
-test/vault_pin_change_test.dart
-test/vault_session_test.dart
-test/vault_status_test.dart
-test/vault_unlock_test.dart
+test/map_points_test.dart
+test/map_style_test.dart
+test/trip_test.dart

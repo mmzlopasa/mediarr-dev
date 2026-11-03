@@ -23,6 +23,9 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type MapPoints = components['schemas']['MapPoints'];
+export type Trip = components['schemas']['Trip'];
+export type MapStyle = components['schemas']['MapStyle'];
 export type VaultStatus = components['schemas']['VaultStatus'];
 
 export class ApiError extends Error {
@@ -136,6 +139,15 @@ export const api = {
 		request<void>(fetch, `/api/partners/${userId}`, undefined, 'DELETE'),
 	setPartnerTimeline: (userId: string, show: boolean) =>
 		request<void>(fetch, `/api/partners/${userId}/timeline`, { show }, 'PUT'),
+	mapPoints: (from?: string, to?: string) => {
+		const query = new URLSearchParams();
+		if (from) query.set('from', from);
+		if (to) query.set('to', to);
+		return request<MapPoints>(fetch, `/api/map/points?${query}`);
+	},
+	mapTrips: () => request<Trip[]>(fetch, '/api/map/trips'),
+	mapStyle: () => request<MapStyle>(fetch, '/api/map/style'),
+	setMapStyle: (body: MapStyle) => request<MapStyle>(fetch, '/api/map/style', body, 'PUT'),
 	emptyTrash: () => request<{ changed: number }>(fetch, '/api/trash/empty', {}),
 	vaultStatus: () => request<VaultStatus>(fetch, '/api/vault/status'),
 	setVaultPin: (pin: string, currentPin?: string) =>

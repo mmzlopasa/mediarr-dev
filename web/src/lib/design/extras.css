@@ -769,3 +769,49 @@ video.viewer-media {
 	max-width: 420px;
 	margin: 6vh auto 0;
 }
+
+/* Map */
+.map-box {
+	position: relative;
+	height: min(68vh, 720px);
+	min-height: 320px;
+	overflow: hidden;
+	border-radius: var(--r-l);
+	border: 1px solid var(--line);
+	background: var(--bg-2);
+	margin-bottom: 18px;
+}
+.map-box .map-canvas {
+	position: absolute;
+	inset: 0;
+}
+.map-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 10px;
+	margin-bottom: 14px;
+}
+.map-bar .f {
+	margin: 0;
+}
+.map-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+	gap: 6px;
+}
+.map-grid button {
+	padding: 0;
+	border: 0;
+	background: var(--bg-2);
+	aspect-ratio: 1;
+	overflow: hidden;
+	border-radius: var(--r-s, 8px);
+	cursor: pointer;
+}
+.map-grid img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}

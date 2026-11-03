@@ -45,6 +45,13 @@ class TimelineStore extends ChangeNotifier {
     : _buckets = ((api) => api.getCollectionBuckets(session.scope)),
       _bucket = ((api, month) => api.getCollectionBucket(session.scope, month));
 
+  /// A list already known, such as the photos on the map.
+  TimelineStore.fixed(this.session, List<TimelineItem> items)
+    : _buckets = ((_) async => null),
+      _bucket = ((_, _) async => null) {
+    months = [TimelineMonth('', items.length)..items = items];
+  }
+
   final Session? session;
   final Future<TimelineBuckets?> Function(DefaultApi api) _buckets;
   final Future<TimelineBucket?> Function(DefaultApi api, String month) _bucket;

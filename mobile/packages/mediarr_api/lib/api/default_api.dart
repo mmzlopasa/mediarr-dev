@@ -2382,6 +2382,173 @@ class DefaultApi {
     return null;
   }
 
+  /// Photos with a location that this user may see, oldest first
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [DateTime] from:
+  ///
+  /// * [DateTime] to:
+  Future<Response> getMapPointsWithHttpInfo({
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/map/points';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (from != null) {
+      queryParams.addAll(_queryParams('', 'from', from));
+    }
+    if (to != null) {
+      queryParams.addAll(_queryParams('', 'to', to));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Photos with a location that this user may see, oldest first
+  ///
+  /// Parameters:
+  ///
+  /// * [DateTime] from:
+  ///
+  /// * [DateTime] to:
+  Future<MapPoints?> getMapPoints({
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    final response = await getMapPointsWithHttpInfo(
+      from: from,
+      to: to,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MapPoints',
+      ) as MapPoints;
+    }
+    return null;
+  }
+
+  /// Where the map's background comes from
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getMapStyleWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/map/style';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Where the map's background comes from
+  Future<MapStyle?> getMapStyle() async {
+    final response = await getMapStyleWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MapStyle',
+      ) as MapStyle;
+    }
+    return null;
+  }
+
+  /// Journeys found from the time and distance between photos
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getMapTripsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/map/trips';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Journeys found from the time and distance between photos
+  Future<List<Trip>?> getMapTrips() async {
+    final response = await getMapTripsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<Trip>')
+              as List)
+          .cast<Trip>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// Assets of one month in a library shared with you
   ///
   /// Note: This method returns the HTTP [Response].
@@ -4445,6 +4612,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Choose the map's background. Administrators only. Empty goes back to the default.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [MapStyle] mapStyle (required):
+  Future<Response> setMapStyleWithHttpInfo(
+    MapStyle mapStyle,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/map/style';
+
+    // ignore: prefer_final_locals
+    Object? postBody = mapStyle;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Choose the map's background. Administrators only. Empty goes back to the default.
+  ///
+  /// Parameters:
+  ///
+  /// * [MapStyle] mapStyle (required):
+  Future<MapStyle?> setMapStyle(
+    MapStyle mapStyle,
+  ) async {
+    final response = await setMapStyleWithHttpInfo(
+      mapStyle,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MapStyle',
+      ) as MapStyle;
+    }
+    return null;
   }
 
   /// Share your library with a user, all of it or from a date

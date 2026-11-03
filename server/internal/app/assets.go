@@ -266,6 +266,9 @@ func (s *apiServer) assetDetail(ctx context.Context, row *db.Asset) (api.AssetDe
 	detail.FocalLength = optional(exif.FocalLength.Float64, exif.FocalLength.Valid)
 	detail.Latitude = optional(exif.Latitude.Float64, exif.Latitude.Valid)
 	detail.Longitude = optional(exif.Longitude.Float64, exif.Longitude.Valid)
+	detail.City = optional(exif.City.String, exif.City.Valid)
+	detail.State = optional(exif.State.String, exif.State.Valid)
+	detail.Country = optional(exif.Country.String, exif.Country.Valid)
 	return detail, nil
 }
 

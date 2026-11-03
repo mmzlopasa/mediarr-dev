@@ -119,6 +119,10 @@ type Exif struct {
 	Latitude     pgtype.Float8
 	Longitude    pgtype.Float8
 	Raw          []byte
+	City         pgtype.Text
+	State        pgtype.Text
+	Country      pgtype.Text
+	GeocodedAt   pgtype.Timestamptz
 }
 
 type Library struct {
@@ -136,6 +140,14 @@ type PartnerShare struct {
 	SinceAt    pgtype.Timestamp
 	InTimeline bool
 	CreatedAt  pgtype.Timestamptz
+}
+
+type Place struct {
+	Name    string
+	State   string
+	Country string
+	Lat     float32
+	Lon     float32
 }
 
 type Session struct {

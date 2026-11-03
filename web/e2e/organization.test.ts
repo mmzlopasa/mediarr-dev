@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { photo, signIn } from './helpers';
 
 test.setTimeout(90000);
@@ -127,4 +129,35 @@ test('a tag groups photos', async ({ page }) => {
 	await expect(page.locator('.tl-tile')).toHaveCount(0);
 	await page.goto('/tags');
 	await page.getByRole('button', { name: 'Delete' }).last().click();
+});
+
+test('a photo with a location appears on the map under its place name', async ({ page }) => {
+	await signIn(page, 'organizer');
+	const gps = readFileSync(join(import.meta.dirname, 'fixtures', 'gps.jpg'));
+	await page.goto('/');
+	await page.locator('main').waitFor();
+	await page.waitForLoadState('networkidle');
+	const before = await page.locator('.tl-tile').count();
+	await page
+		.locator('input[type=file]')
+		.last()
+		.setInputFiles({
+			name: 'gps.jpg',
+			mimeType: 'image/jpeg',
+			buffer: Buffer.concat([gps, Buffer.from(String(Math.random()))])
+		});
+	await expect(page.locator('.tl-tile')).toHaveCount(before + 1, { timeout: 40000 });
+
+	await page.goto('/map');
+	await expect(page.getByRole('heading', { name: 'Map' })).toBeVisible();
+	await expect(page.getByText('Photos with a location: 1')).toBeVisible();
+	await page.getByLabel('To date').fill('2020-01-01');
+	await expect(page.getByText('Photos with a location: 0')).toBeVisible();
+	await page.getByLabel('To date').fill('');
+	await expect(page.getByText('Photos with a location: 1')).toBeVisible();
+
+	const points = await (await page.request.get('/api/map/points')).json();
+	const detail = await (await page.request.get(`/api/assets/${points.ids[0]}`)).json();
+	expect(detail.city).toBe('Hvar');
+	expect(detail.country).toBe('Croatia');
 });

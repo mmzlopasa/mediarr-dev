@@ -214,6 +214,7 @@
 		dragStart = null;
 	}
 
+	const place = $derived([detail?.city, detail?.state, detail?.country].filter(Boolean).join(', '));
 	const hasLive = $derived(Boolean(detail?.liveVideoId || detail?.hasMotion));
 
 	async function toggleLive() {
@@ -500,6 +501,7 @@
 				{#if detail.durationMs}
 					<Kv label={tr('Trajanje', 'Duration')} value={formatDuration(detail.durationMs)} />
 				{/if}
+				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
 				{#if detail.tags?.length}
 					<Kv label={tr('Oznake', 'Tags')} value={detail.tags.join(', ')} />
 				{/if}

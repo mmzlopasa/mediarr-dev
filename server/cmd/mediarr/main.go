@@ -100,6 +100,9 @@ func serve(ctx context.Context, cfg config.Config) error {
 	}
 	defer pool.Close()
 
+	if err := db.LoadPlaces(ctx, pool); err != nil {
+		return err
+	}
 	queries := db.New(pool)
 	if err := prepareStorage(ctx, cfg, queries); err != nil {
 		return err

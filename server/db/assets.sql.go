@@ -216,7 +216,7 @@ func (q *Queries) GetAssetIDByChecksum(ctx context.Context, arg GetAssetIDByChec
 }
 
 const getExif = `-- name: GetExif :one
-SELECT asset_id, make, model, lens, iso, f_number, exposure_time, focal_length, latitude, longitude, raw FROM exif WHERE asset_id = $1
+SELECT asset_id, make, model, lens, iso, f_number, exposure_time, focal_length, latitude, longitude, raw, city, state, country, geocoded_at FROM exif WHERE asset_id = $1
 `
 
 func (q *Queries) GetExif(ctx context.Context, assetID pgtype.UUID) (Exif, error) {
@@ -234,6 +234,10 @@ func (q *Queries) GetExif(ctx context.Context, assetID pgtype.UUID) (Exif, error
 		&i.Latitude,
 		&i.Longitude,
 		&i.Raw,
+		&i.City,
+		&i.State,
+		&i.Country,
+		&i.GeocodedAt,
 	)
 	return i, err
 }
