@@ -1,15 +1,22 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import 'session.dart';
+import 'shared_files.dart';
 import 'tus.dart';
 
 enum UploadState { queued, preparing, uploading, done, duplicate, failed }
 
 class UploadTask {
-  UploadTask({required this.asset, this.name = '', this.albumId});
+  UploadTask({this.asset, this.sharedFile, this.name = '', this.albumId});
 
-  final AssetEntity asset;
+  /// From the phone's library.
+  final AssetEntity? asset;
+
+  /// Sent from another app. This copy is removed once it has been handled.
+  final File? sharedFile;
   final String? albumId;
   String name;
   UploadState state = UploadState.queued;
@@ -47,6 +54,16 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
     _pump();
   }
 
+  void addShared(Iterable<File> files) {
+    state = [
+      ...state,
+      ...files.map(
+        (file) => UploadTask(sharedFile: file, name: sharedFileName(file.path)),
+      ),
+    ];
+    _pump();
+  }
+
   void clearFinished() {
     state = state.where((task) => !task.finished).toList();
   }
@@ -69,10 +86,11 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
       headers: session.headers,
     );
     try {
-      task.name = await task.asset.titleAsync;
+      final asset = task.asset;
+      if (asset != null) task.name = await asset.titleAsync;
       _changed();
       // The untouched original. iOS may first download it from iCloud.
-      final file = await task.asset.originFile;
+      final file = task.sharedFile ?? await asset?.originFile;
       if (file == null) {
         throw UploadRejected('This photo could not be read from the device.');
       }
@@ -82,7 +100,8 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
       final result = await client.upload(
         file,
         name: task.name,
-        lastModifiedMs: task.asset.createDateTime.millisecondsSinceEpoch,
+        lastModifiedMs: (asset?.createDateTime ?? await file.lastModified())
+            .millisecondsSinceEpoch,
         albumId: task.albumId,
         onProgress: (sent, total) {
           task.sent = sent;
@@ -91,6 +110,7 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
         },
       );
       task.state = result.duplicate ? UploadState.duplicate : UploadState.done;
+      await _removeShared(task);
     } catch (cause) {
       task.state = UploadState.failed;
       task.error = cause.toString();
@@ -98,6 +118,14 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
       client.close();
       _changed();
       _pump();
+    }
+  }
+
+  Future<void> _removeShared(UploadTask task) async {
+    try {
+      await task.sharedFile?.delete();
+    } on FileSystemException {
+      // iOS cleans its inbox up by itself.
     }
   }
 }

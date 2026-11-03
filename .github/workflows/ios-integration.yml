@@ -35,4 +35,16 @@ jobs:
           xcrun simctl bootstatus "$DEVICE"
           xcrun simctl privacy "$DEVICE" grant all app.mediarr.mediarr
           echo "DEVICE=$DEVICE" >> "$GITHUB_ENV"
-      - run: flutter test integration_test --device-id "$DEVICE" --suppress-analytics
+      - name: Run the tests, keeping what the app logs
+        timeout-minutes: 20
+        run: |
+          xcrun simctl spawn "$DEVICE" log stream --level debug --predicate 'process == "Runner"' > "$RUNNER_TEMP/app.log" &
+          flutter test integration_test --device-id "$DEVICE" --suppress-analytics --reporter expanded --timeout 15m
+      - name: Keep the app's log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-log
+          path: ${{ runner.temp }}/app.log
+          retention-days: 7
+          if-no-files-found: ignore

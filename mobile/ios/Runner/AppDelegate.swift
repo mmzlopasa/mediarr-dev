@@ -26,6 +26,7 @@ import UIKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "MediarrBackup") {
       BackupChannel.register(messenger: registrar.messenger())
+      SharedFiles.shared.register(messenger: registrar.messenger())
     }
   }
 }

@@ -56,9 +56,11 @@ void main() {
   late FakeServer server;
 
   setUp(() async {
+    debugPrint('setUp: clearing the keychain');
     await const FlutterSecureStorage().deleteAll();
     server = FakeServer();
     await server.start();
+    debugPrint('setUp: server at ${server.address}');
   });
 
   tearDown(() => server.stop());

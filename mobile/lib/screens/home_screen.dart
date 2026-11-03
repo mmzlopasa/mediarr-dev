@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../services/shared_files.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
 import 'account_screen.dart';
@@ -17,6 +18,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    SharedFilesChannel.listen((files) {
+      if (!mounted) return;
+      ref.read(uploadsProvider.notifier).addShared(files);
+      setState(() => _tab = 2);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
