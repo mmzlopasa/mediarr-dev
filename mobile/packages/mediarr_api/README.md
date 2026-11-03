@@ -71,8 +71,10 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**enableTotp**](doc//DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
 *DefaultApi* | [**getAdminOverview**](doc//DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
 *DefaultApi* | [**getAsset**](doc//DefaultApi.md#getasset) | **GET** /api/assets/{id} | Read an asset's details and its neighbours on the timeline
+*DefaultApi* | [**getAssetMotion**](doc//DefaultApi.md#getassetmotion) | **GET** /api/assets/{id}/motion | Read the video embedded in an Android Motion Photo
 *DefaultApi* | [**getAssetOriginal**](doc//DefaultApi.md#getassetoriginal) | **GET** /api/assets/{id}/original | Read the unmodified original. Supports Range requests for video.
 *DefaultApi* | [**getAssetThumbnail**](doc//DefaultApi.md#getassetthumbnail) | **GET** /api/assets/{id}/thumbnail | Read a WebP thumbnail
+*DefaultApi* | [**getAssetVideoFile**](doc//DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
 *DefaultApi* | [**getTimelineBucket**](doc//DefaultApi.md#gettimelinebucket) | **GET** /api/timeline/buckets/{month} | List one month's assets, newest first
@@ -109,6 +111,7 @@ Class | Method | HTTP request | Description
  - [LoginRequest](doc//LoginRequest.md)
  - [PasswordConfirm](doc//PasswordConfirm.md)
  - [SetupRequest](doc//SetupRequest.md)
+ - [Sprite](doc//Sprite.md)
  - [TimelineBucket](doc//TimelineBucket.md)
  - [TimelineBuckets](doc//TimelineBuckets.md)
  - [TimelineBucketsBucketsInner](doc//TimelineBucketsBucketsInner.md)

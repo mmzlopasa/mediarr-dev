@@ -2,6 +2,7 @@ package app
 
 import (
 	"archive/zip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/mmzlopasa/mediarr-app/server/db"
 	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
 )
 
 const (
@@ -103,6 +105,8 @@ func (s *apiServer) GetTimelineBucket(w http.ResponseWriter, r *http.Request, mo
 			Kind:       api.TimelineItemKind(row.Kind),
 			Ratio:      ratioOf(row.AspectRatio, row.Width, row.Height),
 			IsFavorite: row.IsFavorite,
+			IsLive:     optional(row.IsLive, row.IsLive),
+			DurationMs: optional(row.DurationMs.Int64, row.DurationMs.Valid),
 			LocalAt:    row.LocalAt.Time.Format(localTimeLayout),
 		}
 		if row.Blurhash.Valid {
@@ -166,6 +170,11 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 		return
 	}
 
+	if err := s.addMediaDetails(ctx, &row, &detail); err != nil {
+		internalError(w, r, err)
+		return
+	}
+
 	exif, err := s.queries.GetExif(ctx, row.ID)
 	if err != nil && !db.IsNotFound(err) {
 		internalError(w, r, err)
@@ -185,6 +194,46 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 	writeJSON(w, http.StatusOK, detail)
 }
 
+func (s *apiServer) addMediaDetails(ctx context.Context, row *db.Asset, detail *api.AssetDetail) error {
+	detail.DurationMs = optional(row.DurationMs.Int64, row.DurationMs.Valid)
+	detail.VideoCodec = optional(row.VideoCodec.String, row.VideoCodec.Valid)
+
+	hasFile := func(kind string) (bool, error) {
+		_, err := s.queries.GetAssetFile(ctx, db.GetAssetFileParams{AssetID: row.ID, Kind: kind})
+		if db.IsNotFound(err) {
+			return false, nil
+		}
+		return err == nil, err
+	}
+	hls, err := hasFile("hls")
+	if err != nil {
+		return err
+	}
+	motion, err := hasFile("motion_video")
+	if err != nil {
+		return err
+	}
+	detail.HlsReady = optional(hls, hls)
+	detail.HasMotion = optional(motion, motion)
+
+	live, err := s.queries.GetLiveVideo(ctx, row.ID)
+	if err == nil {
+		value := openapi_types.UUID(live.Bytes)
+		detail.LiveVideoId = &value
+	} else if !db.IsNotFound(err) {
+		return err
+	}
+	if row.SpriteColumns.Valid {
+		detail.Sprite = &api.Sprite{
+			Columns:    int(row.SpriteColumns.Int32),
+			Rows:       int(row.SpriteRows.Int32),
+			Count:      int(row.SpriteCount.Int32),
+			IntervalMs: int(row.SpriteIntervalMs.Int32),
+		}
+	}
+	return nil
+}
+
 func (s *apiServer) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params api.GetAssetThumbnailParams) {
 	user := requireUser(w, r)
 	if user == nil {
@@ -193,6 +242,10 @@ func (s *apiServer) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id
 	kind := "thumb_small"
 	if params.Size != nil && *params.Size == api.Large {
 		kind = "thumb_large"
+	}
+	if params.Size != nil && *params.Size == api.Full {
+		s.serveFullPreview(w, r, id, user.ID)
+		return
 	}
 	path, err := s.queries.GetOwnedAssetFile(r.Context(), db.GetOwnedAssetFileParams{AssetID: pgUUID(id), Kind: kind, UserID: user.ID})
 	if db.IsNotFound(err) {
@@ -206,6 +259,123 @@ func (s *apiServer) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id
 	w.Header().Set("Content-Type", "image/webp")
 	w.Header().Set("Cache-Control", thumbCacheAge)
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	serveFile(w, r, path)
+}
+
+// serveFullPreview makes the full resolution preview on first request and keeps it. Only a few run
+// at once, because a RAW decode takes a lot of CPU and memory.
+func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userID pgtype.UUID) {
+	ctx := r.Context()
+	row, err := s.queries.GetOwnedAsset(ctx, db.GetOwnedAssetParams{ID: pgUUID(id), UserID: userID})
+	if db.IsNotFound(err) {
+		writeError(w, http.StatusNotFound, "no such asset")
+		return
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	if row.Kind != "photo" || row.Status != "ready" {
+		writeError(w, http.StatusNotFound, "this asset has no full preview")
+		return
+	}
+
+	path, err := s.queries.GetAssetFile(ctx, db.GetAssetFileParams{AssetID: row.ID, Kind: "thumb_full"})
+	if db.IsNotFound(err) {
+		path, err = s.makeFullPreview(ctx, &row)
+	}
+	if err != nil {
+		var unreadable interface{ Unreadable() bool }
+		if errors.As(err, &unreadable) && unreadable.Unreadable() {
+			writeError(w, http.StatusNotFound, "this file cannot be shown in full")
+			return
+		}
+		internalError(w, r, err)
+		return
+	}
+	w.Header().Set("Content-Type", "image/webp")
+	w.Header().Set("Cache-Control", thumbCacheAge)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	serveFile(w, r, path)
+}
+
+func (s *apiServer) makeFullPreview(ctx context.Context, row *db.Asset) (string, error) {
+	select {
+	case s.fullPreviews <- struct{}{}:
+		defer func() { <-s.fullPreviews }()
+	case <-ctx.Done():
+		return "", ctx.Err()
+	}
+	// Someone may have finished the same one while this request waited its turn.
+	if path, err := s.queries.GetAssetFile(ctx, db.GetAssetFileParams{AssetID: row.ID, Kind: "thumb_full"}); err == nil {
+		return path, nil
+	}
+	id := uuid.UUID(row.ID.Bytes).String()
+	dest := filepath.Join(s.CachePath, "thumbs", uuid.UUID(row.UserID.Bytes).String(), id[:2], id+"-full.webp")
+	if err := jobs.MakeFullPreview(ctx, row.OriginalPath, dest); err != nil {
+		return "", err
+	}
+	info, err := os.Stat(dest)
+	if err != nil {
+		return "", err
+	}
+	err = s.queries.UpsertAssetFile(ctx, db.UpsertAssetFileParams{AssetID: row.ID, Kind: "thumb_full", Path: dest, SizeBytes: info.Size()})
+	return dest, err
+}
+
+func (s *apiServer) GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	path, err := s.queries.GetOwnedAssetFile(r.Context(), db.GetOwnedAssetFileParams{AssetID: pgUUID(id), Kind: "motion_video", UserID: user.ID})
+	if db.IsNotFound(err) {
+		writeError(w, http.StatusNotFound, "no such video")
+		return
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	w.Header().Set("Content-Type", "video/mp4")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", thumbCacheAge)
+	serveFile(w, r, path)
+}
+
+var hlsFileName = regexp.MustCompile(`^(master|[0-9]+)\.m3u8$|^[0-9]+_[0-9]+\.ts$`)
+
+// GetAssetVideoFile serves HLS files. The name must match exactly, so it can never leave the folder.
+func (s *apiServer) GetAssetVideoFile(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, file string) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	kind, name, contentType := "hls", file, "video/mp2t"
+	switch {
+	case file == "sprite.jpg":
+		kind, contentType = "sprite", "image/jpeg"
+	case !hlsFileName.MatchString(file):
+		writeError(w, http.StatusNotFound, "no such file")
+		return
+	case strings.HasSuffix(file, ".m3u8"):
+		contentType = "application/vnd.apple.mpegurl"
+	}
+	path, err := s.queries.GetOwnedAssetFile(r.Context(), db.GetOwnedAssetFileParams{AssetID: pgUUID(id), Kind: kind, UserID: user.ID})
+	if db.IsNotFound(err) {
+		writeError(w, http.StatusNotFound, "no such file")
+		return
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	if kind == "hls" {
+		path = filepath.Join(path, name)
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", thumbCacheAge)
 	serveFile(w, r, path)
 }
 

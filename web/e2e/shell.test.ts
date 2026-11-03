@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { signIn, users } from './helpers';
 
 test.beforeEach(async ({ page }) => {
@@ -298,6 +300,72 @@ test.describe('timeline', () => {
 		}
 		await expect(page.getByText('Poslano')).toHaveCount(7, { timeout: 45000 });
 		await expect(page.locator('.tl-tile').nth(before + 6)).toBeAttached({ timeout: 60000 });
+	});
+
+	test('a video is transcoded and its stream is served to the owner', async ({ page }) => {
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		await page.locator('main').waitFor();
+		const clip = readFileSync(join(import.meta.dirname, 'fixtures', 'clip.mp4'));
+		const name = `clip-${Date.now()}.mp4`;
+		// Trailing bytes make it a new file every run. Players ignore them.
+		await page
+			.locator('input[type=file]')
+			.last()
+			.setInputFiles({
+				name,
+				mimeType: 'video/mp4',
+				buffer: Buffer.concat([clip, Buffer.from(String(Math.random()))])
+			});
+		await expect(page.locator('.tl-video').first()).toBeVisible({ timeout: 45000 });
+
+		await page.locator('.tl-video').first().locator('..').click();
+		await expect(page.locator('video.viewer-media')).toBeAttached();
+		const id = page.url().split('/').pop();
+
+		await expect
+			.poll(
+				async () => (await (await page.request.get(`/api/assets/${id}`)).json()).hlsReady === true,
+				{ timeout: 90000 }
+			)
+			.toBe(true);
+
+		const master = await page.request.get(`/api/assets/${id}/video/master.m3u8`);
+		expect(master.status()).toBe(200);
+		expect(await master.text()).toContain('.m3u8');
+		const sprite = await page.request.get(`/api/assets/${id}/video/sprite.jpg`);
+		expect(sprite.status()).toBe(200);
+
+		// Reproduction needs a browser with H.264. Test Chromium has none; Safari and Chrome do.
+		await page.reload();
+		const video = page.locator('video.viewer-media');
+		await video.waitFor({ state: 'attached' });
+		const canPlay = await video.evaluate(
+			(element: HTMLVideoElement) => element.canPlayType('video/mp4; codecs="avc1.42E01E"') !== ''
+		);
+		if (canPlay) {
+			await expect
+				.poll(() => video.evaluate((element: HTMLVideoElement) => element.readyState), {
+					timeout: 20000
+				})
+				.toBeGreaterThan(0);
+		}
+	});
+
+	test('zooming a photo asks for the full resolution', async ({ page }) => {
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		await page.locator('main').waitFor();
+		await uploadPhoto(page, `e2e-zoom-${Date.now()}.jpg`);
+		const tile = page.locator('.tl-tile:not(:has(.tl-video))').first();
+		await tile.waitFor({ timeout: 45000 });
+		await tile.click();
+		const image = page.locator('img.viewer-media').first();
+		await image.waitFor();
+		const full = page.waitForResponse((response) => response.url().includes('size=full'));
+		await image.hover();
+		await page.mouse.wheel(0, -400);
+		expect((await full).status()).toBe(200);
 	});
 
 	test('a damaged file is reported with an error', async ({ page }) => {

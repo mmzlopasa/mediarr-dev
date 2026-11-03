@@ -3,6 +3,7 @@ import type { TimelineItem } from '#lib/api.ts';
 import {
 	estimateMonthHeight,
 	formatDay,
+	formatDuration,
 	formatMonth,
 	GAP,
 	justify,
@@ -124,5 +125,13 @@ describe('dates', () => {
 	it('shows the wall clock of the capture, in any browser time zone', () => {
 		expect(formatDay('2024-08-01T00:30:00', 'en-GB')).toContain('1 August');
 		expect(formatMonth('2024-08', 'en-GB')).toBe('August 2024');
+	});
+});
+
+describe('formatDuration', () => {
+	it('shows minutes and seconds, and hours only when needed', () => {
+		expect(formatDuration(5000)).toBe('0:05');
+		expect(formatDuration(65000)).toBe('1:05');
+		expect(formatDuration(3725000)).toBe('1:02:05');
 	});
 });

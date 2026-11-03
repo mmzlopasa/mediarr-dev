@@ -29,6 +29,12 @@ class AssetDetail {
     required this.createdAt,
     this.newerId,
     this.olderId,
+    this.durationMs,
+    this.videoCodec,
+    this.hlsReady,
+    this.liveVideoId,
+    this.hasMotion,
+    this.sprite,
     this.camera,
     this.lens,
     this.iso,
@@ -119,6 +125,57 @@ class AssetDetail {
   /// source code must fall back to having a nullable type.
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
+  int? durationMs;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? videoCodec;
+
+  /// The adaptive stream at video/master.m3u8 can be played
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? hlsReady;
+
+  /// The video of a Live Photo
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? liveVideoId;
+
+  /// An Android Motion Photo, with its video at /motion
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? hasMotion;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  Sprite? sprite;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
   String? camera;
 
   ///
@@ -197,6 +254,12 @@ class AssetDetail {
           other.createdAt == createdAt &&
           other.newerId == newerId &&
           other.olderId == olderId &&
+          other.durationMs == durationMs &&
+          other.videoCodec == videoCodec &&
+          other.hlsReady == hlsReady &&
+          other.liveVideoId == liveVideoId &&
+          other.hasMotion == hasMotion &&
+          other.sprite == sprite &&
           other.camera == camera &&
           other.lens == lens &&
           other.iso == iso &&
@@ -225,6 +288,12 @@ class AssetDetail {
       (createdAt.hashCode) +
       (newerId == null ? 0 : newerId!.hashCode) +
       (olderId == null ? 0 : olderId!.hashCode) +
+      (durationMs == null ? 0 : durationMs!.hashCode) +
+      (videoCodec == null ? 0 : videoCodec!.hashCode) +
+      (hlsReady == null ? 0 : hlsReady!.hashCode) +
+      (liveVideoId == null ? 0 : liveVideoId!.hashCode) +
+      (hasMotion == null ? 0 : hasMotion!.hashCode) +
+      (sprite == null ? 0 : sprite!.hashCode) +
       (camera == null ? 0 : camera!.hashCode) +
       (lens == null ? 0 : lens!.hashCode) +
       (iso == null ? 0 : iso!.hashCode) +
@@ -236,7 +305,7 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -283,6 +352,36 @@ class AssetDetail {
       json[r'olderId'] = this.olderId;
     } else {
       json[r'olderId'] = null;
+    }
+    if (this.durationMs != null) {
+      json[r'durationMs'] = this.durationMs;
+    } else {
+      json[r'durationMs'] = null;
+    }
+    if (this.videoCodec != null) {
+      json[r'videoCodec'] = this.videoCodec;
+    } else {
+      json[r'videoCodec'] = null;
+    }
+    if (this.hlsReady != null) {
+      json[r'hlsReady'] = this.hlsReady;
+    } else {
+      json[r'hlsReady'] = null;
+    }
+    if (this.liveVideoId != null) {
+      json[r'liveVideoId'] = this.liveVideoId;
+    } else {
+      json[r'liveVideoId'] = null;
+    }
+    if (this.hasMotion != null) {
+      json[r'hasMotion'] = this.hasMotion;
+    } else {
+      json[r'hasMotion'] = null;
+    }
+    if (this.sprite != null) {
+      json[r'sprite'] = this.sprite;
+    } else {
+      json[r'sprite'] = null;
     }
     if (this.camera != null) {
       json[r'camera'] = this.camera;
@@ -364,6 +463,12 @@ class AssetDetail {
         createdAt: mapDateTime(json, r'createdAt', r'')!,
         newerId: mapValueOfType<String>(json, r'newerId'),
         olderId: mapValueOfType<String>(json, r'olderId'),
+        durationMs: mapValueOfType<int>(json, r'durationMs'),
+        videoCodec: mapValueOfType<String>(json, r'videoCodec'),
+        hlsReady: mapValueOfType<bool>(json, r'hlsReady'),
+        liveVideoId: mapValueOfType<String>(json, r'liveVideoId'),
+        hasMotion: mapValueOfType<bool>(json, r'hasMotion'),
+        sprite: Sprite.fromJson(json[r'sprite']),
         camera: mapValueOfType<String>(json, r'camera'),
         lens: mapValueOfType<String>(json, r'lens'),
         iso: mapValueOfType<int>(json, r'iso'),

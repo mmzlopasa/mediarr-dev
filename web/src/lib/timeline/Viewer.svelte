@@ -8,11 +8,13 @@
 	import Kv from '#lib/design/components/Kv.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { lang, tr } from '#lib/i18n.svelte.ts';
-	import { formatDateTime } from './layout.ts';
+	import { formatDateTime, formatDuration } from './layout.ts';
+	import VideoPlayer from './VideoPlayer.svelte';
 
 	const MIN_SCALE = 1;
 	const MAX_SCALE = 6;
 	const SWIPE_DISTANCE = 60;
+	const FULL_PREVIEW_SCALE = 1.5;
 
 	let {
 		id,
@@ -29,6 +31,10 @@
 	let detail = $state<AssetDetail>();
 	let failed = $state(false);
 	let videoFailed = $state(false);
+	let fullLoaded = $state(false);
+	let fullWanted = $state(false);
+	let playingLive = $state(false);
+	let liveDetail = $state<AssetDetail>();
 	let showInfo = $state(false);
 	let confirmDelete = $state(false);
 	let dialog = $state<HTMLDivElement>();
@@ -45,6 +51,10 @@
 		detail = undefined;
 		failed = false;
 		videoFailed = false;
+		fullLoaded = false;
+		fullWanted = false;
+		playingLive = false;
+		liveDetail = undefined;
 		scale = 1;
 		x = 0;
 		y = 0;
@@ -98,6 +108,8 @@
 		const originX = cx - box.left - box.width / 2;
 		const originY = cy - box.top - box.height / 2;
 		const factor = clamped / scale;
+		// Zooming in asks for the full resolution, including HEIC and RAW.
+		if (clamped >= FULL_PREVIEW_SCALE) fullWanted = true;
 		x = clamped === 1 ? 0 : originX - (originX - x) * factor;
 		y = clamped === 1 ? 0 : originY - (originY - y) * factor;
 		scale = clamped;
@@ -174,6 +186,29 @@
 		dragStart = null;
 	}
 
+	const hasLive = $derived(Boolean(detail?.liveVideoId || detail?.hasMotion));
+
+	async function toggleLive() {
+		playingLive = !playingLive;
+		if (playingLive && detail?.liveVideoId && !liveDetail) {
+			try {
+				liveDetail = await api.asset(detail.liveVideoId);
+			} catch {
+				// It still plays directly.
+			}
+		}
+	}
+
+	const liveSources = $derived.by(() => {
+		if (detail?.hasMotion) return { direct: `/api/assets/${id}/motion` };
+		const video = detail?.liveVideoId;
+		if (!video) return undefined;
+		return {
+			hls: liveDetail?.hlsReady ? `/api/assets/${video}/video/master.m3u8` : undefined,
+			direct: `/api/assets/${video}/original`
+		};
+	});
+
 	async function toggleFavorite() {
 		if (!detail) return;
 		const next = !detail.isFavorite;
@@ -237,6 +272,17 @@
 			>
 			<div class="viewer-acts">
 				{#if detail}
+					{#if hasLive}
+						<button
+							type="button"
+							class="icon-btn"
+							class:viewer-on={playingLive}
+							aria-pressed={playingLive}
+							aria-label={tr('Pusti Live', 'Play Live')}
+							title={tr('Pusti Live', 'Play Live')}
+							onclick={toggleLive}><Icon name="live" /></button
+						>
+					{/if}
 					<button
 						type="button"
 						class="icon-btn"
@@ -290,16 +336,16 @@
 					<Alert kind="err">{tr('Ova fotka nije dostupna.', 'This photo is not available.')}</Alert>
 				</div>
 			{:else if detail?.kind === 'video' && !videoFailed}
-				<!-- svelte-ignore a11y_media_has_caption -->
-				<video
-					class="viewer-media"
-					controls
-					playsinline
-					preload="metadata"
+				<VideoPlayer
+					assetId={id}
+					sources={{
+						hls: detail.hlsReady ? `/api/assets/${id}/video/master.m3u8` : undefined,
+						direct: `/api/assets/${id}/original`
+					}}
+					sprite={detail.sprite}
 					poster="/api/assets/{id}/thumbnail?size=large"
-					src="/api/assets/{id}/original"
-					onerror={() => (videoFailed = true)}
-				></video>
+					onFailed={() => (videoFailed = true)}
+				/>
 			{:else if detail?.kind === 'video'}
 				<div class="viewer-msg">
 					<Alert kind="warn"
@@ -323,6 +369,30 @@
 					draggable="false"
 					style="transform:translate({x}px,{y}px) scale({scale})"
 				/>
+				{#if fullWanted}
+					<img
+						class="viewer-media viewer-full"
+						class:on={fullLoaded}
+						src="/api/assets/{id}/thumbnail?size=full"
+						alt=""
+						draggable="false"
+						style="transform:translate({x}px,{y}px) scale({scale})"
+						onload={() => (fullLoaded = true)}
+					/>
+				{/if}
+				{#if playingLive && liveSources}
+					<div class="viewer-live">
+						<VideoPlayer
+							assetId={detail.liveVideoId ?? id}
+							sources={liveSources}
+							autoplay
+							onFailed={() => {
+								playingLive = false;
+								showToast('err', tr('Video se ne može pustiti.', 'The video cannot be played.'));
+							}}
+						/>
+					</div>
+				{/if}
 			{/if}
 			{#if detail?.newerId && scale === 1}
 				<button
@@ -366,6 +436,9 @@
 					<Kv label={tr('Dimenzije', 'Dimensions')} value="{detail.width} × {detail.height}" />
 				{/if}
 				<Kv label={tr('Veličina', 'Size')} value={formatBytes(detail.sizeBytes)} />
+				{#if detail.durationMs}
+					<Kv label={tr('Trajanje', 'Duration')} value={formatDuration(detail.durationMs)} />
+				{/if}
 				{#if detail.camera}<Kv label={tr('Kamera', 'Camera')} value={detail.camera} />{/if}
 				{#if detail.lens}<Kv label={tr('Objektiv', 'Lens')} value={detail.lens} />{/if}
 				{#if settings}<Kv label={tr('Postavke', 'Settings')} value={settings} />{/if}

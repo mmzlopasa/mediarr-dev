@@ -54,7 +54,8 @@ export const icons = {
 	info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
 	back: '<path d="M15 5l-7 7 7 7"/>',
 	forward: '<path d="M9 5l7 7-7 7"/>',
-	play: '<path d="M7 4.5v15l12-7.5z"/>'
+	play: '<path d="M7 4.5v15l12-7.5z"/>',
+	live: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10" stroke-dasharray="1.5 2.5"/>'
 } as const;
 
 export type IconName = keyof typeof icons;

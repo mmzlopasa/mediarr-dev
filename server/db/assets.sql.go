@@ -14,7 +14,7 @@ import (
 const adminCounts = `-- name: AdminCounts :one
 SELECT (SELECT count(*) FROM users) AS users,
        count(*) FILTER (WHERE kind = 'photo') AS photos,
-       count(*) FILTER (WHERE kind = 'video') AS videos,
+       count(*) FILTER (WHERE kind = 'video' AND live_photo_of IS NULL) AS videos,
        count(*) FILTER (WHERE status = 'processing') AS processing,
        count(*) FILTER (WHERE status = 'failed') AS failed,
        coalesce(sum(size_bytes), 0)::bigint AS library_bytes
@@ -140,7 +140,7 @@ func (q *Queries) FindExistingChecksums(ctx context.Context, arg FindExistingChe
 }
 
 const getAsset = `-- name: GetAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at FROM assets WHERE id = $1
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms FROM assets WHERE id = $1
 `
 
 func (q *Queries) GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error) {
@@ -170,8 +170,32 @@ func (q *Queries) GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error) {
 		&i.DeletedAt,
 		&i.AspectRatio,
 		&i.LocalAt,
+		&i.ContentID,
+		&i.LivePhotoOf,
+		&i.DurationMs,
+		&i.VideoCodec,
+		&i.SpriteColumns,
+		&i.SpriteRows,
+		&i.SpriteCount,
+		&i.SpriteIntervalMs,
 	)
 	return i, err
+}
+
+const getAssetFile = `-- name: GetAssetFile :one
+SELECT path FROM asset_files WHERE asset_id = $1 AND kind = $2
+`
+
+type GetAssetFileParams struct {
+	AssetID pgtype.UUID
+	Kind    string
+}
+
+func (q *Queries) GetAssetFile(ctx context.Context, arg GetAssetFileParams) (string, error) {
+	row := q.db.QueryRow(ctx, getAssetFile, arg.AssetID, arg.Kind)
+	var path string
+	err := row.Scan(&path)
+	return path, err
 }
 
 const getAssetIDByChecksum = `-- name: GetAssetIDByChecksum :one
@@ -213,8 +237,19 @@ func (q *Queries) GetExif(ctx context.Context, assetID pgtype.UUID) (Exif, error
 	return i, err
 }
 
+const getLiveVideo = `-- name: GetLiveVideo :one
+SELECT id FROM assets WHERE live_photo_of = $1 AND deleted_at IS NULL AND status = 'ready' LIMIT 1
+`
+
+func (q *Queries) GetLiveVideo(ctx context.Context, livePhotoOf pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getLiveVideo, livePhotoOf)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getOwnedAsset = `-- name: GetOwnedAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
 `
 
 type GetOwnedAssetParams struct {
@@ -249,6 +284,14 @@ func (q *Queries) GetOwnedAsset(ctx context.Context, arg GetOwnedAssetParams) (A
 		&i.DeletedAt,
 		&i.AspectRatio,
 		&i.LocalAt,
+		&i.ContentID,
+		&i.LivePhotoOf,
+		&i.DurationMs,
+		&i.VideoCodec,
+		&i.SpriteColumns,
+		&i.SpriteRows,
+		&i.SpriteCount,
+		&i.SpriteIntervalMs,
 	)
 	return i, err
 }
@@ -312,6 +355,23 @@ func (q *Queries) InsertAsset(ctx context.Context, arg InsertAssetParams) (pgtyp
 	return id, err
 }
 
+const linkLivePhoto = `-- name: LinkLivePhoto :exec
+UPDATE assets v SET live_photo_of = p.id, updated_at = now()
+FROM assets p
+WHERE v.user_id = $1 AND p.user_id = $1 AND v.content_id = $2 AND p.content_id = $2
+  AND v.kind = 'video' AND p.kind = 'photo' AND v.id <> p.id AND p.deleted_at IS NULL
+`
+
+type LinkLivePhotoParams struct {
+	UserID    pgtype.UUID
+	ContentID pgtype.Text
+}
+
+func (q *Queries) LinkLivePhoto(ctx context.Context, arg LinkLivePhotoParams) error {
+	_, err := q.db.Exec(ctx, linkLivePhoto, arg.UserID, arg.ContentID)
+	return err
+}
+
 const listAssetFiles = `-- name: ListAssetFiles :many
 SELECT asset_id, kind, path, size_bytes, created_at FROM asset_files WHERE asset_id = $1 ORDER BY kind
 `
@@ -343,7 +403,7 @@ func (q *Queries) ListAssetFiles(ctx context.Context, assetID pgtype.UUID) ([]As
 }
 
 const listAssets = `-- name: ListAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at FROM assets
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms FROM assets
 WHERE user_id = $1 AND deleted_at IS NULL
   AND ($2::text IS NULL OR status = $2)
 ORDER BY created_at DESC, id DESC
@@ -389,6 +449,14 @@ func (q *Queries) ListAssets(ctx context.Context, arg ListAssetsParams) ([]Asset
 			&i.DeletedAt,
 			&i.AspectRatio,
 			&i.LocalAt,
+			&i.ContentID,
+			&i.LivePhotoOf,
+			&i.DurationMs,
+			&i.VideoCodec,
+			&i.SpriteColumns,
+			&i.SpriteRows,
+			&i.SpriteCount,
+			&i.SpriteIntervalMs,
 		); err != nil {
 			return nil, err
 		}
@@ -401,7 +469,7 @@ func (q *Queries) ListAssets(ctx context.Context, arg ListAssetsParams) ([]Asset
 }
 
 const listOwnedAssets = `-- name: ListOwnedAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
 `
 
 type ListOwnedAssetsParams struct {
@@ -442,10 +510,42 @@ func (q *Queries) ListOwnedAssets(ctx context.Context, arg ListOwnedAssetsParams
 			&i.DeletedAt,
 			&i.AspectRatio,
 			&i.LocalAt,
+			&i.ContentID,
+			&i.LivePhotoOf,
+			&i.DurationMs,
+			&i.VideoCodec,
+			&i.SpriteColumns,
+			&i.SpriteRows,
+			&i.SpriteCount,
+			&i.SpriteIntervalMs,
 		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listReadyAssetIDs = `-- name: ListReadyAssetIDs :many
+SELECT id FROM assets WHERE status = 'ready' AND deleted_at IS NULL
+`
+
+func (q *Queries) ListReadyAssetIDs(ctx context.Context) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, listReadyAssetIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -484,7 +584,7 @@ func (q *Queries) MarkAssetReady(ctx context.Context, arg MarkAssetReadyParams) 
 
 const newerAsset = `-- name: NewerAsset :one
 SELECT id FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
   AND (local_at, id) > ($2::timestamp, $3::uuid)
 ORDER BY local_at ASC, id ASC LIMIT 1
 `
@@ -504,7 +604,7 @@ func (q *Queries) NewerAsset(ctx context.Context, arg NewerAssetParams) (pgtype.
 
 const olderAsset = `-- name: OlderAsset :one
 SELECT id FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
   AND (local_at, id) < ($2::timestamp, $3::uuid)
 ORDER BY local_at DESC, id DESC LIMIT 1
 `
@@ -569,11 +669,12 @@ func (q *Queries) SoftDeleteAssets(ctx context.Context, arg SoftDeleteAssetsPara
 }
 
 const timelineBucket = `-- name: TimelineBucket :many
-SELECT id, kind, width, height, aspect_ratio, blurhash, is_favorite, local_at
-FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
-  AND local_at >= $2 AND local_at < $3
-ORDER BY local_at DESC, id DESC
+SELECT a.id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+FROM assets a
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+  AND a.local_at >= $2 AND a.local_at < $3
+ORDER BY a.local_at DESC, a.id DESC
 `
 
 type TimelineBucketParams struct {
@@ -591,6 +692,8 @@ type TimelineBucketRow struct {
 	Blurhash    pgtype.Text
 	IsFavorite  bool
 	LocalAt     pgtype.Timestamp
+	DurationMs  pgtype.Int8
+	IsLive      bool
 }
 
 func (q *Queries) TimelineBucket(ctx context.Context, arg TimelineBucketParams) ([]TimelineBucketRow, error) {
@@ -611,6 +714,8 @@ func (q *Queries) TimelineBucket(ctx context.Context, arg TimelineBucketParams) 
 			&i.Blurhash,
 			&i.IsFavorite,
 			&i.LocalAt,
+			&i.DurationMs,
+			&i.IsLive,
 		); err != nil {
 			return nil, err
 		}
@@ -625,7 +730,7 @@ func (q *Queries) TimelineBucket(ctx context.Context, arg TimelineBucketParams) 
 const timelineBuckets = `-- name: TimelineBuckets :many
 SELECT to_char(date_trunc('month', local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
 GROUP BY 1
 ORDER BY 1 DESC
 `
@@ -658,7 +763,7 @@ func (q *Queries) TimelineBuckets(ctx context.Context, userID pgtype.UUID) ([]Ti
 const updateAssetMetadata = `-- name: UpdateAssetMetadata :exec
 UPDATE assets
 SET mime_type = $2, kind = $3, width = $4, height = $5, taken_at = $6, taken_offset_minutes = $7,
-    updated_at = now()
+    content_id = $8, updated_at = now()
 WHERE id = $1
 `
 
@@ -670,6 +775,7 @@ type UpdateAssetMetadataParams struct {
 	Height             pgtype.Int4
 	TakenAt            pgtype.Timestamptz
 	TakenOffsetMinutes pgtype.Int4
+	ContentID          pgtype.Text
 }
 
 func (q *Queries) UpdateAssetMetadata(ctx context.Context, arg UpdateAssetMetadataParams) error {
@@ -681,7 +787,47 @@ func (q *Queries) UpdateAssetMetadata(ctx context.Context, arg UpdateAssetMetada
 		arg.Height,
 		arg.TakenAt,
 		arg.TakenOffsetMinutes,
+		arg.ContentID,
 	)
+	return err
+}
+
+const updateSprite = `-- name: UpdateSprite :exec
+UPDATE assets SET sprite_columns = $2, sprite_rows = $3, sprite_count = $4, sprite_interval_ms = $5, updated_at = now()
+WHERE id = $1
+`
+
+type UpdateSpriteParams struct {
+	ID               pgtype.UUID
+	SpriteColumns    pgtype.Int4
+	SpriteRows       pgtype.Int4
+	SpriteCount      pgtype.Int4
+	SpriteIntervalMs pgtype.Int4
+}
+
+func (q *Queries) UpdateSprite(ctx context.Context, arg UpdateSpriteParams) error {
+	_, err := q.db.Exec(ctx, updateSprite,
+		arg.ID,
+		arg.SpriteColumns,
+		arg.SpriteRows,
+		arg.SpriteCount,
+		arg.SpriteIntervalMs,
+	)
+	return err
+}
+
+const updateVideoInfo = `-- name: UpdateVideoInfo :exec
+UPDATE assets SET duration_ms = $2, video_codec = $3, updated_at = now() WHERE id = $1
+`
+
+type UpdateVideoInfoParams struct {
+	ID         pgtype.UUID
+	DurationMs pgtype.Int8
+	VideoCodec pgtype.Text
+}
+
+func (q *Queries) UpdateVideoInfo(ctx context.Context, arg UpdateVideoInfoParams) error {
+	_, err := q.db.Exec(ctx, updateVideoInfo, arg.ID, arg.DurationMs, arg.VideoCodec)
 	return err
 }
 

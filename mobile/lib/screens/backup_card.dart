@@ -53,13 +53,17 @@ class _BackupCardState extends ConsumerState<BackupCard> {
   Future<void> _refresh() async {
     try {
       final status = await ref.read(backupProvider).status();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() => _status = status);
       widget.onStatus?.call(status);
     } on MissingPluginException {
       // Only the iOS app has the native engine so far.
     } on PlatformException catch (cause) {
-      if (mounted) setState(() => _error = cause.message);
+      if (mounted) {
+        setState(() => _error = cause.message);
+      }
     }
   }
 
@@ -111,11 +115,12 @@ class _BackupCardState extends ConsumerState<BackupCard> {
       }
       await _refresh();
     } on ApiException catch (cause) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error =
               'The server could not be reached. ${cause.message ?? ''}',
         );
+      }
     } on PlatformException catch (cause) {
       if (mounted) setState(() => _error = cause.message);
     } finally {

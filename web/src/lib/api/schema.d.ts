@@ -328,6 +328,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/{id}/motion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the video embedded in an Android Motion Photo */
+        get: operations["getAssetMotion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/video/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an HLS playlist or segment, or the scrub strip (sprite.jpg) */
+        get: operations["getAssetVideoFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/timeline/buckets": {
         parameters: {
             query?: never;
@@ -555,6 +589,9 @@ export interface components {
             ratio: number;
             blurhash?: string;
             isFavorite: boolean;
+            isLive?: boolean;
+            /** Format: int64 */
+            durationMs?: number;
             /** @description Local capture time without a zone: 2006-01-02T15:04:05 */
             localAt: string;
         };
@@ -586,6 +623,19 @@ export interface components {
             newerId?: string;
             /** Format: uuid */
             olderId?: string;
+            /** Format: int64 */
+            durationMs?: number;
+            videoCodec?: string;
+            /** @description The adaptive stream at video/master.m3u8 can be played */
+            hlsReady?: boolean;
+            /**
+             * Format: uuid
+             * @description The video of a Live Photo
+             */
+            liveVideoId?: string;
+            /** @description An Android Motion Photo, with its video at /motion */
+            hasMotion?: boolean;
+            sprite?: components["schemas"]["Sprite"];
             camera?: string;
             lens?: string;
             iso?: number;
@@ -598,6 +648,12 @@ export interface components {
             latitude?: number;
             /** Format: double */
             longitude?: number;
+        };
+        Sprite: {
+            columns: number;
+            rows: number;
+            count: number;
+            intervalMs: number;
         };
         BulkRequest: {
             ids: string[];
@@ -1084,7 +1140,7 @@ export interface operations {
     getAssetThumbnail: {
         parameters: {
             query?: {
-                size?: "small" | "large";
+                size?: "small" | "large" | "full";
             };
             header?: never;
             path: {
@@ -1135,6 +1191,62 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAssetMotion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The video */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "video/mp4": string;
+                };
+            };
+            /** @description Part of the video */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAssetVideoFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
             };
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];

@@ -184,6 +184,7 @@ func (e ListAssetsParamsStatus) Valid() bool {
 
 // Defines values for GetAssetThumbnailParamsSize.
 const (
+	Full  GetAssetThumbnailParamsSize = "full"
 	Large GetAssetThumbnailParamsSize = "large"
 	Small GetAssetThumbnailParamsSize = "small"
 )
@@ -191,6 +192,8 @@ const (
 // Valid indicates whether the value is a known member of the GetAssetThumbnailParamsSize enum.
 func (e GetAssetThumbnailParamsSize) Valid() bool {
 	switch e {
+	case Full:
+		return true
 	case Large:
 		return true
 	case Small:
@@ -248,30 +251,42 @@ type AssetStatus string
 
 // AssetDetail defines model for AssetDetail.
 type AssetDetail struct {
-	Camera         *string             `json:"camera,omitempty"`
-	CreatedAt      time.Time           `json:"createdAt"`
-	ExposureTime   *string             `json:"exposureTime,omitempty"`
-	FNumber        *float64            `json:"fNumber,omitempty"`
-	FocalLength    *float64            `json:"focalLength,omitempty"`
-	HasCaptureTime *bool               `json:"hasCaptureTime,omitempty"`
-	Height         *int                `json:"height,omitempty"`
-	Id             openapi_types.UUID  `json:"id"`
-	IsArchived     bool                `json:"isArchived"`
-	IsFavorite     bool                `json:"isFavorite"`
-	Iso            *int                `json:"iso,omitempty"`
-	Kind           AssetDetailKind     `json:"kind"`
-	Latitude       *float64            `json:"latitude,omitempty"`
-	Lens           *string             `json:"lens,omitempty"`
-	LocalAt        string              `json:"localAt"`
-	Longitude      *float64            `json:"longitude,omitempty"`
-	MimeType       *string             `json:"mimeType,omitempty"`
-	NewerId        *openapi_types.UUID `json:"newerId,omitempty"`
-	OffsetMinutes  *int                `json:"offsetMinutes,omitempty"`
-	OlderId        *openapi_types.UUID `json:"olderId,omitempty"`
-	OriginalName   string              `json:"originalName"`
-	SizeBytes      int64               `json:"sizeBytes"`
-	Status         AssetDetailStatus   `json:"status"`
-	Width          *int                `json:"width,omitempty"`
+	Camera         *string   `json:"camera,omitempty"`
+	CreatedAt      time.Time `json:"createdAt"`
+	DurationMs     *int64    `json:"durationMs,omitempty"`
+	ExposureTime   *string   `json:"exposureTime,omitempty"`
+	FNumber        *float64  `json:"fNumber,omitempty"`
+	FocalLength    *float64  `json:"focalLength,omitempty"`
+	HasCaptureTime *bool     `json:"hasCaptureTime,omitempty"`
+
+	// HasMotion An Android Motion Photo, with its video at /motion
+	HasMotion *bool `json:"hasMotion,omitempty"`
+	Height    *int  `json:"height,omitempty"`
+
+	// HlsReady The adaptive stream at video/master.m3u8 can be played
+	HlsReady   *bool              `json:"hlsReady,omitempty"`
+	Id         openapi_types.UUID `json:"id"`
+	IsArchived bool               `json:"isArchived"`
+	IsFavorite bool               `json:"isFavorite"`
+	Iso        *int               `json:"iso,omitempty"`
+	Kind       AssetDetailKind    `json:"kind"`
+	Latitude   *float64           `json:"latitude,omitempty"`
+	Lens       *string            `json:"lens,omitempty"`
+
+	// LiveVideoId The video of a Live Photo
+	LiveVideoId   *openapi_types.UUID `json:"liveVideoId,omitempty"`
+	LocalAt       string              `json:"localAt"`
+	Longitude     *float64            `json:"longitude,omitempty"`
+	MimeType      *string             `json:"mimeType,omitempty"`
+	NewerId       *openapi_types.UUID `json:"newerId,omitempty"`
+	OffsetMinutes *int                `json:"offsetMinutes,omitempty"`
+	OlderId       *openapi_types.UUID `json:"olderId,omitempty"`
+	OriginalName  string              `json:"originalName"`
+	SizeBytes     int64               `json:"sizeBytes"`
+	Sprite        *Sprite             `json:"sprite,omitempty"`
+	Status        AssetDetailStatus   `json:"status"`
+	VideoCodec    *string             `json:"videoCodec,omitempty"`
+	Width         *int                `json:"width,omitempty"`
 }
 
 // AssetDetailKind defines model for AssetDetail.Kind.
@@ -381,6 +396,14 @@ type SetupRequest struct {
 	Password string `json:"password"`
 }
 
+// Sprite defines model for Sprite.
+type Sprite struct {
+	Columns    int `json:"columns"`
+	Count      int `json:"count"`
+	IntervalMs int `json:"intervalMs"`
+	Rows       int `json:"rows"`
+}
+
 // TimelineBucket defines model for TimelineBucket.
 type TimelineBucket struct {
 	Items []TimelineItem `json:"items"`
@@ -398,8 +421,10 @@ type TimelineBuckets struct {
 // TimelineItem defines model for TimelineItem.
 type TimelineItem struct {
 	Blurhash   *string            `json:"blurhash,omitempty"`
+	DurationMs *int64             `json:"durationMs,omitempty"`
 	Id         openapi_types.UUID `json:"id"`
 	IsFavorite bool               `json:"isFavorite"`
+	IsLive     *bool              `json:"isLive,omitempty"`
 	Kind       TimelineItemKind   `json:"kind"`
 
 	// LocalAt Local capture time without a zone: 2006-01-02T15:04:05
@@ -513,12 +538,18 @@ type ServerInterface interface {
 	// GetAsset Read an asset's details and its neighbours on the timeline
 	// (GET /api/assets/{id})
 	GetAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetAssetMotion Read the video embedded in an Android Motion Photo
+	// (GET /api/assets/{id}/motion)
+	GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetAssetOriginal Read the unmodified original. Supports Range requests for video.
 	// (GET /api/assets/{id}/original)
 	GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams)
 	// GetAssetThumbnail Read a WebP thumbnail
 	// (GET /api/assets/{id}/thumbnail)
 	GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetThumbnailParams)
+	// GetAssetVideoFile Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
+	// (GET /api/assets/{id}/video/{file})
+	GetAssetVideoFile(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, file string)
 	// Login Sign in with email, password and, when enabled, a TOTP code
 	// (POST /api/auth/login)
 	Login(w http.ResponseWriter, r *http.Request)
@@ -624,6 +655,12 @@ func (_ Unimplemented) GetAsset(w http.ResponseWriter, r *http.Request, id opena
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetAssetMotion Read the video embedded in an Android Motion Photo
+// (GET /api/assets/{id}/motion)
+func (_ Unimplemented) GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetAssetOriginal Read the unmodified original. Supports Range requests for video.
 // (GET /api/assets/{id}/original)
 func (_ Unimplemented) GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams) {
@@ -633,6 +670,12 @@ func (_ Unimplemented) GetAssetOriginal(w http.ResponseWriter, r *http.Request, 
 // GetAssetThumbnail Read a WebP thumbnail
 // (GET /api/assets/{id}/thumbnail)
 func (_ Unimplemented) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetThumbnailParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAssetVideoFile Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
+// (GET /api/assets/{id}/video/{file})
+func (_ Unimplemented) GetAssetVideoFile(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, file string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -922,6 +965,32 @@ func (siw *ServerInterfaceWrapper) GetAsset(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// GetAssetMotion operation middleware
+func (siw *ServerInterfaceWrapper) GetAssetMotion(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAssetMotion(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetAssetOriginal operation middleware
 func (siw *ServerInterfaceWrapper) GetAssetOriginal(w http.ResponseWriter, r *http.Request) {
 
@@ -997,6 +1066,41 @@ func (siw *ServerInterfaceWrapper) GetAssetThumbnail(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAssetThumbnail(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAssetVideoFile operation middleware
+func (siw *ServerInterfaceWrapper) GetAssetVideoFile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "file" -------------
+	var file string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "file", chi.URLParam(r, "file"), &file, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "file", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAssetVideoFile(w, r, id, file)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1476,6 +1580,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/assets/{id}/original", wrapper.GetAssetOriginal)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}/motion", wrapper.GetAssetMotion)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}/video/{file}", wrapper.GetAssetVideoFile)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/timeline/buckets", wrapper.GetTimelineBuckets)

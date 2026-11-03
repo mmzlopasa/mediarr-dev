@@ -50,6 +50,7 @@ part 'model/login_error.dart';
 part 'model/login_request.dart';
 part 'model/password_confirm.dart';
 part 'model/setup_request.dart';
+part 'model/sprite.dart';
 part 'model/timeline_bucket.dart';
 part 'model/timeline_buckets.dart';
 part 'model/timeline_buckets_buckets_inner.dart';

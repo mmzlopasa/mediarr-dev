@@ -330,14 +330,20 @@ final class BackupEngine: NSObject {
     defer { try? handle.close() }
     var hasher = SHA256()
     while true {
-      let done: Bool? = autoreleasepool {
-        guard let chunk = try? handle.read(upToCount: 1024 * 1024) else { return nil }
-        if chunk.isEmpty { return true }
-        hasher.update(data: chunk)
-        return false
+      // Reading at the end of a file returns nil or empty data, depending on the iOS version.
+      let finished: Bool? = autoreleasepool {
+        do {
+          guard let chunk = try handle.read(upToCount: 1024 * 1024), !chunk.isEmpty else {
+            return true
+          }
+          hasher.update(data: chunk)
+          return false
+        } catch {
+          return nil
+        }
       }
-      guard let done else { return nil }
-      if done { break }
+      guard let finished else { return nil }
+      if finished { break }
     }
     return hasher.finalize().map { String(format: "%02x", $0) }.joined()
   }

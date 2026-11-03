@@ -43,6 +43,7 @@ type Deps struct {
 	Pool        *pgxpool.Pool
 	Inserter    *jobs.Inserter
 	LibraryPath string
+	CachePath   string
 }
 
 type apiServer struct {
@@ -51,14 +52,17 @@ type apiServer struct {
 	userLimiter *auth.Limiter
 	ipLimiter   *auth.Limiter
 	uploads     *tusd.UnroutedHandler
+	// fullPreviews limits how many full resolution previews are made at once.
+	fullPreviews chan struct{}
 }
 
 // NewHandler returns the root HTTP handler.
 func NewHandler(deps Deps) (http.Handler, error) {
 	server := &apiServer{
-		Deps:        deps,
-		userLimiter: auth.NewLimiter(loginFailuresUser, loginWindow),
-		ipLimiter:   auth.NewLimiter(loginFailuresIP, loginWindow),
+		Deps:         deps,
+		userLimiter:  auth.NewLimiter(loginFailuresUser, loginWindow),
+		ipLimiter:    auth.NewLimiter(loginFailuresIP, loginWindow),
+		fullPreviews: make(chan struct{}, 2),
 	}
 	if deps.Pool != nil {
 		server.queries = db.New(deps.Pool)

@@ -41,6 +41,14 @@ type Asset struct {
 	DeletedAt          pgtype.Timestamptz
 	AspectRatio        pgtype.Float4
 	LocalAt            pgtype.Timestamp
+	ContentID          pgtype.Text
+	LivePhotoOf        pgtype.UUID
+	DurationMs         pgtype.Int8
+	VideoCodec         pgtype.Text
+	SpriteColumns      pgtype.Int4
+	SpriteRows         pgtype.Int4
+	SpriteCount        pgtype.Int4
+	SpriteIntervalMs   pgtype.Int4
 }
 
 type AssetFile struct {

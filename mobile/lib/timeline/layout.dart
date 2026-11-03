@@ -156,3 +156,13 @@ String formatBytes(int bytes) {
   }
   return unit == 0 ? '$bytes B' : '${value.toStringAsFixed(1)} ${units[unit]}';
 }
+
+String formatDuration(int ms) {
+  final total = (ms / 1000).round();
+  final hours = total ~/ 3600;
+  final minutes = (total % 3600) ~/ 60;
+  final seconds = (total % 60).toString().padLeft(2, '0');
+  return hours > 0
+      ? '$hours:${minutes.toString().padLeft(2, '0')}:$seconds'
+      : '$minutes:$seconds';
+}

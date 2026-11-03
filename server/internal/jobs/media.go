@@ -36,6 +36,9 @@ type badFileError struct{ msg string }
 
 func (e *badFileError) Error() string { return e.msg }
 
+// Unreadable lets other packages recognize a file that cannot be processed.
+func (e *badFileError) Unreadable() bool { return true }
+
 // toolProblems are what a user sees. The tools' own output can hold internal paths, so it only goes to the log.
 var toolProblems = map[string]string{
 	"exiftool":  "the file is damaged or not a supported format",
@@ -47,22 +50,34 @@ var toolProblems = map[string]string{
 func runTool(ctx context.Context, name string, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, toolTimeout)
 	defer cancel()
+	return runToolNoLimit(ctx, name, args...)
+}
+
+// runToolNoLimit leaves the time limit to the caller, for work that can take hours.
+func runToolNoLimit(ctx context.Context, name string, args ...string) ([]byte, error) {
+	command, problem := name, name
+	switch name {
+	case "ffmpeg-probe":
+		command, problem = "ffprobe", "ffmpeg"
+	case "nice":
+		problem = "ffmpeg"
+	}
 
 	var stdout, stderr bytes.Buffer
-	cmd := exec.CommandContext(ctx, name, args...)
+	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if ctx.Err() != nil {
-		return nil, fmt.Errorf("%s: %w", name, ctx.Err())
+		return nil, fmt.Errorf("%s: %w", command, ctx.Err())
 	}
 	var exit *exec.ExitError
 	if errors.As(err, &exit) {
-		slog.Warn("media tool rejected a file", "tool", name, "output", truncate(strings.TrimSpace(stderr.String()), maxToolError))
-		return stdout.Bytes(), &badFileError{msg: toolProblems[name]}
+		slog.Warn("media tool rejected a file", "tool", command, "output", truncate(strings.TrimSpace(stderr.String()), maxToolError))
+		return stdout.Bytes(), &badFileError{msg: toolProblems[problem]}
 	}
 	if err != nil {
-		return nil, fmt.Errorf("run %s: %w", name, err)
+		return nil, fmt.Errorf("run %s: %w", command, err)
 	}
 	return stdout.Bytes(), nil
 }
@@ -85,6 +100,11 @@ type Metadata struct {
 	Latitude      *float64
 	Longitude     *float64
 	Raw           []byte
+	// ContentID links the two files of an Apple Live Photo.
+	ContentID string
+	// MotionOffset counts from the end of an Android Motion Photo to its video.
+	MotionOffset int64
+	IsMotion     bool
 }
 
 // ReadMetadata runs exiftool on a file.
@@ -143,6 +163,9 @@ func parseMetadata(row map[string]any) (*Metadata, error) {
 		}
 	}
 	meta.TakenAt, meta.OffsetMinutes = takenAt(row, meta.Kind)
+	meta.ContentID = firstText(row, "ContentIdentifier", "MediaGroupUUID")
+	meta.MotionOffset = int64(number(row, "MicroVideoOffset"))
+	meta.IsMotion = meta.Kind == "photo" && (number(row, "MotionPhoto") == 1 || number(row, "MicroVideo") == 1)
 
 	if lat, lon, ok := gps(row); ok {
 		meta.Latitude, meta.Longitude = &lat, &lon
@@ -254,11 +277,12 @@ func pgText(s string) pgtype.Text { return pgtype.Text{String: s, Valid: s != ""
 
 func (m *Metadata) assetParams(id pgtype.UUID) db.UpdateAssetMetadataParams {
 	params := db.UpdateAssetMetadataParams{
-		ID:       id,
-		MimeType: pgText(m.MIMEType),
-		Kind:     m.Kind,
-		Width:    pgtype.Int4{Int32: m.Width, Valid: m.Width > 0},
-		Height:   pgtype.Int4{Int32: m.Height, Valid: m.Height > 0},
+		ID:        id,
+		MimeType:  pgText(m.MIMEType),
+		Kind:      m.Kind,
+		Width:     pgtype.Int4{Int32: m.Width, Valid: m.Width > 0},
+		Height:    pgtype.Int4{Int32: m.Height, Valid: m.Height > 0},
+		ContentID: pgText(m.ContentID),
 	}
 	if m.TakenAt != nil {
 		params.TakenAt = pgtype.Timestamptz{Time: *m.TakenAt, Valid: true}

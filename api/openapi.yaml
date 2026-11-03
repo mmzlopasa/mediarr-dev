@@ -266,7 +266,7 @@ paths:
       summary: Read a WebP thumbnail
       parameters:
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
-        - { name: size, in: query, schema: { type: string, enum: [small, large], default: small } }
+        - { name: size, in: query, schema: { type: string, enum: [small, large, full], default: small } }
       responses:
         "200":
           description: The thumbnail
@@ -289,6 +289,36 @@ paths:
             application/octet-stream:
               schema: { type: string, format: binary }
         "206": { description: Part of the original file }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/motion:
+    get:
+      operationId: getAssetMotion
+      summary: Read the video embedded in an Android Motion Photo
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The video
+          content:
+            video/mp4:
+              schema: { type: string, format: binary }
+        "206": { description: Part of the video }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/video/{file}:
+    get:
+      operationId: getAssetVideoFile
+      summary: Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: file, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The file
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
   /api/timeline/buckets:
@@ -517,6 +547,8 @@ components:
         ratio: { type: number, format: float, description: "Width divided by height, as displayed" }
         blurhash: { type: string }
         isFavorite: { type: boolean }
+        isLive: { type: boolean }
+        durationMs: { type: integer, format: int64 }
         localAt: { type: string, description: "Local capture time without a zone: 2006-01-02T15:04:05" }
     TimelineBucket:
       type: object
@@ -546,6 +578,12 @@ components:
         createdAt: { type: string, format: date-time }
         newerId: { type: string, format: uuid }
         olderId: { type: string, format: uuid }
+        durationMs: { type: integer, format: int64 }
+        videoCodec: { type: string }
+        hlsReady: { type: boolean, description: "The adaptive stream at video/master.m3u8 can be played" }
+        liveVideoId: { type: string, format: uuid, description: The video of a Live Photo }
+        hasMotion: { type: boolean, description: "An Android Motion Photo, with its video at /motion" }
+        sprite: { $ref: "#/components/schemas/Sprite" }
         camera: { type: string }
         lens: { type: string }
         iso: { type: integer }
@@ -554,6 +592,14 @@ components:
         focalLength: { type: number, format: double }
         latitude: { type: number, format: double }
         longitude: { type: number, format: double }
+    Sprite:
+      type: object
+      required: [columns, rows, count, intervalMs]
+      properties:
+        columns: { type: integer }
+        rows: { type: integer }
+        count: { type: integer }
+        intervalMs: { type: integer }
     BulkRequest:
       type: object
       required: [ids, action]

@@ -14,6 +14,7 @@ type Config struct {
 	LibraryPath       string
 	CachePath         string
 	WorkerConcurrency int
+	VideoAccel        string
 }
 
 // Load returns the settings, with defaults matching the Docker image.
@@ -24,6 +25,7 @@ func Load() Config {
 		LibraryPath:       env("LIBRARY_PATH", "/data/library"),
 		CachePath:         env("CACHE_PATH", "/data/cache"),
 		WorkerConcurrency: concurrency(os.Getenv("WORKER_CONCURRENCY"), runtime.NumCPU()),
+		VideoAccel:        os.Getenv("VIDEO_ACCEL"),
 	}
 }
 

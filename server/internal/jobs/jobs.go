@@ -27,6 +27,7 @@ const (
 	staleUploadAge   = 7 * 24 * time.Hour
 	cleanupInterval  = 6 * time.Hour
 	shutdownDeadline = 30 * time.Second
+	videoQueue       = "video"
 	// Longer than any job's timeout, so a killed worker's jobs restart without cutting off a slow one.
 	rescueStuckAfter = 15 * time.Minute
 )
@@ -41,7 +42,9 @@ func (MetadataArgs) Kind() string { return "metadata" }
 
 // ThumbnailArgs generates thumbnails and the blurhash, then marks the asset ready.
 type ThumbnailArgs struct {
-	AssetID uuid.UUID `json:"asset_id"`
+	AssetID      uuid.UUID `json:"asset_id"`
+	MotionOffset int64     `json:"motion_offset,omitempty"`
+	IsMotion     bool      `json:"is_motion,omitempty"`
 }
 
 // Kind identifies the job in the queue.
@@ -54,6 +57,17 @@ type SidecarArgs struct {
 
 // Kind identifies the job in the queue.
 func (SidecarArgs) Kind() string { return "sidecar" }
+
+// TranscodeArgs makes the HLS versions and the scrub strip of a video.
+type TranscodeArgs struct {
+	AssetID uuid.UUID `json:"asset_id"`
+}
+
+// Kind identifies the job in the queue.
+func (TranscodeArgs) Kind() string { return "transcode" }
+
+// InsertOpts puts video work in its own queue, so it never holds up photos.
+func (TranscodeArgs) InsertOpts() river.InsertOpts { return river.InsertOpts{Queue: videoQueue} }
 
 // CleanupArgs removes abandoned uploads and expired sessions.
 type CleanupArgs struct{}
@@ -74,6 +88,7 @@ type Options struct {
 	Concurrency int
 	LibraryPath string
 	CachePath   string
+	VideoAccel  string
 }
 
 type deps struct {
@@ -92,14 +107,18 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &metadataWorker{deps: d})
 	river.AddWorker(workers, &thumbnailWorker{deps: d})
 	river.AddWorker(workers, &sidecarWorker{deps: d})
+	river.AddWorker(workers, &transcodeWorker{deps: d})
 	river.AddWorker(workers, &cleanupWorker{deps: d})
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{
 		MaxAttempts:          maxAttempts,
 		RescueStuckJobsAfter: rescueStuckAfter,
-		Queues:               map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: opts.Concurrency}},
-		Workers:              workers,
+		Queues: map[string]river.QueueConfig{
+			river.QueueDefault: {MaxWorkers: opts.Concurrency},
+			videoQueue:         {MaxWorkers: 1},
+		},
+		Workers: workers,
 		PeriodicJobs: []*river.PeriodicJob{
 			river.NewPeriodicJob(river.PeriodicInterval(cleanupInterval),
 				func() (river.JobArgs, *river.InsertOpts) { return CleanupArgs{}, nil },
@@ -178,9 +197,20 @@ func (w *metadataWorker) Work(ctx context.Context, job *river.Job[MetadataArgs])
 		if err := q.UpsertExif(ctx, meta.exifParams(id)); err != nil {
 			return err
 		}
+		// Live Photo files can arrive in either order, so both try to link.
+		if meta.ContentID != "" {
+			if err := q.LinkLivePhoto(ctx, db.LinkLivePhotoParams{UserID: asset.UserID, ContentID: pgText(meta.ContentID)}); err != nil {
+				return err
+			}
+		}
 		client := w.client()
-		if _, err := client.InsertTx(ctx, tx, ThumbnailArgs{AssetID: job.Args.AssetID}, nil); err != nil {
+		if _, err := client.InsertTx(ctx, tx, ThumbnailArgs{AssetID: job.Args.AssetID, MotionOffset: meta.MotionOffset, IsMotion: meta.IsMotion}, nil); err != nil {
 			return err
+		}
+		if meta.Kind == "video" {
+			if _, err := client.InsertTx(ctx, tx, TranscodeArgs{AssetID: job.Args.AssetID}, nil); err != nil {
+				return err
+			}
 		}
 		_, err := client.InsertTx(ctx, tx, SidecarArgs{AssetID: job.Args.AssetID}, nil)
 		return err
@@ -211,8 +241,25 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 		return w.failOrRetry(ctx, id, job.Attempt, err)
 	}
 
+	// Best effort: a photo whose embedded video cannot be read is still a good photo.
+	motionPath := ""
+	if job.Args.IsMotion {
+		dest := filepath.Join(w.opts.CachePath, "video", uuidString(asset.UserID), assetID[:2], assetID+"-motion.mp4")
+		found, err := ExtractMotionVideo(asset.OriginalPath, dest, job.Args.MotionOffset)
+		if err != nil {
+			slog.Warn("motion video could not be extracted", "asset", assetID, "error", err)
+		} else if found {
+			motionPath = dest
+		}
+	}
+
 	return pgx.BeginFunc(ctx, w.pool, func(tx pgx.Tx) error {
 		q := w.queries.WithTx(tx)
+		if motionPath != "" {
+			if err := q.UpsertAssetFile(ctx, db.UpsertAssetFileParams{AssetID: id, Kind: "motion_video", Path: motionPath}); err != nil {
+				return err
+			}
+		}
 		for kind, file := range map[string]ThumbFile{"thumb_small": result.Small, "thumb_large": result.Large} {
 			if err := q.UpsertAssetFile(ctx, db.UpsertAssetFileParams{AssetID: id, Kind: kind, Path: file.Path, SizeBytes: file.Size}); err != nil {
 				return err
@@ -253,6 +300,81 @@ func (w *sidecarWorker) Work(ctx context.Context, job *river.Job[SidecarArgs]) e
 		return err
 	}
 	return w.queries.UpsertAssetFile(ctx, db.UpsertAssetFileParams{AssetID: id, Kind: "sidecar", Path: path, SizeBytes: size})
+}
+
+type transcodeWorker struct {
+	river.WorkerDefaults[TranscodeArgs]
+	*deps
+}
+
+func (w *transcodeWorker) Timeout(*river.Job[TranscodeArgs]) time.Duration { return transcodeTimeout }
+
+// Work is optional for the asset: until it finishes, or if it fails, the original still plays
+// directly where the browser supports it. So it never marks the asset as failed.
+func (w *transcodeWorker) Work(ctx context.Context, job *river.Job[TranscodeArgs]) error {
+	id := toPG(job.Args.AssetID)
+	asset, err := w.queries.GetAsset(ctx, id)
+	if err != nil {
+		if db.IsNotFound(err) {
+			return river.JobCancel(err)
+		}
+		return err
+	}
+	// A long transcode can be picked up again after the crash recovery time. Then it is done already.
+	if _, err := w.queries.GetAssetFile(ctx, db.GetAssetFileParams{AssetID: id, Kind: "hls"}); err == nil {
+		return nil
+	}
+
+	info, err := ProbeVideo(ctx, asset.OriginalPath)
+	if err != nil {
+		var bad *badFileError
+		if errors.As(err, &bad) {
+			return river.JobCancel(err)
+		}
+		return err
+	}
+	if err := w.queries.UpdateVideoInfo(ctx, db.UpdateVideoInfoParams{
+		ID:         id,
+		DurationMs: pgtype.Int8{Int64: info.Duration.Milliseconds(), Valid: info.Duration > 0},
+		VideoCodec: pgText(info.Codec),
+	}); err != nil {
+		return err
+	}
+
+	assetID := uuidString(id)
+	dir := filepath.Join(w.opts.CachePath, "video", uuidString(asset.UserID), assetID[:2], assetID)
+	if err := Transcode(ctx, asset.OriginalPath, dir, w.opts.VideoAccel, info); err != nil {
+		var bad *badFileError
+		if errors.As(err, &bad) {
+			return river.JobCancel(err)
+		}
+		return err
+	}
+
+	sprite := filepath.Join(w.opts.CachePath, "video", uuidString(asset.UserID), assetID[:2], assetID+"-sprite.jpg")
+	layout, spriteErr := MakeSprite(ctx, asset.OriginalPath, sprite, info.Duration)
+	if spriteErr != nil {
+		slog.Warn("scrub strip could not be made", "asset", assetID, "error", spriteErr)
+	}
+
+	return pgx.BeginFunc(ctx, w.pool, func(tx pgx.Tx) error {
+		q := w.queries.WithTx(tx)
+		if layout != nil {
+			if err := q.UpsertAssetFile(ctx, db.UpsertAssetFileParams{AssetID: id, Kind: "sprite", Path: sprite}); err != nil {
+				return err
+			}
+			if err := q.UpdateSprite(ctx, db.UpdateSpriteParams{
+				ID:               id,
+				SpriteColumns:    pgtype.Int4{Int32: int32(layout.Columns), Valid: true},                 //nolint:gosec // At most 100.
+				SpriteRows:       pgtype.Int4{Int32: int32(layout.Rows), Valid: true},                    //nolint:gosec // At most 100.
+				SpriteCount:      pgtype.Int4{Int32: int32(layout.Count), Valid: true},                   //nolint:gosec // At most 100.
+				SpriteIntervalMs: pgtype.Int4{Int32: int32(layout.Interval.Milliseconds()), Valid: true}, //nolint:gosec // Bounded by duration.
+			}); err != nil {
+				return err
+			}
+		}
+		return q.UpsertAssetFile(ctx, db.UpsertAssetFileParams{AssetID: id, Kind: "hls", Path: dir})
+	})
 }
 
 type cleanupWorker struct {

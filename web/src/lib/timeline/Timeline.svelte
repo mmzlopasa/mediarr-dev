@@ -14,6 +14,7 @@
 	import {
 		estimateMonthHeight,
 		formatDay,
+		formatDuration,
 		formatMonth,
 		layoutMonth,
 		rowsInRange,
@@ -416,7 +417,14 @@
 									draggable="false"
 								/>
 								{#if tile.item.kind === 'video'}
-									<span class="tl-badge tl-video"><Icon name="play" size={14} /></span>
+									<span class="tl-badge tl-video">
+										{#if tile.item.durationMs}<small>{formatDuration(tile.item.durationMs)}</small
+											>{/if}
+										<Icon name="play" size={14} />
+									</span>
+								{/if}
+								{#if tile.item.isLive}
+									<span class="tl-badge tl-live" title="Live"><Icon name="live" size={14} /></span>
 								{/if}
 								{#if tile.item.isFavorite}
 									<span class="tl-badge tl-fav"><Icon name="star" size={14} /></span>

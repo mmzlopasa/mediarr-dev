@@ -269,6 +269,8 @@ class ApiClient {
           return PasswordConfirm.fromJson(value);
         case 'SetupRequest':
           return SetupRequest.fromJson(value);
+        case 'Sprite':
+          return Sprite.fromJson(value);
         case 'TimelineBucket':
           return TimelineBucket.fromJson(value);
         case 'TimelineBuckets':

@@ -61,6 +61,8 @@ func run(ctx context.Context, args []string) error {
 			return db.MigrateDown(ctx, cfg.DatabaseURL)
 		}
 		return db.Migrate(ctx, cfg.DatabaseURL)
+	case "reprocess":
+		return reprocess(ctx, cfg)
 	case "user":
 		return upsertUser(ctx, cfg, args[1:])
 	default:
@@ -106,7 +108,7 @@ func serve(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return fmt.Errorf("create job client: %w", err)
 	}
-	handler, err := app.NewHandler(app.Deps{Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath})
+	handler, err := app.NewHandler(app.Deps{Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath})
 	if err != nil {
 		return err
 	}
@@ -148,7 +150,7 @@ func worker(ctx context.Context, cfg config.Config) error {
 			return err
 		}
 	}
-	client, err := jobs.NewWorker(pool, jobs.Options{Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath})
+	client, err := jobs.NewWorker(pool, jobs.Options{Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, VideoAccel: cfg.VideoAccel})
 	if err != nil {
 		return fmt.Errorf("create worker: %w", err)
 	}
@@ -191,6 +193,31 @@ func upsertUser(ctx context.Context, cfg config.Config, args []string) error {
 	defer pool.Close()
 	_, err = db.New(pool).UpsertUser(ctx, db.UpsertUserParams{Email: email, Name: args[2], PasswordHash: hash, IsAdmin: isAdmin})
 	return err
+}
+
+// reprocess queues every ready asset for processing again, so files from an older version get what
+// a newer one adds. Originals are not touched.
+func reprocess(ctx context.Context, cfg config.Config) error {
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+	defer pool.Close()
+	inserter, err := jobs.NewInserter(pool)
+	if err != nil {
+		return err
+	}
+	ids, err := db.New(pool).ListReadyAssetIDs(ctx)
+	if err != nil {
+		return err
+	}
+	for _, id := range ids {
+		if _, err := inserter.Insert(ctx, jobs.MetadataArgs{AssetID: id.Bytes}, nil); err != nil {
+			return fmt.Errorf("queue job: %w", err)
+		}
+	}
+	fmt.Printf("queued %d assets\n", len(ids))
+	return nil
 }
 
 // deleteUser removes a user with all their assets and files. It cannot be undone.

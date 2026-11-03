@@ -65,5 +65,7 @@ void main() {
     expect(formatMonth('2024-08'), 'August 2024');
     expect(formatBytes(1536), '1.5 KB');
     expect(formatBytes(512), '512 B');
+    expect(formatDuration(65000), '1:05');
+    expect(formatDuration(3725000), '1:02:05');
   });
 }

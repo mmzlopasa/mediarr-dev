@@ -36,7 +36,7 @@ SELECT checksum FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checks
 -- name: UpdateAssetMetadata :exec
 UPDATE assets
 SET mime_type = $2, kind = $3, width = $4, height = $5, taken_at = $6, taken_offset_minutes = $7,
-    updated_at = now()
+    content_id = $8, updated_at = now()
 WHERE id = $1;
 
 -- name: UpsertExif :exec
@@ -64,7 +64,7 @@ UPDATE assets SET status = 'failed', error = $2, updated_at = now() WHERE id = $
 -- name: AdminCounts :one
 SELECT (SELECT count(*) FROM users) AS users,
        count(*) FILTER (WHERE kind = 'photo') AS photos,
-       count(*) FILTER (WHERE kind = 'video') AS videos,
+       count(*) FILTER (WHERE kind = 'video' AND live_photo_of IS NULL) AS videos,
        count(*) FILTER (WHERE status = 'processing') AS processing,
        count(*) FILTER (WHERE status = 'failed') AS failed,
        coalesce(sum(size_bytes), 0)::bigint AS library_bytes
@@ -82,29 +82,30 @@ UPDATE assets SET deleted_at = NULL, updated_at = now() WHERE id = $1 AND delete
 -- name: TimelineBuckets :many
 SELECT to_char(date_trunc('month', local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
 GROUP BY 1
 ORDER BY 1 DESC;
 
 -- name: TimelineBucket :many
-SELECT id, kind, width, height, aspect_ratio, blurhash, is_favorite, local_at
-FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
-  AND local_at >= sqlc.arg('from_at') AND local_at < sqlc.arg('to_at')
-ORDER BY local_at DESC, id DESC;
+SELECT a.id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+FROM assets a
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+  AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
+ORDER BY a.local_at DESC, a.id DESC;
 
 -- name: GetOwnedAsset :one
 SELECT * FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL;
 
 -- name: NewerAsset :one
 SELECT id FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
   AND (local_at, id) > (sqlc.arg('local_at')::timestamp, sqlc.arg('id')::uuid)
 ORDER BY local_at ASC, id ASC LIMIT 1;
 
 -- name: OlderAsset :one
 SELECT id FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
   AND (local_at, id) < (sqlc.arg('local_at')::timestamp, sqlc.arg('id')::uuid)
 ORDER BY local_at DESC, id DESC LIMIT 1;
 
@@ -129,3 +130,25 @@ WHERE user_id = $1 AND deleted_at IS NULL AND archived_at IS NULL AND id = ANY($
 -- name: SoftDeleteAssets :execrows
 UPDATE assets SET deleted_at = now(), updated_at = now()
 WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[]);
+
+-- name: UpdateVideoInfo :exec
+UPDATE assets SET duration_ms = $2, video_codec = $3, updated_at = now() WHERE id = $1;
+
+-- name: UpdateSprite :exec
+UPDATE assets SET sprite_columns = $2, sprite_rows = $3, sprite_count = $4, sprite_interval_ms = $5, updated_at = now()
+WHERE id = $1;
+
+-- name: LinkLivePhoto :exec
+UPDATE assets v SET live_photo_of = p.id, updated_at = now()
+FROM assets p
+WHERE v.user_id = $1 AND p.user_id = $1 AND v.content_id = $2 AND p.content_id = $2
+  AND v.kind = 'video' AND p.kind = 'photo' AND v.id <> p.id AND p.deleted_at IS NULL;
+
+-- name: GetLiveVideo :one
+SELECT id FROM assets WHERE live_photo_of = $1 AND deleted_at IS NULL AND status = 'ready' LIMIT 1;
+
+-- name: GetAssetFile :one
+SELECT path FROM asset_files WHERE asset_id = $1 AND kind = $2;
+
+-- name: ListReadyAssetIDs :many
+SELECT id FROM assets WHERE status = 'ready' AND deleted_at IS NULL;

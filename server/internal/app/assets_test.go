@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/mmzlopasa/mediarr-app/server/internal/api"
@@ -37,6 +38,8 @@ func (s *stack) markReady(t *testing.T, id, takenAt string, offset *int) string 
 	}
 	return thumb
 }
+
+func textValue(value string) pgtype.Text { return pgtype.Text{String: value, Valid: true} }
 
 func uploadedID(t *testing.T, resp *http.Response) string {
 	t.Helper()

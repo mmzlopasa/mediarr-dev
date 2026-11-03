@@ -18,6 +18,8 @@ class TimelineItem {
     required this.ratio,
     this.blurhash,
     required this.isFavorite,
+    this.isLive,
+    this.durationMs,
     required this.localAt,
   });
 
@@ -38,6 +40,22 @@ class TimelineItem {
 
   bool isFavorite;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? isLive;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? durationMs;
+
   /// Local capture time without a zone: 2006-01-02T15:04:05
   String localAt;
 
@@ -50,6 +68,8 @@ class TimelineItem {
           other.ratio == ratio &&
           other.blurhash == blurhash &&
           other.isFavorite == isFavorite &&
+          other.isLive == isLive &&
+          other.durationMs == durationMs &&
           other.localAt == localAt;
 
   @override
@@ -60,11 +80,13 @@ class TimelineItem {
       (ratio.hashCode) +
       (blurhash == null ? 0 : blurhash!.hashCode) +
       (isFavorite.hashCode) +
+      (isLive == null ? 0 : isLive!.hashCode) +
+      (durationMs == null ? 0 : durationMs!.hashCode) +
       (localAt.hashCode);
 
   @override
   String toString() =>
-      'TimelineItem[id=$id, kind=$kind, ratio=$ratio, blurhash=$blurhash, isFavorite=$isFavorite, localAt=$localAt]';
+      'TimelineItem[id=$id, kind=$kind, ratio=$ratio, blurhash=$blurhash, isFavorite=$isFavorite, isLive=$isLive, durationMs=$durationMs, localAt=$localAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -77,6 +99,16 @@ class TimelineItem {
       json[r'blurhash'] = null;
     }
     json[r'isFavorite'] = this.isFavorite;
+    if (this.isLive != null) {
+      json[r'isLive'] = this.isLive;
+    } else {
+      json[r'isLive'] = null;
+    }
+    if (this.durationMs != null) {
+      json[r'durationMs'] = this.durationMs;
+    } else {
+      json[r'durationMs'] = null;
+    }
     json[r'localAt'] = this.localAt;
     return json;
   }
@@ -107,6 +139,8 @@ class TimelineItem {
         ratio: mapValueOfType<double>(json, r'ratio')!,
         blurhash: mapValueOfType<String>(json, r'blurhash'),
         isFavorite: mapValueOfType<bool>(json, r'isFavorite')!,
+        isLive: mapValueOfType<bool>(json, r'isLive'),
+        durationMs: mapValueOfType<int>(json, r'durationMs'),
         localAt: mapValueOfType<String>(json, r'localAt')!,
       );
     }

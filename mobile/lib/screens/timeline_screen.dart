@@ -371,6 +371,16 @@ class _TileView extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
+              if (item.isLive == true)
+                const Positioned(
+                  right: 5,
+                  top: 5,
+                  child: Icon(
+                    Icons.motion_photos_on,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
               if (item.isFavorite)
                 const Positioned(
                   left: 5,

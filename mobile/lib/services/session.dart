@@ -25,6 +25,10 @@ class Session {
       '$serverUrl/api/assets/$id/thumbnail${large ? '?size=large' : ''}';
 
   String originalUrl(String id) => '$serverUrl/api/assets/$id/original';
+
+  String hlsUrl(String id) => '$serverUrl/api/assets/$id/video/master.m3u8';
+
+  String motionUrl(String id) => '$serverUrl/api/assets/$id/motion';
 }
 
 /// A user-facing sign-in failure.

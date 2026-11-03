@@ -87,6 +87,40 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     }
   }
 
+  /// Plays the moving part of a Live Photo or an Android Motion Photo.
+  Future<void> _playLive(Session session, TimelineItem item) async {
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final detail = await session.api.getAsset(item.id);
+      final liveId = detail?.liveVideoId;
+      String? url;
+      if (detail?.hasMotion == true) {
+        url = session.motionUrl(item.id);
+      } else if (liveId != null) {
+        final video = await session.api.getAsset(liveId);
+        url = video?.hlsReady == true
+            ? session.hlsUrl(liveId)
+            : session.originalUrl(liveId);
+      }
+      if (url == null) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('This photo has no video.')),
+        );
+        return;
+      }
+      await navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => _LivePlayer(session: session, url: url!),
+        ),
+      );
+    } on ApiException {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('The video could not be loaded.')),
+      );
+    }
+  }
+
   void _info(Session session, TimelineItem item) {
     showModalBottomSheet<void>(
       context: context,
@@ -113,6 +147,12 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
         backgroundColor: Colors.black38,
         foregroundColor: Colors.white,
         actions: [
+          if (current.isLive == true)
+            IconButton(
+              tooltip: 'Play Live Photo',
+              icon: const Icon(Icons.motion_photos_on_outlined),
+              onPressed: () => _playLive(session, current),
+            ),
           IconButton(
             tooltip: 'Favorite',
             icon: Icon(
@@ -292,8 +332,21 @@ class _VideoPageState extends State<_VideoPage> {
       if (mounted) setState(() {});
       return;
     }
+    AssetDetail? detail;
+    try {
+      detail = await widget.session.api.getAsset(widget.id);
+    } on ApiException {
+      // The original still plays.
+    }
+    if (!mounted) {
+      return;
+    }
     final controller = VideoPlayerController.networkUrl(
-      Uri.parse(widget.session.originalUrl(widget.id)),
+      Uri.parse(
+        detail?.hlsReady == true
+            ? widget.session.hlsUrl(widget.id)
+            : widget.session.originalUrl(widget.id),
+      ),
       httpHeaders: widget.session.headers,
     );
     setState(() => _controller = controller);
@@ -364,6 +417,72 @@ class _VideoPageState extends State<_VideoPage> {
   }
 }
 
+class _LivePlayer extends StatefulWidget {
+  const _LivePlayer({required this.session, required this.url});
+
+  final Session session;
+  final String url;
+
+  @override
+  State<_LivePlayer> createState() => _LivePlayerState();
+}
+
+class _LivePlayerState extends State<_LivePlayer> {
+  late final VideoPlayerController _controller =
+      VideoPlayerController.networkUrl(
+        Uri.parse(widget.url),
+        httpHeaders: widget.session.headers,
+      );
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller
+        .initialize()
+        .then((_) async {
+          await _controller.setLooping(true);
+          await _controller.play();
+          if (mounted) {
+            setState(() {});
+          }
+        })
+        .catchError((Object _) {
+          if (mounted) {
+            setState(() => _failed = true);
+          }
+        });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.black,
+    appBar: AppBar(
+      backgroundColor: Colors.black38,
+      foregroundColor: Colors.white,
+    ),
+    body: Center(
+      child: _failed
+          ? const EmptyMessage(
+              icon: Icons.videocam_off_outlined,
+              text: 'This video cannot be played on this device.',
+            )
+          : _controller.value.isInitialized
+          ? AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: VideoPlayer(_controller),
+            )
+          : const CircularProgressIndicator(color: Palette.gold),
+    ),
+  );
+}
+
 class _InfoSheet extends StatelessWidget {
   const _InfoSheet({required this.session, required this.id});
 
@@ -411,6 +530,8 @@ class _InfoSheet extends StatelessWidget {
             if (detail.width != null && detail.height != null)
               ('Dimensions', '${detail.width} × ${detail.height}'),
             ('Size', formatBytes(detail.sizeBytes)),
+            if (detail.durationMs != null)
+              ('Duration', formatDuration(detail.durationMs!)),
             if (detail.camera != null) ('Camera', detail.camera!),
             if (detail.lens != null) ('Lens', detail.lens!),
             if (settings.isNotEmpty) ('Settings', settings),
