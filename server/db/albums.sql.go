@@ -15,7 +15,7 @@ const addAlbumAssets = `-- name: AddAlbumAssets :execrows
 INSERT INTO album_assets (album_id, asset_id, added_by)
 SELECT $1, a.id, $2
 FROM assets a
-WHERE a.user_id = $2 AND a.deleted_at IS NULL AND a.id = ANY($3::uuid[])
+WHERE a.user_id = $2 AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.id = ANY($3::uuid[])
 ON CONFLICT DO NOTHING
 `
 
@@ -493,7 +493,7 @@ func (q *Queries) GetPartnerShare(ctx context.Context, arg GetPartnerShareParams
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at FROM users WHERE id = $1
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -510,12 +510,13 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 		&i.TotpLastStep,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.VaultPinHash,
 	)
 	return i, err
 }
 
 const getVisibleAsset = `-- name: GetVisibleAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
 `
 
 type GetVisibleAssetParams struct {
@@ -558,6 +559,7 @@ func (q *Queries) GetVisibleAsset(ctx context.Context, arg GetVisibleAssetParams
 		&i.SpriteRows,
 		&i.SpriteCount,
 		&i.SpriteIntervalMs,
+		&i.VaultAt,
 	)
 	return i, err
 }
@@ -697,7 +699,7 @@ func (q *Queries) ListAlbums(ctx context.Context, userID pgtype.UUID) ([]ListAlb
 const listCameras = `-- name: ListCameras :many
 SELECT DISTINCT trim(coalesce(e.make, '') || ' ' || coalesce(e.model, ''))::text AS camera
 FROM exif e JOIN assets a ON a.id = e.asset_id
-WHERE a.user_id = $1 AND a.deleted_at IS NULL AND (e.make IS NOT NULL OR e.model IS NOT NULL)
+WHERE a.user_id = $1 AND a.deleted_at IS NULL AND a.vault_at IS NULL AND (e.make IS NOT NULL OR e.model IS NOT NULL)
 ORDER BY 1
 `
 
@@ -913,7 +915,7 @@ func (q *Queries) ListPartnersReceived(ctx context.Context, partnerID pgtype.UUI
 }
 
 const listVisibleAssets = `-- name: ListVisibleAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
 `
 
 type ListVisibleAssetsParams struct {
@@ -962,6 +964,7 @@ func (q *Queries) ListVisibleAssets(ctx context.Context, arg ListVisibleAssetsPa
 			&i.SpriteRows,
 			&i.SpriteCount,
 			&i.SpriteIntervalMs,
+			&i.VaultAt,
 		); err != nil {
 			return nil, err
 		}
@@ -977,7 +980,7 @@ const partnerBucket = `-- name: PartnerBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
 FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND ($2::timestamp IS NULL OR a.local_at >= $2)
   AND a.local_at >= $3 AND a.local_at < $4
 ORDER BY a.local_at DESC, a.id DESC
@@ -1044,7 +1047,7 @@ func (q *Queries) PartnerBucket(ctx context.Context, arg PartnerBucketParams) ([
 const partnerBuckets = `-- name: PartnerBuckets :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND ($2::timestamp IS NULL OR a.local_at >= $2)
 GROUP BY 1
 ORDER BY 1 DESC
@@ -1233,7 +1236,7 @@ const timelineBucketWithPartners = `-- name: TimelineBucketWithPartners :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
 FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND a.local_at >= $1 AND a.local_at < $2
   AND (a.user_id = $3 OR EXISTS (
       SELECT 1 FROM partner_shares ps
@@ -1297,7 +1300,7 @@ func (q *Queries) TimelineBucketWithPartners(ctx context.Context, arg TimelineBu
 const timelineBucketsWithPartners = `-- name: TimelineBucketsWithPartners :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND (a.user_id = $1 OR EXISTS (
       SELECT 1 FROM partner_shares ps
       WHERE ps.owner_id = a.user_id AND ps.partner_id = $1 AND ps.in_timeline

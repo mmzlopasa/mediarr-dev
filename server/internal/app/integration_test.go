@@ -741,7 +741,7 @@ func TestMigrationsGoDownAndUp(t *testing.T) {
 	s := newStack(t)
 	ctx := context.Background()
 	// Every schema migration after the first must be able to go down.
-	for range 4 {
+	for range 5 {
 		if err := db.MigrateDown(ctx, s.dbURL); err != nil {
 			t.Fatal(err)
 		}

@@ -91,6 +91,7 @@ type Asset struct {
 	SpriteRows         pgtype.Int4
 	SpriteCount        pgtype.Int4
 	SpriteIntervalMs   pgtype.Int4
+	VaultAt            pgtype.Timestamptz
 }
 
 type AssetFile struct {
@@ -99,6 +100,11 @@ type AssetFile struct {
 	Path      string
 	SizeBytes int64
 	CreatedAt pgtype.Timestamptz
+}
+
+type AssetTag struct {
+	AssetID pgtype.UUID
+	TagID   pgtype.UUID
 }
 
 type Exif struct {
@@ -169,6 +175,13 @@ type SystemState struct {
 	UpdatedAt pgtype.Timestamptz
 }
 
+type Tag struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	Name      string
+	CreatedAt pgtype.Timestamptz
+}
+
 type User struct {
 	ID           pgtype.UUID
 	Email        string
@@ -180,4 +193,11 @@ type User struct {
 	TotpLastStep int64
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
+	VaultPinHash pgtype.Text
+}
+
+type VaultSession struct {
+	TokenHash []byte
+	UserID    pgtype.UUID
+	ExpiresAt pgtype.Timestamptz
 }

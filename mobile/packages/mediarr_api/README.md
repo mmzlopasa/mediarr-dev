@@ -64,6 +64,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 *DefaultApi* | [**bulkAssets**](doc//DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
 *DefaultApi* | [**cancelUpload**](doc//DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
+*DefaultApi* | [**changeAssetTags**](doc//DefaultApi.md#changeassettags) | **POST** /api/assets/tags | Add a tag to the user's own assets, or remove it
 *DefaultApi* | [**changePassword**](doc//DefaultApi.md#changepassword) | **POST** /api/me/password | Change the current user's password and end their other sessions
 *DefaultApi* | [**checkAssets**](doc//DefaultApi.md#checkassets) | **POST** /api/assets/check | Report which SHA-256 checksums the current user already has, so uploads can be skipped
 *DefaultApi* | [**createAlbum**](doc//DefaultApi.md#createalbum) | **POST** /api/albums | Create an album. With rules it is a smart album.
@@ -76,8 +77,10 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteAlbum**](doc//DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 *DefaultApi* | [**deleteAlbumComment**](doc//DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
+*DefaultApi* | [**deleteTag**](doc//DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
 *DefaultApi* | [**disableTotp**](doc//DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 *DefaultApi* | [**downloadAssets**](doc//DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
+*DefaultApi* | [**emptyTrash**](doc//DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 *DefaultApi* | [**enableTotp**](doc//DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
 *DefaultApi* | [**getAdminOverview**](doc//DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
 *DefaultApi* | [**getAlbum**](doc//DefaultApi.md#getalbum) | **GET** /api/albums/{id} | Read an album and its members
@@ -89,6 +92,13 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAssetThumbnail**](doc//DefaultApi.md#getassetthumbnail) | **GET** /api/assets/{id}/thumbnail | Read a WebP thumbnail
 *DefaultApi* | [**getAssetVideoFile**](doc//DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
+*DefaultApi* | [**getCollectionAsset**](doc//DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
+*DefaultApi* | [**getCollectionBucket**](doc//DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
+*DefaultApi* | [**getCollectionBuckets**](doc//DefaultApi.md#getcollectionbuckets) | **GET** /api/collections/{scope}/buckets | Months in the archive, the trash or the unlocked vault
+*DefaultApi* | [**getCollectionMotion**](doc//DefaultApi.md#getcollectionmotion) | **GET** /api/collections/{scope}/assets/{id}/motion | The video inside a Motion Photo in a collection
+*DefaultApi* | [**getCollectionOriginal**](doc//DefaultApi.md#getcollectionoriginal) | **GET** /api/collections/{scope}/assets/{id}/original | The original of an asset in a collection
+*DefaultApi* | [**getCollectionThumbnail**](doc//DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
+*DefaultApi* | [**getCollectionVideoFile**](doc//DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
 *DefaultApi* | [**getPartnerBucket**](doc//DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 *DefaultApi* | [**getPartnerBuckets**](doc//DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
@@ -100,9 +110,12 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getPublicOriginal**](doc//DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 *DefaultApi* | [**getPublicThumbnail**](doc//DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 *DefaultApi* | [**getPublicVideoFile**](doc//DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+*DefaultApi* | [**getTagBucket**](doc//DefaultApi.md#gettagbucket) | **GET** /api/tags/{id}/buckets/{month} | Photos carrying a tag in one month
+*DefaultApi* | [**getTagBuckets**](doc//DefaultApi.md#gettagbuckets) | **GET** /api/tags/{id}/buckets | Months with photos carrying a tag
 *DefaultApi* | [**getTimelineBucket**](doc//DefaultApi.md#gettimelinebucket) | **GET** /api/timeline/buckets/{month} | List one month's assets, newest first
 *DefaultApi* | [**getTimelineBuckets**](doc//DefaultApi.md#gettimelinebuckets) | **GET** /api/timeline/buckets | List the months that have photos, newest first
 *DefaultApi* | [**getUploadOffset**](doc//DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
+*DefaultApi* | [**getVaultStatus**](doc//DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
 *DefaultApi* | [**listAlbumComments**](doc//DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 *DefaultApi* | [**listAlbumLinks**](doc//DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 *DefaultApi* | [**listAlbums**](doc//DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
@@ -110,7 +123,9 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
+*DefaultApi* | [**listTags**](doc//DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 *DefaultApi* | [**listUsers**](doc//DefaultApi.md#listusers) | **GET** /api/admin/users | List users
+*DefaultApi* | [**lockVault**](doc//DefaultApi.md#lockvault) | **POST** /api/vault/lock | Lock the vault again
 *DefaultApi* | [**login**](doc//DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
@@ -122,9 +137,11 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 *DefaultApi* | [**setPartnerTimeline**](doc//DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
+*DefaultApi* | [**setVaultPin**](doc//DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 *DefaultApi* | [**setup**](doc//DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 *DefaultApi* | [**setupTotp**](doc//DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
 *DefaultApi* | [**unlockPublicLink**](doc//DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
+*DefaultApi* | [**unlockVault**](doc//DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 *DefaultApi* | [**updateAlbum**](doc//DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
 
 
@@ -142,6 +159,7 @@ Class | Method | HTTP request | Description
  - [AssetDetail](doc//AssetDetail.md)
  - [AssetIds](doc//AssetIds.md)
  - [AssetList](doc//AssetList.md)
+ - [AssetTagChange](doc//AssetTagChange.md)
  - [AuthStatus](doc//AuthStatus.md)
  - [BulkRequest](doc//BulkRequest.md)
  - [BulkResponse](doc//BulkResponse.md)
@@ -169,6 +187,7 @@ Class | Method | HTTP request | Description
  - [ShareLink](doc//ShareLink.md)
  - [ShareLinkCreate](doc//ShareLinkCreate.md)
  - [Sprite](doc//Sprite.md)
+ - [Tag](doc//Tag.md)
  - [TimelineBucket](doc//TimelineBucket.md)
  - [TimelineBuckets](doc//TimelineBuckets.md)
  - [TimelineBucketsBucketsInner](doc//TimelineBucketsBucketsInner.md)
@@ -177,6 +196,10 @@ Class | Method | HTTP request | Description
  - [TotpSetup](doc//TotpSetup.md)
  - [User](doc//User.md)
  - [UserRef](doc//UserRef.md)
+ - [VaultPinChange](doc//VaultPinChange.md)
+ - [VaultSession](doc//VaultSession.md)
+ - [VaultStatus](doc//VaultStatus.md)
+ - [VaultUnlock](doc//VaultUnlock.md)
 
 
 ## Documentation For Authorization

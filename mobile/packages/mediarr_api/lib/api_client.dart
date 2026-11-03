@@ -253,6 +253,8 @@ class ApiClient {
           return AssetIds.fromJson(value);
         case 'AssetList':
           return AssetList.fromJson(value);
+        case 'AssetTagChange':
+          return AssetTagChange.fromJson(value);
         case 'AuthStatus':
           return AuthStatus.fromJson(value);
         case 'BulkRequest':
@@ -307,6 +309,8 @@ class ApiClient {
           return ShareLinkCreate.fromJson(value);
         case 'Sprite':
           return Sprite.fromJson(value);
+        case 'Tag':
+          return Tag.fromJson(value);
         case 'TimelineBucket':
           return TimelineBucket.fromJson(value);
         case 'TimelineBuckets':
@@ -323,6 +327,14 @@ class ApiClient {
           return User.fromJson(value);
         case 'UserRef':
           return UserRef.fromJson(value);
+        case 'VaultPinChange':
+          return VaultPinChange.fromJson(value);
+        case 'VaultSession':
+          return VaultSession.fromJson(value);
+        case 'VaultStatus':
+          return VaultStatus.fromJson(value);
+        case 'VaultUnlock':
+          return VaultUnlock.fromJson(value);
         default:
           dynamic match;
           if (value is List &&

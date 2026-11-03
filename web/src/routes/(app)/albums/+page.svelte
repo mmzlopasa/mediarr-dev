@@ -85,6 +85,7 @@
 				{ value: 'date', label: tr('Datum fotki', 'Photo date') }
 			]}
 		/>
+		<Button small href={resolve('/(app)/tags')}>{tr('Oznake', 'Tags')}</Button>
 		<Button small variant="gold" onclick={() => (creating = true)}>
 			<Icon name="plus" size={14} />
 			{tr('Novi album', 'New album')}

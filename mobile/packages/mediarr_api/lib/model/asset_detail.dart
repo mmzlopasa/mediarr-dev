@@ -15,6 +15,7 @@ class AssetDetail {
   AssetDetail({
     this.isOwner,
     this.downloadAllowed,
+    this.tags = const [],
     required this.id,
     required this.originalName,
     required this.kind,
@@ -64,6 +65,9 @@ class AssetDetail {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   bool? downloadAllowed;
+
+  /// Only for the owner
+  List<String> tags;
 
   String id;
 
@@ -260,6 +264,7 @@ class AssetDetail {
       other is AssetDetail &&
           other.isOwner == isOwner &&
           other.downloadAllowed == downloadAllowed &&
+          _deepEquality.equals(other.tags, tags) &&
           other.id == id &&
           other.originalName == originalName &&
           other.kind == kind &&
@@ -296,6 +301,7 @@ class AssetDetail {
       // ignore: unnecessary_parenthesis
       (isOwner == null ? 0 : isOwner!.hashCode) +
       (downloadAllowed == null ? 0 : downloadAllowed!.hashCode) +
+      (tags.hashCode) +
       (id.hashCode) +
       (originalName.hashCode) +
       (kind.hashCode) +
@@ -329,7 +335,7 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, tags=$tags, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -343,6 +349,7 @@ class AssetDetail {
     } else {
       json[r'downloadAllowed'] = null;
     }
+    json[r'tags'] = this.tags;
     json[r'id'] = this.id;
     json[r'originalName'] = this.originalName;
     json[r'kind'] = this.kind;
@@ -483,6 +490,9 @@ class AssetDetail {
       return AssetDetail(
         isOwner: mapValueOfType<bool>(json, r'isOwner'),
         downloadAllowed: mapValueOfType<bool>(json, r'downloadAllowed'),
+        tags: json[r'tags'] is Iterable
+            ? (json[r'tags'] as Iterable).cast<String>().toList(growable: false)
+            : const [],
         id: mapValueOfType<String>(json, r'id')!,
         originalName: mapValueOfType<String>(json, r'originalName')!,
         kind: AssetDetailKindEnum.fromJson(json[r'kind'])!,

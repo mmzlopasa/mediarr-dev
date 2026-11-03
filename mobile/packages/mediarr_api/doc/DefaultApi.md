@@ -13,6 +13,7 @@ Method | HTTP request | Description
 [**appendUpload**](DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 [**bulkAssets**](DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
 [**cancelUpload**](DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
+[**changeAssetTags**](DefaultApi.md#changeassettags) | **POST** /api/assets/tags | Add a tag to the user's own assets, or remove it
 [**changePassword**](DefaultApi.md#changepassword) | **POST** /api/me/password | Change the current user's password and end their other sessions
 [**checkAssets**](DefaultApi.md#checkassets) | **POST** /api/assets/check | Report which SHA-256 checksums the current user already has, so uploads can be skipped
 [**createAlbum**](DefaultApi.md#createalbum) | **POST** /api/albums | Create an album. With rules it is a smart album.
@@ -25,8 +26,10 @@ Method | HTTP request | Description
 [**deleteAlbum**](DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 [**deleteAlbumComment**](DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 [**deleteAlbumLink**](DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
+[**deleteTag**](DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
 [**disableTotp**](DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 [**downloadAssets**](DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
+[**emptyTrash**](DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 [**enableTotp**](DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
 [**getAdminOverview**](DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
 [**getAlbum**](DefaultApi.md#getalbum) | **GET** /api/albums/{id} | Read an album and its members
@@ -38,6 +41,13 @@ Method | HTTP request | Description
 [**getAssetThumbnail**](DefaultApi.md#getassetthumbnail) | **GET** /api/assets/{id}/thumbnail | Read a WebP thumbnail
 [**getAssetVideoFile**](DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
 [**getAuthStatus**](DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
+[**getCollectionAsset**](DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
+[**getCollectionBucket**](DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
+[**getCollectionBuckets**](DefaultApi.md#getcollectionbuckets) | **GET** /api/collections/{scope}/buckets | Months in the archive, the trash or the unlocked vault
+[**getCollectionMotion**](DefaultApi.md#getcollectionmotion) | **GET** /api/collections/{scope}/assets/{id}/motion | The video inside a Motion Photo in a collection
+[**getCollectionOriginal**](DefaultApi.md#getcollectionoriginal) | **GET** /api/collections/{scope}/assets/{id}/original | The original of an asset in a collection
+[**getCollectionThumbnail**](DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
+[**getCollectionVideoFile**](DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
 [**getHealth**](DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
 [**getPartnerBucket**](DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 [**getPartnerBuckets**](DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
@@ -49,9 +59,12 @@ Method | HTTP request | Description
 [**getPublicOriginal**](DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 [**getPublicThumbnail**](DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 [**getPublicVideoFile**](DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+[**getTagBucket**](DefaultApi.md#gettagbucket) | **GET** /api/tags/{id}/buckets/{month} | Photos carrying a tag in one month
+[**getTagBuckets**](DefaultApi.md#gettagbuckets) | **GET** /api/tags/{id}/buckets | Months with photos carrying a tag
 [**getTimelineBucket**](DefaultApi.md#gettimelinebucket) | **GET** /api/timeline/buckets/{month} | List one month's assets, newest first
 [**getTimelineBuckets**](DefaultApi.md#gettimelinebuckets) | **GET** /api/timeline/buckets | List the months that have photos, newest first
 [**getUploadOffset**](DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
+[**getVaultStatus**](DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
 [**listAlbumComments**](DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 [**listAlbumLinks**](DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 [**listAlbums**](DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
@@ -59,7 +72,9 @@ Method | HTTP request | Description
 [**listCameras**](DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 [**listDirectory**](DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 [**listPartners**](DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
+[**listTags**](DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 [**listUsers**](DefaultApi.md#listusers) | **GET** /api/admin/users | List users
+[**lockVault**](DefaultApi.md#lockvault) | **POST** /api/vault/lock | Lock the vault again
 [**login**](DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 [**logout**](DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 [**removeAlbumAssets**](DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
@@ -71,9 +86,11 @@ Method | HTTP request | Description
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 [**setPartner**](DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 [**setPartnerTimeline**](DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
+[**setVaultPin**](DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 [**setup**](DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 [**setupTotp**](DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
 [**unlockPublicLink**](DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
+[**unlockVault**](DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 [**updateAlbum**](DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
 
 
@@ -237,6 +254,47 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **changeAssetTags**
+> BulkResponse changeAssetTags(assetTagChange)
+
+Add a tag to the user's own assets, or remove it
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final assetTagChange = AssetTagChange(); // AssetTagChange | 
+
+try {
+    final result = api_instance.changeAssetTags(assetTagChange);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->changeAssetTags: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **assetTagChange** | [**AssetTagChange**](AssetTagChange.md)|  | 
+
+### Return type
+
+[**BulkResponse**](BulkResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -730,6 +788,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **deleteTag**
+> deleteTag(id)
+
+Delete a tag. The photos stay.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.deleteTag(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->deleteTag: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **disableTotp**
 > disableTotp(passwordConfirm)
 
@@ -808,6 +906,43 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/zip, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **emptyTrash**
+> BulkResponse emptyTrash()
+
+Permanently delete everything in the trash
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.emptyTrash();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->emptyTrash: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**BulkResponse**](BulkResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -1258,6 +1393,311 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCollectionAsset**
+> AssetDetail getCollectionAsset(scope, id)
+
+An asset in a collection
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final scope = scope_example; // String | 
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getCollectionAsset(scope, id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCollectionAsset: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **scope** | **String**|  | 
+ **id** | **String**|  | 
+
+### Return type
+
+[**AssetDetail**](AssetDetail.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCollectionBucket**
+> TimelineBucket getCollectionBucket(scope, month)
+
+Assets of one month in a collection
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final scope = scope_example; // String | 
+final month = month_example; // String | 
+
+try {
+    final result = api_instance.getCollectionBucket(scope, month);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCollectionBucket: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **scope** | **String**|  | 
+ **month** | **String**|  | 
+
+### Return type
+
+[**TimelineBucket**](TimelineBucket.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCollectionBuckets**
+> TimelineBuckets getCollectionBuckets(scope)
+
+Months in the archive, the trash or the unlocked vault
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final scope = scope_example; // String | 
+
+try {
+    final result = api_instance.getCollectionBuckets(scope);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCollectionBuckets: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **scope** | **String**|  | 
+
+### Return type
+
+[**TimelineBuckets**](TimelineBuckets.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCollectionMotion**
+> MultipartFile getCollectionMotion(scope, id)
+
+The video inside a Motion Photo in a collection
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final scope = scope_example; // String | 
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getCollectionMotion(scope, id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCollectionMotion: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **scope** | **String**|  | 
+ **id** | **String**|  | 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: video/mp4, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCollectionOriginal**
+> MultipartFile getCollectionOriginal(scope, id, download)
+
+The original of an asset in a collection
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final scope = scope_example; // String | 
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final download = true; // bool | 
+
+try {
+    final result = api_instance.getCollectionOriginal(scope, id, download);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCollectionOriginal: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **scope** | **String**|  | 
+ **id** | **String**|  | 
+ **download** | **bool**|  | [optional] 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCollectionThumbnail**
+> MultipartFile getCollectionThumbnail(scope, id, size)
+
+A preview of an asset in a collection
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final scope = scope_example; // String | 
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final size = size_example; // String | 
+
+try {
+    final result = api_instance.getCollectionThumbnail(scope, id, size);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCollectionThumbnail: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **scope** | **String**|  | 
+ **id** | **String**|  | 
+ **size** | **String**|  | [optional] [default to 'small']
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: image/webp, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCollectionVideoFile**
+> MultipartFile getCollectionVideoFile(scope, id, file)
+
+HLS files of a video in a collection
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final scope = scope_example; // String | 
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final file = file_example; // String | 
+
+try {
+    final result = api_instance.getCollectionVideoFile(scope, id, file);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCollectionVideoFile: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **scope** | **String**|  | 
+ **id** | **String**|  | 
+ **file** | **String**|  | 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/octet-stream, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -1728,6 +2168,90 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getTagBucket**
+> TimelineBucket getTagBucket(id, month)
+
+Photos carrying a tag in one month
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final month = month_example; // String | 
+
+try {
+    final result = api_instance.getTagBucket(id, month);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getTagBucket: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **month** | **String**|  | 
+
+### Return type
+
+[**TimelineBucket**](TimelineBucket.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getTagBuckets**
+> TimelineBuckets getTagBuckets(id)
+
+Months with photos carrying a tag
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getTagBuckets(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getTagBuckets: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**TimelineBuckets**](TimelineBuckets.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getTimelineBucket**
 > TimelineBucket getTimelineBucket(month)
 
@@ -1843,6 +2367,43 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getVaultStatus**
+> VaultStatus getVaultStatus()
+
+Whether the vault has a PIN and is unlocked
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getVaultStatus();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getVaultStatus: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**VaultStatus**](VaultStatus.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -2125,6 +2686,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listTags**
+> List<Tag> listTags()
+
+The current user's tags
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listTags();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listTags: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<Tag>**](Tag.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listUsers**
 > List<User> listUsers()
 
@@ -2150,6 +2748,42 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**List<User>**](User.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **lockVault**
+> lockVault()
+
+Lock the vault again
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    api_instance.lockVault();
+} catch (e) {
+    print('Exception when calling DefaultApi->lockVault: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+void (empty response body)
 
 ### Authorization
 
@@ -2616,6 +3250,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **setVaultPin**
+> setVaultPin(vaultPinChange)
+
+Set the vault PIN. Changing it needs the current one.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final vaultPinChange = VaultPinChange(); // VaultPinChange | 
+
+try {
+    api_instance.setVaultPin(vaultPinChange);
+} catch (e) {
+    print('Exception when calling DefaultApi->setVaultPin: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **vaultPinChange** | [**VaultPinChange**](VaultPinChange.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **setup**
 > User setup(setupRequest)
 
@@ -2724,6 +3398,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **unlockVault**
+> VaultSession unlockVault(vaultUnlock)
+
+Unlock the vault for a short time
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final vaultUnlock = VaultUnlock(); // VaultUnlock | 
+
+try {
+    final result = api_instance.unlockVault(vaultUnlock);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->unlockVault: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **vaultUnlock** | [**VaultUnlock**](VaultUnlock.md)|  | 
+
+### Return type
+
+[**VaultSession**](VaultSession.md)
 
 ### Authorization
 

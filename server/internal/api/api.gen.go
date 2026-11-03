@@ -202,22 +202,37 @@ func (e AssetDetailStatus) Valid() bool {
 
 // Defines values for BulkRequestAction.
 const (
-	Archive    BulkRequestAction = "archive"
-	Delete     BulkRequestAction = "delete"
-	Favorite   BulkRequestAction = "favorite"
-	Unfavorite BulkRequestAction = "unfavorite"
+	BulkRequestActionArchive    BulkRequestAction = "archive"
+	BulkRequestActionDelete     BulkRequestAction = "delete"
+	BulkRequestActionFavorite   BulkRequestAction = "favorite"
+	BulkRequestActionPurge      BulkRequestAction = "purge"
+	BulkRequestActionRestore    BulkRequestAction = "restore"
+	BulkRequestActionUnarchive  BulkRequestAction = "unarchive"
+	BulkRequestActionUnfavorite BulkRequestAction = "unfavorite"
+	BulkRequestActionUnvault    BulkRequestAction = "unvault"
+	BulkRequestActionVault      BulkRequestAction = "vault"
 )
 
 // Valid indicates whether the value is a known member of the BulkRequestAction enum.
 func (e BulkRequestAction) Valid() bool {
 	switch e {
-	case Archive:
+	case BulkRequestActionArchive:
 		return true
-	case Delete:
+	case BulkRequestActionDelete:
 		return true
-	case Favorite:
+	case BulkRequestActionFavorite:
 		return true
-	case Unfavorite:
+	case BulkRequestActionPurge:
+		return true
+	case BulkRequestActionRestore:
+		return true
+	case BulkRequestActionUnarchive:
+		return true
+	case BulkRequestActionUnfavorite:
+		return true
+	case BulkRequestActionUnvault:
+		return true
+	case BulkRequestActionVault:
 		return true
 	default:
 		return false
@@ -341,6 +356,174 @@ func (e GetAssetThumbnailParamsSize) Valid() bool {
 	case GetAssetThumbnailParamsSizeLarge:
 		return true
 	case GetAssetThumbnailParamsSizeSmall:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCollectionAssetParamsScope.
+const (
+	GetCollectionAssetParamsScopeArchive GetCollectionAssetParamsScope = "archive"
+	GetCollectionAssetParamsScopeTrash   GetCollectionAssetParamsScope = "trash"
+	GetCollectionAssetParamsScopeVault   GetCollectionAssetParamsScope = "vault"
+)
+
+// Valid indicates whether the value is a known member of the GetCollectionAssetParamsScope enum.
+func (e GetCollectionAssetParamsScope) Valid() bool {
+	switch e {
+	case GetCollectionAssetParamsScopeArchive:
+		return true
+	case GetCollectionAssetParamsScopeTrash:
+		return true
+	case GetCollectionAssetParamsScopeVault:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCollectionMotionParamsScope.
+const (
+	GetCollectionMotionParamsScopeArchive GetCollectionMotionParamsScope = "archive"
+	GetCollectionMotionParamsScopeTrash   GetCollectionMotionParamsScope = "trash"
+	GetCollectionMotionParamsScopeVault   GetCollectionMotionParamsScope = "vault"
+)
+
+// Valid indicates whether the value is a known member of the GetCollectionMotionParamsScope enum.
+func (e GetCollectionMotionParamsScope) Valid() bool {
+	switch e {
+	case GetCollectionMotionParamsScopeArchive:
+		return true
+	case GetCollectionMotionParamsScopeTrash:
+		return true
+	case GetCollectionMotionParamsScopeVault:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCollectionOriginalParamsScope.
+const (
+	GetCollectionOriginalParamsScopeArchive GetCollectionOriginalParamsScope = "archive"
+	GetCollectionOriginalParamsScopeTrash   GetCollectionOriginalParamsScope = "trash"
+	GetCollectionOriginalParamsScopeVault   GetCollectionOriginalParamsScope = "vault"
+)
+
+// Valid indicates whether the value is a known member of the GetCollectionOriginalParamsScope enum.
+func (e GetCollectionOriginalParamsScope) Valid() bool {
+	switch e {
+	case GetCollectionOriginalParamsScopeArchive:
+		return true
+	case GetCollectionOriginalParamsScopeTrash:
+		return true
+	case GetCollectionOriginalParamsScopeVault:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCollectionThumbnailParamsSize.
+const (
+	GetCollectionThumbnailParamsSizeFull  GetCollectionThumbnailParamsSize = "full"
+	GetCollectionThumbnailParamsSizeLarge GetCollectionThumbnailParamsSize = "large"
+	GetCollectionThumbnailParamsSizeSmall GetCollectionThumbnailParamsSize = "small"
+)
+
+// Valid indicates whether the value is a known member of the GetCollectionThumbnailParamsSize enum.
+func (e GetCollectionThumbnailParamsSize) Valid() bool {
+	switch e {
+	case GetCollectionThumbnailParamsSizeFull:
+		return true
+	case GetCollectionThumbnailParamsSizeLarge:
+		return true
+	case GetCollectionThumbnailParamsSizeSmall:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCollectionThumbnailParamsScope.
+const (
+	GetCollectionThumbnailParamsScopeArchive GetCollectionThumbnailParamsScope = "archive"
+	GetCollectionThumbnailParamsScopeTrash   GetCollectionThumbnailParamsScope = "trash"
+	GetCollectionThumbnailParamsScopeVault   GetCollectionThumbnailParamsScope = "vault"
+)
+
+// Valid indicates whether the value is a known member of the GetCollectionThumbnailParamsScope enum.
+func (e GetCollectionThumbnailParamsScope) Valid() bool {
+	switch e {
+	case GetCollectionThumbnailParamsScopeArchive:
+		return true
+	case GetCollectionThumbnailParamsScopeTrash:
+		return true
+	case GetCollectionThumbnailParamsScopeVault:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCollectionVideoFileParamsScope.
+const (
+	GetCollectionVideoFileParamsScopeArchive GetCollectionVideoFileParamsScope = "archive"
+	GetCollectionVideoFileParamsScopeTrash   GetCollectionVideoFileParamsScope = "trash"
+	GetCollectionVideoFileParamsScopeVault   GetCollectionVideoFileParamsScope = "vault"
+)
+
+// Valid indicates whether the value is a known member of the GetCollectionVideoFileParamsScope enum.
+func (e GetCollectionVideoFileParamsScope) Valid() bool {
+	switch e {
+	case GetCollectionVideoFileParamsScopeArchive:
+		return true
+	case GetCollectionVideoFileParamsScopeTrash:
+		return true
+	case GetCollectionVideoFileParamsScopeVault:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCollectionBucketsParamsScope.
+const (
+	GetCollectionBucketsParamsScopeArchive GetCollectionBucketsParamsScope = "archive"
+	GetCollectionBucketsParamsScopeTrash   GetCollectionBucketsParamsScope = "trash"
+	GetCollectionBucketsParamsScopeVault   GetCollectionBucketsParamsScope = "vault"
+)
+
+// Valid indicates whether the value is a known member of the GetCollectionBucketsParamsScope enum.
+func (e GetCollectionBucketsParamsScope) Valid() bool {
+	switch e {
+	case GetCollectionBucketsParamsScopeArchive:
+		return true
+	case GetCollectionBucketsParamsScopeTrash:
+		return true
+	case GetCollectionBucketsParamsScopeVault:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCollectionBucketParamsScope.
+const (
+	GetCollectionBucketParamsScopeArchive GetCollectionBucketParamsScope = "archive"
+	GetCollectionBucketParamsScopeTrash   GetCollectionBucketParamsScope = "trash"
+	GetCollectionBucketParamsScopeVault   GetCollectionBucketParamsScope = "vault"
+)
+
+// Valid indicates whether the value is a known member of the GetCollectionBucketParamsScope enum.
+func (e GetCollectionBucketParamsScope) Valid() bool {
+	switch e {
+	case GetCollectionBucketParamsScopeArchive:
+		return true
+	case GetCollectionBucketParamsScopeTrash:
+		return true
+	case GetCollectionBucketParamsScopeVault:
 		return true
 	default:
 		return false
@@ -533,8 +716,11 @@ type AssetDetail struct {
 	SizeBytes     int64               `json:"sizeBytes"`
 	Sprite        *Sprite             `json:"sprite,omitempty"`
 	Status        AssetDetailStatus   `json:"status"`
-	VideoCodec    *string             `json:"videoCodec,omitempty"`
-	Width         *int                `json:"width,omitempty"`
+
+	// Tags Only for the owner
+	Tags       *[]string `json:"tags,omitempty"`
+	VideoCodec *string   `json:"videoCodec,omitempty"`
+	Width      *int      `json:"width,omitempty"`
 }
 
 // AssetDetailKind defines model for AssetDetail.Kind.
@@ -554,6 +740,13 @@ type AssetList struct {
 	Items      []Asset `json:"items"`
 	Processing int64   `json:"processing"`
 	Total      int64   `json:"total"`
+}
+
+// AssetTagChange defines model for AssetTagChange.
+type AssetTagChange struct {
+	Ids    []openapi_types.UUID `json:"ids"`
+	Name   string               `json:"name"`
+	Remove *bool                `json:"remove,omitempty"`
 }
 
 // AuthStatus defines model for AuthStatus.
@@ -755,6 +948,13 @@ type Sprite struct {
 	Rows       int `json:"rows"`
 }
 
+// Tag defines model for Tag.
+type Tag struct {
+	AssetCount int64              `json:"assetCount"`
+	Id         openapi_types.UUID `json:"id"`
+	Name       string             `json:"name"`
+}
+
 // TimelineBucket defines model for TimelineBucket.
 type TimelineBucket struct {
 	Items []TimelineItem `json:"items"`
@@ -817,6 +1017,28 @@ type UserRef struct {
 	Name string             `json:"name"`
 }
 
+// VaultPinChange defines model for VaultPinChange.
+type VaultPinChange struct {
+	CurrentPin *string `json:"currentPin,omitempty"`
+	Pin        string  `json:"pin"`
+}
+
+// VaultSession defines model for VaultSession.
+type VaultSession struct {
+	Token string `json:"token"`
+}
+
+// VaultStatus defines model for VaultStatus.
+type VaultStatus struct {
+	HasPin   bool `json:"hasPin"`
+	Unlocked bool `json:"unlocked"`
+}
+
+// VaultUnlock defines model for VaultUnlock.
+type VaultUnlock struct {
+	Pin string `json:"pin"`
+}
+
 // ListAlbumsParams defines parameters for ListAlbums.
 type ListAlbumsParams struct {
 	Sort *ListAlbumsParamsSort `form:"sort,omitempty" json:"sort,omitempty"`
@@ -857,6 +1079,40 @@ type GetAssetThumbnailParams struct {
 
 // GetAssetThumbnailParamsSize defines parameters for GetAssetThumbnail.
 type GetAssetThumbnailParamsSize string
+
+// GetCollectionAssetParamsScope defines parameters for GetCollectionAsset.
+type GetCollectionAssetParamsScope string
+
+// GetCollectionMotionParamsScope defines parameters for GetCollectionMotion.
+type GetCollectionMotionParamsScope string
+
+// GetCollectionOriginalParams defines parameters for GetCollectionOriginal.
+type GetCollectionOriginalParams struct {
+	Download *bool `form:"download,omitempty" json:"download,omitempty"`
+}
+
+// GetCollectionOriginalParamsScope defines parameters for GetCollectionOriginal.
+type GetCollectionOriginalParamsScope string
+
+// GetCollectionThumbnailParams defines parameters for GetCollectionThumbnail.
+type GetCollectionThumbnailParams struct {
+	Size *GetCollectionThumbnailParamsSize `form:"size,omitempty" json:"size,omitempty"`
+}
+
+// GetCollectionThumbnailParamsSize defines parameters for GetCollectionThumbnail.
+type GetCollectionThumbnailParamsSize string
+
+// GetCollectionThumbnailParamsScope defines parameters for GetCollectionThumbnail.
+type GetCollectionThumbnailParamsScope string
+
+// GetCollectionVideoFileParamsScope defines parameters for GetCollectionVideoFile.
+type GetCollectionVideoFileParamsScope string
+
+// GetCollectionBucketsParamsScope defines parameters for GetCollectionBuckets.
+type GetCollectionBucketsParamsScope string
+
+// GetCollectionBucketParamsScope defines parameters for GetCollectionBucket.
+type GetCollectionBucketParamsScope string
 
 // GetPublicOriginalParams defines parameters for GetPublicOriginal.
 type GetPublicOriginalParams struct {
@@ -901,6 +1157,9 @@ type BulkAssetsJSONRequestBody = BulkRequest
 // CheckAssetsJSONRequestBody defines body for CheckAssets for application/json ContentType.
 type CheckAssetsJSONRequestBody = ChecksumCheckRequest
 
+// ChangeAssetTagsJSONRequestBody defines body for ChangeAssetTags for application/json ContentType.
+type ChangeAssetTagsJSONRequestBody = AssetTagChange
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
 
@@ -927,6 +1186,12 @@ type SetPartnerTimelineJSONRequestBody = PartnerTimeline
 
 // UnlockPublicLinkJSONRequestBody defines body for UnlockPublicLink for application/json ContentType.
 type UnlockPublicLinkJSONRequestBody = LinkPassword
+
+// SetVaultPinJSONRequestBody defines body for SetVaultPin for application/json ContentType.
+type SetVaultPinJSONRequestBody = VaultPinChange
+
+// UnlockVaultJSONRequestBody defines body for UnlockVault for application/json ContentType.
+type UnlockVaultJSONRequestBody = VaultUnlock
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -1011,6 +1276,9 @@ type ServerInterface interface {
 	// DownloadAssets Download several originals as one uncompressed ZIP file
 	// (GET /api/assets/download)
 	DownloadAssets(w http.ResponseWriter, r *http.Request, params DownloadAssetsParams)
+	// ChangeAssetTags Add a tag to the user's own assets, or remove it
+	// (POST /api/assets/tags)
+	ChangeAssetTags(w http.ResponseWriter, r *http.Request)
 	// GetAsset Read an asset's details and its neighbours on the timeline
 	// (GET /api/assets/{id})
 	GetAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -1038,6 +1306,27 @@ type ServerInterface interface {
 	// GetAuthStatus Report whether setup is needed and who is signed in
 	// (GET /api/auth/status)
 	GetAuthStatus(w http.ResponseWriter, r *http.Request)
+	// GetCollectionAsset An asset in a collection
+	// (GET /api/collections/{scope}/assets/{id})
+	GetCollectionAsset(w http.ResponseWriter, r *http.Request, scope GetCollectionAssetParamsScope, id openapi_types.UUID)
+	// GetCollectionMotion The video inside a Motion Photo in a collection
+	// (GET /api/collections/{scope}/assets/{id}/motion)
+	GetCollectionMotion(w http.ResponseWriter, r *http.Request, scope GetCollectionMotionParamsScope, id openapi_types.UUID)
+	// GetCollectionOriginal The original of an asset in a collection
+	// (GET /api/collections/{scope}/assets/{id}/original)
+	GetCollectionOriginal(w http.ResponseWriter, r *http.Request, scope GetCollectionOriginalParamsScope, id openapi_types.UUID, params GetCollectionOriginalParams)
+	// GetCollectionThumbnail A preview of an asset in a collection
+	// (GET /api/collections/{scope}/assets/{id}/thumbnail)
+	GetCollectionThumbnail(w http.ResponseWriter, r *http.Request, scope GetCollectionThumbnailParamsScope, id openapi_types.UUID, params GetCollectionThumbnailParams)
+	// GetCollectionVideoFile HLS files of a video in a collection
+	// (GET /api/collections/{scope}/assets/{id}/video/{file})
+	GetCollectionVideoFile(w http.ResponseWriter, r *http.Request, scope GetCollectionVideoFileParamsScope, id openapi_types.UUID, file string)
+	// GetCollectionBuckets Months in the archive, the trash or the unlocked vault
+	// (GET /api/collections/{scope}/buckets)
+	GetCollectionBuckets(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketsParamsScope)
+	// GetCollectionBucket Assets of one month in a collection
+	// (GET /api/collections/{scope}/buckets/{month})
+	GetCollectionBucket(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketParamsScope, month string)
 	// CreateDeviceKey Create a long-lived key for this device, used by background backup
 	// (POST /api/me/device-keys)
 	CreateDeviceKey(w http.ResponseWriter, r *http.Request)
@@ -1104,12 +1393,27 @@ type ServerInterface interface {
 	// CreatePublicUpload Send one whole file to a public album (tus 1.0 creation with upload)
 	// (POST /api/public/{token}/uploads)
 	CreatePublicUpload(w http.ResponseWriter, r *http.Request, token string)
+	// ListTags The current user's tags
+	// (GET /api/tags)
+	ListTags(w http.ResponseWriter, r *http.Request)
+	// DeleteTag Delete a tag. The photos stay.
+	// (DELETE /api/tags/{id})
+	DeleteTag(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetTagBuckets Months with photos carrying a tag
+	// (GET /api/tags/{id}/buckets)
+	GetTagBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetTagBucket Photos carrying a tag in one month
+	// (GET /api/tags/{id}/buckets/{month})
+	GetTagBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string)
 	// GetTimelineBuckets List the months that have photos, newest first
 	// (GET /api/timeline/buckets)
 	GetTimelineBuckets(w http.ResponseWriter, r *http.Request)
 	// GetTimelineBucket List one month's assets, newest first
 	// (GET /api/timeline/buckets/{month})
 	GetTimelineBucket(w http.ResponseWriter, r *http.Request, month string)
+	// EmptyTrash Permanently delete everything in the trash
+	// (POST /api/trash/empty)
+	EmptyTrash(w http.ResponseWriter, r *http.Request)
 	// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 	// (POST /api/uploads)
 	CreateUpload(w http.ResponseWriter, r *http.Request)
@@ -1125,6 +1429,18 @@ type ServerInterface interface {
 	// ListDirectory The other users of this server, for choosing who to share with
 	// (GET /api/users/directory)
 	ListDirectory(w http.ResponseWriter, r *http.Request)
+	// LockVault Lock the vault again
+	// (POST /api/vault/lock)
+	LockVault(w http.ResponseWriter, r *http.Request)
+	// SetVaultPin Set the vault PIN. Changing it needs the current one.
+	// (POST /api/vault/pin)
+	SetVaultPin(w http.ResponseWriter, r *http.Request)
+	// GetVaultStatus Whether the vault has a PIN and is unlocked
+	// (GET /api/vault/status)
+	GetVaultStatus(w http.ResponseWriter, r *http.Request)
+	// UnlockVault Unlock the vault for a short time
+	// (POST /api/vault/unlock)
+	UnlockVault(w http.ResponseWriter, r *http.Request)
 	// GetHealth Report whether the server can reach its database
 	// (GET /health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
@@ -1296,6 +1612,12 @@ func (_ Unimplemented) DownloadAssets(w http.ResponseWriter, r *http.Request, pa
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ChangeAssetTags Add a tag to the user's own assets, or remove it
+// (POST /api/assets/tags)
+func (_ Unimplemented) ChangeAssetTags(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetAsset Read an asset's details and its neighbours on the timeline
 // (GET /api/assets/{id})
 func (_ Unimplemented) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
@@ -1347,6 +1669,48 @@ func (_ Unimplemented) Setup(w http.ResponseWriter, r *http.Request) {
 // GetAuthStatus Report whether setup is needed and who is signed in
 // (GET /api/auth/status)
 func (_ Unimplemented) GetAuthStatus(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCollectionAsset An asset in a collection
+// (GET /api/collections/{scope}/assets/{id})
+func (_ Unimplemented) GetCollectionAsset(w http.ResponseWriter, r *http.Request, scope GetCollectionAssetParamsScope, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCollectionMotion The video inside a Motion Photo in a collection
+// (GET /api/collections/{scope}/assets/{id}/motion)
+func (_ Unimplemented) GetCollectionMotion(w http.ResponseWriter, r *http.Request, scope GetCollectionMotionParamsScope, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCollectionOriginal The original of an asset in a collection
+// (GET /api/collections/{scope}/assets/{id}/original)
+func (_ Unimplemented) GetCollectionOriginal(w http.ResponseWriter, r *http.Request, scope GetCollectionOriginalParamsScope, id openapi_types.UUID, params GetCollectionOriginalParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCollectionThumbnail A preview of an asset in a collection
+// (GET /api/collections/{scope}/assets/{id}/thumbnail)
+func (_ Unimplemented) GetCollectionThumbnail(w http.ResponseWriter, r *http.Request, scope GetCollectionThumbnailParamsScope, id openapi_types.UUID, params GetCollectionThumbnailParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCollectionVideoFile HLS files of a video in a collection
+// (GET /api/collections/{scope}/assets/{id}/video/{file})
+func (_ Unimplemented) GetCollectionVideoFile(w http.ResponseWriter, r *http.Request, scope GetCollectionVideoFileParamsScope, id openapi_types.UUID, file string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCollectionBuckets Months in the archive, the trash or the unlocked vault
+// (GET /api/collections/{scope}/buckets)
+func (_ Unimplemented) GetCollectionBuckets(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketsParamsScope) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCollectionBucket Assets of one month in a collection
+// (GET /api/collections/{scope}/buckets/{month})
+func (_ Unimplemented) GetCollectionBucket(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketParamsScope, month string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1482,6 +1846,30 @@ func (_ Unimplemented) CreatePublicUpload(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListTags The current user's tags
+// (GET /api/tags)
+func (_ Unimplemented) ListTags(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteTag Delete a tag. The photos stay.
+// (DELETE /api/tags/{id})
+func (_ Unimplemented) DeleteTag(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetTagBuckets Months with photos carrying a tag
+// (GET /api/tags/{id}/buckets)
+func (_ Unimplemented) GetTagBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetTagBucket Photos carrying a tag in one month
+// (GET /api/tags/{id}/buckets/{month})
+func (_ Unimplemented) GetTagBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetTimelineBuckets List the months that have photos, newest first
 // (GET /api/timeline/buckets)
 func (_ Unimplemented) GetTimelineBuckets(w http.ResponseWriter, r *http.Request) {
@@ -1491,6 +1879,12 @@ func (_ Unimplemented) GetTimelineBuckets(w http.ResponseWriter, r *http.Request
 // GetTimelineBucket List one month's assets, newest first
 // (GET /api/timeline/buckets/{month})
 func (_ Unimplemented) GetTimelineBucket(w http.ResponseWriter, r *http.Request, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// EmptyTrash Permanently delete everything in the trash
+// (POST /api/trash/empty)
+func (_ Unimplemented) EmptyTrash(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1521,6 +1915,30 @@ func (_ Unimplemented) AppendUpload(w http.ResponseWriter, r *http.Request, id s
 // ListDirectory The other users of this server, for choosing who to share with
 // (GET /api/users/directory)
 func (_ Unimplemented) ListDirectory(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// LockVault Lock the vault again
+// (POST /api/vault/lock)
+func (_ Unimplemented) LockVault(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetVaultPin Set the vault PIN. Changing it needs the current one.
+// (POST /api/vault/pin)
+func (_ Unimplemented) SetVaultPin(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetVaultStatus Whether the vault has a PIN and is unlocked
+// (GET /api/vault/status)
+func (_ Unimplemented) GetVaultStatus(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UnlockVault Unlock the vault for a short time
+// (POST /api/vault/unlock)
+func (_ Unimplemented) UnlockVault(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2270,6 +2688,20 @@ func (siw *ServerInterfaceWrapper) DownloadAssets(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// ChangeAssetTags operation middleware
+func (siw *ServerInterfaceWrapper) ChangeAssetTags(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ChangeAssetTags(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetAsset operation middleware
 func (siw *ServerInterfaceWrapper) GetAsset(w http.ResponseWriter, r *http.Request) {
 
@@ -2488,6 +2920,283 @@ func (siw *ServerInterfaceWrapper) GetAuthStatus(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAuthStatus(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCollectionAsset operation middleware
+func (siw *ServerInterfaceWrapper) GetCollectionAsset(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "scope" -------------
+	var scope GetCollectionAssetParamsScope
+
+	err = runtime.BindStyledParameterWithOptions("simple", "scope", chi.URLParam(r, "scope"), &scope, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCollectionAsset(w, r, scope, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCollectionMotion operation middleware
+func (siw *ServerInterfaceWrapper) GetCollectionMotion(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "scope" -------------
+	var scope GetCollectionMotionParamsScope
+
+	err = runtime.BindStyledParameterWithOptions("simple", "scope", chi.URLParam(r, "scope"), &scope, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCollectionMotion(w, r, scope, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCollectionOriginal operation middleware
+func (siw *ServerInterfaceWrapper) GetCollectionOriginal(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "scope" -------------
+	var scope GetCollectionOriginalParamsScope
+
+	err = runtime.BindStyledParameterWithOptions("simple", "scope", chi.URLParam(r, "scope"), &scope, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetCollectionOriginalParams
+
+	// ------------- Optional query parameter "download" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "download", r.URL.Query(), &params.Download, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "download"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "download", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCollectionOriginal(w, r, scope, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCollectionThumbnail operation middleware
+func (siw *ServerInterfaceWrapper) GetCollectionThumbnail(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "scope" -------------
+	var scope GetCollectionThumbnailParamsScope
+
+	err = runtime.BindStyledParameterWithOptions("simple", "scope", chi.URLParam(r, "scope"), &scope, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetCollectionThumbnailParams
+
+	// ------------- Optional query parameter "size" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "size", r.URL.Query(), &params.Size, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "size"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "size", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCollectionThumbnail(w, r, scope, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCollectionVideoFile operation middleware
+func (siw *ServerInterfaceWrapper) GetCollectionVideoFile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "scope" -------------
+	var scope GetCollectionVideoFileParamsScope
+
+	err = runtime.BindStyledParameterWithOptions("simple", "scope", chi.URLParam(r, "scope"), &scope, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "file" -------------
+	var file string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "file", chi.URLParam(r, "file"), &file, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "file", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCollectionVideoFile(w, r, scope, id, file)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCollectionBuckets operation middleware
+func (siw *ServerInterfaceWrapper) GetCollectionBuckets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "scope" -------------
+	var scope GetCollectionBucketsParamsScope
+
+	err = runtime.BindStyledParameterWithOptions("simple", "scope", chi.URLParam(r, "scope"), &scope, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCollectionBuckets(w, r, scope)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCollectionBucket operation middleware
+func (siw *ServerInterfaceWrapper) GetCollectionBucket(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "scope" -------------
+	var scope GetCollectionBucketParamsScope
+
+	err = runtime.BindStyledParameterWithOptions("simple", "scope", chi.URLParam(r, "scope"), &scope, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "scope", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "month" -------------
+	var month string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "month", chi.URLParam(r, "month"), &month, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCollectionBucket(w, r, scope, month)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3101,6 +3810,107 @@ func (siw *ServerInterfaceWrapper) CreatePublicUpload(w http.ResponseWriter, r *
 	handler.ServeHTTP(w, r)
 }
 
+// ListTags operation middleware
+func (siw *ServerInterfaceWrapper) ListTags(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListTags(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteTag operation middleware
+func (siw *ServerInterfaceWrapper) DeleteTag(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteTag(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTagBuckets operation middleware
+func (siw *ServerInterfaceWrapper) GetTagBuckets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTagBuckets(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTagBucket operation middleware
+func (siw *ServerInterfaceWrapper) GetTagBucket(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "month" -------------
+	var month string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "month", chi.URLParam(r, "month"), &month, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTagBucket(w, r, id, month)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetTimelineBuckets operation middleware
 func (siw *ServerInterfaceWrapper) GetTimelineBuckets(w http.ResponseWriter, r *http.Request) {
 
@@ -3132,6 +3942,20 @@ func (siw *ServerInterfaceWrapper) GetTimelineBucket(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetTimelineBucket(w, r, month)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// EmptyTrash operation middleware
+func (siw *ServerInterfaceWrapper) EmptyTrash(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EmptyTrash(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3238,6 +4062,62 @@ func (siw *ServerInterfaceWrapper) ListDirectory(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListDirectory(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// LockVault operation middleware
+func (siw *ServerInterfaceWrapper) LockVault(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LockVault(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetVaultPin operation middleware
+func (siw *ServerInterfaceWrapper) SetVaultPin(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetVaultPin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetVaultStatus operation middleware
+func (siw *ServerInterfaceWrapper) GetVaultStatus(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetVaultStatus(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UnlockVault operation middleware
+func (siw *ServerInterfaceWrapper) UnlockVault(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UnlockVault(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3571,6 +4451,57 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/public/{token}/uploads", wrapper.CreatePublicUpload)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/collections/{scope}/buckets", wrapper.GetCollectionBuckets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/collections/{scope}/buckets/{month}", wrapper.GetCollectionBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/collections/{scope}/assets/{id}", wrapper.GetCollectionAsset)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/collections/{scope}/assets/{id}/thumbnail", wrapper.GetCollectionThumbnail)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/collections/{scope}/assets/{id}/original", wrapper.GetCollectionOriginal)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/collections/{scope}/assets/{id}/motion", wrapper.GetCollectionMotion)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/collections/{scope}/assets/{id}/video/{file}", wrapper.GetCollectionVideoFile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/trash/empty", wrapper.EmptyTrash)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/vault/status", wrapper.GetVaultStatus)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/vault/pin", wrapper.SetVaultPin)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/vault/unlock", wrapper.UnlockVault)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/vault/lock", wrapper.LockVault)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/tags", wrapper.ListTags)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/tags/{id}", wrapper.DeleteTag)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/tags/{id}/buckets", wrapper.GetTagBuckets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/tags/{id}/buckets/{month}", wrapper.GetTagBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/assets/tags", wrapper.ChangeAssetTags)
 	})
 
 	return r

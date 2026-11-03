@@ -241,6 +241,66 @@ class DefaultApi {
     }
   }
 
+  /// Add a tag to the user's own assets, or remove it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [AssetTagChange] assetTagChange (required):
+  Future<Response> changeAssetTagsWithHttpInfo(
+    AssetTagChange assetTagChange,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/tags';
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetTagChange;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Add a tag to the user's own assets, or remove it
+  ///
+  /// Parameters:
+  ///
+  /// * [AssetTagChange] assetTagChange (required):
+  Future<BulkResponse?> changeAssetTags(
+    AssetTagChange assetTagChange,
+  ) async {
+    final response = await changeAssetTagsWithHttpInfo(
+      assetTagChange,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BulkResponse',
+      ) as BulkResponse;
+    }
+    return null;
+  }
+
   /// Change the current user's password and end their other sessions
   ///
   /// Note: This method returns the HTTP [Response].
@@ -902,6 +962,55 @@ class DefaultApi {
     }
   }
 
+  /// Delete a tag. The photos stay.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteTagWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/tags/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Delete a tag. The photos stay.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteTag(
+    String id,
+  ) async {
+    final response = await deleteTagWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Turn off TOTP
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1011,6 +1120,52 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'MultipartFile',
       ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// Permanently delete everything in the trash
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> emptyTrashWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/trash/empty';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Permanently delete everything in the trash
+  Future<BulkResponse?> emptyTrash() async {
+    final response = await emptyTrashWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BulkResponse',
+      ) as BulkResponse;
     }
     return null;
   }
@@ -1672,6 +1827,511 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'AuthStatus',
       ) as AuthStatus;
+    }
+    return null;
+  }
+
+  /// An asset in a collection
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> getCollectionAssetWithHttpInfo(
+    String scope,
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/collections/{scope}/assets/{id}'
+        .replaceAll('{scope}', scope)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// An asset in a collection
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  Future<AssetDetail?> getCollectionAsset(
+    String scope,
+    String id,
+  ) async {
+    final response = await getCollectionAssetWithHttpInfo(
+      scope,
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AssetDetail',
+      ) as AssetDetail;
+    }
+    return null;
+  }
+
+  /// Assets of one month in a collection
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] month (required):
+  Future<Response> getCollectionBucketWithHttpInfo(
+    String scope,
+    String month,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/collections/{scope}/buckets/{month}'
+        .replaceAll('{scope}', scope)
+        .replaceAll('{month}', month);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Assets of one month in a collection
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] month (required):
+  Future<TimelineBucket?> getCollectionBucket(
+    String scope,
+    String month,
+  ) async {
+    final response = await getCollectionBucketWithHttpInfo(
+      scope,
+      month,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBucket',
+      ) as TimelineBucket;
+    }
+    return null;
+  }
+
+  /// Months in the archive, the trash or the unlocked vault
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  Future<Response> getCollectionBucketsWithHttpInfo(
+    String scope,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/collections/{scope}/buckets'.replaceAll('{scope}', scope);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Months in the archive, the trash or the unlocked vault
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  Future<TimelineBuckets?> getCollectionBuckets(
+    String scope,
+  ) async {
+    final response = await getCollectionBucketsWithHttpInfo(
+      scope,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBuckets',
+      ) as TimelineBuckets;
+    }
+    return null;
+  }
+
+  /// The video inside a Motion Photo in a collection
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> getCollectionMotionWithHttpInfo(
+    String scope,
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/collections/{scope}/assets/{id}/motion'
+        .replaceAll('{scope}', scope)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The video inside a Motion Photo in a collection
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  Future<MultipartFile?> getCollectionMotion(
+    String scope,
+    String id,
+  ) async {
+    final response = await getCollectionMotionWithHttpInfo(
+      scope,
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// The original of an asset in a collection
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] download:
+  Future<Response> getCollectionOriginalWithHttpInfo(
+    String scope,
+    String id, {
+    bool? download,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/collections/{scope}/assets/{id}/original'
+        .replaceAll('{scope}', scope)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (download != null) {
+      queryParams.addAll(_queryParams('', 'download', download));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The original of an asset in a collection
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] download:
+  Future<MultipartFile?> getCollectionOriginal(
+    String scope,
+    String id, {
+    bool? download,
+  }) async {
+    final response = await getCollectionOriginalWithHttpInfo(
+      scope,
+      id,
+      download: download,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// A preview of an asset in a collection
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] size:
+  Future<Response> getCollectionThumbnailWithHttpInfo(
+    String scope,
+    String id, {
+    String? size,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/collections/{scope}/assets/{id}/thumbnail'
+        .replaceAll('{scope}', scope)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (size != null) {
+      queryParams.addAll(_queryParams('', 'size', size));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// A preview of an asset in a collection
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] size:
+  Future<MultipartFile?> getCollectionThumbnail(
+    String scope,
+    String id, {
+    String? size,
+  }) async {
+    final response = await getCollectionThumbnailWithHttpInfo(
+      scope,
+      id,
+      size: size,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// HLS files of a video in a collection
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] file (required):
+  Future<Response> getCollectionVideoFileWithHttpInfo(
+    String scope,
+    String id,
+    String file,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/collections/{scope}/assets/{id}/video/{file}'
+        .replaceAll('{scope}', scope)
+        .replaceAll('{id}', id)
+        .replaceAll('{file}', file);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// HLS files of a video in a collection
+  ///
+  /// Parameters:
+  ///
+  /// * [String] scope (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] file (required):
+  Future<MultipartFile?> getCollectionVideoFile(
+    String scope,
+    String id,
+    String file,
+  ) async {
+    final response = await getCollectionVideoFileWithHttpInfo(
+      scope,
+      id,
+      file,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
     }
     return null;
   }
@@ -2416,6 +3076,135 @@ class DefaultApi {
     return null;
   }
 
+  /// Photos carrying a tag in one month
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] month (required):
+  Future<Response> getTagBucketWithHttpInfo(
+    String id,
+    String month,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/tags/{id}/buckets/{month}'
+        .replaceAll('{id}', id)
+        .replaceAll('{month}', month);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Photos carrying a tag in one month
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] month (required):
+  Future<TimelineBucket?> getTagBucket(
+    String id,
+    String month,
+  ) async {
+    final response = await getTagBucketWithHttpInfo(
+      id,
+      month,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBucket',
+      ) as TimelineBucket;
+    }
+    return null;
+  }
+
+  /// Months with photos carrying a tag
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getTagBucketsWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/tags/{id}/buckets'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Months with photos carrying a tag
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<TimelineBuckets?> getTagBuckets(
+    String id,
+  ) async {
+    final response = await getTagBucketsWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBuckets',
+      ) as TimelineBuckets;
+    }
+    return null;
+  }
+
   /// List one month's assets, newest first
   ///
   /// Note: This method returns the HTTP [Response].
@@ -2571,6 +3360,52 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Whether the vault has a PIN and is unlocked
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getVaultStatusWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/vault/status';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Whether the vault has a PIN and is unlocked
+  Future<VaultStatus?> getVaultStatus() async {
+    final response = await getVaultStatusWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'VaultStatus',
+      ) as VaultStatus;
+    }
+    return null;
   }
 
   /// Comments on an album, or with assetId on one photo, and that photo's hearts
@@ -2984,6 +3819,53 @@ class DefaultApi {
     return null;
   }
 
+  /// The current user's tags
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listTagsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/tags';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The current user's tags
+  Future<List<Tag>?> listTags() async {
+    final response = await listTagsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<Tag>')
+              as List)
+          .cast<Tag>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// List users
   ///
   /// Note: This method returns the HTTP [Response].
@@ -3029,6 +3911,41 @@ class DefaultApi {
           .toList(growable: false);
     }
     return null;
+  }
+
+  /// Lock the vault again
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> lockVaultWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/vault/lock';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Lock the vault again
+  Future<void> lockVault() async {
+    final response = await lockVaultWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Sign in with email, password and, when enabled, a TOTP code
@@ -3643,6 +4560,55 @@ class DefaultApi {
     }
   }
 
+  /// Set the vault PIN. Changing it needs the current one.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [VaultPinChange] vaultPinChange (required):
+  Future<Response> setVaultPinWithHttpInfo(
+    VaultPinChange vaultPinChange,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/vault/pin';
+
+    // ignore: prefer_final_locals
+    Object? postBody = vaultPinChange;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Set the vault PIN. Changing it needs the current one.
+  ///
+  /// Parameters:
+  ///
+  /// * [VaultPinChange] vaultPinChange (required):
+  Future<void> setVaultPin(
+    VaultPinChange vaultPinChange,
+  ) async {
+    final response = await setVaultPinWithHttpInfo(
+      vaultPinChange,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Create the first administrator. Closed once any user exists.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -3803,6 +4769,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Unlock the vault for a short time
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [VaultUnlock] vaultUnlock (required):
+  Future<Response> unlockVaultWithHttpInfo(
+    VaultUnlock vaultUnlock,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/vault/unlock';
+
+    // ignore: prefer_final_locals
+    Object? postBody = vaultUnlock;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Unlock the vault for a short time
+  ///
+  /// Parameters:
+  ///
+  /// * [VaultUnlock] vaultUnlock (required):
+  Future<VaultSession?> unlockVault(
+    VaultUnlock vaultUnlock,
+  ) async {
+    final response = await unlockVaultWithHttpInfo(
+      vaultUnlock,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'VaultSession',
+      ) as VaultSession;
+    }
+    return null;
   }
 
   /// Change an album. Needs the editor role.

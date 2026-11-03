@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
 import '../theme.dart';
+import 'organize_screens.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -44,6 +45,8 @@ class AccountScreen extends ConsumerWidget {
           row('Email', session.user.email),
           const Divider(color: Palette.line),
           row('Server', session.serverUrl),
+          const SizedBox(height: 12),
+          const OrganizeLinks(),
           const SizedBox(height: 28),
           OutlinedButton.icon(
             icon: const Icon(Icons.logout),
@@ -63,6 +66,7 @@ class AccountScreen extends ConsumerWidget {
               } on MissingPluginException {
                 // No native engine on this platform.
               }
+              await forgetVaultPin();
               await notifier.signOut();
             },
           ),

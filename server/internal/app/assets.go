@@ -198,6 +198,14 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 	owner := row.UserID == user.ID
 	detail.IsOwner = &owner
 	detail.DownloadAllowed = optional(true, true)
+	if owner {
+		tags, err := s.queries.ListAssetTags(ctx, row.ID)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		detail.Tags = &tags
+	}
 	if !owner {
 		// Someone else's favorites and archive are their own business. Their neighbours too:
 		// the client moves through the album it is showing.
@@ -382,7 +390,7 @@ func (s *apiServer) makeFullPreview(ctx context.Context, row *db.Asset) (string,
 	if err := jobs.MakeFullPreview(ctx, row.OriginalPath, dest); err != nil {
 		return "", err
 	}
-	info, err := os.Stat(dest)
+	info, err := os.Stat(dest) //nolint:gosec // Built from the cache folder and IDs from the database.
 	if err != nil {
 		return "", err
 	}
@@ -526,14 +534,24 @@ func (s *apiServer) BulkAssets(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx := r.Context()
 	switch body.Action {
-	case api.Favorite:
+	case api.BulkRequestActionFavorite:
 		changed, err = s.queries.SetFavorite(ctx, db.SetFavoriteParams{UserID: user.ID, Column2: ids, IsFavorite: true})
-	case api.Unfavorite:
+	case api.BulkRequestActionUnfavorite:
 		changed, err = s.queries.SetFavorite(ctx, db.SetFavoriteParams{UserID: user.ID, Column2: ids, IsFavorite: false})
-	case api.Archive:
+	case api.BulkRequestActionArchive:
 		changed, err = s.queries.ArchiveAssets(ctx, db.ArchiveAssetsParams{UserID: user.ID, Column2: ids})
-	case api.Delete:
+	case api.BulkRequestActionUnarchive:
+		changed, err = s.queries.UnarchiveAssets(ctx, db.UnarchiveAssetsParams{UserID: user.ID, Column2: ids})
+	case api.BulkRequestActionDelete:
 		changed, err = s.queries.SoftDeleteAssets(ctx, db.SoftDeleteAssetsParams{UserID: user.ID, Column2: ids})
+	case api.BulkRequestActionRestore:
+		changed, err = s.queries.RestoreAssets(ctx, db.RestoreAssetsParams{UserID: user.ID, Column2: ids})
+	case api.BulkRequestActionVault, api.BulkRequestActionUnvault, api.BulkRequestActionPurge:
+		var ok bool
+		changed, ok, err = s.vaultOrPurge(w, r, user, body.Action, ids)
+		if !ok {
+			return
+		}
 	default:
 		writeError(w, http.StatusBadRequest, "unknown action")
 		return

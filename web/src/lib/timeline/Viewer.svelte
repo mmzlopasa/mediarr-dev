@@ -500,6 +500,9 @@
 				{#if detail.durationMs}
 					<Kv label={tr('Trajanje', 'Duration')} value={formatDuration(detail.durationMs)} />
 				{/if}
+				{#if detail.tags?.length}
+					<Kv label={tr('Oznake', 'Tags')} value={detail.tags.join(', ')} />
+				{/if}
 				{#if detail.camera}<Kv label={tr('Kamera', 'Camera')} value={detail.camera} />{/if}
 				{#if detail.lens}<Kv label={tr('Objektiv', 'Lens')} value={detail.lens} />{/if}
 				{#if settings}<Kv label={tr('Postavke', 'Settings')} value={settings} />{/if}
@@ -517,8 +520,8 @@
 <Dialog title={tr('Obrisati fotku?', 'Delete this photo?')} bind:open={confirmDelete}>
 	<p>
 		{tr(
-			'Nestat će iz prikaza. Smeće s vraćanjem stiže u kasnijoj verziji, a do tada se vraća samo ponovnim uploadom iste datoteke.',
-			'It will disappear from view. A trash with restore arrives in a later version; until then, uploading the same file again brings it back.'
+			'Premješta se u smeće, gdje ostaje 30 dana i može se vratiti.',
+			'It moves to the trash, where it stays for 30 days and can be restored.'
 		)}
 	</p>
 	{#snippet footer()}

@@ -14,6 +14,7 @@ doc/Asset.md
 doc/AssetDetail.md
 doc/AssetIds.md
 doc/AssetList.md
+doc/AssetTagChange.md
 doc/AuthStatus.md
 doc/BulkRequest.md
 doc/BulkResponse.md
@@ -42,6 +43,7 @@ doc/SetupRequest.md
 doc/ShareLink.md
 doc/ShareLinkCreate.md
 doc/Sprite.md
+doc/Tag.md
 doc/TimelineBucket.md
 doc/TimelineBuckets.md
 doc/TimelineBucketsBucketsInner.md
@@ -50,6 +52,10 @@ doc/TotpCode.md
 doc/TotpSetup.md
 doc/User.md
 doc/UserRef.md
+doc/VaultPinChange.md
+doc/VaultSession.md
+doc/VaultStatus.md
+doc/VaultUnlock.md
 git_push.sh
 lib/api.dart
 lib/api/default_api.dart
@@ -73,6 +79,7 @@ lib/model/asset.dart
 lib/model/asset_detail.dart
 lib/model/asset_ids.dart
 lib/model/asset_list.dart
+lib/model/asset_tag_change.dart
 lib/model/auth_status.dart
 lib/model/bulk_request.dart
 lib/model/bulk_response.dart
@@ -100,6 +107,7 @@ lib/model/setup_request.dart
 lib/model/share_link.dart
 lib/model/share_link_create.dart
 lib/model/sprite.dart
+lib/model/tag.dart
 lib/model/timeline_bucket.dart
 lib/model/timeline_buckets.dart
 lib/model/timeline_buckets_buckets_inner.dart
@@ -108,4 +116,14 @@ lib/model/totp_code.dart
 lib/model/totp_setup.dart
 lib/model/user.dart
 lib/model/user_ref.dart
+lib/model/vault_pin_change.dart
+lib/model/vault_session.dart
+lib/model/vault_status.dart
+lib/model/vault_unlock.dart
 pubspec.yaml
+test/asset_tag_change_test.dart
+test/tag_test.dart
+test/vault_pin_change_test.dart
+test/vault_session_test.dart
+test/vault_status_test.dart
+test/vault_unlock_test.dart

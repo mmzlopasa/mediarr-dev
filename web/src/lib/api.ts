@@ -22,6 +22,8 @@ export type PublicLink = components['schemas']['PublicLink'];
 export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
+export type Tag = components['schemas']['Tag'];
+export type VaultStatus = components['schemas']['VaultStatus'];
 
 export class ApiError extends Error {
 	status: number;
@@ -134,6 +136,16 @@ export const api = {
 		request<void>(fetch, `/api/partners/${userId}`, undefined, 'DELETE'),
 	setPartnerTimeline: (userId: string, show: boolean) =>
 		request<void>(fetch, `/api/partners/${userId}/timeline`, { show }, 'PUT'),
+	emptyTrash: () => request<{ changed: number }>(fetch, '/api/trash/empty', {}),
+	vaultStatus: () => request<VaultStatus>(fetch, '/api/vault/status'),
+	setVaultPin: (pin: string, currentPin?: string) =>
+		request<void>(fetch, '/api/vault/pin', { pin, currentPin }),
+	unlockVault: (pin: string) => request<{ token: string }>(fetch, '/api/vault/unlock', { pin }),
+	lockVault: () => request<void>(fetch, '/api/vault/lock', {}),
+	tags: () => request<Tag[]>(fetch, '/api/tags'),
+	deleteTag: (id: string) => request<void>(fetch, `/api/tags/${id}`, undefined, 'DELETE'),
+	changeTag: (ids: string[], name: string, remove = false) =>
+		request<{ changed: number }>(fetch, '/api/assets/tags', { ids, name, remove }),
 	publicLink: (token: string) => request<PublicLink>(fetch, `/api/public/${token}`),
 	unlockLink: (token: string, password: string) =>
 		request<void>(fetch, `/api/public/${token}/unlock`, { password })
@@ -156,6 +168,10 @@ export const librarySource = sourceAt('/api/timeline');
 export const albumSource = (id: string) => sourceAt(`/api/albums/${id}`);
 export const partnerSource = (id: string) => sourceAt(`/api/partners/${id}`);
 export const publicSource = (token: string) => sourceAt(`/api/public/${token}`);
+export const tagSource = (id: string) => sourceAt(`/api/tags/${id}`);
+export const collectionBase = (scope: 'archive' | 'trash' | 'vault') => `/api/collections/${scope}`;
+export const collectionSource = (scope: 'archive' | 'trash' | 'vault') =>
+	sourceAt(collectionBase(scope));
 
 export function initialsOf(name: string) {
 	const parts = name.trim().split(/\s+/);

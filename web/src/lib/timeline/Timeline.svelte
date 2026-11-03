@@ -582,8 +582,8 @@
 <Dialog title={tr('Obrisati odabrano?', 'Delete the selection?')} bind:open={confirmDelete}>
 	<p>
 		{tr(
-			`Odabrano: ${selected.size}. Nestat će iz prikaza. Smeće s vraćanjem stiže u kasnijoj verziji, a do tada se vraća samo ponovnim uploadom iste datoteke.`,
-			`Selected: ${selected.size}. They will disappear from view. A trash with restore arrives in a later version; until then, uploading the same file again brings it back.`
+			`Odabrano: ${selected.size}. Premještaju se u smeće, gdje ostaju 30 dana i mogu se vratiti.`,
+			`Selected: ${selected.size}. They move to the trash, where they stay for 30 days and can be restored.`
 		)}
 	</p>
 	{#snippet footer()}

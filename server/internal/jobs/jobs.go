@@ -386,6 +386,12 @@ func (w *cleanupWorker) Work(ctx context.Context, _ *river.Job[CleanupArgs]) err
 	if err := w.queries.DeleteExpiredSessions(ctx); err != nil {
 		return err
 	}
+	if err := w.queries.DeleteExpiredVaultSessions(ctx); err != nil {
+		return err
+	}
+	if err := PurgeExpiredTrash(ctx, w.queries, w.opts.CachePath, time.Now()); err != nil {
+		return err
+	}
 	return removeStaleUploads(storage.TmpDir(w.opts.LibraryPath), time.Now().Add(-staleUploadAge))
 }
 

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
@@ -9,6 +8,7 @@ import '../services/timeline.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'album_sheets.dart';
+import 'asset_picture.dart';
 
 /// A full screen view on a clean black background: colors around a photo must not affect it.
 class ViewerScreen extends ConsumerStatefulWidget {
@@ -17,6 +17,8 @@ class ViewerScreen extends ConsumerStatefulWidget {
     required this.initialIndex,
     this.store,
     this.albumId,
+    this.session,
+    this.readOnly = false,
   });
 
   final int initialIndex;
@@ -26,6 +28,12 @@ class ViewerScreen extends ConsumerStatefulWidget {
 
   /// With an album, the photo also has its comments and hearts.
   final String? albumId;
+
+  /// Where the files come from. Without it, the signed-in library.
+  final Session? session;
+
+  /// Only for looking: moving a photo goes through the actions of where it is.
+  final bool readOnly;
 
   @override
   ConsumerState<ViewerScreen> createState() => _ViewerScreenState();
@@ -66,8 +74,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Delete this photo?'),
         content: const Text(
-          'It will disappear from your timeline. A trash with restore arrives in a later '
-          'version; until then, uploading the same file again brings it back.',
+          'It moves to the trash, where it stays for 30 days and can be restored.',
         ),
         actions: [
           TextButton(
@@ -106,13 +113,13 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final detail = await session.api.getAsset(item.id);
+      final detail = await session.detail(item.id);
       final liveId = detail?.liveVideoId;
       String? url;
       if (detail?.hasMotion == true) {
         url = session.motionUrl(item.id);
       } else if (liveId != null) {
-        final video = await session.api.getAsset(liveId);
+        final video = await session.detail(liveId);
         url = video?.hlsReady == true
             ? session.hlsUrl(liveId)
             : session.originalUrl(liveId);
@@ -147,7 +154,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
   Widget build(BuildContext context) {
     final library = ref.watch(timelineProvider);
     final store = widget.store ?? library;
-    final session = ref.watch(sessionProvider).value;
+    final session = widget.session ?? ref.watch(sessionProvider).value;
     return ListenableBuilder(
       listenable: store,
       builder: (context, _) => _page(store, session),
@@ -162,7 +169,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     final index = _index.clamp(0, items.length - 1);
     final current = items[index];
     // Someone else's photo can be looked at, but only its owner changes it.
-    final mine = current.isShared != true;
+    final mine = !widget.readOnly && current.isShared != true;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -312,18 +319,12 @@ class _PhotoPageState extends State<_PhotoPage> {
       onInteractionEnd: (_) =>
           widget.onZoom(_transform.value.getMaxScaleOnAxis() > 1.01),
       child: SizedBox.expand(
-        child: CachedNetworkImage(
-          imageUrl: widget.session.thumbnailUrl(widget.id, large: true),
-          httpHeaders: widget.session.headers,
-          cacheKey: '${widget.session.serverUrl}/${widget.id}/l',
+        child: AssetPicture(
+          session: widget.session,
+          id: widget.id,
+          large: true,
           fit: BoxFit.contain,
-          placeholder: (_, _) => CachedNetworkImage(
-            imageUrl: widget.session.thumbnailUrl(widget.id),
-            httpHeaders: widget.session.headers,
-            cacheKey: '${widget.session.serverUrl}/${widget.id}/s',
-            fit: BoxFit.contain,
-          ),
-          errorWidget: (_, _, _) => const EmptyMessage(
+          error: const EmptyMessage(
             icon: Icons.broken_image_outlined,
             text: 'This photo could not be loaded.',
           ),
@@ -374,7 +375,7 @@ class _VideoPageState extends State<_VideoPage> {
     }
     AssetDetail? detail;
     try {
-      detail = await widget.session.api.getAsset(widget.id);
+      detail = await widget.session.detail(widget.id);
     } on ApiException {
       // The original still plays.
     }
@@ -414,11 +415,12 @@ class _VideoPageState extends State<_VideoPage> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            CachedNetworkImage(
-              imageUrl: widget.session.thumbnailUrl(widget.id, large: true),
-              httpHeaders: widget.session.headers,
-              cacheKey: '${widget.session.serverUrl}/${widget.id}/l',
+            AssetPicture(
+              session: widget.session,
+              id: widget.id,
+              large: true,
               fit: BoxFit.contain,
+              error: const SizedBox.shrink(),
             ),
             Center(
               child: controller == null
@@ -534,7 +536,7 @@ class _InfoSheet extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return SafeArea(
       child: FutureBuilder<AssetDetail?>(
-        future: session.api.getAsset(id),
+        future: session.detail(id),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const SizedBox(

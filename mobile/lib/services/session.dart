@@ -29,6 +29,61 @@ class Session {
   String hlsUrl(String id) => '$serverUrl/api/assets/$id/video/master.m3u8';
 
   String motionUrl(String id) => '$serverUrl/api/assets/$id/motion';
+
+  /// False for what must not stay on the device, such as photos from the vault.
+  bool get keepOnDisk => true;
+
+  Future<AssetDetail?> detail(String id) => api.getAsset(id);
+}
+
+/// The same connection, reading from the archive, the trash or the unlocked vault.
+class CollectionSession extends Session {
+  CollectionSession(Session session, this.scope, {this.vaultToken})
+    : _parent = session,
+      super(
+        serverUrl: session.serverUrl,
+        cookie: session.cookie,
+        user: session.user,
+      );
+
+  final Session _parent;
+  final String scope;
+  final String? vaultToken;
+
+  String get _base => '$serverUrl/api/collections/$scope/assets';
+
+  @override
+  Map<String, String> get headers => {
+    ...super.headers,
+    'X-Vault-Token': ?vaultToken,
+  };
+
+  @override
+  DefaultApi get api {
+    final api = _parent.api;
+    final token = vaultToken;
+    if (token != null) api.apiClient.addDefaultHeader('X-Vault-Token', token);
+    return api;
+  }
+
+  @override
+  String thumbnailUrl(String id, {bool large = false}) =>
+      '$_base/$id/thumbnail${large ? '?size=large' : ''}';
+
+  @override
+  String originalUrl(String id) => '$_base/$id/original';
+
+  @override
+  String hlsUrl(String id) => '$_base/$id/video/master.m3u8';
+
+  @override
+  String motionUrl(String id) => '$_base/$id/motion';
+
+  @override
+  bool get keepOnDisk => scope != 'vault';
+
+  @override
+  Future<AssetDetail?> detail(String id) => api.getCollectionAsset(scope, id);
 }
 
 /// A user-facing sign-in failure.

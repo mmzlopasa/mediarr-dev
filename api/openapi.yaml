@@ -929,6 +929,245 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
+  /api/collections/{scope}/buckets:
+    get:
+      operationId: getCollectionBuckets
+      summary: Months in the archive, the trash or the unlocked vault
+      parameters:
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+      responses:
+        "200":
+          description: Months
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBuckets" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/collections/{scope}/buckets/{month}:
+    get:
+      operationId: getCollectionBucket
+      summary: Assets of one month in a collection
+      parameters:
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: month, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBucket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/collections/{scope}/assets/{id}:
+    get:
+      operationId: getCollectionAsset
+      summary: An asset in a collection
+      parameters:
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetDetail" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/collections/{scope}/assets/{id}/thumbnail:
+    get:
+      operationId: getCollectionThumbnail
+      summary: A preview of an asset in a collection
+      parameters:
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - name: size
+          in: query
+          schema: { type: string, enum: [small, large, full], default: small }
+      responses:
+        "200":
+          description: Image
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/collections/{scope}/assets/{id}/original:
+    get:
+      operationId: getCollectionOriginal
+      summary: The original of an asset in a collection
+      parameters:
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: download, in: query, schema: { type: boolean } }
+      responses:
+        "200":
+          description: File
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/collections/{scope}/assets/{id}/motion:
+    get:
+      operationId: getCollectionMotion
+      summary: The video inside a Motion Photo in a collection
+      parameters:
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Video
+          content:
+            video/mp4:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/collections/{scope}/assets/{id}/video/{file}:
+    get:
+      operationId: getCollectionVideoFile
+      summary: HLS files of a video in a collection
+      parameters:
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: file, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: File
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/trash/empty:
+    post:
+      operationId: emptyTrash
+      summary: Permanently delete everything in the trash
+      responses:
+        "200":
+          description: How many were deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkResponse" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/vault/status:
+    get:
+      operationId: getVaultStatus
+      summary: Whether the vault has a PIN and is unlocked
+      responses:
+        "200":
+          description: The state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VaultStatus" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/vault/pin:
+    post:
+      operationId: setVaultPin
+      summary: Set the vault PIN. Changing it needs the current one.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VaultPinChange" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/vault/unlock:
+    post:
+      operationId: unlockVault
+      summary: Unlock the vault for a short time
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VaultUnlock" }
+      responses:
+        "200":
+          description: Unlocked. The token is for clients that cannot keep the cookie.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VaultSession" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/vault/lock:
+    post:
+      operationId: lockVault
+      summary: Lock the vault again
+      responses:
+        "204": { description: Locked }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/tags:
+    get:
+      operationId: listTags
+      summary: The current user's tags
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Tag" } }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/tags/{id}:
+    delete:
+      operationId: deleteTag
+      summary: Delete a tag. The photos stay.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/tags/{id}/buckets:
+    get:
+      operationId: getTagBuckets
+      summary: Months with photos carrying a tag
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Months
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBuckets" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/tags/{id}/buckets/{month}:
+    get:
+      operationId: getTagBucket
+      summary: Photos carrying a tag in one month
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: month, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBucket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/tags:
+    post:
+      operationId: changeAssetTags
+      summary: Add a tag to the user's own assets, or remove it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetTagChange" }
+      responses:
+        "200":
+          description: How many changed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
 components:
   responses:
     Error:
@@ -937,6 +1176,42 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    VaultStatus:
+      type: object
+      required: [hasPin, unlocked]
+      properties:
+        hasPin: { type: boolean }
+        unlocked: { type: boolean }
+    VaultPinChange:
+      type: object
+      required: [pin]
+      properties:
+        pin: { type: string }
+        currentPin: { type: string }
+    VaultUnlock:
+      type: object
+      required: [pin]
+      properties:
+        pin: { type: string }
+    VaultSession:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    Tag:
+      type: object
+      required: [id, name, assetCount]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        assetCount: { type: integer, format: int64 }
+    AssetTagChange:
+      type: object
+      required: [ids, name]
+      properties:
+        ids: { type: array, items: { type: string, format: uuid } }
+        name: { type: string }
+        remove: { type: boolean, default: false }
     UserRef:
       type: object
       required: [id, name]
@@ -1255,6 +1530,7 @@ components:
       properties:
         isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
+        tags: { type: array, items: { type: string }, description: "Only for the owner" }
         id: { type: string, format: uuid }
         originalName: { type: string }
         kind: { type: string, enum: [unknown, photo, video] }
@@ -1301,7 +1577,7 @@ components:
           type: array
           maxItems: 1000
           items: { type: string, format: uuid }
-        action: { type: string, enum: [favorite, unfavorite, archive, delete] }
+        action: { type: string, enum: [favorite, unfavorite, archive, unarchive, delete, restore, vault, unvault, purge] }
     BulkResponse:
       type: object
       required: [changed]

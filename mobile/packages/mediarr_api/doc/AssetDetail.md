@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **isOwner** | **bool** | Only the owner can change or delete the asset | [optional] 
 **downloadAllowed** | **bool** | False on a public link that does not allow downloads | [optional] 
+**tags** | **List<String>** | Only for the owner | [optional] [default to const []]
 **id** | **String** |  | 
 **originalName** | **String** |  | 
 **kind** | **String** |  | 

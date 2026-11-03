@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	usage             = "usage: mediarr <serve|worker|healthcheck|migrate [down]|user upsert <email> <name> [--admin]>"
+	usage             = "usage: mediarr <serve|worker|healthcheck|migrate [down]|user upsert <email> <name> [--admin]|user reset-vault <email>>"
 	stateStorageReady = "storage_initialized"
 )
 
@@ -164,6 +164,9 @@ func upsertUser(ctx context.Context, cfg config.Config, args []string) error {
 	if len(args) == 2 && args[0] == "delete" {
 		return deleteUser(ctx, cfg, args[1])
 	}
+	if len(args) == 2 && args[0] == "reset-vault" {
+		return resetVault(ctx, cfg, args[1])
+	}
 	if len(args) < 3 || args[0] != "upsert" {
 		return errors.New(usage)
 	}
@@ -221,6 +224,28 @@ func reprocess(ctx context.Context, cfg config.Config) error {
 }
 
 // deleteUser removes a user with all their assets and files. It cannot be undone.
+// resetVault clears a lost PIN. The photos stay in the vault, and the user sets a new PIN to reach them.
+func resetVault(ctx context.Context, cfg config.Config, rawEmail string) error {
+	email, err := auth.NormalizeEmail(rawEmail)
+	if err != nil {
+		return err
+	}
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+	defer pool.Close()
+	queries := db.New(pool)
+	user, err := queries.GetUserByEmail(ctx, email)
+	if err != nil {
+		return fmt.Errorf("find user: %w", err)
+	}
+	if err := queries.SetVaultPin(ctx, db.SetVaultPinParams{ID: user.ID}); err != nil {
+		return err
+	}
+	return queries.DeleteVaultSessions(ctx, user.ID)
+}
+
 func deleteUser(ctx context.Context, cfg config.Config, rawEmail string) error {
 	email, err := auth.NormalizeEmail(rawEmail)
 	if err != nil {

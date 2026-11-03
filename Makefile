@@ -92,12 +92,13 @@ e2e:
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-uploader@example.com "Demo korisnik"
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-owner@example.com "Demo korisnik"
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-member@example.com "Demo korisnik"
+	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-organizer@example.com "Demo korisnik"
 	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e E2E_PASSWORD=$(E2E_PASSWORD) \
 		-v "$(CURDIR)/web:/web" -w /web mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
-		node_modules/.bin/playwright test; status=$$?; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader e2e-owner e2e-member"; exit $$status
+		node_modules/.bin/playwright test; status=$$?; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer"; exit $$status
 
 # Test accounts must not stay in the demo database, where they would appear as real data.
-TEST_USERS ?= e2e-admin e2e-user e2e-uploader e2e-owner e2e-member uploadtest
+TEST_USERS ?= e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer uploadtest
 clean-test-users:
 	for email in $(TEST_USERS); do \
 		$(DEV_COMPOSE) exec -T server /tmp/air/mediarr user delete $$email@example.com; \

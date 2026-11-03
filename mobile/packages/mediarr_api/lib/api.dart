@@ -42,6 +42,7 @@ part 'model/asset.dart';
 part 'model/asset_detail.dart';
 part 'model/asset_ids.dart';
 part 'model/asset_list.dart';
+part 'model/asset_tag_change.dart';
 part 'model/auth_status.dart';
 part 'model/bulk_request.dart';
 part 'model/bulk_response.dart';
@@ -69,6 +70,7 @@ part 'model/setup_request.dart';
 part 'model/share_link.dart';
 part 'model/share_link_create.dart';
 part 'model/sprite.dart';
+part 'model/tag.dart';
 part 'model/timeline_bucket.dart';
 part 'model/timeline_buckets.dart';
 part 'model/timeline_buckets_buckets_inner.dart';
@@ -77,6 +79,10 @@ part 'model/totp_code.dart';
 part 'model/totp_setup.dart';
 part 'model/user.dart';
 part 'model/user_ref.dart';
+part 'model/vault_pin_change.dart';
+part 'model/vault_session.dart';
+part 'model/vault_status.dart';
+part 'model/vault_unlock.dart';
 
 /// An [ApiClient] instance that uses the default values obtained from
 /// the OpenAPI specification file.

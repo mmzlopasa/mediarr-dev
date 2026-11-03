@@ -155,7 +155,7 @@ func TestAssetsAreInvisibleToOtherUsers(t *testing.T) {
 
 	// Bulk actions ignore assets of other users.
 	parsed := uuid.MustParse(id)
-	for _, action := range []api.BulkRequestAction{api.Favorite, api.Archive, api.Delete} {
+	for _, action := range []api.BulkRequestAction{api.BulkRequestActionFavorite, api.BulkRequestActionArchive, api.BulkRequestActionDelete} {
 		resp, body = other.post("/api/assets/bulk", api.BulkRequest{Ids: []openapi_types.UUID{parsed}, Action: action})
 		expect(t, resp, body, http.StatusOK)
 		var result api.BulkResponse
@@ -261,14 +261,14 @@ func TestBulkActionsAndDeleteKeepTheOriginal(t *testing.T) {
 		return result.Changed
 	}
 
-	if act(api.Favorite) != 1 || !c.readBucket("2024-02").Items[0].IsFavorite {
+	if act(api.BulkRequestActionFavorite) != 1 || !c.readBucket("2024-02").Items[0].IsFavorite {
 		t.Error("favorite did not apply")
 	}
-	if act(api.Unfavorite) != 1 || c.readBucket("2024-02").Items[0].IsFavorite {
+	if act(api.BulkRequestActionUnfavorite) != 1 || c.readBucket("2024-02").Items[0].IsFavorite {
 		t.Error("unfavorite did not apply")
 	}
 
-	if act(api.Delete) != 1 {
+	if act(api.BulkRequestActionDelete) != 1 {
 		t.Error("delete did not apply")
 	}
 	if items := c.readBucket("2024-02").Items; len(items) != 0 {
@@ -289,14 +289,14 @@ func TestBulkActionsAndDeleteKeepTheOriginal(t *testing.T) {
 		t.Error("re-upload did not restore the asset")
 	}
 
-	if act(api.Archive) != 1 {
+	if act(api.BulkRequestActionArchive) != 1 {
 		t.Error("archive did not apply")
 	}
 	if items := c.readBucket("2024-02").Items; len(items) != 0 {
 		t.Error("an archived asset is on the timeline")
 	}
 
-	resp, body = c.post("/api/assets/bulk", api.BulkRequest{Ids: nil, Action: api.Delete})
+	resp, body = c.post("/api/assets/bulk", api.BulkRequest{Ids: nil, Action: api.BulkRequestActionDelete})
 	expect(t, resp, body, http.StatusBadRequest)
 	resp, body = c.post("/api/assets/bulk", map[string]any{"ids": []string{id}, "action": "explode"})
 	expect(t, resp, body, http.StatusBadRequest)

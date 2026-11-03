@@ -72,7 +72,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at
+INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash
 `
 
 type CreateUserParams struct {
@@ -101,6 +101,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.TotpLastStep,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.VaultPinHash,
 	)
 	return i, err
 }
@@ -175,7 +176,7 @@ func (q *Queries) EnableTotp(ctx context.Context, arg EnableTotpParams) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at FROM users WHERE id = $1
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -192,6 +193,7 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 		&i.TotpLastStep,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.VaultPinHash,
 	)
 	return i, err
 }
@@ -199,7 +201,7 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 const getUserByAPIKey = `-- name: GetUserByAPIKey :one
 UPDATE api_keys k SET last_used_at = now() FROM users u
 WHERE k.key_hash = $1 AND u.id = k.user_id
-RETURNING u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at
+RETURNING u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash
 `
 
 func (q *Queries) GetUserByAPIKey(ctx context.Context, keyHash []byte) (User, error) {
@@ -216,12 +218,13 @@ func (q *Queries) GetUserByAPIKey(ctx context.Context, keyHash []byte) (User, er
 		&i.TotpLastStep,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.VaultPinHash,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at FROM users WHERE email = $1
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -238,12 +241,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.TotpLastStep,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.VaultPinHash,
 	)
 	return i, err
 }
 
 const getUserBySessionToken = `-- name: GetUserBySessionToken :one
-SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at FROM sessions s JOIN users u ON u.id = s.user_id
+SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash FROM sessions s JOIN users u ON u.id = s.user_id
 WHERE s.token_hash = $1 AND s.expires_at > now()
 `
 
@@ -261,12 +265,13 @@ func (q *Queries) GetUserBySessionToken(ctx context.Context, tokenHash []byte) (
 		&i.TotpLastStep,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.VaultPinHash,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at FROM users ORDER BY created_at
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash FROM users ORDER BY created_at
 `
 
 func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
@@ -289,6 +294,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.TotpLastStep,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.VaultPinHash,
 		); err != nil {
 			return nil, err
 		}
@@ -342,7 +348,7 @@ INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4)
 ON CONFLICT (email) DO UPDATE
 SET name = EXCLUDED.name, password_hash = EXCLUDED.password_hash, is_admin = EXCLUDED.is_admin,
     totp_enabled = false, totp_secret = NULL, updated_at = now()
-RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at
+RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash
 `
 
 type UpsertUserParams struct {
@@ -371,6 +377,7 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, e
 		&i.TotpLastStep,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.VaultPinHash,
 	)
 	return i, err
 }

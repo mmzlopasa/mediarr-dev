@@ -144,14 +144,24 @@ class BulkRequestActionEnum {
   static const favorite = BulkRequestActionEnum._(r'favorite');
   static const unfavorite = BulkRequestActionEnum._(r'unfavorite');
   static const archive = BulkRequestActionEnum._(r'archive');
+  static const unarchive = BulkRequestActionEnum._(r'unarchive');
   static const delete = BulkRequestActionEnum._(r'delete');
+  static const restore = BulkRequestActionEnum._(r'restore');
+  static const vault = BulkRequestActionEnum._(r'vault');
+  static const unvault = BulkRequestActionEnum._(r'unvault');
+  static const purge = BulkRequestActionEnum._(r'purge');
 
   /// List of all possible values in this [enum][BulkRequestActionEnum].
   static const values = <BulkRequestActionEnum>[
     favorite,
     unfavorite,
     archive,
+    unarchive,
     delete,
+    restore,
+    vault,
+    unvault,
+    purge,
   ];
 
   static BulkRequestActionEnum? fromJson(dynamic value) =>
@@ -201,8 +211,18 @@ class BulkRequestActionEnumTypeTransformer {
           return BulkRequestActionEnum.unfavorite;
         case r'archive':
           return BulkRequestActionEnum.archive;
+        case r'unarchive':
+          return BulkRequestActionEnum.unarchive;
         case r'delete':
           return BulkRequestActionEnum.delete;
+        case r'restore':
+          return BulkRequestActionEnum.restore;
+        case r'vault':
+          return BulkRequestActionEnum.vault;
+        case r'unvault':
+          return BulkRequestActionEnum.unvault;
+        case r'purge':
+          return BulkRequestActionEnum.purge;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

@@ -66,6 +66,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Mediarr uses Face ID to open your vault.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mediarr shows your photos and videos here so you can choose which ones to upload to your own server.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

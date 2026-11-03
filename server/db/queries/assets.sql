@@ -19,7 +19,7 @@ SELECT * FROM assets WHERE id = $1;
 
 -- name: ListAssets :many
 SELECT * FROM assets
-WHERE user_id = sqlc.arg('user_id') AND deleted_at IS NULL
+WHERE user_id = sqlc.arg('user_id') AND deleted_at IS NULL AND vault_at IS NULL
   AND (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status'))
 ORDER BY created_at DESC, id DESC
 LIMIT sqlc.arg('row_limit');
@@ -28,7 +28,7 @@ LIMIT sqlc.arg('row_limit');
 SELECT count(*) AS total,
        count(*) FILTER (WHERE status = 'processing') AS processing,
        count(*) FILTER (WHERE status = 'failed') AS failed
-FROM assets WHERE user_id = $1 AND deleted_at IS NULL;
+FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL;
 
 -- name: FindExistingChecksums :many
 SELECT checksum FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checksum = ANY($2::bytea[]);
@@ -82,7 +82,7 @@ UPDATE assets SET deleted_at = NULL, updated_at = now() WHERE id = $1 AND delete
 -- name: TimelineBuckets :many
 SELECT to_char(date_trunc('month', local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND vault_at IS NULL AND live_photo_of IS NULL
 GROUP BY 1
 ORDER BY 1 DESC;
 
@@ -90,7 +90,7 @@ ORDER BY 1 DESC;
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
 FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
 ORDER BY a.local_at DESC, a.id DESC;
 
@@ -99,13 +99,13 @@ SELECT * FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL;
 
 -- name: NewerAsset :one
 SELECT id FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND vault_at IS NULL AND live_photo_of IS NULL
   AND (local_at, id) > (sqlc.arg('local_at')::timestamp, sqlc.arg('id')::uuid)
 ORDER BY local_at ASC, id ASC LIMIT 1;
 
 -- name: OlderAsset :one
 SELECT id FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND live_photo_of IS NULL
+WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND vault_at IS NULL AND live_photo_of IS NULL
   AND (local_at, id) < (sqlc.arg('local_at')::timestamp, sqlc.arg('id')::uuid)
 ORDER BY local_at DESC, id DESC LIMIT 1;
 
@@ -121,15 +121,15 @@ SELECT * FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY(sqlc
 
 -- name: SetFavorite :execrows
 UPDATE assets SET is_favorite = $3, updated_at = now()
-WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[]);
+WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND id = ANY($2::uuid[]);
 
 -- name: ArchiveAssets :execrows
 UPDATE assets SET archived_at = now(), updated_at = now()
-WHERE user_id = $1 AND deleted_at IS NULL AND archived_at IS NULL AND id = ANY($2::uuid[]);
+WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND archived_at IS NULL AND id = ANY($2::uuid[]);
 
 -- name: SoftDeleteAssets :execrows
 UPDATE assets SET deleted_at = now(), updated_at = now()
-WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[]);
+WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND id = ANY($2::uuid[]);
 
 -- name: UpdateVideoInfo :exec
 UPDATE assets SET duration_ms = $2, video_codec = $3, updated_at = now() WHERE id = $1;

@@ -38,7 +38,7 @@ UPDATE albums SET updated_at = now() WHERE id = $1;
 INSERT INTO album_assets (album_id, asset_id, added_by)
 SELECT sqlc.arg('album_id'), a.id, sqlc.arg('user_id')
 FROM assets a
-WHERE a.user_id = sqlc.arg('user_id') AND a.deleted_at IS NULL AND a.id = ANY(sqlc.arg('ids')::uuid[])
+WHERE a.user_id = sqlc.arg('user_id') AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.id = ANY(sqlc.arg('ids')::uuid[])
 ON CONFLICT DO NOTHING;
 
 -- name: RemoveAlbumAssets :execrows
@@ -85,7 +85,7 @@ ORDER BY a.local_at DESC, a.id DESC;
 -- name: ListCameras :many
 SELECT DISTINCT trim(coalesce(e.make, '') || ' ' || coalesce(e.model, ''))::text AS camera
 FROM exif e JOIN assets a ON a.id = e.asset_id
-WHERE a.user_id = $1 AND a.deleted_at IS NULL AND (e.make IS NOT NULL OR e.model IS NOT NULL)
+WHERE a.user_id = $1 AND a.deleted_at IS NULL AND a.vault_at IS NULL AND (e.make IS NOT NULL OR e.model IS NOT NULL)
 ORDER BY 1;
 
 -- name: ListComments :many
@@ -141,7 +141,7 @@ SELECT count(*) FROM partner_shares WHERE partner_id = $1 AND in_timeline;
 -- name: PartnerBuckets :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND (sqlc.narg('since_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('since_at'))
 GROUP BY 1
 ORDER BY 1 DESC;
@@ -150,7 +150,7 @@ ORDER BY 1 DESC;
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
 FROM assets a
-WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND (sqlc.narg('since_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('since_at'))
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
 ORDER BY a.local_at DESC, a.id DESC;
@@ -158,7 +158,7 @@ ORDER BY a.local_at DESC, a.id DESC;
 -- name: TimelineBucketsWithPartners :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND (a.user_id = $1 OR EXISTS (
       SELECT 1 FROM partner_shares ps
       WHERE ps.owner_id = a.user_id AND ps.partner_id = $1 AND ps.in_timeline
@@ -170,7 +170,7 @@ ORDER BY 1 DESC;
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
 FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
   AND (a.user_id = sqlc.arg('user_id') OR EXISTS (
       SELECT 1 FROM partner_shares ps

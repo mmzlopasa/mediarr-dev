@@ -16,6 +16,8 @@
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 	import AddToAlbum from '#lib/albums/AddToAlbum.svelte';
+	import MoveToVault from '#lib/organize/MoveToVault.svelte';
+	import TagButton from '#lib/organize/TagButton.svelte';
 	import {
 		clearFinishedUploads,
 		isPreparingUpload,
@@ -166,6 +168,14 @@
 <Timeline bind:this={timeline} onOpen={open} onCount={(count) => (total = count)}>
 	{#snippet selectionActions(ids, clear)}
 		<AddToAlbum {ids} onDone={clear} />
+		<TagButton {ids} onDone={clear} />
+		<MoveToVault
+			{ids}
+			onDone={() => {
+				clear();
+				timeline?.reloadLoaded();
+			}}
+		/>
 	{/snippet}
 </Timeline>
 

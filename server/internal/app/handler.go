@@ -53,6 +53,7 @@ type apiServer struct {
 	ipLimiter     *auth.Limiter
 	linkPasswords *auth.Limiter
 	linkUploads   *auth.Limiter
+	vaultPins     *auth.Limiter
 	uploads       *tusd.UnroutedHandler
 	// fullPreviews limits how many full resolution previews are made at once.
 	fullPreviews chan struct{}
@@ -66,6 +67,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		ipLimiter:     auth.NewLimiter(loginFailuresIP, loginWindow),
 		linkPasswords: auth.NewLimiter(linkPasswordFailures, loginWindow),
 		linkUploads:   auth.NewLimiter(linkUploadsPerHour, time.Hour),
+		vaultPins:     auth.NewLimiter(vaultPinFailures, loginWindow),
 		fullPreviews:  make(chan struct{}, 2),
 	}
 	if deps.Pool != nil {

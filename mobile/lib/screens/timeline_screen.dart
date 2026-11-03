@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
@@ -13,6 +12,8 @@ import '../services/uploads.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'album_sheets.dart';
+import 'asset_picture.dart';
+import 'organize_screens.dart';
 import 'viewer_screen.dart';
 
 class TimelineScreen extends ConsumerStatefulWidget {
@@ -61,14 +62,35 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     }
   }
 
+  Future<void> _more(String choice, Session session) async {
+    switch (choice) {
+      case 'archive':
+        await _act(BulkRequestActionEnum.archive);
+      case 'tag':
+        final done = await showAddTag(context, session, _selected.toList());
+        if (done && mounted) setState(_selected.clear);
+      case 'vault':
+        final status = await session.api.getVaultStatus();
+        if (!mounted) return;
+        if (status?.hasPin != true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Set a vault PIN first: Account > Vault.'),
+            ),
+          );
+          return;
+        }
+        await _act(BulkRequestActionEnum.vault);
+    }
+  }
+
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete ${_selected.length}?'),
         content: const Text(
-          'They will disappear from your timeline. A trash with restore arrives in a later '
-          'version; until then, uploading the same file again brings it back.',
+          'They move to the trash, where they stay for 30 days and can be restored.',
         ),
         actions: [
           TextButton(
@@ -162,14 +184,21 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     onPressed: () => _act(BulkRequestActionEnum.favorite),
                   ),
                   IconButton(
-                    tooltip: 'Archive',
-                    icon: const Icon(Icons.archive_outlined),
-                    onPressed: () => _act(BulkRequestActionEnum.archive),
-                  ),
-                  IconButton(
                     tooltip: 'Delete',
                     icon: const Icon(Icons.delete_outline),
                     onPressed: _confirmDelete,
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'More',
+                    onSelected: (choice) => _more(choice, session),
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'archive', child: Text('Archive')),
+                      PopupMenuItem(value: 'tag', child: Text('Add a tag')),
+                      PopupMenuItem(
+                        value: 'vault',
+                        child: Text('Move to the vault'),
+                      ),
+                    ],
                   ),
                 ],
               ],
@@ -390,14 +419,12 @@ class _TileView extends StatelessWidget {
                 padding: EdgeInsets.all(isSelected ? 8 : 0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(isSelected ? 5 : 0),
-                  child: CachedNetworkImage(
-                    imageUrl: session.thumbnailUrl(item.id),
-                    httpHeaders: session.headers,
-                    cacheKey: '${session.serverUrl}/${item.id}/s',
+                  child: AssetPicture(
+                    session: session,
+                    id: item.id,
                     memCacheWidth: pixels,
                     fit: BoxFit.cover,
-                    fadeInDuration: const Duration(milliseconds: 120),
-                    errorWidget: (_, _, _) => const Icon(
+                    error: const Icon(
                       Icons.broken_image_outlined,
                       color: Palette.dim,
                     ),

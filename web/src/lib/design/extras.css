@@ -763,3 +763,9 @@ video.viewer-media {
 	max-width: 460px;
 	margin: 8vh auto 0;
 }
+
+/* A short form on its own in the middle of a page, such as the vault's PIN. */
+.org-box {
+	max-width: 420px;
+	margin: 6vh auto 0;
+}
