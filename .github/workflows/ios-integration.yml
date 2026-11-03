@@ -37,15 +37,16 @@ jobs:
       - name: Install the app once, and allow it to read photos
         run: |
           # Changing this for a running app makes iOS stop it, and without it a dialog waits forever.
-          flutter build ios --simulator --debug
+          # The test's own build, because iOS ties the access to this very binary.
+          flutter build ios --simulator --debug --target=integration_test/app_test.dart
           xcrun simctl install "$DEVICE" build/ios/iphonesimulator/Runner.app
           xcrun simctl privacy "$DEVICE" grant photos app.mediarr.mediarr
       - name: Run the tests, keeping what the app logs
         timeout-minutes: 20
         run: |
           xcrun simctl spawn "$DEVICE" log stream --level debug --predicate 'process == "Runner"' > "$RUNNER_TEMP/app.log" &
-          # Unlike "flutter test", this does not reinstall the app, which would forget the access.
-          flutter drive --driver=test_driver/integration_test.dart --target=integration_test/app_test.dart --device-id "$DEVICE" --suppress-analytics
+          # Runs the binary installed above: a new build would lose the access.
+          flutter drive --driver=test_driver/integration_test.dart --target=integration_test/app_test.dart --use-application-binary=build/ios/iphonesimulator/Runner.app --device-id "$DEVICE" --suppress-analytics
       - name: Keep the app's log
         if: always()
         uses: actions/upload-artifact@v4
