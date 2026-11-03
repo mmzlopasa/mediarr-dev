@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../services/backup.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
+import 'backup_card.dart';
 
 /// Picks directly from the photo library, which gives the untouched originals.
 class UploadScreen extends ConsumerStatefulWidget {
@@ -25,6 +27,8 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   bool _loading = false;
   bool _reachedEnd = false;
   int _page = 0;
+  Map<String, String> _backup = const {};
+  bool _backupOn = false;
 
   Future<void> _open() async {
     final permission = await PhotoManager.requestPermissionExtend();
@@ -57,6 +61,19 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
       _reachedEnd = page.length < _pageSize;
       _loading = false;
     });
+  }
+
+  /// Shows each photo's backup state in the gallery.
+  Future<void> _refreshBadges(BackupStatus status) async {
+    _backupOn = status.enabled;
+    if (!status.enabled || _assets.isEmpty) {
+      if (_backup.isNotEmpty && mounted) setState(() => _backup = const {});
+      return;
+    }
+    final map = await ref
+        .read(backupProvider)
+        .statuses(_assets.map((asset) => asset.id).toList());
+    if (mounted) setState(() => _backup = map);
   }
 
   void _send() {
@@ -120,7 +137,11 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                   _selected[asset.id] = asset;
                 }
               }),
-              child: _AssetThumb(asset: asset, selected: isSelected),
+              child: _AssetThumb(
+                asset: asset,
+                selected: isSelected,
+                backup: _backupOn ? _backup[asset.id] : null,
+              ),
             );
           },
         ),
@@ -138,6 +159,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                 child: Text('Upload', style: text.headlineMedium),
               ),
+              BackupCard(onStatus: _refreshBadges),
               if (tasks.isNotEmpty) _TaskList(tasks: tasks),
               Expanded(child: gallery),
             ],
@@ -162,10 +184,11 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
 }
 
 class _AssetThumb extends StatefulWidget {
-  const _AssetThumb({required this.asset, required this.selected});
+  const _AssetThumb({required this.asset, required this.selected, this.backup});
 
   final AssetEntity asset;
   final bool selected;
+  final String? backup;
 
   @override
   State<_AssetThumb> createState() => _AssetThumbState();
@@ -195,6 +218,12 @@ class _AssetThumbState extends State<_AssetThumb> {
           bottom: 4,
           child: Icon(Icons.play_circle_fill, size: 18, color: Colors.white),
         ),
+      if (widget.backup != null)
+        Positioned(
+          right: 4,
+          top: 4,
+          child: _BackupBadge(status: widget.backup!),
+        ),
       if (widget.selected) ...[
         const ColoredBox(color: Color(0x66000000)),
         const Positioned(
@@ -205,6 +234,33 @@ class _AssetThumbState extends State<_AssetThumb> {
       ],
     ],
   );
+}
+
+/// On the device only, on its way, on the server and verified, or failed.
+class _BackupBadge extends StatelessWidget {
+  const _BackupBadge({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, color) = switch (status) {
+      'verified' => (Icons.cloud_done, Palette.ok),
+      'failed' => (Icons.error, Palette.err),
+      'pending' => (Icons.cloud_queue, Colors.white),
+      _ => (Icons.cloud_upload, Palette.gold),
+    };
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: Color(0x8C000000),
+        shape: BoxShape.circle,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: Icon(icon, size: 15, color: color),
+      ),
+    );
+  }
 }
 
 class _TaskList extends ConsumerWidget {

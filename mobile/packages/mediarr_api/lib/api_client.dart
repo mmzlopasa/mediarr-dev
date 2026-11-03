@@ -251,8 +251,12 @@ class ApiClient {
           return ChecksumCheckRequest.fromJson(value);
         case 'ChecksumCheckResponse':
           return ChecksumCheckResponse.fromJson(value);
+        case 'CreateDeviceKeyRequest':
+          return CreateDeviceKeyRequest.fromJson(value);
         case 'CreateUserRequest':
           return CreateUserRequest.fromJson(value);
+        case 'DeviceKey':
+          return DeviceKey.fromJson(value);
         case 'Error':
           return Error.fromJson(value);
         case 'Health':

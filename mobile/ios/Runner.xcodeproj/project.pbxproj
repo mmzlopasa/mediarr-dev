@@ -16,6 +16,11 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		A1B2C3D4E5F6000000000000 /* BackupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000010 /* BackupStore.swift */; };
+		A1B2C3D4E5F6000000000001 /* BackupRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* BackupRequest.swift */; };
+		A1B2C3D4E5F6000000000002 /* BackupKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000012 /* BackupKeychain.swift */; };
+		A1B2C3D4E5F6000000000003 /* BackupEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000013 /* BackupEngine.swift */; };
+		A1B2C3D4E5F6000000000004 /* BackupChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000014 /* BackupChannel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +64,11 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000010 /* BackupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackupStore.swift; path = Backup/BackupStore.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000011 /* BackupRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackupRequest.swift; path = Backup/BackupRequest.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000012 /* BackupKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackupKeychain.swift; path = Backup/BackupKeychain.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000013 /* BackupEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackupEngine.swift; path = Backup/BackupEngine.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000014 /* BackupChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackupChannel.swift; path = Backup/BackupChannel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,6 +133,11 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
+				A1B2C3D4E5F6000000000010 /* BackupStore.swift */,
+				A1B2C3D4E5F6000000000011 /* BackupRequest.swift */,
+				A1B2C3D4E5F6000000000012 /* BackupKeychain.swift */,
+				A1B2C3D4E5F6000000000013 /* BackupEngine.swift */,
+				A1B2C3D4E5F6000000000014 /* BackupChannel.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -284,6 +299,11 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
+				A1B2C3D4E5F6000000000000 /* BackupStore.swift in Sources */,
+				A1B2C3D4E5F6000000000001 /* BackupRequest.swift in Sources */,
+				A1B2C3D4E5F6000000000002 /* BackupKeychain.swift in Sources */,
+				A1B2C3D4E5F6000000000003 /* BackupEngine.swift in Sources */,
+				A1B2C3D4E5F6000000000004 /* BackupChannel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

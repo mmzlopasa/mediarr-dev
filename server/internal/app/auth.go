@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 
@@ -419,6 +420,45 @@ func (s *apiServer) DisableTotp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.queries.DisableTotp(r.Context(), user.ID); err != nil {
+		internalError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *apiServer) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	var body api.CreateDeviceKeyRequest
+	if !readJSON(w, r, &body) {
+		return
+	}
+	name := strings.TrimSpace(body.Name)
+	if name == "" || len(name) > 100 {
+		writeError(w, http.StatusBadRequest, "enter a device name")
+		return
+	}
+	key, hash, err := auth.NewToken()
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	id, err := s.queries.CreateAPIKey(r.Context(), db.CreateAPIKeyParams{UserID: user.ID, Name: name, KeyHash: hash})
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, api.DeviceKey{Id: uuid.UUID(id.Bytes), Key: key})
+}
+
+func (s *apiServer) RevokeDeviceKey(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	if err := s.queries.DeleteAPIKey(r.Context(), db.DeleteAPIKeyParams{ID: pgUUID(id), UserID: user.ID}); err != nil {
 		internalError(w, r, err)
 		return
 	}

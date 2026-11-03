@@ -598,6 +598,80 @@ func TestFirstUploadsOfANewUserCanRunTogether(t *testing.T) {
 	}
 }
 
+// A background transfer on iOS can only send one file in one request.
+func TestWholeFileInOneRequestWithAKey(t *testing.T) {
+	s := newStack(t)
+	admin := s.admin()
+	resp, body := admin.post("/api/me/device-keys", api.CreateDeviceKeyRequest{Name: "iPhone"})
+	expect(t, resp, body, http.StatusCreated)
+	var key api.DeviceKey
+	if err := json.Unmarshal(body, &key); err != nil {
+		t.Fatal(err)
+	}
+
+	send := func(data []byte, sum string) *http.Response {
+		t.Helper()
+		resp, _ := s.client().do(http.MethodPost, "/api/uploads", map[string]string{
+			apiKeyHeader:      key.Key,
+			"Tus-Resumable":   "1.0.0",
+			"Upload-Length":   strconv.Itoa(len(data)),
+			"Upload-Metadata": tusMeta(map[string]string{"filename": "IMG_1.HEIC", "checksum": sum}),
+			"Content-Type":    "application/offset+octet-stream",
+		}, bytes.NewReader(data))
+		return resp
+	}
+	data := randomBytes(t, 2048)
+	digest := sha256.Sum256(data)
+	sum := hex.EncodeToString(digest[:])
+
+	first := send(data, sum)
+	if first.StatusCode != http.StatusCreated || first.Header.Get("X-Asset-Id") == "" || first.Header.Get("X-Asset-Duplicate") != "false" {
+		t.Fatalf("first: %d %v", first.StatusCode, first.Header)
+	}
+	stored, _ := s.assetFile(first.Header.Get("X-Asset-Id"))
+	got, err := os.ReadFile(stored)
+	if err != nil || !bytes.Equal(got, data) {
+		t.Errorf("stored file differs: %v", err)
+	}
+
+	second := send(data, sum)
+	if second.StatusCode != http.StatusCreated || second.Header.Get("X-Asset-Id") != first.Header.Get("X-Asset-Id") || second.Header.Get("X-Asset-Duplicate") != "true" {
+		t.Errorf("second: %d %v", second.StatusCode, second.Header)
+	}
+
+	// A file damaged on the way is refused.
+	if bad := send(randomBytes(t, 2048), sum); bad.StatusCode != 460 {
+		t.Errorf("wrong checksum: %d", bad.StatusCode)
+	}
+
+	resp, body = admin.do(http.MethodDelete, "/api/me/device-keys/"+key.Id.String(), nil, nil)
+	expect(t, resp, body, http.StatusNoContent)
+	if revoked := send(randomBytes(t, 100), ""); revoked.StatusCode != http.StatusUnauthorized {
+		t.Errorf("revoked key: %d", revoked.StatusCode)
+	}
+}
+
+func TestDeviceKeyCannotBeRevokedByAnotherUser(t *testing.T) {
+	s := newStack(t)
+	admin := s.admin()
+	other := s.user(admin, "ana@example.com")
+	resp, body := admin.post("/api/me/device-keys", api.CreateDeviceKeyRequest{Name: "iPhone"})
+	expect(t, resp, body, http.StatusCreated)
+	var key api.DeviceKey
+	if err := json.Unmarshal(body, &key); err != nil {
+		t.Fatal(err)
+	}
+	resp, body = other.do(http.MethodDelete, "/api/me/device-keys/"+key.Id.String(), nil, nil)
+	expect(t, resp, body, http.StatusNoContent)
+	resp, body = s.client().do(http.MethodGet, "/api/assets", map[string]string{apiKeyHeader: key.Key}, nil)
+	expect(t, resp, body, http.StatusOK)
+
+	resp, body = s.client().post("/api/me/device-keys", api.CreateDeviceKeyRequest{Name: "x"})
+	expect(t, resp, body, http.StatusUnauthorized)
+	resp, body = admin.post("/api/me/device-keys", api.CreateDeviceKeyRequest{Name: "  "})
+	expect(t, resp, body, http.StatusBadRequest)
+}
+
 func TestChecksumMismatchIsRejected(t *testing.T) {
 	s := newStack(t)
 	c := s.admin()

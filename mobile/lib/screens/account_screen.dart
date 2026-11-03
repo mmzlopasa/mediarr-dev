@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../services/backup.dart';
 import '../services/session.dart';
 import '../theme.dart';
 
@@ -52,7 +54,17 @@ class AccountScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: const StadiumBorder(),
             ),
-            onPressed: () => ref.read(sessionProvider.notifier).signOut(),
+            onPressed: () async {
+              // Otherwise the device would keep uploading after signing out.
+              final backup = ref.read(backupProvider);
+              final notifier = ref.read(sessionProvider.notifier);
+              try {
+                await backup.disable(session);
+              } on MissingPluginException {
+                // No native engine on this platform.
+              }
+              await notifier.signOut();
+            },
           ),
         ],
       ),

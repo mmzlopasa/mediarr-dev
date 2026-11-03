@@ -63,7 +63,8 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**cancelUpload**](doc//DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
 *DefaultApi* | [**changePassword**](doc//DefaultApi.md#changepassword) | **POST** /api/me/password | Change the current user's password and end their other sessions
 *DefaultApi* | [**checkAssets**](doc//DefaultApi.md#checkassets) | **POST** /api/assets/check | Report which SHA-256 checksums the current user already has, so uploads can be skipped
-*DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0)
+*DefaultApi* | [**createDeviceKey**](doc//DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
+*DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 *DefaultApi* | [**createUser**](doc//DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
 *DefaultApi* | [**disableTotp**](doc//DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 *DefaultApi* | [**downloadAssets**](doc//DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
@@ -81,6 +82,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listUsers**](doc//DefaultApi.md#listusers) | **GET** /api/admin/users | List users
 *DefaultApi* | [**login**](doc//DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
+*DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 *DefaultApi* | [**setup**](doc//DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 *DefaultApi* | [**setupTotp**](doc//DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
 
@@ -98,7 +100,9 @@ Class | Method | HTTP request | Description
  - [ChangePasswordRequest](doc//ChangePasswordRequest.md)
  - [ChecksumCheckRequest](doc//ChecksumCheckRequest.md)
  - [ChecksumCheckResponse](doc//ChecksumCheckResponse.md)
+ - [CreateDeviceKeyRequest](doc//CreateDeviceKeyRequest.md)
  - [CreateUserRequest](doc//CreateUserRequest.md)
+ - [DeviceKey](doc//DeviceKey.md)
  - [Error](doc//Error.md)
  - [Health](doc//Health.md)
  - [LoginError](doc//LoginError.md)

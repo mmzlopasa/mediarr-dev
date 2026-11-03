@@ -157,6 +157,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/device-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a long-lived key for this device, used by background backup */
+        post: operations["createDeviceKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/device-keys/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke one of the current user's device keys */
+        delete: operations["revokeDeviceKey"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/users": {
         parameters: {
             query?: never;
@@ -354,7 +388,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create a resumable upload (tus 1.0) */
+        /** Create a resumable upload (tus 1.0). A body uploads the whole file in this request. */
         post: operations["createUpload"];
         delete?: never;
         options?: never;
@@ -429,6 +463,14 @@ export interface components {
             name: string;
             password: string;
             isAdmin: boolean;
+        };
+        CreateDeviceKeyRequest: {
+            name: string;
+        };
+        DeviceKey: {
+            /** Format: uuid */
+            id: string;
+            key: string;
         };
         TotpSetup: {
             secret: string;
@@ -820,6 +862,53 @@ export interface operations {
             401: components["responses"]["Error"];
         };
     };
+    createDeviceKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDeviceKeyRequest"];
+            };
+        };
+        responses: {
+            /** @description The key. It is shown only once. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceKey"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    revokeDeviceKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Key revoked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+        };
+    };
     listUsers: {
         parameters: {
             query?: never;
@@ -1132,7 +1221,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Upload created; see the Location header */
+            /** @description Upload created; see the Location header. With a whole file in the body, also X-Asset-Id. */
             201: {
                 headers: {
                     [name: string]: unknown;

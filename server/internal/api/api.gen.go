@@ -324,12 +324,23 @@ type ChecksumCheckResponse struct {
 	Existing []string `json:"existing"`
 }
 
+// CreateDeviceKeyRequest defines model for CreateDeviceKeyRequest.
+type CreateDeviceKeyRequest struct {
+	Name string `json:"name"`
+}
+
 // CreateUserRequest defines model for CreateUserRequest.
 type CreateUserRequest struct {
 	Email    string `json:"email"`
 	IsAdmin  bool   `json:"isAdmin"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
+}
+
+// DeviceKey defines model for DeviceKey.
+type DeviceKey struct {
+	Id  openapi_types.UUID `json:"id"`
+	Key string             `json:"key"`
 }
 
 // Error defines model for Error.
@@ -464,6 +475,9 @@ type LoginJSONRequestBody = LoginRequest
 // SetupJSONRequestBody defines body for Setup for application/json ContentType.
 type SetupJSONRequestBody = SetupRequest
 
+// CreateDeviceKeyJSONRequestBody defines body for CreateDeviceKey for application/json ContentType.
+type CreateDeviceKeyJSONRequestBody = CreateDeviceKeyRequest
+
 // ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
 type ChangePasswordJSONRequestBody = ChangePasswordRequest
 
@@ -517,6 +531,12 @@ type ServerInterface interface {
 	// GetAuthStatus Report whether setup is needed and who is signed in
 	// (GET /api/auth/status)
 	GetAuthStatus(w http.ResponseWriter, r *http.Request)
+	// CreateDeviceKey Create a long-lived key for this device, used by background backup
+	// (POST /api/me/device-keys)
+	CreateDeviceKey(w http.ResponseWriter, r *http.Request)
+	// RevokeDeviceKey Revoke one of the current user's device keys
+	// (DELETE /api/me/device-keys/{id})
+	RevokeDeviceKey(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ChangePassword Change the current user's password and end their other sessions
 	// (POST /api/me/password)
 	ChangePassword(w http.ResponseWriter, r *http.Request)
@@ -535,7 +555,7 @@ type ServerInterface interface {
 	// GetTimelineBucket List one month's assets, newest first
 	// (GET /api/timeline/buckets/{month})
 	GetTimelineBucket(w http.ResponseWriter, r *http.Request, month string)
-	// CreateUpload Create a resumable upload (tus 1.0)
+	// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 	// (POST /api/uploads)
 	CreateUpload(w http.ResponseWriter, r *http.Request)
 	// CancelUpload Cancel an upload (tus 1.0)
@@ -640,6 +660,18 @@ func (_ Unimplemented) GetAuthStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// CreateDeviceKey Create a long-lived key for this device, used by background backup
+// (POST /api/me/device-keys)
+func (_ Unimplemented) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RevokeDeviceKey Revoke one of the current user's device keys
+// (DELETE /api/me/device-keys/{id})
+func (_ Unimplemented) RevokeDeviceKey(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ChangePassword Change the current user's password and end their other sessions
 // (POST /api/me/password)
 func (_ Unimplemented) ChangePassword(w http.ResponseWriter, r *http.Request) {
@@ -676,7 +708,7 @@ func (_ Unimplemented) GetTimelineBucket(w http.ResponseWriter, r *http.Request,
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// CreateUpload Create a resumable upload (tus 1.0)
+// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 // (POST /api/uploads)
 func (_ Unimplemented) CreateUpload(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -1030,6 +1062,46 @@ func (siw *ServerInterfaceWrapper) GetAuthStatus(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// CreateDeviceKey operation middleware
+func (siw *ServerInterfaceWrapper) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateDeviceKey(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RevokeDeviceKey operation middleware
+func (siw *ServerInterfaceWrapper) RevokeDeviceKey(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RevokeDeviceKey(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ChangePassword operation middleware
 func (siw *ServerInterfaceWrapper) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
@@ -1371,6 +1443,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/me/totp/disable", wrapper.DisableTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/me/device-keys", wrapper.CreateDeviceKey)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/me/device-keys/{id}", wrapper.RevokeDeviceKey)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/users", wrapper.ListUsers)

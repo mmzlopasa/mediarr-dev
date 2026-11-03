@@ -105,6 +105,20 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteAPIKey = `-- name: DeleteAPIKey :exec
+DELETE FROM api_keys WHERE id = $1 AND user_id = $2
+`
+
+type DeleteAPIKeyParams struct {
+	ID     pgtype.UUID
+	UserID pgtype.UUID
+}
+
+func (q *Queries) DeleteAPIKey(ctx context.Context, arg DeleteAPIKeyParams) error {
+	_, err := q.db.Exec(ctx, deleteAPIKey, arg.ID, arg.UserID)
+	return err
+}
+
 const deleteExpiredSessions = `-- name: DeleteExpiredSessions :exec
 DELETE FROM sessions WHERE expires_at <= now()
 `

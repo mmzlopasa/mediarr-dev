@@ -28,6 +28,15 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter test
+      - name: Test the native backup code
+        run: |
+          flutter build ios --config-only --no-codesign
+          DEVICE=$(xcrun simctl list devices available | grep -m1 -E 'iPhone' | grep -oE '[0-9A-F-]{36}')
+          xcodebuild test -workspace ios/Runner.xcworkspace -scheme Runner \
+            -destination "platform=iOS Simulator,id=$DEVICE" \
+            -only-testing:RunnerTests CODE_SIGNING_ALLOWED=NO | tail -40
+          test "${PIPESTATUS[0]}" -eq 0
+        shell: bash
       - run: flutter build ios --release --no-codesign --build-number=${{ github.run_number }}
       - name: Package the .ipa
         run: |

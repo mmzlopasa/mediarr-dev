@@ -283,7 +283,67 @@ class DefaultApi {
     return null;
   }
 
-  /// Create a resumable upload (tus 1.0)
+  /// Create a long-lived key for this device, used by background backup
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [CreateDeviceKeyRequest] createDeviceKeyRequest (required):
+  Future<Response> createDeviceKeyWithHttpInfo(
+    CreateDeviceKeyRequest createDeviceKeyRequest,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/device-keys';
+
+    // ignore: prefer_final_locals
+    Object? postBody = createDeviceKeyRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Create a long-lived key for this device, used by background backup
+  ///
+  /// Parameters:
+  ///
+  /// * [CreateDeviceKeyRequest] createDeviceKeyRequest (required):
+  Future<DeviceKey?> createDeviceKey(
+    CreateDeviceKeyRequest createDeviceKeyRequest,
+  ) async {
+    final response = await createDeviceKeyWithHttpInfo(
+      createDeviceKeyRequest,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'DeviceKey',
+      ) as DeviceKey;
+    }
+    return null;
+  }
+
+  /// Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
   ///
   /// Note: This method returns the HTTP [Response].
   Future<Response> createUploadWithHttpInfo() async {
@@ -310,7 +370,7 @@ class DefaultApi {
     );
   }
 
-  /// Create a resumable upload (tus 1.0)
+  /// Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
   Future<void> createUpload() async {
     final response = await createUploadWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -1248,6 +1308,55 @@ class DefaultApi {
   /// End the current session
   Future<void> logout() async {
     final response = await logoutWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Revoke one of the current user's device keys
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> revokeDeviceKeyWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/device-keys/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Revoke one of the current user's device keys
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> revokeDeviceKey(
+    String id,
+  ) async {
+    final response = await revokeDeviceKeyWithHttpInfo(
+      id,
+    );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

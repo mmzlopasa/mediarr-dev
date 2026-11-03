@@ -122,6 +122,32 @@ paths:
       responses:
         "204": { description: TOTP disabled }
         "401": { $ref: "#/components/responses/Error" }
+  /api/me/device-keys:
+    post:
+      operationId: createDeviceKey
+      summary: Create a long-lived key for this device, used by background backup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateDeviceKeyRequest" }
+      responses:
+        "201":
+          description: The key. It is shown only once.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeviceKey" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/me/device-keys/{id}:
+    delete:
+      operationId: revokeDeviceKey
+      summary: Revoke one of the current user's device keys
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Key revoked }
+        "401": { $ref: "#/components/responses/Error" }
   /api/admin/users:
     get:
       operationId: listUsers
@@ -310,9 +336,9 @@ paths:
   /api/uploads:
     post:
       operationId: createUpload
-      summary: Create a resumable upload (tus 1.0)
+      summary: Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
       responses:
-        "201": { description: Upload created; see the Location header }
+        "201": { description: "Upload created; see the Location header. With a whole file in the body, also X-Asset-Id." }
         "401": { $ref: "#/components/responses/Error" }
   /api/uploads/{id}:
     parameters:
@@ -405,6 +431,17 @@ components:
         name: { type: string }
         password: { type: string }
         isAdmin: { type: boolean }
+    CreateDeviceKeyRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+    DeviceKey:
+      type: object
+      required: [id, key]
+      properties:
+        id: { type: string, format: uuid }
+        key: { type: string }
     TotpSetup:
       type: object
       required: [secret, uri]
