@@ -490,8 +490,9 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
       await _session.api.setVaultPin(VaultPinChange(pin: pin));
       // A PIN kept from before no longer opens anything.
       await forgetVaultPin();
-      if (mounted)
+      if (mounted) {
         setState(() => _status = VaultStatus(hasPin: true, unlocked: false));
+      }
       await _unlock(pin, keep: true);
     } on ApiException {
       if (mounted) {
