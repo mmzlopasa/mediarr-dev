@@ -7,8 +7,11 @@
 		Map as MapView,
 		NavigationControl,
 		removeProtocol,
+		setWorkerUrl,
 		type GeoJSONSource
 	} from 'maplibre-gl';
+	// Named here, because a build does not find the worker by itself and the map would stay empty.
+	import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 	import { Protocol } from 'pmtiles';
 	import type { MapPoints } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
@@ -138,6 +141,7 @@
 	}
 
 	onMount(() => {
+		setWorkerUrl(workerUrl);
 		const protocol = new Protocol();
 		addProtocol('pmtiles', protocol.tile);
 		let view: MapView | undefined;

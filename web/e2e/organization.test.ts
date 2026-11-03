@@ -148,6 +148,12 @@ test('a photo with a location appears on the map under its place name', async ({
 		});
 	await expect(page.locator('.tl-tile')).toHaveCount(before + 1, { timeout: 40000 });
 
+	const problems: string[] = [];
+	page.on('console', (message) => {
+		if (message.type() === 'error' && message.text().includes('Worker')) {
+			problems.push(message.text());
+		}
+	});
 	await page.goto('/map');
 	await expect(page.getByRole('heading', { name: 'Map' })).toBeVisible();
 	await expect(page.getByText('With a location: 1')).toBeVisible();
@@ -155,6 +161,9 @@ test('a photo with a location appears on the map under its place name', async ({
 	await expect(page.getByText('With a location: 0')).toBeVisible();
 	await page.getByLabel('To date').fill('');
 	await expect(page.getByText('With a location: 1')).toBeVisible();
+
+	await expect(page.locator('canvas.maplibregl-canvas')).toBeVisible();
+	expect(problems, 'the map needs its worker').toEqual([]);
 
 	const points = await (await page.request.get('/api/map/points')).json();
 	const detail = await (await page.request.get(`/api/assets/${points.ids[0]}`)).json();
