@@ -1511,6 +1511,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/external": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing */
+        get: operations["getExternalLibrary"];
+        /** Choose whose photos the folder holds, and start reading it */
+        put: operations["setExternalLibrary"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/external/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Look through the folder for changes now */
+        post: operations["scanExternalLibrary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/folders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One folder of the external library, for the user who owns it */
+        get: operations["getFolder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/memories": {
         parameters: {
             query?: never;
@@ -1609,6 +1661,44 @@ export interface components {
             /** Format: float */
             ratio: number;
             localAt: string;
+        };
+        ExternalLibrary: {
+            /** @description A folder was given in .env and can be read */
+            available: boolean;
+            /** Format: uuid */
+            ownerId?: string;
+            /** Format: int64 */
+            assets: number;
+            /**
+             * Format: int64
+             * @description Records whose file was not found. They are kept
+             */
+            missing: number;
+            scanning: boolean;
+            /** Format: date-time */
+            scanFinishedAt?: string;
+            scanError?: string;
+        };
+        ExternalLibraryOwner: {
+            /** Format: uuid */
+            ownerId: string;
+        };
+        Folder: {
+            /** @description This user owns an external library */
+            available: boolean;
+            path: string;
+            folders: components["schemas"]["FolderEntry"][];
+            items: components["schemas"]["TimelineItem"][];
+        };
+        FolderEntry: {
+            name: string;
+            /**
+             * Format: int64
+             * @description Photos anywhere inside it
+             */
+            count: number;
+            /** Format: uuid */
+            coverId: string;
         };
         Memory: {
             /** @enum {string} */
@@ -2038,6 +2128,8 @@ export interface components {
             isOwner?: boolean;
             /** @description False on a public link that does not allow downloads */
             downloadAllowed?: boolean;
+            /** @description The file of an external library was not found on the last scan */
+            isMissing?: boolean;
             /** @description Only for the owner */
             tags?: string[];
             /** @description All shots of its stack, the main one first. Only for the owner */
@@ -4588,6 +4680,101 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    getExternalLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Its state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalLibrary"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    setExternalLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExternalLibraryOwner"];
+            };
+        };
+        responses: {
+            /** @description Its state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalLibrary"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    scanExternalLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Started */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    getFolder: {
+        parameters: {
+            query?: {
+                /** @description Relative to the library. Empty is its top */
+                path?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Its folders and photos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Folder"];
+                };
+            };
             401: components["responses"]["Error"];
         };
     };

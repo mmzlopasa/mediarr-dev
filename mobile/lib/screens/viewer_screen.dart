@@ -576,6 +576,11 @@ class _InfoSheet extends StatelessWidget {
             if (detail.iso != null) 'ISO ${detail.iso}',
           ].join(' · ');
           final rows = <(String, String)>[
+            if (detail.isMissing == true)
+              (
+                'Unavailable',
+                'The file was not found on the last scan of the external library. The original is available again once the file is back.',
+              ),
             ('Name', detail.originalName),
             (
               detail.hasCaptureTime == true ? 'Taken' : 'Added',

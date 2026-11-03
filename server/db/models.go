@@ -99,6 +99,7 @@ type Asset struct {
 	Phash              pgtype.Int8
 	Sharpness          pgtype.Float4
 	OrganizedAt        pgtype.Timestamptz
+	MissingAt          pgtype.Timestamptz
 }
 
 type AssetFile struct {
@@ -141,6 +142,13 @@ type Exif struct {
 	GeocodedAt   pgtype.Timestamptz
 }
 
+type ExternalFile struct {
+	LibraryID pgtype.UUID
+	Path      string
+	SizeBytes int64
+	Mtime     pgtype.Timestamptz
+}
+
 type Face struct {
 	ID        pgtype.UUID
 	AssetID   pgtype.UUID
@@ -155,12 +163,15 @@ type Face struct {
 }
 
 type Library struct {
-	ID        pgtype.UUID
-	UserID    pgtype.UUID
-	Name      string
-	Kind      string
-	Path      pgtype.Text
-	CreatedAt pgtype.Timestamptz
+	ID             pgtype.UUID
+	UserID         pgtype.UUID
+	Name           string
+	Kind           string
+	Path           pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	ScanStartedAt  pgtype.Timestamptz
+	ScanFinishedAt pgtype.Timestamptz
+	ScanError      pgtype.Text
 }
 
 type PartnerShare struct {

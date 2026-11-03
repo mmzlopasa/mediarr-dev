@@ -14,7 +14,7 @@ PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/packag
 .PHONY: dev down deploy landing testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e lighthouse
 
 dev:
-	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache .dev/models
+	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache .dev/models .dev/external
 	$(DEV_COMPOSE) up -d --build --wait
 
 down:
@@ -86,6 +86,7 @@ test:
 
 # Runs in the Playwright image, so the host needs no browser or system libraries.
 E2E_PASSWORD := $(shell openssl rand -hex 16)
+E2E_EXTERNAL := $(if $(DEV_EXTERNAL),$(DEV_EXTERNAL),.dev/external)
 e2e:
 	# Hot reload can leave an old worker running next to the new one, and it would take jobs it does not know.
 	$(DEV_COMPOSE) restart worker
@@ -97,12 +98,15 @@ e2e:
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-member@example.com "Demo korisnik"
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-organizer@example.com "Demo korisnik"
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-stacker@example.com "Demo korisnik"
+	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-librarian@example.com "Demo korisnik"
+	mkdir -p "$(E2E_EXTERNAL)/e2e-folder/inner"
+	cp web/e2e/fixtures/gps.jpg "$(E2E_EXTERNAL)/e2e-folder/inner/external-photo.jpg"
 	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e E2E_PASSWORD=$(E2E_PASSWORD) \
 		-v "$(CURDIR)/web:/web" -w /web mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
-		node_modules/.bin/playwright test; status=$$?; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker"; exit $$status
+		node_modules/.bin/playwright test; status=$$?; rm -rf "$(E2E_EXTERNAL)/e2e-folder"; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker e2e-librarian"; exit $$status
 
 # Test accounts must not stay in the demo database, where they would appear as real data.
-TEST_USERS ?= e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker uploadtest
+TEST_USERS ?= e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker e2e-librarian uploadtest
 clean-test-users:
 	for email in $(TEST_USERS); do \
 		$(DEV_COMPOSE) exec -T server /tmp/air/mediarr user delete $$email@example.com; \

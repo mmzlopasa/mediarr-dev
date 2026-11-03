@@ -103,6 +103,8 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getCollectionOriginal**](doc//DefaultApi.md#getcollectionoriginal) | **GET** /api/collections/{scope}/assets/{id}/original | The original of an asset in a collection
 *DefaultApi* | [**getCollectionThumbnail**](doc//DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 *DefaultApi* | [**getCollectionVideoFile**](doc//DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
+*DefaultApi* | [**getExternalLibrary**](doc//DefaultApi.md#getexternallibrary) | **GET** /api/admin/external | The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+*DefaultApi* | [**getFolder**](doc//DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
 *DefaultApi* | [**getMapPoints**](doc//DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 *DefaultApi* | [**getMapStyle**](doc//DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
@@ -149,9 +151,11 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**removeAlbumMember**](doc//DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
 *DefaultApi* | [**removePartner**](doc//DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
 *DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
+*DefaultApi* | [**scanExternalLibrary**](doc//DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 *DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
 *DefaultApi* | [**setAlbumHeart**](doc//DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
+*DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 *DefaultApi* | [**setMapStyle**](doc//DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 *DefaultApi* | [**setPartnerTimeline**](doc//DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
@@ -196,6 +200,10 @@ Class | Method | HTTP request | Description
  - [DuplicateItem](doc//DuplicateItem.md)
  - [Duplicates](doc//Duplicates.md)
  - [Error](doc//Error.md)
+ - [ExternalLibrary](doc//ExternalLibrary.md)
+ - [ExternalLibraryOwner](doc//ExternalLibraryOwner.md)
+ - [Folder](doc//Folder.md)
+ - [FolderEntry](doc//FolderEntry.md)
  - [Health](doc//Health.md)
  - [LinkPassword](doc//LinkPassword.md)
  - [LoginError](doc//LoginError.md)

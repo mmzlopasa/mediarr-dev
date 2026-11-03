@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseURL       string
 	LibraryPath       string
 	CachePath         string
+	ExternalPath      string
 	WorkerConcurrency int
 	VideoAccel        string
 	MLURL             string
@@ -25,6 +26,7 @@ func Load() Config {
 		DatabaseURL:       os.Getenv("DATABASE_URL"),
 		LibraryPath:       env("LIBRARY_PATH", "/data/library"),
 		CachePath:         env("CACHE_PATH", "/data/cache"),
+		ExternalPath:      env("EXTERNAL_PATH", "/external"),
 		WorkerConcurrency: concurrency(os.Getenv("WORKER_CONCURRENCY"), runtime.NumCPU()),
 		VideoAccel:        os.Getenv("VIDEO_ACCEL"),
 		MLURL:             os.Getenv("ML_URL"),

@@ -748,6 +748,9 @@ type AssetDetail struct {
 	IsArchived bool               `json:"isArchived"`
 	IsFavorite bool               `json:"isFavorite"`
 
+	// IsMissing The file of an external library was not found on the last scan
+	IsMissing *bool `json:"isMissing,omitempty"`
+
 	// IsOwner Only the owner can change or delete the asset
 	IsOwner  *bool           `json:"isOwner,omitempty"`
 	Iso      *int            `json:"iso,omitempty"`
@@ -911,6 +914,43 @@ type Duplicates struct {
 // Error defines model for Error.
 type Error struct {
 	Message string `json:"message"`
+}
+
+// ExternalLibrary defines model for ExternalLibrary.
+type ExternalLibrary struct {
+	Assets int64 `json:"assets"`
+
+	// Available A folder was given in .env and can be read
+	Available bool `json:"available"`
+
+	// Missing Records whose file was not found. They are kept
+	Missing        int64               `json:"missing"`
+	OwnerId        *openapi_types.UUID `json:"ownerId,omitempty"`
+	ScanError      *string             `json:"scanError,omitempty"`
+	ScanFinishedAt *time.Time          `json:"scanFinishedAt,omitempty"`
+	Scanning       bool                `json:"scanning"`
+}
+
+// ExternalLibraryOwner defines model for ExternalLibraryOwner.
+type ExternalLibraryOwner struct {
+	OwnerId openapi_types.UUID `json:"ownerId"`
+}
+
+// Folder defines model for Folder.
+type Folder struct {
+	// Available This user owns an external library
+	Available bool           `json:"available"`
+	Folders   []FolderEntry  `json:"folders"`
+	Items     []TimelineItem `json:"items"`
+	Path      string         `json:"path"`
+}
+
+// FolderEntry defines model for FolderEntry.
+type FolderEntry struct {
+	// Count Photos anywhere inside it
+	Count   int64              `json:"count"`
+	CoverId openapi_types.UUID `json:"coverId"`
+	Name    string             `json:"name"`
 }
 
 // Health defines model for Health.
@@ -1309,6 +1349,12 @@ type GetCollectionBucketsParamsScope string
 // GetCollectionBucketParamsScope defines parameters for GetCollectionBucket.
 type GetCollectionBucketParamsScope string
 
+// GetFolderParams defines parameters for GetFolder.
+type GetFolderParams struct {
+	// Path Relative to the library. Empty is its top
+	Path *string `form:"path,omitempty" json:"path,omitempty"`
+}
+
 // GetMapPointsParams defines parameters for GetMapPoints.
 type GetMapPointsParams struct {
 	From *openapi_types.Date `form:"from,omitempty" json:"from,omitempty"`
@@ -1338,6 +1384,9 @@ type GetPublicThumbnailParamsSize string
 type SearchAssetsParams struct {
 	Q string `form:"q" json:"q"`
 }
+
+// SetExternalLibraryJSONRequestBody defines body for SetExternalLibrary for application/json ContentType.
+type SetExternalLibraryJSONRequestBody = ExternalLibraryOwner
 
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
@@ -1425,6 +1474,15 @@ type ServerInterface interface {
 	// GetAnalysisProgress How far picture analysis has come. Administrators only.
 	// (GET /api/admin/analysis)
 	GetAnalysisProgress(w http.ResponseWriter, r *http.Request)
+	// GetExternalLibrary The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+	// (GET /api/admin/external)
+	GetExternalLibrary(w http.ResponseWriter, r *http.Request)
+	// SetExternalLibrary Choose whose photos the folder holds, and start reading it
+	// (PUT /api/admin/external)
+	SetExternalLibrary(w http.ResponseWriter, r *http.Request)
+	// ScanExternalLibrary Look through the folder for changes now
+	// (POST /api/admin/external/scan)
+	ScanExternalLibrary(w http.ResponseWriter, r *http.Request)
 	// GetAdminOverview Live statistics of the whole server, read from the database and the library disk
 	// (GET /api/admin/overview)
 	GetAdminOverview(w http.ResponseWriter, r *http.Request)
@@ -1569,6 +1627,9 @@ type ServerInterface interface {
 	// DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 	// (POST /api/duplicates/dismiss)
 	DismissDuplicates(w http.ResponseWriter, r *http.Request)
+	// GetFolder One folder of the external library, for the user who owns it
+	// (GET /api/folders)
+	GetFolder(w http.ResponseWriter, r *http.Request, params GetFolderParams)
 	// GetMapPoints Photos with a location that this user may see, oldest first
 	// (GET /api/map/points)
 	GetMapPoints(w http.ResponseWriter, r *http.Request, params GetMapPointsParams)
@@ -1740,6 +1801,24 @@ type Unimplemented struct{}
 // GetAnalysisProgress How far picture analysis has come. Administrators only.
 // (GET /api/admin/analysis)
 func (_ Unimplemented) GetAnalysisProgress(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetExternalLibrary The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+// (GET /api/admin/external)
+func (_ Unimplemented) GetExternalLibrary(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetExternalLibrary Choose whose photos the folder holds, and start reading it
+// (PUT /api/admin/external)
+func (_ Unimplemented) SetExternalLibrary(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ScanExternalLibrary Look through the folder for changes now
+// (POST /api/admin/external/scan)
+func (_ Unimplemented) ScanExternalLibrary(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2028,6 +2107,12 @@ func (_ Unimplemented) ListDuplicates(w http.ResponseWriter, r *http.Request) {
 // DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 // (POST /api/duplicates/dismiss)
 func (_ Unimplemented) DismissDuplicates(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetFolder One folder of the external library, for the user who owns it
+// (GET /api/folders)
+func (_ Unimplemented) GetFolder(w http.ResponseWriter, r *http.Request, params GetFolderParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2369,6 +2454,48 @@ func (siw *ServerInterfaceWrapper) GetAnalysisProgress(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAnalysisProgress(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetExternalLibrary operation middleware
+func (siw *ServerInterfaceWrapper) GetExternalLibrary(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetExternalLibrary(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetExternalLibrary operation middleware
+func (siw *ServerInterfaceWrapper) SetExternalLibrary(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetExternalLibrary(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ScanExternalLibrary operation middleware
+func (siw *ServerInterfaceWrapper) ScanExternalLibrary(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScanExternalLibrary(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3698,6 +3825,39 @@ func (siw *ServerInterfaceWrapper) DismissDuplicates(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DismissDuplicates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFolder operation middleware
+func (siw *ServerInterfaceWrapper) GetFolder(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetFolderParams
+
+	// ------------- Optional query parameter "path" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "path", r.URL.Query(), &params.Path, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "path"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFolder(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5424,6 +5584,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/duplicates/dismiss", wrapper.DismissDuplicates)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/external", wrapper.SetExternalLibrary)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/external/scan", wrapper.ScanExternalLibrary)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/folders", wrapper.GetFolder)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/memories", wrapper.ListMemories)

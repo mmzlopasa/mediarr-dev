@@ -140,7 +140,7 @@ func (q *Queries) FindExistingChecksums(ctx context.Context, arg FindExistingChe
 }
 
 const getAsset = `-- name: GetAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at FROM assets WHERE id = $1
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at FROM assets WHERE id = $1
 `
 
 func (q *Queries) GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error) {
@@ -185,6 +185,7 @@ func (q *Queries) GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error) {
 		&i.Phash,
 		&i.Sharpness,
 		&i.OrganizedAt,
+		&i.MissingAt,
 	)
 	return i, err
 }
@@ -260,7 +261,7 @@ func (q *Queries) GetLiveVideo(ctx context.Context, livePhotoOf pgtype.UUID) (pg
 }
 
 const getOwnedAsset = `-- name: GetOwnedAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
 `
 
 type GetOwnedAssetParams struct {
@@ -310,6 +311,7 @@ func (q *Queries) GetOwnedAsset(ctx context.Context, arg GetOwnedAssetParams) (A
 		&i.Phash,
 		&i.Sharpness,
 		&i.OrganizedAt,
+		&i.MissingAt,
 	)
 	return i, err
 }
@@ -421,7 +423,7 @@ func (q *Queries) ListAssetFiles(ctx context.Context, assetID pgtype.UUID) ([]As
 }
 
 const listAssets = `-- name: ListAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at FROM assets
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at FROM assets
 WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL
   AND ($2::text IS NULL OR status = $2)
 ORDER BY created_at DESC, id DESC
@@ -482,6 +484,7 @@ func (q *Queries) ListAssets(ctx context.Context, arg ListAssetsParams) ([]Asset
 			&i.Phash,
 			&i.Sharpness,
 			&i.OrganizedAt,
+			&i.MissingAt,
 		); err != nil {
 			return nil, err
 		}
@@ -494,7 +497,7 @@ func (q *Queries) ListAssets(ctx context.Context, arg ListAssetsParams) ([]Asset
 }
 
 const listOwnedAssets = `-- name: ListOwnedAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
 `
 
 type ListOwnedAssetsParams struct {
@@ -550,6 +553,7 @@ func (q *Queries) ListOwnedAssets(ctx context.Context, arg ListOwnedAssetsParams
 			&i.Phash,
 			&i.Sharpness,
 			&i.OrganizedAt,
+			&i.MissingAt,
 		); err != nil {
 			return nil, err
 		}

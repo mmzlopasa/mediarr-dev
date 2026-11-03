@@ -44,7 +44,9 @@ type Deps struct {
 	Pool        *pgxpool.Pool
 	Inserter    *jobs.Inserter
 	LibraryPath string
-	CachePath   string
+	// ExternalPath is where the folder of EXTERNAL_LIBRARY_PATH is mounted, read only.
+	ExternalPath string
+	CachePath    string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
 }

@@ -111,7 +111,7 @@ func serve(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return fmt.Errorf("create job client: %w", err)
 	}
-	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath})
+	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath})
 	if err != nil {
 		return err
 	}
@@ -158,6 +158,18 @@ func worker(ctx context.Context, cfg config.Config) error {
 		return fmt.Errorf("create worker: %w", err)
 	}
 	slog.Info("worker ready", "concurrency", cfg.WorkerConcurrency)
+	if jobs.IsExternalAvailable(cfg.ExternalPath) {
+		go func() {
+			err := jobs.WatchExternal(ctx, cfg.ExternalPath, jobs.ExternalSettleTime, func() {
+				if _, err := client.Insert(ctx, jobs.ExternalScanArgs{}, nil); err != nil {
+					slog.Warn("a scan of the external library could not be queued", "error", err)
+				}
+			})
+			if err != nil {
+				slog.Warn("the external library is not watched; the periodic scan still finds changes", "error", err)
+			}
+		}()
+	}
 	return jobs.Run(ctx, client)
 }
 

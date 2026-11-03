@@ -287,6 +287,14 @@ class ApiClient {
           return Duplicates.fromJson(value);
         case 'Error':
           return Error.fromJson(value);
+        case 'ExternalLibrary':
+          return ExternalLibrary.fromJson(value);
+        case 'ExternalLibraryOwner':
+          return ExternalLibraryOwner.fromJson(value);
+        case 'Folder':
+          return Folder.fromJson(value);
+        case 'FolderEntry':
+          return FolderEntry.fromJson(value);
         case 'Health':
           return Health.fromJson(value);
         case 'LinkPassword':

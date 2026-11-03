@@ -15,6 +15,7 @@ class AssetDetail {
   AssetDetail({
     this.isOwner,
     this.downloadAllowed,
+    this.isMissing,
     this.tags = const [],
     this.stack = const [],
     this.people = const [],
@@ -70,6 +71,15 @@ class AssetDetail {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   bool? downloadAllowed;
+
+  /// The file of an external library was not found on the last scan
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? isMissing;
 
   /// Only for the owner
   List<String> tags;
@@ -299,6 +309,7 @@ class AssetDetail {
       other is AssetDetail &&
           other.isOwner == isOwner &&
           other.downloadAllowed == downloadAllowed &&
+          other.isMissing == isMissing &&
           _deepEquality.equals(other.tags, tags) &&
           _deepEquality.equals(other.stack, stack) &&
           _deepEquality.equals(other.people, people) &&
@@ -341,6 +352,7 @@ class AssetDetail {
       // ignore: unnecessary_parenthesis
       (isOwner == null ? 0 : isOwner!.hashCode) +
       (downloadAllowed == null ? 0 : downloadAllowed!.hashCode) +
+      (isMissing == null ? 0 : isMissing!.hashCode) +
       (tags.hashCode) +
       (stack.hashCode) +
       (people.hashCode) +
@@ -380,7 +392,7 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, tags=$tags, stack=$stack, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, isMissing=$isMissing, tags=$tags, stack=$stack, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -393,6 +405,11 @@ class AssetDetail {
       json[r'downloadAllowed'] = this.downloadAllowed;
     } else {
       json[r'downloadAllowed'] = null;
+    }
+    if (this.isMissing != null) {
+      json[r'isMissing'] = this.isMissing;
+    } else {
+      json[r'isMissing'] = null;
     }
     json[r'tags'] = this.tags;
     json[r'stack'] = this.stack;
@@ -552,6 +569,7 @@ class AssetDetail {
       return AssetDetail(
         isOwner: mapValueOfType<bool>(json, r'isOwner'),
         downloadAllowed: mapValueOfType<bool>(json, r'downloadAllowed'),
+        isMissing: mapValueOfType<bool>(json, r'isMissing'),
         tags: json[r'tags'] is Iterable
             ? (json[r'tags'] as Iterable).cast<String>().toList(growable: false)
             : const [],

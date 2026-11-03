@@ -67,6 +67,14 @@ export const appNav: NavItem[] = [
 		emptyEn: 'No memories yet.'
 	},
 	{
+		path: '/folders',
+		icon: 'folder',
+		hr: 'Mape',
+		en: 'Folders',
+		emptyHr: 'Ova mapa je prazna.',
+		emptyEn: 'This folder is empty.'
+	},
+	{
 		path: '/duplicates',
 		icon: 'copy',
 		hr: 'Duplikati',

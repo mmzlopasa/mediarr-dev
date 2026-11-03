@@ -52,6 +52,8 @@ Method | HTTP request | Description
 [**getCollectionOriginal**](DefaultApi.md#getcollectionoriginal) | **GET** /api/collections/{scope}/assets/{id}/original | The original of an asset in a collection
 [**getCollectionThumbnail**](DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 [**getCollectionVideoFile**](DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
+[**getExternalLibrary**](DefaultApi.md#getexternallibrary) | **GET** /api/admin/external | The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+[**getFolder**](DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
 [**getHealth**](DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
 [**getMapPoints**](DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 [**getMapStyle**](DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
@@ -98,9 +100,11 @@ Method | HTTP request | Description
 [**removeAlbumMember**](DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
 [**removePartner**](DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
 [**revokeDeviceKey**](DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
+[**scanExternalLibrary**](DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 [**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
 [**setAlbumHeart**](DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
+[**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 [**setMapStyle**](DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
 [**setPartner**](DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 [**setPartnerTimeline**](DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
@@ -1876,6 +1880,84 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getExternalLibrary**
+> ExternalLibrary getExternalLibrary()
+
+The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getExternalLibrary();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getExternalLibrary: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**ExternalLibrary**](ExternalLibrary.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getFolder**
+> Folder getFolder(path)
+
+One folder of the external library, for the user who owns it
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final path = path_example; // String | Relative to the library. Empty is its top
+
+try {
+    final result = api_instance.getFolder(path);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getFolder: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **path** | **String**| Relative to the library. Empty is its top | [optional] 
+
+### Return type
+
+[**Folder**](Folder.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -3739,6 +3821,42 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **scanExternalLibrary**
+> scanExternalLibrary()
+
+Look through the folder for changes now
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    api_instance.scanExternalLibrary();
+} catch (e) {
+    print('Exception when calling DefaultApi->scanExternalLibrary: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **searchAssets**
 > SearchResult searchAssets(q)
 
@@ -3854,6 +3972,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setExternalLibrary**
+> ExternalLibrary setExternalLibrary(externalLibraryOwner)
+
+Choose whose photos the folder holds, and start reading it
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final externalLibraryOwner = ExternalLibraryOwner(); // ExternalLibraryOwner | 
+
+try {
+    final result = api_instance.setExternalLibrary(externalLibraryOwner);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setExternalLibrary: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **externalLibraryOwner** | [**ExternalLibraryOwner**](ExternalLibraryOwner.md)|  | 
+
+### Return type
+
+[**ExternalLibrary**](ExternalLibrary.md)
 
 ### Authorization
 

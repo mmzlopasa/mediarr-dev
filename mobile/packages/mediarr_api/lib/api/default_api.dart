@@ -2540,6 +2540,118 @@ class DefaultApi {
     return null;
   }
 
+  /// The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getExternalLibraryWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/external';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+  Future<ExternalLibrary?> getExternalLibrary() async {
+    final response = await getExternalLibraryWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'ExternalLibrary',
+      ) as ExternalLibrary;
+    }
+    return null;
+  }
+
+  /// One folder of the external library, for the user who owns it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] path:
+  ///   Relative to the library. Empty is its top
+  Future<Response> getFolderWithHttpInfo({
+    String? path,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/folders';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (path != null) {
+      queryParams.addAll(_queryParams('', 'path', path));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// One folder of the external library, for the user who owns it
+  ///
+  /// Parameters:
+  ///
+  /// * [String] path:
+  ///   Relative to the library. Empty is its top
+  Future<Folder?> getFolder({
+    String? path,
+  }) async {
+    final response = await getFolderWithHttpInfo(
+      path: path,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Folder',
+      ) as Folder;
+    }
+    return null;
+  }
+
   /// Report whether the server can reach its database
   ///
   /// Note: This method returns the HTTP [Response].
@@ -5219,6 +5331,41 @@ class DefaultApi {
     }
   }
 
+  /// Look through the folder for changes now
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> scanExternalLibraryWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/external/scan';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Look through the folder for changes now
+  Future<void> scanExternalLibrary() async {
+    final response = await scanExternalLibraryWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Search in natural language. Dates, people, places and cameras in the query become filters.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -5402,6 +5549,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Choose whose photos the folder holds, and start reading it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [ExternalLibraryOwner] externalLibraryOwner (required):
+  Future<Response> setExternalLibraryWithHttpInfo(
+    ExternalLibraryOwner externalLibraryOwner,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/external';
+
+    // ignore: prefer_final_locals
+    Object? postBody = externalLibraryOwner;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Choose whose photos the folder holds, and start reading it
+  ///
+  /// Parameters:
+  ///
+  /// * [ExternalLibraryOwner] externalLibraryOwner (required):
+  Future<ExternalLibrary?> setExternalLibrary(
+    ExternalLibraryOwner externalLibraryOwner,
+  ) async {
+    final response = await setExternalLibraryWithHttpInfo(
+      externalLibraryOwner,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'ExternalLibrary',
+      ) as ExternalLibrary;
+    }
+    return null;
   }
 
   /// Choose the map's background. Administrators only. Empty goes back to the default.

@@ -1378,6 +1378,58 @@ paths:
         "204": { description: Dismissed }
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/admin/external:
+    get:
+      operationId: getExternalLibrary
+      summary: The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+      responses:
+        "200":
+          description: Its state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExternalLibrary" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setExternalLibrary
+      summary: Choose whose photos the folder holds, and start reading it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ExternalLibraryOwner" }
+      responses:
+        "200":
+          description: Its state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExternalLibrary" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/admin/external/scan:
+    post:
+      operationId: scanExternalLibrary
+      summary: Look through the folder for changes now
+      responses:
+        "202": { description: Started }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/folders:
+    get:
+      operationId: getFolder
+      summary: One folder of the external library, for the user who owns it
+      parameters:
+        - { name: path, in: query, description: "Relative to the library. Empty is its top", schema: { type: string } }
+      responses:
+        "200":
+          description: Its folders and photos
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Folder" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/memories:
     get:
       operationId: listMemories
@@ -1472,6 +1524,41 @@ components:
         height: { type: integer }
         ratio: { type: number, format: float }
         localAt: { type: string }
+    ExternalLibrary:
+      type: object
+      required: [available, assets, missing, scanning]
+      properties:
+        available: { type: boolean, description: "A folder was given in .env and can be read" }
+        ownerId: { type: string, format: uuid }
+        assets: { type: integer, format: int64 }
+        missing: { type: integer, format: int64, description: "Records whose file was not found. They are kept" }
+        scanning: { type: boolean }
+        scanFinishedAt: { type: string, format: date-time }
+        scanError: { type: string }
+    ExternalLibraryOwner:
+      type: object
+      required: [ownerId]
+      properties:
+        ownerId: { type: string, format: uuid }
+    Folder:
+      type: object
+      required: [available, path, folders, items]
+      properties:
+        available: { type: boolean, description: "This user owns an external library" }
+        path: { type: string }
+        folders:
+          type: array
+          items: { $ref: "#/components/schemas/FolderEntry" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/TimelineItem" }
+    FolderEntry:
+      type: object
+      required: [name, count, coverId]
+      properties:
+        name: { type: string }
+        count: { type: integer, format: int64, description: "Photos anywhere inside it" }
+        coverId: { type: string, format: uuid }
     Memory:
       type: object
       required: [kind, title, items]
@@ -1922,6 +2009,7 @@ components:
       properties:
         isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
+        isMissing: { type: boolean, description: "The file of an external library was not found on the last scan" }
         tags: { type: array, items: { type: string }, description: "Only for the owner" }
         stack: { type: array, items: { type: string, format: uuid }, description: "All shots of its stack, the main one first. Only for the owner" }
         people: { type: array, items: { $ref: "#/components/schemas/PersonRef" }, description: "Only for the owner" }

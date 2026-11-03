@@ -32,6 +32,10 @@ doc/DuplicateGroup.md
 doc/DuplicateItem.md
 doc/Duplicates.md
 doc/Error.md
+doc/ExternalLibrary.md
+doc/ExternalLibraryOwner.md
+doc/Folder.md
+doc/FolderEntry.md
 doc/Health.md
 doc/LinkPassword.md
 doc/LoginError.md
@@ -112,6 +116,10 @@ lib/model/duplicate_group.dart
 lib/model/duplicate_item.dart
 lib/model/duplicates.dart
 lib/model/error.dart
+lib/model/external_library.dart
+lib/model/external_library_owner.dart
+lib/model/folder.dart
+lib/model/folder_entry.dart
 lib/model/health.dart
 lib/model/link_password.dart
 lib/model/login_error.dart

@@ -956,3 +956,51 @@ video.viewer-media {
 	object-fit: cover;
 	display: block;
 }
+
+/* Folders of an external library */
+.folder-path {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+}
+.folder-path button {
+	padding: 0;
+	color: var(--acc);
+	background: none;
+	border: 0;
+	cursor: pointer;
+	font: inherit;
+}
+.folder-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 10px;
+}
+.folder-tile {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 6px;
+	min-width: 0;
+	text-align: left;
+	color: inherit;
+	background: transparent;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	cursor: pointer;
+}
+.folder-photo {
+	border-color: transparent;
+}
+.folder-tile img {
+	width: 100%;
+	aspect-ratio: 1;
+	object-fit: cover;
+	border-radius: 8px;
+}
+.folder-tile b {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

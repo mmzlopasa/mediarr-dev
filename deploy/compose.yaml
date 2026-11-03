@@ -14,6 +14,8 @@ x-server: &server
   volumes:
     - ${UPLOAD_LOCATION}:/data/library
     - ${CACHE_LOCATION}:/data/cache
+    # Optional, and read only: Mediarr never changes or copies these files.
+    - ${EXTERNAL_LIBRARY_PATH:-/dev/null}:/external:ro
   depends_on:
     db:
       condition: service_healthy

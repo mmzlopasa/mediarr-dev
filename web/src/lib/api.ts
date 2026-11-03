@@ -23,6 +23,8 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type Folder = components['schemas']['Folder'];
+export type ExternalLibrary = components['schemas']['ExternalLibrary'];
 export type Duplicates = components['schemas']['Duplicates'];
 export type DuplicateGroup = components['schemas']['DuplicateGroup'];
 export type MapPoints = components['schemas']['MapPoints'];
@@ -175,6 +177,11 @@ export const api = {
 	unlockVault: (pin: string) => request<{ token: string }>(fetch, '/api/vault/unlock', { pin }),
 	lockVault: () => request<void>(fetch, '/api/vault/lock', {}),
 	tags: () => request<Tag[]>(fetch, '/api/tags'),
+	folder: (path: string) => request<Folder>(fetch, `/api/folders?path=${encodeURIComponent(path)}`),
+	externalLibrary: () => request<ExternalLibrary>(fetch, '/api/admin/external'),
+	setExternalOwner: (ownerId: string) =>
+		request<ExternalLibrary>(fetch, '/api/admin/external', { ownerId }, 'PUT'),
+	scanExternal: () => request<void>(fetch, '/api/admin/external/scan', {}),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>

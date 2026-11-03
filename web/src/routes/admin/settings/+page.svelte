@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api, type AnalysisProgress } from '#lib/api.ts';
+	import { api, type AnalysisProgress, type ExternalLibrary, type User } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
 	import Button from '#lib/design/components/Button.svelte';
@@ -16,6 +16,9 @@
 	let loaded = $state(false);
 	let failed = $state(false);
 	let analysis = $state<AnalysisProgress>();
+	let external = $state<ExternalLibrary>();
+	let users = $state<User[]>([]);
+	let owner = $state('');
 
 	onMount(async () => {
 		try {
@@ -23,11 +26,27 @@
 			light = style.light;
 			dark = style.dark;
 			analysis = await api.analysisProgress();
+			external = await api.externalLibrary();
+			owner = external.ownerId ?? '';
+			users = await api.listUsers();
 			loaded = true;
 		} catch {
 			failed = true;
 		}
 	});
+
+	async function externalAction(action: () => Promise<unknown>) {
+		try {
+			await action();
+			external = await api.externalLibrary();
+			showToast('ok', tr('Pregled je pokrenut.', 'The scan has started.'));
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
+			);
+		}
+	}
 
 	async function save(event: SubmitEvent) {
 		event.preventDefault();
@@ -68,6 +87,58 @@
 					'Not turned on. In .env, set COMPOSE_PROFILES=ml and ML_URL=http://ml:8000.'
 				)}
 			</p>
+		{/if}
+	</Card>
+	<Card title={tr('Vanjska biblioteka', 'External library')}>
+		{#if !external?.available}
+			<p class="alb-meta">
+				{tr(
+					'Nije uključeno. U .env postavite EXTERNAL_LIBRARY_PATH na mapu s fotkama. Mediarr je samo čita.',
+					'Not turned on. In .env, set EXTERNAL_LIBRARY_PATH to a folder of photos. Mediarr only reads it.'
+				)}
+			</p>
+		{:else}
+			<p class="alb-meta">
+				{tr(
+					'Mediarr ovu mapu samo čita. Promjene vidi odmah na lokalnom disku, a na mrežnom shareu (SMB) tek pri pregledu svakih 6 sati ili kad ga pokrenete ručno.',
+					'Mediarr only reads this folder. It sees changes at once on a local disk, but on a network share (SMB) only at the scan every 6 hours, or when you start one.'
+				)}
+			</p>
+			<label class="form">
+				<span>{tr('Čije su ovo fotke', 'Whose photos these are')}</span>
+				<select bind:value={owner} disabled={(external?.assets ?? 0) > 0}>
+					<option value="" disabled>{tr('Odaberite korisnika', 'Choose a user')}</option>
+					{#each users as user (user.id)}
+						<option value={user.id}>{user.name} ({user.email})</option>
+					{/each}
+				</select>
+			</label>
+			{#if external.ownerId}
+				<Kv label={tr('Fotke i videi', 'Photos and videos')} value={String(external.assets)} />
+				<Kv label={tr('Nedostupno', 'Unavailable')} value={String(external.missing)} />
+				<Kv
+					label={tr('Stanje', 'State')}
+					value={external.scanning
+						? tr('Pregled u tijeku', 'Scanning')
+						: external.scanFinishedAt
+							? tr('Pregledano ', 'Scanned ') + new Date(external.scanFinishedAt).toLocaleString()
+							: tr('Još nije pregledano', 'Not scanned yet')}
+				/>
+				{#if external.scanError}<Alert kind="err">{external.scanError}</Alert>{/if}
+			{/if}
+			{#if !external.ownerId}
+				<Button
+					variant="gold"
+					small
+					disabled={!owner}
+					onclick={() => externalAction(() => api.setExternalOwner(owner))}
+					>{tr('Spremi i pregledaj', 'Save and scan')}</Button
+				>
+			{:else}
+				<Button small onclick={() => externalAction(api.scanExternal)}
+					>{tr('Pregledaj sada', 'Scan now')}</Button
+				>
+			{/if}
 		{/if}
 	</Card>
 	<Card title={tr('Karta', 'Map')}>

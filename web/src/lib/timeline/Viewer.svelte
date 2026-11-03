@@ -530,6 +530,14 @@
 				>
 			</div>
 			<div class="dlg-b">
+				{#if detail.isMissing}
+					<Alert kind="warn"
+						>{tr(
+							'Datoteka nije pronađena na zadnjem pregledu vanjske biblioteke. Pregled i dalje radi, a original će opet biti dostupan kad se datoteka vrati.',
+							'The file was not found on the last scan of the external library. The preview still works, and the original is available again once the file is back.'
+						)}</Alert
+					>
+				{/if}
 				<Kv label={tr('Naziv', 'Name')} value={detail.originalName} />
 				<Kv
 					label={detail.hasCaptureTime ? tr('Snimljeno', 'Taken') : tr('Dodano', 'Added')}

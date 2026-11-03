@@ -147,6 +147,10 @@ func writeBucket(w http.ResponseWriter, month string, rows []db.TimelineBucketRo
 	if oldestFirst {
 		slices.Reverse(rows)
 	}
+	writeJSON(w, http.StatusOK, api.TimelineBucket{Month: month, Items: timelineItems(rows, viewer)})
+}
+
+func timelineItems(rows []db.TimelineBucketRow, viewer pgtype.UUID) []api.TimelineItem {
 	items := make([]api.TimelineItem, len(rows))
 	for i := range rows {
 		row := &rows[i]
@@ -166,7 +170,7 @@ func writeBucket(w http.ResponseWriter, month string, rows []db.TimelineBucketRo
 			items[i].Blurhash = &row.Blurhash.String
 		}
 	}
-	writeJSON(w, http.StatusOK, api.TimelineBucket{Month: month, Items: items})
+	return items
 }
 
 func optional[T any](value T, valid bool) *T {
@@ -206,6 +210,7 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 			return
 		}
 		detail.Tags = &tags
+		detail.IsMissing = optional(true, row.MissingAt.Valid)
 		stack, err := s.stackOf(ctx, &row)
 		if err != nil {
 			internalError(w, r, err)
