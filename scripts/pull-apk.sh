@@ -24,16 +24,15 @@ github() {
 
 json() { python3 -I -c "import json,sys;d=json.load(sys.stdin);$1"; }
 
-runs=$(github "https://api.github.com/repos/$REPO/actions/workflows/android.yml/runs?branch=main&per_page=20")
+runs=$(github "https://api.github.com/repos/$REPO/actions/workflows/android.yml/runs?branch=main&status=success&per_page=5")
 run_id=$(json "
-r=[x for x in d['workflow_runs'] if x['status']=='completed']
+r=[x for x in d['workflow_runs'] if x['conclusion']=='success']
 print(r[0]['id'] if r else '')" <<<"$runs")
 [ -n "$run_id" ] || exit 0
 [ "$(cat "$STATE" 2>/dev/null || true)" != "$run_id" ] || exit 0
 
 artifacts=$(github "https://api.github.com/repos/$REPO/actions/runs/$run_id/artifacts")
 url=$(json "a=[x for x in d['artifacts'] if x['name']=='Mediarr-apk' and not x['expired']];print(a[0]['archive_download_url'] if a else '')" <<<"$artifacts")
-# The build job can succeed while the emulator job fails, and then there is still an APK.
 [ -n "$url" ] || exit 0
 
 if [ ! -f "$TOOLS_DIR/apksigner.jar" ]; then

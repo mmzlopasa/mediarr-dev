@@ -18,6 +18,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -293,6 +294,16 @@ class BackupEngine(context: Context) {
 
     /** Looks through the chosen album and sends what is new. Returns false if it should run again. */
     fun work(progress: (sent: Int) -> Unit, stopped: () -> Boolean): Boolean {
+        // The periodic and the immediate job can start together, and would send the same file twice.
+        if (!running.compareAndSet(false, true)) return true
+        return try {
+            send(progress, stopped)
+        } finally {
+            running.set(false)
+        }
+    }
+
+    private fun send(progress: (sent: Int) -> Unit, stopped: () -> Boolean): Boolean {
         if (!enabled || server == null || key == null) return true
         store.recoverInterrupted()
         val album = currentAlbum() ?: return true
@@ -363,6 +374,7 @@ class BackupEngine(context: Context) {
     }
 
     companion object {
+        private val running = AtomicBoolean(false)
         const val MAX_ATTEMPTS = 5
         private const val FAILURES_SHOWN = 5
         private const val BUFFER = 1024 * 1024

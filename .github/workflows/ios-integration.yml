@@ -33,14 +33,17 @@ jobs:
           DEVICE=$(xcrun simctl list devices available | grep -m1 -E 'iPhone' | grep -oE '[0-9A-F-]{36}')
           xcrun simctl boot "$DEVICE"
           xcrun simctl bootstatus "$DEVICE"
-          xcrun simctl privacy "$DEVICE" grant all app.mediarr.mediarr
           echo "DEVICE=$DEVICE" >> "$GITHUB_ENV"
+      - name: Install the app once, and allow it to read photos
+        run: |
+          # Changing this for a running app makes iOS stop it, and without it a dialog waits forever.
+          flutter build ios --simulator --debug
+          xcrun simctl install "$DEVICE" build/ios/iphonesimulator/Runner.app
+          xcrun simctl privacy "$DEVICE" grant photos app.mediarr.mediarr
       - name: Run the tests, keeping what the app logs
         timeout-minutes: 20
         run: |
           xcrun simctl spawn "$DEVICE" log stream --level debug --predicate 'process == "Runner"' > "$RUNNER_TEMP/app.log" &
-          # The test installs the app itself, which forgets what was granted before.
-          (while true; do xcrun simctl privacy "$DEVICE" grant photos app.mediarr.mediarr >/dev/null 2>&1; sleep 2; done) &
           flutter test integration_test --device-id "$DEVICE" --suppress-analytics --reporter expanded --timeout 8m
       - name: Keep the app's log
         if: always()

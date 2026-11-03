@@ -58,6 +58,11 @@ Future<void> signIn(WidgetTester tester, String server, String pass) async {
   );
   await tester.enterText(find.widgetWithText(TextField, 'Email'), email);
   await tester.enterText(find.widgetWithText(TextField, 'Password'), pass);
+  // The keyboard moves the button, and a tap during that goes past it.
+  FocusManager.instance.primaryFocus?.unfocus();
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
   await tester.tap(find.text('Sign in'));
 }
 
@@ -161,6 +166,7 @@ void main() {
     expect(server.uploads, hasLength(1));
     final upload = server.uploads.single;
     expect(upload.actualChecksum, upload.declaredChecksum);
+    expect(upload.name, contains('phone'), reason: 'only the chosen album');
 
     // Another look through the album sends nothing again.
     await backup.setAlbum(
