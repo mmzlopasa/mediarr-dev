@@ -39,7 +39,7 @@ jobs:
         timeout-minutes: 20
         run: |
           xcrun simctl spawn "$DEVICE" log stream --level debug --predicate 'process == "Runner"' > "$RUNNER_TEMP/app.log" &
-          flutter test integration_test --device-id "$DEVICE" --suppress-analytics --reporter expanded --timeout 15m
+          flutter test integration_test --device-id "$DEVICE" --suppress-analytics --reporter expanded --timeout 8m
       - name: Keep the app's log
         if: always()
         uses: actions/upload-artifact@v4

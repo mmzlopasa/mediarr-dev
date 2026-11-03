@@ -16,7 +16,7 @@ trap 'kill "$grants" 2>/dev/null' EXIT
 
 adb logcat -c
 adb logcat '*:W' >/tmp/emulator.log &
-flutter test integration_test -d emulator-5554 --suppress-analytics --reporter expanded --timeout 15m
+flutter test integration_test -d emulator-5554 --suppress-analytics --reporter expanded --timeout 8m
 status=$?
 echo '--- last warnings from the emulator ---'
 grep -iE 'mediarr|backup|AndroidRuntime|WM-' /tmp/emulator.log | tail -60

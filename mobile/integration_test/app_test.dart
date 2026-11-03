@@ -65,15 +65,21 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   late FakeServer server;
 
+  // Stays up for the whole run: a picture may still be loading when a test ends.
+  setUpAll(() async {
+    server = FakeServer();
+    await server.start();
+    debugPrint('server at ${server.address}');
+  });
+
+  tearDownAll(() => server.stop());
+
   setUp(() async {
     debugPrint('setUp: clearing the keychain');
     await const FlutterSecureStorage().deleteAll();
-    server = FakeServer();
-    await server.start();
-    debugPrint('setUp: server at ${server.address}');
+    server.uploads.clear();
+    debugPrint('setUp: done');
   });
-
-  tearDown(() => server.stop());
 
   testWidgets(
     'a wrong password is refused, and the right one opens the library',
@@ -87,7 +93,7 @@ void main() {
       await waitFor(tester, find.byType(AssetPicture));
 
       // The photo opens in the viewer, with its details.
-      await tester.tap(find.byType(AssetPicture).first);
+      await tester.tap(find.byType(AssetPicture).first, warnIfMissed: false);
       await waitFor(tester, find.byTooltip('Details'));
       await tester.tap(find.byTooltip('Details'));
       await waitFor(tester, find.text('beach.jpg'));
@@ -101,9 +107,11 @@ void main() {
     await signIn(tester, server.address, password);
     await waitFor(tester, find.byType(AssetPicture));
 
+    debugPrint('backup test: asking for photos');
     final state = await PhotoManager.requestPermissionExtend();
     expect(state.hasAccess, isTrue, reason: 'CI grants access beforehand');
     final albumName = 'Mediarr test ${DateTime.now().millisecondsSinceEpoch}';
+    debugPrint('backup test: adding a photo to the album');
     await addPhotoToAlbum(albumName);
 
     final element = tester.element(find.byType(AssetPicture).first);
@@ -118,8 +126,10 @@ void main() {
       title: 'private.jpg',
     );
 
+    debugPrint('backup test: listing albums');
     final albums = await backup.albums();
     final album = albums.firstWhere((a) => a.title == albumName);
+    debugPrint('backup test: enabling backup');
     await backup.enable(
       session,
       wifiOnly: false,
@@ -136,6 +146,9 @@ void main() {
       );
       status = await backup.status();
     }
+    debugPrint(
+      'backup test: finished waiting: verified ${status.verified}, pending ${status.pending}, working ${status.working}, failed ${status.failed}',
+    );
     expect(status.failures, isEmpty);
     expect(
       status.verified,
