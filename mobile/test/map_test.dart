@@ -140,7 +140,7 @@ void main() {
     });
     expect(find.text('native map http://s/d.json 1'), findsOneWidget);
     expect(find.text('Hvar, Vis'), findsOneWidget);
-    expect(find.text('Photos: 1'), findsOneWidget);
+    expect(find.text('Items: 1'), findsOneWidget);
   });
 
   testWidgets('a failure is not shown as an empty map', (tester) async {

@@ -157,7 +157,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             child: Row(
               children: [
                 if (_selected.isEmpty)
-                  Text('Photos', style: text.headlineMedium)
+                  Text('Media', style: text.headlineMedium)
                 else ...[
                   IconButton(
                     tooltip: 'Clear selection',

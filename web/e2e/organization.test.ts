@@ -67,7 +67,7 @@ test('the archive takes a photo off the timeline and gives it back', async ({ pa
 	await page.goto('/archive');
 	await expect(page.locator('.tl-tile')).toHaveCount(1);
 	await select(page);
-	await page.getByRole('button', { name: 'Back to Photos' }).click();
+	await page.getByRole('button', { name: 'Back to Media' }).click();
 	await expect(page.getByText('The archive is empty.')).toBeVisible();
 });
 
@@ -106,7 +106,7 @@ test('the vault hides a photo until the PIN opens it', async ({ page }) => {
 	await expect(page.locator('.viewer-media').first()).toBeVisible();
 	await page.goBack();
 	await select(page);
-	await page.getByRole('button', { name: 'Back to Photos' }).click();
+	await page.getByRole('button', { name: 'Back to Media' }).click();
 	await expect(page.getByText('The vault is empty.')).toBeVisible();
 });
 
@@ -150,11 +150,11 @@ test('a photo with a location appears on the map under its place name', async ({
 
 	await page.goto('/map');
 	await expect(page.getByRole('heading', { name: 'Map' })).toBeVisible();
-	await expect(page.getByText('Photos with a location: 1')).toBeVisible();
+	await expect(page.getByText('With a location: 1')).toBeVisible();
 	await page.getByLabel('To date').fill('2020-01-01');
-	await expect(page.getByText('Photos with a location: 0')).toBeVisible();
+	await expect(page.getByText('With a location: 0')).toBeVisible();
 	await page.getByLabel('To date').fill('');
-	await expect(page.getByText('Photos with a location: 1')).toBeVisible();
+	await expect(page.getByText('With a location: 1')).toBeVisible();
 
 	const points = await (await page.request.get('/api/map/points')).json();
 	const detail = await (await page.request.get(`/api/assets/${points.ids[0]}`)).json();

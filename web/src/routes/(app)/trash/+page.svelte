@@ -56,7 +56,7 @@
 	<div>
 		<h1>{tr(item.hr, item.en)}</h1>
 		<p>
-			{tr('Fotke se trajno brišu nakon 30 dana.', 'Photos are permanently deleted after 30 days.')}
+			{tr('Stavke se trajno brišu nakon 30 dana.', 'Items are permanently deleted after 30 days.')}
 		</p>
 	</div>
 	<div class="ph-a">

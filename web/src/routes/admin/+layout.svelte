@@ -16,7 +16,7 @@
 	footLabel={tr('Administracija', 'Administration')}
 	footLinks={[
 		{ href: resolve('/(app)/account'), icon: 'user', label: tr('Račun', 'Account') },
-		{ href: resolve('/(app)'), icon: 'photo', label: tr('Fotografije', 'Photos') }
+		{ href: resolve('/(app)'), icon: 'photo', label: tr('Mediji', 'Media') }
 	]}
 >
 	{@render children()}

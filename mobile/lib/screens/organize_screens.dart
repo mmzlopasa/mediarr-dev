@@ -268,7 +268,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
       emptyText: 'The archive is empty.',
       actions: (selected, clear) => [
         IconButton(
-          tooltip: 'Back to Photos',
+          tooltip: 'Back to Media',
           icon: const Icon(Icons.unarchive_outlined),
           onPressed: () => _bulk(
             context,
@@ -277,7 +277,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
             selected,
             clear,
             BulkRequestActionEnum.unarchive,
-            'Back in Photos',
+            'Back in Media',
           ),
         ),
       ],
@@ -329,7 +329,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
       children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Text('Photos are permanently deleted after 30 days.'),
+          child: Text('Items are permanently deleted after 30 days.'),
         ),
         Expanded(
           child: _PhotoGrid(
@@ -534,7 +534,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
               onUnauthorized: _relock,
               actions: (selected, clear) => [
                 IconButton(
-                  tooltip: 'Back to Photos',
+                  tooltip: 'Back to Media',
                   icon: const Icon(Icons.photo_outlined),
                   onPressed: () => _bulk(
                     context,
@@ -543,7 +543,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
                     selected,
                     clear,
                     BulkRequestActionEnum.unvault,
-                    'Back in Photos',
+                    'Back in Media',
                   ),
                 ),
                 IconButton(

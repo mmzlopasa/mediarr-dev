@@ -41,7 +41,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const NavigationDestination(
             icon: Icon(Icons.photo_outlined),
             selectedIcon: Icon(Icons.photo, color: Palette.gold),
-            label: 'Photos',
+            label: 'Media',
           ),
           const NavigationDestination(
             icon: Icon(Icons.photo_album_outlined),

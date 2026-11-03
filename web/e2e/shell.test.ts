@@ -13,7 +13,7 @@ test('the interface defaults to English', async ({ page }) => {
 	await signIn(page, 'admin');
 	await page.addInitScript(() => localStorage.setItem('mediarr_lang', ''));
 	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Photos' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Media' })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 
@@ -22,7 +22,7 @@ test('app sidebar has the planned sections and navigates', async ({ page }) => {
 	await page.goto('/');
 	const nav = page.getByRole('navigation').first();
 	for (const label of [
-		'Fotke',
+		'Mediji',
 		'Pretraga',
 		'Karta',
 		'Ljudi',
@@ -75,7 +75,7 @@ test('language menu switches the interface', async ({ page }) => {
 	await page.goto('/');
 	await page.locator('.langdd summary').click();
 	await page.getByRole('menuitem', { name: /English/ }).click();
-	await expect(page.getByRole('link', { name: 'Photos', exact: true })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Media', exact: true })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 
@@ -158,7 +158,7 @@ test('a sign-in link cannot redirect to another site', async ({ page }) => {
 	await page.getByLabel('E-adresa').fill(users.user);
 	await page.getByLabel('Lozinka', { exact: true }).fill(process.env.E2E_PASSWORD!);
 	await page.getByRole('button', { name: 'Prijavi se' }).click();
-	await expect(page.getByRole('heading', { name: 'Fotke' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Mediji' })).toBeVisible();
 	expect(new URL(page.url()).host).not.toBe('example.com');
 });
 
@@ -174,7 +174,7 @@ test('signing out ends the session', async ({ page }) => {
 test('administration is closed to normal users', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/admin');
-	await expect(page.getByRole('heading', { name: 'Fotke' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Mediji' })).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Administracija' })).toHaveCount(0);
 });
 

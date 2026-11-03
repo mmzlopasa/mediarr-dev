@@ -41,7 +41,7 @@
 					'All your photos and videos, on your own server.'
 				)}
 			</h2>
-			<p>{tr('Fotke · albumi · ljudi · karta', 'Photos · albums · people · map')}</p>
+			<p>{tr('Mediji · albumi · ljudi · karta', 'Media · albums · people · map')}</p>
 		</div>
 	</aside>
 </main>

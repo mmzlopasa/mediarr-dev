@@ -13,8 +13,8 @@ export const appNav: NavItem[] = [
 	{
 		path: '/',
 		icon: 'photo',
-		hr: 'Fotke',
-		en: 'Photos',
+		hr: 'Mediji',
+		en: 'Media',
 		emptyHr: 'Još nema fotki. Dodajte prve gumbom Upload.',
 		emptyEn: 'No photos yet. Add your first ones with the Upload button.'
 	},

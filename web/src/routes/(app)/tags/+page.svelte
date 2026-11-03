@@ -54,8 +54,8 @@
 				<EmptyState
 					icon="list"
 					text={tr(
-						'Još nema oznaka. Odaberite fotke među Fotkama i dodajte oznaku.',
-						'No tags yet. Select photos under Photos and add a tag.'
+						'Još nema oznaka. Odaberite stavke među Medijima i dodajte oznaku.',
+						'No tags yet. Select items under Media and add a tag.'
 					)}
 				/>
 			{/each}

@@ -13,7 +13,7 @@
 	nav={appNav}
 	user={data.user}
 	roleLabel={tr('Korisnik', 'User')}
-	footLabel={tr('Fotografije', 'Photos')}
+	footLabel={tr('Mediji', 'Media')}
 	footLinks={[
 		{ href: resolve('/(app)/account'), icon: 'user', label: tr('Račun', 'Account') },
 		...(data.user.isAdmin

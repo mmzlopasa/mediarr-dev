@@ -73,7 +73,7 @@ export function appPage(theme: string) {
 		'/',
 		'',
 		'Korisnik',
-		'Fotografije',
+		'Mediji',
 		[
 			['user', 'Račun'],
 			['shield', 'Administracija']
@@ -93,7 +93,7 @@ export function adminPage(theme: string) {
 		'Administracija',
 		[
 			['user', 'Račun'],
-			['photo', 'Fotografije']
+			['photo', 'Mediji']
 		],
 		titleRow('Dobrodošli', 'Stanje biblioteke i poslužitelja na jednom mjestu.') +
 			`<div class="stats">${stat('Korisnici', '0')}${stat('Fotke', '0')}${stat('Videi', '0')}${stat('Pohrana', '0 B', '', 0)}</div>` +
@@ -106,7 +106,7 @@ export function loginPage(theme: string) {
 		theme,
 		'auth-page auth-split',
 		`<main class="as" id="main"><section class="as-l"><div class="as-top">${logo()}<div class="auth-tools as-tools-m">${langMenu}${themeBtn}</div></div><div class="as-form"><h1 class="as-h">Dobrodošli</h1><p class="as-p">Prijavite se svojim računom.</p><form class="as-f"><label class="as-fl"><span>E-adresa</span><input class="as-in" type="email" name="email"></label><label class="as-fl"><span>Lozinka</span><span class="as-pw"><input class="as-in" type="password" name="password"><button type="button" class="as-eye">${ico('eye')}</button></span></label><button class="as-btn" type="submit">Prijavi se</button></form><p class="as-links"><a href="#">Zaboravljena lozinka?</a></p><p class="as-legal"><a href="#">← mediarr.app</a></p></div></section>` +
-			`<aside class="as-r"><div class="as-rtop">${langMenu}${themeBtn}<a class="as-cta" href="#">mediarr.app</a></div><div class="as-globe" aria-hidden="true"></div><div class="as-promo"><span class="as-eb">Mediarr</span><h2>Sve vaše fotke i videi, na vašem poslužitelju.</h2><p>Fotke · albumi · ljudi · karta</p></div></aside></main>`
+			`<aside class="as-r"><div class="as-rtop">${langMenu}${themeBtn}<a class="as-cta" href="#">mediarr.app</a></div><div class="as-globe" aria-hidden="true"></div><div class="as-promo"><span class="as-eb">Mediarr</span><h2>Sve vaše fotke i videi, na vašem poslužitelju.</h2><p>Mediji · albumi · ljudi · karta</p></div></aside></main>`
 	);
 }
 

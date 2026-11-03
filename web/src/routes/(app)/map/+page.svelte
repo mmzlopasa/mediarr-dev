@@ -104,7 +104,7 @@
 	</section>
 {:else}
 	<p class="alb-meta">
-		{tr(`Fotke s lokacijom: ${points.ids.length}`, `Photos with a location: ${points.ids.length}`)}
+		{tr(`S lokacijom: ${points.ids.length}`, `With a location: ${points.ids.length}`)}
 	</p>
 	<PhotoMap
 		{points}
@@ -131,7 +131,7 @@
 	</Card>
 {/if}
 
-<Dialog title={tr(`Fotke: ${cluster.length}`, `Photos: ${cluster.length}`)} bind:open={showCluster}>
+<Dialog title={tr(`Stavke: ${cluster.length}`, `Items: ${cluster.length}`)} bind:open={showCluster}>
 	<div class="map-grid">
 		{#each cluster as id (id)}
 			<button

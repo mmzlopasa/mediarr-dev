@@ -12,7 +12,7 @@
 	async function unarchive(ids: string[], clear: () => void) {
 		try {
 			const { changed } = await api.bulk(ids, 'unarchive');
-			showToast('ok', tr(`Vraćeno u Fotke: ${changed}`, `Back in Photos: ${changed}`));
+			showToast('ok', tr(`Vraćeno u Medije: ${changed}`, `Back in Media: ${changed}`));
 			clear();
 			await view?.reload();
 		} catch {
@@ -30,8 +30,8 @@
 		<button
 			type="button"
 			class="icon-btn"
-			aria-label={tr('Vrati u Fotke', 'Back to Photos')}
-			title={tr('Vrati u Fotke', 'Back to Photos')}
+			aria-label={tr('Vrati u Medije', 'Back to Media')}
+			title={tr('Vrati u Medije', 'Back to Media')}
 			onclick={() => unarchive(ids, clear)}><Icon name="archive" /></button
 		>
 	{/snippet}

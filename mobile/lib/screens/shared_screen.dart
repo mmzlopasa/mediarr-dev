@@ -149,7 +149,7 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Show in my Photos'),
+                  title: const Text('Show in my Media'),
                   value: entry.inTimeline,
                   onChanged: (value) => _run(
                     () => session.api.setPartnerTimeline(

@@ -235,8 +235,8 @@
 						? tr('Nijedna fotka ne odgovara pravilima.', 'No photos match the rules.')
 						: canAdd
 							? tr(
-									'Album je prazan. Pošaljite fotke ovdje ili ih odaberite među Fotkama.',
-									'This album is empty. Upload here, or select photos under Photos.'
+									'Album je prazan. Pošaljite ih ovdje ili ih odaberite među Medijima.',
+									'This album is empty. Upload here, or select items under Media.'
 								)
 							: tr('Album je prazan.', 'This album is empty.')}
 				/>

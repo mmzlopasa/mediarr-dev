@@ -180,7 +180,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Text(
-                  'Photos: ${points.ids.length}',
+                  'Items: ${points.ids.length}',
                   style: text.bodySmall?.copyWith(color: Palette.dim),
                 ),
               ),

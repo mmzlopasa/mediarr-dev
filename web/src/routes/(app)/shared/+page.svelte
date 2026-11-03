@@ -102,8 +102,8 @@
 					small
 					onclick={() => run(() => api.setPartnerTimeline(entry.userId, !entry.inTimeline))}
 					>{entry.inTimeline
-						? tr('Makni iz mojih Fotki', 'Remove from my Photos')
-						: tr('Prikaži u mojim Fotkama', 'Show in my Photos')}</Button
+						? tr('Makni iz mojih Medija', 'Remove from my Media')
+						: tr('Prikaži u mojim Medijima', 'Show in my Media')}</Button
 				>
 			</div>
 		{:else}
