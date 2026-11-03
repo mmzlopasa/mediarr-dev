@@ -1,6 +1,8 @@
 name: iOS app
 
-# Builds an unsigned .ipa for sideloading through Feather, which signs it on install.
+# Builds an unsigned .ipa for sideloading through Feather, which signs it on install, and publishes
+# it. The newest build is always at:
+# https://github.com/mmzlopasa/mediarr-app/releases/latest/download/Mediarr.ipa
 on:
   workflow_dispatch:
   push:
@@ -10,7 +12,8 @@ on:
       - .github/workflows/ios.yml
 
 permissions:
-  contents: read
+  # Publishing a release needs write access.
+  contents: write
 
 jobs:
   ipa:
@@ -41,3 +44,13 @@ jobs:
           path: mobile/build/ipa/Mediarr.ipa
           retention-days: 30
           if-no-files-found: error
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD: ${{ github.run_number }}
+        run: |
+          VERSION=$(sed -n 's/^version: \([0-9.]*\).*/\1/p' pubspec.yaml)
+          gh release create "ios-$VERSION-$BUILD" build/ipa/Mediarr.ipa \
+            --title "Mediarr for iOS $VERSION (build $BUILD)" \
+            --notes "Unsigned build for sideloading, for example with Feather. Early version: uploads run only while the app is open." \
+            --latest
