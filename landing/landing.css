@@ -28,3 +28,45 @@ html[data-theme='light'] .logo-dot {
 .auth-h {
 	font-size: clamp(2rem, 7vw, 2.6rem);
 }
+
+.apps {
+	width: 100%;
+	max-width: 440px;
+	display: grid;
+	gap: 12px;
+}
+.apps-h {
+	font-size: 1.15rem;
+}
+.apps-g {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+.apps-c {
+	display: grid;
+	justify-items: start;
+	align-content: start;
+	gap: 8px;
+	padding: 18px;
+	border-radius: var(--r-w);
+}
+.apps-n {
+	font-weight: 600;
+}
+.apps-p {
+	margin: 0;
+	color: var(--haze);
+	font-size: 0.84rem;
+	line-height: 1.45;
+}
+.apps-c .btn,
+.apps-c .badge {
+	align-self: end;
+	margin-top: 4px;
+}
+@media (max-width: 420px) {
+	.apps-g {
+		grid-template-columns: 1fr;
+	}
+}

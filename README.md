@@ -55,8 +55,11 @@ make deploy   # gradi iz repoa, sluša na vrijednosti HTTP_PORT iz deploy/.env (
 sudo cp deploy/nginx/mediarr.app.conf /etc/nginx/sites-available/mediarr.app
 sudo ln -s /etc/nginx/sites-available/mediarr.app /etc/nginx/sites-enabled/mediarr.app
 sudo cp deploy/nginx/demo.mediarr.app.conf /etc/nginx/sites-available/demo.mediarr.app
+sudo cp deploy/nginx/cdn.mediarr.app.conf /etc/nginx/sites-available/cdn.mediarr.app
+sudo ln -s /etc/nginx/sites-available/cdn.mediarr.app /etc/nginx/sites-enabled/cdn.mediarr.app
 sudo ln -s /etc/nginx/sites-available/demo.mediarr.app /etc/nginx/sites-enabled/demo.mediarr.app
 sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d mediarr.app -d www.mediarr.app
 sudo certbot --nginx -d demo.mediarr.app
+sudo certbot --nginx -d cdn.mediarr.app
 ```

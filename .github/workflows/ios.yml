@@ -1,8 +1,7 @@
 name: iOS app
 
-# Builds an unsigned .ipa for sideloading through Feather, which signs it on install, and publishes
-# it. The newest build is always at:
-# https://github.com/mmzlopasa/mediarr-app/releases/latest/download/Mediarr.ipa
+# Builds an unsigned .ipa for sideloading through Feather, which signs it on install.
+# Published on https://cdn.mediarr.app/apps/mediarr.ipa, never as a GitHub release.
 on:
   workflow_dispatch:
   push:
@@ -12,7 +11,7 @@ on:
       - .github/workflows/ios.yml
 
 permissions:
-  # Publishing a release needs write access.
+  # Temporary, for the release cleanup below.
   contents: write
 
 jobs:
@@ -44,13 +43,11 @@ jobs:
           path: mobile/build/ipa/Mediarr.ipa
           retention-days: 30
           if-no-files-found: error
-      - name: Publish the release
+      # One-time cleanup: nothing is published on GitHub. Downloads live on cdn.mediarr.app.
+      - name: Remove GitHub releases
         env:
           GH_TOKEN: ${{ github.token }}
-          BUILD: ${{ github.run_number }}
         run: |
-          VERSION=$(sed -n 's/^version: \([0-9.]*\).*/\1/p' pubspec.yaml)
-          gh release create "ios-$VERSION-$BUILD" build/ipa/Mediarr.ipa \
-            --title "Mediarr for iOS $VERSION (build $BUILD)" \
-            --notes "Unsigned build for sideloading, for example with Feather. Early version: uploads run only while the app is open." \
-            --latest
+          for tag in $(gh release list --json tagName --jq '.[].tagName'); do
+            gh release delete "$tag" --cleanup-tag --yes
+          done
