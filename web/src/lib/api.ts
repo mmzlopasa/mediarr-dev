@@ -23,6 +23,8 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type Duplicates = components['schemas']['Duplicates'];
+export type DuplicateGroup = components['schemas']['DuplicateGroup'];
 export type MapPoints = components['schemas']['MapPoints'];
 export type Memory = components['schemas']['Memory'];
 export type StoryExport = components['schemas']['StoryExport'];
@@ -173,6 +175,12 @@ export const api = {
 	unlockVault: (pin: string) => request<{ token: string }>(fetch, '/api/vault/unlock', { pin }),
 	lockVault: () => request<void>(fetch, '/api/vault/lock', {}),
 	tags: () => request<Tag[]>(fetch, '/api/tags'),
+	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
+	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
+	setStackMain: (id: string) =>
+		request<void>(fetch, `/api/assets/${id}/stack/main`, undefined, 'PUT'),
+	dissolveStack: (id: string) =>
+		request<void>(fetch, `/api/assets/${id}/stack`, undefined, 'DELETE'),
 	deleteTag: (id: string) => request<void>(fetch, `/api/tags/${id}`, undefined, 'DELETE'),
 	changeTag: (ids: string[], name: string, remove = false) =>
 		request<{ changed: number }>(fetch, '/api/assets/tags', { ids, name, remove }),

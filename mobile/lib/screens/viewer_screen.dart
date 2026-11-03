@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'asset_picture.dart';
+import 'duplicates_screen.dart';
 
 /// A full screen view on a clean black background: colors around a photo must not affect it.
 class ViewerScreen extends ConsumerStatefulWidget {
@@ -178,6 +179,17 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
         backgroundColor: Colors.black38,
         foregroundColor: Colors.white,
         actions: [
+          if (mine && current.stackSize != null)
+            IconButton(
+              tooltip: 'Shots in this stack',
+              icon: const Icon(Icons.burst_mode),
+              onPressed: () => showStackSheet(
+                context,
+                session,
+                current.id,
+                () => store.refresh(reloadLoaded: true),
+              ),
+            ),
           if (current.isLive == true)
             IconButton(
               tooltip: 'Play Live Photo',

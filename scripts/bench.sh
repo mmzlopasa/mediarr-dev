@@ -28,6 +28,9 @@ services:
   server:
     environment:
       ML_URL: http://ml:8000
+  db:
+    # Building the search index on 100k vectors in parallel takes shared memory.
+    shm_size: 3gb
   ml:
     environment:
       ML_THREADS: "4"

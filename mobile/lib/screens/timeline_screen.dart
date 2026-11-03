@@ -451,6 +451,29 @@ class _TileView extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
+              if (item.stackSize != null)
+                Positioned(
+                  right: 5,
+                  bottom: 5,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${item.stackSize}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.burst_mode,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
               if (item.isLive == true)
                 const Positioned(
                   right: 5,

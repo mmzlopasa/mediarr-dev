@@ -12,6 +12,7 @@ import '../services/timeline.dart';
 import '../theme.dart';
 import 'album_sheets.dart';
 import 'map_screen.dart';
+import 'duplicates_screen.dart';
 import 'memories_screen.dart';
 import 'people_screens.dart';
 import 'timeline_screen.dart';
@@ -58,6 +59,12 @@ class OrganizeLinks extends StatelessWidget {
           leading: const Icon(Icons.map_outlined),
           title: const Text('Map'),
           onTap: () => open(const MapScreen()),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.copy_all_outlined),
+          title: const Text('Duplicates'),
+          onTap: () => open(const DuplicatesScreen()),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,

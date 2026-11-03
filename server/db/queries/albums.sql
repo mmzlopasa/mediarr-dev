@@ -76,7 +76,8 @@ ORDER BY 1 DESC;
 
 -- name: AlbumBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
 WHERE a.id IN (SELECT album_item_ids(sqlc.arg('album_id')))
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
@@ -141,16 +142,17 @@ SELECT count(*) FROM partner_shares WHERE partner_id = $1 AND in_timeline;
 -- name: PartnerBuckets :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (sqlc.narg('since_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('since_at'))
 GROUP BY 1
 ORDER BY 1 DESC;
 
 -- name: PartnerBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
-WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (sqlc.narg('since_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('since_at'))
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
 ORDER BY a.local_at DESC, a.id DESC;
@@ -158,7 +160,7 @@ ORDER BY a.local_at DESC, a.id DESC;
 -- name: TimelineBucketsWithPartners :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (a.user_id = $1 OR EXISTS (
       SELECT 1 FROM partner_shares ps
       WHERE ps.owner_id = a.user_id AND ps.partner_id = $1 AND ps.in_timeline
@@ -168,9 +170,10 @@ ORDER BY 1 DESC;
 
 -- name: TimelineBucketWithPartners :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       (SELECT count(*) FROM assets m WHERE m.stack_parent = a.id)::bigint AS stack_members
 FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
   AND (a.user_id = sqlc.arg('user_id') OR EXISTS (
       SELECT 1 FROM partner_shares ps

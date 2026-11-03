@@ -67,6 +67,14 @@ export const appNav: NavItem[] = [
 		emptyEn: 'No memories yet.'
 	},
 	{
+		path: '/duplicates',
+		icon: 'copy',
+		hr: 'Duplikati',
+		en: 'Duplicates',
+		emptyHr: 'Nisu pronađene slične fotke.',
+		emptyEn: 'No similar photos were found.'
+	},
+	{
 		path: '/archive',
 		icon: 'archive',
 		hr: 'Arhiva',

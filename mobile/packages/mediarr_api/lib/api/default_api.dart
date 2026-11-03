@@ -1120,6 +1120,104 @@ class DefaultApi {
     }
   }
 
+  /// These photos are not duplicates of each other, and are not proposed again
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<Response> dismissDuplicatesWithHttpInfo(
+    AssetIds assetIds,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/duplicates/dismiss';
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetIds;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// These photos are not duplicates of each other, and are not proposed again
+  ///
+  /// Parameters:
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<void> dismissDuplicates(
+    AssetIds assetIds,
+  ) async {
+    final response = await dismissDuplicatesWithHttpInfo(
+      assetIds,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Split a stack back into single shots. It is not put together again by itself
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> dissolveStackWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/{id}/stack'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Split a stack back into single shots. It is not put together again by itself
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> dissolveStack(
+    String id,
+  ) async {
+    final response = await dissolveStackWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Download several originals as one uncompressed ZIP file
   ///
   /// Note: This method returns the HTTP [Response].
@@ -4355,6 +4453,52 @@ class DefaultApi {
     return null;
   }
 
+  /// Groups of photos that look alike. Only a proposal, nothing is removed without asking
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listDuplicatesWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/duplicates';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Groups of photos that look alike. Only a proposal, nothing is removed without asking
+  Future<Duplicates?> listDuplicates() async {
+    final response = await listDuplicatesWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Duplicates',
+      ) as Duplicates;
+    }
+    return null;
+  }
+
   /// On this day in earlier years, and the last week
   ///
   /// Note: This method returns the HTTP [Response].
@@ -5427,6 +5571,55 @@ class DefaultApi {
     final response = await setPartnerTimelineWithHttpInfo(
       userId,
       partnerTimeline,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Make this shot the one the timeline shows
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> setStackMainWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/{id}/stack/main'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Make this shot the one the timeline shows
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> setStackMain(
+    String id,
+  ) async {
+    final response = await setStackMainWithHttpInfo(
+      id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

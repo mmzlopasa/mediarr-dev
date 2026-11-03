@@ -120,23 +120,25 @@ func (q *Queries) InsertFace(ctx context.Context, arg InsertFaceParams) error {
 
 const itemsByID = `-- name: ItemsByID :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
 WHERE a.id = ANY($1::uuid[])
 `
 
 type ItemsByIDRow struct {
-	ID          pgtype.UUID
-	UserID      pgtype.UUID
-	Kind        string
-	Width       pgtype.Int4
-	Height      pgtype.Int4
-	AspectRatio pgtype.Float4
-	Blurhash    pgtype.Text
-	IsFavorite  bool
-	LocalAt     pgtype.Timestamp
-	DurationMs  pgtype.Int8
-	IsLive      bool
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
 }
 
 func (q *Queries) ItemsByID(ctx context.Context, dollar_1 []pgtype.UUID) ([]ItemsByIDRow, error) {
@@ -160,6 +162,7 @@ func (q *Queries) ItemsByID(ctx context.Context, dollar_1 []pgtype.UUID) ([]Item
 			&i.LocalAt,
 			&i.DurationMs,
 			&i.IsLive,
+			&i.StackMembers,
 		); err != nil {
 			return nil, err
 		}
@@ -358,10 +361,11 @@ func (q *Queries) NearestPerson(ctx context.Context, arg NearestPersonParams) (N
 
 const personBucket = `-- name: PersonBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
 WHERE a.id IN (SELECT f.asset_id FROM faces f WHERE f.person_id = $1)
-  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND a.local_at >= $2 AND a.local_at < $3
 ORDER BY a.local_at DESC, a.id DESC
 `
@@ -373,17 +377,18 @@ type PersonBucketParams struct {
 }
 
 type PersonBucketRow struct {
-	ID          pgtype.UUID
-	UserID      pgtype.UUID
-	Kind        string
-	Width       pgtype.Int4
-	Height      pgtype.Int4
-	AspectRatio pgtype.Float4
-	Blurhash    pgtype.Text
-	IsFavorite  bool
-	LocalAt     pgtype.Timestamp
-	DurationMs  pgtype.Int8
-	IsLive      bool
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
 }
 
 func (q *Queries) PersonBucket(ctx context.Context, arg PersonBucketParams) ([]PersonBucketRow, error) {
@@ -407,6 +412,7 @@ func (q *Queries) PersonBucket(ctx context.Context, arg PersonBucketParams) ([]P
 			&i.LocalAt,
 			&i.DurationMs,
 			&i.IsLive,
+			&i.StackMembers,
 		); err != nil {
 			return nil, err
 		}
@@ -421,7 +427,7 @@ func (q *Queries) PersonBucket(ctx context.Context, arg PersonBucketParams) ([]P
 const personBuckets = `-- name: PersonBuckets :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(DISTINCT a.id) AS count
 FROM assets a JOIN faces f ON f.asset_id = a.id
-WHERE f.person_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE f.person_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
 GROUP BY 1
 ORDER BY 1 DESC
 `
@@ -489,7 +495,7 @@ SELECT a.id
 FROM assets a
 LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND ($2::timestamp IS NULL OR a.local_at >= $2)
   AND ($3::timestamp IS NULL OR a.local_at < $3)
   AND ($4::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = $4))
@@ -548,7 +554,7 @@ WHERE a.id IN (
         SELECT n.id FROM assets n WHERE n.original_name ILIKE $2 AND n.user_id = $3
       )
   AND a.user_id = $3 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND ($4::timestamp IS NULL OR a.local_at >= $4)
   AND ($5::timestamp IS NULL OR a.local_at < $5)
   AND ($6::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = $6))
@@ -607,7 +613,7 @@ FROM asset_search s
 JOIN assets a ON a.id = s.asset_id
 LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND ($2::timestamp IS NULL OR a.local_at >= $2)
   AND ($3::timestamp IS NULL OR a.local_at < $3)
   AND ($4::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = $4))

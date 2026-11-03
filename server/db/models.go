@@ -93,6 +93,12 @@ type Asset struct {
 	SpriteCount        pgtype.Int4
 	SpriteIntervalMs   pgtype.Int4
 	VaultAt            pgtype.Timestamptz
+	StackParent        pgtype.UUID
+	StackFree          bool
+	StackChosen        bool
+	Phash              pgtype.Int8
+	Sharpness          pgtype.Float4
+	OrganizedAt        pgtype.Timestamptz
 }
 
 type AssetFile struct {
@@ -104,11 +110,12 @@ type AssetFile struct {
 }
 
 type AssetSearch struct {
-	AssetID    pgtype.UUID
-	Embedding  pgvector.Vector
-	OcrText    string
-	OcrTsv     interface{}
-	AnalyzedAt pgtype.Timestamptz
+	AssetID        pgtype.UUID
+	Embedding      pgvector.Vector
+	OcrText        string
+	OcrTsv         interface{}
+	AnalyzedAt     pgtype.Timestamptz
+	SimilarChecked bool
 }
 
 type AssetTag struct {
@@ -209,6 +216,14 @@ type ShareLinkSession struct {
 	TokenHash []byte
 	LinkID    pgtype.UUID
 	ExpiresAt pgtype.Timestamptz
+}
+
+type SimilarPair struct {
+	AID         pgtype.UUID
+	BID         pgtype.UUID
+	UserID      pgtype.UUID
+	DismissedAt pgtype.Timestamptz
+	CreatedAt   pgtype.Timestamptz
 }
 
 type StoryExport struct {

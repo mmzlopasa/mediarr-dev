@@ -28,6 +28,9 @@ doc/CreateDeviceKeyRequest.md
 doc/CreateUserRequest.md
 doc/DefaultApi.md
 doc/DeviceKey.md
+doc/DuplicateGroup.md
+doc/DuplicateItem.md
+doc/Duplicates.md
 doc/Error.md
 doc/Health.md
 doc/LinkPassword.md
@@ -105,6 +108,9 @@ lib/model/comment_create.dart
 lib/model/create_device_key_request.dart
 lib/model/create_user_request.dart
 lib/model/device_key.dart
+lib/model/duplicate_group.dart
+lib/model/duplicate_item.dart
+lib/model/duplicates.dart
 lib/model/error.dart
 lib/model/health.dart
 lib/model/link_password.dart
@@ -147,6 +153,3 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
-test/memory_test.dart
-test/story_export_test.dart
-test/story_request_test.dart

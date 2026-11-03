@@ -250,6 +250,18 @@
 		}
 	}
 
+	async function changeStack(action: (shot: string) => Promise<void>) {
+		if (!detail) return;
+		const shot = detail.id;
+		try {
+			await action(shot);
+			detail = await load(shot);
+			onChanged();
+		} catch {
+			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		}
+	}
+
 	async function remove() {
 		if (!detail) return;
 		const removed = detail.id;
@@ -440,6 +452,35 @@
 						/>
 					</div>
 				{/if}
+			{/if}
+			{#if detail?.stack && scale === 1}
+				<div
+					class="viewer-stack"
+					role="group"
+					aria-label={tr('Niz snimki', 'Stack of shots')}
+					onpointerdown={(event) => event.stopPropagation()}
+				>
+					{#each detail.stack as shot, index (shot)}
+						<button
+							type="button"
+							class="viewer-stack-shot"
+							class:on={shot === id}
+							aria-current={shot === id}
+							aria-label={tr(`Snimka ${index + 1}`, `Shot ${index + 1}`)}
+							onclick={() => go(shot)}
+						>
+							<img src="{base}/assets/{shot}/thumbnail" alt="" draggable="false" />
+						</button>
+					{/each}
+					{#if detail.stack[0] !== id}
+						<Button small onclick={() => changeStack(api.setStackMain)}
+							>{tr('Postavi kao glavnu', 'Make it the main shot')}</Button
+						>
+					{/if}
+					<Button small onclick={() => changeStack(api.dissolveStack)}
+						>{tr('Razdvoji', 'Split the stack')}</Button
+					>
+				</div>
 			{/if}
 			{#if newerId && scale === 1}
 				<button

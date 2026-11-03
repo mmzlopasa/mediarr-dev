@@ -766,11 +766,14 @@ type AssetDetail struct {
 	OriginalName  string              `json:"originalName"`
 
 	// People Only for the owner
-	People    *[]PersonRef      `json:"people,omitempty"`
-	SizeBytes int64             `json:"sizeBytes"`
-	Sprite    *Sprite           `json:"sprite,omitempty"`
-	State     *string           `json:"state,omitempty"`
-	Status    AssetDetailStatus `json:"status"`
+	People    *[]PersonRef `json:"people,omitempty"`
+	SizeBytes int64        `json:"sizeBytes"`
+	Sprite    *Sprite      `json:"sprite,omitempty"`
+
+	// Stack All shots of its stack, the main one first. Only for the owner
+	Stack  *[]openapi_types.UUID `json:"stack,omitempty"`
+	State  *string               `json:"state,omitempty"`
+	Status AssetDetailStatus     `json:"status"`
 
 	// Tags Only for the owner
 	Tags       *[]string `json:"tags,omitempty"`
@@ -873,6 +876,36 @@ type CreateUserRequest struct {
 type DeviceKey struct {
 	Id  openapi_types.UUID `json:"id"`
 	Key string             `json:"key"`
+}
+
+// DuplicateGroup defines model for DuplicateGroup.
+type DuplicateGroup struct {
+	Items []DuplicateItem `json:"items"`
+
+	// KeepId The largest one, proposed to keep
+	KeepId openapi_types.UUID `json:"keepId"`
+}
+
+// DuplicateItem defines model for DuplicateItem.
+type DuplicateItem struct {
+	Height       *int               `json:"height,omitempty"`
+	Id           openapi_types.UUID `json:"id"`
+	LocalAt      string             `json:"localAt"`
+	OriginalName string             `json:"originalName"`
+	Ratio        float32            `json:"ratio"`
+	SizeBytes    int64              `json:"sizeBytes"`
+	Width        *int               `json:"width,omitempty"`
+}
+
+// Duplicates defines model for Duplicates.
+type Duplicates struct {
+	Groups []DuplicateGroup `json:"groups"`
+
+	// Pending Photos not compared yet
+	Pending int `json:"pending"`
+
+	// Total All groups, of which at most the first 100 are listed
+	Total int `json:"total"`
 }
 
 // Error defines model for Error.
@@ -1130,6 +1163,9 @@ type TimelineItem struct {
 
 	// Ratio Width divided by height, as displayed
 	Ratio float32 `json:"ratio"`
+
+	// StackSize Shots in this stack, when it is one. Only the main shot shows on the timeline
+	StackSize *int `json:"stackSize,omitempty"`
 }
 
 // TimelineItemKind defines model for TimelineItem.Kind.
@@ -1342,6 +1378,9 @@ type LoginJSONRequestBody = LoginRequest
 // SetupJSONRequestBody defines body for Setup for application/json ContentType.
 type SetupJSONRequestBody = SetupRequest
 
+// DismissDuplicatesJSONRequestBody defines body for DismissDuplicates for application/json ContentType.
+type DismissDuplicatesJSONRequestBody = AssetIds
+
 // SetMapStyleJSONRequestBody defines body for SetMapStyle for application/json ContentType.
 type SetMapStyleJSONRequestBody = MapStyle
 
@@ -1479,6 +1518,12 @@ type ServerInterface interface {
 	// GetAssetOriginal Read the unmodified original. Supports Range requests for video.
 	// (GET /api/assets/{id}/original)
 	GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams)
+	// DissolveStack Split a stack back into single shots. It is not put together again by itself
+	// (DELETE /api/assets/{id}/stack)
+	DissolveStack(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// SetStackMain Make this shot the one the timeline shows
+	// (PUT /api/assets/{id}/stack/main)
+	SetStackMain(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetAssetThumbnail Read a WebP thumbnail
 	// (GET /api/assets/{id}/thumbnail)
 	GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetThumbnailParams)
@@ -1518,6 +1563,12 @@ type ServerInterface interface {
 	// GetCollectionBucket Assets of one month in a collection
 	// (GET /api/collections/{scope}/buckets/{month})
 	GetCollectionBucket(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketParamsScope, month string)
+	// ListDuplicates Groups of photos that look alike. Only a proposal, nothing is removed without asking
+	// (GET /api/duplicates)
+	ListDuplicates(w http.ResponseWriter, r *http.Request)
+	// DismissDuplicates These photos are not duplicates of each other, and are not proposed again
+	// (POST /api/duplicates/dismiss)
+	DismissDuplicates(w http.ResponseWriter, r *http.Request)
 	// GetMapPoints Photos with a location that this user may see, oldest first
 	// (GET /api/map/points)
 	GetMapPoints(w http.ResponseWriter, r *http.Request, params GetMapPointsParams)
@@ -1878,6 +1929,18 @@ func (_ Unimplemented) GetAssetOriginal(w http.ResponseWriter, r *http.Request, 
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// DissolveStack Split a stack back into single shots. It is not put together again by itself
+// (DELETE /api/assets/{id}/stack)
+func (_ Unimplemented) DissolveStack(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetStackMain Make this shot the one the timeline shows
+// (PUT /api/assets/{id}/stack/main)
+func (_ Unimplemented) SetStackMain(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetAssetThumbnail Read a WebP thumbnail
 // (GET /api/assets/{id}/thumbnail)
 func (_ Unimplemented) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetThumbnailParams) {
@@ -1953,6 +2016,18 @@ func (_ Unimplemented) GetCollectionBuckets(w http.ResponseWriter, r *http.Reque
 // GetCollectionBucket Assets of one month in a collection
 // (GET /api/collections/{scope}/buckets/{month})
 func (_ Unimplemented) GetCollectionBucket(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketParamsScope, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListDuplicates Groups of photos that look alike. Only a proposal, nothing is removed without asking
+// (GET /api/duplicates)
+func (_ Unimplemented) ListDuplicates(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DismissDuplicates These photos are not duplicates of each other, and are not proposed again
+// (POST /api/duplicates/dismiss)
+func (_ Unimplemented) DismissDuplicates(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3142,6 +3217,58 @@ func (siw *ServerInterfaceWrapper) GetAssetOriginal(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// DissolveStack operation middleware
+func (siw *ServerInterfaceWrapper) DissolveStack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DissolveStack(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetStackMain operation middleware
+func (siw *ServerInterfaceWrapper) SetStackMain(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetStackMain(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetAssetThumbnail operation middleware
 func (siw *ServerInterfaceWrapper) GetAssetThumbnail(w http.ResponseWriter, r *http.Request) {
 
@@ -3543,6 +3670,34 @@ func (siw *ServerInterfaceWrapper) GetCollectionBucket(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetCollectionBucket(w, r, scope, month)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListDuplicates operation middleware
+func (siw *ServerInterfaceWrapper) ListDuplicates(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListDuplicates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DismissDuplicates operation middleware
+func (siw *ServerInterfaceWrapper) DismissDuplicates(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DismissDuplicates(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5257,6 +5412,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/analysis", wrapper.GetAnalysisProgress)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/assets/{id}/stack", wrapper.DissolveStack)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/assets/{id}/stack/main", wrapper.SetStackMain)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/duplicates", wrapper.ListDuplicates)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/duplicates/dismiss", wrapper.DismissDuplicates)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/memories", wrapper.ListMemories)

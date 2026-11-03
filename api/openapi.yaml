@@ -1334,6 +1334,50 @@ paths:
               schema: { $ref: "#/components/schemas/AnalysisProgress" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/stack:
+    delete:
+      operationId: dissolveStack
+      summary: Split a stack back into single shots. It is not put together again by itself
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Split }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/stack/main:
+    put:
+      operationId: setStackMain
+      summary: Make this shot the one the timeline shows
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Changed }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/duplicates:
+    get:
+      operationId: listDuplicates
+      summary: Groups of photos that look alike. Only a proposal, nothing is removed without asking
+      responses:
+        "200":
+          description: The groups, newest first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Duplicates" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/duplicates/dismiss:
+    post:
+      operationId: dismissDuplicates
+      summary: These photos are not duplicates of each other, and are not proposed again
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetIds" }
+      responses:
+        "204": { description: Dismissed }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/memories:
     get:
       operationId: listMemories
@@ -1400,6 +1444,34 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    Duplicates:
+      type: object
+      required: [groups, total, pending]
+      properties:
+        total: { type: integer, description: "All groups, of which at most the first 100 are listed" }
+        pending: { type: integer, description: "Photos not compared yet" }
+        groups:
+          type: array
+          items: { $ref: "#/components/schemas/DuplicateGroup" }
+    DuplicateGroup:
+      type: object
+      required: [items, keepId]
+      properties:
+        keepId: { type: string, format: uuid, description: "The largest one, proposed to keep" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/DuplicateItem" }
+    DuplicateItem:
+      type: object
+      required: [id, originalName, sizeBytes, ratio, localAt]
+      properties:
+        id: { type: string, format: uuid }
+        originalName: { type: string }
+        sizeBytes: { type: integer, format: int64 }
+        width: { type: integer }
+        height: { type: integer }
+        ratio: { type: number, format: float }
+        localAt: { type: string }
     Memory:
       type: object
       required: [kind, title, items]
@@ -1832,6 +1904,7 @@ components:
         blurhash: { type: string }
         isFavorite: { type: boolean }
         isLive: { type: boolean }
+        stackSize: { type: integer, description: "Shots in this stack, when it is one. Only the main shot shows on the timeline" }
         isShared: { type: boolean, description: "Belongs to someone else, shared with this user" }
         durationMs: { type: integer, format: int64 }
         localAt: { type: string, description: "Local capture time without a zone: 2006-01-02T15:04:05" }
@@ -1850,6 +1923,7 @@ components:
         isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
         tags: { type: array, items: { type: string }, description: "Only for the owner" }
+        stack: { type: array, items: { type: string, format: uuid }, description: "All shots of its stack, the main one first. Only for the owner" }
         people: { type: array, items: { $ref: "#/components/schemas/PersonRef" }, description: "Only for the owner" }
         city: { type: string }
         state: { type: string }

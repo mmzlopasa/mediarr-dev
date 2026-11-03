@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **isOwner** | **bool** | Only the owner can change or delete the asset | [optional] 
 **downloadAllowed** | **bool** | False on a public link that does not allow downloads | [optional] 
 **tags** | **List<String>** | Only for the owner | [optional] [default to const []]
+**stack** | **List<String>** | All shots of its stack, the main one first. Only for the owner | [optional] [default to const []]
 **people** | [**List<PersonRef>**](PersonRef.md) | Only for the owner | [optional] [default to const []]
 **city** | **String** |  | [optional] 
 **state** | **String** |  | [optional] 

@@ -453,6 +453,12 @@
 										<Icon name="play" size={14} />
 									</span>
 								{/if}
+								{#if tile.item.stackSize}
+									<span class="tl-badge tl-video" title={tr('Niz snimki', 'Stack of shots')}>
+										<small>{tile.item.stackSize}</small>
+										<Icon name="copy" size={14} />
+									</span>
+								{/if}
 								{#if tile.item.isLive}
 									<span class="tl-badge tl-live" title="Live"><Icon name="live" size={14} /></span>
 								{/if}

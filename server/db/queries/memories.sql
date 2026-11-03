@@ -2,7 +2,7 @@
 SELECT a.id, EXTRACT(YEAR FROM a.local_at)::int AS year
 FROM assets a
 WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND EXTRACT(MONTH FROM a.local_at) = sqlc.arg('month')::int AND EXTRACT(DAY FROM a.local_at) = sqlc.arg('day')::int
   AND a.local_at < sqlc.arg('before')
 ORDER BY a.local_at DESC, a.id;
@@ -11,7 +11,7 @@ ORDER BY a.local_at DESC, a.id;
 SELECT a.id
 FROM assets a
 WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
 ORDER BY a.is_favorite DESC, a.local_at DESC, a.id
 LIMIT 200;

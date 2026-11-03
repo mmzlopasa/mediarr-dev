@@ -74,7 +74,7 @@ SELECT a.id, a.kind, a.local_at, e.latitude::float8 AS latitude, e.longitude::fl
        COALESCE(e.city, '')::text AS city, COALESCE(e.country, '')::text AS country
 FROM assets a
 JOIN exif e ON e.asset_id = a.id
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND e.latitude IS NOT NULL AND e.longitude IS NOT NULL
   AND ($1::timestamp IS NULL OR a.local_at >= $1)
   AND ($2::timestamp IS NULL OR a.local_at < $2)

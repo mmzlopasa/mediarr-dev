@@ -12,7 +12,8 @@ ORDER BY 1 DESC;
 
 -- name: CollectionBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
 WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.live_photo_of IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
@@ -133,7 +134,8 @@ ORDER BY 1 DESC;
 
 -- name: TagBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a JOIN asset_tags x ON x.asset_id = a.id
 WHERE x.tag_id = sqlc.arg('tag_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')

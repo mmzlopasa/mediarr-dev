@@ -74,16 +74,17 @@ ORDER BY p.name, p.id;
 -- name: PersonBuckets :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(DISTINCT a.id) AS count
 FROM assets a JOIN faces f ON f.asset_id = a.id
-WHERE f.person_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE f.person_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
 GROUP BY 1
 ORDER BY 1 DESC;
 
 -- name: PersonBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
 WHERE a.id IN (SELECT f.asset_id FROM faces f WHERE f.person_id = sqlc.arg('person_id'))
-  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
 ORDER BY a.local_at DESC, a.id DESC;
 
@@ -108,7 +109,7 @@ FROM asset_search s
 JOIN assets a ON a.id = s.asset_id
 LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (sqlc.narg('from_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('from_at'))
   AND (sqlc.narg('to_at')::timestamp IS NULL OR a.local_at < sqlc.narg('to_at'))
   AND (sqlc.narg('person')::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = sqlc.narg('person')))
@@ -129,7 +130,7 @@ WHERE a.id IN (
         SELECT n.id FROM assets n WHERE n.original_name ILIKE sqlc.arg('name_pattern') AND n.user_id = sqlc.arg('user_id')
       )
   AND a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (sqlc.narg('from_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('from_at'))
   AND (sqlc.narg('to_at')::timestamp IS NULL OR a.local_at < sqlc.narg('to_at'))
   AND (sqlc.narg('person')::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = sqlc.narg('person')))
@@ -143,7 +144,7 @@ SELECT a.id
 FROM assets a
 LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (sqlc.narg('from_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('from_at'))
   AND (sqlc.narg('to_at')::timestamp IS NULL OR a.local_at < sqlc.narg('to_at'))
   AND (sqlc.narg('person')::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = sqlc.narg('person')))
@@ -154,6 +155,7 @@ LIMIT sqlc.arg('row_limit');
 
 -- name: ItemsByID :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
 WHERE a.id = ANY($1::uuid[]);

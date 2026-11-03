@@ -157,6 +157,7 @@ func writeBucket(w http.ResponseWriter, month string, rows []db.TimelineBucketRo
 			Ratio:      ratioOf(row.AspectRatio, row.Width, row.Height),
 			IsFavorite: row.IsFavorite && mine,
 			IsLive:     optional(row.IsLive, row.IsLive),
+			StackSize:  optional(int(row.StackMembers)+1, mine && row.StackMembers > 0),
 			IsShared:   optional(true, !mine),
 			DurationMs: optional(row.DurationMs.Int64, row.DurationMs.Valid),
 			LocalAt:    row.LocalAt.Time.Format(localTimeLayout),
@@ -205,6 +206,12 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 			return
 		}
 		detail.Tags = &tags
+		stack, err := s.stackOf(ctx, &row)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		detail.Stack = stack
 		people, err := s.queries.ListAssetPeople(ctx, row.ID)
 		if err != nil {
 			internalError(w, r, err)

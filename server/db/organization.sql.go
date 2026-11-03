@@ -13,7 +13,8 @@ import (
 
 const collectionBucket = `-- name: CollectionBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
   AND a.local_at >= $2 AND a.local_at < $3
@@ -33,17 +34,18 @@ type CollectionBucketParams struct {
 }
 
 type CollectionBucketRow struct {
-	ID          pgtype.UUID
-	UserID      pgtype.UUID
-	Kind        string
-	Width       pgtype.Int4
-	Height      pgtype.Int4
-	AspectRatio pgtype.Float4
-	Blurhash    pgtype.Text
-	IsFavorite  bool
-	LocalAt     pgtype.Timestamp
-	DurationMs  pgtype.Int8
-	IsLive      bool
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
 }
 
 func (q *Queries) CollectionBucket(ctx context.Context, arg CollectionBucketParams) ([]CollectionBucketRow, error) {
@@ -72,6 +74,7 @@ func (q *Queries) CollectionBucket(ctx context.Context, arg CollectionBucketPara
 			&i.LocalAt,
 			&i.DurationMs,
 			&i.IsLive,
+			&i.StackMembers,
 		); err != nil {
 			return nil, err
 		}
@@ -204,7 +207,7 @@ func (q *Queries) EnsureTag(ctx context.Context, arg EnsureTagParams) (pgtype.UU
 }
 
 const getCollectionAsset = `-- name: GetCollectionAsset :one
-SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at
+SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at
 FROM assets a
 JOIN assets p ON p.id = COALESCE(a.live_photo_of, a.id)
 WHERE a.id = $1 AND a.user_id = $2
@@ -258,6 +261,12 @@ func (q *Queries) GetCollectionAsset(ctx context.Context, arg GetCollectionAsset
 		&i.SpriteCount,
 		&i.SpriteIntervalMs,
 		&i.VaultAt,
+		&i.StackParent,
+		&i.StackFree,
+		&i.StackChosen,
+		&i.Phash,
+		&i.Sharpness,
+		&i.OrganizedAt,
 	)
 	return i, err
 }
@@ -332,7 +341,7 @@ func (q *Queries) ListExpiredTrash(ctx context.Context, before pgtype.Timestampt
 }
 
 const listPurgeFamily = `-- name: ListPurgeFamily :many
-SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, l.kind AS library_kind
+SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, l.kind AS library_kind
 FROM assets a JOIN libraries l ON l.id = a.library_id
 WHERE a.id = ANY($1::uuid[]) OR a.live_photo_of = ANY($1::uuid[])
 `
@@ -370,6 +379,12 @@ type ListPurgeFamilyRow struct {
 	SpriteCount        pgtype.Int4
 	SpriteIntervalMs   pgtype.Int4
 	VaultAt            pgtype.Timestamptz
+	StackParent        pgtype.UUID
+	StackFree          bool
+	StackChosen        bool
+	Phash              pgtype.Int8
+	Sharpness          pgtype.Float4
+	OrganizedAt        pgtype.Timestamptz
 	LibraryKind        string
 }
 
@@ -416,6 +431,12 @@ func (q *Queries) ListPurgeFamily(ctx context.Context, dollar_1 []pgtype.UUID) (
 			&i.SpriteCount,
 			&i.SpriteIntervalMs,
 			&i.VaultAt,
+			&i.StackParent,
+			&i.StackFree,
+			&i.StackChosen,
+			&i.Phash,
+			&i.Sharpness,
+			&i.OrganizedAt,
 			&i.LibraryKind,
 		); err != nil {
 			return nil, err
@@ -613,7 +634,8 @@ func (q *Queries) TagAssets(ctx context.Context, arg TagAssetsParams) (int64, er
 
 const tagBucket = `-- name: TagBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a JOIN asset_tags x ON x.asset_id = a.id
 WHERE x.tag_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND a.local_at >= $2 AND a.local_at < $3
@@ -627,17 +649,18 @@ type TagBucketParams struct {
 }
 
 type TagBucketRow struct {
-	ID          pgtype.UUID
-	UserID      pgtype.UUID
-	Kind        string
-	Width       pgtype.Int4
-	Height      pgtype.Int4
-	AspectRatio pgtype.Float4
-	Blurhash    pgtype.Text
-	IsFavorite  bool
-	LocalAt     pgtype.Timestamp
-	DurationMs  pgtype.Int8
-	IsLive      bool
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
 }
 
 func (q *Queries) TagBucket(ctx context.Context, arg TagBucketParams) ([]TagBucketRow, error) {
@@ -661,6 +684,7 @@ func (q *Queries) TagBucket(ctx context.Context, arg TagBucketParams) ([]TagBuck
 			&i.LocalAt,
 			&i.DurationMs,
 			&i.IsLive,
+			&i.StackMembers,
 		); err != nil {
 			return nil, err
 		}

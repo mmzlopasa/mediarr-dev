@@ -144,7 +144,7 @@ const onThisDay = `-- name: OnThisDay :many
 SELECT a.id, EXTRACT(YEAR FROM a.local_at)::int AS year
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND EXTRACT(MONTH FROM a.local_at) = $2::int AND EXTRACT(DAY FROM a.local_at) = $3::int
   AND a.local_at < $4
 ORDER BY a.local_at DESC, a.id
@@ -191,7 +191,7 @@ const recentForSummary = `-- name: RecentForSummary :many
 SELECT a.id
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
-  AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND a.local_at >= $2 AND a.local_at < $3
 ORDER BY a.is_favorite DESC, a.local_at DESC, a.id
 LIMIT 200

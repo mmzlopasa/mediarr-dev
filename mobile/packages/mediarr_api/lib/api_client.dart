@@ -279,6 +279,12 @@ class ApiClient {
           return CreateUserRequest.fromJson(value);
         case 'DeviceKey':
           return DeviceKey.fromJson(value);
+        case 'DuplicateGroup':
+          return DuplicateGroup.fromJson(value);
+        case 'DuplicateItem':
+          return DuplicateItem.fromJson(value);
+        case 'Duplicates':
+          return Duplicates.fromJson(value);
         case 'Error':
           return Error.fromJson(value);
         case 'Health':

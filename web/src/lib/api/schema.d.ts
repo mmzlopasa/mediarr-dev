@@ -1443,6 +1443,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/{id}/stack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Split a stack back into single shots. It is not put together again by itself */
+        delete: operations["dissolveStack"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/stack/main": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Make this shot the one the timeline shows */
+        put: operations["setStackMain"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Groups of photos that look alike. Only a proposal, nothing is removed without asking */
+        get: operations["listDuplicates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/duplicates/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** These photos are not duplicates of each other, and are not proposed again */
+        post: operations["dismissDuplicates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/memories": {
         parameters: {
             query?: never;
@@ -1515,6 +1583,33 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Duplicates: {
+            /** @description All groups, of which at most the first 100 are listed */
+            total: number;
+            /** @description Photos not compared yet */
+            pending: number;
+            groups: components["schemas"]["DuplicateGroup"][];
+        };
+        DuplicateGroup: {
+            /**
+             * Format: uuid
+             * @description The largest one, proposed to keep
+             */
+            keepId: string;
+            items: components["schemas"]["DuplicateItem"][];
+        };
+        DuplicateItem: {
+            /** Format: uuid */
+            id: string;
+            originalName: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            width?: number;
+            height?: number;
+            /** Format: float */
+            ratio: number;
+            localAt: string;
+        };
         Memory: {
             /** @enum {string} */
             kind: "on_this_day" | "week";
@@ -1925,6 +2020,8 @@ export interface components {
             blurhash?: string;
             isFavorite: boolean;
             isLive?: boolean;
+            /** @description Shots in this stack, when it is one. Only the main shot shows on the timeline */
+            stackSize?: number;
             /** @description Belongs to someone else, shared with this user */
             isShared?: boolean;
             /** Format: int64 */
@@ -1943,6 +2040,8 @@ export interface components {
             downloadAllowed?: boolean;
             /** @description Only for the owner */
             tags?: string[];
+            /** @description All shots of its stack, the main one first. Only for the owner */
+            stack?: string[];
             /** @description Only for the owner */
             people?: components["schemas"]["PersonRef"][];
             city?: string;
@@ -4401,6 +4500,95 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
+        };
+    };
+    dissolveStack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Split */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    setStackMain: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Changed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listDuplicates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The groups, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Duplicates"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    dismissDuplicates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetIds"];
+            };
+        };
+        responses: {
+            /** @description Dismissed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
         };
     };
     listMemories: {

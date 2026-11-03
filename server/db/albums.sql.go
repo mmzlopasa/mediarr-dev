@@ -35,7 +35,8 @@ func (q *Queries) AddAlbumAssets(ctx context.Context, arg AddAlbumAssetsParams) 
 
 const albumBucket = `-- name: AlbumBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
 WHERE a.id IN (SELECT album_item_ids($1))
   AND a.local_at >= $2 AND a.local_at < $3
@@ -49,17 +50,18 @@ type AlbumBucketParams struct {
 }
 
 type AlbumBucketRow struct {
-	ID          pgtype.UUID
-	UserID      pgtype.UUID
-	Kind        string
-	Width       pgtype.Int4
-	Height      pgtype.Int4
-	AspectRatio pgtype.Float4
-	Blurhash    pgtype.Text
-	IsFavorite  bool
-	LocalAt     pgtype.Timestamp
-	DurationMs  pgtype.Int8
-	IsLive      bool
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
 }
 
 func (q *Queries) AlbumBucket(ctx context.Context, arg AlbumBucketParams) ([]AlbumBucketRow, error) {
@@ -83,6 +85,7 @@ func (q *Queries) AlbumBucket(ctx context.Context, arg AlbumBucketParams) ([]Alb
 			&i.LocalAt,
 			&i.DurationMs,
 			&i.IsLive,
+			&i.StackMembers,
 		); err != nil {
 			return nil, err
 		}
@@ -516,7 +519,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 }
 
 const getVisibleAsset = `-- name: GetVisibleAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
 `
 
 type GetVisibleAssetParams struct {
@@ -560,6 +563,12 @@ func (q *Queries) GetVisibleAsset(ctx context.Context, arg GetVisibleAssetParams
 		&i.SpriteCount,
 		&i.SpriteIntervalMs,
 		&i.VaultAt,
+		&i.StackParent,
+		&i.StackFree,
+		&i.StackChosen,
+		&i.Phash,
+		&i.Sharpness,
+		&i.OrganizedAt,
 	)
 	return i, err
 }
@@ -915,7 +924,7 @@ func (q *Queries) ListPartnersReceived(ctx context.Context, partnerID pgtype.UUI
 }
 
 const listVisibleAssets = `-- name: ListVisibleAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
 `
 
 type ListVisibleAssetsParams struct {
@@ -965,6 +974,12 @@ func (q *Queries) ListVisibleAssets(ctx context.Context, arg ListVisibleAssetsPa
 			&i.SpriteCount,
 			&i.SpriteIntervalMs,
 			&i.VaultAt,
+			&i.StackParent,
+			&i.StackFree,
+			&i.StackChosen,
+			&i.Phash,
+			&i.Sharpness,
+			&i.OrganizedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -978,9 +993,10 @@ func (q *Queries) ListVisibleAssets(ctx context.Context, arg ListVisibleAssetsPa
 
 const partnerBucket = `-- name: PartnerBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       0::bigint AS stack_members
 FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND ($2::timestamp IS NULL OR a.local_at >= $2)
   AND a.local_at >= $3 AND a.local_at < $4
 ORDER BY a.local_at DESC, a.id DESC
@@ -994,17 +1010,18 @@ type PartnerBucketParams struct {
 }
 
 type PartnerBucketRow struct {
-	ID          pgtype.UUID
-	UserID      pgtype.UUID
-	Kind        string
-	Width       pgtype.Int4
-	Height      pgtype.Int4
-	AspectRatio pgtype.Float4
-	Blurhash    pgtype.Text
-	IsFavorite  bool
-	LocalAt     pgtype.Timestamp
-	DurationMs  pgtype.Int8
-	IsLive      bool
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
 }
 
 func (q *Queries) PartnerBucket(ctx context.Context, arg PartnerBucketParams) ([]PartnerBucketRow, error) {
@@ -1033,6 +1050,7 @@ func (q *Queries) PartnerBucket(ctx context.Context, arg PartnerBucketParams) ([
 			&i.LocalAt,
 			&i.DurationMs,
 			&i.IsLive,
+			&i.StackMembers,
 		); err != nil {
 			return nil, err
 		}
@@ -1047,7 +1065,7 @@ func (q *Queries) PartnerBucket(ctx context.Context, arg PartnerBucketParams) ([
 const partnerBuckets = `-- name: PartnerBuckets :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND ($2::timestamp IS NULL OR a.local_at >= $2)
 GROUP BY 1
 ORDER BY 1 DESC
@@ -1234,9 +1252,10 @@ func (q *Queries) SetPartnerTimeline(ctx context.Context, arg SetPartnerTimeline
 
 const timelineBucketWithPartners = `-- name: TimelineBucketWithPartners :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
-       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
+       (SELECT count(*) FROM assets m WHERE m.stack_parent = a.id)::bigint AS stack_members
 FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND a.local_at >= $1 AND a.local_at < $2
   AND (a.user_id = $3 OR EXISTS (
       SELECT 1 FROM partner_shares ps
@@ -1252,17 +1271,18 @@ type TimelineBucketWithPartnersParams struct {
 }
 
 type TimelineBucketWithPartnersRow struct {
-	ID          pgtype.UUID
-	UserID      pgtype.UUID
-	Kind        string
-	Width       pgtype.Int4
-	Height      pgtype.Int4
-	AspectRatio pgtype.Float4
-	Blurhash    pgtype.Text
-	IsFavorite  bool
-	LocalAt     pgtype.Timestamp
-	DurationMs  pgtype.Int8
-	IsLive      bool
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
 }
 
 func (q *Queries) TimelineBucketWithPartners(ctx context.Context, arg TimelineBucketWithPartnersParams) ([]TimelineBucketWithPartnersRow, error) {
@@ -1286,6 +1306,7 @@ func (q *Queries) TimelineBucketWithPartners(ctx context.Context, arg TimelineBu
 			&i.LocalAt,
 			&i.DurationMs,
 			&i.IsLive,
+			&i.StackMembers,
 		); err != nil {
 			return nil, err
 		}
@@ -1300,7 +1321,7 @@ func (q *Queries) TimelineBucketWithPartners(ctx context.Context, arg TimelineBu
 const timelineBucketsWithPartners = `-- name: TimelineBucketsWithPartners :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (a.user_id = $1 OR EXISTS (
       SELECT 1 FROM partner_shares ps
       WHERE ps.owner_id = a.user_id AND ps.partner_id = $1 AND ps.in_timeline
