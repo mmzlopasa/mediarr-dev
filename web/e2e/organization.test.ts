@@ -170,3 +170,27 @@ test('a photo with a location appears on the map under its place name', async ({
 	expect(detail.city).toBe('Hvar');
 	expect(detail.country).toBe('Croatia');
 });
+
+test('search answers, shows its filters and says when something is not found', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await page.goto('/search');
+	await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible();
+	await expect(page.getByText('Describe what you are looking for')).toBeVisible();
+	await page.getByRole('textbox', { name: 'What are you looking for?' }).fill('gps.jpg 2024');
+	await page.getByRole('main').getByRole('button', { name: 'Search' }).click();
+	await expect(page).toHaveURL(/\/search\?q=/);
+	await expect(page.getByRole('button', { name: 'Open' })).toHaveCount(1);
+	await expect(page.getByText('2024-01-01 – 2024-12-31')).toBeVisible();
+	await page.getByRole('button', { name: 'Open' }).click();
+	await expect(page.locator('.viewer-media').first()).toBeVisible();
+	await page.goBack();
+	await page.goto('/search?q=2001');
+	await expect(page.getByText('Nothing was found.')).toBeVisible();
+});
+
+test('the people page lists no one before any face is known', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await page.goto('/people');
+	await expect(page.getByRole('heading', { name: 'People' })).toBeVisible();
+	await expect(page.getByText('No people recognised yet.')).toBeVisible();
+});

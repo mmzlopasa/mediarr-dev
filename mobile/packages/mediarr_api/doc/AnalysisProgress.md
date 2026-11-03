@@ -1,0 +1,17 @@
+# mediarr_api.model.AnalysisProgress
+
+## Load the model package
+```dart
+import 'package:mediarr_api/api.dart';
+```
+
+## Properties
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**enabled** | **bool** |  | 
+**total** | **int** |  | 
+**analyzed** | **int** |  | 
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

@@ -17,6 +17,9 @@ class AlbumRules {
     this.to,
     this.kind,
     this.camera,
+    this.person,
+    this.tag,
+    this.place,
   });
 
   ///
@@ -45,6 +48,30 @@ class AlbumRules {
   ///
   String? camera;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? person;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? tag;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? place;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -52,7 +79,10 @@ class AlbumRules {
           other.from == from &&
           other.to == to &&
           other.kind == kind &&
-          other.camera == camera;
+          other.camera == camera &&
+          other.person == person &&
+          other.tag == tag &&
+          other.place == place;
 
   @override
   int get hashCode =>
@@ -60,11 +90,14 @@ class AlbumRules {
       (from == null ? 0 : from!.hashCode) +
       (to == null ? 0 : to!.hashCode) +
       (kind == null ? 0 : kind!.hashCode) +
-      (camera == null ? 0 : camera!.hashCode);
+      (camera == null ? 0 : camera!.hashCode) +
+      (person == null ? 0 : person!.hashCode) +
+      (tag == null ? 0 : tag!.hashCode) +
+      (place == null ? 0 : place!.hashCode);
 
   @override
   String toString() =>
-      'AlbumRules[from=$from, to=$to, kind=$kind, camera=$camera]';
+      'AlbumRules[from=$from, to=$to, kind=$kind, camera=$camera, person=$person, tag=$tag, place=$place]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -87,6 +120,21 @@ class AlbumRules {
       json[r'camera'] = this.camera;
     } else {
       json[r'camera'] = null;
+    }
+    if (this.person != null) {
+      json[r'person'] = this.person;
+    } else {
+      json[r'person'] = null;
+    }
+    if (this.tag != null) {
+      json[r'tag'] = this.tag;
+    } else {
+      json[r'tag'] = null;
+    }
+    if (this.place != null) {
+      json[r'place'] = this.place;
+    } else {
+      json[r'place'] = null;
     }
     return json;
   }
@@ -116,6 +164,9 @@ class AlbumRules {
         to: mapDateTime(json, r'to', r''),
         kind: AlbumRulesKindEnum.fromJson(json[r'kind']),
         camera: mapValueOfType<String>(json, r'camera'),
+        person: mapValueOfType<String>(json, r'person'),
+        tag: mapValueOfType<String>(json, r'tag'),
+        place: mapValueOfType<String>(json, r'place'),
       );
     }
     return null;

@@ -502,6 +502,12 @@
 					<Kv label={tr('Trajanje', 'Duration')} value={formatDuration(detail.durationMs)} />
 				{/if}
 				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
+				{#if detail.people?.length}
+					<Kv
+						label={tr('Osobe', 'People')}
+						value={detail.people.map((person) => person.name).join(', ')}
+					/>
+				{/if}
 				{#if detail.tags?.length}
 					<Kv label={tr('Oznake', 'Tags')} value={detail.tags.join(', ')} />
 				{/if}

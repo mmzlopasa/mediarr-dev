@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api } from '#lib/api.ts';
+	import { api, type AnalysisProgress } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
+	import Bar from '#lib/design/components/Bar.svelte';
 	import Button from '#lib/design/components/Button.svelte';
+	import Kv from '#lib/design/components/Kv.svelte';
 	import Card from '#lib/design/components/Card.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
@@ -13,12 +15,14 @@
 	let dark = $state('');
 	let loaded = $state(false);
 	let failed = $state(false);
+	let analysis = $state<AnalysisProgress>();
 
 	onMount(async () => {
 		try {
 			const style = await api.mapStyle();
 			light = style.light;
 			dark = style.dark;
+			analysis = await api.analysisProgress();
 			loaded = true;
 		} catch {
 			failed = true;
@@ -50,6 +54,22 @@
 {:else if !loaded}
 	<Skeleton height="200px" />
 {:else}
+	<Card title={tr('Pametna pretraga i lica', 'Smart search and faces')}>
+		{#if analysis?.enabled}
+			<Kv label={tr('Obrađeno', 'Analysed')} value="{analysis.analyzed} / {analysis.total}" />
+			<Bar
+				pct={analysis.total ? Math.round((analysis.analyzed / analysis.total) * 100) : 0}
+				label={tr('Obrada slika', 'Picture analysis')}
+			/>
+		{:else}
+			<p class="alb-meta">
+				{tr(
+					'Nije uključeno. U .env postavite COMPOSE_PROFILES=ml i ML_URL=http://ml:8000.',
+					'Not turned on. In .env, set COMPOSE_PROFILES=ml and ML_URL=http://ml:8000.'
+				)}
+			</p>
+		{/if}
+	</Card>
 	<Card title={tr('Karta', 'Map')}>
 		<form class="form" onsubmit={save}>
 			<p class="alb-meta">

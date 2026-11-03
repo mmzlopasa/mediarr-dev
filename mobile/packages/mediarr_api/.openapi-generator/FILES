@@ -10,6 +10,7 @@ doc/AlbumCreate.md
 doc/AlbumMember.md
 doc/AlbumRules.md
 doc/AlbumUpdate.md
+doc/AnalysisProgress.md
 doc/Asset.md
 doc/AssetDetail.md
 doc/AssetIds.md
@@ -40,7 +41,13 @@ doc/PartnerShare.md
 doc/PartnerTimeline.md
 doc/Partners.md
 doc/PasswordConfirm.md
+doc/PeopleList.md
+doc/Person.md
+doc/PersonRef.md
+doc/PersonUpdate.md
 doc/PublicLink.md
+doc/SearchFilters.md
+doc/SearchResult.md
 doc/SetupRequest.md
 doc/ShareLink.md
 doc/ShareLinkCreate.md
@@ -78,6 +85,7 @@ lib/model/album_create.dart
 lib/model/album_member.dart
 lib/model/album_rules.dart
 lib/model/album_update.dart
+lib/model/analysis_progress.dart
 lib/model/asset.dart
 lib/model/asset_detail.dart
 lib/model/asset_ids.dart
@@ -107,7 +115,13 @@ lib/model/partner_share.dart
 lib/model/partner_timeline.dart
 lib/model/partners.dart
 lib/model/password_confirm.dart
+lib/model/people_list.dart
+lib/model/person.dart
+lib/model/person_ref.dart
+lib/model/person_update.dart
 lib/model/public_link.dart
+lib/model/search_filters.dart
+lib/model/search_result.dart
 lib/model/setup_request.dart
 lib/model/share_link.dart
 lib/model/share_link_create.dart
@@ -127,6 +141,10 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
-test/map_points_test.dart
-test/map_style_test.dart
-test/trip_test.dart
+test/analysis_progress_test.dart
+test/people_list_test.dart
+test/person_ref_test.dart
+test/person_test.dart
+test/person_update_test.dart
+test/search_filters_test.dart
+test/search_result_test.dart

@@ -4,7 +4,7 @@ export DEV_GID := $(shell id -g)
 
 # Optional per-machine settings, such as DEV_LIBRARY on a separate disk.
 -include deploy/.env.dev
-export DEV_LIBRARY DEV_MEDIA_CACHE
+export DEV_LIBRARY DEV_MEDIA_CACHE DEV_MODELS
 
 DEV_COMPOSE := docker compose -f deploy/compose.dev.yaml
 GO_TOOL := go tool -modfile=tools.mod
@@ -14,7 +14,7 @@ PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/packag
 .PHONY: dev down deploy landing testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e lighthouse
 
 dev:
-	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache
+	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache .dev/models
 	$(DEV_COMPOSE) up -d --build --wait
 
 down:

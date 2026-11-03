@@ -111,7 +111,7 @@ func serve(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return fmt.Errorf("create job client: %w", err)
 	}
-	handler, err := app.NewHandler(app.Deps{Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath})
+	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath})
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func worker(ctx context.Context, cfg config.Config) error {
 			return err
 		}
 	}
-	client, err := jobs.NewWorker(pool, jobs.Options{Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, VideoAccel: cfg.VideoAccel})
+	client, err := jobs.NewWorker(pool, jobs.Options{MLURL: cfg.MLURL, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, VideoAccel: cfg.VideoAccel})
 	if err != nil {
 		return fmt.Errorf("create worker: %w", err)
 	}

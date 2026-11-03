@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api, type AlbumRules } from '#lib/api.ts';
+	import { api, type AlbumRules, type Person, type Tag } from '#lib/api.ts';
 	import Input from '#lib/design/components/Input.svelte';
 	import Select from '#lib/design/components/Select.svelte';
 	import { tr } from '#lib/i18n.svelte.ts';
@@ -12,9 +12,18 @@
 	let to = $state(rules.to ?? '');
 	let kind = $state<string>(rules.kind ?? '');
 	let camera = $state(rules.camera ?? '');
+	let person = $state(rules.person ?? '');
+	let tag = $state(rules.tag ?? '');
+	let place = $state(rules.place ?? '');
+	let people = $state<Person[]>([]);
+	let tags = $state<Tag[]>([]);
 
 	onMount(async () => {
 		cameras = await api.cameras().catch(() => []);
+		people = (await api.people().catch(() => ({ people: [] as Person[] }))).people.filter(
+			(entry) => entry.name
+		);
+		tags = await api.tags().catch(() => []);
 	});
 
 	$effect(() => {
@@ -22,7 +31,10 @@
 			from: from || undefined,
 			to: to || undefined,
 			kind: (kind || undefined) as AlbumRules['kind'],
-			camera: camera || undefined
+			camera: camera || undefined,
+			person: person || undefined,
+			tag: tag || undefined,
+			place: place || undefined
 		};
 	});
 </script>
@@ -47,9 +59,24 @@
 		...cameras.map((name) => ({ value: name, label: name }))
 	]}
 />
-<p class="alb-meta">
-	{tr(
-		'Pravila za osobe, mjesta i oznake još nisu dostupna: stižu s tim značajkama.',
-		'Rules for people, places and tags are not available yet: they arrive with those features.'
-	)}
-</p>
+<Select
+	label={tr('Osoba', 'Person')}
+	bind:value={person}
+	options={[
+		{ value: '', label: tr('Sve', 'All') },
+		...people.map((entry) => ({ value: entry.id, label: entry.name }))
+	]}
+/>
+<Select
+	label={tr('Oznaka', 'Tag')}
+	bind:value={tag}
+	options={[
+		{ value: '', label: tr('Sve', 'All') },
+		...tags.map((entry) => ({ value: entry.id, label: entry.name }))
+	]}
+/>
+<Input
+	label={tr('Mjesto', 'Place')}
+	hint={tr('Grad, regija ili država', 'A city, region or country')}
+	bind:value={place}
+/>

@@ -12,6 +12,9 @@ Name | Type | Description | Notes
 **to** | [**DateTime**](DateTime.md) |  | [optional] 
 **kind** | **String** |  | [optional] 
 **camera** | **String** |  | [optional] 
+**person** | **String** |  | [optional] 
+**tag** | **String** |  | [optional] 
+**place** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

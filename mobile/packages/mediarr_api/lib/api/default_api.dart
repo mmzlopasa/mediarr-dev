@@ -1454,6 +1454,52 @@ class DefaultApi {
     return null;
   }
 
+  /// How far picture analysis has come. Administrators only.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getAnalysisProgressWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/analysis';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// How far picture analysis has come. Administrators only.
+  Future<AnalysisProgress?> getAnalysisProgress() async {
+    final response = await getAnalysisProgressWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AnalysisProgress',
+      ) as AnalysisProgress;
+    }
+    return null;
+  }
+
   /// Read an asset's details and its neighbours on the timeline
   ///
   /// Note: This method returns the HTTP [Response].
@@ -2675,6 +2721,195 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'TimelineBuckets',
       ) as TimelineBuckets;
+    }
+    return null;
+  }
+
+  /// Photos of this person in one month
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] month (required):
+  Future<Response> getPersonBucketWithHttpInfo(
+    String id,
+    String month,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/people/{id}/buckets/{month}'
+        .replaceAll('{id}', id)
+        .replaceAll('{month}', month);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Photos of this person in one month
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] month (required):
+  Future<TimelineBucket?> getPersonBucket(
+    String id,
+    String month,
+  ) async {
+    final response = await getPersonBucketWithHttpInfo(
+      id,
+      month,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBucket',
+      ) as TimelineBucket;
+    }
+    return null;
+  }
+
+  /// Months with this person
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getPersonBucketsWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/people/{id}/buckets'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Months with this person
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<TimelineBuckets?> getPersonBuckets(
+    String id,
+  ) async {
+    final response = await getPersonBucketsWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBuckets',
+      ) as TimelineBuckets;
+    }
+    return null;
+  }
+
+  /// A picture of this person's face
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getPersonThumbnailWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/people/{id}/thumbnail'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// A picture of this person's face
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<MultipartFile?> getPersonThumbnail(
+    String id,
+  ) async {
+    final response = await getPersonThumbnailWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
     }
     return null;
   }
@@ -3986,6 +4221,52 @@ class DefaultApi {
     return null;
   }
 
+  /// People recognised in the current user's library
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listPeopleWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/people';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// People recognised in the current user's library
+  Future<PeopleList?> listPeople() async {
+    final response = await listPeopleWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'PeopleList',
+      ) as PeopleList;
+    }
+    return null;
+  }
+
   /// The current user's tags
   ///
   /// Note: This method returns the HTTP [Response].
@@ -4205,6 +4486,62 @@ class DefaultApi {
   /// End the current session
   Future<void> logout() async {
     final response = await logoutWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Treat other people as this one
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<Response> mergePeopleWithHttpInfo(
+    String id,
+    AssetIds assetIds,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/people/{id}/merge'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetIds;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Treat other people as this one
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<void> mergePeople(
+    String id,
+    AssetIds assetIds,
+  ) async {
+    final response = await mergePeopleWithHttpInfo(
+      id,
+      assetIds,
+    );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
@@ -4489,6 +4826,68 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Search in natural language. Dates, people, places and cameras in the query become filters.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] q (required):
+  Future<Response> searchAssetsWithHttpInfo(
+    String q,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/search';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    queryParams.addAll(_queryParams('', 'q', q));
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Search in natural language. Dates, people, places and cameras in the query become filters.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] q (required):
+  Future<SearchResult?> searchAssets(
+    String q,
+  ) async {
+    final response = await searchAssetsWithHttpInfo(
+      q,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'SearchResult',
+      ) as SearchResult;
+    }
+    return null;
   }
 
   /// Add your heart to a photo in an album
@@ -5123,5 +5522,61 @@ class DefaultApi {
       ) as Album;
     }
     return null;
+  }
+
+  /// Name or hide a person
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [PersonUpdate] personUpdate (required):
+  Future<Response> updatePersonWithHttpInfo(
+    String id,
+    PersonUpdate personUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/people/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = personUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PATCH',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Name or hide a person
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [PersonUpdate] personUpdate (required):
+  Future<void> updatePerson(
+    String id,
+    PersonUpdate personUpdate,
+  ) async {
+    final response = await updatePersonWithHttpInfo(
+      id,
+      personUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 }

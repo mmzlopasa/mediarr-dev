@@ -20,9 +20,25 @@ BIND_ADDRESS=127.0.0.1
 HTTP_PORT=$PORT
 ENV
 
+# Search needs the real model, because reading the query is part of what is measured.
+MODELS=${DEV_MODELS:-/mnt/mediarr/dev/models}
+cat >"$WORK/override.yaml" <<YAML
+services:
+  server:
+    environment:
+      ML_URL: http://ml:8000
+  ml:
+    environment:
+      ML_THREADS: "4"
+      MODEL_DIR: /models
+    user: "$(id -u):$(id -g)"
+    volumes:
+      - $MODELS:/models
+YAML
+
 # Compose reads deploy/.env for the containers, so it has to exist on a fresh checkout too.
 [ -e "$ROOT/deploy/.env" ] || cp "$ROOT/deploy/.env.example" "$ROOT/deploy/.env"
-COMPOSE=(docker compose -p mediarr-bench --env-file "$WORK/env" -f "$ROOT/deploy/compose.yaml" -f "$ROOT/deploy/compose.build.yaml")
+COMPOSE=(docker compose -p mediarr-bench --profile ml --env-file "$WORK/env" -f "$ROOT/deploy/compose.yaml" -f "$ROOT/deploy/compose.build.yaml" -f "$WORK/override.yaml")
 
 cleanup() {
 	"${COMPOSE[@]}" down -v >/dev/null 2>&1 || true
@@ -31,7 +47,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${COMPOSE[@]}" up -d --build --wait server db nginx 2>&1 | tail -1
+"${COMPOSE[@]}" up -d --build --wait server db nginx ml 2>&1 | tail -1
 
 printf '%s\n' "$PASSWORD" | "${COMPOSE[@]}" exec -T server /mediarr user upsert bench@example.com "Bench" 
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$WORK/cache:/c" mediarr-dev-go \
@@ -49,6 +65,18 @@ WHERE u.email = 'bench@example.com';
 INSERT INTO asset_files (asset_id, kind, path, size_bytes)
 SELECT a.id, k.kind, '/data/cache/bench.webp', 1000 FROM assets a, (VALUES ('thumb_small'), ('thumb_large')) AS k(kind);
 ANALYZE;
+SQL
+
+# Random vectors spread evenly, which is harder for the index than real photos are.
+"${COMPOSE[@]}" exec -T db psql -q -v ON_ERROR_STOP=1 -U mediarr -d mediarr <<'SQL'
+DROP INDEX asset_search_embedding_idx;
+INSERT INTO asset_search (asset_id, embedding)
+SELECT a.id, (SELECT array_agg(random() - 0.5) FROM generate_series(1, 768) WHERE a.n > 0)::real[]::vector
+FROM (SELECT id, row_number() OVER () AS n FROM assets) a;
+SET maintenance_work_mem = '2GB';
+SET max_parallel_maintenance_workers = 4;
+CREATE INDEX asset_search_embedding_idx ON asset_search USING hnsw (embedding vector_cosine_ops);
+ANALYZE asset_search;
 SQL
 
 VERSION=$(cd "$ROOT/web" && node -p "require('./node_modules/@playwright/test/package.json').version")

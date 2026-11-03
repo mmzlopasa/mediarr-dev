@@ -19,6 +19,7 @@ x-go: &go
     LIBRARY_PATH: /data/library
     CACHE_PATH: /data/cache
     WORKER_CONCURRENCY: "2"
+    ML_URL: http://ml:8000
   volumes:
     - ../server:/src/server
     - ../.dev/cache:/cache
@@ -48,6 +49,20 @@ services:
     depends_on:
       server:
         condition: service_healthy
+
+  ml:
+    build:
+      context: ../ml
+    user: ${DEV_UID:-1000}:${DEV_GID:-1000}
+    environment:
+      HOME: /tmp
+      MODEL_DIR: /models
+      ML_THREADS: "4"
+    volumes:
+      - ${DEV_MODELS:-../.dev/models}:/models
+      - ../ml/app:/app/app:ro
+    mem_limit: 4g
+    restart: unless-stopped
 
   web:
     image: node:22-slim

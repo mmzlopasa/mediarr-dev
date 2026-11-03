@@ -107,7 +107,12 @@ func encodeRules(rules *api.AlbumRules) ([]byte, error) {
 		camera := strings.TrimSpace(*rules.Camera)
 		rules.Camera = optional(camera, camera != "")
 	}
-	if rules.From == nil && rules.To == nil && rules.Kind == nil && rules.Camera == nil {
+	if rules.Place != nil {
+		place := strings.TrimSpace(*rules.Place)
+		rules.Place = optional(place, place != "")
+	}
+	if rules.From == nil && rules.To == nil && rules.Kind == nil && rules.Camera == nil &&
+		rules.Person == nil && rules.Tag == nil && rules.Place == nil {
 		return nil, errors.New("a smart album needs at least one rule")
 	}
 	if rules.From != nil && rules.To != nil && rules.To.Before(rules.From.Time) {

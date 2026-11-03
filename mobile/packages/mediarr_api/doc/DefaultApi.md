@@ -35,6 +35,7 @@ Method | HTTP request | Description
 [**getAlbum**](DefaultApi.md#getalbum) | **GET** /api/albums/{id} | Read an album and its members
 [**getAlbumBucket**](DefaultApi.md#getalbumbucket) | **GET** /api/albums/{id}/buckets/{month} | Assets of one month in an album
 [**getAlbumBuckets**](DefaultApi.md#getalbumbuckets) | **GET** /api/albums/{id}/buckets | Months in an album, in the album's order
+[**getAnalysisProgress**](DefaultApi.md#getanalysisprogress) | **GET** /api/admin/analysis | How far picture analysis has come. Administrators only.
 [**getAsset**](DefaultApi.md#getasset) | **GET** /api/assets/{id} | Read an asset's details and its neighbours on the timeline
 [**getAssetMotion**](DefaultApi.md#getassetmotion) | **GET** /api/assets/{id}/motion | Read the video embedded in an Android Motion Photo
 [**getAssetOriginal**](DefaultApi.md#getassetoriginal) | **GET** /api/assets/{id}/original | Read the unmodified original. Supports Range requests for video.
@@ -54,6 +55,9 @@ Method | HTTP request | Description
 [**getMapTrips**](DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
 [**getPartnerBucket**](DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 [**getPartnerBuckets**](DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
+[**getPersonBucket**](DefaultApi.md#getpersonbucket) | **GET** /api/people/{id}/buckets/{month} | Photos of this person in one month
+[**getPersonBuckets**](DefaultApi.md#getpersonbuckets) | **GET** /api/people/{id}/buckets | Months with this person
+[**getPersonThumbnail**](DefaultApi.md#getpersonthumbnail) | **GET** /api/people/{id}/thumbnail | A picture of this person's face
 [**getPublicAsset**](DefaultApi.md#getpublicasset) | **GET** /api/public/{token}/assets/{id} | An asset in a public album, without what the link does not allow
 [**getPublicBucket**](DefaultApi.md#getpublicbucket) | **GET** /api/public/{token}/buckets/{month} | Assets of one month in a public album
 [**getPublicBuckets**](DefaultApi.md#getpublicbuckets) | **GET** /api/public/{token}/buckets | Months in a public album
@@ -75,16 +79,19 @@ Method | HTTP request | Description
 [**listCameras**](DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 [**listDirectory**](DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 [**listPartners**](DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
+[**listPeople**](DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 [**listTags**](DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 [**listUsers**](DefaultApi.md#listusers) | **GET** /api/admin/users | List users
 [**lockVault**](DefaultApi.md#lockvault) | **POST** /api/vault/lock | Lock the vault again
 [**login**](DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 [**logout**](DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
+[**mergePeople**](DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
 [**removeAlbumAssets**](DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 [**removeAlbumHeart**](DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 [**removeAlbumMember**](DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
 [**removePartner**](DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
 [**revokeDeviceKey**](DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
+[**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
 [**setAlbumHeart**](DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 [**setMapStyle**](DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
@@ -96,6 +103,7 @@ Method | HTTP request | Description
 [**unlockPublicLink**](DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 [**unlockVault**](DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 [**updateAlbum**](DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
+[**updatePerson**](DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 
 
 # **addAlbumAssets**
@@ -1152,6 +1160,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getAnalysisProgress**
+> AnalysisProgress getAnalysisProgress()
+
+How far picture analysis has come. Administrators only.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getAnalysisProgress();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getAnalysisProgress: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**AnalysisProgress**](AnalysisProgress.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getAsset**
 > AssetDetail getAsset(id)
 
@@ -1940,6 +1985,131 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getPersonBucket**
+> TimelineBucket getPersonBucket(id, month)
+
+Photos of this person in one month
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final month = month_example; // String | 
+
+try {
+    final result = api_instance.getPersonBucket(id, month);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getPersonBucket: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **month** | **String**|  | 
+
+### Return type
+
+[**TimelineBucket**](TimelineBucket.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getPersonBuckets**
+> TimelineBuckets getPersonBuckets(id)
+
+Months with this person
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getPersonBuckets(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getPersonBuckets: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**TimelineBuckets**](TimelineBuckets.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getPersonThumbnail**
+> MultipartFile getPersonThumbnail(id)
+
+A picture of this person's face
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getPersonThumbnail(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getPersonThumbnail: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: image/webp, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -2807,6 +2977,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listPeople**
+> PeopleList listPeople()
+
+People recognised in the current user's library
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listPeople();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listPeople: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**PeopleList**](PeopleList.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listTags**
 > List<Tag> listTags()
 
@@ -2991,6 +3198,48 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **mergePeople**
+> mergePeople(id, assetIds)
+
+Treat other people as this one
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final assetIds = AssetIds(); // AssetIds | 
+
+try {
+    api_instance.mergePeople(id, assetIds);
+} catch (e) {
+    print('Exception when calling DefaultApi->mergePeople: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **assetIds** | [**AssetIds**](AssetIds.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -3189,6 +3438,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **searchAssets**
+> SearchResult searchAssets(q)
+
+Search in natural language. Dates, people, places and cameras in the query become filters.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final q = q_example; // String | 
+
+try {
+    final result = api_instance.searchAssets(q);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->searchAssets: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **q** | **String**|  | 
+
+### Return type
+
+[**SearchResult**](SearchResult.md)
 
 ### Authorization
 
@@ -3644,6 +3934,48 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Album**](Album.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updatePerson**
+> updatePerson(id, personUpdate)
+
+Name or hide a person
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final personUpdate = PersonUpdate(); // PersonUpdate | 
+
+try {
+    api_instance.updatePerson(id, personUpdate);
+} catch (e) {
+    print('Exception when calling DefaultApi->updatePerson: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **personUpdate** | [**PersonUpdate**](PersonUpdate.md)|  | 
+
+### Return type
+
+void (empty response body)
 
 ### Authorization
 

@@ -16,6 +16,7 @@ class AssetDetail {
     this.isOwner,
     this.downloadAllowed,
     this.tags = const [],
+    this.people = const [],
     this.city,
     this.state,
     this.country,
@@ -71,6 +72,9 @@ class AssetDetail {
 
   /// Only for the owner
   List<String> tags;
+
+  /// Only for the owner
+  List<PersonRef> people;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -292,6 +296,7 @@ class AssetDetail {
           other.isOwner == isOwner &&
           other.downloadAllowed == downloadAllowed &&
           _deepEquality.equals(other.tags, tags) &&
+          _deepEquality.equals(other.people, people) &&
           other.city == city &&
           other.state == state &&
           other.country == country &&
@@ -332,6 +337,7 @@ class AssetDetail {
       (isOwner == null ? 0 : isOwner!.hashCode) +
       (downloadAllowed == null ? 0 : downloadAllowed!.hashCode) +
       (tags.hashCode) +
+      (people.hashCode) +
       (city == null ? 0 : city!.hashCode) +
       (state == null ? 0 : state!.hashCode) +
       (country == null ? 0 : country!.hashCode) +
@@ -368,7 +374,7 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, tags=$tags, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, tags=$tags, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -383,6 +389,7 @@ class AssetDetail {
       json[r'downloadAllowed'] = null;
     }
     json[r'tags'] = this.tags;
+    json[r'people'] = this.people;
     if (this.city != null) {
       json[r'city'] = this.city;
     } else {
@@ -541,6 +548,7 @@ class AssetDetail {
         tags: json[r'tags'] is Iterable
             ? (json[r'tags'] as Iterable).cast<String>().toList(growable: false)
             : const [],
+        people: PersonRef.listFromJson(json[r'people']),
         city: mapValueOfType<String>(json, r'city'),
         state: mapValueOfType<String>(json, r'state'),
         country: mapValueOfType<String>(json, r'country'),

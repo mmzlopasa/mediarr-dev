@@ -245,6 +245,8 @@ class ApiClient {
           return AlbumRules.fromJson(value);
         case 'AlbumUpdate':
           return AlbumUpdate.fromJson(value);
+        case 'AnalysisProgress':
+          return AnalysisProgress.fromJson(value);
         case 'Asset':
           return Asset.fromJson(value);
         case 'AssetDetail':
@@ -303,8 +305,20 @@ class ApiClient {
           return Partners.fromJson(value);
         case 'PasswordConfirm':
           return PasswordConfirm.fromJson(value);
+        case 'PeopleList':
+          return PeopleList.fromJson(value);
+        case 'Person':
+          return Person.fromJson(value);
+        case 'PersonRef':
+          return PersonRef.fromJson(value);
+        case 'PersonUpdate':
+          return PersonUpdate.fromJson(value);
         case 'PublicLink':
           return PublicLink.fromJson(value);
+        case 'SearchFilters':
+          return SearchFilters.fromJson(value);
+        case 'SearchResult':
+          return SearchResult.fromJson(value);
         case 'SetupRequest':
           return SetupRequest.fromJson(value);
         case 'ShareLink':

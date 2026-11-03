@@ -14,6 +14,7 @@ import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'asset_picture.dart';
 import 'organize_screens.dart';
+import 'people_screens.dart';
 import 'viewer_screen.dart';
 
 class TimelineScreen extends ConsumerStatefulWidget {
@@ -156,9 +157,18 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
             child: Row(
               children: [
-                if (_selected.isEmpty)
-                  Text('Media', style: text.headlineMedium)
-                else ...[
+                if (_selected.isEmpty) ...[
+                  Expanded(child: Text('Media', style: text.headlineMedium)),
+                  IconButton(
+                    tooltip: 'Search',
+                    icon: const Icon(Icons.search),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SearchScreen(),
+                      ),
+                    ),
+                  ),
+                ] else ...[
                   IconButton(
                     tooltip: 'Clear selection',
                     icon: const Icon(Icons.close),

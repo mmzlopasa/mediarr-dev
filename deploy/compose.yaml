@@ -41,6 +41,7 @@ services:
   ml:
     image: ghcr.io/mmzlopasa/mediarr-ml:${MEDIARR_VERSION:-latest}
     profiles: ["ml"]
+    env_file: .env
     volumes:
       - model-cache:/models
     restart: unless-stopped

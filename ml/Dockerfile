@@ -7,6 +7,8 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-cache
 
 COPY app ./app
+RUN mkdir /models && chown 10001 /models
+ENV MODEL_DIR=/models HOME=/tmp
 
 USER 10001
 EXPOSE 8000

@@ -18,6 +18,7 @@ import (
 	"github.com/mmzlopasa/mediarr-app/server/internal/api"
 	"github.com/mmzlopasa/mediarr-app/server/internal/auth"
 	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
+	"github.com/mmzlopasa/mediarr-app/server/internal/ml"
 	"github.com/mmzlopasa/mediarr-app/server/internal/webui"
 )
 
@@ -44,6 +45,8 @@ type Deps struct {
 	Inserter    *jobs.Inserter
 	LibraryPath string
 	CachePath   string
+	// MLURL is empty when picture analysis is not turned on.
+	MLURL string
 }
 
 type apiServer struct {
@@ -57,6 +60,7 @@ type apiServer struct {
 	uploads       *tusd.UnroutedHandler
 	// fullPreviews limits how many full resolution previews are made at once.
 	fullPreviews chan struct{}
+	embeddings   *ml.Cache
 }
 
 // NewHandler returns the root HTTP handler.
@@ -79,6 +83,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		server.uploads = uploads
 	}
 
+	server.embeddings = ml.NewCache(ml.New(deps.MLURL))
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(requireJSONForWrites)

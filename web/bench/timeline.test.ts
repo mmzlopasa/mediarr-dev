@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 const FIRST_VIEW_LIMIT_MS = 1000;
 const MIN_FPS = 55;
 const RUNS = 5;
+const SEARCH_P95_LIMIT_MS = 300;
 
 async function signIn(page: Page) {
 	const response = await page.request.post('/api/auth/login', {
@@ -38,6 +39,77 @@ test('the first view of 100k assets takes under a second', async ({ page }) => {
 	);
 
 	expect(median(times)).toBeLessThan(FIRST_VIEW_LIMIT_MS);
+});
+
+test('smart search answers within its limit, in both languages', async ({ page }) => {
+	await signIn(page);
+	const subjects = [
+		'pas na plaži',
+		'dog on a beach',
+		'mačka na krevetu',
+		'a cat on a bed',
+		'planine zimi',
+		'mountains in winter',
+		'crveni auto',
+		'a red car',
+		'šuma u jesen',
+		'a forest in autumn',
+		'grad noću',
+		'a city at night',
+		'jedrenjak na moru',
+		'a sailing boat',
+		'ptica na grani',
+		'a bird on a branch',
+		'vjenčanje u crkvi',
+		'a wedding in a church',
+		'rođendanska torta',
+		'a birthday cake',
+		'djeca na igralištu',
+		'children on a playground',
+		'zalazak sunca',
+		'a sunset over the sea',
+		'pizza na stolu',
+		'pizza on a table',
+		'stari most',
+		'an old bridge',
+		'snijeg u parku',
+		'snow in a park',
+		'račun iz trgovine',
+		'a shop receipt',
+		'koncert',
+		'a concert crowd',
+		'bicikl uz rijeku',
+		'a bicycle by a river',
+		'kava i knjiga',
+		'coffee and a book',
+		'avion na nebu',
+		'an airplane in the sky'
+	];
+	// The service loads its model when it starts, in the background.
+	await expect
+		.poll(
+			async () => {
+				const warm = await page.request.get(`/api/search?q=${encodeURIComponent('warm up')}`);
+				return (await warm.json()).smart;
+			},
+			{ timeout: 120000, intervals: [3000], message: 'the model answered' }
+		)
+		.toBe(true);
+
+	const times: number[] = [];
+	for (const subject of subjects) {
+		const started = Date.now();
+		const response = await page.request.get(`/api/search?q=${encodeURIComponent(subject)}`);
+		times.push(Date.now() - started);
+		expect(response.status()).toBe(200);
+		const result = await response.json();
+		expect(result.smart).toBe(true);
+		expect(result.items.length).toBeGreaterThan(0);
+	}
+	times.sort((a, b) => a - b);
+	const p95 = times[Math.ceil(times.length * 0.95) - 1];
+	console.log(`smart search: p50 ${median(times)} ms, p95 ${p95} ms, worst ${times.at(-1)} ms`);
+	expect(p95).toBeLessThan(SEARCH_P95_LIMIT_MS);
 });
 
 test('scrolling stays smooth', async ({ page }) => {

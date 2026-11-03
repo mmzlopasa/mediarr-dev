@@ -40,6 +40,11 @@ class TimelineStore extends ChangeNotifier {
     : _buckets = ((api) => api.getTagBuckets(tagId)),
       _bucket = ((api, month) => api.getTagBucket(tagId, month));
 
+  /// Photos of one person.
+  TimelineStore.person(this.session, String personId)
+    : _buckets = ((api) => api.getPersonBuckets(personId)),
+      _bucket = ((api, month) => api.getPersonBucket(personId, month));
+
   /// The archive, the trash or the unlocked vault.
   TimelineStore.collection(CollectionSession this.session)
     : _buckets = ((api) => api.getCollectionBuckets(session.scope)),

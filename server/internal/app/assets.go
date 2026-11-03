@@ -205,6 +205,16 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 			return
 		}
 		detail.Tags = &tags
+		people, err := s.queries.ListAssetPeople(ctx, row.ID)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		refs := make([]api.PersonRef, len(people))
+		for i := range people {
+			refs[i] = api.PersonRef{Id: people[i].ID.Bytes, Name: people[i].Name}
+		}
+		detail.People = &refs
 	}
 	if !owner {
 		// Someone else's favorites and archive are their own business. Their neighbours too:

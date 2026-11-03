@@ -19,6 +19,7 @@ import (
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 
 	"github.com/mmzlopasa/mediarr-app/server/db"
+	"github.com/mmzlopasa/mediarr-app/server/internal/ml"
 	"github.com/mmzlopasa/mediarr-app/server/internal/storage"
 )
 
@@ -89,6 +90,8 @@ type Options struct {
 	LibraryPath string
 	CachePath   string
 	VideoAccel  string
+	// MLURL is empty when picture analysis is not turned on.
+	MLURL string
 }
 
 type deps struct {
@@ -109,6 +112,8 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &sidecarWorker{deps: d})
 	river.AddWorker(workers, &transcodeWorker{deps: d})
 	river.AddWorker(workers, &cleanupWorker{deps: d})
+	river.AddWorker(workers, &analyzeWorker{deps: d, client: ml.New(opts.MLURL)})
+	river.AddWorker(workers, &analyzeBackfillWorker{deps: d})
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{
@@ -117,11 +122,15 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault: {MaxWorkers: opts.Concurrency},
 			videoQueue:         {MaxWorkers: 1},
+			mlQueue:            {MaxWorkers: 1},
 		},
 		Workers: workers,
 		PeriodicJobs: []*river.PeriodicJob{
 			river.NewPeriodicJob(river.PeriodicInterval(cleanupInterval),
 				func() (river.JobArgs, *river.InsertOpts) { return CleanupArgs{}, nil },
+				&river.PeriodicJobOpts{RunOnStart: true}),
+			river.NewPeriodicJob(river.PeriodicInterval(analyzeBackfillInterval),
+				func() (river.JobArgs, *river.InsertOpts) { return AnalyzeBackfillArgs{}, nil },
 				&river.PeriodicJobOpts{RunOnStart: true}),
 		},
 	})
@@ -268,11 +277,18 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 				return err
 			}
 		}
-		return q.MarkAssetReady(ctx, db.MarkAssetReadyParams{
+		if err := q.MarkAssetReady(ctx, db.MarkAssetReadyParams{
 			ID:          id,
 			Blurhash:    pgtype.Text{String: result.Blurhash, Valid: true},
 			AspectRatio: pgtype.Float4{Float32: result.Ratio, Valid: result.Ratio > 0},
-		})
+		}); err != nil {
+			return err
+		}
+		if w.opts.MLURL == "" {
+			return nil
+		}
+		_, err := w.client().InsertTx(ctx, tx, AnalyzeArgs{AssetID: job.Args.AssetID}, nil)
+		return err
 	})
 }
 

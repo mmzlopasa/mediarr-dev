@@ -693,7 +693,7 @@ class _LinksSheetState extends State<LinksSheet> {
   }
 }
 
-/// The conditions of a smart album. Rules for people, places and tags come with those features.
+/// The conditions of a smart album.
 class RulesEditor extends StatefulWidget {
   const RulesEditor({
     super.key,
@@ -716,6 +716,11 @@ class _RulesEditorState extends State<RulesEditor> {
   late DateTime? _to = widget.rules.to;
   late AlbumRulesKindEnum? _kind = widget.rules.kind;
   late String? _camera = widget.rules.camera;
+  late String? _person = widget.rules.person;
+  late String? _tag = widget.rules.tag;
+  late final _place = TextEditingController(text: widget.rules.place);
+  List<Person> _people = const [];
+  List<Tag> _tags = const [];
 
   @override
   void initState() {
@@ -723,12 +728,38 @@ class _RulesEditorState extends State<RulesEditor> {
     widget.session.api.listCameras().then((value) {
       if (mounted) setState(() => _cameras = value ?? const []);
     }, onError: (Object _) {});
+    widget.session.api.listPeople().then((value) {
+      if (mounted) {
+        setState(() {
+          _people = (value?.people ?? const <Person>[])
+              .where((person) => person.name.isNotEmpty)
+              .toList();
+        });
+      }
+    }, onError: (Object _) {});
+    widget.session.api.listTags().then((value) {
+      if (mounted) setState(() => _tags = value ?? const []);
+    }, onError: (Object _) {});
+  }
+
+  @override
+  void dispose() {
+    _place.dispose();
+    super.dispose();
   }
 
   void _notify() {
     setState(() {});
     widget.onChanged(
-      AlbumRules(from: _from, to: _to, kind: _kind, camera: _camera),
+      AlbumRules(
+        from: _from,
+        to: _to,
+        kind: _kind,
+        camera: _camera,
+        person: _person,
+        tag: _tag,
+        place: _place.text.trim().isEmpty ? null : _place.text.trim(),
+      ),
     );
   }
 
@@ -808,11 +839,40 @@ class _RulesEditorState extends State<RulesEditor> {
           _notify();
         },
       ),
-      const SizedBox(height: 6),
-      Text(
-        'Rules for people, places and tags are not available yet: they arrive with those features.',
-        style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: Palette.dim),
+      DropdownButtonFormField<String?>(
+        key: ValueKey('people${_people.length}'),
+        initialValue: _people.any((person) => person.id == _person)
+            ? _person
+            : null,
+        decoration: const InputDecoration(labelText: 'Person'),
+        items: [
+          const DropdownMenuItem(child: Text('All')),
+          for (final person in _people)
+            DropdownMenuItem(value: person.id, child: Text(person.name)),
+        ],
+        onChanged: (value) {
+          _person = value;
+          _notify();
+        },
+      ),
+      DropdownButtonFormField<String?>(
+        key: ValueKey('tags${_tags.length}'),
+        initialValue: _tags.any((tag) => tag.id == _tag) ? _tag : null,
+        decoration: const InputDecoration(labelText: 'Tag'),
+        items: [
+          const DropdownMenuItem(child: Text('All')),
+          for (final tag in _tags)
+            DropdownMenuItem(value: tag.id, child: Text(tag.name)),
+        ],
+        onChanged: (value) {
+          _tag = value;
+          _notify();
+        },
+      ),
+      TextField(
+        controller: _place,
+        decoration: const InputDecoration(labelText: 'Place'),
+        onChanged: (_) => _notify(),
       ),
     ],
   );

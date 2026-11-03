@@ -594,7 +594,7 @@ type Album struct {
 	OwnerName    string              `json:"ownerName"`
 	Role         AlbumRole           `json:"role"`
 
-	// Rules Conditions that must all hold. Rules for people, places and tags arrive with those features.
+	// Rules Conditions that must all hold.
 	Rules     *AlbumRules `json:"rules,omitempty"`
 	Title     string      `json:"title"`
 	UpdatedAt time.Time   `json:"updatedAt"`
@@ -610,7 +610,7 @@ type AlbumRole string
 type AlbumCreate struct {
 	Description *string `json:"description,omitempty"`
 
-	// Rules Conditions that must all hold. Rules for people, places and tags arrive with those features.
+	// Rules Conditions that must all hold.
 	Rules *AlbumRules `json:"rules,omitempty"`
 	Title string      `json:"title"`
 }
@@ -625,11 +625,14 @@ type AlbumMember struct {
 // AlbumMemberRole defines model for AlbumMember.Role.
 type AlbumMemberRole string
 
-// AlbumRules Conditions that must all hold. Rules for people, places and tags arrive with those features.
+// AlbumRules Conditions that must all hold.
 type AlbumRules struct {
 	Camera *string             `json:"camera,omitempty"`
 	From   *openapi_types.Date `json:"from,omitempty"`
 	Kind   *AlbumRulesKind     `json:"kind,omitempty"`
+	Person *openapi_types.UUID `json:"person,omitempty"`
+	Place  *string             `json:"place,omitempty"`
+	Tag    *openapi_types.UUID `json:"tag,omitempty"`
 	To     *openapi_types.Date `json:"to,omitempty"`
 }
 
@@ -642,13 +645,20 @@ type AlbumUpdate struct {
 	Description  *string             `json:"description,omitempty"`
 	Order        *AlbumUpdateOrder   `json:"order,omitempty"`
 
-	// Rules Conditions that must all hold. Rules for people, places and tags arrive with those features.
+	// Rules Conditions that must all hold.
 	Rules *AlbumRules `json:"rules,omitempty"`
 	Title *string     `json:"title,omitempty"`
 }
 
 // AlbumUpdateOrder defines model for AlbumUpdate.Order.
 type AlbumUpdateOrder string
+
+// AnalysisProgress defines model for AnalysisProgress.
+type AnalysisProgress struct {
+	Analyzed int64 `json:"analyzed"`
+	Enabled  bool  `json:"enabled"`
+	Total    int64 `json:"total"`
+}
 
 // Asset defines model for Asset.
 type Asset struct {
@@ -715,10 +725,13 @@ type AssetDetail struct {
 	OffsetMinutes *int                `json:"offsetMinutes,omitempty"`
 	OlderId       *openapi_types.UUID `json:"olderId,omitempty"`
 	OriginalName  string              `json:"originalName"`
-	SizeBytes     int64               `json:"sizeBytes"`
-	Sprite        *Sprite             `json:"sprite,omitempty"`
-	State         *string             `json:"state,omitempty"`
-	Status        AssetDetailStatus   `json:"status"`
+
+	// People Only for the owner
+	People    *[]PersonRef      `json:"people,omitempty"`
+	SizeBytes int64             `json:"sizeBytes"`
+	Sprite    *Sprite           `json:"sprite,omitempty"`
+	State     *string           `json:"state,omitempty"`
+	Status    AssetDetailStatus `json:"status"`
 
 	// Tags Only for the owner
 	Tags       *[]string `json:"tags,omitempty"`
@@ -905,6 +918,33 @@ type PasswordConfirm struct {
 	Password string `json:"password"`
 }
 
+// PeopleList defines model for PeopleList.
+type PeopleList struct {
+	// Enabled False when face recognition is not turned on
+	Enabled bool     `json:"enabled"`
+	People  []Person `json:"people"`
+}
+
+// Person defines model for Person.
+type Person struct {
+	AssetCount int64              `json:"assetCount"`
+	Hidden     bool               `json:"hidden"`
+	Id         openapi_types.UUID `json:"id"`
+	Name       string             `json:"name"`
+}
+
+// PersonRef defines model for PersonRef.
+type PersonRef struct {
+	Id   openapi_types.UUID `json:"id"`
+	Name string             `json:"name"`
+}
+
+// PersonUpdate defines model for PersonUpdate.
+type PersonUpdate struct {
+	Hidden *bool   `json:"hidden,omitempty"`
+	Name   *string `json:"name,omitempty"`
+}
+
 // PublicLink defines model for PublicLink.
 type PublicLink struct {
 	AllowDownload bool    `json:"allowDownload"`
@@ -916,6 +956,24 @@ type PublicLink struct {
 	Title       *string `json:"title,omitempty"`
 	UploadOnly  bool    `json:"uploadOnly"`
 	Watermarked bool    `json:"watermarked"`
+}
+
+// SearchFilters defines model for SearchFilters.
+type SearchFilters struct {
+	Camera *string             `json:"camera,omitempty"`
+	From   *openapi_types.Date `json:"from,omitempty"`
+	Person *string             `json:"person,omitempty"`
+	Place  *string             `json:"place,omitempty"`
+	To     *openapi_types.Date `json:"to,omitempty"`
+}
+
+// SearchResult defines model for SearchResult.
+type SearchResult struct {
+	Filters SearchFilters  `json:"filters"`
+	Items   []TimelineItem `json:"items"`
+
+	// Smart False when picture search is not turned on or did not answer
+	Smart bool `json:"smart"`
 }
 
 // SetupRequest defines model for SetupRequest.
@@ -1165,6 +1223,11 @@ type GetPublicThumbnailParams struct {
 // GetPublicThumbnailParamsSize defines parameters for GetPublicThumbnail.
 type GetPublicThumbnailParamsSize string
 
+// SearchAssetsParams defines parameters for SearchAssets.
+type SearchAssetsParams struct {
+	Q string `form:"q" json:"q"`
+}
+
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
 
@@ -1225,6 +1288,12 @@ type SetPartnerJSONRequestBody = PartnerShare
 // SetPartnerTimelineJSONRequestBody defines body for SetPartnerTimeline for application/json ContentType.
 type SetPartnerTimelineJSONRequestBody = PartnerTimeline
 
+// UpdatePersonJSONRequestBody defines body for UpdatePerson for application/json ContentType.
+type UpdatePersonJSONRequestBody = PersonUpdate
+
+// MergePeopleJSONRequestBody defines body for MergePeople for application/json ContentType.
+type MergePeopleJSONRequestBody = AssetIds
+
 // UnlockPublicLinkJSONRequestBody defines body for UnlockPublicLink for application/json ContentType.
 type UnlockPublicLinkJSONRequestBody = LinkPassword
 
@@ -1236,6 +1305,9 @@ type UnlockVaultJSONRequestBody = VaultUnlock
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// GetAnalysisProgress How far picture analysis has come. Administrators only.
+	// (GET /api/admin/analysis)
+	GetAnalysisProgress(w http.ResponseWriter, r *http.Request)
 	// GetAdminOverview Live statistics of the whole server, read from the database and the library disk
 	// (GET /api/admin/overview)
 	GetAdminOverview(w http.ResponseWriter, r *http.Request)
@@ -1416,6 +1488,24 @@ type ServerInterface interface {
 	// SetPartnerTimeline Choose whether a partner's photos also appear in your timeline
 	// (PUT /api/partners/{userId}/timeline)
 	SetPartnerTimeline(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID)
+	// ListPeople People recognised in the current user's library
+	// (GET /api/people)
+	ListPeople(w http.ResponseWriter, r *http.Request)
+	// UpdatePerson Name or hide a person
+	// (PATCH /api/people/{id})
+	UpdatePerson(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetPersonBuckets Months with this person
+	// (GET /api/people/{id}/buckets)
+	GetPersonBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetPersonBucket Photos of this person in one month
+	// (GET /api/people/{id}/buckets/{month})
+	GetPersonBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string)
+	// MergePeople Treat other people as this one
+	// (POST /api/people/{id}/merge)
+	MergePeople(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetPersonThumbnail A picture of this person's face
+	// (GET /api/people/{id}/thumbnail)
+	GetPersonThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetPublicLink What a public link offers. Needs no account.
 	// (GET /api/public/{token})
 	GetPublicLink(w http.ResponseWriter, r *http.Request, token string)
@@ -1446,6 +1536,9 @@ type ServerInterface interface {
 	// CreatePublicUpload Send one whole file to a public album (tus 1.0 creation with upload)
 	// (POST /api/public/{token}/uploads)
 	CreatePublicUpload(w http.ResponseWriter, r *http.Request, token string)
+	// SearchAssets Search in natural language. Dates, people, places and cameras in the query become filters.
+	// (GET /api/search)
+	SearchAssets(w http.ResponseWriter, r *http.Request, params SearchAssetsParams)
 	// ListTags The current user's tags
 	// (GET /api/tags)
 	ListTags(w http.ResponseWriter, r *http.Request)
@@ -1502,6 +1595,12 @@ type ServerInterface interface {
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// GetAnalysisProgress How far picture analysis has come. Administrators only.
+// (GET /api/admin/analysis)
+func (_ Unimplemented) GetAnalysisProgress(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // GetAdminOverview Live statistics of the whole server, read from the database and the library disk
 // (GET /api/admin/overview)
@@ -1863,6 +1962,42 @@ func (_ Unimplemented) SetPartnerTimeline(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListPeople People recognised in the current user's library
+// (GET /api/people)
+func (_ Unimplemented) ListPeople(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdatePerson Name or hide a person
+// (PATCH /api/people/{id})
+func (_ Unimplemented) UpdatePerson(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPersonBuckets Months with this person
+// (GET /api/people/{id}/buckets)
+func (_ Unimplemented) GetPersonBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPersonBucket Photos of this person in one month
+// (GET /api/people/{id}/buckets/{month})
+func (_ Unimplemented) GetPersonBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// MergePeople Treat other people as this one
+// (POST /api/people/{id}/merge)
+func (_ Unimplemented) MergePeople(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPersonThumbnail A picture of this person's face
+// (GET /api/people/{id}/thumbnail)
+func (_ Unimplemented) GetPersonThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetPublicLink What a public link offers. Needs no account.
 // (GET /api/public/{token})
 func (_ Unimplemented) GetPublicLink(w http.ResponseWriter, r *http.Request, token string) {
@@ -1920,6 +2055,12 @@ func (_ Unimplemented) UnlockPublicLink(w http.ResponseWriter, r *http.Request, 
 // CreatePublicUpload Send one whole file to a public album (tus 1.0 creation with upload)
 // (POST /api/public/{token}/uploads)
 func (_ Unimplemented) CreatePublicUpload(w http.ResponseWriter, r *http.Request, token string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SearchAssets Search in natural language. Dates, people, places and cameras in the query become filters.
+// (GET /api/search)
+func (_ Unimplemented) SearchAssets(w http.ResponseWriter, r *http.Request, params SearchAssetsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2033,6 +2174,20 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetAnalysisProgress operation middleware
+func (siw *ServerInterfaceWrapper) GetAnalysisProgress(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAnalysisProgress(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // GetAdminOverview operation middleware
 func (siw *ServerInterfaceWrapper) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
@@ -3620,6 +3775,159 @@ func (siw *ServerInterfaceWrapper) SetPartnerTimeline(w http.ResponseWriter, r *
 	handler.ServeHTTP(w, r)
 }
 
+// ListPeople operation middleware
+func (siw *ServerInterfaceWrapper) ListPeople(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPeople(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdatePerson operation middleware
+func (siw *ServerInterfaceWrapper) UpdatePerson(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdatePerson(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPersonBuckets operation middleware
+func (siw *ServerInterfaceWrapper) GetPersonBuckets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPersonBuckets(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPersonBucket operation middleware
+func (siw *ServerInterfaceWrapper) GetPersonBucket(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "month" -------------
+	var month string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "month", chi.URLParam(r, "month"), &month, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPersonBucket(w, r, id, month)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// MergePeople operation middleware
+func (siw *ServerInterfaceWrapper) MergePeople(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.MergePeople(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPersonThumbnail operation middleware
+func (siw *ServerInterfaceWrapper) GetPersonThumbnail(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPersonThumbnail(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetPublicLink operation middleware
 func (siw *ServerInterfaceWrapper) GetPublicLink(w http.ResponseWriter, r *http.Request) {
 
@@ -3966,6 +4274,39 @@ func (siw *ServerInterfaceWrapper) CreatePublicUpload(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreatePublicUpload(w, r, token)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SearchAssets operation middleware
+func (siw *ServerInterfaceWrapper) SearchAssets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchAssetsParams
+
+	// ------------- Required query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SearchAssets(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4679,6 +5020,30 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/api/map/style", wrapper.SetMapStyle)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/search", wrapper.SearchAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/people", wrapper.ListPeople)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/people/{id}", wrapper.UpdatePerson)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/people/{id}/merge", wrapper.MergePeople)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/people/{id}/thumbnail", wrapper.GetPersonThumbnail)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/people/{id}/buckets", wrapper.GetPersonBuckets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/people/{id}/buckets/{month}", wrapper.GetPersonBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/analysis", wrapper.GetAnalysisProgress)
 	})
 
 	return r

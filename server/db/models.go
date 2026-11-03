@@ -6,6 +6,7 @@ package db
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/pgvector/pgvector-go"
 )
 
 type Album struct {
@@ -102,6 +103,14 @@ type AssetFile struct {
 	CreatedAt pgtype.Timestamptz
 }
 
+type AssetSearch struct {
+	AssetID    pgtype.UUID
+	Embedding  pgvector.Vector
+	OcrText    string
+	OcrTsv     interface{}
+	AnalyzedAt pgtype.Timestamptz
+}
+
 type AssetTag struct {
 	AssetID pgtype.UUID
 	TagID   pgtype.UUID
@@ -125,6 +134,19 @@ type Exif struct {
 	GeocodedAt   pgtype.Timestamptz
 }
 
+type Face struct {
+	ID        pgtype.UUID
+	AssetID   pgtype.UUID
+	UserID    pgtype.UUID
+	PersonID  pgtype.UUID
+	X1        float32
+	Y1        float32
+	X2        float32
+	Y2        float32
+	Score     float32
+	Embedding pgvector.Vector
+}
+
 type Library struct {
 	ID        pgtype.UUID
 	UserID    pgtype.UUID
@@ -140,6 +162,14 @@ type PartnerShare struct {
 	SinceAt    pgtype.Timestamp
 	InTimeline bool
 	CreatedAt  pgtype.Timestamptz
+}
+
+type Person struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	Name      string
+	Hidden    bool
+	CreatedAt pgtype.Timestamptz
 }
 
 type Place struct {

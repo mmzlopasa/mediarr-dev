@@ -1221,6 +1221,119 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/search:
+    get:
+      operationId: searchAssets
+      summary: Search in natural language. Dates, people, places and cameras in the query become filters.
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Results, best first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SearchResult" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/people:
+    get:
+      operationId: listPeople
+      summary: People recognised in the current user's library
+      responses:
+        "200":
+          description: People
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PeopleList" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/people/{id}:
+    patch:
+      operationId: updatePerson
+      summary: Name or hide a person
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PersonUpdate" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/people/{id}/merge:
+    post:
+      operationId: mergePeople
+      summary: Treat other people as this one
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetIds" }
+      responses:
+        "204": { description: Merged }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/people/{id}/thumbnail:
+    get:
+      operationId: getPersonThumbnail
+      summary: A picture of this person's face
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Image
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/people/{id}/buckets:
+    get:
+      operationId: getPersonBuckets
+      summary: Months with this person
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Months
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBuckets" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/people/{id}/buckets/{month}:
+    get:
+      operationId: getPersonBucket
+      summary: Photos of this person in one month
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: month, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBucket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/analysis:
+    get:
+      operationId: getAnalysisProgress
+      summary: How far picture analysis has come. Administrators only.
+      responses:
+        "200":
+          description: Progress
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnalysisProgress" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
 components:
   responses:
     Error:
@@ -1229,6 +1342,53 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    SearchResult:
+      type: object
+      required: [items, smart, filters]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/TimelineItem" } }
+        smart: { type: boolean, description: "False when picture search is not turned on or did not answer" }
+        filters: { $ref: "#/components/schemas/SearchFilters" }
+    SearchFilters:
+      type: object
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        person: { type: string }
+        place: { type: string }
+        camera: { type: string }
+    Person:
+      type: object
+      required: [id, name, hidden, assetCount]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        hidden: { type: boolean }
+        assetCount: { type: integer, format: int64 }
+    PeopleList:
+      type: object
+      required: [enabled, people]
+      properties:
+        enabled: { type: boolean, description: "False when face recognition is not turned on" }
+        people: { type: array, items: { $ref: "#/components/schemas/Person" } }
+    PersonRef:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    PersonUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        hidden: { type: boolean }
+    AnalysisProgress:
+      type: object
+      required: [enabled, total, analyzed]
+      properties:
+        enabled: { type: boolean }
+        total: { type: integer, format: int64 }
+        analyzed: { type: integer, format: int64 }
     MapPoints:
       type: object
       required: [ids, kinds, lats, lons]
@@ -1298,12 +1458,15 @@ components:
         name: { type: string }
     AlbumRules:
       type: object
-      description: "Conditions that must all hold. Rules for people, places and tags arrive with those features."
+      description: "Conditions that must all hold."
       properties:
         from: { type: string, format: date }
         to: { type: string, format: date }
         kind: { type: string, enum: [photo, video, live] }
         camera: { type: string }
+        person: { type: string, format: uuid }
+        tag: { type: string, format: uuid }
+        place: { type: string }
     AlbumMember:
       type: object
       required: [userId, name, role]
@@ -1609,6 +1772,7 @@ components:
         isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
         tags: { type: array, items: { type: string }, description: "Only for the owner" }
+        people: { type: array, items: { $ref: "#/components/schemas/PersonRef" }, description: "Only for the owner" }
         city: { type: string }
         state: { type: string }
         country: { type: string }

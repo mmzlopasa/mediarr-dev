@@ -42,6 +42,7 @@ type stack struct {
 	library string
 	cache   string
 	dbURL   string
+	handler http.Handler
 }
 
 // newStack creates a database, migrates it and starts the real handler.
@@ -91,7 +92,7 @@ func newStack(t *testing.T) *stack {
 	}
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
-	return &stack{t: t, pool: pool, url: server.URL, library: library, cache: cache, dbURL: dbURL}
+	return &stack{t: t, pool: pool, url: server.URL, library: library, cache: cache, dbURL: dbURL, handler: handler}
 }
 
 type client struct {
@@ -741,7 +742,7 @@ func TestMigrationsGoDownAndUp(t *testing.T) {
 	s := newStack(t)
 	ctx := context.Background()
 	// Every schema migration after the first must be able to go down.
-	for range 6 {
+	for range 8 {
 		if err := db.MigrateDown(ctx, s.dbURL); err != nil {
 			t.Fatal(err)
 		}

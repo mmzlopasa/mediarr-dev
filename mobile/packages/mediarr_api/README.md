@@ -86,6 +86,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAlbum**](doc//DefaultApi.md#getalbum) | **GET** /api/albums/{id} | Read an album and its members
 *DefaultApi* | [**getAlbumBucket**](doc//DefaultApi.md#getalbumbucket) | **GET** /api/albums/{id}/buckets/{month} | Assets of one month in an album
 *DefaultApi* | [**getAlbumBuckets**](doc//DefaultApi.md#getalbumbuckets) | **GET** /api/albums/{id}/buckets | Months in an album, in the album's order
+*DefaultApi* | [**getAnalysisProgress**](doc//DefaultApi.md#getanalysisprogress) | **GET** /api/admin/analysis | How far picture analysis has come. Administrators only.
 *DefaultApi* | [**getAsset**](doc//DefaultApi.md#getasset) | **GET** /api/assets/{id} | Read an asset's details and its neighbours on the timeline
 *DefaultApi* | [**getAssetMotion**](doc//DefaultApi.md#getassetmotion) | **GET** /api/assets/{id}/motion | Read the video embedded in an Android Motion Photo
 *DefaultApi* | [**getAssetOriginal**](doc//DefaultApi.md#getassetoriginal) | **GET** /api/assets/{id}/original | Read the unmodified original. Supports Range requests for video.
@@ -105,6 +106,9 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getMapTrips**](doc//DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
 *DefaultApi* | [**getPartnerBucket**](doc//DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 *DefaultApi* | [**getPartnerBuckets**](doc//DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
+*DefaultApi* | [**getPersonBucket**](doc//DefaultApi.md#getpersonbucket) | **GET** /api/people/{id}/buckets/{month} | Photos of this person in one month
+*DefaultApi* | [**getPersonBuckets**](doc//DefaultApi.md#getpersonbuckets) | **GET** /api/people/{id}/buckets | Months with this person
+*DefaultApi* | [**getPersonThumbnail**](doc//DefaultApi.md#getpersonthumbnail) | **GET** /api/people/{id}/thumbnail | A picture of this person's face
 *DefaultApi* | [**getPublicAsset**](doc//DefaultApi.md#getpublicasset) | **GET** /api/public/{token}/assets/{id} | An asset in a public album, without what the link does not allow
 *DefaultApi* | [**getPublicBucket**](doc//DefaultApi.md#getpublicbucket) | **GET** /api/public/{token}/buckets/{month} | Assets of one month in a public album
 *DefaultApi* | [**getPublicBuckets**](doc//DefaultApi.md#getpublicbuckets) | **GET** /api/public/{token}/buckets | Months in a public album
@@ -126,16 +130,19 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
+*DefaultApi* | [**listPeople**](doc//DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 *DefaultApi* | [**listTags**](doc//DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 *DefaultApi* | [**listUsers**](doc//DefaultApi.md#listusers) | **GET** /api/admin/users | List users
 *DefaultApi* | [**lockVault**](doc//DefaultApi.md#lockvault) | **POST** /api/vault/lock | Lock the vault again
 *DefaultApi* | [**login**](doc//DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
+*DefaultApi* | [**mergePeople**](doc//DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 *DefaultApi* | [**removeAlbumHeart**](doc//DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 *DefaultApi* | [**removeAlbumMember**](doc//DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
 *DefaultApi* | [**removePartner**](doc//DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
 *DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
+*DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
 *DefaultApi* | [**setAlbumHeart**](doc//DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 *DefaultApi* | [**setMapStyle**](doc//DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
@@ -147,6 +154,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**unlockPublicLink**](doc//DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 *DefaultApi* | [**unlockVault**](doc//DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 *DefaultApi* | [**updateAlbum**](doc//DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
+*DefaultApi* | [**updatePerson**](doc//DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 
 
 ## Documentation For Models
@@ -159,6 +167,7 @@ Class | Method | HTTP request | Description
  - [AlbumMember](doc//AlbumMember.md)
  - [AlbumRules](doc//AlbumRules.md)
  - [AlbumUpdate](doc//AlbumUpdate.md)
+ - [AnalysisProgress](doc//AnalysisProgress.md)
  - [Asset](doc//Asset.md)
  - [AssetDetail](doc//AssetDetail.md)
  - [AssetIds](doc//AssetIds.md)
@@ -188,7 +197,13 @@ Class | Method | HTTP request | Description
  - [PartnerTimeline](doc//PartnerTimeline.md)
  - [Partners](doc//Partners.md)
  - [PasswordConfirm](doc//PasswordConfirm.md)
+ - [PeopleList](doc//PeopleList.md)
+ - [Person](doc//Person.md)
+ - [PersonRef](doc//PersonRef.md)
+ - [PersonUpdate](doc//PersonUpdate.md)
  - [PublicLink](doc//PublicLink.md)
+ - [SearchFilters](doc//SearchFilters.md)
+ - [SearchResult](doc//SearchResult.md)
  - [SetupRequest](doc//SetupRequest.md)
  - [ShareLink](doc//ShareLink.md)
  - [ShareLinkCreate](doc//ShareLinkCreate.md)

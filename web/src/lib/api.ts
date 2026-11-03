@@ -24,6 +24,10 @@ export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
 export type MapPoints = components['schemas']['MapPoints'];
+export type SearchResult = components['schemas']['SearchResult'];
+export type Person = components['schemas']['Person'];
+export type PeopleList = components['schemas']['PeopleList'];
+export type AnalysisProgress = components['schemas']['AnalysisProgress'];
 export type Trip = components['schemas']['Trip'];
 export type MapStyle = components['schemas']['MapStyle'];
 export type VaultStatus = components['schemas']['VaultStatus'];
@@ -148,6 +152,14 @@ export const api = {
 	mapTrips: () => request<Trip[]>(fetch, '/api/map/trips'),
 	mapStyle: () => request<MapStyle>(fetch, '/api/map/style'),
 	setMapStyle: (body: MapStyle) => request<MapStyle>(fetch, '/api/map/style', body, 'PUT'),
+	search: (query: string) =>
+		request<SearchResult>(fetch, `/api/search?q=${encodeURIComponent(query)}`),
+	people: () => request<PeopleList>(fetch, '/api/people'),
+	updatePerson: (id: string, body: { name?: string; hidden?: boolean }) =>
+		request<void>(fetch, `/api/people/${id}`, body, 'PATCH'),
+	mergePeople: (id: string, ids: string[]) =>
+		request<void>(fetch, `/api/people/${id}/merge`, { ids }),
+	analysisProgress: () => request<AnalysisProgress>(fetch, '/api/admin/analysis'),
 	emptyTrash: () => request<{ changed: number }>(fetch, '/api/trash/empty', {}),
 	vaultStatus: () => request<VaultStatus>(fetch, '/api/vault/status'),
 	setVaultPin: (pin: string, currentPin?: string) =>
@@ -181,6 +193,7 @@ export const albumSource = (id: string) => sourceAt(`/api/albums/${id}`);
 export const partnerSource = (id: string) => sourceAt(`/api/partners/${id}`);
 export const publicSource = (token: string) => sourceAt(`/api/public/${token}`);
 export const tagSource = (id: string) => sourceAt(`/api/tags/${id}`);
+export const personSource = (id: string) => sourceAt(`/api/people/${id}`);
 export const collectionBase = (scope: 'archive' | 'trash' | 'vault') => `/api/collections/${scope}`;
 export const collectionSource = (scope: 'archive' | 'trash' | 'vault') =>
 	sourceAt(collectionBase(scope));
