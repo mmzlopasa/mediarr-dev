@@ -39,6 +39,8 @@ jobs:
         timeout-minutes: 20
         run: |
           xcrun simctl spawn "$DEVICE" log stream --level debug --predicate 'process == "Runner"' > "$RUNNER_TEMP/app.log" &
+          # The test installs the app itself, which forgets what was granted before.
+          (while true; do xcrun simctl privacy "$DEVICE" grant photos app.mediarr.mediarr >/dev/null 2>&1; sleep 2; done) &
           flutter test integration_test --device-id "$DEVICE" --suppress-analytics --reporter expanded --timeout 8m
       - name: Keep the app's log
         if: always()

@@ -108,7 +108,10 @@ void main() {
     await waitFor(tester, find.byType(AssetPicture));
 
     debugPrint('backup test: asking for photos');
-    final state = await PhotoManager.requestPermissionExtend();
+    // A dialog nobody can answer would wait forever.
+    final state = await PhotoManager.requestPermissionExtend().timeout(
+      const Duration(seconds: 30),
+    );
     expect(state.hasAccess, isTrue, reason: 'CI grants access beforehand');
     final albumName = 'Mediarr test ${DateTime.now().millisecondsSinceEpoch}';
     debugPrint('backup test: adding a photo to the album');
