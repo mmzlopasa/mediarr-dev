@@ -103,9 +103,6 @@ export function addUploads(selected: Iterable<File>) {
 		files.set(id, file);
 		added.push({ id, name: file.name, loaded: 0, total: file.size, status: 'queued' });
 	}
-	trace(
-		`selected ${added.length}: ${added.map((item) => `${item.name}/${item.total}`).join(', ')}`
-	);
 	items = [...items, ...added];
 	pump();
 }
