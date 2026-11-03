@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Mediarr API
-  version: 0.2.0
+  version: 0.3.0
 paths:
   /health:
     get:
@@ -394,6 +394,541 @@ paths:
       responses:
         "204": { description: Upload cancelled }
         "404": { $ref: "#/components/responses/Error" }
+  /api/users/directory:
+    get:
+      operationId: listDirectory
+      summary: The other users of this server, for choosing who to share with
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/UserRef" } }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/albums:
+    get:
+      operationId: listAlbums
+      summary: Albums the current user owns or that are shared with them
+      parameters:
+        - name: sort
+          in: query
+          schema: { type: string, enum: [updated, title, date], default: updated }
+      responses:
+        "200":
+          description: Albums
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Album" } }
+        "401": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createAlbum
+      summary: Create an album. With rules it is a smart album.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AlbumCreate" }
+      responses:
+        "201":
+          description: The album
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Album" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/albums/cameras:
+    get:
+      operationId: listCameras
+      summary: Cameras in the current user's library, for smart album rules
+      responses:
+        "200":
+          description: Camera names
+          content:
+            application/json:
+              schema: { type: array, items: { type: string } }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getAlbum
+      summary: Read an album and its members
+      responses:
+        "200":
+          description: The album
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Album" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    patch:
+      operationId: updateAlbum
+      summary: Change an album. Needs the editor role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AlbumUpdate" }
+      responses:
+        "200":
+          description: The album
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Album" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteAlbum
+      summary: Delete an album, but not its photos. Owner only.
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/assets:
+    post:
+      operationId: addAlbumAssets
+      summary: Add your own assets to an album. Needs the contributor role.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetIds" }
+      responses:
+        "200":
+          description: How many were added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/assets/remove:
+    post:
+      operationId: removeAlbumAssets
+      summary: Remove assets from an album. A contributor can remove only what they added.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetIds" }
+      responses:
+        "200":
+          description: How many were removed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/buckets:
+    get:
+      operationId: getAlbumBuckets
+      summary: Months in an album, in the album's order
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Months
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBuckets" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/buckets/{month}:
+    get:
+      operationId: getAlbumBucket
+      summary: Assets of one month in an album
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: month, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBucket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/members/{userId}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      operationId: setAlbumMember
+      summary: Share an album with a user or change their role. Owner only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemberRole" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: removeAlbumMember
+      summary: End a user's access. The owner can remove anyone, and a member can leave.
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/comments:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: listAlbumComments
+      summary: Comments on an album, or with assetId on one photo, and that photo's hearts
+      parameters:
+        - { name: assetId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Comments and hearts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Activity" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createAlbumComment
+      summary: Comment on an album or on a photo in it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommentCreate" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/comments/{commentId}:
+    delete:
+      operationId: deleteAlbumComment
+      summary: Delete a comment. The author, an editor or the owner can do this.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: commentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/assets/{assetId}/heart:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: assetId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      operationId: setAlbumHeart
+      summary: Add your heart to a photo in an album
+      responses:
+        "204": { description: Saved }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: removeAlbumHeart
+      summary: Take back your heart
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/links:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: listAlbumLinks
+      summary: Public links of an album. Owner only.
+      responses:
+        "200":
+          description: Links
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ShareLink" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createAlbumLink
+      summary: Create a public link. Its token is returned only this once.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ShareLinkCreate" }
+      responses:
+        "201":
+          description: The link
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ShareLink" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/links/{linkId}:
+    delete:
+      operationId: deleteAlbumLink
+      summary: Revoke a public link. It stops working at once.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: linkId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Revoked }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/partners:
+    get:
+      operationId: listPartners
+      summary: Who you share your library with, and who shares theirs with you
+      responses:
+        "200":
+          description: Partners
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Partners" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/partners/{userId}:
+    parameters:
+      - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      operationId: setPartner
+      summary: Share your library with a user, all of it or from a date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerShare" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: removePartner
+      summary: Stop sharing your library with a user
+      responses:
+        "204": { description: Stopped }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/partners/{userId}/timeline:
+    put:
+      operationId: setPartnerTimeline
+      summary: Choose whether a partner's photos also appear in your timeline
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerTimeline" }
+      responses:
+        "204": { description: Saved }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/partners/{userId}/buckets:
+    get:
+      operationId: getPartnerBuckets
+      summary: Months in a library shared with you
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Months
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBuckets" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/partners/{userId}/buckets/{month}:
+    get:
+      operationId: getPartnerBucket
+      summary: Assets of one month in a library shared with you
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: month, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBucket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}:
+    get:
+      operationId: getPublicLink
+      summary: What a public link offers. Needs no account.
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The link
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicLink" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/unlock:
+    post:
+      operationId: unlockPublicLink
+      summary: Send a link's password. Success sets a cookie valid only for this link.
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LinkPassword" }
+      responses:
+        "204": { description: Unlocked }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/buckets:
+    get:
+      operationId: getPublicBuckets
+      summary: Months in a public album
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Months
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBuckets" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/buckets/{month}:
+    get:
+      operationId: getPublicBucket
+      summary: Assets of one month in a public album
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: month, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBucket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/assets/{id}:
+    get:
+      operationId: getPublicAsset
+      summary: An asset in a public album, without what the link does not allow
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetDetail" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/assets/{id}/thumbnail:
+    get:
+      operationId: getPublicThumbnail
+      summary: A preview from a public album, with the link's watermark if it has one
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - name: size
+          in: query
+          schema: { type: string, enum: [small, large, full], default: small }
+      responses:
+        "200":
+          description: Image
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/assets/{id}/original:
+    get:
+      operationId: getPublicOriginal
+      summary: Download an original. Counts toward the link's limit.
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: download, in: query, schema: { type: boolean } }
+      responses:
+        "200":
+          description: File
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/assets/{id}/motion:
+    get:
+      operationId: getPublicMotion
+      summary: The video inside a Motion Photo in a public album
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Video
+          content:
+            video/mp4:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/assets/{id}/video/{file}:
+    get:
+      operationId: getPublicVideoFile
+      summary: HLS files of a video in a public album
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: file, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: File
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/uploads:
+    post:
+      operationId: createPublicUpload
+      summary: Send one whole file to a public album (tus 1.0 creation with upload)
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        "201": { description: Received }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
 components:
   responses:
     Error:
@@ -402,6 +937,161 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    UserRef:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    AlbumRules:
+      type: object
+      description: "Conditions that must all hold. Rules for people, places and tags arrive with those features."
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        kind: { type: string, enum: [photo, video, live] }
+        camera: { type: string }
+    AlbumMember:
+      type: object
+      required: [userId, name, role]
+      properties:
+        userId: { type: string, format: uuid }
+        name: { type: string }
+        role: { type: string, enum: [viewer, contributor, editor] }
+    Album:
+      type: object
+      required: [id, title, description, role, ownerId, ownerName, assetCount, order, isSmart, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        role: { type: string, enum: [owner, editor, contributor, viewer] }
+        ownerId: { type: string, format: uuid }
+        ownerName: { type: string }
+        assetCount: { type: integer, format: int64 }
+        coverAssetId: { type: string, format: uuid }
+        order: { type: string, enum: [newest, oldest] }
+        isSmart: { type: boolean }
+        rules: { $ref: "#/components/schemas/AlbumRules" }
+        members: { type: array, items: { $ref: "#/components/schemas/AlbumMember" } }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    AlbumCreate:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        rules: { $ref: "#/components/schemas/AlbumRules" }
+    AlbumUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        coverAssetId: { type: string, format: uuid }
+        order: { type: string, enum: [newest, oldest] }
+        rules: { $ref: "#/components/schemas/AlbumRules" }
+    AssetIds:
+      type: object
+      required: [ids]
+      properties:
+        ids: { type: array, items: { type: string, format: uuid } }
+    MemberRole:
+      type: object
+      required: [role]
+      properties:
+        role: { type: string, enum: [viewer, contributor, editor] }
+    Comment:
+      type: object
+      required: [id, userId, userName, body, createdAt, canDelete]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        userName: { type: string }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+        canDelete: { type: boolean }
+    Activity:
+      type: object
+      required: [comments, hearts, hearted]
+      properties:
+        comments: { type: array, items: { $ref: "#/components/schemas/Comment" } }
+        hearts: { type: integer, format: int64 }
+        hearted: { type: boolean }
+    CommentCreate:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string }
+        assetId: { type: string, format: uuid }
+    ShareLink:
+      type: object
+      required: [id, label, hasPassword, downloadCount, allowDownload, allowUpload, uploadOnly, showLocation, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        token: { type: string, description: Returned only when the link is created }
+        label: { type: string }
+        hasPassword: { type: boolean }
+        expiresAt: { type: string, format: date-time }
+        downloadLimit: { type: integer }
+        downloadCount: { type: integer }
+        allowDownload: { type: boolean }
+        allowUpload: { type: boolean }
+        uploadOnly: { type: boolean }
+        showLocation: { type: boolean }
+        watermark: { type: string }
+        createdAt: { type: string, format: date-time }
+    ShareLinkCreate:
+      type: object
+      properties:
+        label: { type: string }
+        password: { type: string }
+        expiresAt: { type: string, format: date-time }
+        downloadLimit: { type: integer, minimum: 1 }
+        allowDownload: { type: boolean, default: true }
+        allowUpload: { type: boolean, default: false }
+        uploadOnly: { type: boolean, default: false }
+        showLocation: { type: boolean, default: false }
+        watermark: { type: string }
+    PublicLink:
+      type: object
+      required: [locked, allowDownload, allowUpload, uploadOnly, watermarked]
+      properties:
+        locked: { type: boolean, description: A password is needed first. Nothing else is told until then. }
+        title: { type: string }
+        description: { type: string }
+        allowDownload: { type: boolean }
+        allowUpload: { type: boolean }
+        uploadOnly: { type: boolean }
+        watermarked: { type: boolean }
+    LinkPassword:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string }
+    PartnerEntry:
+      type: object
+      required: [userId, name, inTimeline]
+      properties:
+        userId: { type: string, format: uuid }
+        name: { type: string }
+        since: { type: string, format: date }
+        inTimeline: { type: boolean }
+    Partners:
+      type: object
+      required: [given, received]
+      properties:
+        given: { type: array, items: { $ref: "#/components/schemas/PartnerEntry" } }
+        received: { type: array, items: { $ref: "#/components/schemas/PartnerEntry" } }
+    PartnerShare:
+      type: object
+      properties:
+        since: { type: string, format: date }
+    PartnerTimeline:
+      type: object
+      required: [show]
+      properties:
+        show: { type: boolean }
     Health:
       type: object
       required: [status]
@@ -548,6 +1238,7 @@ components:
         blurhash: { type: string }
         isFavorite: { type: boolean }
         isLive: { type: boolean }
+        isShared: { type: boolean, description: "Belongs to someone else, shared with this user" }
         durationMs: { type: integer, format: int64 }
         localAt: { type: string, description: "Local capture time without a zone: 2006-01-02T15:04:05" }
     TimelineBucket:
@@ -562,6 +1253,8 @@ components:
       type: object
       required: [id, originalName, kind, status, sizeBytes, isFavorite, isArchived, localAt, createdAt]
       properties:
+        isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
+        downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
         id: { type: string, format: uuid }
         originalName: { type: string }
         kind: { type: string, enum: [unknown, photo, video] }

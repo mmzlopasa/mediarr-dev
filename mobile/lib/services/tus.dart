@@ -55,6 +55,7 @@ class TusClient {
     File file, {
     required String name,
     int? lastModifiedMs,
+    String? albumId,
     void Function(int sent, int total)? onProgress,
   }) async {
     final total = await file.length();
@@ -62,6 +63,7 @@ class TusClient {
       () => _create(total, {
         'filename': name,
         if (lastModifiedMs != null) 'lastModified': '$lastModifiedMs',
+        'albumId': ?albumId,
       }),
     );
 

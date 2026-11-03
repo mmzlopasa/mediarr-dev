@@ -3,6 +3,8 @@
 	import { addUploads, setPreparingUpload } from '#lib/uploads.svelte.ts';
 	import Icon from './Icon.svelte';
 
+	let { albumId }: { albumId?: string } = $props();
+
 	// Listed so that iOS sends HEIC originals instead of converting them to JPEG.
 	const ACCEPT =
 		'image/*,video/*,image/heic,image/heif,.heic,.heif,.dng,.cr2,.cr3,.nef,.arw,.raf,.rw2,.orf,.pef';
@@ -14,7 +16,7 @@
 
 	function chosen(event: Event) {
 		const input = event.currentTarget as HTMLInputElement;
-		if (input.files?.length) addUploads(input.files);
+		if (input.files?.length) addUploads(input.files, albumId);
 		else setPreparingUpload(false);
 		inputs = [...inputs, active + 1];
 	}

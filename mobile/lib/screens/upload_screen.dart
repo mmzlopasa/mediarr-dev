@@ -11,7 +11,10 @@ import 'backup_card.dart';
 
 /// Picks directly from the photo library, which gives the untouched originals.
 class UploadScreen extends ConsumerStatefulWidget {
-  const UploadScreen({super.key});
+  const UploadScreen({super.key, this.albumId});
+
+  /// Sends straight into this album, and offers no automatic backup here.
+  final String? albumId;
 
   @override
   ConsumerState<UploadScreen> createState() => _UploadScreenState();
@@ -77,7 +80,9 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
   }
 
   void _send() {
-    ref.read(uploadsProvider.notifier).add(_selected.values.toList());
+    ref
+        .read(uploadsProvider.notifier)
+        .add(_selected.values.toList(), albumId: widget.albumId);
     setState(_selected.clear);
   }
 
@@ -159,7 +164,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                 child: Text('Upload', style: text.headlineMedium),
               ),
-              BackupCard(onStatus: _refreshBadges),
+              if (widget.albumId == null) BackupCard(onStatus: _refreshBadges),
               if (tasks.isNotEmpty) _TaskList(tasks: tasks),
               Expanded(child: gallery),
             ],

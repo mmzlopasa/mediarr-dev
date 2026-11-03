@@ -19,6 +19,7 @@ class TimelineItem {
     this.blurhash,
     required this.isFavorite,
     this.isLive,
+    this.isShared,
     this.durationMs,
     required this.localAt,
   });
@@ -48,6 +49,15 @@ class TimelineItem {
   ///
   bool? isLive;
 
+  /// Belongs to someone else, shared with this user
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? isShared;
+
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
   /// does not include a default value (using the "default:" property), however, the generated
@@ -69,6 +79,7 @@ class TimelineItem {
           other.blurhash == blurhash &&
           other.isFavorite == isFavorite &&
           other.isLive == isLive &&
+          other.isShared == isShared &&
           other.durationMs == durationMs &&
           other.localAt == localAt;
 
@@ -81,12 +92,13 @@ class TimelineItem {
       (blurhash == null ? 0 : blurhash!.hashCode) +
       (isFavorite.hashCode) +
       (isLive == null ? 0 : isLive!.hashCode) +
+      (isShared == null ? 0 : isShared!.hashCode) +
       (durationMs == null ? 0 : durationMs!.hashCode) +
       (localAt.hashCode);
 
   @override
   String toString() =>
-      'TimelineItem[id=$id, kind=$kind, ratio=$ratio, blurhash=$blurhash, isFavorite=$isFavorite, isLive=$isLive, durationMs=$durationMs, localAt=$localAt]';
+      'TimelineItem[id=$id, kind=$kind, ratio=$ratio, blurhash=$blurhash, isFavorite=$isFavorite, isLive=$isLive, isShared=$isShared, durationMs=$durationMs, localAt=$localAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -103,6 +115,11 @@ class TimelineItem {
       json[r'isLive'] = this.isLive;
     } else {
       json[r'isLive'] = null;
+    }
+    if (this.isShared != null) {
+      json[r'isShared'] = this.isShared;
+    } else {
+      json[r'isShared'] = null;
     }
     if (this.durationMs != null) {
       json[r'durationMs'] = this.durationMs;
@@ -140,6 +157,7 @@ class TimelineItem {
         blurhash: mapValueOfType<String>(json, r'blurhash'),
         isFavorite: mapValueOfType<bool>(json, r'isFavorite')!,
         isLive: mapValueOfType<bool>(json, r'isLive'),
+        isShared: mapValueOfType<bool>(json, r'isShared'),
         durationMs: mapValueOfType<int>(json, r'durationMs'),
         localAt: mapValueOfType<String>(json, r'localAt')!,
       );

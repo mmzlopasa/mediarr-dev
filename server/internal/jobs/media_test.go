@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -304,5 +305,38 @@ func TestRemoveStaleUploads(t *testing.T) {
 	}
 	if err := removeStaleUploads(filepath.Join(dir, "missing"), time.Now()); err != nil {
 		t.Errorf("missing directory: %v", err)
+	}
+}
+
+func TestWatermarkMarksACopy(t *testing.T) {
+	requireTools(t)
+	ctx := context.Background()
+	dir := t.TempDir()
+	source := filepath.Join(dir, "source.webp")
+	if _, err := runTool(ctx, "vips", "black", source, "800", "600"); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dest := filepath.Join(dir, "cache", "marked.webp")
+	// Markup in the text stays plain text, and a very long text still fits.
+	if err := Watermark(ctx, source, `<b>Studio</b> & "Co" `+strings.Repeat("long ", 40), dest); err != nil {
+		t.Fatal(err)
+	}
+	after, err := os.ReadFile(source)
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatalf("the source changed: %v", err)
+	}
+	out, err := runTool(ctx, "vips", "max", dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(string(out)) == "0" {
+		t.Fatal("no text was drawn on the black picture")
+	}
+	if width, err := imageDimension(ctx, dest, "width"); err != nil || width != 800 {
+		t.Fatalf("size changed: %d, %v", width, err)
 	}
 }

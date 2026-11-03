@@ -10,6 +10,7 @@
 	import { lang, tr } from '#lib/i18n.svelte.ts';
 	import { formatDateTime, formatDuration } from './layout.ts';
 	import VideoPlayer from './VideoPlayer.svelte';
+	import AlbumActivity from './AlbumActivity.svelte';
 
 	const MIN_SCALE = 1;
 	const MAX_SCALE = 6;
@@ -20,22 +21,42 @@
 		id,
 		onClose,
 		onNavigate,
-		onChanged
+		onChanged,
+		base = '/api',
+		neighbours,
+		albumId,
+		previewOnly = false
 	}: {
 		id: string;
 		onClose: () => void;
 		onNavigate: (id: string) => void;
 		onChanged: () => void;
+		base?: string;
+		neighbours?: (id: string) => { newer?: string; older?: string };
+		albumId?: string;
+		previewOnly?: boolean;
 	} = $props();
+
+	const load = (asset: string) =>
+		base === '/api' ? api.asset(asset) : (fetchPublicAsset(asset) as Promise<AssetDetail>);
+
+	async function fetchPublicAsset(asset: string) {
+		const response = await fetch(`${base}/assets/${asset}`);
+		if (!response.ok) throw new Error('not available');
+		return response.json();
+	}
 
 	let detail = $state<AssetDetail>();
 	let failed = $state(false);
+	let newerId = $state<string>();
+	let olderId = $state<string>();
 	let videoFailed = $state(false);
 	let fullLoaded = $state(false);
 	let fullWanted = $state(false);
 	let playingLive = $state(false);
 	let liveDetail = $state<AssetDetail>();
 	let showInfo = $state(false);
+	let showActivity = $state(false);
 	let confirmDelete = $state(false);
 	let dialog = $state<HTMLDivElement>();
 
@@ -49,6 +70,8 @@
 	$effect(() => {
 		const current = id;
 		detail = undefined;
+		newerId = undefined;
+		olderId = undefined;
 		failed = false;
 		videoFailed = false;
 		fullLoaded = false;
@@ -59,14 +82,16 @@
 		x = 0;
 		y = 0;
 		let stale = false;
-		api
-			.asset(current)
+		load(current)
 			.then((loaded) => {
 				if (stale) return;
 				detail = loaded;
+				const around = neighbours?.(current);
+				newerId = around ? around.newer : loaded.newerId;
+				olderId = around ? around.older : loaded.olderId;
 				// Next and previous photos open at once.
-				for (const neighbour of [loaded.newerId, loaded.olderId]) {
-					if (neighbour) new Image().src = `/api/assets/${neighbour}/thumbnail?size=large`;
+				for (const neighbour of [newerId, olderId]) {
+					if (neighbour) new Image().src = `${base}/assets/${neighbour}/thumbnail?size=large`;
 				}
 			})
 			.catch(() => {
@@ -95,9 +120,12 @@
 		if (confirmDelete) return;
 		if (event.key === 'Escape') {
 			if (showInfo) showInfo = false;
+			else if (showActivity) showActivity = false;
 			else onClose();
-		} else if (event.key === 'ArrowLeft') go(detail?.newerId);
-		else if (event.key === 'ArrowRight') go(detail?.olderId);
+		} else if ((event.target as HTMLElement).closest?.('input,textarea')) {
+			return;
+		} else if (event.key === 'ArrowLeft') go(newerId);
+		else if (event.key === 'ArrowRight') go(olderId);
 		else if (event.key === 'i') showInfo = !showInfo;
 	}
 
@@ -167,7 +195,7 @@
 		const dx = event.clientX - start.x;
 		const dy = event.clientY - start.y;
 		if (scale === 1 && Math.abs(dx) > SWIPE_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.5) {
-			go(dx > 0 ? detail?.newerId : detail?.olderId);
+			go(dx > 0 ? newerId : olderId);
 			return;
 		}
 		if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
@@ -192,7 +220,7 @@
 		playingLive = !playingLive;
 		if (playingLive && detail?.liveVideoId && !liveDetail) {
 			try {
-				liveDetail = await api.asset(detail.liveVideoId);
+				liveDetail = await load(detail.liveVideoId);
 			} catch {
 				// It still plays directly.
 			}
@@ -200,12 +228,12 @@
 	}
 
 	const liveSources = $derived.by(() => {
-		if (detail?.hasMotion) return { direct: `/api/assets/${id}/motion` };
+		if (detail?.hasMotion) return { direct: `${base}/assets/${id}/motion` };
 		const video = detail?.liveVideoId;
 		if (!video) return undefined;
 		return {
-			hls: liveDetail?.hlsReady ? `/api/assets/${video}/video/master.m3u8` : undefined,
-			direct: `/api/assets/${video}/original`
+			hls: liveDetail?.hlsReady ? `${base}/assets/${video}/video/master.m3u8` : undefined,
+			direct: `${base}/assets/${video}/original`
 		};
 	});
 
@@ -223,7 +251,7 @@
 
 	async function remove() {
 		if (!detail) return;
-		const { id: removed, olderId, newerId } = detail;
+		const removed = detail.id;
 		try {
 			await api.bulk([removed], 'delete');
 			confirmDelete = false;
@@ -283,24 +311,38 @@
 							onclick={toggleLive}><Icon name="live" /></button
 						>
 					{/if}
-					<button
-						type="button"
-						class="icon-btn"
-						class:viewer-on={detail.isFavorite}
-						class:viewer-fav={detail.isFavorite}
-						aria-pressed={detail.isFavorite}
-						aria-label={tr('Favorit', 'Favorite')}
-						title={tr('Favorit', 'Favorite')}
-						onclick={toggleFavorite}><Icon name="star" /></button
-					>
-					<a
-						class="icon-btn"
-						href="/api/assets/{detail.id}/original?download=true"
-						download
-						aria-label={tr('Preuzmi original', 'Download the original')}
-						title={tr('Preuzmi original', 'Download the original')}
-						data-sveltekit-reload><Icon name="download" /></a
-					>
+					{#if albumId}
+						<button
+							type="button"
+							class="icon-btn"
+							class:viewer-on={showActivity}
+							aria-pressed={showActivity}
+							aria-label={tr('Komentari i srca', 'Comments and hearts')}
+							title={tr('Komentari i srca', 'Comments and hearts')}
+							onclick={() => {
+								showActivity = !showActivity;
+								showInfo = false;
+							}}><Icon name="heart" /></button
+						>
+					{/if}
+					{#if detail.isOwner}<button
+							type="button"
+							class="icon-btn"
+							class:viewer-on={detail.isFavorite}
+							class:viewer-fav={detail.isFavorite}
+							aria-pressed={detail.isFavorite}
+							aria-label={tr('Favorit', 'Favorite')}
+							title={tr('Favorit', 'Favorite')}
+							onclick={toggleFavorite}><Icon name="star" /></button
+						>{/if}
+					{#if detail.downloadAllowed !== false}<a
+							class="icon-btn"
+							href="{base}/assets/{detail.id}/original?download=true"
+							download
+							aria-label={tr('Preuzmi original', 'Download the original')}
+							title={tr('Preuzmi original', 'Download the original')}
+							data-sveltekit-reload><Icon name="download" /></a
+						>{/if}
 					<button
 						type="button"
 						class="icon-btn"
@@ -308,15 +350,18 @@
 						aria-pressed={showInfo}
 						aria-label={tr('Podaci', 'Details')}
 						title={tr('Podaci', 'Details')}
-						onclick={() => (showInfo = !showInfo)}><Icon name="info" /></button
+						onclick={() => {
+							showInfo = !showInfo;
+							showActivity = false;
+						}}><Icon name="info" /></button
 					>
-					<button
-						type="button"
-						class="icon-btn"
-						aria-label={tr('Obriši', 'Delete')}
-						title={tr('Obriši', 'Delete')}
-						onclick={() => (confirmDelete = true)}><Icon name="trash" /></button
-					>
+					{#if detail.isOwner}<button
+							type="button"
+							class="icon-btn"
+							aria-label={tr('Obriši', 'Delete')}
+							title={tr('Obriši', 'Delete')}
+							onclick={() => (confirmDelete = true)}><Icon name="trash" /></button
+						>{/if}
 				{/if}
 			</div>
 		</div>
@@ -335,18 +380,18 @@
 				<div class="viewer-msg">
 					<Alert kind="err">{tr('Ova fotka nije dostupna.', 'This photo is not available.')}</Alert>
 				</div>
-			{:else if detail?.kind === 'video' && !videoFailed}
+			{:else if detail?.kind === 'video' && !videoFailed && !previewOnly}
 				<VideoPlayer
 					assetId={id}
 					sources={{
-						hls: detail.hlsReady ? `/api/assets/${id}/video/master.m3u8` : undefined,
-						direct: `/api/assets/${id}/original`
+						hls: detail.hlsReady ? `${base}/assets/${id}/video/master.m3u8` : undefined,
+						direct: `${base}/assets/${id}/original`
 					}}
 					sprite={detail.sprite}
-					poster="/api/assets/{id}/thumbnail?size=large"
+					poster="{base}/assets/{id}/thumbnail?size=large"
 					onFailed={() => (videoFailed = true)}
 				/>
-			{:else if detail?.kind === 'video'}
+			{:else if detail?.kind === 'video' && !previewOnly}
 				<div class="viewer-msg">
 					<Alert kind="warn"
 						>{tr(
@@ -354,17 +399,18 @@
 							'This browser cannot play this video. You can download it.'
 						)}</Alert
 					>
-					<a
-						class="btn gold"
-						href="/api/assets/{id}/original?download=true"
-						download
-						data-sveltekit-reload><Icon name="download" size={14} /> {tr('Preuzmi', 'Download')}</a
-					>
+					{#if detail.downloadAllowed !== false}<a
+							class="btn gold"
+							href="{base}/assets/{id}/original?download=true"
+							download
+							data-sveltekit-reload
+							><Icon name="download" size={14} /> {tr('Preuzmi', 'Download')}</a
+						>{/if}
 				</div>
 			{:else if detail}
 				<img
 					class="viewer-media"
-					src="/api/assets/{id}/thumbnail?size=large"
+					src="{base}/assets/{id}/thumbnail?size=large"
 					alt={detail.originalName}
 					draggable="false"
 					style="transform:translate({x}px,{y}px) scale({scale})"
@@ -373,7 +419,7 @@
 					<img
 						class="viewer-media viewer-full"
 						class:on={fullLoaded}
-						src="/api/assets/{id}/thumbnail?size=full"
+						src="{base}/assets/{id}/thumbnail?size=full"
 						alt=""
 						draggable="false"
 						style="transform:translate({x}px,{y}px) scale({scale})"
@@ -394,26 +440,41 @@
 					</div>
 				{/if}
 			{/if}
-			{#if detail?.newerId && scale === 1}
+			{#if newerId && scale === 1}
 				<button
 					type="button"
 					class="icon-btn viewer-nav viewer-prev"
 					aria-label={tr('Novija', 'Newer')}
 					onpointerdown={(event) => event.stopPropagation()}
-					onclick={() => go(detail?.newerId)}><Icon name="back" /></button
+					onclick={() => go(newerId)}><Icon name="back" /></button
 				>
 			{/if}
-			{#if detail?.olderId && scale === 1}
+			{#if olderId && scale === 1}
 				<button
 					type="button"
 					class="icon-btn viewer-nav viewer-next"
 					aria-label={tr('Starija', 'Older')}
 					onpointerdown={(event) => event.stopPropagation()}
-					onclick={() => go(detail?.olderId)}><Icon name="forward" /></button
+					onclick={() => go(olderId)}><Icon name="forward" /></button
 				>
 			{/if}
 		</div>
 	</div>
+
+	{#if showActivity && albumId}
+		<aside class="viewer-info" aria-label={tr('Komentari i srca', 'Comments and hearts')}>
+			<div class="dlg-h">
+				<h2>{tr('Komentari i srca', 'Comments and hearts')}</h2>
+				<button
+					type="button"
+					class="icon-btn sm"
+					aria-label={tr('Zatvori', 'Close')}
+					onclick={() => (showActivity = false)}>✕</button
+				>
+			</div>
+			<div class="dlg-b"><AlbumActivity {albumId} assetId={id} /></div>
+		</aside>
+	{/if}
 
 	{#if showInfo && detail}
 		<aside class="viewer-info" aria-label={tr('Podaci', 'Details')}>

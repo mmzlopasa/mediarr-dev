@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"math"
 	"os"
@@ -304,4 +305,58 @@ func MakeFullPreview(ctx context.Context, original, dest string) error {
 		return err
 	}
 	return os.Rename(tmp, dest)
+}
+
+// Watermark writes a copy of a preview with text in its corner. The source is never changed.
+func Watermark(ctx context.Context, source, text, dest string) error {
+	if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil {
+		return err
+	}
+	work, err := os.MkdirTemp(filepath.Dir(dest), ".mark-*")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = os.RemoveAll(work) }()
+
+	width, err := imageDimension(ctx, source, "width")
+	if err != nil {
+		return err
+	}
+	height, err := imageDimension(ctx, source, "height")
+	if err != nil {
+		return err
+	}
+	const margin = 12
+	// The text keeps the same share of the picture on every preview size.
+	dpi := max(width*3/10, 60)
+	label := filepath.Join(work, "label.png")
+	// vips reads the text as markup, so what the user typed is escaped and stays plain text.
+	markup := `<span foreground="white" background="#00000099"> ` + html.EscapeString(text) + ` </span>`
+	if _, err := runTool(ctx, "vips", "text", label, markup, "--rgba", "--dpi", strconv.Itoa(dpi),
+		"--width", strconv.Itoa(max(width-2*margin, 1)), "--font", "DejaVu Sans 8"); err != nil {
+		return err
+	}
+	labelWidth, err := imageDimension(ctx, label, "width")
+	if err != nil {
+		return err
+	}
+	labelHeight, err := imageDimension(ctx, label, "height")
+	if err != nil {
+		return err
+	}
+	tmp := filepath.Join(work, "marked.webp")
+	if _, err := runTool(ctx, "vips", "composite2", source, label, tmp+"[Q=85,strip]", "over",
+		"--x", strconv.Itoa(max(width-labelWidth-margin, 0)),
+		"--y", strconv.Itoa(max(height-labelHeight-margin, 0))); err != nil {
+		return err
+	}
+	return os.Rename(tmp, dest)
+}
+
+func imageDimension(ctx context.Context, path, field string) (int, error) {
+	out, err := runTool(ctx, "vipsheader", "-f", field, path)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.Atoi(strings.TrimSpace(string(out)))
 }

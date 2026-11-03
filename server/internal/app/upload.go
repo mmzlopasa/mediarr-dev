@@ -35,6 +35,8 @@ const (
 	metaFilename    = "filename"
 	metaChecksum    = "checksum"
 	metaModified    = "lastModified"
+	metaAlbum       = "albumId"
+	metaGuest       = "guest"
 	maxAssetListLen = 200
 	defaultListLen  = 50
 )
@@ -81,6 +83,17 @@ func (s *apiServer) beforeUpload(hook tusd.HookEvent) (tusd.HTTPResponse, tusd.F
 		metaFilename: storage.SafeName(meta[metaFilename]),
 		metaChecksum: meta[metaChecksum],
 		metaModified: meta[metaModified],
+	}
+	// A guest's album comes from the link they opened, never from what they send.
+	if album, ok := hook.Context.Value(guestAlbumKey{}).(pgtype.UUID); ok {
+		changes[metaAlbum] = uuid.UUID(album.Bytes).String()
+		changes[metaGuest] = "true"
+	} else if wanted := meta[metaAlbum]; wanted != "" {
+		id, err := uuid.Parse(wanted)
+		if err != nil || !s.canUploadToAlbum(hook.Context, id, user.ID) {
+			return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_ALBUM_FORBIDDEN", "you cannot add photos to this album", http.StatusForbidden)
+		}
+		changes[metaAlbum] = id.String()
 	}
 	return tusd.HTTPResponse{}, tusd.FileInfoChanges{MetaData: changes}, nil
 }
@@ -137,7 +150,8 @@ func (s *apiServer) finishUpload(hook tusd.HookEvent) (tusd.HTTPResponse, error)
 	name := meta[metaFilename]
 	dest := storage.OriginalPath(s.LibraryPath, owner.String(), uploadTime(meta[metaModified]), sumHex, name)
 
-	assetID, duplicate, err := s.storeAsset(ctx, userID, sum, name, dest, tmp, hook.Upload.Size)
+	guest := meta[metaGuest] == "true"
+	assetID, duplicate, err := s.storeAsset(ctx, userID, sum, name, dest, tmp, hook.Upload.Size, !guest)
 	if err != nil {
 		return tusd.HTTPResponse{}, err
 	}
@@ -145,6 +159,13 @@ func (s *apiServer) finishUpload(hook tusd.HookEvent) (tusd.HTTPResponse, error)
 		removeUpload(tmp)
 	}
 	removeUpload(infoFile)
+	if err := s.addUploadToAlbum(ctx, meta[metaAlbum], guest, userID, assetID); err != nil {
+		return tusd.HTTPResponse{}, err
+	}
+	if guest {
+		// A guest learns nothing about the owner's library, not even whether a file was already in it.
+		return tusd.HTTPResponse{}, nil
+	}
 
 	return tusd.HTTPResponse{Header: tusd.HTTPHeader{
 		"X-Asset-Id":        uuid.UUID(assetID.Bytes).String(),
@@ -154,7 +175,7 @@ func (s *apiServer) finishUpload(hook tusd.HookEvent) (tusd.HTTPResponse, error)
 
 // storeAsset publishes the file inside the transaction: if the commit fails, the next attempt
 // overwrites the same path with the same content, so nothing is lost or duplicated.
-func (s *apiServer) storeAsset(ctx context.Context, userID pgtype.UUID, sum []byte, name, dest, tmp string, size int64) (pgtype.UUID, bool, error) {
+func (s *apiServer) storeAsset(ctx context.Context, userID pgtype.UUID, sum []byte, name, dest, tmp string, size int64, restore bool) (pgtype.UUID, bool, error) {
 	var assetID pgtype.UUID
 	duplicate := false
 	err := pgx.BeginFunc(ctx, s.Pool, func(tx pgx.Tx) error {
@@ -177,7 +198,11 @@ func (s *apiServer) storeAsset(ctx context.Context, userID pgtype.UUID, sum []by
 			if err != nil {
 				return err
 			}
-			// Uploading a deleted file again brings it back, instead of leaving it hidden.
+			// Uploading a deleted file again brings it back, instead of leaving it hidden. Only the
+			// owner's own upload does: a guest cannot undo what the owner deleted.
+			if !restore {
+				return nil
+			}
 			return q.RestoreDeletedAsset(ctx, assetID)
 		}
 		if err != nil {

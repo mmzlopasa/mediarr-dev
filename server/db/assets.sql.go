@@ -669,7 +669,7 @@ func (q *Queries) SoftDeleteAssets(ctx context.Context, arg SoftDeleteAssetsPara
 }
 
 const timelineBucket = `-- name: TimelineBucket :many
-SELECT a.id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
+SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL
@@ -685,6 +685,7 @@ type TimelineBucketParams struct {
 
 type TimelineBucketRow struct {
 	ID          pgtype.UUID
+	UserID      pgtype.UUID
 	Kind        string
 	Width       pgtype.Int4
 	Height      pgtype.Int4
@@ -707,6 +708,7 @@ func (q *Queries) TimelineBucket(ctx context.Context, arg TimelineBucketParams) 
 		var i TimelineBucketRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Kind,
 			&i.Width,
 			&i.Height,

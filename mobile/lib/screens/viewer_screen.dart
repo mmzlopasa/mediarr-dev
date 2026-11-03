@@ -8,12 +8,24 @@ import '../services/session.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
+import 'album_sheets.dart';
 
 /// A full screen view on a clean black background: colors around a photo must not affect it.
 class ViewerScreen extends ConsumerStatefulWidget {
-  const ViewerScreen({super.key, required this.initialIndex});
+  const ViewerScreen({
+    super.key,
+    required this.initialIndex,
+    this.store,
+    this.albumId,
+  });
 
   final int initialIndex;
+
+  /// What to move through. Without it, the library.
+  final TimelineStore? store;
+
+  /// With an album, the photo also has its comments and hearts.
+  final String? albumId;
 
   @override
   ConsumerState<ViewerScreen> createState() => _ViewerScreenState();
@@ -32,8 +44,10 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     super.dispose();
   }
 
+  TimelineStore get _store => widget.store ?? ref.read(timelineProvider);
+
   Future<void> _favorite(TimelineItem item) async {
-    final store = ref.read(timelineProvider);
+    final store = _store;
     await _guard(
       () => store.act(
         [item.id],
@@ -45,7 +59,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
   }
 
   Future<void> _delete(TimelineItem item) async {
-    final store = ref.read(timelineProvider);
+    final store = _store;
     final navigator = Navigator.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -131,14 +145,24 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final store = ref.watch(timelineProvider);
+    final library = ref.watch(timelineProvider);
+    final store = widget.store ?? library;
     final session = ref.watch(sessionProvider).value;
+    return ListenableBuilder(
+      listenable: store,
+      builder: (context, _) => _page(store, session),
+    );
+  }
+
+  Widget _page(TimelineStore store, Session? session) {
     final items = store.loadedItems;
     if (session == null || items.isEmpty) {
       return const Scaffold(backgroundColor: Colors.black);
     }
     final index = _index.clamp(0, items.length - 1);
     final current = items[index];
+    // Someone else's photo can be looked at, but only its owner changes it.
+    final mine = current.isShared != true;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -153,24 +177,40 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
               icon: const Icon(Icons.motion_photos_on_outlined),
               onPressed: () => _playLive(session, current),
             ),
-          IconButton(
-            tooltip: 'Favorite',
-            icon: Icon(
-              current.isFavorite ? Icons.star : Icons.star_border,
-              color: current.isFavorite ? Palette.gold : Colors.white,
+          if (widget.albumId != null)
+            IconButton(
+              tooltip: 'Comments and hearts',
+              icon: const Icon(Icons.favorite_border),
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => ActivitySheet(
+                  session: session,
+                  albumId: widget.albumId!,
+                  assetId: current.id,
+                ),
+              ),
             ),
-            onPressed: () => _favorite(current),
-          ),
+          if (mine)
+            IconButton(
+              tooltip: 'Favorite',
+              icon: Icon(
+                current.isFavorite ? Icons.star : Icons.star_border,
+                color: current.isFavorite ? Palette.gold : Colors.white,
+              ),
+              onPressed: () => _favorite(current),
+            ),
           IconButton(
             tooltip: 'Details',
             icon: const Icon(Icons.info_outline),
             onPressed: () => _info(session, current),
           ),
-          IconButton(
-            tooltip: 'Delete',
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () => _delete(current),
-          ),
+          if (mine)
+            IconButton(
+              tooltip: 'Delete',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _delete(current),
+            ),
         ],
       ),
       body: PageView.builder(

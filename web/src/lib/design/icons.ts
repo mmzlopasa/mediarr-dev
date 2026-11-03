@@ -55,7 +55,9 @@ export const icons = {
 	back: '<path d="M15 5l-7 7 7 7"/>',
 	forward: '<path d="M9 5l7 7-7 7"/>',
 	play: '<path d="M7 4.5v15l12-7.5z"/>',
-	live: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10" stroke-dasharray="1.5 2.5"/>'
+	live: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10" stroke-dasharray="1.5 2.5"/>',
+	heart: '<path d="M12 20s-7.5-4.6-9.2-9A5 5 0 0 1 12 7a5 5 0 0 1 9.2 4c-1.7 4.4-9.2 9-9.2 9z"/>',
+	comment: '<path d="M4 5h16v11H9l-5 4z"/>'
 } as const;
 
 export type IconName = keyof typeof icons;

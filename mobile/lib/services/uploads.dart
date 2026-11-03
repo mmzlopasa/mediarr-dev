@@ -7,9 +7,10 @@ import 'tus.dart';
 enum UploadState { queued, preparing, uploading, done, duplicate, failed }
 
 class UploadTask {
-  UploadTask({required this.asset, this.name = ''});
+  UploadTask({required this.asset, this.name = '', this.albumId});
 
   final AssetEntity asset;
+  final String? albumId;
   String name;
   UploadState state = UploadState.queued;
   int sent = 0;
@@ -38,8 +39,11 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
 
   void _changed() => state = [...state];
 
-  void add(Iterable<AssetEntity> assets) {
-    state = [...state, ...assets.map((asset) => UploadTask(asset: asset))];
+  void add(Iterable<AssetEntity> assets, {String? albumId}) {
+    state = [
+      ...state,
+      ...assets.map((asset) => UploadTask(asset: asset, albumId: albumId)),
+    ];
     _pump();
   }
 
@@ -79,6 +83,7 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
         file,
         name: task.name,
         lastModifiedMs: task.asset.createDateTime.millisecondsSinceEpoch,
+        albumId: task.albumId,
         onProgress: (sent, total) {
           task.sent = sent;
           task.total = total;

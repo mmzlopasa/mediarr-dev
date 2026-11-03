@@ -87,7 +87,7 @@ GROUP BY 1
 ORDER BY 1 DESC;
 
 -- name: TimelineBucket :many
-SELECT a.id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
+SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.live_photo_of IS NULL

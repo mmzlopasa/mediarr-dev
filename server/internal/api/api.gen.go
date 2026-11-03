@@ -14,6 +14,108 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for AlbumOrder.
+const (
+	AlbumOrderNewest AlbumOrder = "newest"
+	AlbumOrderOldest AlbumOrder = "oldest"
+)
+
+// Valid indicates whether the value is a known member of the AlbumOrder enum.
+func (e AlbumOrder) Valid() bool {
+	switch e {
+	case AlbumOrderNewest:
+		return true
+	case AlbumOrderOldest:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AlbumRole.
+const (
+	AlbumRoleContributor AlbumRole = "contributor"
+	AlbumRoleEditor      AlbumRole = "editor"
+	AlbumRoleOwner       AlbumRole = "owner"
+	AlbumRoleViewer      AlbumRole = "viewer"
+)
+
+// Valid indicates whether the value is a known member of the AlbumRole enum.
+func (e AlbumRole) Valid() bool {
+	switch e {
+	case AlbumRoleContributor:
+		return true
+	case AlbumRoleEditor:
+		return true
+	case AlbumRoleOwner:
+		return true
+	case AlbumRoleViewer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AlbumMemberRole.
+const (
+	AlbumMemberRoleContributor AlbumMemberRole = "contributor"
+	AlbumMemberRoleEditor      AlbumMemberRole = "editor"
+	AlbumMemberRoleViewer      AlbumMemberRole = "viewer"
+)
+
+// Valid indicates whether the value is a known member of the AlbumMemberRole enum.
+func (e AlbumMemberRole) Valid() bool {
+	switch e {
+	case AlbumMemberRoleContributor:
+		return true
+	case AlbumMemberRoleEditor:
+		return true
+	case AlbumMemberRoleViewer:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AlbumRulesKind.
+const (
+	AlbumRulesKindLive  AlbumRulesKind = "live"
+	AlbumRulesKindPhoto AlbumRulesKind = "photo"
+	AlbumRulesKindVideo AlbumRulesKind = "video"
+)
+
+// Valid indicates whether the value is a known member of the AlbumRulesKind enum.
+func (e AlbumRulesKind) Valid() bool {
+	switch e {
+	case AlbumRulesKindLive:
+		return true
+	case AlbumRulesKindPhoto:
+		return true
+	case AlbumRulesKindVideo:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AlbumUpdateOrder.
+const (
+	AlbumUpdateOrderNewest AlbumUpdateOrder = "newest"
+	AlbumUpdateOrderOldest AlbumUpdateOrder = "oldest"
+)
+
+// Valid indicates whether the value is a known member of the AlbumUpdateOrder enum.
+func (e AlbumUpdateOrder) Valid() bool {
+	switch e {
+	case AlbumUpdateOrderNewest:
+		return true
+	case AlbumUpdateOrderOldest:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AssetKind.
 const (
 	AssetKindPhoto   AssetKind = "photo"
@@ -140,6 +242,27 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for MemberRoleRole.
+const (
+	MemberRoleRoleContributor MemberRoleRole = "contributor"
+	MemberRoleRoleEditor      MemberRoleRole = "editor"
+	MemberRoleRoleViewer      MemberRoleRole = "viewer"
+)
+
+// Valid indicates whether the value is a known member of the MemberRoleRole enum.
+func (e MemberRoleRole) Valid() bool {
+	switch e {
+	case MemberRoleRoleContributor:
+		return true
+	case MemberRoleRoleEditor:
+		return true
+	case MemberRoleRoleViewer:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TimelineItemKind.
 const (
 	TimelineItemKindPhoto   TimelineItemKind = "photo"
@@ -155,6 +278,27 @@ func (e TimelineItemKind) Valid() bool {
 	case TimelineItemKindUnknown:
 		return true
 	case TimelineItemKindVideo:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListAlbumsParamsSort.
+const (
+	Date    ListAlbumsParamsSort = "date"
+	Title   ListAlbumsParamsSort = "title"
+	Updated ListAlbumsParamsSort = "updated"
+)
+
+// Valid indicates whether the value is a known member of the ListAlbumsParamsSort enum.
+func (e ListAlbumsParamsSort) Valid() bool {
+	switch e {
+	case Date:
+		return true
+	case Title:
+		return true
+	case Updated:
 		return true
 	default:
 		return false
@@ -184,23 +328,51 @@ func (e ListAssetsParamsStatus) Valid() bool {
 
 // Defines values for GetAssetThumbnailParamsSize.
 const (
-	Full  GetAssetThumbnailParamsSize = "full"
-	Large GetAssetThumbnailParamsSize = "large"
-	Small GetAssetThumbnailParamsSize = "small"
+	GetAssetThumbnailParamsSizeFull  GetAssetThumbnailParamsSize = "full"
+	GetAssetThumbnailParamsSizeLarge GetAssetThumbnailParamsSize = "large"
+	GetAssetThumbnailParamsSizeSmall GetAssetThumbnailParamsSize = "small"
 )
 
 // Valid indicates whether the value is a known member of the GetAssetThumbnailParamsSize enum.
 func (e GetAssetThumbnailParamsSize) Valid() bool {
 	switch e {
-	case Full:
+	case GetAssetThumbnailParamsSizeFull:
 		return true
-	case Large:
+	case GetAssetThumbnailParamsSizeLarge:
 		return true
-	case Small:
+	case GetAssetThumbnailParamsSizeSmall:
 		return true
 	default:
 		return false
 	}
+}
+
+// Defines values for GetPublicThumbnailParamsSize.
+const (
+	GetPublicThumbnailParamsSizeFull  GetPublicThumbnailParamsSize = "full"
+	GetPublicThumbnailParamsSizeLarge GetPublicThumbnailParamsSize = "large"
+	GetPublicThumbnailParamsSizeSmall GetPublicThumbnailParamsSize = "small"
+)
+
+// Valid indicates whether the value is a known member of the GetPublicThumbnailParamsSize enum.
+func (e GetPublicThumbnailParamsSize) Valid() bool {
+	switch e {
+	case GetPublicThumbnailParamsSizeFull:
+		return true
+	case GetPublicThumbnailParamsSizeLarge:
+		return true
+	case GetPublicThumbnailParamsSizeSmall:
+		return true
+	default:
+		return false
+	}
+}
+
+// Activity defines model for Activity.
+type Activity struct {
+	Comments []Comment `json:"comments"`
+	Hearted  bool      `json:"hearted"`
+	Hearts   int64     `json:"hearts"`
 }
 
 // AdminOverview defines model for AdminOverview.
@@ -224,6 +396,76 @@ type AdminOverview struct {
 	Version      string `json:"version"`
 	Videos       int64  `json:"videos"`
 }
+
+// Album defines model for Album.
+type Album struct {
+	AssetCount   int64               `json:"assetCount"`
+	CoverAssetId *openapi_types.UUID `json:"coverAssetId,omitempty"`
+	CreatedAt    time.Time           `json:"createdAt"`
+	Description  string              `json:"description"`
+	Id           openapi_types.UUID  `json:"id"`
+	IsSmart      bool                `json:"isSmart"`
+	Members      *[]AlbumMember      `json:"members,omitempty"`
+	Order        AlbumOrder          `json:"order"`
+	OwnerId      openapi_types.UUID  `json:"ownerId"`
+	OwnerName    string              `json:"ownerName"`
+	Role         AlbumRole           `json:"role"`
+
+	// Rules Conditions that must all hold. Rules for people, places and tags arrive with those features.
+	Rules     *AlbumRules `json:"rules,omitempty"`
+	Title     string      `json:"title"`
+	UpdatedAt time.Time   `json:"updatedAt"`
+}
+
+// AlbumOrder defines model for Album.Order.
+type AlbumOrder string
+
+// AlbumRole defines model for Album.Role.
+type AlbumRole string
+
+// AlbumCreate defines model for AlbumCreate.
+type AlbumCreate struct {
+	Description *string `json:"description,omitempty"`
+
+	// Rules Conditions that must all hold. Rules for people, places and tags arrive with those features.
+	Rules *AlbumRules `json:"rules,omitempty"`
+	Title string      `json:"title"`
+}
+
+// AlbumMember defines model for AlbumMember.
+type AlbumMember struct {
+	Name   string             `json:"name"`
+	Role   AlbumMemberRole    `json:"role"`
+	UserId openapi_types.UUID `json:"userId"`
+}
+
+// AlbumMemberRole defines model for AlbumMember.Role.
+type AlbumMemberRole string
+
+// AlbumRules Conditions that must all hold. Rules for people, places and tags arrive with those features.
+type AlbumRules struct {
+	Camera *string             `json:"camera,omitempty"`
+	From   *openapi_types.Date `json:"from,omitempty"`
+	Kind   *AlbumRulesKind     `json:"kind,omitempty"`
+	To     *openapi_types.Date `json:"to,omitempty"`
+}
+
+// AlbumRulesKind defines model for AlbumRules.Kind.
+type AlbumRulesKind string
+
+// AlbumUpdate defines model for AlbumUpdate.
+type AlbumUpdate struct {
+	CoverAssetId *openapi_types.UUID `json:"coverAssetId,omitempty"`
+	Description  *string             `json:"description,omitempty"`
+	Order        *AlbumUpdateOrder   `json:"order,omitempty"`
+
+	// Rules Conditions that must all hold. Rules for people, places and tags arrive with those features.
+	Rules *AlbumRules `json:"rules,omitempty"`
+	Title *string     `json:"title,omitempty"`
+}
+
+// AlbumUpdateOrder defines model for AlbumUpdate.Order.
+type AlbumUpdateOrder string
 
 // Asset defines model for Asset.
 type Asset struct {
@@ -251,13 +493,16 @@ type AssetStatus string
 
 // AssetDetail defines model for AssetDetail.
 type AssetDetail struct {
-	Camera         *string   `json:"camera,omitempty"`
-	CreatedAt      time.Time `json:"createdAt"`
-	DurationMs     *int64    `json:"durationMs,omitempty"`
-	ExposureTime   *string   `json:"exposureTime,omitempty"`
-	FNumber        *float64  `json:"fNumber,omitempty"`
-	FocalLength    *float64  `json:"focalLength,omitempty"`
-	HasCaptureTime *bool     `json:"hasCaptureTime,omitempty"`
+	Camera    *string   `json:"camera,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+
+	// DownloadAllowed False on a public link that does not allow downloads
+	DownloadAllowed *bool    `json:"downloadAllowed,omitempty"`
+	DurationMs      *int64   `json:"durationMs,omitempty"`
+	ExposureTime    *string  `json:"exposureTime,omitempty"`
+	FNumber         *float64 `json:"fNumber,omitempty"`
+	FocalLength     *float64 `json:"focalLength,omitempty"`
+	HasCaptureTime  *bool    `json:"hasCaptureTime,omitempty"`
 
 	// HasMotion An Android Motion Photo, with its video at /motion
 	HasMotion *bool `json:"hasMotion,omitempty"`
@@ -268,10 +513,13 @@ type AssetDetail struct {
 	Id         openapi_types.UUID `json:"id"`
 	IsArchived bool               `json:"isArchived"`
 	IsFavorite bool               `json:"isFavorite"`
-	Iso        *int               `json:"iso,omitempty"`
-	Kind       AssetDetailKind    `json:"kind"`
-	Latitude   *float64           `json:"latitude,omitempty"`
-	Lens       *string            `json:"lens,omitempty"`
+
+	// IsOwner Only the owner can change or delete the asset
+	IsOwner  *bool           `json:"isOwner,omitempty"`
+	Iso      *int            `json:"iso,omitempty"`
+	Kind     AssetDetailKind `json:"kind"`
+	Latitude *float64        `json:"latitude,omitempty"`
+	Lens     *string         `json:"lens,omitempty"`
 
 	// LiveVideoId The video of a Live Photo
 	LiveVideoId   *openapi_types.UUID `json:"liveVideoId,omitempty"`
@@ -294,6 +542,11 @@ type AssetDetailKind string
 
 // AssetDetailStatus defines model for AssetDetail.Status.
 type AssetDetailStatus string
+
+// AssetIds defines model for AssetIds.
+type AssetIds struct {
+	Ids []openapi_types.UUID `json:"ids"`
+}
 
 // AssetList defines model for AssetList.
 type AssetList struct {
@@ -339,6 +592,22 @@ type ChecksumCheckResponse struct {
 	Existing []string `json:"existing"`
 }
 
+// Comment defines model for Comment.
+type Comment struct {
+	Body      string             `json:"body"`
+	CanDelete bool               `json:"canDelete"`
+	CreatedAt time.Time          `json:"createdAt"`
+	Id        openapi_types.UUID `json:"id"`
+	UserId    openapi_types.UUID `json:"userId"`
+	UserName  string             `json:"userName"`
+}
+
+// CommentCreate defines model for CommentCreate.
+type CommentCreate struct {
+	AssetId *openapi_types.UUID `json:"assetId,omitempty"`
+	Body    string              `json:"body"`
+}
+
 // CreateDeviceKeyRequest defines model for CreateDeviceKeyRequest.
 type CreateDeviceKeyRequest struct {
 	Name string `json:"name"`
@@ -371,6 +640,11 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// LinkPassword defines model for LinkPassword.
+type LinkPassword struct {
+	Password string `json:"password"`
+}
+
 // LoginError defines model for LoginError.
 type LoginError struct {
 	Message      string `json:"message"`
@@ -384,9 +658,54 @@ type LoginRequest struct {
 	TotpCode *string `json:"totpCode,omitempty"`
 }
 
+// MemberRole defines model for MemberRole.
+type MemberRole struct {
+	Role MemberRoleRole `json:"role"`
+}
+
+// MemberRoleRole defines model for MemberRole.Role.
+type MemberRoleRole string
+
+// PartnerEntry defines model for PartnerEntry.
+type PartnerEntry struct {
+	InTimeline bool                `json:"inTimeline"`
+	Name       string              `json:"name"`
+	Since      *openapi_types.Date `json:"since,omitempty"`
+	UserId     openapi_types.UUID  `json:"userId"`
+}
+
+// PartnerShare defines model for PartnerShare.
+type PartnerShare struct {
+	Since *openapi_types.Date `json:"since,omitempty"`
+}
+
+// PartnerTimeline defines model for PartnerTimeline.
+type PartnerTimeline struct {
+	Show bool `json:"show"`
+}
+
+// Partners defines model for Partners.
+type Partners struct {
+	Given    []PartnerEntry `json:"given"`
+	Received []PartnerEntry `json:"received"`
+}
+
 // PasswordConfirm defines model for PasswordConfirm.
 type PasswordConfirm struct {
 	Password string `json:"password"`
+}
+
+// PublicLink defines model for PublicLink.
+type PublicLink struct {
+	AllowDownload bool    `json:"allowDownload"`
+	AllowUpload   bool    `json:"allowUpload"`
+	Description   *string `json:"description,omitempty"`
+
+	// Locked A password is needed first. Nothing else is told until then.
+	Locked      bool    `json:"locked"`
+	Title       *string `json:"title,omitempty"`
+	UploadOnly  bool    `json:"uploadOnly"`
+	Watermarked bool    `json:"watermarked"`
 }
 
 // SetupRequest defines model for SetupRequest.
@@ -394,6 +713,38 @@ type SetupRequest struct {
 	Email    string `json:"email"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
+}
+
+// ShareLink defines model for ShareLink.
+type ShareLink struct {
+	AllowDownload bool               `json:"allowDownload"`
+	AllowUpload   bool               `json:"allowUpload"`
+	CreatedAt     time.Time          `json:"createdAt"`
+	DownloadCount int                `json:"downloadCount"`
+	DownloadLimit *int               `json:"downloadLimit,omitempty"`
+	ExpiresAt     *time.Time         `json:"expiresAt,omitempty"`
+	HasPassword   bool               `json:"hasPassword"`
+	Id            openapi_types.UUID `json:"id"`
+	Label         string             `json:"label"`
+	ShowLocation  bool               `json:"showLocation"`
+
+	// Token Returned only when the link is created
+	Token      *string `json:"token,omitempty"`
+	UploadOnly bool    `json:"uploadOnly"`
+	Watermark  *string `json:"watermark,omitempty"`
+}
+
+// ShareLinkCreate defines model for ShareLinkCreate.
+type ShareLinkCreate struct {
+	AllowDownload *bool      `json:"allowDownload,omitempty"`
+	AllowUpload   *bool      `json:"allowUpload,omitempty"`
+	DownloadLimit *int       `json:"downloadLimit,omitempty"`
+	ExpiresAt     *time.Time `json:"expiresAt,omitempty"`
+	Label         *string    `json:"label,omitempty"`
+	Password      *string    `json:"password,omitempty"`
+	ShowLocation  *bool      `json:"showLocation,omitempty"`
+	UploadOnly    *bool      `json:"uploadOnly,omitempty"`
+	Watermark     *string    `json:"watermark,omitempty"`
 }
 
 // Sprite defines model for Sprite.
@@ -425,7 +776,10 @@ type TimelineItem struct {
 	Id         openapi_types.UUID `json:"id"`
 	IsFavorite bool               `json:"isFavorite"`
 	IsLive     *bool              `json:"isLive,omitempty"`
-	Kind       TimelineItemKind   `json:"kind"`
+
+	// IsShared Belongs to someone else, shared with this user
+	IsShared *bool            `json:"isShared,omitempty"`
+	Kind     TimelineItemKind `json:"kind"`
 
 	// LocalAt Local capture time without a zone: 2006-01-02T15:04:05
 	LocalAt string `json:"localAt"`
@@ -457,6 +811,25 @@ type User struct {
 	TotpEnabled bool               `json:"totpEnabled"`
 }
 
+// UserRef defines model for UserRef.
+type UserRef struct {
+	Id   openapi_types.UUID `json:"id"`
+	Name string             `json:"name"`
+}
+
+// ListAlbumsParams defines parameters for ListAlbums.
+type ListAlbumsParams struct {
+	Sort *ListAlbumsParamsSort `form:"sort,omitempty" json:"sort,omitempty"`
+}
+
+// ListAlbumsParamsSort defines parameters for ListAlbums.
+type ListAlbumsParamsSort string
+
+// ListAlbumCommentsParams defines parameters for ListAlbumComments.
+type ListAlbumCommentsParams struct {
+	AssetId *openapi_types.UUID `form:"assetId,omitempty" json:"assetId,omitempty"`
+}
+
 // ListAssetsParams defines parameters for ListAssets.
 type ListAssetsParams struct {
 	Limit  *int                    `form:"limit,omitempty" json:"limit,omitempty"`
@@ -485,8 +858,42 @@ type GetAssetThumbnailParams struct {
 // GetAssetThumbnailParamsSize defines parameters for GetAssetThumbnail.
 type GetAssetThumbnailParamsSize string
 
+// GetPublicOriginalParams defines parameters for GetPublicOriginal.
+type GetPublicOriginalParams struct {
+	Download *bool `form:"download,omitempty" json:"download,omitempty"`
+}
+
+// GetPublicThumbnailParams defines parameters for GetPublicThumbnail.
+type GetPublicThumbnailParams struct {
+	Size *GetPublicThumbnailParamsSize `form:"size,omitempty" json:"size,omitempty"`
+}
+
+// GetPublicThumbnailParamsSize defines parameters for GetPublicThumbnail.
+type GetPublicThumbnailParamsSize string
+
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
+
+// CreateAlbumJSONRequestBody defines body for CreateAlbum for application/json ContentType.
+type CreateAlbumJSONRequestBody = AlbumCreate
+
+// UpdateAlbumJSONRequestBody defines body for UpdateAlbum for application/json ContentType.
+type UpdateAlbumJSONRequestBody = AlbumUpdate
+
+// AddAlbumAssetsJSONRequestBody defines body for AddAlbumAssets for application/json ContentType.
+type AddAlbumAssetsJSONRequestBody = AssetIds
+
+// RemoveAlbumAssetsJSONRequestBody defines body for RemoveAlbumAssets for application/json ContentType.
+type RemoveAlbumAssetsJSONRequestBody = AssetIds
+
+// CreateAlbumCommentJSONRequestBody defines body for CreateAlbumComment for application/json ContentType.
+type CreateAlbumCommentJSONRequestBody = CommentCreate
+
+// CreateAlbumLinkJSONRequestBody defines body for CreateAlbumLink for application/json ContentType.
+type CreateAlbumLinkJSONRequestBody = ShareLinkCreate
+
+// SetAlbumMemberJSONRequestBody defines body for SetAlbumMember for application/json ContentType.
+type SetAlbumMemberJSONRequestBody = MemberRole
 
 // BulkAssetsJSONRequestBody defines body for BulkAssets for application/json ContentType.
 type BulkAssetsJSONRequestBody = BulkRequest
@@ -512,6 +919,15 @@ type DisableTotpJSONRequestBody = PasswordConfirm
 // EnableTotpJSONRequestBody defines body for EnableTotp for application/json ContentType.
 type EnableTotpJSONRequestBody = TotpCode
 
+// SetPartnerJSONRequestBody defines body for SetPartner for application/json ContentType.
+type SetPartnerJSONRequestBody = PartnerShare
+
+// SetPartnerTimelineJSONRequestBody defines body for SetPartnerTimeline for application/json ContentType.
+type SetPartnerTimelineJSONRequestBody = PartnerTimeline
+
+// UnlockPublicLinkJSONRequestBody defines body for UnlockPublicLink for application/json ContentType.
+type UnlockPublicLinkJSONRequestBody = LinkPassword
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// GetAdminOverview Live statistics of the whole server, read from the database and the library disk
@@ -523,6 +939,66 @@ type ServerInterface interface {
 	// CreateUser Create a user
 	// (POST /api/admin/users)
 	CreateUser(w http.ResponseWriter, r *http.Request)
+	// ListAlbums Albums the current user owns or that are shared with them
+	// (GET /api/albums)
+	ListAlbums(w http.ResponseWriter, r *http.Request, params ListAlbumsParams)
+	// CreateAlbum Create an album. With rules it is a smart album.
+	// (POST /api/albums)
+	CreateAlbum(w http.ResponseWriter, r *http.Request)
+	// ListCameras Cameras in the current user's library, for smart album rules
+	// (GET /api/albums/cameras)
+	ListCameras(w http.ResponseWriter, r *http.Request)
+	// DeleteAlbum Delete an album, but not its photos. Owner only.
+	// (DELETE /api/albums/{id})
+	DeleteAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetAlbum Read an album and its members
+	// (GET /api/albums/{id})
+	GetAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// UpdateAlbum Change an album. Needs the editor role.
+	// (PATCH /api/albums/{id})
+	UpdateAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// AddAlbumAssets Add your own assets to an album. Needs the contributor role.
+	// (POST /api/albums/{id}/assets)
+	AddAlbumAssets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// RemoveAlbumAssets Remove assets from an album. A contributor can remove only what they added.
+	// (POST /api/albums/{id}/assets/remove)
+	RemoveAlbumAssets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// RemoveAlbumHeart Take back your heart
+	// (DELETE /api/albums/{id}/assets/{assetId}/heart)
+	RemoveAlbumHeart(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, assetId openapi_types.UUID)
+	// SetAlbumHeart Add your heart to a photo in an album
+	// (PUT /api/albums/{id}/assets/{assetId}/heart)
+	SetAlbumHeart(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, assetId openapi_types.UUID)
+	// GetAlbumBuckets Months in an album, in the album's order
+	// (GET /api/albums/{id}/buckets)
+	GetAlbumBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetAlbumBucket Assets of one month in an album
+	// (GET /api/albums/{id}/buckets/{month})
+	GetAlbumBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string)
+	// ListAlbumComments Comments on an album, or with assetId on one photo, and that photo's hearts
+	// (GET /api/albums/{id}/comments)
+	ListAlbumComments(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params ListAlbumCommentsParams)
+	// CreateAlbumComment Comment on an album or on a photo in it
+	// (POST /api/albums/{id}/comments)
+	CreateAlbumComment(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// DeleteAlbumComment Delete a comment. The author, an editor or the owner can do this.
+	// (DELETE /api/albums/{id}/comments/{commentId})
+	DeleteAlbumComment(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, commentId openapi_types.UUID)
+	// ListAlbumLinks Public links of an album. Owner only.
+	// (GET /api/albums/{id}/links)
+	ListAlbumLinks(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// CreateAlbumLink Create a public link. Its token is returned only this once.
+	// (POST /api/albums/{id}/links)
+	CreateAlbumLink(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// DeleteAlbumLink Revoke a public link. It stops working at once.
+	// (DELETE /api/albums/{id}/links/{linkId})
+	DeleteAlbumLink(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, linkId openapi_types.UUID)
+	// RemoveAlbumMember End a user's access. The owner can remove anyone, and a member can leave.
+	// (DELETE /api/albums/{id}/members/{userId})
+	RemoveAlbumMember(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userId openapi_types.UUID)
+	// SetAlbumMember Share an album with a user or change their role. Owner only.
+	// (PUT /api/albums/{id}/members/{userId})
+	SetAlbumMember(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userId openapi_types.UUID)
 	// ListAssets List the current user's most recent assets and their processing status
 	// (GET /api/assets)
 	ListAssets(w http.ResponseWriter, r *http.Request, params ListAssetsParams)
@@ -580,6 +1056,54 @@ type ServerInterface interface {
 	// SetupTotp Generate a TOTP secret. It takes effect only after confirmation.
 	// (POST /api/me/totp/setup)
 	SetupTotp(w http.ResponseWriter, r *http.Request)
+	// ListPartners Who you share your library with, and who shares theirs with you
+	// (GET /api/partners)
+	ListPartners(w http.ResponseWriter, r *http.Request)
+	// RemovePartner Stop sharing your library with a user
+	// (DELETE /api/partners/{userId})
+	RemovePartner(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID)
+	// SetPartner Share your library with a user, all of it or from a date
+	// (PUT /api/partners/{userId})
+	SetPartner(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID)
+	// GetPartnerBuckets Months in a library shared with you
+	// (GET /api/partners/{userId}/buckets)
+	GetPartnerBuckets(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID)
+	// GetPartnerBucket Assets of one month in a library shared with you
+	// (GET /api/partners/{userId}/buckets/{month})
+	GetPartnerBucket(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID, month string)
+	// SetPartnerTimeline Choose whether a partner's photos also appear in your timeline
+	// (PUT /api/partners/{userId}/timeline)
+	SetPartnerTimeline(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID)
+	// GetPublicLink What a public link offers. Needs no account.
+	// (GET /api/public/{token})
+	GetPublicLink(w http.ResponseWriter, r *http.Request, token string)
+	// GetPublicAsset An asset in a public album, without what the link does not allow
+	// (GET /api/public/{token}/assets/{id})
+	GetPublicAsset(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID)
+	// GetPublicMotion The video inside a Motion Photo in a public album
+	// (GET /api/public/{token}/assets/{id}/motion)
+	GetPublicMotion(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID)
+	// GetPublicOriginal Download an original. Counts toward the link's limit.
+	// (GET /api/public/{token}/assets/{id}/original)
+	GetPublicOriginal(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, params GetPublicOriginalParams)
+	// GetPublicThumbnail A preview from a public album, with the link's watermark if it has one
+	// (GET /api/public/{token}/assets/{id}/thumbnail)
+	GetPublicThumbnail(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, params GetPublicThumbnailParams)
+	// GetPublicVideoFile HLS files of a video in a public album
+	// (GET /api/public/{token}/assets/{id}/video/{file})
+	GetPublicVideoFile(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, file string)
+	// GetPublicBuckets Months in a public album
+	// (GET /api/public/{token}/buckets)
+	GetPublicBuckets(w http.ResponseWriter, r *http.Request, token string)
+	// GetPublicBucket Assets of one month in a public album
+	// (GET /api/public/{token}/buckets/{month})
+	GetPublicBucket(w http.ResponseWriter, r *http.Request, token string, month string)
+	// UnlockPublicLink Send a link's password. Success sets a cookie valid only for this link.
+	// (POST /api/public/{token}/unlock)
+	UnlockPublicLink(w http.ResponseWriter, r *http.Request, token string)
+	// CreatePublicUpload Send one whole file to a public album (tus 1.0 creation with upload)
+	// (POST /api/public/{token}/uploads)
+	CreatePublicUpload(w http.ResponseWriter, r *http.Request, token string)
 	// GetTimelineBuckets List the months that have photos, newest first
 	// (GET /api/timeline/buckets)
 	GetTimelineBuckets(w http.ResponseWriter, r *http.Request)
@@ -598,6 +1122,9 @@ type ServerInterface interface {
 	// AppendUpload Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 	// (PATCH /api/uploads/{id})
 	AppendUpload(w http.ResponseWriter, r *http.Request, id string)
+	// ListDirectory The other users of this server, for choosing who to share with
+	// (GET /api/users/directory)
+	ListDirectory(w http.ResponseWriter, r *http.Request)
 	// GetHealth Report whether the server can reach its database
 	// (GET /health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
@@ -622,6 +1149,126 @@ func (_ Unimplemented) ListUsers(w http.ResponseWriter, r *http.Request) {
 // CreateUser Create a user
 // (POST /api/admin/users)
 func (_ Unimplemented) CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAlbums Albums the current user owns or that are shared with them
+// (GET /api/albums)
+func (_ Unimplemented) ListAlbums(w http.ResponseWriter, r *http.Request, params ListAlbumsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateAlbum Create an album. With rules it is a smart album.
+// (POST /api/albums)
+func (_ Unimplemented) CreateAlbum(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListCameras Cameras in the current user's library, for smart album rules
+// (GET /api/albums/cameras)
+func (_ Unimplemented) ListCameras(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteAlbum Delete an album, but not its photos. Owner only.
+// (DELETE /api/albums/{id})
+func (_ Unimplemented) DeleteAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAlbum Read an album and its members
+// (GET /api/albums/{id})
+func (_ Unimplemented) GetAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateAlbum Change an album. Needs the editor role.
+// (PATCH /api/albums/{id})
+func (_ Unimplemented) UpdateAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AddAlbumAssets Add your own assets to an album. Needs the contributor role.
+// (POST /api/albums/{id}/assets)
+func (_ Unimplemented) AddAlbumAssets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemoveAlbumAssets Remove assets from an album. A contributor can remove only what they added.
+// (POST /api/albums/{id}/assets/remove)
+func (_ Unimplemented) RemoveAlbumAssets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemoveAlbumHeart Take back your heart
+// (DELETE /api/albums/{id}/assets/{assetId}/heart)
+func (_ Unimplemented) RemoveAlbumHeart(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, assetId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetAlbumHeart Add your heart to a photo in an album
+// (PUT /api/albums/{id}/assets/{assetId}/heart)
+func (_ Unimplemented) SetAlbumHeart(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, assetId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAlbumBuckets Months in an album, in the album's order
+// (GET /api/albums/{id}/buckets)
+func (_ Unimplemented) GetAlbumBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAlbumBucket Assets of one month in an album
+// (GET /api/albums/{id}/buckets/{month})
+func (_ Unimplemented) GetAlbumBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAlbumComments Comments on an album, or with assetId on one photo, and that photo's hearts
+// (GET /api/albums/{id}/comments)
+func (_ Unimplemented) ListAlbumComments(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params ListAlbumCommentsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateAlbumComment Comment on an album or on a photo in it
+// (POST /api/albums/{id}/comments)
+func (_ Unimplemented) CreateAlbumComment(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteAlbumComment Delete a comment. The author, an editor or the owner can do this.
+// (DELETE /api/albums/{id}/comments/{commentId})
+func (_ Unimplemented) DeleteAlbumComment(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, commentId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAlbumLinks Public links of an album. Owner only.
+// (GET /api/albums/{id}/links)
+func (_ Unimplemented) ListAlbumLinks(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateAlbumLink Create a public link. Its token is returned only this once.
+// (POST /api/albums/{id}/links)
+func (_ Unimplemented) CreateAlbumLink(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteAlbumLink Revoke a public link. It stops working at once.
+// (DELETE /api/albums/{id}/links/{linkId})
+func (_ Unimplemented) DeleteAlbumLink(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, linkId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemoveAlbumMember End a user's access. The owner can remove anyone, and a member can leave.
+// (DELETE /api/albums/{id}/members/{userId})
+func (_ Unimplemented) RemoveAlbumMember(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetAlbumMember Share an album with a user or change their role. Owner only.
+// (PUT /api/albums/{id}/members/{userId})
+func (_ Unimplemented) SetAlbumMember(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -739,6 +1386,102 @@ func (_ Unimplemented) SetupTotp(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListPartners Who you share your library with, and who shares theirs with you
+// (GET /api/partners)
+func (_ Unimplemented) ListPartners(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemovePartner Stop sharing your library with a user
+// (DELETE /api/partners/{userId})
+func (_ Unimplemented) RemovePartner(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetPartner Share your library with a user, all of it or from a date
+// (PUT /api/partners/{userId})
+func (_ Unimplemented) SetPartner(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPartnerBuckets Months in a library shared with you
+// (GET /api/partners/{userId}/buckets)
+func (_ Unimplemented) GetPartnerBuckets(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPartnerBucket Assets of one month in a library shared with you
+// (GET /api/partners/{userId}/buckets/{month})
+func (_ Unimplemented) GetPartnerBucket(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetPartnerTimeline Choose whether a partner's photos also appear in your timeline
+// (PUT /api/partners/{userId}/timeline)
+func (_ Unimplemented) SetPartnerTimeline(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPublicLink What a public link offers. Needs no account.
+// (GET /api/public/{token})
+func (_ Unimplemented) GetPublicLink(w http.ResponseWriter, r *http.Request, token string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPublicAsset An asset in a public album, without what the link does not allow
+// (GET /api/public/{token}/assets/{id})
+func (_ Unimplemented) GetPublicAsset(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPublicMotion The video inside a Motion Photo in a public album
+// (GET /api/public/{token}/assets/{id}/motion)
+func (_ Unimplemented) GetPublicMotion(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPublicOriginal Download an original. Counts toward the link's limit.
+// (GET /api/public/{token}/assets/{id}/original)
+func (_ Unimplemented) GetPublicOriginal(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, params GetPublicOriginalParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPublicThumbnail A preview from a public album, with the link's watermark if it has one
+// (GET /api/public/{token}/assets/{id}/thumbnail)
+func (_ Unimplemented) GetPublicThumbnail(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, params GetPublicThumbnailParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPublicVideoFile HLS files of a video in a public album
+// (GET /api/public/{token}/assets/{id}/video/{file})
+func (_ Unimplemented) GetPublicVideoFile(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, file string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPublicBuckets Months in a public album
+// (GET /api/public/{token}/buckets)
+func (_ Unimplemented) GetPublicBuckets(w http.ResponseWriter, r *http.Request, token string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetPublicBucket Assets of one month in a public album
+// (GET /api/public/{token}/buckets/{month})
+func (_ Unimplemented) GetPublicBucket(w http.ResponseWriter, r *http.Request, token string, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UnlockPublicLink Send a link's password. Success sets a cookie valid only for this link.
+// (POST /api/public/{token}/unlock)
+func (_ Unimplemented) UnlockPublicLink(w http.ResponseWriter, r *http.Request, token string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreatePublicUpload Send one whole file to a public album (tus 1.0 creation with upload)
+// (POST /api/public/{token}/uploads)
+func (_ Unimplemented) CreatePublicUpload(w http.ResponseWriter, r *http.Request, token string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetTimelineBuckets List the months that have photos, newest first
 // (GET /api/timeline/buckets)
 func (_ Unimplemented) GetTimelineBuckets(w http.ResponseWriter, r *http.Request) {
@@ -772,6 +1515,12 @@ func (_ Unimplemented) GetUploadOffset(w http.ResponseWriter, r *http.Request, i
 // AppendUpload Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 // (PATCH /api/uploads/{id})
 func (_ Unimplemented) AppendUpload(w http.ResponseWriter, r *http.Request, id string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListDirectory The other users of this server, for choosing who to share with
+// (GET /api/users/directory)
+func (_ Unimplemented) ListDirectory(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -823,6 +1572,588 @@ func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAlbums operation middleware
+func (siw *ServerInterfaceWrapper) ListAlbums(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAlbumsParams
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sort"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAlbums(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateAlbum operation middleware
+func (siw *ServerInterfaceWrapper) CreateAlbum(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateAlbum(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListCameras operation middleware
+func (siw *ServerInterfaceWrapper) ListCameras(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListCameras(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteAlbum operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAlbum(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteAlbum(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAlbum operation middleware
+func (siw *ServerInterfaceWrapper) GetAlbum(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAlbum(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateAlbum operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAlbum(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateAlbum(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AddAlbumAssets operation middleware
+func (siw *ServerInterfaceWrapper) AddAlbumAssets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AddAlbumAssets(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveAlbumAssets operation middleware
+func (siw *ServerInterfaceWrapper) RemoveAlbumAssets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveAlbumAssets(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveAlbumHeart operation middleware
+func (siw *ServerInterfaceWrapper) RemoveAlbumHeart(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "assetId" -------------
+	var assetId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "assetId", chi.URLParam(r, "assetId"), &assetId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "assetId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveAlbumHeart(w, r, id, assetId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetAlbumHeart operation middleware
+func (siw *ServerInterfaceWrapper) SetAlbumHeart(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "assetId" -------------
+	var assetId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "assetId", chi.URLParam(r, "assetId"), &assetId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "assetId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetAlbumHeart(w, r, id, assetId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAlbumBuckets operation middleware
+func (siw *ServerInterfaceWrapper) GetAlbumBuckets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAlbumBuckets(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAlbumBucket operation middleware
+func (siw *ServerInterfaceWrapper) GetAlbumBucket(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "month" -------------
+	var month string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "month", chi.URLParam(r, "month"), &month, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAlbumBucket(w, r, id, month)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAlbumComments operation middleware
+func (siw *ServerInterfaceWrapper) ListAlbumComments(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAlbumCommentsParams
+
+	// ------------- Optional query parameter "assetId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "assetId", r.URL.Query(), &params.AssetId, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "assetId"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "assetId", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAlbumComments(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateAlbumComment operation middleware
+func (siw *ServerInterfaceWrapper) CreateAlbumComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateAlbumComment(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteAlbumComment operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAlbumComment(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "commentId" -------------
+	var commentId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "commentId", chi.URLParam(r, "commentId"), &commentId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "commentId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteAlbumComment(w, r, id, commentId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAlbumLinks operation middleware
+func (siw *ServerInterfaceWrapper) ListAlbumLinks(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAlbumLinks(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateAlbumLink operation middleware
+func (siw *ServerInterfaceWrapper) CreateAlbumLink(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateAlbumLink(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteAlbumLink operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAlbumLink(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "linkId" -------------
+	var linkId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "linkId", chi.URLParam(r, "linkId"), &linkId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "linkId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteAlbumLink(w, r, id, linkId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveAlbumMember operation middleware
+func (siw *ServerInterfaceWrapper) RemoveAlbumMember(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveAlbumMember(w, r, id, userId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetAlbumMember operation middleware
+func (siw *ServerInterfaceWrapper) SetAlbumMember(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetAlbumMember(w, r, id, userId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1262,6 +2593,514 @@ func (siw *ServerInterfaceWrapper) SetupTotp(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// ListPartners operation middleware
+func (siw *ServerInterfaceWrapper) ListPartners(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPartners(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemovePartner operation middleware
+func (siw *ServerInterfaceWrapper) RemovePartner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemovePartner(w, r, userId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetPartner operation middleware
+func (siw *ServerInterfaceWrapper) SetPartner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetPartner(w, r, userId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPartnerBuckets operation middleware
+func (siw *ServerInterfaceWrapper) GetPartnerBuckets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPartnerBuckets(w, r, userId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPartnerBucket operation middleware
+func (siw *ServerInterfaceWrapper) GetPartnerBucket(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "month" -------------
+	var month string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "month", chi.URLParam(r, "month"), &month, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPartnerBucket(w, r, userId, month)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetPartnerTimeline operation middleware
+func (siw *ServerInterfaceWrapper) SetPartnerTimeline(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetPartnerTimeline(w, r, userId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPublicLink operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicLink(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPublicLink(w, r, token)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPublicAsset operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicAsset(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPublicAsset(w, r, token, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPublicMotion operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicMotion(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPublicMotion(w, r, token, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPublicOriginal operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicOriginal(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetPublicOriginalParams
+
+	// ------------- Optional query parameter "download" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "download", r.URL.Query(), &params.Download, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "download"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "download", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPublicOriginal(w, r, token, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPublicThumbnail operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicThumbnail(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetPublicThumbnailParams
+
+	// ------------- Optional query parameter "size" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "size", r.URL.Query(), &params.Size, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "size"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "size", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPublicThumbnail(w, r, token, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPublicVideoFile operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicVideoFile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "file" -------------
+	var file string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "file", chi.URLParam(r, "file"), &file, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "file", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPublicVideoFile(w, r, token, id, file)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPublicBuckets operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicBuckets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPublicBuckets(w, r, token)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPublicBucket operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicBucket(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "month" -------------
+	var month string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "month", chi.URLParam(r, "month"), &month, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPublicBucket(w, r, token, month)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UnlockPublicLink operation middleware
+func (siw *ServerInterfaceWrapper) UnlockPublicLink(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UnlockPublicLink(w, r, token)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreatePublicUpload operation middleware
+func (siw *ServerInterfaceWrapper) CreatePublicUpload(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreatePublicUpload(w, r, token)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetTimelineBuckets operation middleware
 func (siw *ServerInterfaceWrapper) GetTimelineBuckets(w http.ResponseWriter, r *http.Request) {
 
@@ -1385,6 +3224,20 @@ func (siw *ServerInterfaceWrapper) AppendUpload(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.AppendUpload(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListDirectory operation middleware
+func (siw *ServerInterfaceWrapper) ListDirectory(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListDirectory(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1607,6 +3460,117 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/api/uploads/{id}", wrapper.AppendUpload)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/users/directory", wrapper.ListDirectory)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums", wrapper.ListAlbums)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/albums", wrapper.CreateAlbum)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums/cameras", wrapper.ListCameras)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/albums/{id}", wrapper.DeleteAlbum)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums/{id}", wrapper.GetAlbum)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/albums/{id}", wrapper.UpdateAlbum)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/albums/{id}/assets", wrapper.AddAlbumAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/albums/{id}/assets/remove", wrapper.RemoveAlbumAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums/{id}/buckets", wrapper.GetAlbumBuckets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums/{id}/buckets/{month}", wrapper.GetAlbumBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/albums/{id}/members/{userId}", wrapper.RemoveAlbumMember)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/albums/{id}/members/{userId}", wrapper.SetAlbumMember)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums/{id}/comments", wrapper.ListAlbumComments)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/albums/{id}/comments", wrapper.CreateAlbumComment)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/albums/{id}/comments/{commentId}", wrapper.DeleteAlbumComment)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/albums/{id}/assets/{assetId}/heart", wrapper.RemoveAlbumHeart)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/albums/{id}/assets/{assetId}/heart", wrapper.SetAlbumHeart)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums/{id}/links", wrapper.ListAlbumLinks)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/albums/{id}/links", wrapper.CreateAlbumLink)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/albums/{id}/links/{linkId}", wrapper.DeleteAlbumLink)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/partners", wrapper.ListPartners)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/partners/{userId}", wrapper.RemovePartner)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/partners/{userId}", wrapper.SetPartner)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/partners/{userId}/timeline", wrapper.SetPartnerTimeline)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/partners/{userId}/buckets", wrapper.GetPartnerBuckets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/partners/{userId}/buckets/{month}", wrapper.GetPartnerBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/public/{token}", wrapper.GetPublicLink)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/public/{token}/unlock", wrapper.UnlockPublicLink)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/public/{token}/buckets", wrapper.GetPublicBuckets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/public/{token}/buckets/{month}", wrapper.GetPublicBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/public/{token}/assets/{id}", wrapper.GetPublicAsset)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/public/{token}/assets/{id}/thumbnail", wrapper.GetPublicThumbnail)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/public/{token}/assets/{id}/original", wrapper.GetPublicOriginal)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/public/{token}/assets/{id}/motion", wrapper.GetPublicMotion)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/public/{token}/assets/{id}/video/{file}", wrapper.GetPublicVideoFile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/public/{token}/uploads", wrapper.CreatePublicUpload)
 	})
 
 	return r

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
 import 'account_screen.dart';
+import 'albums_screen.dart';
 import 'timeline_screen.dart';
 import 'upload_screen.dart';
 
@@ -26,7 +27,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: IndexedStack(
         index: _tab,
-        children: const [TimelineScreen(), UploadScreen(), AccountScreen()],
+        children: const [
+          TimelineScreen(),
+          AlbumsScreen(),
+          UploadScreen(),
+          AccountScreen(),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
@@ -36,6 +42,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icon(Icons.photo_outlined),
             selectedIcon: Icon(Icons.photo, color: Palette.gold),
             label: 'Photos',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.photo_album_outlined),
+            selectedIcon: Icon(Icons.photo_album, color: Palette.gold),
+            label: 'Albums',
           ),
           NavigationDestination(
             icon: Badge(

@@ -8,6 +8,48 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Album struct {
+	ID           pgtype.UUID
+	OwnerID      pgtype.UUID
+	Title        string
+	Description  string
+	CoverAssetID pgtype.UUID
+	AssetOrder   string
+	Rules        []byte
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type AlbumAsset struct {
+	AlbumID pgtype.UUID
+	AssetID pgtype.UUID
+	AddedBy pgtype.UUID
+	AddedAt pgtype.Timestamptz
+}
+
+type AlbumComment struct {
+	ID        pgtype.UUID
+	AlbumID   pgtype.UUID
+	AssetID   pgtype.UUID
+	UserID    pgtype.UUID
+	Body      string
+	CreatedAt pgtype.Timestamptz
+}
+
+type AlbumHeart struct {
+	AlbumID   pgtype.UUID
+	AssetID   pgtype.UUID
+	UserID    pgtype.UUID
+	CreatedAt pgtype.Timestamptz
+}
+
+type AlbumMember struct {
+	AlbumID pgtype.UUID
+	UserID  pgtype.UUID
+	Role    string
+	AddedAt pgtype.Timestamptz
+}
+
 type ApiKey struct {
 	ID         pgtype.UUID
 	UserID     pgtype.UUID
@@ -82,11 +124,42 @@ type Library struct {
 	CreatedAt pgtype.Timestamptz
 }
 
+type PartnerShare struct {
+	OwnerID    pgtype.UUID
+	PartnerID  pgtype.UUID
+	SinceAt    pgtype.Timestamp
+	InTimeline bool
+	CreatedAt  pgtype.Timestamptz
+}
+
 type Session struct {
 	ID        pgtype.UUID
 	UserID    pgtype.UUID
 	TokenHash []byte
 	CreatedAt pgtype.Timestamptz
+	ExpiresAt pgtype.Timestamptz
+}
+
+type ShareLink struct {
+	ID            pgtype.UUID
+	AlbumID       pgtype.UUID
+	TokenHash     []byte
+	Label         string
+	PasswordHash  pgtype.Text
+	ExpiresAt     pgtype.Timestamptz
+	DownloadLimit pgtype.Int4
+	DownloadCount int32
+	AllowDownload bool
+	AllowUpload   bool
+	UploadOnly    bool
+	ShowLocation  bool
+	Watermark     pgtype.Text
+	CreatedAt     pgtype.Timestamptz
+}
+
+type ShareLinkSession struct {
+	TokenHash []byte
+	LinkID    pgtype.UUID
 	ExpiresAt pgtype.Timestamptz
 }
 

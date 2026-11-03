@@ -15,6 +15,7 @@
 	import { appNav } from '#lib/nav.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
+	import AddToAlbum from '#lib/albums/AddToAlbum.svelte';
 	import {
 		clearFinishedUploads,
 		isPreparingUpload,
@@ -39,7 +40,14 @@
 		uploads().filter((upload) => upload.status === 'done' || upload.status === 'duplicate').length
 	);
 
+	// Photos from a partner have no neighbours on the server, so the viewer follows what is shown.
+	let partnersShown = $state(false);
+
 	async function refresh() {
+		api
+			.partners()
+			.then((partners) => (partnersShown = partners.received.some((entry) => entry.inTimeline)))
+			.catch(() => {});
 		try {
 			problems = await api.listProblems();
 		} catch {
@@ -155,7 +163,11 @@
 	</section>
 {/if}
 
-<Timeline bind:this={timeline} onOpen={open} onCount={(count) => (total = count)} />
+<Timeline bind:this={timeline} onOpen={open} onCount={(count) => (total = count)}>
+	{#snippet selectionActions(ids, clear)}
+		<AddToAlbum {ids} onDone={clear} />
+	{/snippet}
+</Timeline>
 
 {#if page.state.viewer}
 	<Viewer
@@ -163,5 +175,6 @@
 		onClose={() => history.back()}
 		onNavigate={(id) => replaceState(resolve('/(app)/photos/[id]', { id }), { viewer: id })}
 		onChanged={() => timeline?.reloadLoaded()}
+		neighbours={partnersShown ? (id) => timeline?.neighbours(id) ?? {} : undefined}
 	/>
 {/if}

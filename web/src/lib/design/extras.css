@@ -651,3 +651,115 @@ video.viewer-media {
 	z-index: 1;
 	background: #000;
 }
+
+/* Albums */
+.alb-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+	gap: 16px;
+}
+.alb-card {
+	display: block;
+	color: inherit;
+	text-decoration: none;
+	border-radius: var(--r-l);
+	min-width: 0;
+}
+.alb-cover {
+	display: grid;
+	place-items: center;
+	aspect-ratio: 1;
+	width: 100%;
+	overflow: hidden;
+	border-radius: var(--r-l);
+	border: 1px solid var(--line);
+	background: var(--bg-2);
+	color: var(--haze);
+}
+.alb-cover img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+.alb-name {
+	display: block;
+	margin-top: 8px;
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.alb-meta {
+	display: block;
+	color: var(--haze);
+	font-size: 0.82rem;
+}
+.alb-list {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--line);
+}
+.alb-list:last-child {
+	border-bottom: 0;
+}
+.alb-list > b {
+	flex: 1 1 140px;
+	min-width: 0;
+	overflow-wrap: anywhere;
+	font-weight: 500;
+}
+.alb-comment {
+	padding: 10px 0;
+	border-bottom: 1px solid var(--line);
+	overflow-wrap: anywhere;
+}
+.alb-comment p {
+	margin: 4px 0 0;
+}
+.alb-comment small {
+	color: var(--haze);
+}
+.alb-comment-h {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.alb-comment-h b {
+	flex: 1;
+	min-width: 0;
+}
+.alb-heart {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+.alb-heart .on {
+	color: var(--gold);
+}
+.alb-heart .on svg {
+	fill: currentColor;
+}
+
+/* Public link page: works on a phone too, because guests open it there. */
+.pub {
+	position: relative;
+	max-width: 1400px;
+	margin: 0 auto;
+	padding: 18px clamp(12px, 3vw, 28px) 60px;
+}
+.pub-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 22px;
+}
+.pub-box {
+	max-width: 460px;
+	margin: 8vh auto 0;
+}

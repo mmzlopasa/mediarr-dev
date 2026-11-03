@@ -12,6 +12,7 @@ import '../services/timeline.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
+import 'album_sheets.dart';
 import 'viewer_screen.dart';
 
 class TimelineScreen extends ConsumerStatefulWidget {
@@ -112,40 +113,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         text: 'No photos yet. Add your first ones in the Upload tab.',
       );
     } else {
-      body = LayoutBuilder(
-        builder: (context, constraints) {
-          const side = 12.0;
-          final width = constraints.maxWidth - side * 2;
-          return RefreshIndicator(
-            color: Palette.gold,
-            onRefresh: () => store.refresh(reloadLoaded: true),
-            child: CustomScrollView(
-              // Keeps nearby months loaded, and the scroll steady when returning.
-              key: const PageStorageKey('timeline'),
-              scrollCacheExtent: const ScrollCacheExtent.pixels(900),
-              slivers: [
-                for (final month in months)
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: side),
-                    sliver: _MonthSliver(
-                      store: store,
-                      month: month,
-                      width: width,
-                      session: session,
-                      selected: _selected,
-                      onToggle: _toggle,
-                      onOpen: (index) => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => ViewerScreen(initialIndex: index),
-                        ),
-                      ),
-                    ),
-                  ),
-                const SliverToBoxAdapter(child: SizedBox(height: 90)),
-              ],
-            ),
-          );
-        },
+      body = TimelineGrid(
+        store: store,
+        session: session,
+        selected: _selected,
+        onToggle: _toggle,
+        onOpen: (index) => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ViewerScreen(initialIndex: index),
+          ),
+        ),
       );
     }
 
@@ -168,6 +145,18 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                   Text('${_selected.length}', style: text.titleLarge),
                   const Spacer(),
                   IconButton(
+                    tooltip: 'Add to album',
+                    icon: const Icon(Icons.photo_album_outlined),
+                    onPressed: () async {
+                      final added = await showAddToAlbum(
+                        context,
+                        session,
+                        _selected.toList(),
+                      );
+                      if (added && mounted) setState(_selected.clear);
+                    },
+                  ),
+                  IconButton(
                     tooltip: 'Add to favorites',
                     icon: const Icon(Icons.star_border),
                     onPressed: () => _act(BulkRequestActionEnum.favorite),
@@ -189,6 +178,60 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           Expanded(child: body),
         ],
       ),
+    );
+  }
+}
+
+/// The months and photos of any store: the library, an album or a partner's library.
+class TimelineGrid extends StatelessWidget {
+  const TimelineGrid({
+    super.key,
+    required this.store,
+    required this.session,
+    required this.selected,
+    required this.onToggle,
+    required this.onOpen,
+  });
+
+  final TimelineStore store;
+  final Session session;
+  final Set<String> selected;
+  final void Function(String id) onToggle;
+  final void Function(int index) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final months = store.months ?? const <TimelineMonth>[];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const side = 12.0;
+        final width = constraints.maxWidth - side * 2;
+        return RefreshIndicator(
+          color: Palette.gold,
+          onRefresh: () => store.refresh(reloadLoaded: true),
+          child: CustomScrollView(
+            // Keeps nearby months loaded, and the scroll steady when returning.
+            key: PageStorageKey(store),
+            scrollCacheExtent: const ScrollCacheExtent.pixels(900),
+            slivers: [
+              for (final month in months)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: side),
+                  sliver: _MonthSliver(
+                    store: store,
+                    month: month,
+                    width: width,
+                    session: session,
+                    selected: selected,
+                    onToggle: onToggle,
+                    onOpen: onOpen,
+                  ),
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: 90)),
+            ],
+          ),
+        );
+      },
     );
   }
 }

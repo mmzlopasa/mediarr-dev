@@ -16,6 +16,73 @@ class DefaultApi {
 
   final ApiClient apiClient;
 
+  /// Add your own assets to an album. Needs the contributor role.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<Response> addAlbumAssetsWithHttpInfo(
+    String id,
+    AssetIds assetIds,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/assets'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetIds;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Add your own assets to an album. Needs the contributor role.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<BulkResponse?> addAlbumAssets(
+    String id,
+    AssetIds assetIds,
+  ) async {
+    final response = await addAlbumAssetsWithHttpInfo(
+      id,
+      assetIds,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BulkResponse',
+      ) as BulkResponse;
+    }
+    return null;
+  }
+
   /// Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -283,6 +350,189 @@ class DefaultApi {
     return null;
   }
 
+  /// Create an album. With rules it is a smart album.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [AlbumCreate] albumCreate (required):
+  Future<Response> createAlbumWithHttpInfo(
+    AlbumCreate albumCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums';
+
+    // ignore: prefer_final_locals
+    Object? postBody = albumCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Create an album. With rules it is a smart album.
+  ///
+  /// Parameters:
+  ///
+  /// * [AlbumCreate] albumCreate (required):
+  Future<Album?> createAlbum(
+    AlbumCreate albumCreate,
+  ) async {
+    final response = await createAlbumWithHttpInfo(
+      albumCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Album',
+      ) as Album;
+    }
+    return null;
+  }
+
+  /// Comment on an album or on a photo in it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [CommentCreate] commentCreate (required):
+  Future<Response> createAlbumCommentWithHttpInfo(
+    String id,
+    CommentCreate commentCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/comments'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = commentCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Comment on an album or on a photo in it
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [CommentCreate] commentCreate (required):
+  Future<void> createAlbumComment(
+    String id,
+    CommentCreate commentCreate,
+  ) async {
+    final response = await createAlbumCommentWithHttpInfo(
+      id,
+      commentCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Create a public link. Its token is returned only this once.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [ShareLinkCreate] shareLinkCreate (required):
+  Future<Response> createAlbumLinkWithHttpInfo(
+    String id,
+    ShareLinkCreate shareLinkCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/links'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = shareLinkCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Create a public link. Its token is returned only this once.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [ShareLinkCreate] shareLinkCreate (required):
+  Future<ShareLink?> createAlbumLink(
+    String id,
+    ShareLinkCreate shareLinkCreate,
+  ) async {
+    final response = await createAlbumLinkWithHttpInfo(
+      id,
+      shareLinkCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'ShareLink',
+      ) as ShareLink;
+    }
+    return null;
+  }
+
   /// Create a long-lived key for this device, used by background backup
   ///
   /// Note: This method returns the HTTP [Response].
@@ -341,6 +591,55 @@ class DefaultApi {
       ) as DeviceKey;
     }
     return null;
+  }
+
+  /// Send one whole file to a public album (tus 1.0 creation with upload)
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  Future<Response> createPublicUploadWithHttpInfo(
+    String token,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/uploads'.replaceAll('{token}', token);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Send one whole file to a public album (tus 1.0 creation with upload)
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  Future<void> createPublicUpload(
+    String token,
+  ) async {
+    final response = await createPublicUploadWithHttpInfo(
+      token,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
@@ -436,6 +735,171 @@ class DefaultApi {
       ) as User;
     }
     return null;
+  }
+
+  /// Delete an album, but not its photos. Owner only.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteAlbumWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Delete an album, but not its photos. Owner only.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteAlbum(
+    String id,
+  ) async {
+    final response = await deleteAlbumWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Delete a comment. The author, an editor or the owner can do this.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] commentId (required):
+  Future<Response> deleteAlbumCommentWithHttpInfo(
+    String id,
+    String commentId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/comments/{commentId}'
+        .replaceAll('{id}', id)
+        .replaceAll('{commentId}', commentId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Delete a comment. The author, an editor or the owner can do this.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] commentId (required):
+  Future<void> deleteAlbumComment(
+    String id,
+    String commentId,
+  ) async {
+    final response = await deleteAlbumCommentWithHttpInfo(
+      id,
+      commentId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Revoke a public link. It stops working at once.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] linkId (required):
+  Future<Response> deleteAlbumLinkWithHttpInfo(
+    String id,
+    String linkId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/links/{linkId}'
+        .replaceAll('{id}', id)
+        .replaceAll('{linkId}', linkId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Revoke a public link. It stops working at once.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] linkId (required):
+  Future<void> deleteAlbumLink(
+    String id,
+    String linkId,
+  ) async {
+    final response = await deleteAlbumLinkWithHttpInfo(
+      id,
+      linkId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Turn off TOTP
@@ -642,6 +1106,195 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'AdminOverview',
       ) as AdminOverview;
+    }
+    return null;
+  }
+
+  /// Read an album and its members
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getAlbumWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Read an album and its members
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Album?> getAlbum(
+    String id,
+  ) async {
+    final response = await getAlbumWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Album',
+      ) as Album;
+    }
+    return null;
+  }
+
+  /// Assets of one month in an album
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] month (required):
+  Future<Response> getAlbumBucketWithHttpInfo(
+    String id,
+    String month,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/buckets/{month}'
+        .replaceAll('{id}', id)
+        .replaceAll('{month}', month);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Assets of one month in an album
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] month (required):
+  Future<TimelineBucket?> getAlbumBucket(
+    String id,
+    String month,
+  ) async {
+    final response = await getAlbumBucketWithHttpInfo(
+      id,
+      month,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBucket',
+      ) as TimelineBucket;
+    }
+    return null;
+  }
+
+  /// Months in an album, in the album's order
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getAlbumBucketsWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/buckets'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Months in an album, in the album's order
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<TimelineBuckets?> getAlbumBuckets(
+    String id,
+  ) async {
+    final response = await getAlbumBucketsWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBuckets',
+      ) as TimelineBuckets;
     }
     return null;
   }
@@ -1069,6 +1722,700 @@ class DefaultApi {
     return null;
   }
 
+  /// Assets of one month in a library shared with you
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [String] month (required):
+  Future<Response> getPartnerBucketWithHttpInfo(
+    String userId,
+    String month,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/partners/{userId}/buckets/{month}'
+        .replaceAll('{userId}', userId)
+        .replaceAll('{month}', month);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Assets of one month in a library shared with you
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [String] month (required):
+  Future<TimelineBucket?> getPartnerBucket(
+    String userId,
+    String month,
+  ) async {
+    final response = await getPartnerBucketWithHttpInfo(
+      userId,
+      month,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBucket',
+      ) as TimelineBucket;
+    }
+    return null;
+  }
+
+  /// Months in a library shared with you
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  Future<Response> getPartnerBucketsWithHttpInfo(
+    String userId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/partners/{userId}/buckets'.replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Months in a library shared with you
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  Future<TimelineBuckets?> getPartnerBuckets(
+    String userId,
+  ) async {
+    final response = await getPartnerBucketsWithHttpInfo(
+      userId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBuckets',
+      ) as TimelineBuckets;
+    }
+    return null;
+  }
+
+  /// An asset in a public album, without what the link does not allow
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> getPublicAssetWithHttpInfo(
+    String token,
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/assets/{id}'
+        .replaceAll('{token}', token)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// An asset in a public album, without what the link does not allow
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  Future<AssetDetail?> getPublicAsset(
+    String token,
+    String id,
+  ) async {
+    final response = await getPublicAssetWithHttpInfo(
+      token,
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AssetDetail',
+      ) as AssetDetail;
+    }
+    return null;
+  }
+
+  /// Assets of one month in a public album
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] month (required):
+  Future<Response> getPublicBucketWithHttpInfo(
+    String token,
+    String month,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/buckets/{month}'
+        .replaceAll('{token}', token)
+        .replaceAll('{month}', month);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Assets of one month in a public album
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] month (required):
+  Future<TimelineBucket?> getPublicBucket(
+    String token,
+    String month,
+  ) async {
+    final response = await getPublicBucketWithHttpInfo(
+      token,
+      month,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBucket',
+      ) as TimelineBucket;
+    }
+    return null;
+  }
+
+  /// Months in a public album
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  Future<Response> getPublicBucketsWithHttpInfo(
+    String token,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/buckets'.replaceAll('{token}', token);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Months in a public album
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  Future<TimelineBuckets?> getPublicBuckets(
+    String token,
+  ) async {
+    final response = await getPublicBucketsWithHttpInfo(
+      token,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBuckets',
+      ) as TimelineBuckets;
+    }
+    return null;
+  }
+
+  /// What a public link offers. Needs no account.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  Future<Response> getPublicLinkWithHttpInfo(
+    String token,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}'.replaceAll('{token}', token);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// What a public link offers. Needs no account.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  Future<PublicLink?> getPublicLink(
+    String token,
+  ) async {
+    final response = await getPublicLinkWithHttpInfo(
+      token,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'PublicLink',
+      ) as PublicLink;
+    }
+    return null;
+  }
+
+  /// The video inside a Motion Photo in a public album
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> getPublicMotionWithHttpInfo(
+    String token,
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/assets/{id}/motion'
+        .replaceAll('{token}', token)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The video inside a Motion Photo in a public album
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  Future<MultipartFile?> getPublicMotion(
+    String token,
+    String id,
+  ) async {
+    final response = await getPublicMotionWithHttpInfo(
+      token,
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// Download an original. Counts toward the link's limit.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] download:
+  Future<Response> getPublicOriginalWithHttpInfo(
+    String token,
+    String id, {
+    bool? download,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/assets/{id}/original'
+        .replaceAll('{token}', token)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (download != null) {
+      queryParams.addAll(_queryParams('', 'download', download));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Download an original. Counts toward the link's limit.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] download:
+  Future<MultipartFile?> getPublicOriginal(
+    String token,
+    String id, {
+    bool? download,
+  }) async {
+    final response = await getPublicOriginalWithHttpInfo(
+      token,
+      id,
+      download: download,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// A preview from a public album, with the link's watermark if it has one
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] size:
+  Future<Response> getPublicThumbnailWithHttpInfo(
+    String token,
+    String id, {
+    String? size,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/assets/{id}/thumbnail'
+        .replaceAll('{token}', token)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (size != null) {
+      queryParams.addAll(_queryParams('', 'size', size));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// A preview from a public album, with the link's watermark if it has one
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] size:
+  Future<MultipartFile?> getPublicThumbnail(
+    String token,
+    String id, {
+    String? size,
+  }) async {
+    final response = await getPublicThumbnailWithHttpInfo(
+      token,
+      id,
+      size: size,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// HLS files of a video in a public album
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] file (required):
+  Future<Response> getPublicVideoFileWithHttpInfo(
+    String token,
+    String id,
+    String file,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/assets/{id}/video/{file}'
+        .replaceAll('{token}', token)
+        .replaceAll('{id}', id)
+        .replaceAll('{file}', file);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// HLS files of a video in a public album
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] file (required):
+  Future<MultipartFile?> getPublicVideoFile(
+    String token,
+    String id,
+    String file,
+  ) async {
+    final response = await getPublicVideoFileWithHttpInfo(
+      token,
+      id,
+      file,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
   /// List one month's assets, newest first
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1226,6 +2573,203 @@ class DefaultApi {
     }
   }
 
+  /// Comments on an album, or with assetId on one photo, and that photo's hearts
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] assetId:
+  Future<Response> listAlbumCommentsWithHttpInfo(
+    String id, {
+    String? assetId,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/comments'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (assetId != null) {
+      queryParams.addAll(_queryParams('', 'assetId', assetId));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Comments on an album, or with assetId on one photo, and that photo's hearts
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] assetId:
+  Future<Activity?> listAlbumComments(
+    String id, {
+    String? assetId,
+  }) async {
+    final response = await listAlbumCommentsWithHttpInfo(
+      id,
+      assetId: assetId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Activity',
+      ) as Activity;
+    }
+    return null;
+  }
+
+  /// Public links of an album. Owner only.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> listAlbumLinksWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/links'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Public links of an album. Owner only.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<List<ShareLink>?> listAlbumLinks(
+    String id,
+  ) async {
+    final response = await listAlbumLinksWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<ShareLink>')
+              as List)
+          .cast<ShareLink>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// Albums the current user owns or that are shared with them
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] sort:
+  Future<Response> listAlbumsWithHttpInfo({
+    String? sort,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (sort != null) {
+      queryParams.addAll(_queryParams('', 'sort', sort));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Albums the current user owns or that are shared with them
+  ///
+  /// Parameters:
+  ///
+  /// * [String] sort:
+  Future<List<Album>?> listAlbums({
+    String? sort,
+  }) async {
+    final response = await listAlbumsWithHttpInfo(
+      sort: sort,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<Album>')
+              as List)
+          .cast<Album>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// List the current user's most recent assets and their processing status
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1296,6 +2840,146 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'AssetList',
       ) as AssetList;
+    }
+    return null;
+  }
+
+  /// Cameras in the current user's library, for smart album rules
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listCamerasWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/cameras';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Cameras in the current user's library, for smart album rules
+  Future<List<String>?> listCameras() async {
+    final response = await listCamerasWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<String>')
+              as List)
+          .cast<String>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// The other users of this server, for choosing who to share with
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listDirectoryWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/users/directory';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The other users of this server, for choosing who to share with
+  Future<List<UserRef>?> listDirectory() async {
+    final response = await listDirectoryWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<UserRef>')
+              as List)
+          .cast<UserRef>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// Who you share your library with, and who shares theirs with you
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listPartnersWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/partners';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Who you share your library with, and who shares theirs with you
+  Future<Partners?> listPartners() async {
+    final response = await listPartnersWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Partners',
+      ) as Partners;
     }
     return null;
   }
@@ -1442,6 +3126,238 @@ class DefaultApi {
     }
   }
 
+  /// Remove assets from an album. A contributor can remove only what they added.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<Response> removeAlbumAssetsWithHttpInfo(
+    String id,
+    AssetIds assetIds,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/assets/remove'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetIds;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Remove assets from an album. A contributor can remove only what they added.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<BulkResponse?> removeAlbumAssets(
+    String id,
+    AssetIds assetIds,
+  ) async {
+    final response = await removeAlbumAssetsWithHttpInfo(
+      id,
+      assetIds,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BulkResponse',
+      ) as BulkResponse;
+    }
+    return null;
+  }
+
+  /// Take back your heart
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] assetId (required):
+  Future<Response> removeAlbumHeartWithHttpInfo(
+    String id,
+    String assetId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/assets/{assetId}/heart'
+        .replaceAll('{id}', id)
+        .replaceAll('{assetId}', assetId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Take back your heart
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] assetId (required):
+  Future<void> removeAlbumHeart(
+    String id,
+    String assetId,
+  ) async {
+    final response = await removeAlbumHeartWithHttpInfo(
+      id,
+      assetId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// End a user's access. The owner can remove anyone, and a member can leave.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] userId (required):
+  Future<Response> removeAlbumMemberWithHttpInfo(
+    String id,
+    String userId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/members/{userId}'
+        .replaceAll('{id}', id)
+        .replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// End a user's access. The owner can remove anyone, and a member can leave.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] userId (required):
+  Future<void> removeAlbumMember(
+    String id,
+    String userId,
+  ) async {
+    final response = await removeAlbumMemberWithHttpInfo(
+      id,
+      userId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Stop sharing your library with a user
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  Future<Response> removePartnerWithHttpInfo(
+    String userId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/partners/{userId}'.replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop sharing your library with a user
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  Future<void> removePartner(
+    String userId,
+  ) async {
+    final response = await removePartnerWithHttpInfo(
+      userId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Revoke one of the current user's device keys
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1485,6 +3401,242 @@ class DefaultApi {
   ) async {
     final response = await revokeDeviceKeyWithHttpInfo(
       id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Add your heart to a photo in an album
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] assetId (required):
+  Future<Response> setAlbumHeartWithHttpInfo(
+    String id,
+    String assetId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/assets/{assetId}/heart'
+        .replaceAll('{id}', id)
+        .replaceAll('{assetId}', assetId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Add your heart to a photo in an album
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] assetId (required):
+  Future<void> setAlbumHeart(
+    String id,
+    String assetId,
+  ) async {
+    final response = await setAlbumHeartWithHttpInfo(
+      id,
+      assetId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Share an album with a user or change their role. Owner only.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [MemberRole] memberRole (required):
+  Future<Response> setAlbumMemberWithHttpInfo(
+    String id,
+    String userId,
+    MemberRole memberRole,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/members/{userId}'
+        .replaceAll('{id}', id)
+        .replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = memberRole;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Share an album with a user or change their role. Owner only.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [MemberRole] memberRole (required):
+  Future<void> setAlbumMember(
+    String id,
+    String userId,
+    MemberRole memberRole,
+  ) async {
+    final response = await setAlbumMemberWithHttpInfo(
+      id,
+      userId,
+      memberRole,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Share your library with a user, all of it or from a date
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [PartnerShare] partnerShare (required):
+  Future<Response> setPartnerWithHttpInfo(
+    String userId,
+    PartnerShare partnerShare,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/partners/{userId}'.replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = partnerShare;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Share your library with a user, all of it or from a date
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [PartnerShare] partnerShare (required):
+  Future<void> setPartner(
+    String userId,
+    PartnerShare partnerShare,
+  ) async {
+    final response = await setPartnerWithHttpInfo(
+      userId,
+      partnerShare,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Choose whether a partner's photos also appear in your timeline
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [PartnerTimeline] partnerTimeline (required):
+  Future<Response> setPartnerTimelineWithHttpInfo(
+    String userId,
+    PartnerTimeline partnerTimeline,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/partners/{userId}/timeline'.replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = partnerTimeline;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Choose whether a partner's photos also appear in your timeline
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  ///
+  /// * [PartnerTimeline] partnerTimeline (required):
+  Future<void> setPartnerTimeline(
+    String userId,
+    PartnerTimeline partnerTimeline,
+  ) async {
+    final response = await setPartnerTimelineWithHttpInfo(
+      userId,
+      partnerTimeline,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -1593,6 +3745,129 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'TotpSetup',
       ) as TotpSetup;
+    }
+    return null;
+  }
+
+  /// Send a link's password. Success sets a cookie valid only for this link.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [LinkPassword] linkPassword (required):
+  Future<Response> unlockPublicLinkWithHttpInfo(
+    String token,
+    LinkPassword linkPassword,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/unlock'.replaceAll('{token}', token);
+
+    // ignore: prefer_final_locals
+    Object? postBody = linkPassword;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Send a link's password. Success sets a cookie valid only for this link.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [LinkPassword] linkPassword (required):
+  Future<void> unlockPublicLink(
+    String token,
+    LinkPassword linkPassword,
+  ) async {
+    final response = await unlockPublicLinkWithHttpInfo(
+      token,
+      linkPassword,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Change an album. Needs the editor role.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AlbumUpdate] albumUpdate (required):
+  Future<Response> updateAlbumWithHttpInfo(
+    String id,
+    AlbumUpdate albumUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = albumUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PATCH',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change an album. Needs the editor role.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AlbumUpdate] albumUpdate (required):
+  Future<Album?> updateAlbum(
+    String id,
+    AlbumUpdate albumUpdate,
+  ) async {
+    final response = await updateAlbumWithHttpInfo(
+      id,
+      albumUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Album',
+      ) as Album;
     }
     return null;
   }

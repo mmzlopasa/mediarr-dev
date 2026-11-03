@@ -30,10 +30,17 @@ part 'auth/http_bearer_auth.dart';
 
 part 'api/default_api.dart';
 
+part 'model/activity.dart';
 part 'model/admin_overview.dart';
 part 'model/admin_overview_jobs.dart';
+part 'model/album.dart';
+part 'model/album_create.dart';
+part 'model/album_member.dart';
+part 'model/album_rules.dart';
+part 'model/album_update.dart';
 part 'model/asset.dart';
 part 'model/asset_detail.dart';
+part 'model/asset_ids.dart';
 part 'model/asset_list.dart';
 part 'model/auth_status.dart';
 part 'model/bulk_request.dart';
@@ -41,15 +48,26 @@ part 'model/bulk_response.dart';
 part 'model/change_password_request.dart';
 part 'model/checksum_check_request.dart';
 part 'model/checksum_check_response.dart';
+part 'model/comment.dart';
+part 'model/comment_create.dart';
 part 'model/create_device_key_request.dart';
 part 'model/create_user_request.dart';
 part 'model/device_key.dart';
 part 'model/error.dart';
 part 'model/health.dart';
+part 'model/link_password.dart';
 part 'model/login_error.dart';
 part 'model/login_request.dart';
+part 'model/member_role.dart';
+part 'model/partner_entry.dart';
+part 'model/partner_share.dart';
+part 'model/partner_timeline.dart';
+part 'model/partners.dart';
 part 'model/password_confirm.dart';
+part 'model/public_link.dart';
 part 'model/setup_request.dart';
+part 'model/share_link.dart';
+part 'model/share_link_create.dart';
 part 'model/sprite.dart';
 part 'model/timeline_bucket.dart';
 part 'model/timeline_buckets.dart';
@@ -58,6 +76,7 @@ part 'model/timeline_item.dart';
 part 'model/totp_code.dart';
 part 'model/totp_setup.dart';
 part 'model/user.dart';
+part 'model/user_ref.dart';
 
 /// An [ApiClient] instance that uses the default values obtained from
 /// the OpenAPI specification file.

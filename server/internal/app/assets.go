@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -58,10 +59,32 @@ func (s *apiServer) GetTimelineBuckets(w http.ResponseWriter, r *http.Request) {
 	if user == nil {
 		return
 	}
-	rows, err := s.queries.TimelineBuckets(r.Context(), user.ID)
+	ctx := r.Context()
+	partners, err := s.queries.CountTimelinePartners(ctx, user.ID)
 	if err != nil {
 		internalError(w, r, err)
 		return
+	}
+	var rows []db.TimelineBucketsRow
+	if partners == 0 {
+		rows, err = s.queries.TimelineBuckets(ctx, user.ID)
+	} else {
+		var mixed []db.TimelineBucketsWithPartnersRow
+		mixed, err = s.queries.TimelineBucketsWithPartners(ctx, user.ID)
+		for _, row := range mixed {
+			rows = append(rows, db.TimelineBucketsRow(row))
+		}
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	writeBuckets(w, rows, false)
+}
+
+func writeBuckets(w http.ResponseWriter, rows []db.TimelineBucketsRow, oldestFirst bool) {
+	if oldestFirst {
+		slices.Reverse(rows)
 	}
 	out := api.TimelineBuckets{Buckets: make([]struct {
 		Count int64  `json:"count"`
@@ -74,38 +97,67 @@ func (s *apiServer) GetTimelineBuckets(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
+func monthRange(w http.ResponseWriter, month string) (from, to pgtype.Timestamp, ok bool) {
+	if !bucketMonth.MatchString(month) {
+		writeError(w, http.StatusBadRequest, "month must look like 2024-07")
+		return from, to, false
+	}
+	start, err := time.Parse("2006-01", month)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "month must look like 2024-07")
+		return from, to, false
+	}
+	return pgtype.Timestamp{Time: start, Valid: true}, pgtype.Timestamp{Time: start.AddDate(0, 1, 0), Valid: true}, true
+}
+
 func (s *apiServer) GetTimelineBucket(w http.ResponseWriter, r *http.Request, month string) {
 	user := requireUser(w, r)
 	if user == nil {
 		return
 	}
-	if !bucketMonth.MatchString(month) {
-		writeError(w, http.StatusBadRequest, "month must look like 2024-07")
+	from, to, ok := monthRange(w, month)
+	if !ok {
 		return
 	}
-	from, err := time.Parse("2006-01", month)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "month must look like 2024-07")
-		return
-	}
-	rows, err := s.queries.TimelineBucket(r.Context(), db.TimelineBucketParams{
-		UserID: user.ID,
-		FromAt: pgtype.Timestamp{Time: from, Valid: true},
-		ToAt:   pgtype.Timestamp{Time: from.AddDate(0, 1, 0), Valid: true},
-	})
+	ctx := r.Context()
+	partners, err := s.queries.CountTimelinePartners(ctx, user.ID)
 	if err != nil {
 		internalError(w, r, err)
 		return
 	}
+	var rows []db.TimelineBucketRow
+	if partners == 0 {
+		rows, err = s.queries.TimelineBucket(ctx, db.TimelineBucketParams{UserID: user.ID, FromAt: from, ToAt: to})
+	} else {
+		var mixed []db.TimelineBucketWithPartnersRow
+		mixed, err = s.queries.TimelineBucketWithPartners(ctx, db.TimelineBucketWithPartnersParams{UserID: user.ID, FromAt: from, ToAt: to})
+		for i := range mixed {
+			rows = append(rows, db.TimelineBucketRow(mixed[i]))
+		}
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	writeBucket(w, month, rows, user.ID, false)
+}
+
+// writeBucket hides what belongs to the owner alone, such as favorites, from everyone else.
+func writeBucket(w http.ResponseWriter, month string, rows []db.TimelineBucketRow, viewer pgtype.UUID, oldestFirst bool) {
+	if oldestFirst {
+		slices.Reverse(rows)
+	}
 	items := make([]api.TimelineItem, len(rows))
 	for i := range rows {
 		row := &rows[i]
+		mine := row.UserID == viewer
 		items[i] = api.TimelineItem{
 			Id:         uuid.UUID(row.ID.Bytes),
 			Kind:       api.TimelineItemKind(row.Kind),
 			Ratio:      ratioOf(row.AspectRatio, row.Width, row.Height),
-			IsFavorite: row.IsFavorite,
+			IsFavorite: row.IsFavorite && mine,
 			IsLive:     optional(row.IsLive, row.IsLive),
+			IsShared:   optional(true, !mine),
 			DurationMs: optional(row.DurationMs.Int64, row.DurationMs.Valid),
 			LocalAt:    row.LocalAt.Time.Format(localTimeLayout),
 		}
@@ -129,7 +181,7 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 		return
 	}
 	ctx := r.Context()
-	row, err := s.queries.GetOwnedAsset(ctx, db.GetOwnedAssetParams{ID: pgUUID(id), UserID: user.ID})
+	row, err := s.queries.GetVisibleAsset(ctx, db.GetVisibleAssetParams{ID: pgUUID(id), UserID: user.ID})
 	if db.IsNotFound(err) {
 		writeError(w, http.StatusNotFound, "no such asset")
 		return
@@ -138,23 +190,21 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 		internalError(w, r, err)
 		return
 	}
-	detail := api.AssetDetail{
-		Id:             id,
-		OriginalName:   row.OriginalName,
-		Kind:           api.AssetDetailKind(row.Kind),
-		Status:         api.AssetDetailStatus(row.Status),
-		MimeType:       optional(row.MimeType.String, row.MimeType.Valid),
-		SizeBytes:      row.SizeBytes,
-		Width:          optional(int(row.Width.Int32), row.Width.Valid),
-		Height:         optional(int(row.Height.Int32), row.Height.Valid),
-		IsFavorite:     row.IsFavorite,
-		IsArchived:     row.ArchivedAt.Valid,
-		LocalAt:        row.LocalAt.Time.Format(localTimeLayout),
-		OffsetMinutes:  optional(int(row.TakenOffsetMinutes.Int32), row.TakenOffsetMinutes.Valid),
-		HasCaptureTime: optional(row.TakenAt.Valid, true),
-		CreatedAt:      row.CreatedAt.Time,
+	detail, err := s.assetDetail(ctx, &row)
+	if err != nil {
+		internalError(w, r, err)
+		return
 	}
-
+	owner := row.UserID == user.ID
+	detail.IsOwner = &owner
+	detail.DownloadAllowed = optional(true, true)
+	if !owner {
+		// Someone else's favorites and archive are their own business. Their neighbours too:
+		// the client moves through the album it is showing.
+		detail.IsFavorite, detail.IsArchived = false, false
+		writeJSON(w, http.StatusOK, detail)
+		return
+	}
 	if newer, err := s.queries.NewerAsset(ctx, db.NewerAssetParams{UserID: user.ID, LocalAt: row.LocalAt, ID: row.ID}); err == nil {
 		value := openapi_types.UUID(newer.Bytes)
 		detail.NewerId = &value
@@ -169,29 +219,46 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 		internalError(w, r, err)
 		return
 	}
-
-	if err := s.addMediaDetails(ctx, &row, &detail); err != nil {
-		internalError(w, r, err)
-		return
-	}
-
-	exif, err := s.queries.GetExif(ctx, row.ID)
-	if err != nil && !db.IsNotFound(err) {
-		internalError(w, r, err)
-		return
-	}
-	if err == nil {
-		camera := strings.TrimSpace(exif.Make.String + " " + exif.Model.String)
-		detail.Camera = optional(camera, camera != "")
-		detail.Lens = optional(exif.Lens.String, exif.Lens.Valid)
-		detail.Iso = optional(int(exif.Iso.Int32), exif.Iso.Valid)
-		detail.FNumber = optional(exif.FNumber.Float64, exif.FNumber.Valid)
-		detail.ExposureTime = optional(exif.ExposureTime.String, exif.ExposureTime.Valid)
-		detail.FocalLength = optional(exif.FocalLength.Float64, exif.FocalLength.Valid)
-		detail.Latitude = optional(exif.Latitude.Float64, exif.Latitude.Valid)
-		detail.Longitude = optional(exif.Longitude.Float64, exif.Longitude.Valid)
-	}
 	writeJSON(w, http.StatusOK, detail)
+}
+
+func (s *apiServer) assetDetail(ctx context.Context, row *db.Asset) (api.AssetDetail, error) {
+	detail := api.AssetDetail{
+		Id:             row.ID.Bytes,
+		OriginalName:   row.OriginalName,
+		Kind:           api.AssetDetailKind(row.Kind),
+		Status:         api.AssetDetailStatus(row.Status),
+		MimeType:       optional(row.MimeType.String, row.MimeType.Valid),
+		SizeBytes:      row.SizeBytes,
+		Width:          optional(int(row.Width.Int32), row.Width.Valid),
+		Height:         optional(int(row.Height.Int32), row.Height.Valid),
+		IsFavorite:     row.IsFavorite,
+		IsArchived:     row.ArchivedAt.Valid,
+		LocalAt:        row.LocalAt.Time.Format(localTimeLayout),
+		OffsetMinutes:  optional(int(row.TakenOffsetMinutes.Int32), row.TakenOffsetMinutes.Valid),
+		HasCaptureTime: optional(row.TakenAt.Valid, true),
+		CreatedAt:      row.CreatedAt.Time,
+	}
+	if err := s.addMediaDetails(ctx, row, &detail); err != nil {
+		return detail, err
+	}
+	exif, err := s.queries.GetExif(ctx, row.ID)
+	if db.IsNotFound(err) {
+		return detail, nil
+	}
+	if err != nil {
+		return detail, err
+	}
+	camera := strings.TrimSpace(exif.Make.String + " " + exif.Model.String)
+	detail.Camera = optional(camera, camera != "")
+	detail.Lens = optional(exif.Lens.String, exif.Lens.Valid)
+	detail.Iso = optional(int(exif.Iso.Int32), exif.Iso.Valid)
+	detail.FNumber = optional(exif.FNumber.Float64, exif.FNumber.Valid)
+	detail.ExposureTime = optional(exif.ExposureTime.String, exif.ExposureTime.Valid)
+	detail.FocalLength = optional(exif.FocalLength.Float64, exif.FocalLength.Valid)
+	detail.Latitude = optional(exif.Latitude.Float64, exif.Latitude.Valid)
+	detail.Longitude = optional(exif.Longitude.Float64, exif.Longitude.Valid)
+	return detail, nil
 }
 
 func (s *apiServer) addMediaDetails(ctx context.Context, row *db.Asset, detail *api.AssetDetail) error {
@@ -240,14 +307,23 @@ func (s *apiServer) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id
 		return
 	}
 	kind := "thumb_small"
-	if params.Size != nil && *params.Size == api.Large {
+	if params.Size != nil && *params.Size == api.GetAssetThumbnailParamsSizeLarge {
 		kind = "thumb_large"
 	}
-	if params.Size != nil && *params.Size == api.Full {
-		s.serveFullPreview(w, r, id, user.ID)
+	if params.Size != nil && *params.Size == api.GetAssetThumbnailParamsSizeFull {
+		row, err := s.queries.GetVisibleAsset(r.Context(), db.GetVisibleAssetParams{ID: pgUUID(id), UserID: user.ID})
+		if db.IsNotFound(err) {
+			writeError(w, http.StatusNotFound, "no such asset")
+			return
+		}
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		s.serveFullPreview(w, r, &row)
 		return
 	}
-	path, err := s.queries.GetOwnedAssetFile(r.Context(), db.GetOwnedAssetFileParams{AssetID: pgUUID(id), Kind: kind, UserID: user.ID})
+	path, err := s.queries.GetVisibleAssetFile(r.Context(), db.GetVisibleAssetFileParams{AssetID: pgUUID(id), Kind: kind, UserID: user.ID})
 	if db.IsNotFound(err) {
 		writeError(w, http.StatusNotFound, "no such thumbnail")
 		return
@@ -264,17 +340,8 @@ func (s *apiServer) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id
 
 // serveFullPreview makes the full resolution preview on first request and keeps it. Only a few run
 // at once, because a RAW decode takes a lot of CPU and memory.
-func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userID pgtype.UUID) {
+func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, row *db.Asset) {
 	ctx := r.Context()
-	row, err := s.queries.GetOwnedAsset(ctx, db.GetOwnedAssetParams{ID: pgUUID(id), UserID: userID})
-	if db.IsNotFound(err) {
-		writeError(w, http.StatusNotFound, "no such asset")
-		return
-	}
-	if err != nil {
-		internalError(w, r, err)
-		return
-	}
 	if row.Kind != "photo" || row.Status != "ready" {
 		writeError(w, http.StatusNotFound, "this asset has no full preview")
 		return
@@ -282,7 +349,7 @@ func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, id 
 
 	path, err := s.queries.GetAssetFile(ctx, db.GetAssetFileParams{AssetID: row.ID, Kind: "thumb_full"})
 	if db.IsNotFound(err) {
-		path, err = s.makeFullPreview(ctx, &row)
+		path, err = s.makeFullPreview(ctx, row)
 	}
 	if err != nil {
 		var unreadable interface{ Unreadable() bool }
@@ -328,7 +395,7 @@ func (s *apiServer) GetAssetMotion(w http.ResponseWriter, r *http.Request, id op
 	if user == nil {
 		return
 	}
-	path, err := s.queries.GetOwnedAssetFile(r.Context(), db.GetOwnedAssetFileParams{AssetID: pgUUID(id), Kind: "motion_video", UserID: user.ID})
+	path, err := s.queries.GetVisibleAssetFile(r.Context(), db.GetVisibleAssetFileParams{AssetID: pgUUID(id), Kind: "motion_video", UserID: user.ID})
 	if db.IsNotFound(err) {
 		writeError(w, http.StatusNotFound, "no such video")
 		return
@@ -351,6 +418,12 @@ func (s *apiServer) GetAssetVideoFile(w http.ResponseWriter, r *http.Request, id
 	if user == nil {
 		return
 	}
+	s.serveVideoFile(w, r, file, func(kind string) (string, error) {
+		return s.queries.GetVisibleAssetFile(r.Context(), db.GetVisibleAssetFileParams{AssetID: pgUUID(id), Kind: kind, UserID: user.ID})
+	})
+}
+
+func (s *apiServer) serveVideoFile(w http.ResponseWriter, r *http.Request, file string, lookup func(kind string) (string, error)) {
 	kind, name, contentType := "hls", file, "video/mp2t"
 	switch {
 	case file == "sprite.jpg":
@@ -361,7 +434,7 @@ func (s *apiServer) GetAssetVideoFile(w http.ResponseWriter, r *http.Request, id
 	case strings.HasSuffix(file, ".m3u8"):
 		contentType = "application/vnd.apple.mpegurl"
 	}
-	path, err := s.queries.GetOwnedAssetFile(r.Context(), db.GetOwnedAssetFileParams{AssetID: pgUUID(id), Kind: kind, UserID: user.ID})
+	path, err := lookup(kind)
 	if db.IsNotFound(err) {
 		writeError(w, http.StatusNotFound, "no such file")
 		return
@@ -380,7 +453,7 @@ func (s *apiServer) GetAssetVideoFile(w http.ResponseWriter, r *http.Request, id
 }
 
 func serveFile(w http.ResponseWriter, r *http.Request, path string) {
-	f, err := os.Open(path)
+	f, err := os.Open(path) //nolint:gosec // From the database, and video file names must match hlsFileName first.
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			slog.Error("file in the database is missing on disk", "path", path)
@@ -405,7 +478,7 @@ func (s *apiServer) GetAssetOriginal(w http.ResponseWriter, r *http.Request, id 
 	if user == nil {
 		return
 	}
-	row, err := s.queries.GetOwnedAsset(r.Context(), db.GetOwnedAssetParams{ID: pgUUID(id), UserID: user.ID})
+	row, err := s.queries.GetVisibleAsset(r.Context(), db.GetVisibleAssetParams{ID: pgUUID(id), UserID: user.ID})
 	if db.IsNotFound(err) {
 		writeError(w, http.StatusNotFound, "no such asset")
 		return
@@ -414,8 +487,11 @@ func (s *apiServer) GetAssetOriginal(w http.ResponseWriter, r *http.Request, id 
 		internalError(w, r, err)
 		return
 	}
+	serveOriginal(w, r, &row, params.Download != nil && *params.Download)
+}
 
-	inline := inlineTypes[row.MimeType.String] && (params.Download == nil || !*params.Download)
+func serveOriginal(w http.ResponseWriter, r *http.Request, row *db.Asset, download bool) {
+	inline := inlineTypes[row.MimeType.String] && !download
 	contentType, disposition := "application/octet-stream", "attachment"
 	if inline {
 		contentType, disposition = row.MimeType.String, "inline"
@@ -489,7 +565,7 @@ func (s *apiServer) DownloadAssets(w http.ResponseWriter, r *http.Request, param
 		}
 		ids = append(ids, pgtype.UUID{Bytes: id, Valid: true})
 	}
-	rows, err := s.queries.ListOwnedAssets(r.Context(), db.ListOwnedAssetsParams{UserID: user.ID, Ids: ids})
+	rows, err := s.queries.ListVisibleAssets(r.Context(), db.ListVisibleAssetsParams{Ids: ids, UserID: user.ID})
 	if err != nil {
 		internalError(w, r, err)
 		return

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onMount, untrack, type Snippet } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
-	import { api, type TimelineItem } from '#lib/api.ts';
+	import { api, librarySource, type TimelineItem, type TimelineSource } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
@@ -39,8 +39,25 @@
 
 	let {
 		onOpen,
-		onCount
-	}: { onOpen: (id: string) => void; onCount?: (total: number | undefined) => void } = $props();
+		onCount,
+		source = librarySource,
+		base = '/api',
+		hrefFor,
+		selectable = true,
+		ownActions = true,
+		downloads = true,
+		selectionActions
+	}: {
+		onOpen: (id: string) => void;
+		onCount?: (total: number | undefined) => void;
+		source?: TimelineSource;
+		base?: string;
+		hrefFor?: (id: string) => string;
+		selectable?: boolean;
+		ownActions?: boolean;
+		downloads?: boolean;
+		selectionActions?: Snippet<[string[], () => void]>;
+	} = $props();
 
 	let months = $state.raw<Month[] | undefined>(undefined);
 	let loadFailed = $state(false);
@@ -125,7 +142,7 @@
 	async function loadMonth(month: string) {
 		updateMonth(month, (entry) => ({ ...entry, loading: true, failed: false }));
 		try {
-			const bucket = await api.timelineBucket(month);
+			const bucket = await source.bucket(month);
 			applyLoaded(month, bucket.items);
 		} catch {
 			updateMonth(month, (entry) => ({ ...entry, loading: false, failed: true }));
@@ -158,7 +175,7 @@
 	/** Reads what changed. Months whose counts are the same are not fetched again. */
 	export async function refresh(force: string[] = []) {
 		try {
-			const { buckets } = await api.timelineBuckets();
+			const { buckets } = await source.buckets();
 			loadFailed = false;
 			const known = new Map((months ?? []).map((entry) => [entry.month, entry]));
 			const stale: string[] = [];
@@ -202,6 +219,14 @@
 		};
 	});
 
+	/** The photos before and after this one, as shown here. Months not loaded yet are not known. */
+	export function neighbours(id: string) {
+		const items = allItems();
+		const index = items.findIndex((item) => item.id === id);
+		if (index < 0) return {};
+		return { newer: items[index - 1]?.id, older: items[index + 1]?.id };
+	}
+
 	function allItems() {
 		return (months ?? []).flatMap((entry) => entry.items ?? []);
 	}
@@ -234,7 +259,7 @@
 
 	function tileDown(event: PointerEvent, id: string, month: string, index: number) {
 		pressed = false;
-		if (event.pointerType === 'mouse') return;
+		if (!selectable || event.pointerType === 'mouse') return;
 		pressStart = { x: event.clientX, y: event.clientY };
 		clearTimeout(longPress);
 		longPress = window.setTimeout(() => {
@@ -262,6 +287,10 @@
 			pressed = false;
 			return;
 		}
+		if (!selectable) {
+			onOpen(id);
+			return;
+		}
 		if (event.shiftKey && lastIndex) {
 			selectRange(month, index);
 		} else if (selecting || event.ctrlKey || event.metaKey) {
@@ -283,7 +312,7 @@
 
 	// Drag on the empty space between photos to select with a box. Mouse only: touch scrolls.
 	function gridDown(event: PointerEvent) {
-		if (event.pointerType !== 'mouse' || event.button !== 0) return;
+		if (!selectable || event.pointerType !== 'mouse' || event.button !== 0) return;
 		if ((event.target as HTMLElement).closest('.tl-tile')) return;
 		const x = event.pageX;
 		const y = event.pageY;
@@ -355,8 +384,8 @@
 	);
 	const downloadUrl = $derived(
 		selected.size === 1
-			? `/api/assets/${[...selected][0]}/original?download=true`
-			: `/api/assets/download?ids=${[...selected].join(',')}`
+			? `${base}/assets/${[...selected][0]}/original?download=true`
+			: `${base}/assets/download?ids=${[...selected].join(',')}`
 	);
 </script>
 
@@ -395,7 +424,8 @@
 							<a
 								class="tl-tile"
 								class:sel={selected.has(tile.item.id)}
-								href={resolve('/(app)/photos/[id]', { id: tile.item.id })}
+								href={hrefFor?.(tile.item.id) ??
+									resolve('/(app)/photos/[id]', { id: tile.item.id })}
 								draggable="false"
 								style="top:{row.top}px;left:{tile.x}px;width:{tile.width}px;height:{row.height}px;{blur
 									? `background-image:url(${blur})`
@@ -411,7 +441,7 @@
 								}}
 							>
 								<img
-									src="/api/assets/{tile.item.id}/thumbnail"
+									src="{base}/assets/{tile.item.id}/thumbnail"
 									alt=""
 									decoding="async"
 									draggable="false"
@@ -429,15 +459,17 @@
 								{#if tile.item.isFavorite}
 									<span class="tl-badge tl-fav"><Icon name="star" size={14} /></span>
 								{/if}
-								<button
-									type="button"
-									class="tl-check"
-									aria-label={tr('Odaberi', 'Select')}
-									aria-pressed={selected.has(tile.item.id)}
-									onclick={(event) => checkClick(event, tile.item.id, entry.month, tile.index)}
-								>
-									<Icon name="check" size={14} />
-								</button>
+								{#if selectable}
+									<button
+										type="button"
+										class="tl-check"
+										aria-label={tr('Odaberi', 'Select')}
+										aria-pressed={selected.has(tile.item.id)}
+										onclick={(event) => checkClick(event, tile.item.id, entry.month, tile.index)}
+									>
+										<Icon name="check" size={14} />
+									</button>
+								{/if}
 							</a>
 						{/each}
 					{/if}
@@ -487,19 +519,22 @@
 		>
 		<b class="selbar-n">{selected.size}</b>
 		<div class="selbar-a">
-			<button
-				type="button"
-				class="icon-btn"
-				disabled={busy}
-				aria-label={allFavorite
-					? tr('Makni iz favorita', 'Remove from favorites')
-					: tr('Dodaj u favorite', 'Add to favorites')}
-				title={allFavorite
-					? tr('Makni iz favorita', 'Remove from favorites')
-					: tr('Dodaj u favorite', 'Add to favorites')}
-				onclick={() => act(allFavorite ? 'unfavorite' : 'favorite')}><Icon name="star" /></button
-			>
-			{#if selected.size <= ZIP_LIMIT}
+			{@render selectionActions?.([...selected], () => selected.clear())}
+			{#if ownActions}<button
+					type="button"
+					class="icon-btn"
+					disabled={busy}
+					aria-label={allFavorite
+						? tr('Makni iz favorita', 'Remove from favorites')
+						: tr('Dodaj u favorite', 'Add to favorites')}
+					title={allFavorite
+						? tr('Makni iz favorita', 'Remove from favorites')
+						: tr('Dodaj u favorite', 'Add to favorites')}
+					onclick={() => act(allFavorite ? 'unfavorite' : 'favorite')}><Icon name="star" /></button
+				>{/if}
+			{#if !downloads}
+				<!-- This place offers no downloads. -->
+			{:else if selected.size <= ZIP_LIMIT}
 				<a
 					class="icon-btn"
 					href={downloadUrl}
@@ -524,22 +559,22 @@
 						)}><Icon name="download" /></button
 				>
 			{/if}
-			<button
-				type="button"
-				class="icon-btn"
-				disabled={busy}
-				aria-label={tr('Arhiviraj', 'Archive')}
-				title={tr('Arhiviraj', 'Archive')}
-				onclick={() => act('archive')}><Icon name="archive" /></button
-			>
-			<button
-				type="button"
-				class="icon-btn"
-				disabled={busy}
-				aria-label={tr('Obriši', 'Delete')}
-				title={tr('Obriši', 'Delete')}
-				onclick={() => (confirmDelete = true)}><Icon name="trash" /></button
-			>
+			{#if ownActions}<button
+					type="button"
+					class="icon-btn"
+					disabled={busy}
+					aria-label={tr('Arhiviraj', 'Archive')}
+					title={tr('Arhiviraj', 'Archive')}
+					onclick={() => act('archive')}><Icon name="archive" /></button
+				>
+				<button
+					type="button"
+					class="icon-btn"
+					disabled={busy}
+					aria-label={tr('Obriši', 'Delete')}
+					title={tr('Obriši', 'Delete')}
+					onclick={() => (confirmDelete = true)}><Icon name="trash" /></button
+				>{/if}
 		</div>
 	</div>
 {/if}

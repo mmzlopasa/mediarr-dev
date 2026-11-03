@@ -229,14 +229,28 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
+        case 'Activity':
+          return Activity.fromJson(value);
         case 'AdminOverview':
           return AdminOverview.fromJson(value);
         case 'AdminOverviewJobs':
           return AdminOverviewJobs.fromJson(value);
+        case 'Album':
+          return Album.fromJson(value);
+        case 'AlbumCreate':
+          return AlbumCreate.fromJson(value);
+        case 'AlbumMember':
+          return AlbumMember.fromJson(value);
+        case 'AlbumRules':
+          return AlbumRules.fromJson(value);
+        case 'AlbumUpdate':
+          return AlbumUpdate.fromJson(value);
         case 'Asset':
           return Asset.fromJson(value);
         case 'AssetDetail':
           return AssetDetail.fromJson(value);
+        case 'AssetIds':
+          return AssetIds.fromJson(value);
         case 'AssetList':
           return AssetList.fromJson(value);
         case 'AuthStatus':
@@ -251,6 +265,10 @@ class ApiClient {
           return ChecksumCheckRequest.fromJson(value);
         case 'ChecksumCheckResponse':
           return ChecksumCheckResponse.fromJson(value);
+        case 'Comment':
+          return Comment.fromJson(value);
+        case 'CommentCreate':
+          return CommentCreate.fromJson(value);
         case 'CreateDeviceKeyRequest':
           return CreateDeviceKeyRequest.fromJson(value);
         case 'CreateUserRequest':
@@ -261,14 +279,32 @@ class ApiClient {
           return Error.fromJson(value);
         case 'Health':
           return Health.fromJson(value);
+        case 'LinkPassword':
+          return LinkPassword.fromJson(value);
         case 'LoginError':
           return LoginError.fromJson(value);
         case 'LoginRequest':
           return LoginRequest.fromJson(value);
+        case 'MemberRole':
+          return MemberRole.fromJson(value);
+        case 'PartnerEntry':
+          return PartnerEntry.fromJson(value);
+        case 'PartnerShare':
+          return PartnerShare.fromJson(value);
+        case 'PartnerTimeline':
+          return PartnerTimeline.fromJson(value);
+        case 'Partners':
+          return Partners.fromJson(value);
         case 'PasswordConfirm':
           return PasswordConfirm.fromJson(value);
+        case 'PublicLink':
+          return PublicLink.fromJson(value);
         case 'SetupRequest':
           return SetupRequest.fromJson(value);
+        case 'ShareLink':
+          return ShareLink.fromJson(value);
+        case 'ShareLinkCreate':
+          return ShareLinkCreate.fromJson(value);
         case 'Sprite':
           return Sprite.fromJson(value);
         case 'TimelineBucket':
@@ -285,6 +321,8 @@ class ApiClient {
           return TotpSetup.fromJson(value);
         case 'User':
           return User.fromJson(value);
+        case 'UserRef':
+          return UserRef.fromJson(value);
         default:
           dynamic match;
           if (value is List &&

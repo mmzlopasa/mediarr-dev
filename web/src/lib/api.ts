@@ -11,6 +11,17 @@ export type TimelineBucket = components['schemas']['TimelineBucket'];
 export type TimelineBuckets = components['schemas']['TimelineBuckets'];
 export type AssetDetail = components['schemas']['AssetDetail'];
 export type BulkAction = components['schemas']['BulkRequest']['action'];
+export type Album = components['schemas']['Album'];
+export type AlbumRules = components['schemas']['AlbumRules'];
+export type AlbumMember = components['schemas']['AlbumMember'];
+export type UserRef = components['schemas']['UserRef'];
+export type Activity = components['schemas']['Activity'];
+export type ShareLink = components['schemas']['ShareLink'];
+export type ShareLinkCreate = components['schemas']['ShareLinkCreate'];
+export type PublicLink = components['schemas']['PublicLink'];
+export type Partners = components['schemas']['Partners'];
+export type PartnerEntry = components['schemas']['PartnerEntry'];
+export type MemberRole = AlbumMember['role'];
 
 export class ApiError extends Error {
 	status: number;
@@ -25,9 +36,14 @@ export class ApiError extends Error {
 
 type Fetch = typeof fetch;
 
-async function request<T>(fetcher: Fetch, path: string, body?: unknown): Promise<T> {
+async function request<T>(
+	fetcher: Fetch,
+	path: string,
+	body?: unknown,
+	method?: 'PUT' | 'PATCH' | 'DELETE'
+): Promise<T> {
 	const response = await fetcher(path, {
-		method: body === undefined ? 'GET' : 'POST',
+		method: method ?? (body === undefined ? 'GET' : 'POST'),
 		headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
 		body: body === undefined ? undefined : JSON.stringify(body)
 	});
@@ -65,8 +81,81 @@ export const api = {
 		request<TimelineBucket>(fetch, `/api/timeline/buckets/${month}`),
 	asset: (id: string) => request<AssetDetail>(fetch, `/api/assets/${id}`),
 	bulk: (ids: string[], action: BulkAction) =>
-		request<{ changed: number }>(fetch, '/api/assets/bulk', { ids, action })
+		request<{ changed: number }>(fetch, '/api/assets/bulk', { ids, action }),
+
+	directory: () => request<UserRef[]>(fetch, '/api/users/directory'),
+	albums: (sort: 'updated' | 'title' | 'date' = 'updated') =>
+		request<Album[]>(fetch, `/api/albums?sort=${sort}`),
+	cameras: () => request<string[]>(fetch, '/api/albums/cameras'),
+	createAlbum: (body: { title: string; description?: string; rules?: AlbumRules }) =>
+		request<Album>(fetch, '/api/albums', body),
+	album: (id: string) => request<Album>(fetch, `/api/albums/${id}`),
+	updateAlbum: (
+		id: string,
+		body: {
+			title?: string;
+			description?: string;
+			order?: Album['order'];
+			coverAssetId?: string;
+			rules?: AlbumRules;
+		}
+	) => request<Album>(fetch, `/api/albums/${id}`, body, 'PATCH'),
+	deleteAlbum: (id: string) => request<void>(fetch, `/api/albums/${id}`, undefined, 'DELETE'),
+	addToAlbum: (id: string, ids: string[]) =>
+		request<{ changed: number }>(fetch, `/api/albums/${id}/assets`, { ids }),
+	removeFromAlbum: (id: string, ids: string[]) =>
+		request<{ changed: number }>(fetch, `/api/albums/${id}/assets/remove`, { ids }),
+	setMember: (id: string, userId: string, role: MemberRole) =>
+		request<void>(fetch, `/api/albums/${id}/members/${userId}`, { role }, 'PUT'),
+	removeMember: (id: string, userId: string) =>
+		request<void>(fetch, `/api/albums/${id}/members/${userId}`, undefined, 'DELETE'),
+	activity: (id: string, assetId?: string) =>
+		request<Activity>(fetch, `/api/albums/${id}/comments${assetId ? `?assetId=${assetId}` : ''}`),
+	addComment: (id: string, body: string, assetId?: string) =>
+		request<void>(fetch, `/api/albums/${id}/comments`, { body, assetId }),
+	deleteComment: (id: string, commentId: string) =>
+		request<void>(fetch, `/api/albums/${id}/comments/${commentId}`, undefined, 'DELETE'),
+	setHeart: (id: string, assetId: string, on: boolean) =>
+		request<void>(
+			fetch,
+			`/api/albums/${id}/assets/${assetId}/heart`,
+			undefined,
+			on ? 'PUT' : 'DELETE'
+		),
+	links: (id: string) => request<ShareLink[]>(fetch, `/api/albums/${id}/links`),
+	createLink: (id: string, body: ShareLinkCreate) =>
+		request<ShareLink>(fetch, `/api/albums/${id}/links`, body),
+	deleteLink: (id: string, linkId: string) =>
+		request<void>(fetch, `/api/albums/${id}/links/${linkId}`, undefined, 'DELETE'),
+	partners: () => request<Partners>(fetch, '/api/partners'),
+	setPartner: (userId: string, since?: string) =>
+		request<void>(fetch, `/api/partners/${userId}`, { since }, 'PUT'),
+	removePartner: (userId: string) =>
+		request<void>(fetch, `/api/partners/${userId}`, undefined, 'DELETE'),
+	setPartnerTimeline: (userId: string, show: boolean) =>
+		request<void>(fetch, `/api/partners/${userId}/timeline`, { show }, 'PUT'),
+	publicLink: (token: string) => request<PublicLink>(fetch, `/api/public/${token}`),
+	unlockLink: (token: string, password: string) =>
+		request<void>(fetch, `/api/public/${token}/unlock`, { password })
 };
+
+/** Where a timeline reads its months from: the library, an album, a partner or a public link. */
+export type TimelineSource = {
+	buckets: () => Promise<TimelineBuckets>;
+	bucket: (month: string) => Promise<TimelineBucket>;
+};
+
+function sourceAt(path: string): TimelineSource {
+	return {
+		buckets: () => request<TimelineBuckets>(fetch, `${path}/buckets`),
+		bucket: (month) => request<TimelineBucket>(fetch, `${path}/buckets/${month}`)
+	};
+}
+
+export const librarySource = sourceAt('/api/timeline');
+export const albumSource = (id: string) => sourceAt(`/api/albums/${id}`);
+export const partnerSource = (id: string) => sourceAt(`/api/partners/${id}`);
+export const publicSource = (token: string) => sourceAt(`/api/public/${token}`);
 
 export function initialsOf(name: string) {
 	const parts = name.trim().split(/\s+/);

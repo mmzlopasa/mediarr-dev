@@ -21,9 +21,23 @@ final timelineProvider = ChangeNotifierProvider<TimelineStore>((ref) {
 
 /// Everything shown comes from the server. Nothing is stored or invented on the device yet.
 class TimelineStore extends ChangeNotifier {
-  TimelineStore(this.session);
+  TimelineStore(this.session)
+    : _buckets = ((api) => api.getTimelineBuckets()),
+      _bucket = ((api, month) => api.getTimelineBucket(month));
+
+  /// The same months and photos, but from one album.
+  TimelineStore.album(this.session, String albumId)
+    : _buckets = ((api) => api.getAlbumBuckets(albumId)),
+      _bucket = ((api, month) => api.getAlbumBucket(albumId, month));
+
+  /// The same months and photos, but from a library shared with this user.
+  TimelineStore.partner(this.session, String userId)
+    : _buckets = ((api) => api.getPartnerBuckets(userId)),
+      _bucket = ((api, month) => api.getPartnerBucket(userId, month));
 
   final Session? session;
+  final Future<TimelineBuckets?> Function(DefaultApi api) _buckets;
+  final Future<TimelineBucket?> Function(DefaultApi api, String month) _bucket;
   List<TimelineMonth>? months;
   bool failed = false;
 
@@ -61,7 +75,7 @@ class TimelineStore extends ChangeNotifier {
       return;
     }
     try {
-      final response = await current.api.getTimelineBuckets();
+      final response = await _buckets(current.api);
       final buckets =
           response?.buckets ?? const <TimelineBucketsBucketsInner>[];
       final known = {
@@ -102,7 +116,7 @@ class TimelineStore extends ChangeNotifier {
     month.loading = true;
     month.failed = false;
     try {
-      final bucket = await current.api.getTimelineBucket(month.month);
+      final bucket = await _bucket(current.api, month.month);
       month.items = bucket?.items ?? [];
       month.count = month.items!.length;
     } on ApiException {

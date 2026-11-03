@@ -48,10 +48,12 @@ type Deps struct {
 
 type apiServer struct {
 	Deps
-	queries     *db.Queries
-	userLimiter *auth.Limiter
-	ipLimiter   *auth.Limiter
-	uploads     *tusd.UnroutedHandler
+	queries       *db.Queries
+	userLimiter   *auth.Limiter
+	ipLimiter     *auth.Limiter
+	linkPasswords *auth.Limiter
+	linkUploads   *auth.Limiter
+	uploads       *tusd.UnroutedHandler
 	// fullPreviews limits how many full resolution previews are made at once.
 	fullPreviews chan struct{}
 }
@@ -59,10 +61,12 @@ type apiServer struct {
 // NewHandler returns the root HTTP handler.
 func NewHandler(deps Deps) (http.Handler, error) {
 	server := &apiServer{
-		Deps:         deps,
-		userLimiter:  auth.NewLimiter(loginFailuresUser, loginWindow),
-		ipLimiter:    auth.NewLimiter(loginFailuresIP, loginWindow),
-		fullPreviews: make(chan struct{}, 2),
+		Deps:          deps,
+		userLimiter:   auth.NewLimiter(loginFailuresUser, loginWindow),
+		ipLimiter:     auth.NewLimiter(loginFailuresIP, loginWindow),
+		linkPasswords: auth.NewLimiter(linkPasswordFailures, loginWindow),
+		linkUploads:   auth.NewLimiter(linkUploadsPerHour, time.Hour),
+		fullPreviews:  make(chan struct{}, 2),
 	}
 	if deps.Pool != nil {
 		server.queries = db.New(deps.Pool)
@@ -95,13 +99,17 @@ func notFound(w http.ResponseWriter, r *http.Request) {
 // requireJSONForWrites stops cross-site forms, which cannot send JSON, from reaching the JSON API.
 func requireJSONForWrites(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/") && r.URL.Path != "/api/uploads" &&
+		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/") && r.URL.Path != "/api/uploads" && !isPublicUpload(r.URL.Path) &&
 			r.ContentLength != 0 && !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 			writeError(w, http.StatusUnsupportedMediaType, "expected application/json")
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func isPublicUpload(path string) bool {
+	return strings.HasPrefix(path, publicPathPrefix) && strings.HasSuffix(path, "/uploads")
 }
 
 func (s *apiServer) GetHealth(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +137,11 @@ func writeError(w http.ResponseWriter, code int, message string) {
 }
 
 func internalError(w http.ResponseWriter, r *http.Request, err error) {
-	slog.Error("request failed", "path", r.URL.Path, "error", err)
+	path := r.URL.Path
+	if strings.HasPrefix(path, publicPathPrefix) {
+		path = publicPathPrefix + "…" // The token in the path opens the album, so it stays out of logs.
+	}
+	slog.Error("request failed", "path", path, "error", err)
 	writeError(w, http.StatusInternalServerError, "something went wrong")
 }
 

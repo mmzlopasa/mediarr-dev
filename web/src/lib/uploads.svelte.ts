@@ -24,6 +24,8 @@ let preparingTimer = 0;
 // Not reactive on purpose: the interface renders `items`, and this only holds the file handles.
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const files = new Map<number, File>();
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const albums = new Map<number, string>();
 
 export function uploads() {
 	return items;
@@ -72,7 +74,11 @@ async function start(item: UploadItem) {
 			chunkSize: CHUNK_SIZE,
 			retryDelays: RETRY_DELAYS,
 			removeFingerprintOnSuccess: true,
-			metadata: { filename: file.name, lastModified: String(file.lastModified) },
+			metadata: {
+				filename: file.name,
+				lastModified: String(file.lastModified),
+				...(albums.has(item.id) ? { albumId: albums.get(item.id) as string } : {})
+			},
 			onProgress: (loaded, total) => update(item.id, { loaded, total }),
 			onAfterResponse: (_request, response) => {
 				if (response.getHeader('X-Asset-Duplicate') === 'true') duplicate = true;
@@ -95,12 +101,13 @@ async function start(item: UploadItem) {
 	}
 }
 
-export function addUploads(selected: Iterable<File>) {
+export function addUploads(selected: Iterable<File>, albumId?: string) {
 	setPreparingUpload(false);
 	const added: UploadItem[] = [];
 	for (const file of selected) {
 		const id = nextId++;
 		files.set(id, file);
+		if (albumId) albums.set(id, albumId);
 		added.push({ id, name: file.name, loaded: 0, total: file.size, status: 'queued' });
 	}
 	items = [...items, ...added];

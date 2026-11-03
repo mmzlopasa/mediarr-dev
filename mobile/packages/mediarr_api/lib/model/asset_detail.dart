@@ -13,6 +13,8 @@ part of openapi.api;
 class AssetDetail {
   /// Returns a new [AssetDetail] instance.
   AssetDetail({
+    this.isOwner,
+    this.downloadAllowed,
     required this.id,
     required this.originalName,
     required this.kind,
@@ -44,6 +46,24 @@ class AssetDetail {
     this.latitude,
     this.longitude,
   });
+
+  /// Only the owner can change or delete the asset
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? isOwner;
+
+  /// False on a public link that does not allow downloads
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? downloadAllowed;
 
   String id;
 
@@ -238,6 +258,8 @@ class AssetDetail {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is AssetDetail &&
+          other.isOwner == isOwner &&
+          other.downloadAllowed == downloadAllowed &&
           other.id == id &&
           other.originalName == originalName &&
           other.kind == kind &&
@@ -272,6 +294,8 @@ class AssetDetail {
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
+      (isOwner == null ? 0 : isOwner!.hashCode) +
+      (downloadAllowed == null ? 0 : downloadAllowed!.hashCode) +
       (id.hashCode) +
       (originalName.hashCode) +
       (kind.hashCode) +
@@ -305,10 +329,20 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+    if (this.isOwner != null) {
+      json[r'isOwner'] = this.isOwner;
+    } else {
+      json[r'isOwner'] = null;
+    }
+    if (this.downloadAllowed != null) {
+      json[r'downloadAllowed'] = this.downloadAllowed;
+    } else {
+      json[r'downloadAllowed'] = null;
+    }
     json[r'id'] = this.id;
     json[r'originalName'] = this.originalName;
     json[r'kind'] = this.kind;
@@ -447,6 +481,8 @@ class AssetDetail {
       }());
 
       return AssetDetail(
+        isOwner: mapValueOfType<bool>(json, r'isOwner'),
+        downloadAllowed: mapValueOfType<bool>(json, r'downloadAllowed'),
         id: mapValueOfType<String>(json, r'id')!,
         originalName: mapValueOfType<String>(json, r'originalName')!,
         kind: AssetDetailKindEnum.fromJson(json[r'kind'])!,

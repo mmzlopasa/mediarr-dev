@@ -451,10 +451,681 @@ export interface paths {
         patch: operations["appendUpload"];
         trace?: never;
     };
+    "/api/users/directory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The other users of this server, for choosing who to share with */
+        get: operations["listDirectory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Albums the current user owns or that are shared with them */
+        get: operations["listAlbums"];
+        put?: never;
+        /** Create an album. With rules it is a smart album. */
+        post: operations["createAlbum"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/cameras": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cameras in the current user's library, for smart album rules */
+        get: operations["listCameras"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** Read an album and its members */
+        get: operations["getAlbum"];
+        put?: never;
+        post?: never;
+        /** Delete an album, but not its photos. Owner only. */
+        delete: operations["deleteAlbum"];
+        options?: never;
+        head?: never;
+        /** Change an album. Needs the editor role. */
+        patch: operations["updateAlbum"];
+        trace?: never;
+    };
+    "/api/albums/{id}/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add your own assets to an album. Needs the contributor role. */
+        post: operations["addAlbumAssets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/assets/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove assets from an album. A contributor can remove only what they added. */
+        post: operations["removeAlbumAssets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/buckets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Months in an album, in the album's order */
+        get: operations["getAlbumBuckets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/buckets/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Assets of one month in an album */
+        get: operations["getAlbumBucket"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Share an album with a user or change their role. Owner only. */
+        put: operations["setAlbumMember"];
+        post?: never;
+        /** End a user's access. The owner can remove anyone, and a member can leave. */
+        delete: operations["removeAlbumMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** Comments on an album, or with assetId on one photo, and that photo's hearts */
+        get: operations["listAlbumComments"];
+        put?: never;
+        /** Comment on an album or on a photo in it */
+        post: operations["createAlbumComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a comment. The author, an editor or the owner can do this. */
+        delete: operations["deleteAlbumComment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/assets/{assetId}/heart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Add your heart to a photo in an album */
+        put: operations["setAlbumHeart"];
+        post?: never;
+        /** Take back your heart */
+        delete: operations["removeAlbumHeart"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** Public links of an album. Owner only. */
+        get: operations["listAlbumLinks"];
+        put?: never;
+        /** Create a public link. Its token is returned only this once. */
+        post: operations["createAlbumLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/links/{linkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a public link. It stops working at once. */
+        delete: operations["deleteAlbumLink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who you share your library with, and who shares theirs with you */
+        get: operations["listPartners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Share your library with a user, all of it or from a date */
+        put: operations["setPartner"];
+        post?: never;
+        /** Stop sharing your library with a user */
+        delete: operations["removePartner"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners/{userId}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Choose whether a partner's photos also appear in your timeline */
+        put: operations["setPartnerTimeline"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners/{userId}/buckets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Months in a library shared with you */
+        get: operations["getPartnerBuckets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partners/{userId}/buckets/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Assets of one month in a library shared with you */
+        get: operations["getPartnerBucket"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What a public link offers. Needs no account. */
+        get: operations["getPublicLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a link's password. Success sets a cookie valid only for this link. */
+        post: operations["unlockPublicLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/buckets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Months in a public album */
+        get: operations["getPublicBuckets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/buckets/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Assets of one month in a public album */
+        get: operations["getPublicBucket"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An asset in a public album, without what the link does not allow */
+        get: operations["getPublicAsset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/assets/{id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A preview from a public album, with the link's watermark if it has one */
+        get: operations["getPublicThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/assets/{id}/original": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download an original. Counts toward the link's limit. */
+        get: operations["getPublicOriginal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/assets/{id}/motion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The video inside a Motion Photo in a public album */
+        get: operations["getPublicMotion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/assets/{id}/video/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** HLS files of a video in a public album */
+        get: operations["getPublicVideoFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send one whole file to a public album (tus 1.0 creation with upload) */
+        post: operations["createPublicUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        UserRef: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        /** @description Conditions that must all hold. Rules for people, places and tags arrive with those features. */
+        AlbumRules: {
+            /** Format: date */
+            from?: string;
+            /** Format: date */
+            to?: string;
+            /** @enum {string} */
+            kind?: "photo" | "video" | "live";
+            camera?: string;
+        };
+        AlbumMember: {
+            /** Format: uuid */
+            userId: string;
+            name: string;
+            /** @enum {string} */
+            role: "viewer" | "contributor" | "editor";
+        };
+        Album: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: string;
+            /** @enum {string} */
+            role: "owner" | "editor" | "contributor" | "viewer";
+            /** Format: uuid */
+            ownerId: string;
+            ownerName: string;
+            /** Format: int64 */
+            assetCount: number;
+            /** Format: uuid */
+            coverAssetId?: string;
+            /** @enum {string} */
+            order: "newest" | "oldest";
+            isSmart: boolean;
+            rules?: components["schemas"]["AlbumRules"];
+            members?: components["schemas"]["AlbumMember"][];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AlbumCreate: {
+            title: string;
+            description?: string;
+            rules?: components["schemas"]["AlbumRules"];
+        };
+        AlbumUpdate: {
+            title?: string;
+            description?: string;
+            /** Format: uuid */
+            coverAssetId?: string;
+            /** @enum {string} */
+            order?: "newest" | "oldest";
+            rules?: components["schemas"]["AlbumRules"];
+        };
+        AssetIds: {
+            ids: string[];
+        };
+        MemberRole: {
+            /** @enum {string} */
+            role: "viewer" | "contributor" | "editor";
+        };
+        Comment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            userId: string;
+            userName: string;
+            body: string;
+            /** Format: date-time */
+            createdAt: string;
+            canDelete: boolean;
+        };
+        Activity: {
+            comments: components["schemas"]["Comment"][];
+            /** Format: int64 */
+            hearts: number;
+            hearted: boolean;
+        };
+        CommentCreate: {
+            body: string;
+            /** Format: uuid */
+            assetId?: string;
+        };
+        ShareLink: {
+            /** Format: uuid */
+            id: string;
+            /** @description Returned only when the link is created */
+            token?: string;
+            label: string;
+            hasPassword: boolean;
+            /** Format: date-time */
+            expiresAt?: string;
+            downloadLimit?: number;
+            downloadCount: number;
+            allowDownload: boolean;
+            allowUpload: boolean;
+            uploadOnly: boolean;
+            showLocation: boolean;
+            watermark?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ShareLinkCreate: {
+            label?: string;
+            password?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            downloadLimit?: number;
+            /** @default true */
+            allowDownload: boolean;
+            /** @default false */
+            allowUpload: boolean;
+            /** @default false */
+            uploadOnly: boolean;
+            /** @default false */
+            showLocation: boolean;
+            watermark?: string;
+        };
+        PublicLink: {
+            /** @description A password is needed first. Nothing else is told until then. */
+            locked: boolean;
+            title?: string;
+            description?: string;
+            allowDownload: boolean;
+            allowUpload: boolean;
+            uploadOnly: boolean;
+            watermarked: boolean;
+        };
+        LinkPassword: {
+            password: string;
+        };
+        PartnerEntry: {
+            /** Format: uuid */
+            userId: string;
+            name: string;
+            /** Format: date */
+            since?: string;
+            inTimeline: boolean;
+        };
+        Partners: {
+            given: components["schemas"]["PartnerEntry"][];
+            received: components["schemas"]["PartnerEntry"][];
+        };
+        PartnerShare: {
+            /** Format: date */
+            since?: string;
+        };
+        PartnerTimeline: {
+            show: boolean;
+        };
         Health: {
             /** @enum {string} */
             status: "ok" | "unavailable";
@@ -590,6 +1261,8 @@ export interface components {
             blurhash?: string;
             isFavorite: boolean;
             isLive?: boolean;
+            /** @description Belongs to someone else, shared with this user */
+            isShared?: boolean;
             /** Format: int64 */
             durationMs?: number;
             /** @description Local capture time without a zone: 2006-01-02T15:04:05 */
@@ -600,6 +1273,10 @@ export interface components {
             items: components["schemas"]["TimelineItem"][];
         };
         AssetDetail: {
+            /** @description Only the owner can change or delete the asset */
+            isOwner?: boolean;
+            /** @description False on a public link that does not allow downloads */
+            downloadAllowed?: boolean;
             /** Format: uuid */
             id: string;
             originalName: string;
@@ -1410,6 +2087,949 @@ export interface operations {
                 content?: never;
             };
             404: components["responses"]["Error"];
+        };
+    };
+    listDirectory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserRef"][];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    listAlbums: {
+        parameters: {
+            query?: {
+                sort?: "updated" | "title" | "date";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Albums */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Album"][];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    createAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumCreate"];
+            };
+        };
+        responses: {
+            /** @description The album */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Album"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    listCameras: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Camera names */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    getAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The album */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Album"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    deleteAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    updateAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumUpdate"];
+            };
+        };
+        responses: {
+            /** @description The album */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Album"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    addAlbumAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetIds"];
+            };
+        };
+        responses: {
+            /** @description How many were added */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResponse"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    removeAlbumAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetIds"];
+            };
+        };
+        responses: {
+            /** @description How many were removed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResponse"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    getAlbumBuckets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Months */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBuckets"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAlbumBucket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Assets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBucket"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    setAlbumMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberRole"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    removeAlbumMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listAlbumComments: {
+        parameters: {
+            query?: {
+                assetId?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Comments and hearts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Activity"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    createAlbumComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentCreate"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    deleteAlbumComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    setAlbumHeart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    removeAlbumHeart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listAlbumLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Links */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLink"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    createAlbumLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description The link */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLink"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    deleteAlbumLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revoked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listPartners: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Partners */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Partners"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    setPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerShare"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    removePartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stopped */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    setPartnerTimeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerTimeline"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPartnerBuckets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Months */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBuckets"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPartnerBucket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Assets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBucket"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPublicLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The link */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicLink"];
+                };
+            };
+            404: components["responses"]["Error"];
+        };
+    };
+    unlockPublicLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkPassword"];
+            };
+        };
+        responses: {
+            /** @description Unlocked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    getPublicBuckets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Months */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBuckets"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPublicBucket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Assets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBucket"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPublicAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The asset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetail"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPublicThumbnail: {
+        parameters: {
+            query?: {
+                size?: "small" | "large" | "full";
+            };
+            header?: never;
+            path: {
+                token: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Image */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": string;
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPublicOriginal: {
+        parameters: {
+            query?: {
+                download?: boolean;
+            };
+            header?: never;
+            path: {
+                token: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPublicMotion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Video */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "video/mp4": string;
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getPublicVideoFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                id: string;
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    createPublicUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Received */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
 }
