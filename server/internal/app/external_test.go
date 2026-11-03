@@ -1,9 +1,7 @@
 package app
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -19,14 +17,6 @@ import (
 	"github.com/mmzlopasa/mediarr-app/server/internal/api"
 	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
 )
-
-func (c *client) putJSON(path string, payload any) (*http.Response, []byte) {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		panic(err)
-	}
-	return c.do(http.MethodPut, path, map[string]string{"Content-Type": "application/json"}, bytes.NewReader(data))
-}
 
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
@@ -56,7 +46,7 @@ func (s *stack) scan(t *testing.T) jobs.ScanResult {
 
 func (s *stack) setExternalOwner(t *testing.T, admin *client) {
 	t.Helper()
-	resp, body := admin.putJSON("/api/admin/external", map[string]string{"ownerId": s.userID("admin@example.com")})
+	resp, body := admin.send(http.MethodPut, "/api/admin/external", map[string]string{"ownerId": s.userID("admin@example.com")})
 	expect(t, resp, body, http.StatusOK)
 }
 
@@ -297,7 +287,7 @@ func TestExternalSettingsAreForAdmins(t *testing.T) {
 	writeFile(t, filepath.Join(s.external, "a.jpg"), "a")
 	s.scan(t)
 	// Once imported, the photos cannot pass to someone else by a change of a setting.
-	resp, body = c.putJSON("/api/admin/external", map[string]string{"ownerId": s.userID("other@example.com")})
+	resp, body = c.send(http.MethodPut, "/api/admin/external", map[string]string{"ownerId": s.userID("other@example.com")})
 	expect(t, resp, body, http.StatusConflict)
 
 	resp, body = c.get("/api/admin/external")

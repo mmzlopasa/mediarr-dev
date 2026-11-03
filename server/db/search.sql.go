@@ -334,29 +334,90 @@ func (q *Queries) MoveFaces(ctx context.Context, arg MoveFacesParams) error {
 	return err
 }
 
-const nearestPerson = `-- name: NearestPerson :one
-SELECT f.person_id, (f.embedding <=> $1::text::vector)::float8 AS distance
-FROM faces f
-WHERE f.user_id = $2 AND f.person_id IS NOT NULL
-ORDER BY f.embedding <=> $1::text::vector
-LIMIT 1
+const movePersonRules = `-- name: MovePersonRules :exec
+UPDATE albums SET rules = jsonb_set(rules, '{person}', to_jsonb($1::uuid::text))
+WHERE owner_id = $2 AND rules IS NOT NULL
+  AND (rules->>'person')::uuid = ANY($3::uuid[])
 `
 
-type NearestPersonParams struct {
-	Embedding string
-	UserID    pgtype.UUID
+type MovePersonRulesParams struct {
+	Target  pgtype.UUID
+	UserID  pgtype.UUID
+	Sources []pgtype.UUID
 }
 
-type NearestPersonRow struct {
-	PersonID pgtype.UUID
+func (q *Queries) MovePersonRules(ctx context.Context, arg MovePersonRulesParams) error {
+	_, err := q.db.Exec(ctx, movePersonRules, arg.Target, arg.UserID, arg.Sources)
+	return err
+}
+
+const peopleNearFace = `-- name: PeopleNearFace :many
+SELECT p.id, p.name, p.hidden, min(f.embedding <=> $1::text::vector)::float8 AS distance
+FROM faces f
+JOIN people p ON p.id = f.person_id
+WHERE f.user_id = $2
+  AND f.embedding <=> $1::text::vector <= $3::float8
+GROUP BY p.id
+ORDER BY distance, p.id
+`
+
+type PeopleNearFaceParams struct {
+	Embedding   string
+	UserID      pgtype.UUID
+	MaxDistance float64
+}
+
+type PeopleNearFaceRow struct {
+	ID       pgtype.UUID
+	Name     string
+	Hidden   bool
 	Distance float64
 }
 
-func (q *Queries) NearestPerson(ctx context.Context, arg NearestPersonParams) (NearestPersonRow, error) {
-	row := q.db.QueryRow(ctx, nearestPerson, arg.Embedding, arg.UserID)
-	var i NearestPersonRow
-	err := row.Scan(&i.PersonID, &i.Distance)
-	return i, err
+// Reads every face of the user, because an index would stop at the nearest ones and could miss a
+// second person the new face connects to. This runs next to much slower picture analysis.
+func (q *Queries) PeopleNearFace(ctx context.Context, arg PeopleNearFaceParams) ([]PeopleNearFaceRow, error) {
+	rows, err := q.db.Query(ctx, peopleNearFace, arg.Embedding, arg.UserID, arg.MaxDistance)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PeopleNearFaceRow
+	for rows.Next() {
+		var i PeopleNearFaceRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Hidden,
+			&i.Distance,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const peopleSeenTogether = `-- name: PeopleSeenTogether :one
+SELECT EXISTS (
+    SELECT 1 FROM faces x JOIN faces y ON y.asset_id = x.asset_id
+    WHERE x.person_id = $1 AND y.person_id = $2
+)::boolean
+`
+
+type PeopleSeenTogetherParams struct {
+	First  pgtype.UUID
+	Second pgtype.UUID
+}
+
+func (q *Queries) PeopleSeenTogether(ctx context.Context, arg PeopleSeenTogetherParams) (bool, error) {
+	row := q.db.QueryRow(ctx, peopleSeenTogether, arg.First, arg.Second)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const personBucket = `-- name: PersonBucket :many

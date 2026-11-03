@@ -63,6 +63,16 @@ func fakeML(t *testing.T) *httptest.Server {
 			if strings.Contains(content, "marko") {
 				faces = append(faces, map[string]any{"box": []float32{200, 10, 300, 110}, "score": 0.9, "embedding": axis(faceSize, 2)})
 			}
+			// "left" and "right" are too far apart for one person, and "bridge" is close to both.
+			if strings.Contains(content, "left") {
+				faces = append(faces, map[string]any{"box": []float32{10, 10, 110, 110}, "score": 0.9, "embedding": facePair(1, 0)})
+			}
+			if strings.Contains(content, "right") {
+				faces = append(faces, map[string]any{"box": []float32{200, 10, 300, 110}, "score": 0.9, "embedding": facePair(0.1, 0.995)})
+			}
+			if strings.Contains(content, "bridge") {
+				faces = append(faces, map[string]any{"box": []float32{400, 10, 500, 110}, "score": 0.9, "embedding": facePair(1.1, 0.995)})
+			}
 			if strings.Contains(content, "tiny") {
 				faces = append(faces, map[string]any{"box": []float32{1, 1, 11, 11}, "score": 0.9, "embedding": axis(faceSize, 3)})
 			}
@@ -191,6 +201,86 @@ func TestMergeRanksFavoursAgreement(t *testing.T) {
 	got := mergeRanks(3, []pgtype.UUID{id(1), id(2), id(3)}, []pgtype.UUID{id(3), id(4), id(2)})
 	if len(got) != 3 || got[0] != id(3) {
 		t.Fatalf("%v", got)
+	}
+}
+
+// facePair is a face vector with two values, which decide how close it is to another.
+func facePair(first, second float32) []float32 {
+	out := make([]float32, faceSize)
+	out[10], out[11] = first, second
+	return out
+}
+
+func peopleNamed(t *testing.T, c *client) []api.Person {
+	t.Helper()
+	resp, body := c.get("/api/people")
+	expect(t, resp, body, http.StatusOK)
+	return decode[api.PeopleList](t, body).People
+}
+
+func TestAFaceBetweenTwoPeopleMakesThemOne(t *testing.T) {
+	service := fakeML(t)
+	s := newStack(t)
+	c := s.admin()
+	s.analyzed(t, c, service, "1.jpg", "2024-01-01T10:00:00Z", "left")
+	s.analyzed(t, c, service, "2.jpg", "2024-01-02T10:00:00Z", "left again")
+	s.analyzed(t, c, service, "3.jpg", "2024-01-03T10:00:00Z", "right")
+	s.analyzed(t, c, service, "4.jpg", "2024-01-04T10:00:00Z", "right again")
+	if got := peopleNamed(t, c); len(got) != 2 {
+		t.Fatalf("before the bridge: %+v", got)
+	}
+	// A smart album that follows one of them must not lose its photos.
+	follower := got0(t, peopleNamed(t, c))
+	album := c.newAlbum(map[string]any{"title": "Follows", "rules": map[string]string{"person": follower}})
+
+	s.analyzed(t, c, service, "5.jpg", "2024-01-05T10:00:00Z", "bridge")
+	got := peopleNamed(t, c)
+	if len(got) != 1 || got[0].AssetCount != 5 {
+		t.Fatalf("after the bridge: %+v", got)
+	}
+	resp, body := c.get("/api/albums/" + album)
+	expect(t, resp, body, http.StatusOK)
+	if decode[api.Album](t, body).AssetCount != 5 {
+		t.Fatalf("the album lost the person: %s", body)
+	}
+}
+
+func got0(t *testing.T, people []api.Person) string {
+	t.Helper()
+	if len(people) == 0 {
+		t.Fatal("nobody found")
+	}
+	return people[0].Id.String()
+}
+
+func TestOnlyTheUserMergesWhomTheyNamed(t *testing.T) {
+	service := fakeML(t)
+	s := newStack(t)
+	c := s.admin()
+	s.analyzed(t, c, service, "1.jpg", "2024-01-01T10:00:00Z", "left")
+	s.analyzed(t, c, service, "2.jpg", "2024-01-02T10:00:00Z", "left again")
+	s.analyzed(t, c, service, "3.jpg", "2024-01-03T10:00:00Z", "right")
+	s.analyzed(t, c, service, "4.jpg", "2024-01-04T10:00:00Z", "right again")
+	for i, person := range peopleNamed(t, c) {
+		resp, body := c.send(http.MethodPatch, "/api/people/"+person.Id.String(), map[string]string{"name": []string{"Ana", "Eva"}[i]})
+		expect(t, resp, body, http.StatusNoContent)
+	}
+	s.analyzed(t, c, service, "5.jpg", "2024-01-05T10:00:00Z", "bridge")
+	if got := peopleNamed(t, c); len(got) != 2 {
+		t.Fatalf("%+v", got)
+	}
+}
+
+func TestPeopleInOnePhotoAreNotMerged(t *testing.T) {
+	service := fakeML(t)
+	s := newStack(t)
+	c := s.admin()
+	s.analyzed(t, c, service, "1.jpg", "2024-01-01T10:00:00Z", "left right")
+	s.analyzed(t, c, service, "2.jpg", "2024-01-02T10:00:00Z", "left again")
+	s.analyzed(t, c, service, "3.jpg", "2024-01-03T10:00:00Z", "right again")
+	s.analyzed(t, c, service, "4.jpg", "2024-01-05T10:00:00Z", "bridge")
+	if got := peopleNamed(t, c); len(got) != 2 {
+		t.Fatalf("%+v", got)
 	}
 }
 

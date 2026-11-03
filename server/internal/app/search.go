@@ -487,11 +487,7 @@ func (s *apiServer) MergePeople(w http.ResponseWriter, r *http.Request, id opena
 		return
 	}
 	err := pgx.BeginFunc(r.Context(), s.Pool, func(tx pgx.Tx) error {
-		q := s.queries.WithTx(tx)
-		if err := q.MoveFaces(r.Context(), db.MoveFacesParams{Target: row.ID, Sources: sources, UserID: user.ID}); err != nil {
-			return err
-		}
-		return q.DeletePeople(r.Context(), db.DeletePeopleParams{Ids: sources, UserID: user.ID})
+		return jobs.MergePeople(r.Context(), s.queries.WithTx(tx), row.ID, sources, user.ID)
 	})
 	if err != nil {
 		internalError(w, r, err)

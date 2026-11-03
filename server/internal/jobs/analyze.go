@@ -23,8 +23,8 @@ import (
 const (
 	mlQueue                 = "ml"
 	analyzeBackfillInterval = 10 * time.Minute
-	// How far apart two face vectors may be for the same person. Measured on real photos: the same
-	// person came out at about 0.66 and different people at about 0.97.
+	// How far apart two face vectors may be for the same person. Measured on 13 real photos of one
+	// person: a chain of steps up to 0.655 connects them all, and the nearest other face was 0.839.
 	sameFaceDistance = 0.7
 	minFaceSide      = 40
 	minFaceScore     = 0.6
@@ -146,20 +146,77 @@ func usableFace(face *ml.Face) bool {
 
 // storeFace gives a face to the closest known person, or starts a new one. Starting a person
 // for every stray face is fine: someone seen once and unnamed is not listed.
+// planFace chooses who a new face belongs to. A face close to two people shows they are one, whatever
+// order the photos arrived in. Only the user can say that about people they named or hid, so those
+// are never merged, and a face goes to the named person rather than to a nearer unnamed one.
+func planFace(near []db.PeopleNearFaceRow) (person pgtype.UUID, merge []pgtype.UUID) {
+	if len(near) == 0 {
+		return person, nil
+	}
+	target := &near[0]
+	if target.Hidden {
+		return target.ID, nil
+	}
+	for i := range near {
+		if near[i].Name != "" && !near[i].Hidden {
+			target = &near[i]
+			break
+		}
+	}
+	for i := range near {
+		if other := &near[i]; other.ID != target.ID && other.Name == "" && !other.Hidden {
+			merge = append(merge, other.ID)
+		}
+	}
+	return target.ID, merge
+}
+
+// mergeNewlyConnected leaves apart anyone seen in one photo with the person, who cannot be the same.
+func mergeNewlyConnected(ctx context.Context, q *db.Queries, person pgtype.UUID, candidates []pgtype.UUID, user pgtype.UUID) error {
+	sources := []pgtype.UUID{}
+	for _, candidate := range candidates {
+		together, err := q.PeopleSeenTogether(ctx, db.PeopleSeenTogetherParams{First: person, Second: candidate})
+		if err != nil {
+			return err
+		}
+		if !together {
+			sources = append(sources, candidate)
+		}
+	}
+	if len(sources) == 0 {
+		return nil
+	}
+	return MergePeople(ctx, q, person, sources, user)
+}
+
+// MergePeople makes several people one. A smart album that follows one of them follows the result.
+func MergePeople(ctx context.Context, q *db.Queries, target pgtype.UUID, sources []pgtype.UUID, user pgtype.UUID) error {
+	if err := q.MoveFaces(ctx, db.MoveFacesParams{Target: target, Sources: sources, UserID: user}); err != nil {
+		return err
+	}
+	if err := q.MovePersonRules(ctx, db.MovePersonRulesParams{Target: target, Sources: sources, UserID: user}); err != nil {
+		return err
+	}
+	return q.DeletePeople(ctx, db.DeletePeopleParams{Ids: sources, UserID: user})
+}
+
 func storeFace(ctx context.Context, q *db.Queries, asset *db.Asset, face *ml.Face) error {
 	if !usableFace(face) {
 		return nil
 	}
 	vector := ml.Vector(face.Embedding)
-	nearest, err := q.NearestPerson(ctx, db.NearestPersonParams{Embedding: vector, UserID: asset.UserID})
-	if err != nil && !db.IsNotFound(err) {
+	near, err := q.PeopleNearFace(ctx, db.PeopleNearFaceParams{Embedding: vector, UserID: asset.UserID, MaxDistance: sameFaceDistance})
+	if err != nil {
 		return err
 	}
-	person := nearest.PersonID
-	if db.IsNotFound(err) || nearest.Distance > sameFaceDistance {
+	person, merge := planFace(near)
+	if !person.Valid {
 		if person, err = q.CreatePerson(ctx, asset.UserID); err != nil {
 			return err
 		}
+	}
+	if err := mergeNewlyConnected(ctx, q, person, merge, asset.UserID); err != nil {
+		return err
 	}
 	return q.InsertFace(ctx, db.InsertFaceParams{
 		AssetID: asset.ID, UserID: asset.UserID, PersonID: person,

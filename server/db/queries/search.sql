@@ -19,12 +19,27 @@ SET embedding = EXCLUDED.embedding, ocr_text = EXCLUDED.ocr_text, analyzed_at = 
 -- name: DeleteAssetFaces :exec
 DELETE FROM faces WHERE asset_id = $1;
 
--- name: NearestPerson :one
-SELECT f.person_id, (f.embedding <=> sqlc.arg('embedding')::text::vector)::float8 AS distance
+-- name: PeopleNearFace :many
+-- Reads every face of the user, because an index would stop at the nearest ones and could miss a
+-- second person the new face connects to. This runs next to much slower picture analysis.
+SELECT p.id, p.name, p.hidden, min(f.embedding <=> sqlc.arg('embedding')::text::vector)::float8 AS distance
 FROM faces f
-WHERE f.user_id = sqlc.arg('user_id') AND f.person_id IS NOT NULL
-ORDER BY f.embedding <=> sqlc.arg('embedding')::text::vector
-LIMIT 1;
+JOIN people p ON p.id = f.person_id
+WHERE f.user_id = sqlc.arg('user_id')
+  AND f.embedding <=> sqlc.arg('embedding')::text::vector <= sqlc.arg('max_distance')::float8
+GROUP BY p.id
+ORDER BY distance, p.id;
+
+-- name: PeopleSeenTogether :one
+SELECT EXISTS (
+    SELECT 1 FROM faces x JOIN faces y ON y.asset_id = x.asset_id
+    WHERE x.person_id = sqlc.arg('first') AND y.person_id = sqlc.arg('second')
+)::boolean;
+
+-- name: MovePersonRules :exec
+UPDATE albums SET rules = jsonb_set(rules, '{person}', to_jsonb(sqlc.arg('target')::uuid::text))
+WHERE owner_id = sqlc.arg('user_id') AND rules IS NOT NULL
+  AND (rules->>'person')::uuid = ANY(sqlc.arg('sources')::uuid[]);
 
 -- name: CreatePerson :one
 INSERT INTO people (user_id) VALUES ($1) RETURNING id;

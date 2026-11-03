@@ -56,6 +56,11 @@ test('a burst shows as one photo, and can be looked through and split', async ({
 		.locator('input[type=file]')
 		.last()
 		.setInputFiles(['burst0.jpg', 'burst1.jpg', 'burst2.jpg'].map(fixture));
+	// Leaving the page would stop an upload. The stack may already have formed by the time they all show.
+	await expect(async () => {
+		const stacked = await page.locator('.tl-tile .tl-video').count();
+		expect(stacked > 0 || (await page.locator('.tl-tile').count()) === before + 3).toBe(true);
+	}).toPass({ timeout: 60000 });
 
 	await expect(async () => {
 		await page.goto('/');
