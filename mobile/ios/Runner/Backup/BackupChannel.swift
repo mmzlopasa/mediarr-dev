@@ -43,6 +43,11 @@ enum BackupChannel {
         result(nil)
       case "status":
         engine.status { value in DispatchQueue.main.async { result(value) } }
+      case "verifiedChecksums":
+        engine.verifiedChecksums { value in DispatchQueue.main.async { result(value) } }
+      case "waiting":
+        let limit = arguments["limit"] as? Int ?? 100
+        engine.waiting(limit: limit) { value in DispatchQueue.main.async { result(value) } }
       case "statuses":
         let ids = arguments["ids"] as? [String] ?? []
         engine.statuses(ids: ids) { value in DispatchQueue.main.async { result(value) } }

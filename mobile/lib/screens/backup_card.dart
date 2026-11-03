@@ -9,6 +9,7 @@ import 'package:photo_manager/photo_manager.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
 import '../theme.dart';
+import 'free_space_screen.dart';
 
 String describeLastBackup(DateTime? last, DateTime now) {
   if (last == null) return 'Nothing has been backed up yet.';
@@ -278,6 +279,18 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                   style: text.bodySmall?.copyWith(color: Palette.err),
                 ),
               ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.cleaning_services_outlined, size: 18),
+                label: const Text('Free up space'),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const FreeSpaceScreen(),
+                  ),
+                ),
+              ),
+            ),
             if (status.failed > 0)
               Align(
                 alignment: Alignment.centerLeft,

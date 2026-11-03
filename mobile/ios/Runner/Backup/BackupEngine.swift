@@ -433,6 +433,7 @@ final class BackupEngine: NSObject {
         limit: BackupEngine.maxAttempts)
       return
     }
+    openStore()?.setChecksum(checksum, assetID: item.assetID, part: item.part)
     // A file already on the server is not sent again, which also saves the data.
     pendingChecks += 1
     let finishCheck: (Bool) -> Void = { [self] exists in
@@ -515,6 +516,18 @@ final class BackupEngine: NSObject {
         out["lastFinished"] = last
       }
       reply(out)
+    }
+  }
+
+  func verifiedChecksums(reply: @escaping ([String: [String]]) -> Void) {
+    queue.async { [self] in
+      reply(openStore()?.verifiedChecksums() ?? [:])
+    }
+  }
+
+  func waiting(limit: Int, reply: @escaping ([[String: String]]) -> Void) {
+    queue.async { [self] in
+      reply(openStore()?.waiting(limit: limit) ?? [])
     }
   }
 

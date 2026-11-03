@@ -23,6 +23,24 @@ final class BackupStoreTests: XCTestCase {
     XCTAssertEqual(store.nextPending()?.assetID, "new")
   }
 
+  func testOnlyFullyVerifiedAssetsCanBeRemovedFromThePhone() {
+    store.add([("done", date(1)), ("half", date(2)), ("old", date(3))])
+    store.add([("half", date(2))], part: "video")
+    store.setChecksum("c1", assetID: "done", part: BackupPart.main)
+    store.markVerified(assetID: "done", part: BackupPart.main, remoteID: "r")
+    store.setChecksum("c2", assetID: "half", part: BackupPart.main)
+    store.markVerified(assetID: "half", part: BackupPart.main, remoteID: "r")
+    // From before checksums were remembered.
+    store.markVerified(assetID: "old", part: BackupPart.main, remoteID: "r")
+    XCTAssertEqual(store.verifiedChecksums(), ["done": ["c1"]])
+  }
+
+  func testWaitingListsWhatIsNotOnTheServerYet() {
+    store.add([("a", date(1)), ("b", date(2))])
+    store.markVerified(assetID: "a", part: BackupPart.main, remoteID: "r")
+    XCTAssertEqual(store.waiting(limit: 10), [["id": "b", "status": "pending"]])
+  }
+
   func testKnownFileKeepsItsState() {
     store.add([("a", date(1))])
     store.markVerified(assetID: "a", part: BackupPart.main, remoteID: "r")

@@ -16,6 +16,7 @@ import 'asset_picture.dart';
 import 'organize_screens.dart';
 import 'people_screens.dart';
 import 'viewer_screen.dart';
+import 'waiting_strip.dart';
 
 class TimelineScreen extends ConsumerStatefulWidget {
   const TimelineScreen({super.key});
@@ -214,6 +215,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               ],
             ),
           ),
+          const WaitingStrip(),
           Expanded(child: body),
         ],
       ),

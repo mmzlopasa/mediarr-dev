@@ -45,6 +45,8 @@ final class BackupStore {
       );
       CREATE INDEX IF NOT EXISTS items_status ON items (status, created DESC);
       """)
+    // Older installations lack the column. Their files are simply not offered for freeing up space.
+    try? execute("ALTER TABLE items ADD COLUMN checksum TEXT")
   }
 
   deinit {
@@ -194,6 +196,57 @@ final class BackupStore {
     run(
       "UPDATE items SET status = ?, error = ? WHERE asset_id = ? AND part = ?",
       [.text(status.rawValue), error.map(Value.text) ?? .null, .text(assetID), .text(part)])
+  }
+
+  /// Remembered so the server can be asked again before a file is removed from the phone.
+  func setChecksum(_ checksum: String, assetID: String, part: String) {
+    run(
+      "UPDATE items SET checksum = ? WHERE asset_id = ? AND part = ?",
+      [.text(checksum), .text(assetID), .text(part)])
+  }
+
+  /// The checksums of every file of an asset, for assets whose files are all verified. A Live Photo
+  /// with only one of its two files on the server is not listed.
+  func verifiedChecksums() -> [String: [String]] {
+    let skipped = BackupStatus.skipped.rawValue
+    guard
+      let statement = prepare(
+        "SELECT asset_id, status, checksum FROM items WHERE status <> ?", [.text(skipped)])
+    else { return [:] }
+    defer { sqlite3_finalize(statement) }
+    var out: [String: [String]] = [:]
+    var unfinished = Set<String>()
+    while sqlite3_step(statement) == SQLITE_ROW {
+      guard let id = text(statement, 0) else { continue }
+      if text(statement, 1) == BackupStatus.verified.rawValue, let checksum = text(statement, 2) {
+        out[id, default: []].append(checksum)
+      } else {
+        unfinished.insert(id)
+      }
+    }
+    for id in unfinished { out[id] = nil }
+    return out
+  }
+
+  /// What still waits to reach the server, newest first.
+  func waiting(limit: Int) -> [[String: String]] {
+    let verified = BackupStatus.verified.rawValue
+    let skipped = BackupStatus.skipped.rawValue
+    guard
+      let statement = prepare(
+        """
+        SELECT asset_id, status FROM items WHERE status NOT IN (?, ?)
+        ORDER BY created DESC LIMIT ?
+        """, [.text(verified), .text(skipped), .int(limit)])
+    else { return [] }
+    defer { sqlite3_finalize(statement) }
+    var out: [[String: String]] = []
+    while sqlite3_step(statement) == SQLITE_ROW {
+      if let id = text(statement, 0), let status = text(statement, 1) {
+        out.append(["id": id, "status": status])
+      }
+    }
+    return out
   }
 
   func markVerified(assetID: String, part: String, remoteID: String?, at date: Date = Date()) {

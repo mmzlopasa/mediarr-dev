@@ -9,6 +9,7 @@ import 'package:mediarr/theme.dart';
 const _channel = MethodChannel('app.mediarr/backup');
 
 void main() {
+  freeSpaceTests();
   TestWidgetsFlutterBinding.ensureInitialized();
 
   void reply(Map<String, Object?> status) {
@@ -160,5 +161,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(choice?.id, isNull);
     expect(choice?.name, 'Putovanje');
+  });
+}
+
+void freeSpaceTests() {
+  test('only what the server has right now may leave the phone', () {
+    expect(
+      safeToRemove(
+        {
+          'whole': ['a'],
+          'live': ['b', 'c'],
+          'half-live': ['b', 'gone'],
+          'deleted-on-server': ['gone'],
+          'no-checksum': [],
+        },
+        {'a', 'b', 'c'},
+      ),
+      ['whole', 'live'],
+    );
   });
 }

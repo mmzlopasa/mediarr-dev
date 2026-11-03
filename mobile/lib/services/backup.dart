@@ -80,6 +80,24 @@ class BackupStatus {
   int get total => pending + working + verified + failed;
 }
 
+class WaitingAsset {
+  const WaitingAsset(this.id, this.status);
+
+  final String id;
+  final String status;
+}
+
+/// Only what the server confirms having right now may leave the phone: every file of the asset has
+/// to be on it. A photo deleted from the server since it was sent is no longer there.
+List<String> safeToRemove(
+  Map<String, List<String>> verified,
+  Set<String> onServer,
+) => [
+  for (final entry in verified.entries)
+    if (entry.value.isNotEmpty && entry.value.every(onServer.contains))
+      entry.key,
+];
+
 final backupProvider = Provider<BackupService>((ref) => BackupService());
 
 class BackupService {
@@ -98,6 +116,30 @@ class BackupService {
       'ids': ids,
     });
     return map ?? const {};
+  }
+
+  /// Assets whose files are all verified, with the checksum of each file.
+  Future<Map<String, List<String>>> verifiedChecksums() async {
+    final map = await _channel.invokeMapMethod<String, List<Object?>>(
+      'verifiedChecksums',
+    );
+    return {
+      for (final entry in (map ?? const <String, List<Object?>>{}).entries)
+        entry.key: entry.value.map((value) => value.toString()).toList(),
+    };
+  }
+
+  /// Photos in the chosen album that are not on the server yet, newest first.
+  Future<List<WaitingAsset>> waiting({int limit = 60}) async {
+    final list = await _channel.invokeListMethod<Object?>('waiting', {
+      'limit': limit,
+    });
+    final seen = <String>{};
+    return [
+      for (final raw in list ?? const <Object?>[])
+        if (raw is Map && seen.add(raw['id'].toString()))
+          WaitingAsset(raw['id'].toString(), raw['status'].toString()),
+    ];
   }
 
   /// Background work outlives a session, so it gets its own long-lived key for this device.
