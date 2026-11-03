@@ -15,7 +15,12 @@
 	import { appNav } from '#lib/nav.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
-	import { clearFinishedUploads, uploads, type UploadStatus } from '#lib/uploads.svelte.ts';
+	import {
+		clearFinishedUploads,
+		isPreparingUpload,
+		uploads,
+		type UploadStatus
+	} from '#lib/uploads.svelte.ts';
 
 	const BUSY_POLL_MS = 2000;
 	const IDLE_POLL_MS = 30000;
@@ -83,6 +88,15 @@
 		<UploadButton />
 	</div>
 </div>
+
+{#if isPreparingUpload()}
+	<Alert kind="ok">
+		{tr(
+			'Mobitel priprema odabrane datoteke. Kod većih fotki i videa to može potrajati.',
+			'Your device is preparing the selected files. With larger photos and videos this can take a while.'
+		)}
+	</Alert>
+{/if}
 
 {#if uploads().length > 0}
 	<Card title={tr('Upload', 'Upload')}>

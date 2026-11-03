@@ -197,7 +197,7 @@ function photo(name: string) {
 
 async function uploadPhoto(page: Page, name: string) {
 	const file = photo(name);
-	await page.locator('input[type=file]').setInputFiles(file);
+	await page.locator('input[type=file]').last().setInputFiles(file);
 	return file;
 }
 
@@ -217,7 +217,10 @@ test.describe('timeline', () => {
 		await expect(image).toHaveJSProperty('complete', true);
 		expect(await image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
-		await page.locator('input[type=file]').setInputFiles({ ...file, name: `copy-${file.name}` });
+		await page
+			.locator('input[type=file]')
+			.last()
+			.setInputFiles({ ...file, name: `copy-${file.name}` });
 		await expect(page.getByText('Već postoji')).toBeVisible({ timeout: 30000 });
 	});
 
@@ -277,16 +280,39 @@ test.describe('timeline', () => {
 		await expect(page.locator('.tl-tile')).toHaveCount(before - 1);
 	});
 
+	test('several files chosen in the picker all upload, even in a row', async ({ page }) => {
+		await signIn(page, 'uploader');
+		await page.goto('/');
+		await page.locator('main').waitFor();
+		const before = await page.locator('.tl-tile').count();
+		for (const batch of [
+			[1, 2, 3, 4, 5],
+			[6, 7]
+		]) {
+			const [chooser] = await Promise.all([
+				page.waitForEvent('filechooser'),
+				page.getByRole('button', { name: 'Upload' }).click()
+			]);
+			expect(chooser.isMultiple()).toBe(true);
+			await chooser.setFiles(batch.map((n) => photo(`image-${n}.jpg`)));
+		}
+		await expect(page.getByText('Poslano')).toHaveCount(7, { timeout: 45000 });
+		await expect(page.locator('.tl-tile').nth(before + 6)).toBeAttached({ timeout: 60000 });
+	});
+
 	test('a damaged file is reported with an error', async ({ page }) => {
 		await signIn(page, 'uploader');
 		await page.goto('/');
 		await page.locator('main').waitFor();
 		const name = `broken-${Date.now()}.jpg`;
-		await page.locator('input[type=file]').setInputFiles({
-			name,
-			mimeType: 'image/jpeg',
-			buffer: Buffer.from(`not an image ${Date.now()}`)
-		});
+		await page
+			.locator('input[type=file]')
+			.last()
+			.setInputFiles({
+				name,
+				mimeType: 'image/jpeg',
+				buffer: Buffer.from(`not an image ${Date.now()}`)
+			});
 		await expect(page.getByText('Datoteke koje se nisu mogle obraditi')).toBeVisible({
 			timeout: 45000
 		});

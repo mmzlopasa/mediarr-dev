@@ -78,7 +78,7 @@ export function appPage(theme: string) {
 			['user', 'Račun'],
 			['shield', 'Administracija']
 		],
-		`<div class="ph"><div><h1>${item.hr}</h1></div><div class="ph-a"><button class="btn gold sm">${ico('upload', 14)} Upload</button><input class="sr" type="file" multiple tabindex="-1"></div></div>` +
+		`<div class="ph"><div><h1>${item.hr}</h1></div><div class="ph-a"><label class="btn gold sm">${ico('upload', 14)} Upload</label><input class="sr" type="file" multiple tabindex="-1"></div></div>` +
 			`<section class="card glass"><div class="card-b">${emptyState(item.icon, item.emptyHr)}</div></section>`
 	);
 }
