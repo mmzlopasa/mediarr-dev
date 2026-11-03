@@ -194,3 +194,32 @@ test('the people page lists no one before any face is known', async ({ page }) =
 	await expect(page.getByRole('heading', { name: 'People' })).toBeVisible();
 	await expect(page.getByText('No people recognised yet.')).toBeVisible();
 });
+
+test('a memory plays as a story and becomes a video', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await page.goto('/memories');
+	await expect(page.getByRole('heading', { name: 'Memories' })).toBeVisible();
+
+	// The photo with a location was taken on 15 June 2024, so this looks at that day a year later.
+	await page.route('**/api/memories?*', (route) => {
+		const url = new URL(route.request().url());
+		url.searchParams.set('date', '2025-06-15');
+		return route.continue({ url: url.href });
+	});
+	await page.reload();
+	await page.getByRole('button', { name: /On this day/ }).click();
+	const story = page.getByRole('dialog');
+	await expect(story.locator('img')).toBeVisible();
+	await story.getByRole('button', { name: 'Make a video' }).click();
+	await expect(story.getByRole('link', { name: 'Download the video' })).toBeVisible({
+		timeout: 60000
+	});
+	const address = await story
+		.getByRole('link', { name: 'Download the video' })
+		.getAttribute('href');
+	const video = await page.request.get(address as string);
+	expect(video.status()).toBe(200);
+	expect((await video.body()).length).toBeGreaterThan(1000);
+	await story.getByRole('button', { name: 'Close' }).click();
+	await expect(story).toHaveCount(0);
+});

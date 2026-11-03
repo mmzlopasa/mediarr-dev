@@ -1,0 +1,70 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { api, type Memory } from '#lib/api.ts';
+	import Alert from '#lib/design/components/Alert.svelte';
+	import EmptyState from '#lib/design/components/EmptyState.svelte';
+	import Skeleton from '#lib/design/components/Skeleton.svelte';
+	import { tr } from '#lib/i18n.svelte.ts';
+	import { appNav } from '#lib/nav.ts';
+	import Story from '#lib/organize/Story.svelte';
+
+	const item = appNav.find((candidate) => candidate.path === '/memories') ?? appNav[0];
+
+	let memories = $state<Memory[]>();
+	let failed = $state(false);
+	let open = $state<Memory>();
+
+	// The person's own date decides what today is, not the server's.
+	function today() {
+		const now = new Date();
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const day = String(now.getDate()).padStart(2, '0');
+		return `${now.getFullYear()}-${month}-${day}`;
+	}
+
+	onMount(async () => {
+		try {
+			memories = await api.memories(today());
+		} catch {
+			failed = true;
+		}
+	});
+
+	function titleOf(memory: Memory) {
+		if (memory.kind === 'week') return tr('Protekli tjedan', 'The last week');
+		const years = new Date().getFullYear() - (memory.year ?? 0);
+		return tr(`Na današnji dan, ${memory.year}.`, `On this day, ${years} years ago`);
+	}
+</script>
+
+<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+
+<div class="ph"><div><h1>{tr(item.hr, item.en)}</h1></div></div>
+
+{#if failed}
+	<Alert kind="err">{tr('Uspomene se nisu učitale.', 'Memories could not be loaded.')}</Alert>
+{:else if !memories}
+	<div class="alb-grid" aria-hidden="true">
+		<Skeleton height="220px" /><Skeleton height="220px" />
+	</div>
+{:else if memories.length === 0}
+	<section class="card glass">
+		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
+	</section>
+{:else}
+	<div class="alb-grid">
+		{#each memories as memory (memory.kind + memory.title)}
+			<button type="button" class="alb-card story-card" onclick={() => (open = memory)}>
+				<span class="alb-cover">
+					<img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" />
+				</span>
+				<span class="alb-name">{titleOf(memory)}</span>
+				<span class="alb-meta">{memory.title} · {memory.items.length}</span>
+			</button>
+		{/each}
+	</div>
+{/if}
+
+{#if open}
+	<Story memory={open} title={titleOf(open)} onClose={() => (open = undefined)} />
+{/if}

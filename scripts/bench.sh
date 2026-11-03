@@ -21,7 +21,8 @@ HTTP_PORT=$PORT
 ENV
 
 # Search needs the real model, because reading the query is part of what is measured.
-MODELS=${DEV_MODELS:-/mnt/mediarr/dev/models}
+MODELS=${DEV_MODELS:-$WORK/models}
+mkdir -p "$MODELS"
 cat >"$WORK/override.yaml" <<YAML
 services:
   server:

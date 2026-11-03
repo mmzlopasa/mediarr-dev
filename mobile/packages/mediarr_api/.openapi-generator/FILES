@@ -36,6 +36,7 @@ doc/LoginRequest.md
 doc/MapPoints.md
 doc/MapStyle.md
 doc/MemberRole.md
+doc/Memory.md
 doc/PartnerEntry.md
 doc/PartnerShare.md
 doc/PartnerTimeline.md
@@ -52,6 +53,8 @@ doc/SetupRequest.md
 doc/ShareLink.md
 doc/ShareLinkCreate.md
 doc/Sprite.md
+doc/StoryExport.md
+doc/StoryRequest.md
 doc/Tag.md
 doc/TimelineBucket.md
 doc/TimelineBuckets.md
@@ -110,6 +113,7 @@ lib/model/login_request.dart
 lib/model/map_points.dart
 lib/model/map_style.dart
 lib/model/member_role.dart
+lib/model/memory.dart
 lib/model/partner_entry.dart
 lib/model/partner_share.dart
 lib/model/partner_timeline.dart
@@ -126,6 +130,8 @@ lib/model/setup_request.dart
 lib/model/share_link.dart
 lib/model/share_link_create.dart
 lib/model/sprite.dart
+lib/model/story_export.dart
+lib/model/story_request.dart
 lib/model/tag.dart
 lib/model/timeline_bucket.dart
 lib/model/timeline_buckets.dart
@@ -141,10 +147,6 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
-test/analysis_progress_test.dart
-test/people_list_test.dart
-test/person_ref_test.dart
-test/person_test.dart
-test/person_update_test.dart
-test/search_filters_test.dart
-test/search_result_test.dart
+test/memory_test.dart
+test/story_export_test.dart
+test/story_request_test.dart

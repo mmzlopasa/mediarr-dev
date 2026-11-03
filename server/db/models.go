@@ -211,6 +211,15 @@ type ShareLinkSession struct {
 	ExpiresAt pgtype.Timestamptz
 }
 
+type StoryExport struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	Title     string
+	Status    string
+	Path      pgtype.Text
+	CreatedAt pgtype.Timestamptz
+}
+
 type SystemState struct {
 	Key       string
 	Value     string

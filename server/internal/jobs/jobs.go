@@ -114,6 +114,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &cleanupWorker{deps: d})
 	river.AddWorker(workers, &analyzeWorker{deps: d, client: ml.New(opts.MLURL)})
 	river.AddWorker(workers, &analyzeBackfillWorker{deps: d})
+	river.AddWorker(workers, &storyWorker{deps: d})
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{
@@ -412,6 +413,9 @@ func (w *cleanupWorker) Work(ctx context.Context, _ *river.Job[CleanupArgs]) err
 		return err
 	}
 	if err := GeocodePending(ctx, w.queries); err != nil {
+		return err
+	}
+	if err := removeOldStories(ctx, w.queries, time.Now()); err != nil {
 		return err
 	}
 	return removeStaleUploads(storage.TmpDir(w.opts.LibraryPath), time.Now().Add(-staleUploadAge))

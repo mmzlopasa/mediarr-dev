@@ -278,6 +278,45 @@ func (e MemberRoleRole) Valid() bool {
 	}
 }
 
+// Defines values for MemoryKind.
+const (
+	OnThisDay MemoryKind = "on_this_day"
+	Week      MemoryKind = "week"
+)
+
+// Valid indicates whether the value is a known member of the MemoryKind enum.
+func (e MemoryKind) Valid() bool {
+	switch e {
+	case OnThisDay:
+		return true
+	case Week:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for StoryExportStatus.
+const (
+	StoryExportStatusFailed  StoryExportStatus = "failed"
+	StoryExportStatusReady   StoryExportStatus = "ready"
+	StoryExportStatusWorking StoryExportStatus = "working"
+)
+
+// Valid indicates whether the value is a known member of the StoryExportStatus enum.
+func (e StoryExportStatus) Valid() bool {
+	switch e {
+	case StoryExportStatusFailed:
+		return true
+	case StoryExportStatusReady:
+		return true
+	case StoryExportStatusWorking:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TimelineItemKind.
 const (
 	TimelineItemKindPhoto   TimelineItemKind = "photo"
@@ -889,6 +928,21 @@ type MemberRole struct {
 // MemberRoleRole defines model for MemberRole.Role.
 type MemberRoleRole string
 
+// Memory defines model for Memory.
+type Memory struct {
+	Items []TimelineItem `json:"items"`
+	Kind  MemoryKind     `json:"kind"`
+
+	// Title A date or date span. The client words the rest.
+	Title string `json:"title"`
+
+	// Year The year, for on_this_day
+	Year *int `json:"year,omitempty"`
+}
+
+// MemoryKind defines model for Memory.Kind.
+type MemoryKind string
+
 // PartnerEntry defines model for PartnerEntry.
 type PartnerEntry struct {
 	InTimeline bool                `json:"inTimeline"`
@@ -1021,6 +1075,21 @@ type Sprite struct {
 	Count      int `json:"count"`
 	IntervalMs int `json:"intervalMs"`
 	Rows       int `json:"rows"`
+}
+
+// StoryExport defines model for StoryExport.
+type StoryExport struct {
+	Id     openapi_types.UUID `json:"id"`
+	Status StoryExportStatus  `json:"status"`
+}
+
+// StoryExportStatus defines model for StoryExport.Status.
+type StoryExportStatus string
+
+// StoryRequest defines model for StoryRequest.
+type StoryRequest struct {
+	Ids   []openapi_types.UUID `json:"ids"`
+	Title string               `json:"title"`
 }
 
 // Tag defines model for Tag.
@@ -1210,6 +1279,12 @@ type GetMapPointsParams struct {
 	To   *openapi_types.Date `form:"to,omitempty" json:"to,omitempty"`
 }
 
+// ListMemoriesParams defines parameters for ListMemories.
+type ListMemoriesParams struct {
+	// Date The user's own date, which decides what today is
+	Date *openapi_types.Date `form:"date,omitempty" json:"date,omitempty"`
+}
+
 // GetPublicOriginalParams defines parameters for GetPublicOriginal.
 type GetPublicOriginalParams struct {
 	Download *bool `form:"download,omitempty" json:"download,omitempty"`
@@ -1296,6 +1371,9 @@ type MergePeopleJSONRequestBody = AssetIds
 
 // UnlockPublicLinkJSONRequestBody defines body for UnlockPublicLink for application/json ContentType.
 type UnlockPublicLinkJSONRequestBody = LinkPassword
+
+// CreateStoryExportJSONRequestBody defines body for CreateStoryExport for application/json ContentType.
+type CreateStoryExportJSONRequestBody = StoryRequest
 
 // SetVaultPinJSONRequestBody defines body for SetVaultPin for application/json ContentType.
 type SetVaultPinJSONRequestBody = VaultPinChange
@@ -1470,6 +1548,9 @@ type ServerInterface interface {
 	// SetupTotp Generate a TOTP secret. It takes effect only after confirmation.
 	// (POST /api/me/totp/setup)
 	SetupTotp(w http.ResponseWriter, r *http.Request)
+	// ListMemories On this day in earlier years, and the last week
+	// (GET /api/memories)
+	ListMemories(w http.ResponseWriter, r *http.Request, params ListMemoriesParams)
 	// ListPartners Who you share your library with, and who shares theirs with you
 	// (GET /api/partners)
 	ListPartners(w http.ResponseWriter, r *http.Request)
@@ -1539,6 +1620,15 @@ type ServerInterface interface {
 	// SearchAssets Search in natural language. Dates, people, places and cameras in the query become filters.
 	// (GET /api/search)
 	SearchAssets(w http.ResponseWriter, r *http.Request, params SearchAssetsParams)
+	// CreateStoryExport Make a video of the chosen photos. Runs in the background.
+	// (POST /api/stories)
+	CreateStoryExport(w http.ResponseWriter, r *http.Request)
+	// GetStoryExport How a video is coming along
+	// (GET /api/stories/{id})
+	GetStoryExport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetStoryVideo The finished video
+	// (GET /api/stories/{id}/video)
+	GetStoryVideo(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ListTags The current user's tags
 	// (GET /api/tags)
 	ListTags(w http.ResponseWriter, r *http.Request)
@@ -1926,6 +2016,12 @@ func (_ Unimplemented) SetupTotp(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListMemories On this day in earlier years, and the last week
+// (GET /api/memories)
+func (_ Unimplemented) ListMemories(w http.ResponseWriter, r *http.Request, params ListMemoriesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ListPartners Who you share your library with, and who shares theirs with you
 // (GET /api/partners)
 func (_ Unimplemented) ListPartners(w http.ResponseWriter, r *http.Request) {
@@ -2061,6 +2157,24 @@ func (_ Unimplemented) CreatePublicUpload(w http.ResponseWriter, r *http.Request
 // SearchAssets Search in natural language. Dates, people, places and cameras in the query become filters.
 // (GET /api/search)
 func (_ Unimplemented) SearchAssets(w http.ResponseWriter, r *http.Request, params SearchAssetsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateStoryExport Make a video of the chosen photos. Runs in the background.
+// (POST /api/stories)
+func (_ Unimplemented) CreateStoryExport(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetStoryExport How a video is coming along
+// (GET /api/stories/{id})
+func (_ Unimplemented) GetStoryExport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetStoryVideo The finished video
+// (GET /api/stories/{id}/video)
+func (_ Unimplemented) GetStoryVideo(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3622,6 +3736,39 @@ func (siw *ServerInterfaceWrapper) SetupTotp(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// ListMemories operation middleware
+func (siw *ServerInterfaceWrapper) ListMemories(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListMemoriesParams
+
+	// ------------- Optional query parameter "date" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "date", r.URL.Query(), &params.Date, runtime.BindQueryParameterOptions{Type: "string", Format: "date"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "date"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "date", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMemories(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListPartners operation middleware
 func (siw *ServerInterfaceWrapper) ListPartners(w http.ResponseWriter, r *http.Request) {
 
@@ -4307,6 +4454,72 @@ func (siw *ServerInterfaceWrapper) SearchAssets(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SearchAssets(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateStoryExport operation middleware
+func (siw *ServerInterfaceWrapper) CreateStoryExport(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateStoryExport(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetStoryExport operation middleware
+func (siw *ServerInterfaceWrapper) GetStoryExport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetStoryExport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetStoryVideo operation middleware
+func (siw *ServerInterfaceWrapper) GetStoryVideo(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetStoryVideo(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5044,6 +5257,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/analysis", wrapper.GetAnalysisProgress)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/memories", wrapper.ListMemories)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/stories", wrapper.CreateStoryExport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/stories/{id}", wrapper.GetStoryExport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/stories/{id}/video", wrapper.GetStoryVideo)
 	})
 
 	return r

@@ -105,5 +105,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
         working-directory: web
       - run: docker build -t mediarr-dev-go -f deploy/dev.Dockerfile deploy
+      # Search is measured with the real model, which is too large to fetch on every run.
+      - uses: actions/cache@v4
+        with:
+          path: .models
+          key: search-model-siglip2-fp16-v1
       # Frame rates on shared runners are too noisy to fail a build; load times are checked.
       - run: make bench BENCH_SKIP_FPS=1
+        env:
+          DEV_MODELS: ${{ github.workspace }}/.models

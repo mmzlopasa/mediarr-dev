@@ -369,10 +369,19 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 		ids = mergeRanks(searchResultSize, textIDs, vectorIDs)
 	}
 
-	rows, err := s.queries.ItemsByID(ctx, ids)
+	items, err := s.itemsInOrder(ctx, ids)
 	if err != nil {
 		internalError(w, r, err)
 		return
+	}
+	writeJSON(w, http.StatusOK, api.SearchResult{Items: items, Smart: smart, Filters: filters})
+}
+
+// itemsInOrder reads what the given photos need on screen, in the order asked for.
+func (s *apiServer) itemsInOrder(ctx context.Context, ids []pgtype.UUID) ([]api.TimelineItem, error) {
+	rows, err := s.queries.ItemsByID(ctx, ids)
+	if err != nil {
+		return nil, err
 	}
 	found := make(map[pgtype.UUID]*db.ItemsByIDRow, len(rows))
 	for i := range rows {
@@ -393,7 +402,7 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 			Blurhash:   optional(row.Blurhash.String, row.Blurhash.Valid),
 		})
 	}
-	writeJSON(w, http.StatusOK, api.SearchResult{Items: items, Smart: smart, Filters: filters})
+	return items, nil
 }
 
 func (s *apiServer) ListPeople(w http.ResponseWriter, r *http.Request) {

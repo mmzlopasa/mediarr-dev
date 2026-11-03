@@ -12,6 +12,7 @@ import '../services/timeline.dart';
 import '../theme.dart';
 import 'album_sheets.dart';
 import 'map_screen.dart';
+import 'memories_screen.dart';
 import 'people_screens.dart';
 import 'timeline_screen.dart';
 import 'viewer_screen.dart';
@@ -40,6 +41,12 @@ class OrganizeLinks extends StatelessWidget {
             .push(MaterialPageRoute<void>(builder: (_) => screen));
     return Column(
       children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.auto_awesome_outlined),
+          title: const Text('Memories'),
+          onTap: () => open(const MemoriesScreen()),
+        ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.people_outline),

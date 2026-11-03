@@ -295,6 +295,8 @@ class ApiClient {
           return MapStyle.fromJson(value);
         case 'MemberRole':
           return MemberRole.fromJson(value);
+        case 'Memory':
+          return Memory.fromJson(value);
         case 'PartnerEntry':
           return PartnerEntry.fromJson(value);
         case 'PartnerShare':
@@ -327,6 +329,10 @@ class ApiClient {
           return ShareLinkCreate.fromJson(value);
         case 'Sprite':
           return Sprite.fromJson(value);
+        case 'StoryExport':
+          return StoryExport.fromJson(value);
+        case 'StoryRequest':
+          return StoryRequest.fromJson(value);
         case 'Tag':
           return Tag.fromJson(value);
         case 'TimelineBucket':

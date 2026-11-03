@@ -42,6 +42,8 @@ test('the first view of 100k assets takes under a second', async ({ page }) => {
 });
 
 test('smart search answers within its limit, in both languages', async ({ page }) => {
+	// The first run on a machine also fetches the model.
+	test.setTimeout(900000);
 	await signIn(page);
 	const subjects = [
 		'pas na plaži',
@@ -92,7 +94,7 @@ test('smart search answers within its limit, in both languages', async ({ page }
 				const warm = await page.request.get(`/api/search?q=${encodeURIComponent('warm up')}`);
 				return (await warm.json()).smart;
 			},
-			{ timeout: 120000, intervals: [3000], message: 'the model answered' }
+			{ timeout: 780000, intervals: [3000], message: 'the model answered' }
 		)
 		.toBe(true);
 

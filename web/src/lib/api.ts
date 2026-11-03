@@ -24,6 +24,8 @@ export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
 export type MapPoints = components['schemas']['MapPoints'];
+export type Memory = components['schemas']['Memory'];
+export type StoryExport = components['schemas']['StoryExport'];
 export type SearchResult = components['schemas']['SearchResult'];
 export type Person = components['schemas']['Person'];
 export type PeopleList = components['schemas']['PeopleList'];
@@ -160,6 +162,10 @@ export const api = {
 	mergePeople: (id: string, ids: string[]) =>
 		request<void>(fetch, `/api/people/${id}/merge`, { ids }),
 	analysisProgress: () => request<AnalysisProgress>(fetch, '/api/admin/analysis'),
+	memories: (date: string) => request<Memory[]>(fetch, `/api/memories?date=${date}`),
+	createStory: (title: string, ids: string[]) =>
+		request<StoryExport>(fetch, '/api/stories', { title, ids }),
+	story: (id: string) => request<StoryExport>(fetch, `/api/stories/${id}`),
 	emptyTrash: () => request<{ changed: number }>(fetch, '/api/trash/empty', {}),
 	vaultStatus: () => request<VaultStatus>(fetch, '/api/vault/status'),
 	setVaultPin: (pin: string, currentPin?: string) =>

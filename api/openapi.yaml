@@ -1334,6 +1334,64 @@ paths:
               schema: { $ref: "#/components/schemas/AnalysisProgress" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/memories:
+    get:
+      operationId: listMemories
+      summary: On this day in earlier years, and the last week
+      parameters:
+        - { name: date, in: query, description: "The user's own date, which decides what today is", schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Memories, newest first
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Memory" } }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/stories:
+    post:
+      operationId: createStoryExport
+      summary: Make a video of the chosen photos. Runs in the background.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StoryRequest" }
+      responses:
+        "202":
+          description: Started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoryExport" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/stories/{id}:
+    get:
+      operationId: getStoryExport
+      summary: How a video is coming along
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoryExport" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/stories/{id}/video:
+    get:
+      operationId: getStoryVideo
+      summary: The finished video
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Video
+          content:
+            video/mp4:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
 components:
   responses:
     Error:
@@ -1342,6 +1400,26 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    Memory:
+      type: object
+      required: [kind, title, items]
+      properties:
+        kind: { type: string, enum: [on_this_day, week] }
+        year: { type: integer, description: "The year, for on_this_day" }
+        title: { type: string, description: "A date or date span. The client words the rest." }
+        items: { type: array, items: { $ref: "#/components/schemas/TimelineItem" } }
+    StoryRequest:
+      type: object
+      required: [title, ids]
+      properties:
+        title: { type: string }
+        ids: { type: array, items: { type: string, format: uuid } }
+    StoryExport:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [working, ready, failed] }
     SearchResult:
       type: object
       required: [items, smart, filters]

@@ -702,6 +702,66 @@ class DefaultApi {
     }
   }
 
+  /// Make a video of the chosen photos. Runs in the background.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [StoryRequest] storyRequest (required):
+  Future<Response> createStoryExportWithHttpInfo(
+    StoryRequest storyRequest,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/stories';
+
+    // ignore: prefer_final_locals
+    Object? postBody = storyRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Make a video of the chosen photos. Runs in the background.
+  ///
+  /// Parameters:
+  ///
+  /// * [StoryRequest] storyRequest (required):
+  Future<StoryExport?> createStoryExport(
+    StoryRequest storyRequest,
+  ) async {
+    final response = await createStoryExportWithHttpInfo(
+      storyRequest,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'StoryExport',
+      ) as StoryExport;
+    }
+    return null;
+  }
+
   /// Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -3478,6 +3538,126 @@ class DefaultApi {
     return null;
   }
 
+  /// How a video is coming along
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getStoryExportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/stories/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// How a video is coming along
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<StoryExport?> getStoryExport(
+    String id,
+  ) async {
+    final response = await getStoryExportWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'StoryExport',
+      ) as StoryExport;
+    }
+    return null;
+  }
+
+  /// The finished video
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getStoryVideoWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/stories/{id}/video'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The finished video
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<MultipartFile?> getStoryVideo(
+    String id,
+  ) async {
+    final response = await getStoryVideoWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
   /// Photos carrying a tag in one month
   ///
   /// Note: This method returns the HTTP [Response].
@@ -4170,6 +4350,73 @@ class DefaultApi {
       return (await apiClient.deserializeAsync(responseBody, 'List<UserRef>')
               as List)
           .cast<UserRef>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// On this day in earlier years, and the last week
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [DateTime] date:
+  ///   The user's own date, which decides what today is
+  Future<Response> listMemoriesWithHttpInfo({
+    DateTime? date,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/memories';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (date != null) {
+      queryParams.addAll(_queryParams('', 'date', date));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// On this day in earlier years, and the last week
+  ///
+  /// Parameters:
+  ///
+  /// * [DateTime] date:
+  ///   The user's own date, which decides what today is
+  Future<List<Memory>?> listMemories({
+    DateTime? date,
+  }) async {
+    final response = await listMemoriesWithHttpInfo(
+      date: date,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<Memory>')
+              as List)
+          .cast<Memory>()
           .toList(growable: false);
     }
     return null;

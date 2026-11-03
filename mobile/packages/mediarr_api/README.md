@@ -72,6 +72,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**createAlbumLink**](doc//DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
 *DefaultApi* | [**createDeviceKey**](doc//DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
 *DefaultApi* | [**createPublicUpload**](doc//DefaultApi.md#createpublicupload) | **POST** /api/public/{token}/uploads | Send one whole file to a public album (tus 1.0 creation with upload)
+*DefaultApi* | [**createStoryExport**](doc//DefaultApi.md#createstoryexport) | **POST** /api/stories | Make a video of the chosen photos. Runs in the background.
 *DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 *DefaultApi* | [**createUser**](doc//DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
 *DefaultApi* | [**deleteAlbum**](doc//DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
@@ -117,6 +118,8 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getPublicOriginal**](doc//DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 *DefaultApi* | [**getPublicThumbnail**](doc//DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 *DefaultApi* | [**getPublicVideoFile**](doc//DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+*DefaultApi* | [**getStoryExport**](doc//DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
+*DefaultApi* | [**getStoryVideo**](doc//DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
 *DefaultApi* | [**getTagBucket**](doc//DefaultApi.md#gettagbucket) | **GET** /api/tags/{id}/buckets/{month} | Photos carrying a tag in one month
 *DefaultApi* | [**getTagBuckets**](doc//DefaultApi.md#gettagbuckets) | **GET** /api/tags/{id}/buckets | Months with photos carrying a tag
 *DefaultApi* | [**getTimelineBucket**](doc//DefaultApi.md#gettimelinebucket) | **GET** /api/timeline/buckets/{month} | List one month's assets, newest first
@@ -129,6 +132,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listAssets**](doc//DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
+*DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
 *DefaultApi* | [**listPeople**](doc//DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 *DefaultApi* | [**listTags**](doc//DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
@@ -192,6 +196,7 @@ Class | Method | HTTP request | Description
  - [MapPoints](doc//MapPoints.md)
  - [MapStyle](doc//MapStyle.md)
  - [MemberRole](doc//MemberRole.md)
+ - [Memory](doc//Memory.md)
  - [PartnerEntry](doc//PartnerEntry.md)
  - [PartnerShare](doc//PartnerShare.md)
  - [PartnerTimeline](doc//PartnerTimeline.md)
@@ -208,6 +213,8 @@ Class | Method | HTTP request | Description
  - [ShareLink](doc//ShareLink.md)
  - [ShareLinkCreate](doc//ShareLinkCreate.md)
  - [Sprite](doc//Sprite.md)
+ - [StoryExport](doc//StoryExport.md)
+ - [StoryRequest](doc//StoryRequest.md)
  - [Tag](doc//Tag.md)
  - [TimelineBucket](doc//TimelineBucket.md)
  - [TimelineBuckets](doc//TimelineBuckets.md)
