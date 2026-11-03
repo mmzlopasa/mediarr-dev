@@ -11,8 +11,7 @@ on:
       - .github/workflows/ios.yml
 
 permissions:
-  # Temporary, for the release cleanup below.
-  contents: write
+  contents: read
 
 jobs:
   ipa:
@@ -43,11 +42,3 @@ jobs:
           path: mobile/build/ipa/Mediarr.ipa
           retention-days: 30
           if-no-files-found: error
-      # One-time cleanup: nothing is published on GitHub. Downloads live on cdn.mediarr.app.
-      - name: Remove GitHub releases
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          for tag in $(gh release list --json tagName --jq '.[].tagName'); do
-            gh release delete "$tag" --cleanup-tag --yes
-          done
