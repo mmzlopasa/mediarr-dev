@@ -1,0 +1,396 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mediarr_api/api.dart';
+
+import '../services/session.dart';
+import '../services/timeline.dart';
+import '../services/uploads.dart';
+import '../theme.dart';
+import '../timeline/layout.dart';
+import 'viewer_screen.dart';
+
+class TimelineScreen extends ConsumerStatefulWidget {
+  const TimelineScreen({super.key});
+
+  @override
+  ConsumerState<TimelineScreen> createState() => _TimelineScreenState();
+}
+
+class _TimelineScreenState extends ConsumerState<TimelineScreen> {
+  static const _pollEvery = Duration(seconds: 5);
+  final _selected = <String>{};
+  Timer? _poll;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _store.refresh());
+    // New photos appear while uploads and server processing are going on.
+    _poll = Timer.periodic(_pollEvery, (_) => _store.refresh());
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  TimelineStore get _store => ref.read(timelineProvider);
+
+  void _toggle(String id) => setState(() {
+    if (!_selected.remove(id)) _selected.add(id);
+  });
+
+  Future<void> _act(BulkRequestActionEnum action) async {
+    final ids = _selected.toList();
+    try {
+      await _store.act(ids, action);
+      if (mounted) setState(_selected.clear);
+    } on ApiException catch (cause) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('The action failed. ${cause.message ?? ''}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete ${_selected.length}?'),
+        content: const Text(
+          'They will disappear from your timeline. A trash with restore arrives in a later '
+          'version; until then, uploading the same file again brings it back.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Palette.err)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await _act(BulkRequestActionEnum.delete);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final store = ref.watch(timelineProvider);
+    final session = ref.watch(sessionProvider).value;
+    ref.listen(uploadsProvider, (previous, next) {
+      final before = previous?.where((task) => task.finished).length ?? 0;
+      if (next.where((task) => task.finished).length > before) store.refresh();
+    });
+    final text = Theme.of(context).textTheme;
+    final months = store.months;
+
+    if (session == null) return const SizedBox.shrink();
+
+    Widget body;
+    if (months == null) {
+      body = store.failed
+          ? EmptyMessage(
+              icon: Icons.cloud_off,
+              text: 'Your photos could not be loaded. Check the connection.',
+              action: GoldButton(label: 'Try again', onPressed: store.refresh),
+            )
+          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+    } else if (months.isEmpty) {
+      body = const EmptyMessage(
+        icon: Icons.photo_outlined,
+        text: 'No photos yet. Add your first ones in the Upload tab.',
+      );
+    } else {
+      body = LayoutBuilder(
+        builder: (context, constraints) {
+          const side = 12.0;
+          final width = constraints.maxWidth - side * 2;
+          return RefreshIndicator(
+            color: Palette.gold,
+            onRefresh: () => store.refresh(reloadLoaded: true),
+            child: CustomScrollView(
+              // Keeps nearby months loaded, and the scroll steady when returning.
+              key: const PageStorageKey('timeline'),
+              scrollCacheExtent: const ScrollCacheExtent.pixels(900),
+              slivers: [
+                for (final month in months)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: side),
+                    sliver: _MonthSliver(
+                      store: store,
+                      month: month,
+                      width: width,
+                      session: session,
+                      selected: _selected,
+                      onToggle: _toggle,
+                      onOpen: (index) => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => ViewerScreen(initialIndex: index),
+                        ),
+                      ),
+                    ),
+                  ),
+                const SliverToBoxAdapter(child: SizedBox(height: 90)),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+            child: Row(
+              children: [
+                if (_selected.isEmpty)
+                  Text('Photos', style: text.headlineMedium)
+                else ...[
+                  IconButton(
+                    tooltip: 'Clear selection',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(_selected.clear),
+                  ),
+                  Text('${_selected.length}', style: text.titleLarge),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: 'Add to favorites',
+                    icon: const Icon(Icons.star_border),
+                    onPressed: () => _act(BulkRequestActionEnum.favorite),
+                  ),
+                  IconButton(
+                    tooltip: 'Archive',
+                    icon: const Icon(Icons.archive_outlined),
+                    onPressed: () => _act(BulkRequestActionEnum.archive),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete',
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: _confirmDelete,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Expanded(child: body),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthSliver extends StatelessWidget {
+  const _MonthSliver({
+    required this.store,
+    required this.month,
+    required this.width,
+    required this.session,
+    required this.selected,
+    required this.onToggle,
+    required this.onOpen,
+  });
+
+  final TimelineStore store;
+  final TimelineMonth month;
+  final double width;
+  final Session session;
+  final Set<String> selected;
+  final void Function(String id) onToggle;
+  final void Function(int index) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = month.items;
+    if (items == null) {
+      // Built only when this month comes near the screen, which is when it loads.
+      return SliverList.builder(
+        itemCount: 1,
+        itemBuilder: (context, _) {
+          if (!month.loading && !month.failed) {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => store.load(month),
+            );
+          }
+          return SizedBox(
+            height: estimateMonthHeight(month.count, width),
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 22),
+                child: month.failed
+                    ? TextButton(
+                        onPressed: () => store.load(month),
+                        child: Text(
+                          '${formatMonth(month.month)} could not be loaded. Try again.',
+                        ),
+                      )
+                    : Text(
+                        formatMonth(month.month),
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    final rows = layoutMonth(
+      items,
+      start: store.startOf(month),
+      width: width,
+      monthLabel: formatMonth(month.month),
+      dayLabel: formatDay,
+    );
+    final text = Theme.of(context).textTheme;
+    return SliverList.builder(
+      itemCount: rows.length,
+      itemBuilder: (context, index) {
+        final row = rows[index];
+        return switch (row) {
+          HeaderRow(:final label, :final isMonth) => SizedBox(
+            height: row.height,
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  label,
+                  style: isMonth ? text.titleLarge : text.bodyMedium,
+                ),
+              ),
+            ),
+          ),
+          TilesRow(:final tiles) => Padding(
+            padding: const EdgeInsets.only(bottom: gap),
+            child: SizedBox(
+              height: row.height,
+              child: Row(
+                children: [
+                  for (var i = 0; i < tiles.length; i++) ...[
+                    if (i > 0) const SizedBox(width: gap),
+                    _TileView(
+                      tile: tiles[i],
+                      height: row.height,
+                      session: session,
+                      isSelected: selected.contains(tiles[i].item.id),
+                      selecting: selected.isNotEmpty,
+                      onToggle: onToggle,
+                      onOpen: onOpen,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        };
+      },
+    );
+  }
+}
+
+class _TileView extends StatelessWidget {
+  const _TileView({
+    required this.tile,
+    required this.height,
+    required this.session,
+    required this.isSelected,
+    required this.selecting,
+    required this.onToggle,
+    required this.onOpen,
+  });
+
+  final Tile tile;
+  final double height;
+  final Session session;
+  final bool isSelected;
+  final bool selecting;
+  final void Function(String id) onToggle;
+  final void Function(int index) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = tile.item;
+    final pixels = (tile.width * MediaQuery.devicePixelRatioOf(context))
+        .round();
+    return GestureDetector(
+      onTap: () => selecting ? onToggle(item.id) : onOpen(tile.index),
+      onLongPress: () {
+        HapticFeedback.selectionClick();
+        onToggle(item.id);
+      },
+      child: SizedBox(
+        width: tile.width,
+        height: height,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ColoredBox(color: Palette.bg3),
+              AnimatedPadding(
+                duration: const Duration(milliseconds: 120),
+                padding: EdgeInsets.all(isSelected ? 8 : 0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(isSelected ? 5 : 0),
+                  child: CachedNetworkImage(
+                    imageUrl: session.thumbnailUrl(item.id),
+                    httpHeaders: session.headers,
+                    cacheKey: '${session.serverUrl}/${item.id}/s',
+                    memCacheWidth: pixels,
+                    fit: BoxFit.cover,
+                    fadeInDuration: const Duration(milliseconds: 120),
+                    errorWidget: (_, _, _) => const Icon(
+                      Icons.broken_image_outlined,
+                      color: Palette.dim,
+                    ),
+                  ),
+                ),
+              ),
+              if (item.kind == TimelineItemKindEnum.video)
+                const Positioned(
+                  right: 5,
+                  bottom: 5,
+                  child: Icon(
+                    Icons.play_circle_fill,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              if (item.isFavorite)
+                const Positioned(
+                  left: 5,
+                  bottom: 5,
+                  child: Icon(Icons.star, size: 18, color: Palette.gold),
+                ),
+              if (isSelected)
+                const Positioned(
+                  left: 4,
+                  top: 4,
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 22,
+                    color: Palette.gold,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

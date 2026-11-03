@@ -1,0 +1,43 @@
+name: iOS app
+
+# Builds an unsigned .ipa for sideloading through Feather, which signs it on install.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - mobile/**
+      - .github/workflows/ios.yml
+
+permissions:
+  contents: read
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.9
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test
+      - run: flutter build ios --release --no-codesign --build-number=${{ github.run_number }}
+      - name: Package the .ipa
+        run: |
+          mkdir -p build/ipa/Payload
+          cp -R build/ios/iphoneos/Runner.app build/ipa/Payload/
+          cd build/ipa
+          zip -qry Mediarr.ipa Payload
+          ls -la Mediarr.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mediarr-ipa
+          path: mobile/build/ipa/Mediarr.ipa
+          retention-days: 30
+          if-no-files-found: error
