@@ -16,12 +16,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	tusd "github.com/tus/tusd/v2/pkg/handler"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
-	"github.com/mmzlopasa/mediarr-app/server/internal/auth"
-	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
-	"github.com/mmzlopasa/mediarr-app/server/internal/ml"
-	"github.com/mmzlopasa/mediarr-app/server/internal/webui"
+	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/auth"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
+	"github.com/mediarr-app/mediarr/server/internal/ml"
+	"github.com/mediarr-app/mediarr/server/internal/webui"
 )
 
 const (

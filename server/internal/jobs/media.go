@@ -20,7 +20,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"golang.org/x/image/webp"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
+	"github.com/mediarr-app/mediarr/server/db"
 )
 
 const (

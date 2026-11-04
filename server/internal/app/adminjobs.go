@@ -11,8 +11,8 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/riverqueue/river/rivertype"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/api"
 )
 
 const (

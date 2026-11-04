@@ -1,4 +1,4 @@
-module github.com/mmzlopasa/mediarr-app/server
+module github.com/mediarr-app/mediarr/server
 
 go 1.27.3
 

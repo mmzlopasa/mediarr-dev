@@ -12,7 +12,7 @@ import (
 
 	_ "golang.org/x/image/webp" // Previews are WebP.
 
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/api"
 )
 
 func landscapeJPEG(t *testing.T) []byte {

@@ -17,8 +17,8 @@ import (
 	"github.com/riverqueue/river/rivertype"
 	"golang.org/x/image/webp"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
-	"github.com/mmzlopasa/mediarr-app/server/internal/ml"
+	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/ml"
 )
 
 const (

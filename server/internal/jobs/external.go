@@ -20,7 +20,7 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
+	"github.com/mediarr-app/mediarr/server/db"
 )
 
 const (

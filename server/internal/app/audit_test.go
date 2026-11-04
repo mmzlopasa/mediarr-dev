@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/api"
 )
 
 func auditEntries(t *testing.T, c *client) []api.AuditEntry {

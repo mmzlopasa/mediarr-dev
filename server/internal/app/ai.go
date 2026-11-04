@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
-	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
+	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 const (

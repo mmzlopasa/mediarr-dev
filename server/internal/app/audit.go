@@ -13,9 +13,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
-	"github.com/mmzlopasa/mediarr-app/server/internal/auth"
+	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/auth"
 )
 
 const (

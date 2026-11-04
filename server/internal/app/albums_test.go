@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/api"
 )
 
 func (c *client) send(method, path string, payload any) (*http.Response, []byte) {

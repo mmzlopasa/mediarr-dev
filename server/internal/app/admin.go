@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"syscall"
 
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/api"
 )
 
 // Version is set at build time. Development builds report "dev".

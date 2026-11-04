@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/api"
 )
 
 // pictureOf is a real picture that differs by its colour, so that no two are the same file.

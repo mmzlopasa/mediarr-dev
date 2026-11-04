@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
-	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
+	"github.com/mediarr-app/mediarr/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 func TestUploadsCannotBePutTogether(t *testing.T) {

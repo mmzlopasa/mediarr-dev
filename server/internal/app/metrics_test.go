@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
-	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
+	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 func TestMetricsNeedTheirToken(t *testing.T) {

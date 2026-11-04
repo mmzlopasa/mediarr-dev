@@ -18,9 +18,9 @@ import (
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
-	"github.com/mmzlopasa/mediarr-app/server/internal/ml"
-	"github.com/mmzlopasa/mediarr-app/server/internal/storage"
+	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/ml"
+	"github.com/mediarr-app/mediarr/server/internal/storage"
 )
 
 const (

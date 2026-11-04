@@ -17,7 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/riverqueue/river"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
+	"github.com/mediarr-app/mediarr/server/db"
 )
 
 const (

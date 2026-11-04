@@ -20,12 +20,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
-	"github.com/mmzlopasa/mediarr-app/server/internal/app"
-	"github.com/mmzlopasa/mediarr-app/server/internal/auth"
-	"github.com/mmzlopasa/mediarr-app/server/internal/config"
-	"github.com/mmzlopasa/mediarr-app/server/internal/jobs"
-	"github.com/mmzlopasa/mediarr-app/server/internal/storage"
+	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/app"
+	"github.com/mediarr-app/mediarr/server/internal/auth"
+	"github.com/mediarr-app/mediarr/server/internal/config"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
+	"github.com/mediarr-app/mediarr/server/internal/storage"
 )
 
 const (

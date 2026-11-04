@@ -4,7 +4,7 @@
 # The signing key stays on this server: Android refuses an update signed with any other key.
 set -euo pipefail
 
-REPO=mmzlopasa/mediarr-app
+REPO=mediarr-app/mediarr
 TOKEN_FILE=$HOME/.config/mediarr-gh-token
 KEY_DIR=$HOME/.config/mediarr-android
 TOOLS_DIR=$HOME/.local/share/mediarr-android

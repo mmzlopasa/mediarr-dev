@@ -1,7 +1,7 @@
 name: mediarr
 
 x-server: &server
-  image: ghcr.io/mmzlopasa/mediarr-server:${MEDIARR_VERSION:-latest}
+  image: ghcr.io/mediarr-app/mediarr-server:${MEDIARR_VERSION:-latest}
   env_file: .env
   environment:
     DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/mediarr
@@ -35,7 +35,7 @@ services:
         condition: service_healthy
 
   ml:
-    image: ghcr.io/mmzlopasa/mediarr-ml:${MEDIARR_VERSION:-latest}
+    image: ghcr.io/mediarr-app/mediarr-ml:${MEDIARR_VERSION:-latest}
     profiles: ["ml"]
     env_file: .env
     volumes:

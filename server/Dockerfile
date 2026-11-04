@@ -17,7 +17,7 @@ COPY server/ ./
 COPY --from=web /src/web/build/ ./internal/webui/dist/
 ARG MEDIARR_VERSION=dev
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath \
-    -ldflags="-s -w -X github.com/mmzlopasa/mediarr-app/server/internal/app.Version=$MEDIARR_VERSION" -o /mediarr ./cmd/mediarr
+    -ldflags="-s -w -X github.com/mediarr-app/mediarr/server/internal/app.Version=$MEDIARR_VERSION" -o /mediarr ./cmd/mediarr
 
 FROM alpine:3
 RUN apk add --no-cache vips-tools vips-heif exiftool ffmpeg libraw-tools font-dejavu restic postgresql17-client && adduser -D -u 10001 mediarr

@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/mmzlopasa/mediarr-app/server/db"
+	"github.com/mediarr-app/mediarr/server/db"
 )
 
 // TrashLifetime is how long a deleted photo can still be restored.

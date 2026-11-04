@@ -17,7 +17,7 @@ SIGLIP_FILES = {
     "text_model_fp16.onnx": "onnx/text_model_fp16.onnx",
     "tokenizer.json": "tokenizer.json",
 }
-# Each server fetches these from their source. Their licence is in docs/adr/002-lica-i-karta.md.
+# Each server fetches these from their source. Check their licence before any commercial use
 FACE_RELEASE = "https://github.com/deepinsight/insightface/releases/download/v0.7"
 FACE_FILES = {
     "buffalo_l": ("det_10g.onnx", "w600k_r50.onnx"),

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/api"
 )
 
 func TestAQuotaStopsUploadsOfThatUserOnly(t *testing.T) {

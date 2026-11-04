@@ -3,7 +3,7 @@
 # https://cdn.mediarr.app/apps/mediarr.ipa. Runs from cron. Does nothing when there is no new build.
 set -euo pipefail
 
-REPO=mmzlopasa/mediarr-app
+REPO=mediarr-app/mediarr
 TOKEN_FILE=$HOME/.config/mediarr-gh-token
 DEST_DIR=$HOME/mediarr-apps
 DEST=$DEST_DIR/mediarr.ipa
