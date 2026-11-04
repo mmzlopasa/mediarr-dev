@@ -216,6 +216,13 @@ func MergePeople(ctx context.Context, q *db.Queries, target pgtype.UUID, sources
 	if err := q.MovePersonRules(ctx, db.MovePersonRulesParams{Target: target, Sources: sources, UserID: user}); err != nil {
 		return err
 	}
+	// An import may still be running, and it must find the person under the new id.
+	if err := q.MovePersonImports(ctx, db.MovePersonImportsParams{Target: target, UserID: user, Sources: sources}); err != nil {
+		return err
+	}
+	if err := q.MovePersonHints(ctx, db.MovePersonHintsParams{Target: target, Sources: sources}); err != nil {
+		return err
+	}
 	return q.DeletePeople(ctx, db.DeletePeopleParams{Ids: sources, UserID: user})
 }
 

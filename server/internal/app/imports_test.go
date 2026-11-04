@@ -243,4 +243,13 @@ func TestImportFromARealImmich(t *testing.T) {
 			t.Errorf("%s: %d, want %d", query, got, want)
 		}
 	}
+
+	// A person whose id the import remembers can be gone, and the file must still count as fine.
+	if _, err := s.pool.Exec(ctx, "DELETE FROM people WHERE name='Ana'"); err != nil {
+		t.Fatal(err)
+	}
+	entry = c.startImport(t, payload)
+	if entry.Failed != 0 || entry.Added != 0 {
+		t.Fatalf("after the person was gone: %+v", entry)
+	}
 }

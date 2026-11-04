@@ -43,3 +43,13 @@ UPDATE assets SET archived_at = now() WHERE id = $1 AND archived_at IS NULL;
 
 -- name: CreateNamedPerson :one
 INSERT INTO people (user_id, name, hidden) VALUES ($1, $2, $3) RETURNING id;
+
+-- name: MovePersonImports :exec
+UPDATE import_map SET local_id = sqlc.arg('target')
+WHERE user_id = sqlc.arg('user_id') AND kind = 'person' AND local_id = ANY(sqlc.arg('sources')::uuid[]);
+
+-- name: MovePersonHints :exec
+INSERT INTO face_hints (asset_id, person_id, x1, y1, x2, y2)
+SELECT asset_id, sqlc.arg('target'), x1, y1, x2, y2 FROM face_hints
+WHERE person_id = ANY(sqlc.arg('sources')::uuid[])
+ON CONFLICT DO NOTHING;

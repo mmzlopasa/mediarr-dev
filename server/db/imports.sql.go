@@ -282,6 +282,39 @@ func (q *Queries) MarkImportedFavorite(ctx context.Context, id pgtype.UUID) erro
 	return err
 }
 
+const movePersonHints = `-- name: MovePersonHints :exec
+INSERT INTO face_hints (asset_id, person_id, x1, y1, x2, y2)
+SELECT asset_id, $1, x1, y1, x2, y2 FROM face_hints
+WHERE person_id = ANY($2::uuid[])
+ON CONFLICT DO NOTHING
+`
+
+type MovePersonHintsParams struct {
+	Target  pgtype.UUID
+	Sources []pgtype.UUID
+}
+
+func (q *Queries) MovePersonHints(ctx context.Context, arg MovePersonHintsParams) error {
+	_, err := q.db.Exec(ctx, movePersonHints, arg.Target, arg.Sources)
+	return err
+}
+
+const movePersonImports = `-- name: MovePersonImports :exec
+UPDATE import_map SET local_id = $1
+WHERE user_id = $2 AND kind = 'person' AND local_id = ANY($3::uuid[])
+`
+
+type MovePersonImportsParams struct {
+	Target  pgtype.UUID
+	UserID  pgtype.UUID
+	Sources []pgtype.UUID
+}
+
+func (q *Queries) MovePersonImports(ctx context.Context, arg MovePersonImportsParams) error {
+	_, err := q.db.Exec(ctx, movePersonImports, arg.Target, arg.UserID, arg.Sources)
+	return err
+}
+
 const setImportFacts = `-- name: SetImportFacts :exec
 UPDATE assets SET import_taken_at = $2, import_latitude = $3, import_longitude = $4 WHERE id = $1
 `

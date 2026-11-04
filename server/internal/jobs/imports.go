@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/riverqueue/river"
 
@@ -31,22 +32,23 @@ import (
 )
 
 const (
-	importQueue       = "import"
-	importSlice       = 6 * time.Hour
-	immichPageSize    = 250
-	importRequestWait = 2 * time.Minute
-	maxImportError    = 400
-	maxImportAnswer   = 64 << 20
-	maxSidecarBytes   = 1 << 20
-	maxImportPages    = 200000
-	minImportFree     = 2 << 30
-	statusDone        = "done"
-	statusFailed      = "failed"
-	sourceImmich      = "immich"
-	sourceTakeout     = "takeout"
-	sourceICloud      = "icloud"
-	kindAlbum         = "album"
-	kindPerson        = "person"
+	importQueue         = "import"
+	importSlice         = 6 * time.Hour
+	immichPageSize      = 250
+	importRequestWait   = 2 * time.Minute
+	maxImportError      = 400
+	foreignKeyViolation = "23503"
+	maxImportAnswer     = 64 << 20
+	maxSidecarBytes     = 1 << 20
+	maxImportPages      = 200000
+	minImportFree       = 2 << 30
+	statusDone          = "done"
+	statusFailed        = "failed"
+	sourceImmich        = "immich"
+	sourceTakeout       = "takeout"
+	sourceICloud        = "icloud"
+	kindAlbum           = "album"
+	kindPerson          = "person"
 )
 
 // ImportArgs brings a library in from somewhere else.
@@ -473,6 +475,11 @@ func (i *importRun) immichHints(ctx context.Context, remote string, local pgtype
 			X1: float32(face.X1 / face.ImageWidth), Y1: float32(face.Y1 / face.ImageHeight),
 			X2: float32(face.X2 / face.ImageWidth), Y2: float32(face.Y2 / face.ImageHeight),
 		}); err != nil {
+			// The person was merged away. A hint only helps, and the face still finds its person.
+			var failure *pgconn.PgError
+			if errors.As(err, &failure) && failure.Code == foreignKeyViolation {
+				continue
+			}
 			return err
 		}
 	}

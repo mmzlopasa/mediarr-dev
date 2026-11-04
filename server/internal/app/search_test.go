@@ -455,3 +455,36 @@ func TestPersonThumbnailIsAReadableCrop(t *testing.T) {
 		t.Fatalf("%v, %v", info, err)
 	}
 }
+
+func TestMergingPeopleKeepsWhatAnImportRemembers(t *testing.T) {
+	s := newStack(t)
+	c := s.admin()
+	ctx := context.Background()
+	asset := c.newPhoto(t, "a.jpg", "2024-01-01T10:00:00Z")
+	var user, keep, merged string
+	if err := s.pool.QueryRow(ctx, `SELECT id FROM users LIMIT 1`).Scan(&user); err != nil {
+		t.Fatal(err)
+	}
+	for _, target := range []*string{&keep, &merged} {
+		if err := s.pool.QueryRow(ctx, `INSERT INTO people (user_id, name) VALUES ($1, '') RETURNING id`, user).Scan(target); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := s.pool.Exec(ctx, `INSERT INTO import_map (user_id, origin, kind, remote_id, local_id) VALUES ($1, 'x', 'person', 'r', $2)`, user, merged); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.pool.Exec(ctx, `INSERT INTO face_hints (asset_id, person_id, x1, y1, x2, y2) VALUES ($1, $2, 0, 0, 1, 1)`, asset, merged); err != nil {
+		t.Fatal(err)
+	}
+	resp, body := c.post("/api/people/"+keep+"/merge", map[string][]string{"ids": {merged}})
+	if resp.StatusCode >= http.StatusBadRequest {
+		t.Fatalf("%d %s", resp.StatusCode, body)
+	}
+	var mapped, hinted string
+	if err := s.pool.QueryRow(ctx, `SELECT local_id FROM import_map WHERE remote_id = 'r'`).Scan(&mapped); err != nil || mapped != keep {
+		t.Fatalf("map: %s, %v", mapped, err)
+	}
+	if err := s.pool.QueryRow(ctx, `SELECT person_id FROM face_hints WHERE asset_id = $1`, asset).Scan(&hinted); err != nil || hinted != keep {
+		t.Fatalf("hint: %s, %v", hinted, err)
+	}
+}
