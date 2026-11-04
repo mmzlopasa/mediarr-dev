@@ -51,6 +51,8 @@ type Deps struct {
 	ExternalPath string
 	// ProxyHops is how many reverse proxies stand in front of the bundled nginx.
 	ProxyHops int
+	// DemoEmail is an account anyone may sign in to, so it can look at everything and change nothing.
+	DemoEmail string
 	// MaxUploadBytes limits one file, if above zero.
 	MaxUploadBytes int64
 	// MetricsToken turns on /metrics, for whoever has it.
@@ -118,6 +120,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 	r.Use(sameOriginWrites)
 	if server.queries != nil {
 		r.Use(server.loadUser)
+		r.Use(server.demoReadOnly)
 		r.Use(server.limitAndAudit)
 	}
 	r.NotFound(notFound)

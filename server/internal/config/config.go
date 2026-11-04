@@ -15,6 +15,7 @@ type Config struct {
 	CachePath         string
 	ExternalPath      string
 	ProxyHops         int
+	DemoEmail         string
 	MaxUploadBytes    int64
 	MetricsToken      string
 	BackupPath        string
@@ -32,6 +33,7 @@ func Load() Config {
 		CachePath:         env("CACHE_PATH", "/data/cache"),
 		ExternalPath:      env("EXTERNAL_PATH", "/external"),
 		ProxyHops:         envInt("TRUSTED_PROXY_HOPS", 0),
+		DemoEmail:         os.Getenv("DEMO_EMAIL"),
 		MetricsToken:      os.Getenv("METRICS_TOKEN"),
 		BackupPath:        env("BACKUP_MOUNT", "/backup"),
 		MaxUploadBytes:    int64(envInt("MAX_UPLOAD_MB", 0)) * 1024 * 1024,

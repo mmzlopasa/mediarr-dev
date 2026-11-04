@@ -22,6 +22,7 @@ x-go: &go
     ML_URL: http://ml:8000
     # The demo stands behind the host nginx.
     TRUSTED_PROXY_HOPS: "1"
+    DEMO_EMAIL: ${DEMO_EMAIL:-}
   volumes:
     - ../server:/src/server
     - ../.dev/cache:/cache

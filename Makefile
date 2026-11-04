@@ -4,7 +4,7 @@ export DEV_GID := $(shell id -g)
 
 # Optional per-machine settings, such as DEV_LIBRARY on a separate disk.
 -include docker/.env.dev
-export DEV_LIBRARY DEV_MEDIA_CACHE DEV_MODELS
+export DEV_LIBRARY DEV_MEDIA_CACHE DEV_MODELS DEMO_EMAIL
 
 DEV_COMPOSE := docker compose -f docker/docker-compose.dev.yml
 GO_TOOL := go tool -modfile=tools.mod
