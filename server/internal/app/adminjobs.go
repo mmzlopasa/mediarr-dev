@@ -22,7 +22,7 @@ const (
 	mlHealthWait  = 3 * time.Second
 )
 
-var jobQueues = []string{"default", "video", "ml"}
+var jobQueues = []string{"default", "video", "ml", "import"}
 
 func (s *apiServer) GetAdminJobs(w http.ResponseWriter, r *http.Request) {
 	if requireAdmin(w, r) == nil {

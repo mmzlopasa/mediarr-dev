@@ -280,6 +280,18 @@ func firstNumber(row map[string]any, keys ...string) float64 {
 
 func pgText(s string) pgtype.Text { return pgtype.Text{String: s, Valid: s != ""} }
 
+// fillFromImport uses what the place a file came from knew, only where the file itself says nothing.
+func (m *Metadata) fillFromImport(asset *db.Asset) {
+	if m.TakenAt == nil && asset.ImportTakenAt.Valid {
+		when := asset.ImportTakenAt.Time
+		m.TakenAt = &when
+	}
+	if m.Latitude == nil && asset.ImportLatitude.Valid && asset.ImportLongitude.Valid {
+		lat, lon := asset.ImportLatitude.Float64, asset.ImportLongitude.Float64
+		m.Latitude, m.Longitude = &lat, &lon
+	}
+}
+
 func (m *Metadata) assetParams(id pgtype.UUID) db.UpdateAssetMetadataParams {
 	params := db.UpdateAssetMetadataParams{
 		ID:        id,

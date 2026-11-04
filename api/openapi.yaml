@@ -1690,6 +1690,45 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/admin/imports:
+    get:
+      operationId: listImports
+      summary: Imports, the newest first
+      responses:
+        "200":
+          description: The imports
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ImportEntry" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createImport
+      summary: Bring a library in from Immich, Google Takeout or an iCloud export
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ImportCreate" }
+      responses:
+        "201":
+          description: Started
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: { type: string } }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/imports/{id}/cancel:
+    post:
+      operationId: cancelImport
+      summary: Stop an import. What it has brought in stays
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Stopped }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/admin/external:
     get:
       operationId: getExternalLibrary
@@ -2034,6 +2073,29 @@ components:
         name: { type: string }
         createdAt: { type: string, format: date-time }
         lastUsedAt: { type: string, format: date-time }
+    ImportCreate:
+      type: object
+      required: [source, ownerId]
+      properties:
+        source: { type: string, enum: [immich, takeout, icloud] }
+        ownerId: { type: string, format: uuid, description: "Whose library it goes into" }
+        address: { type: string, description: "Immich only" }
+        apiKey: { type: string, description: "Immich only. Forgotten when the import ends" }
+        folder: { type: string, description: "Takeout and iCloud: an unpacked folder inside the external library's mount" }
+    ImportEntry:
+      type: object
+      required: [id, userEmail, source, status, added, skipped, failed, lastError, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        userEmail: { type: string }
+        source: { type: string, enum: [immich, takeout, icloud] }
+        status: { type: string, enum: [running, done, failed, cancelled] }
+        added: { type: integer }
+        skipped: { type: integer, description: "Already there, or deleted at the source" }
+        failed: { type: integer }
+        lastError: { type: string }
+        createdAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time }
     Memory:
       type: object
       required: [kind, title, items]

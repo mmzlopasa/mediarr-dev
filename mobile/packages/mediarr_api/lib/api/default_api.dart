@@ -312,6 +312,55 @@ class DefaultApi {
     return null;
   }
 
+  /// Stop an import. What it has brought in stays
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> cancelImportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/imports/{id}/cancel'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop an import. What it has brought in stays
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> cancelImport(
+    String id,
+  ) async {
+    final response = await cancelImportWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Cancel an upload (tus 1.0)
   ///
   /// Note: This method returns the HTTP [Response].
@@ -878,6 +927,66 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'DeviceKey',
       ) as DeviceKey;
+    }
+    return null;
+  }
+
+  /// Bring a library in from Immich, Google Takeout or an iCloud export
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [ImportCreate] importCreate (required):
+  Future<Response> createImportWithHttpInfo(
+    ImportCreate importCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/imports';
+
+    // ignore: prefer_final_locals
+    Object? postBody = importCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Bring a library in from Immich, Google Takeout or an iCloud export
+  ///
+  /// Parameters:
+  ///
+  /// * [ImportCreate] importCreate (required):
+  Future<Map<String, String>?> createImport(
+    ImportCreate importCreate,
+  ) async {
+    final response = await createImportWithHttpInfo(
+      importCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return Map<String, String>.from(
+        await apiClient.deserializeAsync(
+            await _decodeBodyBytes(response), 'Map<String, String>'),
+      );
     }
     return null;
   }
@@ -5531,6 +5640,53 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'Duplicates',
       ) as Duplicates;
+    }
+    return null;
+  }
+
+  /// Imports, the newest first
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listImportsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/imports';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Imports, the newest first
+  Future<List<ImportEntry>?> listImports() async {
+    final response = await listImportsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<ImportEntry>') as List)
+          .cast<ImportEntry>()
+          .toList(growable: false);
     }
     return null;
   }

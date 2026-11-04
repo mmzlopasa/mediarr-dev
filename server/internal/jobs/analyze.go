@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
+	"golang.org/x/image/webp"
 
 	"github.com/mmzlopasa/mediarr-app/server/db"
 	"github.com/mmzlopasa/mediarr-app/server/internal/ml"
@@ -119,6 +120,10 @@ func AnalyzeAsset(ctx context.Context, pool beginner, q *db.Queries, client *ml.
 		return err
 	}
 
+	hints, width, height, err := faceHints(ctx, q, id, path)
+	if err != nil {
+		return err
+	}
 	return pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
 		qtx := q.WithTx(tx)
 		if _, err := tx.Exec(ctx, "SET LOCAL hnsw.iterative_scan = relaxed_order"); err != nil {
@@ -133,7 +138,7 @@ func AnalyzeAsset(ctx context.Context, pool beginner, q *db.Queries, client *ml.
 			return err
 		}
 		for i := range faces {
-			if err := storeFace(ctx, qtx, &asset, &faces[i]); err != nil {
+			if err := storeFace(ctx, qtx, &asset, &faces[i], hintFor(&faces[i], hints, width, height)); err != nil {
 				return err
 			}
 		}
@@ -202,7 +207,52 @@ func MergePeople(ctx context.Context, q *db.Queries, target pgtype.UUID, sources
 	return q.DeletePeople(ctx, db.DeletePeopleParams{Ids: sources, UserID: user})
 }
 
-func storeFace(ctx context.Context, q *db.Queries, asset *db.Asset, face *ml.Face) error {
+// minHintOverlap is how much of a face and a named box must cover each other to be the same face.
+const minHintOverlap = 0.3
+
+// overlap is the part the two boxes share, of all they cover together.
+func overlap(a, b [4]float32) float32 {
+	width := min(a[2], b[2]) - max(a[0], b[0])
+	height := min(a[3], b[3]) - max(a[1], b[1])
+	if width <= 0 || height <= 0 {
+		return 0
+	}
+	shared := width * height
+	return shared / ((a[2]-a[0])*(a[3]-a[1]) + (b[2]-b[0])*(b[3]-b[1]) - shared)
+}
+
+// faceHints reads who another system said is in this picture, and the preview's size to compare with.
+func faceHints(ctx context.Context, q *db.Queries, id pgtype.UUID, preview string) (hints []db.ListFaceHintsRow, width, height float32, err error) {
+	hints, err = q.ListFaceHints(ctx, id)
+	if err != nil || len(hints) == 0 {
+		return nil, 0, 0, err
+	}
+	file, err := os.Open(preview) //nolint:gosec // From the database.
+	if err != nil {
+		return nil, 0, 0, fmt.Errorf("read preview: %w", err)
+	}
+	defer func() { _ = file.Close() }()
+	config, err := webp.DecodeConfig(file)
+	if err != nil {
+		// Without a size there is nothing to compare, and the faces are grouped as usual.
+		return nil, 0, 0, nil //nolint:nilerr // See above.
+	}
+	return hints, float32(config.Width), float32(config.Height), nil
+}
+
+func hintFor(face *ml.Face, hints []db.ListFaceHintsRow, width, height float32) pgtype.UUID {
+	var best pgtype.UUID
+	bestOverlap := float32(minHintOverlap)
+	box := [4]float32{face.Box[0] / max(width, 1), face.Box[1] / max(height, 1), face.Box[2] / max(width, 1), face.Box[3] / max(height, 1)}
+	for i := range hints {
+		if got := overlap(box, [4]float32{hints[i].X1, hints[i].Y1, hints[i].X2, hints[i].Y2}); got >= bestOverlap {
+			best, bestOverlap = hints[i].PersonID, got
+		}
+	}
+	return best
+}
+
+func storeFace(ctx context.Context, q *db.Queries, asset *db.Asset, face *ml.Face, named pgtype.UUID) error {
 	if !usableFace(face) {
 		return nil
 	}
@@ -212,6 +262,9 @@ func storeFace(ctx context.Context, q *db.Queries, asset *db.Asset, face *ml.Fac
 		return err
 	}
 	person, merge := planFace(near)
+	if named.Valid {
+		person, merge = named, nil
+	}
 	if !person.Valid {
 		if person, err = q.CreatePerson(ctx, asset.UserID); err != nil {
 			return err

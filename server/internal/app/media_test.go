@@ -19,7 +19,7 @@ import (
 func (s *stack) startWorker(t *testing.T) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
-	worker, err := jobs.NewWorker(s.pool, jobs.Options{Concurrency: 2, LibraryPath: s.library, CachePath: s.cache})
+	worker, err := jobs.NewWorker(s.pool, jobs.Options{Concurrency: 2, LibraryPath: s.library, CachePath: s.cache, ExternalPath: s.external})
 	if err != nil {
 		t.Fatal(err)
 	}

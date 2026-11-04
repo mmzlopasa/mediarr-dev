@@ -1870,6 +1870,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Imports, the newest first */
+        get: operations["listImports"];
+        put?: never;
+        /** Bring a library in from Immich, Google Takeout or an iCloud export */
+        post: operations["createImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/imports/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop an import. What it has brought in stays */
+        post: operations["cancelImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/external": {
         parameters: {
             query?: never;
@@ -2211,6 +2246,39 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             lastUsedAt?: string;
+        };
+        ImportCreate: {
+            /** @enum {string} */
+            source: "immich" | "takeout" | "icloud";
+            /**
+             * Format: uuid
+             * @description Whose library it goes into
+             */
+            ownerId: string;
+            /** @description Immich only */
+            address?: string;
+            /** @description Immich only. Forgotten when the import ends */
+            apiKey?: string;
+            /** @description Takeout and iCloud: an unpacked folder inside the external library's mount */
+            folder?: string;
+        };
+        ImportEntry: {
+            /** Format: uuid */
+            id: string;
+            userEmail: string;
+            /** @enum {string} */
+            source: "immich" | "takeout" | "icloud";
+            /** @enum {string} */
+            status: "running" | "done" | "failed" | "cancelled";
+            added: number;
+            /** @description Already there, or deleted at the source */
+            skipped: number;
+            failed: number;
+            lastError: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            finishedAt?: string;
         };
         Memory: {
             /** @enum {string} */
@@ -5791,6 +5859,79 @@ export interface operations {
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    listImports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The imports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportEntry"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    createImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCreate"];
+            };
+        };
+        responses: {
+            /** @description Started */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    cancelImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stopped */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     getExternalLibrary: {

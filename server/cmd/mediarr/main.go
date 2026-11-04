@@ -161,7 +161,7 @@ func worker(ctx context.Context, cfg config.Config) error {
 	if err := jobs.ReleaseInterrupted(ctx, pool); err != nil {
 		return err
 	}
-	client, err := jobs.NewWorker(pool, jobs.Options{MLURL: cfg.MLURL, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, VideoAccel: cfg.VideoAccel})
+	client, err := jobs.NewWorker(pool, jobs.Options{MLURL: cfg.MLURL, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, VideoAccel: cfg.VideoAccel})
 	if err != nil {
 		return fmt.Errorf("create worker: %w", err)
 	}

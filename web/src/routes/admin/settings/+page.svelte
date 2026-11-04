@@ -5,7 +5,9 @@
 		type AnalysisProgress,
 		type ExternalLibrary,
 		type OIDCSettings,
-		type User
+		type User,
+		type ImportCreate,
+		type ImportEntry
 	} from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
@@ -65,6 +67,45 @@
 			});
 			oidcSecret = '';
 			showToast('ok', tr('Spremljeno.', 'Saved.'));
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
+			);
+		}
+	}
+
+	let imports = $state<ImportEntry[]>([]);
+	let importSource = $state<ImportCreate['source']>('immich');
+	let importOwner = $state('');
+	let importAddress = $state('');
+	let importKey = $state('');
+	let importFolder = $state('');
+	let importTimer: ReturnType<typeof setInterval> | undefined;
+
+	async function loadImports() {
+		imports = await api.imports().catch(() => imports);
+	}
+
+	onMount(() => {
+		loadImports();
+		importTimer = setInterval(loadImports, 5000);
+		return () => clearInterval(importTimer);
+	});
+
+	async function startImport(event: SubmitEvent) {
+		event.preventDefault();
+		try {
+			await api.startImport({
+				source: importSource,
+				ownerId: importOwner,
+				...(importSource === 'immich'
+					? { address: importAddress, apiKey: importKey }
+					: { folder: importFolder })
+			});
+			importKey = '';
+			await loadImports();
+			showToast('ok', tr('Uvoz je pokrenut.', 'The import has started.'));
 		} catch (cause) {
 			showToast(
 				'err',
@@ -212,6 +253,76 @@
 			</form>
 		</Card>
 	{/if}
+	<Card title={tr('Uvoz', 'Import')}>
+		<form class="form" onsubmit={startImport}>
+			<p class="alb-meta">
+				{tr(
+					'Datoteka koja već postoji ne uvozi se ponovno, pa se uvoz smije ponoviti. Ništa se ne mijenja na izvoru.',
+					'A file that is already here is not brought in again, so an import can be repeated. Nothing changes at the source.'
+				)}
+			</p>
+			<label class="form">
+				<span>{tr('Odakle', 'From')}</span>
+				<select bind:value={importSource} data-testid="import-source">
+					<option value="immich">Immich</option>
+					<option value="takeout">Google Takeout</option>
+					<option value="icloud">iCloud</option>
+				</select>
+			</label>
+			<label class="form">
+				<span>{tr('U čiju biblioteku', 'Into whose library')}</span>
+				<select bind:value={importOwner} required data-testid="import-owner">
+					<option value="" disabled>{tr('Odaberite korisnika', 'Choose a user')}</option>
+					{#each users as user (user.id)}
+						<option value={user.id}>{user.name} ({user.email})</option>
+					{/each}
+				</select>
+			</label>
+			{#if importSource === 'immich'}
+				<Input label={tr('Adresa Immicha', 'Immich address')} bind:value={importAddress} />
+				<Input label={tr('Immich API ključ', 'Immich API key')} bind:value={importKey} />
+				<p class="alb-meta">
+					{tr(
+						'Ključ se briše kad uvoz završi. Lica se prepoznaju iznova ako je uključena analiza slika, a imena se preuzimaju.',
+						'The key is erased when the import ends. Faces are recognised again if picture analysis is on, and their names are kept.'
+					)}
+				</p>
+			{:else}
+				<Input
+					label={tr('Mapa unutar vanjske biblioteke', 'Folder inside the external library')}
+					bind:value={importFolder}
+				/>
+				<p class="alb-meta">
+					{tr(
+						'Raspakirajte izvoz u mapu iz EXTERNAL_LIBRARY_PATH. Datoteke se kopiraju, a izvoz ostaje netaknut.',
+						'Unpack the export into the folder of EXTERNAL_LIBRARY_PATH. The files are copied, and the export stays untouched.'
+					)}
+				</p>
+			{/if}
+			<Button type="submit" variant="gold" small>{tr('Pokreni uvoz', 'Start the import')}</Button>
+		</form>
+		{#each imports as entry (entry.id)}
+			<div class="alb-list" data-import={entry.source}>
+				<b>{entry.source} → {entry.userEmail}</b>
+				<span class="alb-meta">
+					{entry.status} · {tr('dodano', 'added')}
+					{entry.added} · {tr('preskočeno', 'skipped')}
+					{entry.skipped} · {tr('neuspjelo', 'failed')}
+					{entry.failed}
+					{#if entry.lastError}· {entry.lastError}{/if}
+				</span>
+				{#if entry.status === 'running'}
+					<Button
+						small
+						onclick={async () => {
+							await api.cancelImport(entry.id);
+							await loadImports();
+						}}>{tr('Zaustavi', 'Stop')}</Button
+					>
+				{/if}
+			</div>
+		{/each}
+	</Card>
 	<Card title={tr('Karta', 'Map')}>
 		<form class="form" onsubmit={save}>
 			<p class="alb-meta">

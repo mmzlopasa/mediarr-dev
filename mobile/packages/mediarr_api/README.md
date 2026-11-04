@@ -65,6 +65,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**beginPasskeyLogin**](doc//DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
 *DefaultApi* | [**beginPasskeyRegistration**](doc//DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey
 *DefaultApi* | [**bulkAssets**](doc//DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
+*DefaultApi* | [**cancelImport**](doc//DefaultApi.md#cancelimport) | **POST** /api/admin/imports/{id}/cancel | Stop an import. What it has brought in stays
 *DefaultApi* | [**cancelUpload**](doc//DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
 *DefaultApi* | [**changeAssetTags**](doc//DefaultApi.md#changeassettags) | **POST** /api/assets/tags | Add a tag to the user's own assets, or remove it
 *DefaultApi* | [**changePassword**](doc//DefaultApi.md#changepassword) | **POST** /api/me/password | Change the current user's password and end their other sessions
@@ -75,6 +76,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**createAlbumComment**](doc//DefaultApi.md#createalbumcomment) | **POST** /api/albums/{id}/comments | Comment on an album or on a photo in it
 *DefaultApi* | [**createAlbumLink**](doc//DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
 *DefaultApi* | [**createDeviceKey**](doc//DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
+*DefaultApi* | [**createImport**](doc//DefaultApi.md#createimport) | **POST** /api/admin/imports | Bring a library in from Immich, Google Takeout or an iCloud export
 *DefaultApi* | [**createPublicUpload**](doc//DefaultApi.md#createpublicupload) | **POST** /api/public/{token}/uploads | Send one whole file to a public album (tus 1.0 creation with upload)
 *DefaultApi* | [**createStoryExport**](doc//DefaultApi.md#createstoryexport) | **POST** /api/stories | Make a video of the chosen photos. Runs in the background.
 *DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
@@ -154,6 +156,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 *DefaultApi* | [**listDuplicates**](doc//DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
+*DefaultApi* | [**listImports**](doc//DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
 *DefaultApi* | [**listPasskeys**](doc//DefaultApi.md#listpasskeys) | **GET** /api/me/passkeys | The current user's passkeys
@@ -239,6 +242,8 @@ Class | Method | HTTP request | Description
  - [Folder](doc//Folder.md)
  - [FolderEntry](doc//FolderEntry.md)
  - [Health](doc//Health.md)
+ - [ImportCreate](doc//ImportCreate.md)
+ - [ImportEntry](doc//ImportEntry.md)
  - [JobQueue](doc//JobQueue.md)
  - [LinkPassword](doc//LinkPassword.md)
  - [LoginError](doc//LoginError.md)

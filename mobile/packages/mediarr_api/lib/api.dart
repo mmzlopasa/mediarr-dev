@@ -73,6 +73,8 @@ part 'model/failed_job.dart';
 part 'model/folder.dart';
 part 'model/folder_entry.dart';
 part 'model/health.dart';
+part 'model/import_create.dart';
+part 'model/import_entry.dart';
 part 'model/job_queue.dart';
 part 'model/link_password.dart';
 part 'model/login_error.dart';

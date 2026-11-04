@@ -46,6 +46,8 @@ doc/FailedJob.md
 doc/Folder.md
 doc/FolderEntry.md
 doc/Health.md
+doc/ImportCreate.md
+doc/ImportEntry.md
 doc/JobQueue.md
 doc/LinkPassword.md
 doc/LoginError.md
@@ -147,6 +149,8 @@ lib/model/failed_job.dart
 lib/model/folder.dart
 lib/model/folder_entry.dart
 lib/model/health.dart
+lib/model/import_create.dart
+lib/model/import_entry.dart
 lib/model/job_queue.dart
 lib/model/link_password.dart
 lib/model/login_error.dart
@@ -195,8 +199,5 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
-test/auth_methods_test.dart
-test/oidc_exchange_test.dart
-test/oidc_settings_test.dart
-test/oidc_settings_update_test.dart
-test/passkey_test.dart
+test/import_create_test.dart
+test/import_entry_test.dart

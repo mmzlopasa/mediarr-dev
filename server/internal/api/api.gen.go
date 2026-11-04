@@ -305,6 +305,72 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for ImportCreateSource.
+const (
+	ImportCreateSourceIcloud  ImportCreateSource = "icloud"
+	ImportCreateSourceImmich  ImportCreateSource = "immich"
+	ImportCreateSourceTakeout ImportCreateSource = "takeout"
+)
+
+// Valid indicates whether the value is a known member of the ImportCreateSource enum.
+func (e ImportCreateSource) Valid() bool {
+	switch e {
+	case ImportCreateSourceIcloud:
+		return true
+	case ImportCreateSourceImmich:
+		return true
+	case ImportCreateSourceTakeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ImportEntrySource.
+const (
+	ImportEntrySourceIcloud  ImportEntrySource = "icloud"
+	ImportEntrySourceImmich  ImportEntrySource = "immich"
+	ImportEntrySourceTakeout ImportEntrySource = "takeout"
+)
+
+// Valid indicates whether the value is a known member of the ImportEntrySource enum.
+func (e ImportEntrySource) Valid() bool {
+	switch e {
+	case ImportEntrySourceIcloud:
+		return true
+	case ImportEntrySourceImmich:
+		return true
+	case ImportEntrySourceTakeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ImportEntryStatus.
+const (
+	ImportEntryStatusCancelled ImportEntryStatus = "cancelled"
+	ImportEntryStatusDone      ImportEntryStatus = "done"
+	ImportEntryStatusFailed    ImportEntryStatus = "failed"
+	ImportEntryStatusRunning   ImportEntryStatus = "running"
+)
+
+// Valid indicates whether the value is a known member of the ImportEntryStatus enum.
+func (e ImportEntryStatus) Valid() bool {
+	switch e {
+	case ImportEntryStatusCancelled:
+		return true
+	case ImportEntryStatusDone:
+		return true
+	case ImportEntryStatusFailed:
+		return true
+	case ImportEntryStatusRunning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MemberRoleRole.
 const (
 	MemberRoleRoleContributor MemberRoleRole = "contributor"
@@ -1108,6 +1174,47 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// ImportCreate defines model for ImportCreate.
+type ImportCreate struct {
+	// Address Immich only
+	Address *string `json:"address,omitempty"`
+
+	// ApiKey Immich only. Forgotten when the import ends
+	ApiKey *string `json:"apiKey,omitempty"`
+
+	// Folder Takeout and iCloud: an unpacked folder inside the external library's mount
+	Folder *string `json:"folder,omitempty"`
+
+	// OwnerId Whose library it goes into
+	OwnerId openapi_types.UUID `json:"ownerId"`
+	Source  ImportCreateSource `json:"source"`
+}
+
+// ImportCreateSource defines model for ImportCreate.Source.
+type ImportCreateSource string
+
+// ImportEntry defines model for ImportEntry.
+type ImportEntry struct {
+	Added      int                `json:"added"`
+	CreatedAt  time.Time          `json:"createdAt"`
+	Failed     int                `json:"failed"`
+	FinishedAt *time.Time         `json:"finishedAt,omitempty"`
+	Id         openapi_types.UUID `json:"id"`
+	LastError  string             `json:"lastError"`
+
+	// Skipped Already there, or deleted at the source
+	Skipped   int               `json:"skipped"`
+	Source    ImportEntrySource `json:"source"`
+	Status    ImportEntryStatus `json:"status"`
+	UserEmail string            `json:"userEmail"`
+}
+
+// ImportEntrySource defines model for ImportEntry.Source.
+type ImportEntrySource string
+
+// ImportEntryStatus defines model for ImportEntry.Status.
+type ImportEntryStatus string
+
 // JobQueue defines model for JobQueue.
 type JobQueue struct {
 	Name    string `json:"name"`
@@ -1633,6 +1740,9 @@ type SearchAssetsParams struct {
 // SetExternalLibraryJSONRequestBody defines body for SetExternalLibrary for application/json ContentType.
 type SetExternalLibraryJSONRequestBody = ExternalLibraryOwner
 
+// CreateImportJSONRequestBody defines body for CreateImport for application/json ContentType.
+type CreateImportJSONRequestBody = ImportCreate
+
 // SetOIDCSettingsJSONRequestBody defines body for SetOIDCSettings for application/json ContentType.
 type SetOIDCSettingsJSONRequestBody = OIDCSettingsUpdate
 
@@ -1761,6 +1871,15 @@ type ServerInterface interface {
 	// GetAdminHealth Whether the worker and the analysis service are running
 	// (GET /api/admin/health)
 	GetAdminHealth(w http.ResponseWriter, r *http.Request)
+	// ListImports Imports, the newest first
+	// (GET /api/admin/imports)
+	ListImports(w http.ResponseWriter, r *http.Request)
+	// CreateImport Bring a library in from Immich, Google Takeout or an iCloud export
+	// (POST /api/admin/imports)
+	CreateImport(w http.ResponseWriter, r *http.Request)
+	// CancelImport Stop an import. What it has brought in stays
+	// (POST /api/admin/imports/{id}/cancel)
+	CancelImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetAdminJobs The job queues, and the jobs that gave up
 	// (GET /api/admin/jobs)
 	GetAdminJobs(w http.ResponseWriter, r *http.Request)
@@ -2178,6 +2297,24 @@ func (_ Unimplemented) ScanExternalLibrary(w http.ResponseWriter, r *http.Reques
 // GetAdminHealth Whether the worker and the analysis service are running
 // (GET /api/admin/health)
 func (_ Unimplemented) GetAdminHealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListImports Imports, the newest first
+// (GET /api/admin/imports)
+func (_ Unimplemented) ListImports(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateImport Bring a library in from Immich, Google Takeout or an iCloud export
+// (POST /api/admin/imports)
+func (_ Unimplemented) CreateImport(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CancelImport Stop an import. What it has brought in stays
+// (POST /api/admin/imports/{id}/cancel)
+func (_ Unimplemented) CancelImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3053,6 +3190,60 @@ func (siw *ServerInterfaceWrapper) GetAdminHealth(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAdminHealth(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListImports operation middleware
+func (siw *ServerInterfaceWrapper) ListImports(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListImports(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateImport operation middleware
+func (siw *ServerInterfaceWrapper) CreateImport(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateImport(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelImport operation middleware
+func (siw *ServerInterfaceWrapper) CancelImport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelImport(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6680,6 +6871,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/auth/passkey/finish", wrapper.FinishPasskeyLogin)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/imports", wrapper.ListImports)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/imports", wrapper.CreateImport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/imports/{id}/cancel", wrapper.CancelImport)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

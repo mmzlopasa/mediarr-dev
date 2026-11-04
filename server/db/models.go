@@ -105,6 +105,9 @@ type Asset struct {
 	Edits              []byte
 	EditRevision       int32
 	EditApplied        int32
+	ImportTakenAt      pgtype.Timestamptz
+	ImportLatitude     pgtype.Float8
+	ImportLongitude    pgtype.Float8
 }
 
 type AssetFile struct {
@@ -177,6 +180,40 @@ type Face struct {
 	Y2        float32
 	Score     float32
 	Embedding pgvector.Vector
+}
+
+type FaceHint struct {
+	AssetID  pgtype.UUID
+	PersonID pgtype.UUID
+	X1       float32
+	Y1       float32
+	X2       float32
+	Y2       float32
+}
+
+type Import struct {
+	ID         pgtype.UUID
+	UserID     pgtype.UUID
+	Source     string
+	Status     string
+	Address    string
+	Secret     string
+	Folder     string
+	Page       int32
+	Added      int32
+	Skipped    int32
+	Failed     int32
+	LastError  string
+	CreatedAt  pgtype.Timestamptz
+	FinishedAt pgtype.Timestamptz
+}
+
+type ImportMap struct {
+	UserID   pgtype.UUID
+	Origin   string
+	Kind     string
+	RemoteID string
+	LocalID  pgtype.UUID
 }
 
 type Library struct {

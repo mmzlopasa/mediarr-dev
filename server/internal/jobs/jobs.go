@@ -92,7 +92,9 @@ type Options struct {
 	Concurrency int
 	LibraryPath string
 	CachePath   string
-	VideoAccel  string
+	// ExternalPath is where a folder to import from is mounted, read only.
+	ExternalPath string
+	VideoAccel   string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
 }
@@ -119,6 +121,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &analyzeBackfillWorker{deps: d})
 	river.AddWorker(workers, &storyWorker{deps: d})
 	river.AddWorker(workers, &organizeWorker{deps: d})
+	river.AddWorker(workers, &importWorker{deps: d})
 	river.AddWorker(workers, &externalScanWorker{deps: d})
 
 	var err error
@@ -129,6 +132,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 			river.QueueDefault: {MaxWorkers: opts.Concurrency},
 			videoQueue:         {MaxWorkers: 1},
 			mlQueue:            {MaxWorkers: 1},
+			importQueue:        {MaxWorkers: 1},
 		},
 		Workers: workers,
 		PeriodicJobs: []*river.PeriodicJob{
@@ -226,6 +230,7 @@ func (w *metadataWorker) Work(ctx context.Context, job *river.Job[MetadataArgs])
 	if err != nil {
 		return w.failOrRetry(ctx, id, job.Attempt, err)
 	}
+	meta.fillFromImport(&asset)
 
 	return pgx.BeginFunc(ctx, w.pool, func(tx pgx.Tx) error {
 		q := w.queries.WithTx(tx)
