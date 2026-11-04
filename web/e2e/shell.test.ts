@@ -461,3 +461,26 @@ test('no page scrolls sideways on a phone', async ({ page }) => {
 		expect(overflow, path).toBeLessThanOrEqual(0);
 	}
 });
+
+test('jobs can be paused, and storage shows each user', async ({ page }) => {
+	await signIn(page, 'admin');
+	await page.goto('/admin/jobs');
+	const video = page.locator('[data-queue="video"]');
+	await expect(video).toContainText(/Radi|Running/);
+	await video.getByRole('button', { name: /Pauziraj|Pause/ }).click();
+	await expect(video).toContainText(/Pauzirano|Paused/);
+	await video.getByRole('button', { name: /Nastavi|Resume/ }).click();
+	await expect(video).toContainText(/Radi|Running/);
+
+	await page.goto('/admin/storage');
+	const row = page.locator('[data-user="e2e-user@example.com"]');
+	await row.getByRole('textbox').fill('5');
+	await row.getByRole('button', { name: /Spremi|Save/ }).click();
+	await page.reload();
+	await expect(row.getByRole('textbox')).toHaveValue('5');
+	await row.getByRole('textbox').fill('');
+	await row.getByRole('button', { name: /Spremi|Save/ }).click();
+
+	await page.goto('/admin/health');
+	await expect(page.getByText(/Pozadinski poslovi rade|Background jobs are running/)).toBeVisible();
+});

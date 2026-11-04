@@ -1486,6 +1486,98 @@ class DefaultApi {
     }
   }
 
+  /// Whether the worker and the analysis service are running
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getAdminHealthWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/health';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Whether the worker and the analysis service are running
+  Future<AdminHealth?> getAdminHealth() async {
+    final response = await getAdminHealthWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AdminHealth',
+      ) as AdminHealth;
+    }
+    return null;
+  }
+
+  /// The job queues, and the jobs that gave up
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getAdminJobsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/jobs';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The job queues, and the jobs that gave up
+  Future<AdminJobs?> getAdminJobs() async {
+    final response = await getAdminJobsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AdminJobs',
+      ) as AdminJobs;
+    }
+    return null;
+  }
+
   /// Live statistics of the whole server, read from the database and the library disk
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1528,6 +1620,53 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'AdminOverview',
       ) as AdminOverview;
+    }
+    return null;
+  }
+
+  /// How much each user stores
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getAdminStorageWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/storage';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// How much each user stores
+  Future<List<UserStorage>?> getAdminStorage() async {
+    final response = await getAdminStorageWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<UserStorage>') as List)
+          .cast<UserStorage>()
+          .toList(growable: false);
     }
     return null;
   }
@@ -4216,6 +4355,52 @@ class DefaultApi {
     return null;
   }
 
+  /// What emptying the trash would remove
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getTrashSummaryWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/trash/summary';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// What emptying the trash would remove
+  Future<TrashSummary?> getTrashSummary() async {
+    final response = await getTrashSummaryWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TrashSummary',
+      ) as TrashSummary;
+    }
+    return null;
+  }
+
   /// Read how much of an upload has arrived (tus 1.0)
   ///
   /// Note: This method returns the HTTP [Response].
@@ -5285,6 +5470,56 @@ class DefaultApi {
     }
   }
 
+  /// Stop starting jobs from this queue
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] queue (required):
+  Future<Response> pauseJobQueueWithHttpInfo(
+    String queue,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/admin/jobs/queues/{queue}/pause'.replaceAll('{queue}', queue);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop starting jobs from this queue
+  ///
+  /// Parameters:
+  ///
+  /// * [String] queue (required):
+  Future<void> pauseJobQueue(
+    String queue,
+  ) async {
+    final response = await pauseJobQueueWithHttpInfo(
+      queue,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Remove assets from an album. A contributor can remove only what they added.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -5511,6 +5746,106 @@ class DefaultApi {
   ) async {
     final response = await removePartnerWithHttpInfo(
       userId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Continue a paused queue
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] queue (required):
+  Future<Response> resumeJobQueueWithHttpInfo(
+    String queue,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/admin/jobs/queues/{queue}/resume'.replaceAll('{queue}', queue);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Continue a paused queue
+  ///
+  /// Parameters:
+  ///
+  /// * [String] queue (required):
+  Future<void> resumeJobQueue(
+    String queue,
+  ) async {
+    final response = await resumeJobQueueWithHttpInfo(
+      queue,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Try a failed job again
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [int] id (required):
+  Future<Response> retryJobWithHttpInfo(
+    int id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/admin/jobs/{id}/retry'.replaceAll('{id}', id.toString());
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Try a failed job again
+  ///
+  /// Parameters:
+  ///
+  /// * [int] id (required):
+  Future<void> retryJob(
+    int id,
+  ) async {
+    final response = await retryJobWithHttpInfo(
+      id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -6118,6 +6453,62 @@ class DefaultApi {
   ) async {
     final response = await setStackMainWithHttpInfo(
       id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Set how much a user may store. Without a value there is no limit
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [QuotaUpdate] quotaUpdate (required):
+  Future<Response> setUserQuotaWithHttpInfo(
+    String id,
+    QuotaUpdate quotaUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/users/{id}/quota'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = quotaUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Set how much a user may store. Without a value there is no limit
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [QuotaUpdate] quotaUpdate (required):
+  Future<void> setUserQuota(
+    String id,
+    QuotaUpdate quotaUpdate,
+  ) async {
+    final response = await setUserQuotaWithHttpInfo(
+      id,
+      quotaUpdate,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

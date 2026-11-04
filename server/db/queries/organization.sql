@@ -140,3 +140,10 @@ FROM assets a JOIN asset_tags x ON x.asset_id = a.id
 WHERE x.tag_id = sqlc.arg('tag_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
 ORDER BY a.local_at DESC, a.id DESC;
+
+-- name: TrashSummary :one
+SELECT count(*) AS assets, coalesce(sum(size_bytes), 0)::bigint AS bytes
+FROM assets WHERE user_id = $1 AND deleted_at IS NOT NULL AND live_photo_of IS NULL;
+
+-- name: CountOwnedOfIDs :one
+SELECT count(*) FROM assets WHERE user_id = $1 AND id = ANY($2::uuid[]);

@@ -603,6 +603,15 @@ func (s *apiServer) BulkAssets(w http.ResponseWriter, r *http.Request) {
 	var changed int64
 	var err error
 	ctx := r.Context()
+	if body.DryRun != nil && *body.DryRun {
+		changed, err = s.queries.CountOwnedOfIDs(ctx, db.CountOwnedOfIDsParams{UserID: user.ID, Column2: ids})
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, api.BulkResponse{Changed: changed})
+		return
+	}
 	switch body.Action {
 	case api.BulkRequestActionFavorite:
 		changed, err = s.queries.SetFavorite(ctx, db.SetFavoriteParams{UserID: user.ID, Column2: ids, IsFavorite: true})

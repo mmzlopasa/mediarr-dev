@@ -288,6 +288,7 @@ type User struct {
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
 	VaultPinHash pgtype.Text
+	QuotaBytes   pgtype.Int8
 }
 
 type VaultSession struct {

@@ -23,6 +23,10 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type AdminJobs = components['schemas']['AdminJobs'];
+export type AdminHealth = components['schemas']['AdminHealth'];
+export type UserStorage = components['schemas']['UserStorage'];
+export type TrashSummary = components['schemas']['TrashSummary'];
 export type ApiKey = components['schemas']['ApiKey'];
 export type AuditEntry = components['schemas']['AuditEntry'];
 export type AssetEdits = components['schemas']['AssetEdits'];
@@ -199,6 +203,15 @@ export const api = {
 		}),
 	revokeApiKey: (id: string) =>
 		request<void>(fetch, `/api/me/device-keys/${id}`, undefined, 'DELETE'),
+	adminJobs: () => request<AdminJobs>(fetch, '/api/admin/jobs'),
+	pauseQueue: (queue: string, pause: boolean) =>
+		request<void>(fetch, `/api/admin/jobs/queues/${queue}/${pause ? 'pause' : 'resume'}`, {}),
+	retryJob: (id: number) => request<void>(fetch, `/api/admin/jobs/${id}/retry`, {}),
+	adminHealth: () => request<AdminHealth>(fetch, '/api/admin/health'),
+	adminStorage: () => request<UserStorage[]>(fetch, '/api/admin/storage'),
+	setQuota: (id: string, quotaBytes?: number) =>
+		request<void>(fetch, `/api/admin/users/${id}/quota`, { quotaBytes }, 'PUT'),
+	trashSummary: () => request<TrashSummary>(fetch, '/api/trash/summary'),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>

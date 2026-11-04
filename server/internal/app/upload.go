@@ -81,6 +81,15 @@ func (s *apiServer) beforeUpload(hook tusd.HookEvent) (tusd.HTTPResponse, tusd.F
 	if err := s.checkDiskRoom(hook.Upload.Size); err != nil {
 		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, err
 	}
+	if user.QuotaBytes.Valid {
+		stored, err := s.queries.UserStoredBytes(hook.Context, user.ID)
+		if err != nil {
+			return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, err
+		}
+		if stored+hook.Upload.Size > user.QuotaBytes.Int64 {
+			return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_QUOTA", "this account has reached its storage limit", http.StatusRequestEntityTooLarge)
+		}
+	}
 	meta := hook.Upload.MetaData
 	if sum := meta[metaChecksum]; sum != "" && !checksumHex.MatchString(sum) {
 		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_BAD_CHECKSUM", "checksum must be lowercase hex SHA-256", http.StatusBadRequest)

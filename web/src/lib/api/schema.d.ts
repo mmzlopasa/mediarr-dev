@@ -1546,6 +1546,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The job queues, and the jobs that gave up */
+        get: operations["getAdminJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/jobs/queues/{queue}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop starting jobs from this queue */
+        post: operations["pauseJobQueue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/jobs/queues/{queue}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Continue a paused queue */
+        post: operations["resumeJobQueue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/jobs/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Try a failed job again */
+        post: operations["retryJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the worker and the analysis service are running */
+        get: operations["getAdminHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/storage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How much each user stores */
+        get: operations["getAdminStorage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{id}/quota": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set how much a user may store. Without a value there is no limit */
+        put: operations["setUserQuota"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trash/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What emptying the trash would remove */
+        get: operations["getTrashSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/external": {
         parameters: {
             query?: never;
@@ -1800,6 +1936,58 @@ export interface components {
             name: string;
             scopes: ("read" | "upload" | "write" | "admin")[];
             expiresInDays?: number;
+        };
+        AdminJobs: {
+            queues: components["schemas"]["JobQueue"][];
+            failed: components["schemas"]["FailedJob"][];
+        };
+        JobQueue: {
+            name: string;
+            paused: boolean;
+            /** Format: int64 */
+            queued: number;
+            /** Format: int64 */
+            running: number;
+        };
+        FailedJob: {
+            /** Format: int64 */
+            id: number;
+            kind: string;
+            queue: string;
+            error: string;
+            /** Format: date-time */
+            at: string;
+        };
+        AdminHealth: {
+            workerRunning: boolean;
+            /** Format: date-time */
+            workerLastSeen?: string;
+            mlEnabled: boolean;
+            mlRunning?: boolean;
+            /** Format: int64 */
+            databaseBytes: number;
+        };
+        UserStorage: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            email: string;
+            /** Format: int64 */
+            storedBytes: number;
+            /** Format: int64 */
+            assets: number;
+            /** Format: int64 */
+            quotaBytes?: number;
+        };
+        QuotaUpdate: {
+            /** Format: int64 */
+            quotaBytes?: number;
+        };
+        TrashSummary: {
+            /** Format: int64 */
+            assets: number;
+            /** Format: int64 */
+            bytes: number;
         };
         Memory: {
             /** @enum {string} */
@@ -2302,6 +2490,8 @@ export interface components {
             ids: string[];
             /** @enum {string} */
             action: "favorite" | "unfavorite" | "archive" | "unarchive" | "delete" | "restore" | "vault" | "unvault" | "purge";
+            /** @description Only say how many it would change */
+            dryRun?: boolean;
         };
         BulkResponse: {
             /** Format: int64 */
@@ -4860,6 +5050,190 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
+        };
+    };
+    getAdminJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queues and failed jobs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminJobs"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    pauseJobQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                queue: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paused */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    resumeJobQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                queue: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resumed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    retryJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued again */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAdminHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminHealth"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    getAdminStorage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One row per user, the largest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserStorage"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    setUserQuota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuotaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getTrashSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Count and size */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrashSummary"];
+                };
+            };
+            401: components["responses"]["Error"];
         };
     };
     getExternalLibrary: {

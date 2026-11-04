@@ -63,7 +63,7 @@ func TestEveryRouteNeedsAnAccount(t *testing.T) {
 			continue
 		}
 		// The required query values, so that the answer is about the account and not about them.
-		path := routeParam.ReplaceAllString(r.path, someID) + "?ids=" + someID + "&q=x"
+		path := routeParam.ReplaceAllString(strings.ReplaceAll(r.path, "/jobs/{id}", "/jobs/1"), someID) + "?ids=" + someID + "&q=x"
 		resp, body := anonymous.send(r.method, path, map[string]any{})
 		if resp.StatusCode != http.StatusUnauthorized {
 			t.Errorf("%s %s without an account: %d %s", r.method, r.path, resp.StatusCode, truncateForTest(body))
@@ -88,7 +88,7 @@ func TestAdminRoutesAreForAdmins(t *testing.T) {
 		if !strings.HasPrefix(r.path, "/api/admin/") {
 			continue
 		}
-		resp, body := user.send(r.method, routeParam.ReplaceAllString(r.path, someID), map[string]any{})
+		resp, body := user.send(r.method, routeParam.ReplaceAllString(strings.ReplaceAll(r.path, "/jobs/{id}", "/jobs/1"), someID), map[string]any{})
 		if resp.StatusCode != http.StatusForbidden {
 			t.Errorf("%s %s as a plain user: %d %s", r.method, r.path, resp.StatusCode, truncateForTest(body))
 		}

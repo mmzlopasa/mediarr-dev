@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { api } from '#lib/api.ts';
+	import { api, formatBytes, type TrashSummary } from '#lib/api.ts';
 	import Button from '#lib/design/components/Button.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
@@ -37,6 +37,17 @@
 			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
 		}
 	}
+
+	let summary = $state<TrashSummary>();
+
+	// What it would remove is shown before anything is decided.
+	$effect(() => {
+		if (!confirmEmpty) return;
+		api
+			.trashSummary()
+			.then((value) => (summary = value))
+			.catch(() => (summary = undefined));
+	});
 
 	async function empty() {
 		try {
@@ -108,6 +119,14 @@
 			'All originals in the trash are removed from the disk. This cannot be undone.'
 		)}
 	</p>
+	{#if summary}
+		<p data-testid="trash-summary">
+			{tr(
+				`Briše se: ${summary.assets} datoteka, ${formatBytes(summary.bytes)}.`,
+				`This removes ${summary.assets} files, ${formatBytes(summary.bytes)}.`
+			)}
+		</p>
+	{/if}
 	{#snippet footer()}
 		<Button onclick={() => (confirmEmpty = false)}>{tr('Odustani', 'Cancel')}</Button>
 		<Button variant="danger" onclick={empty}>{tr('Isprazni smeće', 'Empty the trash')}</Button>

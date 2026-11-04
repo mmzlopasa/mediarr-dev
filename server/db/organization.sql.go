@@ -129,6 +129,22 @@ func (q *Queries) CollectionBuckets(ctx context.Context, arg CollectionBucketsPa
 	return items, nil
 }
 
+const countOwnedOfIDs = `-- name: CountOwnedOfIDs :one
+SELECT count(*) FROM assets WHERE user_id = $1 AND id = ANY($2::uuid[])
+`
+
+type CountOwnedOfIDsParams struct {
+	UserID  pgtype.UUID
+	Column2 []pgtype.UUID
+}
+
+func (q *Queries) CountOwnedOfIDs(ctx context.Context, arg CountOwnedOfIDsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countOwnedOfIDs, arg.UserID, arg.Column2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createVaultSession = `-- name: CreateVaultSession :exec
 INSERT INTO vault_sessions (token_hash, user_id, expires_at) VALUES ($1, $2, $3)
 `
@@ -739,6 +755,23 @@ func (q *Queries) TagBuckets(ctx context.Context, tagID pgtype.UUID) ([]TagBucke
 		return nil, err
 	}
 	return items, nil
+}
+
+const trashSummary = `-- name: TrashSummary :one
+SELECT count(*) AS assets, coalesce(sum(size_bytes), 0)::bigint AS bytes
+FROM assets WHERE user_id = $1 AND deleted_at IS NOT NULL AND live_photo_of IS NULL
+`
+
+type TrashSummaryRow struct {
+	Assets int64
+	Bytes  int64
+}
+
+func (q *Queries) TrashSummary(ctx context.Context, userID pgtype.UUID) (TrashSummaryRow, error) {
+	row := q.db.QueryRow(ctx, trashSummary, userID)
+	var i TrashSummaryRow
+	err := row.Scan(&i.Assets, &i.Bytes)
+	return i, err
 }
 
 const unarchiveAssets = `-- name: UnarchiveAssets :execrows

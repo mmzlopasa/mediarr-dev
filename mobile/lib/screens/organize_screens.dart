@@ -10,6 +10,7 @@ import 'package:mediarr_api/api.dart';
 import '../services/session.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
+import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'api_keys_screen.dart';
 import 'map_screen.dart';
@@ -217,13 +218,20 @@ class _PhotoGridState extends State<_PhotoGrid> {
   );
 }
 
-Future<bool> _confirmPermanent(BuildContext context, String title) async {
+Future<bool> _confirmPermanent(
+  BuildContext context,
+  String title, {
+  String? detail,
+}) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
       title: Text(title),
-      content: const Text(
-        'The originals are removed from the disk. This cannot be undone.',
+      content: Text(
+        [
+          ?detail,
+          'The originals are removed from the disk. This cannot be undone.',
+        ].join(' '),
       ),
       actions: [
         TextButton(
@@ -341,7 +349,21 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
   }
 
   Future<void> _empty() async {
-    if (!await _confirmPermanent(context, 'Empty the trash?')) return;
+    // What it would remove is shown before anything is decided.
+    String? detail;
+    try {
+      final summary = await _session.api.getTrashSummary();
+      if (summary != null) {
+        detail =
+            'This removes ${summary.assets} files, ${formatBytes(summary.bytes)}.';
+      }
+    } on ApiException {
+      // The question can still be asked without the numbers.
+    }
+    if (!mounted) return;
+    if (!await _confirmPermanent(context, 'Empty the trash?', detail: detail)) {
+      return;
+    }
     try {
       final result = await _session.api.emptyTrash();
       await _store.refresh(reloadLoaded: true);

@@ -231,6 +231,10 @@ class ApiClient {
           return value is DateTime ? value : DateTime.tryParse(value);
         case 'Activity':
           return Activity.fromJson(value);
+        case 'AdminHealth':
+          return AdminHealth.fromJson(value);
+        case 'AdminJobs':
+          return AdminJobs.fromJson(value);
         case 'AdminOverview':
           return AdminOverview.fromJson(value);
         case 'AdminOverviewJobs':
@@ -301,12 +305,16 @@ class ApiClient {
           return ExternalLibrary.fromJson(value);
         case 'ExternalLibraryOwner':
           return ExternalLibraryOwner.fromJson(value);
+        case 'FailedJob':
+          return FailedJob.fromJson(value);
         case 'Folder':
           return Folder.fromJson(value);
         case 'FolderEntry':
           return FolderEntry.fromJson(value);
         case 'Health':
           return Health.fromJson(value);
+        case 'JobQueue':
+          return JobQueue.fromJson(value);
         case 'LinkPassword':
           return LinkPassword.fromJson(value);
         case 'LoginError':
@@ -341,6 +349,8 @@ class ApiClient {
           return PersonUpdate.fromJson(value);
         case 'PublicLink':
           return PublicLink.fromJson(value);
+        case 'QuotaUpdate':
+          return QuotaUpdate.fromJson(value);
         case 'SearchFilters':
           return SearchFilters.fromJson(value);
         case 'SearchResult':
@@ -371,12 +381,16 @@ class ApiClient {
           return TotpCode.fromJson(value);
         case 'TotpSetup':
           return TotpSetup.fromJson(value);
+        case 'TrashSummary':
+          return TrashSummary.fromJson(value);
         case 'Trip':
           return Trip.fromJson(value);
         case 'User':
           return User.fromJson(value);
         case 'UserRef':
           return UserRef.fromJson(value);
+        case 'UserStorage':
+          return UserStorage.fromJson(value);
         case 'VaultPinChange':
           return VaultPinChange.fromJson(value);
         case 'VaultSession':

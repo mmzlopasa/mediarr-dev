@@ -15,31 +15,49 @@ class BulkRequest {
   BulkRequest({
     this.ids = const [],
     required this.action,
+    this.dryRun,
   });
 
   List<String> ids;
 
   BulkRequestActionEnum action;
 
+  /// Only say how many it would change
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? dryRun;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is BulkRequest &&
           _deepEquality.equals(other.ids, ids) &&
-          other.action == action;
+          other.action == action &&
+          other.dryRun == dryRun;
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (ids.hashCode) + (action.hashCode);
+      (ids.hashCode) +
+      (action.hashCode) +
+      (dryRun == null ? 0 : dryRun!.hashCode);
 
   @override
-  String toString() => 'BulkRequest[ids=$ids, action=$action]';
+  String toString() => 'BulkRequest[ids=$ids, action=$action, dryRun=$dryRun]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'ids'] = this.ids;
     json[r'action'] = this.action;
+    if (this.dryRun != null) {
+      json[r'dryRun'] = this.dryRun;
+    } else {
+      json[r'dryRun'] = null;
+    }
     return json;
   }
 
@@ -68,6 +86,7 @@ class BulkRequest {
             ? (json[r'ids'] as Iterable).cast<String>().toList(growable: false)
             : const [],
         action: BulkRequestActionEnum.fromJson(json[r'action'])!,
+        dryRun: mapValueOfType<bool>(json, r'dryRun'),
       );
     }
     return null;

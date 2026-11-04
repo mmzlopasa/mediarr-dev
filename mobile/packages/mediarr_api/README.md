@@ -87,7 +87,10 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**downloadAssets**](doc//DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
 *DefaultApi* | [**emptyTrash**](doc//DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 *DefaultApi* | [**enableTotp**](doc//DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
+*DefaultApi* | [**getAdminHealth**](doc//DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
+*DefaultApi* | [**getAdminJobs**](doc//DefaultApi.md#getadminjobs) | **GET** /api/admin/jobs | The job queues, and the jobs that gave up
 *DefaultApi* | [**getAdminOverview**](doc//DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
+*DefaultApi* | [**getAdminStorage**](doc//DefaultApi.md#getadminstorage) | **GET** /api/admin/storage | How much each user stores
 *DefaultApi* | [**getAlbum**](doc//DefaultApi.md#getalbum) | **GET** /api/albums/{id} | Read an album and its members
 *DefaultApi* | [**getAlbumBucket**](doc//DefaultApi.md#getalbumbucket) | **GET** /api/albums/{id}/buckets/{month} | Assets of one month in an album
 *DefaultApi* | [**getAlbumBuckets**](doc//DefaultApi.md#getalbumbuckets) | **GET** /api/albums/{id}/buckets | Months in an album, in the album's order
@@ -130,6 +133,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getTagBuckets**](doc//DefaultApi.md#gettagbuckets) | **GET** /api/tags/{id}/buckets | Months with photos carrying a tag
 *DefaultApi* | [**getTimelineBucket**](doc//DefaultApi.md#gettimelinebucket) | **GET** /api/timeline/buckets/{month} | List one month's assets, newest first
 *DefaultApi* | [**getTimelineBuckets**](doc//DefaultApi.md#gettimelinebuckets) | **GET** /api/timeline/buckets | List the months that have photos, newest first
+*DefaultApi* | [**getTrashSummary**](doc//DefaultApi.md#gettrashsummary) | **GET** /api/trash/summary | What emptying the trash would remove
 *DefaultApi* | [**getUploadOffset**](doc//DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 *DefaultApi* | [**getVaultStatus**](doc//DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
 *DefaultApi* | [**listAPIKeys**](doc//DefaultApi.md#listapikeys) | **GET** /api/me/api-keys | The current user's keys, without the keys themselves
@@ -150,10 +154,13 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**login**](doc//DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 *DefaultApi* | [**mergePeople**](doc//DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
+*DefaultApi* | [**pauseJobQueue**](doc//DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 *DefaultApi* | [**removeAlbumHeart**](doc//DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 *DefaultApi* | [**removeAlbumMember**](doc//DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
 *DefaultApi* | [**removePartner**](doc//DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
+*DefaultApi* | [**resumeJobQueue**](doc//DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
+*DefaultApi* | [**retryJob**](doc//DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
 *DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 *DefaultApi* | [**scanExternalLibrary**](doc//DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 *DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
@@ -165,6 +172,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 *DefaultApi* | [**setPartnerTimeline**](doc//DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
 *DefaultApi* | [**setStackMain**](doc//DefaultApi.md#setstackmain) | **PUT** /api/assets/{id}/stack/main | Make this shot the one the timeline shows
+*DefaultApi* | [**setUserQuota**](doc//DefaultApi.md#setuserquota) | **PUT** /api/admin/users/{id}/quota | Set how much a user may store. Without a value there is no limit
 *DefaultApi* | [**setVaultPin**](doc//DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 *DefaultApi* | [**setup**](doc//DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 *DefaultApi* | [**setupTotp**](doc//DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
@@ -177,6 +185,8 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [Activity](doc//Activity.md)
+ - [AdminHealth](doc//AdminHealth.md)
+ - [AdminJobs](doc//AdminJobs.md)
  - [AdminOverview](doc//AdminOverview.md)
  - [AdminOverviewJobs](doc//AdminOverviewJobs.md)
  - [Album](doc//Album.md)
@@ -212,9 +222,11 @@ Class | Method | HTTP request | Description
  - [Error](doc//Error.md)
  - [ExternalLibrary](doc//ExternalLibrary.md)
  - [ExternalLibraryOwner](doc//ExternalLibraryOwner.md)
+ - [FailedJob](doc//FailedJob.md)
  - [Folder](doc//Folder.md)
  - [FolderEntry](doc//FolderEntry.md)
  - [Health](doc//Health.md)
+ - [JobQueue](doc//JobQueue.md)
  - [LinkPassword](doc//LinkPassword.md)
  - [LoginError](doc//LoginError.md)
  - [LoginRequest](doc//LoginRequest.md)
@@ -232,6 +244,7 @@ Class | Method | HTTP request | Description
  - [PersonRef](doc//PersonRef.md)
  - [PersonUpdate](doc//PersonUpdate.md)
  - [PublicLink](doc//PublicLink.md)
+ - [QuotaUpdate](doc//QuotaUpdate.md)
  - [SearchFilters](doc//SearchFilters.md)
  - [SearchResult](doc//SearchResult.md)
  - [SetupRequest](doc//SetupRequest.md)
@@ -247,9 +260,11 @@ Class | Method | HTTP request | Description
  - [TimelineItem](doc//TimelineItem.md)
  - [TotpCode](doc//TotpCode.md)
  - [TotpSetup](doc//TotpSetup.md)
+ - [TrashSummary](doc//TrashSummary.md)
  - [Trip](doc//Trip.md)
  - [User](doc//User.md)
  - [UserRef](doc//UserRef.md)
+ - [UserStorage](doc//UserStorage.md)
  - [VaultPinChange](doc//VaultPinChange.md)
  - [VaultSession](doc//VaultSession.md)
  - [VaultStatus](doc//VaultStatus.md)

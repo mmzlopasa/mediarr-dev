@@ -70,3 +70,22 @@ RETURNING sqlc.embed(u), k.scopes;
 
 -- name: DeleteAPIKey :exec
 DELETE FROM api_keys WHERE id = $1 AND user_id = $2;
+
+-- name: SetUserQuota :execrows
+UPDATE users SET quota_bytes = $2 WHERE id = $1;
+
+-- name: UserStoredBytes :one
+-- Only what lives in Mediarr's own storage: an external folder is on the user's disk already.
+SELECT coalesce(sum(a.size_bytes), 0)::bigint
+FROM assets a JOIN libraries l ON l.id = a.library_id
+WHERE a.user_id = $1 AND l.kind = 'upload';
+
+-- name: ListUserStorage :many
+SELECT u.id, u.name, u.email, u.quota_bytes,
+       coalesce(sum(a.size_bytes) FILTER (WHERE l.kind = 'upload'), 0)::bigint AS stored_bytes,
+       count(a.id) AS assets
+FROM users u
+LEFT JOIN assets a ON a.user_id = u.id
+LEFT JOIN libraries l ON l.id = a.library_id
+GROUP BY u.id
+ORDER BY stored_bytes DESC, u.email;

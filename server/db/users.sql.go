@@ -80,7 +80,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash
+INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes
 `
 
 type CreateUserParams struct {
@@ -110,6 +110,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.VaultPinHash,
+		&i.QuotaBytes,
 	)
 	return i, err
 }
@@ -193,7 +194,7 @@ func (q *Queries) EnableTotp(ctx context.Context, arg EnableTotpParams) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash FROM users WHERE id = $1
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -211,6 +212,7 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.VaultPinHash,
+		&i.QuotaBytes,
 	)
 	return i, err
 }
@@ -218,7 +220,7 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 const getUserByAPIKey = `-- name: GetUserByAPIKey :one
 UPDATE api_keys k SET last_used_at = now() FROM users u
 WHERE k.key_hash = $1 AND u.id = k.user_id AND (k.expires_at IS NULL OR k.expires_at > now())
-RETURNING u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, k.scopes
+RETURNING u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes, k.scopes
 `
 
 type GetUserByAPIKeyRow struct {
@@ -241,13 +243,14 @@ func (q *Queries) GetUserByAPIKey(ctx context.Context, keyHash []byte) (GetUserB
 		&i.User.CreatedAt,
 		&i.User.UpdatedAt,
 		&i.User.VaultPinHash,
+		&i.User.QuotaBytes,
 		&i.Scopes,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash FROM users WHERE email = $1
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -265,12 +268,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.VaultPinHash,
+		&i.QuotaBytes,
 	)
 	return i, err
 }
 
 const getUserBySessionToken = `-- name: GetUserBySessionToken :one
-SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash FROM sessions s JOIN users u ON u.id = s.user_id
+SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes FROM sessions s JOIN users u ON u.id = s.user_id
 WHERE s.token_hash = $1 AND s.expires_at > now()
 `
 
@@ -289,6 +293,7 @@ func (q *Queries) GetUserBySessionToken(ctx context.Context, tokenHash []byte) (
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.VaultPinHash,
+		&i.QuotaBytes,
 	)
 	return i, err
 }
@@ -333,8 +338,55 @@ func (q *Queries) ListAPIKeys(ctx context.Context, userID pgtype.UUID) ([]ListAP
 	return items, nil
 }
 
+const listUserStorage = `-- name: ListUserStorage :many
+SELECT u.id, u.name, u.email, u.quota_bytes,
+       coalesce(sum(a.size_bytes) FILTER (WHERE l.kind = 'upload'), 0)::bigint AS stored_bytes,
+       count(a.id) AS assets
+FROM users u
+LEFT JOIN assets a ON a.user_id = u.id
+LEFT JOIN libraries l ON l.id = a.library_id
+GROUP BY u.id
+ORDER BY stored_bytes DESC, u.email
+`
+
+type ListUserStorageRow struct {
+	ID          pgtype.UUID
+	Name        string
+	Email       string
+	QuotaBytes  pgtype.Int8
+	StoredBytes int64
+	Assets      int64
+}
+
+func (q *Queries) ListUserStorage(ctx context.Context) ([]ListUserStorageRow, error) {
+	rows, err := q.db.Query(ctx, listUserStorage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserStorageRow
+	for rows.Next() {
+		var i ListUserStorageRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.QuotaBytes,
+			&i.StoredBytes,
+			&i.Assets,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash FROM users ORDER BY created_at
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes FROM users ORDER BY created_at
 `
 
 func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
@@ -358,6 +410,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.VaultPinHash,
+			&i.QuotaBytes,
 		); err != nil {
 			return nil, err
 		}
@@ -406,12 +459,29 @@ func (q *Queries) SetTotpSecret(ctx context.Context, arg SetTotpSecretParams) er
 	return err
 }
 
+const setUserQuota = `-- name: SetUserQuota :execrows
+UPDATE users SET quota_bytes = $2 WHERE id = $1
+`
+
+type SetUserQuotaParams struct {
+	ID         pgtype.UUID
+	QuotaBytes pgtype.Int8
+}
+
+func (q *Queries) SetUserQuota(ctx context.Context, arg SetUserQuotaParams) (int64, error) {
+	result, err := q.db.Exec(ctx, setUserQuota, arg.ID, arg.QuotaBytes)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const upsertUser = `-- name: UpsertUser :one
 INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4)
 ON CONFLICT (email) DO UPDATE
 SET name = EXCLUDED.name, password_hash = EXCLUDED.password_hash, is_admin = EXCLUDED.is_admin,
     totp_enabled = false, totp_secret = NULL, updated_at = now()
-RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash
+RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes
 `
 
 type UpsertUserParams struct {
@@ -441,6 +511,21 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.VaultPinHash,
+		&i.QuotaBytes,
 	)
 	return i, err
+}
+
+const userStoredBytes = `-- name: UserStoredBytes :one
+SELECT coalesce(sum(a.size_bytes), 0)::bigint
+FROM assets a JOIN libraries l ON l.id = a.library_id
+WHERE a.user_id = $1 AND l.kind = 'upload'
+`
+
+// Only what lives in Mediarr's own storage: an external folder is on the user's disk already.
+func (q *Queries) UserStoredBytes(ctx context.Context, userID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, userStoredBytes, userID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
 }

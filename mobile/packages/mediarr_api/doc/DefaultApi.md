@@ -36,7 +36,10 @@ Method | HTTP request | Description
 [**downloadAssets**](DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
 [**emptyTrash**](DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 [**enableTotp**](DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
+[**getAdminHealth**](DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
+[**getAdminJobs**](DefaultApi.md#getadminjobs) | **GET** /api/admin/jobs | The job queues, and the jobs that gave up
 [**getAdminOverview**](DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
+[**getAdminStorage**](DefaultApi.md#getadminstorage) | **GET** /api/admin/storage | How much each user stores
 [**getAlbum**](DefaultApi.md#getalbum) | **GET** /api/albums/{id} | Read an album and its members
 [**getAlbumBucket**](DefaultApi.md#getalbumbucket) | **GET** /api/albums/{id}/buckets/{month} | Assets of one month in an album
 [**getAlbumBuckets**](DefaultApi.md#getalbumbuckets) | **GET** /api/albums/{id}/buckets | Months in an album, in the album's order
@@ -79,6 +82,7 @@ Method | HTTP request | Description
 [**getTagBuckets**](DefaultApi.md#gettagbuckets) | **GET** /api/tags/{id}/buckets | Months with photos carrying a tag
 [**getTimelineBucket**](DefaultApi.md#gettimelinebucket) | **GET** /api/timeline/buckets/{month} | List one month's assets, newest first
 [**getTimelineBuckets**](DefaultApi.md#gettimelinebuckets) | **GET** /api/timeline/buckets | List the months that have photos, newest first
+[**getTrashSummary**](DefaultApi.md#gettrashsummary) | **GET** /api/trash/summary | What emptying the trash would remove
 [**getUploadOffset**](DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 [**getVaultStatus**](DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
 [**listAPIKeys**](DefaultApi.md#listapikeys) | **GET** /api/me/api-keys | The current user's keys, without the keys themselves
@@ -99,10 +103,13 @@ Method | HTTP request | Description
 [**login**](DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 [**logout**](DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 [**mergePeople**](DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
+[**pauseJobQueue**](DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 [**removeAlbumAssets**](DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 [**removeAlbumHeart**](DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 [**removeAlbumMember**](DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
 [**removePartner**](DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
+[**resumeJobQueue**](DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
+[**retryJob**](DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
 [**revokeDeviceKey**](DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 [**scanExternalLibrary**](DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 [**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
@@ -114,6 +121,7 @@ Method | HTTP request | Description
 [**setPartner**](DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 [**setPartnerTimeline**](DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
 [**setStackMain**](DefaultApi.md#setstackmain) | **PUT** /api/assets/{id}/stack/main | Make this shot the one the timeline shows
+[**setUserQuota**](DefaultApi.md#setuserquota) | **PUT** /api/admin/users/{id}/quota | Set how much a user may store. Without a value there is no limit
 [**setVaultPin**](DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 [**setup**](DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 [**setupTotp**](DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
@@ -1217,6 +1225,80 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getAdminHealth**
+> AdminHealth getAdminHealth()
+
+Whether the worker and the analysis service are running
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getAdminHealth();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getAdminHealth: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**AdminHealth**](AdminHealth.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getAdminJobs**
+> AdminJobs getAdminJobs()
+
+The job queues, and the jobs that gave up
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getAdminJobs();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getAdminJobs: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**AdminJobs**](AdminJobs.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getAdminOverview**
 > AdminOverview getAdminOverview()
 
@@ -1242,6 +1324,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**AdminOverview**](AdminOverview.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getAdminStorage**
+> List<UserStorage> getAdminStorage()
+
+How much each user stores
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getAdminStorage();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getAdminStorage: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<UserStorage>**](UserStorage.md)
 
 ### Authorization
 
@@ -3000,6 +3119,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getTrashSummary**
+> TrashSummary getTrashSummary()
+
+What emptying the trash would remove
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getTrashSummary();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getTrashSummary: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**TrashSummary**](TrashSummary.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getUploadOffset**
 > getUploadOffset(id)
 
@@ -3780,6 +3936,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **pauseJobQueue**
+> pauseJobQueue(queue)
+
+Stop starting jobs from this queue
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final queue = queue_example; // String | 
+
+try {
+    api_instance.pauseJobQueue(queue);
+} catch (e) {
+    print('Exception when calling DefaultApi->pauseJobQueue: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **queue** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **removeAlbumAssets**
 > BulkResponse removeAlbumAssets(id, assetIds)
 
@@ -3931,6 +4127,86 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **userId** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **resumeJobQueue**
+> resumeJobQueue(queue)
+
+Continue a paused queue
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final queue = queue_example; // String | 
+
+try {
+    api_instance.resumeJobQueue(queue);
+} catch (e) {
+    print('Exception when calling DefaultApi->resumeJobQueue: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **queue** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **retryJob**
+> retryJob(id)
+
+Try a failed job again
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 789; // int | 
+
+try {
+    api_instance.retryJob(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->retryJob: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
 
 ### Return type
 
@@ -4394,6 +4670,48 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setUserQuota**
+> setUserQuota(id, quotaUpdate)
+
+Set how much a user may store. Without a value there is no limit
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final quotaUpdate = QuotaUpdate(); // QuotaUpdate | 
+
+try {
+    api_instance.setUserQuota(id, quotaUpdate);
+} catch (e) {
+    print('Exception when calling DefaultApi->setUserQuota: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **quotaUpdate** | [**QuotaUpdate**](QuotaUpdate.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

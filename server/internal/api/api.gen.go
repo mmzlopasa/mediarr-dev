@@ -648,6 +648,21 @@ type Activity struct {
 	Hearts   int64     `json:"hearts"`
 }
 
+// AdminHealth defines model for AdminHealth.
+type AdminHealth struct {
+	DatabaseBytes  int64      `json:"databaseBytes"`
+	MlEnabled      bool       `json:"mlEnabled"`
+	MlRunning      *bool      `json:"mlRunning,omitempty"`
+	WorkerLastSeen *time.Time `json:"workerLastSeen,omitempty"`
+	WorkerRunning  bool       `json:"workerRunning"`
+}
+
+// AdminJobs defines model for AdminJobs.
+type AdminJobs struct {
+	Failed []FailedJob `json:"failed"`
+	Queues []JobQueue  `json:"queues"`
+}
+
 // AdminOverview defines model for AdminOverview.
 type AdminOverview struct {
 	DatabaseVersion string `json:"databaseVersion"`
@@ -921,7 +936,10 @@ type AuthStatus struct {
 
 // BulkRequest defines model for BulkRequest.
 type BulkRequest struct {
-	Action BulkRequestAction    `json:"action"`
+	Action BulkRequestAction `json:"action"`
+
+	// DryRun Only say how many it would change
+	DryRun *bool                `json:"dryRun,omitempty"`
 	Ids    []openapi_types.UUID `json:"ids"`
 }
 
@@ -1047,6 +1065,15 @@ type ExternalLibraryOwner struct {
 	OwnerId openapi_types.UUID `json:"ownerId"`
 }
 
+// FailedJob defines model for FailedJob.
+type FailedJob struct {
+	At    time.Time `json:"at"`
+	Error string    `json:"error"`
+	Id    int64     `json:"id"`
+	Kind  string    `json:"kind"`
+	Queue string    `json:"queue"`
+}
+
 // Folder defines model for Folder.
 type Folder struct {
 	// Available This user owns an external library
@@ -1071,6 +1098,14 @@ type Health struct {
 
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
+
+// JobQueue defines model for JobQueue.
+type JobQueue struct {
+	Name    string `json:"name"`
+	Paused  bool   `json:"paused"`
+	Queued  int64  `json:"queued"`
+	Running int64  `json:"running"`
+}
 
 // LinkPassword defines model for LinkPassword.
 type LinkPassword struct {
@@ -1194,6 +1229,11 @@ type PublicLink struct {
 	Title       *string `json:"title,omitempty"`
 	UploadOnly  bool    `json:"uploadOnly"`
 	Watermarked bool    `json:"watermarked"`
+}
+
+// QuotaUpdate defines model for QuotaUpdate.
+type QuotaUpdate struct {
+	QuotaBytes *int64 `json:"quotaBytes,omitempty"`
 }
 
 // SearchFilters defines model for SearchFilters.
@@ -1333,6 +1373,12 @@ type TotpSetup struct {
 	Uri    string `json:"uri"`
 }
 
+// TrashSummary defines model for TrashSummary.
+type TrashSummary struct {
+	Assets int64 `json:"assets"`
+	Bytes  int64 `json:"bytes"`
+}
+
 // Trip defines model for Trip.
 type Trip struct {
 	Count   int                `json:"count"`
@@ -1361,6 +1407,16 @@ type User struct {
 type UserRef struct {
 	Id   openapi_types.UUID `json:"id"`
 	Name string             `json:"name"`
+}
+
+// UserStorage defines model for UserStorage.
+type UserStorage struct {
+	Assets      int64              `json:"assets"`
+	Email       string             `json:"email"`
+	Id          openapi_types.UUID `json:"id"`
+	Name        string             `json:"name"`
+	QuotaBytes  *int64             `json:"quotaBytes,omitempty"`
+	StoredBytes int64              `json:"storedBytes"`
 }
 
 // VaultPinChange defines model for VaultPinChange.
@@ -1510,6 +1566,9 @@ type SetExternalLibraryJSONRequestBody = ExternalLibraryOwner
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
 
+// SetUserQuotaJSONRequestBody defines body for SetUserQuota for application/json ContentType.
+type SetUserQuotaJSONRequestBody = QuotaUpdate
+
 // CreateAlbumJSONRequestBody defines body for CreateAlbum for application/json ContentType.
 type CreateAlbumJSONRequestBody = AlbumCreate
 
@@ -1611,15 +1670,36 @@ type ServerInterface interface {
 	// ScanExternalLibrary Look through the folder for changes now
 	// (POST /api/admin/external/scan)
 	ScanExternalLibrary(w http.ResponseWriter, r *http.Request)
+	// GetAdminHealth Whether the worker and the analysis service are running
+	// (GET /api/admin/health)
+	GetAdminHealth(w http.ResponseWriter, r *http.Request)
+	// GetAdminJobs The job queues, and the jobs that gave up
+	// (GET /api/admin/jobs)
+	GetAdminJobs(w http.ResponseWriter, r *http.Request)
+	// PauseJobQueue Stop starting jobs from this queue
+	// (POST /api/admin/jobs/queues/{queue}/pause)
+	PauseJobQueue(w http.ResponseWriter, r *http.Request, queue string)
+	// ResumeJobQueue Continue a paused queue
+	// (POST /api/admin/jobs/queues/{queue}/resume)
+	ResumeJobQueue(w http.ResponseWriter, r *http.Request, queue string)
+	// RetryJob Try a failed job again
+	// (POST /api/admin/jobs/{id}/retry)
+	RetryJob(w http.ResponseWriter, r *http.Request, id int64)
 	// GetAdminOverview Live statistics of the whole server, read from the database and the library disk
 	// (GET /api/admin/overview)
 	GetAdminOverview(w http.ResponseWriter, r *http.Request)
+	// GetAdminStorage How much each user stores
+	// (GET /api/admin/storage)
+	GetAdminStorage(w http.ResponseWriter, r *http.Request)
 	// ListUsers List users
 	// (GET /api/admin/users)
 	ListUsers(w http.ResponseWriter, r *http.Request)
 	// CreateUser Create a user
 	// (POST /api/admin/users)
 	CreateUser(w http.ResponseWriter, r *http.Request)
+	// SetUserQuota Set how much a user may store. Without a value there is no limit
+	// (PUT /api/admin/users/{id}/quota)
+	SetUserQuota(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ListAlbums Albums the current user owns or that are shared with them
 	// (GET /api/albums)
 	ListAlbums(w http.ResponseWriter, r *http.Request, params ListAlbumsParams)
@@ -1902,6 +1982,9 @@ type ServerInterface interface {
 	// EmptyTrash Permanently delete everything in the trash
 	// (POST /api/trash/empty)
 	EmptyTrash(w http.ResponseWriter, r *http.Request)
+	// GetTrashSummary What emptying the trash would remove
+	// (GET /api/trash/summary)
+	GetTrashSummary(w http.ResponseWriter, r *http.Request)
 	// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 	// (POST /api/uploads)
 	CreateUpload(w http.ResponseWriter, r *http.Request)
@@ -1968,9 +2051,45 @@ func (_ Unimplemented) ScanExternalLibrary(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetAdminHealth Whether the worker and the analysis service are running
+// (GET /api/admin/health)
+func (_ Unimplemented) GetAdminHealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAdminJobs The job queues, and the jobs that gave up
+// (GET /api/admin/jobs)
+func (_ Unimplemented) GetAdminJobs(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// PauseJobQueue Stop starting jobs from this queue
+// (POST /api/admin/jobs/queues/{queue}/pause)
+func (_ Unimplemented) PauseJobQueue(w http.ResponseWriter, r *http.Request, queue string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ResumeJobQueue Continue a paused queue
+// (POST /api/admin/jobs/queues/{queue}/resume)
+func (_ Unimplemented) ResumeJobQueue(w http.ResponseWriter, r *http.Request, queue string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RetryJob Try a failed job again
+// (POST /api/admin/jobs/{id}/retry)
+func (_ Unimplemented) RetryJob(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetAdminOverview Live statistics of the whole server, read from the database and the library disk
 // (GET /api/admin/overview)
 func (_ Unimplemented) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAdminStorage How much each user stores
+// (GET /api/admin/storage)
+func (_ Unimplemented) GetAdminStorage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1983,6 +2102,12 @@ func (_ Unimplemented) ListUsers(w http.ResponseWriter, r *http.Request) {
 // CreateUser Create a user
 // (POST /api/admin/users)
 func (_ Unimplemented) CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetUserQuota Set how much a user may store. Without a value there is no limit
+// (PUT /api/admin/users/{id}/quota)
+func (_ Unimplemented) SetUserQuota(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2550,6 +2675,12 @@ func (_ Unimplemented) EmptyTrash(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetTrashSummary What emptying the trash would remove
+// (GET /api/trash/summary)
+func (_ Unimplemented) GetTrashSummary(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 // (POST /api/uploads)
 func (_ Unimplemented) CreateUpload(w http.ResponseWriter, r *http.Request) {
@@ -2721,11 +2852,131 @@ func (siw *ServerInterfaceWrapper) ScanExternalLibrary(w http.ResponseWriter, r 
 	handler.ServeHTTP(w, r)
 }
 
+// GetAdminHealth operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminHealth(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAdminHealth(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAdminJobs operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminJobs(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAdminJobs(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PauseJobQueue operation middleware
+func (siw *ServerInterfaceWrapper) PauseJobQueue(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "queue" -------------
+	var queue string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "queue", chi.URLParam(r, "queue"), &queue, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "queue", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PauseJobQueue(w, r, queue)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ResumeJobQueue operation middleware
+func (siw *ServerInterfaceWrapper) ResumeJobQueue(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "queue" -------------
+	var queue string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "queue", chi.URLParam(r, "queue"), &queue, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "queue", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResumeJobQueue(w, r, queue)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RetryJob operation middleware
+func (siw *ServerInterfaceWrapper) RetryJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RetryJob(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetAdminOverview operation middleware
 func (siw *ServerInterfaceWrapper) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAdminOverview(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAdminStorage operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminStorage(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAdminStorage(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2754,6 +3005,32 @@ func (siw *ServerInterfaceWrapper) CreateUser(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateUser(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetUserQuota operation middleware
+func (siw *ServerInterfaceWrapper) SetUserQuota(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetUserQuota(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5295,6 +5572,20 @@ func (siw *ServerInterfaceWrapper) EmptyTrash(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// GetTrashSummary operation middleware
+func (siw *ServerInterfaceWrapper) GetTrashSummary(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTrashSummary(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateUpload operation middleware
 func (siw *ServerInterfaceWrapper) CreateUpload(w http.ResponseWriter, r *http.Request) {
 
@@ -5889,6 +6180,30 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/audit", wrapper.ListAuditLog)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/jobs", wrapper.GetAdminJobs)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/jobs/queues/{queue}/pause", wrapper.PauseJobQueue)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/jobs/queues/{queue}/resume", wrapper.ResumeJobQueue)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/jobs/{id}/retry", wrapper.RetryJob)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/health", wrapper.GetAdminHealth)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/storage", wrapper.GetAdminStorage)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/users/{id}/quota", wrapper.SetUserQuota)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/trash/summary", wrapper.GetTrashSummary)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

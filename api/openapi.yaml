@@ -1421,6 +1421,103 @@ paths:
               schema: { type: array, items: { $ref: "#/components/schemas/AuditEntry" } }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/admin/jobs:
+    get:
+      operationId: getAdminJobs
+      summary: The job queues, and the jobs that gave up
+      responses:
+        "200":
+          description: Queues and failed jobs
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminJobs" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/jobs/queues/{queue}/pause:
+    post:
+      operationId: pauseJobQueue
+      summary: Stop starting jobs from this queue
+      parameters:
+        - { name: queue, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Paused }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/jobs/queues/{queue}/resume:
+    post:
+      operationId: resumeJobQueue
+      summary: Continue a paused queue
+      parameters:
+        - { name: queue, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Resumed }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/jobs/{id}/retry:
+    post:
+      operationId: retryJob
+      summary: Try a failed job again
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        "204": { description: Queued again }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/health:
+    get:
+      operationId: getAdminHealth
+      summary: Whether the worker and the analysis service are running
+      responses:
+        "200":
+          description: The state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminHealth" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/storage:
+    get:
+      operationId: getAdminStorage
+      summary: How much each user stores
+      responses:
+        "200":
+          description: One row per user, the largest first
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/UserStorage" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/users/{id}/quota:
+    put:
+      operationId: setUserQuota
+      summary: Set how much a user may store. Without a value there is no limit
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QuotaUpdate" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/trash/summary:
+    get:
+      operationId: getTrashSummary
+      summary: What emptying the trash would remove
+      responses:
+        "200":
+          description: Count and size
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrashSummary" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/admin/external:
     get:
       operationId: getExternalLibrary
@@ -1675,6 +1772,58 @@ components:
         name: { type: string }
         scopes: { type: array, items: { type: string, enum: [read, upload, write, admin] } }
         expiresInDays: { type: integer, minimum: 1, maximum: 3650 }
+    AdminJobs:
+      type: object
+      required: [queues, failed]
+      properties:
+        queues: { type: array, items: { $ref: "#/components/schemas/JobQueue" } }
+        failed: { type: array, items: { $ref: "#/components/schemas/FailedJob" } }
+    JobQueue:
+      type: object
+      required: [name, paused, queued, running]
+      properties:
+        name: { type: string }
+        paused: { type: boolean }
+        queued: { type: integer, format: int64 }
+        running: { type: integer, format: int64 }
+    FailedJob:
+      type: object
+      required: [id, kind, queue, error, at]
+      properties:
+        id: { type: integer, format: int64 }
+        kind: { type: string }
+        queue: { type: string }
+        error: { type: string }
+        at: { type: string, format: date-time }
+    AdminHealth:
+      type: object
+      required: [workerRunning, mlEnabled, databaseBytes]
+      properties:
+        workerRunning: { type: boolean }
+        workerLastSeen: { type: string, format: date-time }
+        mlEnabled: { type: boolean }
+        mlRunning: { type: boolean }
+        databaseBytes: { type: integer, format: int64 }
+    UserStorage:
+      type: object
+      required: [id, name, email, storedBytes, assets]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string }
+        storedBytes: { type: integer, format: int64 }
+        assets: { type: integer, format: int64 }
+        quotaBytes: { type: integer, format: int64 }
+    QuotaUpdate:
+      type: object
+      properties:
+        quotaBytes: { type: integer, format: int64 }
+    TrashSummary:
+      type: object
+      required: [assets, bytes]
+      properties:
+        assets: { type: integer, format: int64 }
+        bytes: { type: integer, format: int64 }
     Memory:
       type: object
       required: [kind, title, items]
@@ -2181,6 +2330,7 @@ components:
           maxItems: 1000
           items: { type: string, format: uuid }
         action: { type: string, enum: [favorite, unfavorite, archive, unarchive, delete, restore, vault, unvault, purge] }
+        dryRun: { type: boolean, description: "Only say how many it would change" }
     BulkResponse:
       type: object
       required: [changed]

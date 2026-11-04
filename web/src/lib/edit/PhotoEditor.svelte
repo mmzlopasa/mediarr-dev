@@ -133,6 +133,7 @@
 <div
 	class="editor"
 	role="dialog"
+	tabindex="-1"
 	aria-modal="true"
 	aria-label={tr('Uredi fotku', 'Edit the photo')}
 	onpointermove={drag}
