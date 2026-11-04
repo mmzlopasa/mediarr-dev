@@ -22,7 +22,7 @@ A local model writes a short description of each photo, which makes it searchabl
 
 3. Under **Admin → Settings → AI descriptions and questions**, set the address to `http://ollama:11434`.
 
-The models take about 3 GB of disk and download by themselves.
+The models take about 3 GB of disk and download by themselves. The Ollama image takes another 8.5 GB. While it works, Ollama used about 8.8 GB of memory in our measurement, so a server with less than about 12 GB of memory should leave this off.
 
 :::warning Processor use
 Without a graphics card, each photo takes a while and Ollama uses every processor core while it works. On a server shared with other services, those will slow down, especially after a large upload.

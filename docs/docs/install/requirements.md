@@ -17,7 +17,7 @@ Mediarr is built and tested on Linux with x86-64 processors.
 | --- | --- |
 | Mediarr itself | The server aims to stay under 300 MB when idle, plus the database |
 | Smart search and faces | About 2 GB more |
-| AI descriptions | Depends on the model. The default models take about 3 GB of disk |
+| AI descriptions | About 8.8 GB while working, measured with the default models |
 
 ## Disk
 
