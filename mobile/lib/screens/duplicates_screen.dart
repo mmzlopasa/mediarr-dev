@@ -70,7 +70,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Move', style: TextStyle(color: Palette.err)),
+            child: Text('Move', style: TextStyle(color: Palette.err)),
           ),
         ],
       ),
@@ -169,9 +169,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                     icon: Icons.cloud_off,
                     text: 'Duplicates could not be loaded.',
                   )
-                : const Center(
-                    child: CircularProgressIndicator(color: Palette.gold),
-                  )
+                : Center(child: CircularProgressIndicator(color: Palette.gold))
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
@@ -269,9 +267,7 @@ class _StackSheetState extends State<_StackSheet> {
                 icon: Icons.cloud_off,
                 text: 'This stack could not be loaded.',
               )
-            : const Center(
-                child: CircularProgressIndicator(color: Palette.gold),
-              ),
+            : Center(child: CircularProgressIndicator(color: Palette.gold)),
       );
     }
     final api = widget.session.api;

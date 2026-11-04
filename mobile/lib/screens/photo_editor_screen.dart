@@ -448,7 +448,7 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(18),
                 child: picture == null
-                    ? const Center(
+                    ? Center(
                         child: CircularProgressIndicator(color: Palette.gold),
                       )
                     : _stage(picture),

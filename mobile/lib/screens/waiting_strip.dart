@@ -122,7 +122,7 @@ class _WaitingTileState extends State<_WaitingTile> {
           fit: StackFit.expand,
           children: [
             if (picture == null)
-              const ColoredBox(color: Palette.bg3)
+              ColoredBox(color: Palette.bg3)
             else
               Image.memory(picture, fit: BoxFit.cover),
             Positioned(

@@ -87,7 +87,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Palette.err)),
+            child: Text('Delete', style: TextStyle(color: Palette.err)),
           ),
         ],
       ),
@@ -464,7 +464,7 @@ class _VideoPageState extends State<_VideoPage> {
                       size: 72,
                       color: Colors.white,
                     )
-                  : const CircularProgressIndicator(color: Palette.gold),
+                  : CircularProgressIndicator(color: Palette.gold),
             ),
           ],
         ),
@@ -485,7 +485,7 @@ class _VideoPageState extends State<_VideoPage> {
             child: VideoProgressIndicator(
               controller,
               allowScrubbing: true,
-              colors: const VideoProgressColors(playedColor: Palette.gold),
+              colors: VideoProgressColors(playedColor: Palette.gold),
             ),
           ),
         ],
@@ -555,7 +555,7 @@ class _LivePlayerState extends State<_LivePlayer> {
               aspectRatio: _controller.value.aspectRatio,
               child: VideoPlayer(_controller),
             )
-          : const CircularProgressIndicator(color: Palette.gold),
+          : CircularProgressIndicator(color: Palette.gold),
     ),
   );
 }
@@ -584,7 +584,7 @@ class _InfoSheet extends StatelessWidget {
           }
           final detail = snapshot.data;
           if (detail == null) {
-            return const SizedBox(
+            return SizedBox(
               height: 200,
               child: Center(
                 child: CircularProgressIndicator(color: Palette.gold),

@@ -16,6 +16,16 @@ enum GridSize {
   final double scale;
 }
 
+enum AppTheme {
+  system('Automatic'),
+  light('Light'),
+  dark('Dark');
+
+  const AppTheme(this.label);
+
+  final String label;
+}
+
 /// What Free up space must leave on the phone, whatever the server holds.
 class FreeSpaceRules {
   const FreeSpaceRules({
@@ -83,6 +93,7 @@ class FreeSpaceRules {
 class AppSettings {
   const AppSettings({
     this.gridSize = GridSize.medium,
+    this.theme = AppTheme.system,
     this.readOnly = false,
     this.mirrorAlbums = false,
     this.freeSpace = const FreeSpaceRules(),
@@ -93,6 +104,10 @@ class AppSettings {
       (size) => size.name == json['gridSize'],
       orElse: () => GridSize.medium,
     ),
+    theme: AppTheme.values.firstWhere(
+      (theme) => theme.name == json['theme'],
+      orElse: () => AppTheme.system,
+    ),
     readOnly: json['readOnly'] as bool? ?? false,
     mirrorAlbums: json['mirrorAlbums'] as bool? ?? false,
     freeSpace: FreeSpaceRules.fromJson(
@@ -101,12 +116,14 @@ class AppSettings {
   );
 
   final GridSize gridSize;
+  final AppTheme theme;
   final bool readOnly;
   final bool mirrorAlbums;
   final FreeSpaceRules freeSpace;
 
   Map<String, dynamic> toJson() => {
     'gridSize': gridSize.name,
+    'theme': theme.name,
     'readOnly': readOnly,
     'mirrorAlbums': mirrorAlbums,
     'freeSpace': freeSpace.toJson(),
@@ -114,11 +131,13 @@ class AppSettings {
 
   AppSettings copyWith({
     GridSize? gridSize,
+    AppTheme? theme,
     bool? readOnly,
     bool? mirrorAlbums,
     FreeSpaceRules? freeSpace,
   }) => AppSettings(
     gridSize: gridSize ?? this.gridSize,
+    theme: theme ?? this.theme,
     readOnly: readOnly ?? this.readOnly,
     mirrorAlbums: mirrorAlbums ?? this.mirrorAlbums,
     freeSpace: freeSpace ?? this.freeSpace,

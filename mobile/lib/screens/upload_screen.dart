@@ -118,7 +118,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               icon: Icons.photo_outlined,
               text: 'There are no photos on this device.',
             )
-          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else {
       gallery = NotificationListener<ScrollNotification>(
         onNotification: (notification) {
@@ -213,7 +213,7 @@ class _AssetThumbState extends State<_AssetThumb> {
         builder: (context, snapshot) {
           final bytes = snapshot.data;
           return bytes == null
-              ? const ColoredBox(color: Palette.bg3)
+              ? ColoredBox(color: Palette.bg3)
               : Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true);
         },
       ),
@@ -231,7 +231,7 @@ class _AssetThumbState extends State<_AssetThumb> {
         ),
       if (widget.selected) ...[
         const ColoredBox(color: Color(0x66000000)),
-        const Positioned(
+        Positioned(
           left: 4,
           top: 4,
           child: Icon(Icons.check_circle, size: 22, color: Palette.gold),

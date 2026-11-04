@@ -66,7 +66,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
               text: 'Memories could not be loaded. Check the connection.',
               action: GoldButton(label: 'Try again', onPressed: _load),
             )
-          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (memories.isEmpty) {
       body = const EmptyMessage(
         icon: Icons.auto_awesome_outlined,
@@ -105,7 +105,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
                         session: _session,
                         id: memory.items.first.id,
                         fit: BoxFit.cover,
-                        error: const Icon(
+                        error: Icon(
                           Icons.broken_image_outlined,
                           color: Palette.dim,
                         ),
@@ -244,7 +244,7 @@ class _StoryScreenState extends State<StoryScreen> {
         title: Text(widget.title),
         actions: [
           _exporting
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.all(14),
                   child: SizedBox.square(
                     dimension: 20,
@@ -281,10 +281,7 @@ class _StoryScreenState extends State<StoryScreen> {
                   id: item.id,
                   large: true,
                   fit: BoxFit.contain,
-                  error: const Icon(
-                    Icons.broken_image_outlined,
-                    color: Palette.dim,
-                  ),
+                  error: Icon(Icons.broken_image_outlined, color: Palette.dim),
                 ),
               ),
             ),

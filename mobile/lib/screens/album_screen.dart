@@ -141,7 +141,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(action, style: const TextStyle(color: Palette.err)),
+            child: Text(action, style: TextStyle(color: Palette.err)),
           ),
         ],
       ),
@@ -299,18 +299,14 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
       );
     }
     if (album == null || rights == null) {
-      return const Center(
-        child: CircularProgressIndicator(color: Palette.gold),
-      );
+      return Center(child: CircularProgressIndicator(color: Palette.gold));
     }
     return ListenableBuilder(
       listenable: _store,
       builder: (context, _) {
         final months = _store.months;
         if (months == null) {
-          return const Center(
-            child: CircularProgressIndicator(color: Palette.gold),
-          );
+          return Center(child: CircularProgressIndicator(color: Palette.gold));
         }
         if (months.isEmpty) {
           return EmptyMessage(
@@ -405,7 +401,7 @@ class _LibraryPickerState extends ConsumerState<_LibraryPicker> {
         ],
       ),
       body: store.months == null
-          ? const Center(child: CircularProgressIndicator(color: Palette.gold))
+          ? Center(child: CircularProgressIndicator(color: Palette.gold))
           : store.months!.isEmpty
           ? const EmptyMessage(
               icon: Icons.photo_outlined,
@@ -505,7 +501,7 @@ class _EditSheetState extends State<_EditSheet> {
       if (_error != null)
         Padding(
           padding: const EdgeInsets.only(top: 8),
-          child: Text(_error!, style: const TextStyle(color: Palette.err)),
+          child: Text(_error!, style: TextStyle(color: Palette.err)),
         ),
       const SizedBox(height: 12),
       GoldButton(label: 'Save', onPressed: _save),

@@ -107,7 +107,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Palette.err)),
+            child: Text('Delete', style: TextStyle(color: Palette.err)),
           ),
         ],
       ),
@@ -136,7 +136,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               text: 'Your photos could not be loaded. Check the connection.',
               action: GoldButton(label: 'Try again', onPressed: store.refresh),
             )
-          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (months.isEmpty) {
       body = const EmptyMessage(
         icon: Icons.photo_outlined,
@@ -444,7 +444,7 @@ class _TileView extends StatelessWidget {
                     id: item.id,
                     memCacheWidth: pixels,
                     fit: BoxFit.cover,
-                    error: const Icon(
+                    error: Icon(
                       Icons.broken_image_outlined,
                       color: Palette.dim,
                     ),
@@ -495,13 +495,13 @@ class _TileView extends StatelessWidget {
                   ),
                 ),
               if (item.isFavorite)
-                const Positioned(
+                Positioned(
                   left: 5,
                   bottom: 5,
                   child: Icon(Icons.star, size: 18, color: Palette.gold),
                 ),
               if (isSelected)
-                const Positioned(
+                Positioned(
                   left: 4,
                   top: 4,
                   child: Icon(

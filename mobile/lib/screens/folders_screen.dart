@@ -132,9 +132,7 @@ class _FoldersScreenState extends ConsumerState<FoldersScreen> {
                     icon: Icons.cloud_off,
                     text: 'The folder could not be loaded.',
                   )
-                : const Center(
-                    child: CircularProgressIndicator(color: Palette.gold),
-                  )
+                : Center(child: CircularProgressIndicator(color: Palette.gold))
           : !folder.available
           ? const EmptyMessage(
               icon: Icons.folder_outlined,

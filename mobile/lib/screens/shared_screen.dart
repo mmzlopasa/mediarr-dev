@@ -102,7 +102,7 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
               text: 'This could not be loaded. Check the connection.',
               action: GoldButton(label: 'Try again', onPressed: _load),
             )
-          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else {
       final withMe = albums
           .where((album) => album.role != AlbumRoleEnum.owner)
@@ -276,9 +276,7 @@ class _PartnerLibraryState extends ConsumerState<_PartnerLibrary> {
                   icon: Icons.lock_outline,
                   text: 'This library is not available.',
                 )
-              : const Center(
-                  child: CircularProgressIndicator(color: Palette.gold),
-                );
+              : Center(child: CircularProgressIndicator(color: Palette.gold));
         }
         if (months.isEmpty) {
           return const EmptyMessage(

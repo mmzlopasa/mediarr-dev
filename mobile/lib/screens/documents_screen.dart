@@ -57,7 +57,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
               icon: Icons.cloud_off,
               text: 'Documents could not be loaded.',
             )
-          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (data.items.isEmpty) {
       body = EmptyMessage(
         icon: Icons.description_outlined,

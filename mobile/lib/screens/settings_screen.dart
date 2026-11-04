@@ -43,6 +43,19 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
+          heading('Appearance'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SegmentedButton<AppTheme>(
+              segments: [
+                for (final theme in AppTheme.values)
+                  ButtonSegment(value: theme, label: Text(theme.label)),
+              ],
+              selected: {settings.theme},
+              onSelectionChanged: (chosen) =>
+                  notifier.change(settings.copyWith(theme: chosen.first)),
+            ),
+          ),
           heading('Photo grid'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

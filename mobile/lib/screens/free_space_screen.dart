@@ -120,7 +120,7 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove', style: TextStyle(color: Palette.err)),
+            child: Text('Remove', style: TextStyle(color: Palette.err)),
           ),
         ],
       ),
@@ -149,9 +149,7 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
     if (_error != null) {
       body = EmptyMessage(icon: Icons.cloud_off, text: _error!);
     } else if (assets == null) {
-      body = const Center(
-        child: CircularProgressIndicator(color: Palette.gold),
-      );
+      body = Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (assets.isEmpty) {
       body = const EmptyMessage(
         icon: Icons.cleaning_services_outlined,
@@ -321,7 +319,7 @@ class _Thumbnail extends StatelessWidget {
   Widget build(BuildContext context) => FutureBuilder<Uint8List?>(
     future: asset.thumbnailDataWithSize(const ThumbnailSize.square(200)),
     builder: (_, snapshot) => snapshot.data == null
-        ? const ColoredBox(color: Palette.bg3)
+        ? ColoredBox(color: Palette.bg3)
         : Image.memory(snapshot.data!, fit: BoxFit.cover),
   );
 }

@@ -120,9 +120,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final text = Theme.of(context).textTheme;
     Widget body;
     if (_busy) {
-      body = const Center(
-        child: CircularProgressIndicator(color: Palette.gold),
-      );
+      body = Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (_failed) {
       body = const EmptyMessage(
         icon: Icons.cloud_off,
@@ -178,7 +176,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         session: _session,
                         id: result.items[index].id,
                         fit: BoxFit.cover,
-                        error: const Icon(
+                        error: Icon(
                           Icons.broken_image_outlined,
                           color: Palette.dim,
                         ),
@@ -231,8 +229,7 @@ class _PersonPicture extends StatelessWidget {
     '${session.serverUrl}/api/people/$id/thumbnail',
     headers: session.headers,
     fit: BoxFit.cover,
-    errorBuilder: (_, _, _) =>
-        const Icon(Icons.person_outline, color: Palette.dim),
+    errorBuilder: (_, _, _) => Icon(Icons.person_outline, color: Palette.dim),
   );
 }
 
@@ -292,7 +289,7 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
               icon: Icons.cloud_off,
               text: 'People could not be loaded. Check the connection.',
             )
-          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (!list.enabled && list.people.isEmpty) {
       body = const EmptyMessage(
         icon: Icons.people_outline,
@@ -513,9 +510,7 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
                   icon: Icons.cloud_off,
                   text: 'This could not be loaded. Check the connection.',
                 )
-              : const Center(
-                  child: CircularProgressIndicator(color: Palette.gold),
-                );
+              : Center(child: CircularProgressIndicator(color: Palette.gold));
         }
         if (months.isEmpty) {
           return const EmptyMessage(

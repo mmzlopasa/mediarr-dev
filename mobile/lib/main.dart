@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/session.dart';
+import 'services/settings.dart';
 import 'theme.dart';
 
 void main() {
@@ -19,12 +20,32 @@ class MediarrApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider);
+    final theme = ref.watch(settingsProvider).theme;
     return MaterialApp(
       title: 'Mediarr',
       debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
+      theme: buildTheme(light: true),
+      darkTheme: buildTheme(),
+      themeMode: switch (theme) {
+        AppTheme.system => ThemeMode.system,
+        AppTheme.light => ThemeMode.light,
+        AppTheme.dark => ThemeMode.dark,
+      },
+      builder: (context, child) {
+        final light = Theme.of(context).brightness == Brightness.light;
+        if (Palette.light != light) {
+          Palette.light = light;
+          SystemChrome.setSystemUIOverlayStyle(
+            light ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+          );
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _redrawAll(context),
+          );
+        }
+        return child ?? const SizedBox.shrink();
+      },
       home: session.when(
-        loading: () => const Scaffold(
+        loading: () => Scaffold(
           body: Center(child: CircularProgressIndicator(color: Palette.gold)),
         ),
         error: (_, _) => const LoginScreen(),
@@ -33,4 +54,14 @@ class MediarrApp extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Colors come from Palette, not from an inherited theme, so everything has to be told.
+void _redrawAll(BuildContext context) {
+  void visit(Element element) {
+    element.markNeedsBuild();
+    element.visitChildren(visit);
+  }
+
+  (context as Element).visitChildren(visit);
 }

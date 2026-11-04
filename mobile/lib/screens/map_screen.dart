@@ -144,7 +144,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               text: 'The map could not be loaded. Check the connection.',
               action: GoldButton(label: 'Try again', onPressed: _loadAll),
             )
-          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (points.ids.isEmpty && _from == null && _to == null) {
       body = const EmptyMessage(
         icon: Icons.map_outlined,

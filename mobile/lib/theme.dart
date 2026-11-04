@@ -2,28 +2,39 @@ import 'package:flutter/material.dart';
 
 /// The colors of the Mediarr design system (web/src/lib/design/dash.css), dark theme.
 abstract final class Palette {
-  static const bg = Color(0xFF0D0F14);
-  static const bg2 = Color(0xFF161922);
-  static const bg3 = Color(0xFF20242F);
-  static const ink = Color(0xFFF3F5F7);
-  static const haze = Color(0xFFAEB4C0);
-  static const dim = Color(0xFF7C8391);
-  static const line = Color(0x14FFFFFF);
-  static const line2 = Color(0x29FFFFFF);
-  static const violet = Color(0xFF8B7CFF);
-  static const gold = Color(0xFFFFD76A);
+  /// Set by the app when the theme changes, before anything is drawn with these.
+  static bool light = false;
+
+  static Color _pick(int dark, int bright) => Color(light ? bright : dark);
+
+  static Color get bg => _pick(0xFF0D0F14, 0xFFEEF0F3);
+  static Color get bg2 => _pick(0xFF161922, 0xFFE4E7EC);
+  static Color get bg3 => _pick(0xFF20242F, 0xFFD8DCE3);
+  static Color get ink => _pick(0xFFF3F5F7, 0xFF12141A);
+  static Color get haze => _pick(0xFFAEB4C0, 0xFF4A505C);
+  static Color get dim => _pick(0xFF7C8391, 0xFF646A77);
+  static Color get line => _pick(0x14FFFFFF, 0x1A12141A);
+  static Color get line2 => _pick(0x29FFFFFF, 0x2E12141A);
+  static Color get violet => _pick(0xFF8B7CFF, 0xFF5A49E6);
+
+  /// The accent: gold on dark. Gold has no contrast on a light background, so there it is violet.
+  static Color get gold => _pick(0xFFFFD76A, 0xFF5A49E6);
+  static Color get field => _pick(0x0DFFFFFF, 0xD9FFFFFF);
+  static Color get ok => _pick(0xFF8EF0C8, 0xFF0B8F69);
+  static Color get warn => _pick(0xFFFFC98A, 0xFFA85D00);
+  static Color get err => _pick(0xFFFF9AA8, 0xFFC62A47);
+
+  /// These belong to the gold button, which looks the same in both themes.
+  static const buttonGold = Color(0xFFFFD76A);
   static const gold2 = Color(0xFFFFF0B8);
   static const gold3 = Color(0xFFE9B84A);
   static const onGold = Color(0xFF1B1530);
-  static const ok = Color(0xFF8EF0C8);
-  static const warn = Color(0xFFFFC98A);
-  static const err = Color(0xFFFF9AA8);
 }
 
 const goldGradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
-  colors: [Palette.gold2, Palette.gold, Palette.gold3],
+  colors: [Palette.gold2, Palette.buttonGold, Palette.gold3],
   stops: [0, 0.55, 1],
 );
 
@@ -36,8 +47,18 @@ TextStyle _text(double size, double weight, Color color) => TextStyle(
   letterSpacing: -0.1,
 );
 
-ThemeData buildTheme() {
-  final scheme = const ColorScheme.dark(
+ThemeData buildTheme({bool light = false}) {
+  final was = Palette.light;
+  Palette.light = light;
+  try {
+    return _build(light);
+  } finally {
+    Palette.light = was;
+  }
+}
+
+ThemeData _build(bool light) {
+  final scheme = (light ? ColorScheme.light : ColorScheme.dark)(
     surface: Palette.bg,
     primary: Palette.gold,
     onPrimary: Palette.onGold,
@@ -48,7 +69,7 @@ ThemeData buildTheme() {
   );
   final border = OutlineInputBorder(
     borderRadius: BorderRadius.circular(16),
-    borderSide: const BorderSide(color: Palette.line2),
+    borderSide: BorderSide(color: Palette.line2),
   );
   return ThemeData(
     useMaterial3: true,
@@ -73,11 +94,11 @@ ThemeData buildTheme() {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0x0DFFFFFF),
+      fillColor: Palette.field,
       border: border,
       enabledBorder: border,
       focusedBorder: border.copyWith(
-        borderSide: const BorderSide(color: Palette.gold),
+        borderSide: BorderSide(color: Palette.gold),
       ),
       labelStyle: _text(14, 500, Palette.haze),
       hintStyle: _text(14, 400, Palette.dim),
@@ -85,15 +106,15 @@ ThemeData buildTheme() {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Palette.bg2,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: const Color(0x33FFD76A),
+      indicatorColor: Palette.gold.withValues(alpha: 0.2),
       labelTextStyle: WidgetStateProperty.all(_text(12, 500, Palette.haze)),
     ),
-    dialogTheme: const DialogThemeData(backgroundColor: Palette.bg2),
-    bottomSheetTheme: const BottomSheetThemeData(
+    dialogTheme: DialogThemeData(backgroundColor: Palette.bg2),
+    bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: Palette.bg2,
       surfaceTintColor: Colors.transparent,
     ),
-    snackBarTheme: const SnackBarThemeData(
+    snackBarTheme: SnackBarThemeData(
       backgroundColor: Palette.bg3,
       contentTextStyle: TextStyle(fontFamily: 'Sora', color: Palette.ink),
     ),

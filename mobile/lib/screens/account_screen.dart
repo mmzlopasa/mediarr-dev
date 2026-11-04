@@ -42,9 +42,9 @@ class AccountScreen extends ConsumerWidget {
           Text('Account', style: text.headlineMedium),
           const SizedBox(height: 20),
           row('Name', session.user.name),
-          const Divider(color: Palette.line),
+          Divider(color: Palette.line),
           row('Email', session.user.email),
-          const Divider(color: Palette.line),
+          Divider(color: Palette.line),
           row('Server', session.serverUrl),
           const SizedBox(height: 12),
           ListTile(
@@ -63,7 +63,7 @@ class AccountScreen extends ConsumerWidget {
             label: const Text('Sign out'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Palette.ink,
-              side: const BorderSide(color: Palette.line2),
+              side: BorderSide(color: Palette.line2),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: const StadiumBorder(),
             ),

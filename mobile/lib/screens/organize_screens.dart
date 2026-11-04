@@ -191,9 +191,7 @@ class _PhotoGridState extends State<_PhotoGrid> {
                 icon: Icons.cloud_off,
                 text: 'This could not be loaded. Check the connection.',
               )
-            : const Center(
-                child: CircularProgressIndicator(color: Palette.gold),
-              );
+            : Center(child: CircularProgressIndicator(color: Palette.gold));
       }
       if (months.isEmpty) {
         return EmptyMessage(icon: Icons.photo_outlined, text: widget.emptyText);
@@ -259,7 +257,7 @@ Future<bool> _confirmPermanent(
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text(
+          child: Text(
             'Delete permanently',
             style: TextStyle(color: Palette.err),
           ),
@@ -653,7 +651,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
               action: GoldButton(label: 'Try again', onPressed: _load),
             )
           : status == null
-          ? const Center(child: CircularProgressIndicator(color: Palette.gold))
+          ? Center(child: CircularProgressIndicator(color: Palette.gold))
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
@@ -675,10 +673,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      _error!,
-                      style: const TextStyle(color: Palette.err),
-                    ),
+                    child: Text(_error!, style: TextStyle(color: Palette.err)),
                   ),
                 if (_canUseBiometrics)
                   SwitchListTile(
@@ -824,9 +819,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                     icon: Icons.cloud_off,
                     text: 'Tags could not be loaded.',
                   )
-                : const Center(
-                    child: CircularProgressIndicator(color: Palette.gold),
-                  )
+                : Center(child: CircularProgressIndicator(color: Palette.gold))
           : tags.isEmpty
           ? const EmptyMessage(
               icon: Icons.sell_outlined,
@@ -1003,9 +996,7 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
                     icon: Icons.cloud_off,
                     text: 'The family library could not be loaded.',
                   )
-                : const Center(
-                    child: CircularProgressIndicator(color: Palette.gold),
-                  )
+                : Center(child: CircularProgressIndicator(color: Palette.gold))
           : closed != null
           ? EmptyMessage(icon: Icons.family_restroom, text: closed)
           : _PhotoGrid(

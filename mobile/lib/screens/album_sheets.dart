@@ -155,9 +155,7 @@ class _ActivitySheetState extends State<ActivitySheet> {
         if (activity == null)
           _failedLoad
               ? const Text('Comments could not be loaded.')
-              : const Center(
-                  child: CircularProgressIndicator(color: Palette.gold),
-                )
+              : Center(child: CircularProgressIndicator(color: Palette.gold))
         else ...[
           if (widget.assetId != null)
             Row(
@@ -310,7 +308,7 @@ class _AddToAlbumSheetState extends State<_AddToAlbumSheet> {
     children: [
       if (_failedLoad) const Text('Albums could not be loaded.'),
       if (_albums == null && !_failedLoad)
-        const Center(child: CircularProgressIndicator(color: Palette.gold)),
+        Center(child: CircularProgressIndicator(color: Palette.gold)),
       for (final album in _albums ?? const <Album>[])
         ListTile(
           contentPadding: EdgeInsets.zero,
@@ -402,7 +400,7 @@ class _ShareSheetState extends State<ShareSheet> {
       children: [
         if (_failedLoad) const Text('Sharing could not be loaded.'),
         if (members == null && !_failedLoad)
-          const Center(child: CircularProgressIndicator(color: Palette.gold)),
+          Center(child: CircularProgressIndicator(color: Palette.gold)),
         if (members != null && members.isEmpty)
           const Text('This album is not shared yet.'),
         for (final member in members ?? const <AlbumMember>[])
@@ -606,7 +604,7 @@ class _LinksSheetState extends State<LinksSheet> {
         ],
         if (_failedLoad) const Text('Links could not be loaded.'),
         if (_links == null && !_failedLoad)
-          const Center(child: CircularProgressIndicator(color: Palette.gold)),
+          Center(child: CircularProgressIndicator(color: Palette.gold)),
         for (final link in _links ?? const <ShareLink>[])
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -621,10 +619,10 @@ class _LinksSheetState extends State<LinksSheet> {
                   if (context.mounted) _failed(context, cause);
                 }
               },
-              child: const Text('Revoke', style: TextStyle(color: Palette.err)),
+              child: Text('Revoke', style: TextStyle(color: Palette.err)),
             ),
           ),
-        const Divider(color: Palette.line),
+        Divider(color: Palette.line),
         TextField(
           controller: _label,
           decoration: const InputDecoration(labelText: 'Name'),

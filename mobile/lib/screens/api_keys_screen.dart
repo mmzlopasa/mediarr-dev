@@ -162,9 +162,7 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
                     icon: Icons.cloud_off,
                     text: 'The keys could not be loaded.',
                   )
-                : const Center(
-                    child: CircularProgressIndicator(color: Palette.gold),
-                  )
+                : Center(child: CircularProgressIndicator(color: Palette.gold))
           : keys.isEmpty
           ? const EmptyMessage(
               icon: Icons.key_outlined,

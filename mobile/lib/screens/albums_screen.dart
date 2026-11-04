@@ -79,7 +79,7 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
               text: 'Albums could not be loaded. Check the connection.',
               action: GoldButton(label: 'Try again', onPressed: _load),
             )
-          : const Center(child: CircularProgressIndicator(color: Palette.gold));
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (albums.isEmpty) {
       body = const EmptyMessage(
         icon: Icons.photo_album_outlined,
@@ -193,7 +193,7 @@ class _AlbumTile extends StatelessWidget {
                 color: Palette.bg3,
                 width: double.infinity,
                 child: cover == null
-                    ? const Icon(
+                    ? Icon(
                         Icons.photo_album_outlined,
                         color: Palette.dim,
                         size: 32,
@@ -203,7 +203,7 @@ class _AlbumTile extends StatelessWidget {
                         httpHeaders: session.headers,
                         cacheKey: '${session.serverUrl}/$cover/s',
                         fit: BoxFit.cover,
-                        errorWidget: (_, _, _) => const Icon(
+                        errorWidget: (_, _, _) => Icon(
                           Icons.broken_image_outlined,
                           color: Palette.dim,
                         ),
@@ -297,7 +297,7 @@ class _NewAlbumSheetState extends State<_NewAlbumSheet> {
       if (_error != null)
         Padding(
           padding: const EdgeInsets.only(top: 8),
-          child: Text(_error!, style: const TextStyle(color: Palette.err)),
+          child: Text(_error!, style: TextStyle(color: Palette.err)),
         ),
       const SizedBox(height: 12),
       GoldButton(label: 'Create', onPressed: _create),

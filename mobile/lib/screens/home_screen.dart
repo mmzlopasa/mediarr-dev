@@ -105,12 +105,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         selectedIndex: shown.indexOf(tab),
         onDestinationSelected: (value) => setState(() => _tab = shown[value]),
         destinations: [
-          const NavigationDestination(
+          NavigationDestination(
             icon: Icon(Icons.photo_outlined),
             selectedIcon: Icon(Icons.photo, color: Palette.gold),
             label: 'Media',
           ),
-          const NavigationDestination(
+          NavigationDestination(
             icon: Icon(Icons.photo_album_outlined),
             selectedIcon: Icon(Icons.photo_album, color: Palette.gold),
             label: 'Albums',
@@ -122,10 +122,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 label: Text('$working'),
                 child: const Icon(Icons.upload_outlined),
               ),
-              selectedIcon: const Icon(Icons.upload, color: Palette.gold),
+              selectedIcon: Icon(Icons.upload, color: Palette.gold),
               label: 'Upload',
             ),
-          const NavigationDestination(
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person, color: Palette.gold),
             label: 'Account',

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mediarr/screens/settings_screen.dart';
 import 'package:mediarr/services/session.dart';
 import 'package:mediarr/services/settings.dart';
+import 'package:mediarr/theme.dart';
 import 'package:mediarr/timeline/layout.dart';
 
 void main() {
@@ -68,6 +69,23 @@ void main() {
     );
   });
 
+  test('the accent has contrast in both themes, and the button stays gold', () {
+    Palette.light = false;
+    expect(Palette.gold, Palette.buttonGold);
+    Palette.light = true;
+    expect(Palette.gold, isNot(Palette.buttonGold));
+    expect(Palette.bg.computeLuminance(), greaterThan(0.5));
+    Palette.light = false;
+    expect(Palette.bg.computeLuminance(), lessThan(0.1));
+  });
+
+  test('both themes can be built, and building one changes nothing', () {
+    Palette.light = false;
+    expect(buildTheme(light: true).brightness, Brightness.light);
+    expect(buildTheme().brightness, Brightness.dark);
+    expect(Palette.light, isFalse);
+  });
+
   test('a larger grid size makes rows taller', () {
     expect(
       rowHeightFor(400, GridSize.large.scale),
@@ -119,6 +137,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(container.read(settingsProvider).gridSize, GridSize.large);
 
+    await tester.scrollUntilVisible(
+      find.text('Read-only mode'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Read-only mode'));
     await tester.pumpAndSettle();
     expect(container.read(settingsProvider).readOnly, isTrue);
