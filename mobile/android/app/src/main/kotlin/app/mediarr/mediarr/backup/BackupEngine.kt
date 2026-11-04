@@ -76,6 +76,8 @@ class BackupEngine(context: Context) {
     private val chargingOnly get() = prefs.getBoolean(KEY_CHARGING, false)
     private val albumId get() = prefs.getString(KEY_ALBUM_ID, null)
     private val albumName get() = prefs.getString(KEY_ALBUM_NAME, null)
+    private val moreAlbums get() = prefs.getStringSet(KEY_MORE_ALBUMS, emptySet()) ?: emptySet()
+    private val excludedAlbums get() = prefs.getStringSet(KEY_EXCLUDED_ALBUMS, emptySet()) ?: emptySet()
 
     fun enable(server: String, key: String, wifiOnly: Boolean, onlyNew: Boolean, albumId: String?, albumName: String) {
         prefs.edit()
@@ -100,6 +102,33 @@ class BackupEngine(context: Context) {
         runNow()
     }
 
+    /** More albums beside the chosen one, and albums whose photos are never sent. */
+    fun setAlbumLists(more: List<String>, excluded: List<String>, onlyNew: Boolean) {
+        val added = more.toSet() - moreAlbums
+        prefs.edit()
+            .putStringSet(KEY_MORE_ALBUMS, more.toSet())
+            .putStringSet(KEY_EXCLUDED_ALBUMS, excluded.toSet())
+            .apply()
+        if (onlyNew) {
+            for (album in albums().filter { it.id in added }) {
+                store.addSkipped(assetsIn(album).map { it.id to it.createdMs })
+            }
+        }
+        store.forgetPending(assetsToSend().map { it.id }.toSet())
+        runNow()
+    }
+
+    /** Everything in the chosen albums, except what is also in an excluded one. */
+    private fun assetsToSend(): List<LocalAsset> {
+        val all = albums()
+        val chosen = (listOfNotNull(findAlbum(albumId, albumName, all)) + all.filter { it.id in moreAlbums })
+            .distinctBy { it.id }
+            .filter { it.id !in excludedAlbums }
+        val assets = chosen.flatMap(::assetsIn).distinctBy { it.id }
+        val never = all.filter { it.id in excludedAlbums }.flatMap(::assetsIn).map { it.id }.toSet()
+        return assets.filter { it.id !in never }
+    }
+
     fun disable() {
         val manager = WorkManager.getInstance(context)
         manager.cancelUniqueWork(WORK_ONCE)
@@ -109,6 +138,8 @@ class BackupEngine(context: Context) {
             .remove(KEY_KEY)
             .remove(KEY_ALBUM_ID)
             .remove(KEY_ALBUM_NAME)
+            .remove(KEY_MORE_ALBUMS)
+            .remove(KEY_EXCLUDED_ALBUMS)
             .apply()
         store.clear()
     }
@@ -319,8 +350,8 @@ class BackupEngine(context: Context) {
     private fun send(progress: (sent: Int) -> Unit, stopped: () -> Boolean): Boolean {
         if (!enabled || server == null || key == null) return true
         store.recoverInterrupted()
-        val album = currentAlbum() ?: return true
-        val assets = assetsIn(album).associateBy { it.id }
+        val assets = assetsToSend().associateBy { it.id }
+        if (assets.isEmpty() && currentAlbum() == null && moreAlbums.isEmpty()) return true
         store.add(assets.values.map { it.id to it.createdMs })
         store.forgetPending(assets.keys)
         var sent = 0
@@ -382,7 +413,9 @@ class BackupEngine(context: Context) {
             "lastFinished" to store.lastFinished()?.let { it / 1000.0 },
             "failures" to store.failures(FAILURES_SHOWN),
             "albumName" to (album?.title ?: albumName ?: ""),
-            "albumFound" to (album != null),
+            "albumFound" to (album != null || moreAlbums.isNotEmpty()),
+            "moreAlbums" to moreAlbums.toList(),
+            "excludedAlbums" to excludedAlbums.toList(),
             "limitedAccess" to false,
         )
     }
@@ -404,5 +437,7 @@ class BackupEngine(context: Context) {
         private const val KEY_CHARGING = "chargingOnly"
         private const val KEY_ALBUM_ID = "albumId"
         private const val KEY_ALBUM_NAME = "albumName"
+        private const val KEY_MORE_ALBUMS = "moreAlbums"
+        private const val KEY_EXCLUDED_ALBUMS = "excludedAlbums"
     }
 }

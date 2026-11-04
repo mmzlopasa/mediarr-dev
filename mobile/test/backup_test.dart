@@ -44,6 +44,8 @@ void main() {
       'enabled': true,
       'wifiOnly': false,
       'chargingOnly': true,
+      'moreAlbums': ['b'],
+      'excludedAlbums': ['c'],
       'pending': 2,
       'working': 1,
       'verified': 7,
@@ -56,6 +58,8 @@ void main() {
     expect(status.total, 11);
     expect(status.wifiOnly, isFalse);
     expect(status.chargingOnly, isTrue);
+    expect(status.moreAlbums, ['b']);
+    expect(status.excludedAlbums, ['c']);
     expect(status.lastFinished, DateTime.fromMillisecondsSinceEpoch(1000000));
     expect(status.failures.single.error, 'damaged');
   });
@@ -181,5 +185,15 @@ void freeSpaceTests() {
       ),
       ['whole', 'live'],
     );
+  });
+
+  test('roles become the two lists, and a removed album is in neither', () {
+    final lists = albumListsFrom({
+      'a': AlbumRole.send,
+      'b': AlbumRole.never,
+      'c': AlbumRole.none,
+    });
+    expect(lists.more, ['a']);
+    expect(lists.excluded, ['b']);
   });
 }

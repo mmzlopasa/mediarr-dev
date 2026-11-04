@@ -47,6 +47,8 @@ final class BackupEngine: NSObject {
     static let chargingOnly = "backup.chargingOnly"
     static let albumID = "backup.albumID"
     static let albumName = "backup.albumName"
+    static let moreAlbums = "backup.moreAlbums"
+    static let excludedAlbums = "backup.excludedAlbums"
     static let onlyNewPending = "backup.onlyNewPending"
     static let unauthorized = "backup.unauthorized"
   }
@@ -104,6 +106,8 @@ final class BackupEngine: NSObject {
 
   private var enabled: Bool { defaults.bool(forKey: Keys.enabled) }
   private var wifiOnly: Bool { defaults.object(forKey: Keys.wifiOnly) as? Bool ?? true }
+  private var moreAlbums: [String] { defaults.stringArray(forKey: Keys.moreAlbums) ?? [] }
+  private var excludedAlbums: [String] { defaults.stringArray(forKey: Keys.excludedAlbums) ?? [] }
   private var chargingOnly: Bool { defaults.bool(forKey: Keys.chargingOnly) }
   private var pluggedIn = false
   private var paused: Bool { defaults.bool(forKey: Keys.unauthorized) }
@@ -117,7 +121,9 @@ final class BackupEngine: NSObject {
     queue.async { [self] in
       guard enabled else { return }
       // An older version could back up everything. Without a chosen album, nothing may be sent.
-      guard defaults.string(forKey: Keys.albumID) != nil || defaults.string(forKey: Keys.albumName) != nil
+      guard
+        defaults.string(forKey: Keys.albumID) != nil || defaults.string(forKey: Keys.albumName) != nil
+          || !moreAlbums.isEmpty
       else {
         stopSending()
         return
@@ -189,10 +195,45 @@ final class BackupEngine: NSObject {
     }
   }
 
+  /// More albums beside the chosen one, and albums whose photos are never sent.
+  func setAlbumLists(more: [String], excluded: [String], onlyNew: Bool) {
+    queue.async { [self] in
+      let added = Set(more).subtracting(moreAlbums)
+      defaults.set(more, forKey: Keys.moreAlbums)
+      defaults.set(excluded, forKey: Keys.excludedAlbums)
+      if onlyNew, let store = openStore() {
+        store.addSkipped(assets(inAlbums: Array(added)).map(\.id))
+      }
+      openStore()?.forgetUnfinished()
+      session.getAllTasks { [self] tasks in
+        tasks.forEach { $0.cancel() }
+        queue.async { [self] in recoverThenWork() }
+      }
+    }
+  }
+
+  private func assets(inAlbums ids: [String]) -> [(id: String, created: Date)] {
+    guard !ids.isEmpty else { return [] }
+    var found: [(id: String, created: Date)] = []
+    var seen = Set<String>()
+    PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: ids, options: nil)
+      .enumerateObjects { collection, _, _ in
+        PHAsset.fetchAssets(in: collection, options: nil).enumerateObjects { asset, _, _ in
+          guard asset.mediaType == .image || asset.mediaType == .video,
+            seen.insert(asset.localIdentifier).inserted
+          else { return }
+          found.append((asset.localIdentifier, asset.creationDate ?? Date(timeIntervalSince1970: 0)))
+        }
+      }
+    return found
+  }
+
   func disable() {
     queue.async { [self] in
       defaults.removeObject(forKey: Keys.albumID)
       defaults.removeObject(forKey: Keys.albumName)
+      defaults.removeObject(forKey: Keys.moreAlbums)
+      defaults.removeObject(forKey: Keys.excludedAlbums)
       defaults.removeObject(forKey: Keys.onlyNewPending)
       stopSending()
     }
@@ -315,24 +356,16 @@ final class BackupEngine: NSObject {
     guard enabled, let store = openStore() else { return }
     let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
     guard status == .authorized || status == .limited else { return }
-    guard let album = currentAlbum(),
-      let collection = PHAssetCollection.fetchAssetCollections(
-        withLocalIdentifiers: [album.id], options: nil
-      ).firstObject
-    else {
+    let album = currentAlbum()
+    if let album { defaults.set(album.id, forKey: Keys.albumID) }
+    let excluded = excludedAlbums
+    let chosen = ([album?.id].compactMap { $0 } + moreAlbums).filter { !excluded.contains($0) }
+    guard !chosen.isEmpty else {
       store.forgetPending(notIn: [])
       return
     }
-    defaults.set(album.id, forKey: Keys.albumID)
-
-    let result = PHAsset.fetchAssets(in: collection, options: nil)
-    var found: [(id: String, created: Date)] = []
-    found.reserveCapacity(result.count)
-    result.enumerateObjects { asset, _, _ in
-      if asset.mediaType == .image || asset.mediaType == .video {
-        found.append((asset.localIdentifier, asset.creationDate ?? Date(timeIntervalSince1970: 0)))
-      }
-    }
+    let never = Set(assets(inAlbums: excluded).map(\.id))
+    let found = assets(inAlbums: chosen).filter { !never.contains($0.id) }
     if defaults.bool(forKey: Keys.onlyNewPending) {
       // What is in the album right now stays on the device. Only what is added later is sent.
       store.addSkipped(found.map(\.id))
@@ -549,7 +582,9 @@ final class BackupEngine: NSObject {
         "failed": counts["failed"] ?? 0,
         "failures": openStore()?.failures(limit: 20) ?? [],
         "albumName": defaults.string(forKey: Keys.albumName) ?? "",
-        "albumFound": currentAlbum() != nil,
+        "albumFound": currentAlbum() != nil || !moreAlbums.isEmpty,
+        "moreAlbums": moreAlbums,
+        "excludedAlbums": excludedAlbums,
         "limitedAccess": PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited,
       ]
       if let last = openStore()?.lastFinished() {

@@ -22,12 +22,19 @@ class BackupFailure {
   final String error;
 }
 
+List<String> _strings(Object? value) => [
+  if (value is List)
+    for (final item in value) item.toString(),
+];
+
 /// What the native backup engine reports. All of it is counted on the device.
 class BackupStatus {
   const BackupStatus({
     this.enabled = false,
     this.wifiOnly = true,
     this.chargingOnly = false,
+    this.moreAlbums = const [],
+    this.excludedAlbums = const [],
     this.unauthorized = false,
     this.pending = 0,
     this.working = 0,
@@ -44,6 +51,8 @@ class BackupStatus {
     enabled: map['enabled'] == true,
     wifiOnly: map['wifiOnly'] != false,
     chargingOnly: map['chargingOnly'] == true,
+    moreAlbums: _strings(map['moreAlbums']),
+    excludedAlbums: _strings(map['excludedAlbums']),
     unauthorized: map['unauthorized'] == true,
     pending: (map['pending'] as num?)?.toInt() ?? 0,
     working: (map['working'] as num?)?.toInt() ?? 0,
@@ -71,6 +80,8 @@ class BackupStatus {
   final bool enabled;
   final bool wifiOnly;
   final bool chargingOnly;
+  final List<String> moreAlbums;
+  final List<String> excludedAlbums;
   final bool unauthorized;
   final int pending;
   final int working;
@@ -214,6 +225,16 @@ class BackupService {
 
   Future<void> setChargingOnly(bool value) =>
       _channel.invokeMethod<void>('setChargingOnly', {'value': value});
+
+  Future<void> setAlbumLists({
+    required List<String> more,
+    required List<String> excluded,
+    required bool onlyNew,
+  }) => _channel.invokeMethod<void>('setAlbumLists', {
+    'more': more,
+    'excluded': excluded,
+    'onlyNew': onlyNew,
+  });
 
   Future<void> setServer(String server) =>
       _channel.invokeMethod<void>('setServer', {'value': server});

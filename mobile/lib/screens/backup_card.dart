@@ -101,6 +101,34 @@ class _BackupCardState extends ConsumerState<BackupCard> {
     );
   }
 
+  Future<void> _editAlbums() async {
+    final service = ref.read(backupProvider);
+    final status = _status;
+    if (status == null) return;
+    final albums = await service.albums();
+    if (!mounted) return;
+    final chosen = await showModalBottomSheet<AlbumLists>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => AlbumListsSheet(
+        albums: albums,
+        more: status.moreAlbums,
+        excluded: status.excludedAlbums,
+      ),
+    );
+    if (chosen == null) return;
+    final added = chosen.more.any((id) => !status.moreAlbums.contains(id));
+    final onlyNew = added ? await _askScope('the added albums') : false;
+    if (onlyNew == null) return;
+    await _run(() async {
+      await service.setAlbumLists(
+        more: chosen.more,
+        excluded: chosen.excluded,
+        onlyNew: onlyNew,
+      );
+    });
+  }
+
   /// Backup only ever runs with a chosen album, so choosing comes first.
   Future<bool> _chooseAndApply({required bool enable}) async {
     final session = ref.read(sessionProvider).value;
@@ -232,6 +260,15 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                   style: text.bodySmall?.copyWith(color: Palette.warn),
                 ),
               ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: _busy ? null : _editAlbums,
+                child: Text(
+                  'More albums: ${status.moreAlbums.length}, never sent: ${status.excludedAlbums.length}',
+                ),
+              ),
+            ),
             Row(
               children: [
                 Expanded(child: Text('Only on Wi-Fi', style: text.bodyMedium)),
@@ -447,4 +484,105 @@ class _AlbumPickerState extends State<AlbumPicker> {
       ),
     );
   }
+}
+
+class AlbumLists {
+  const AlbumLists(this.more, this.excluded);
+
+  final List<String> more;
+  final List<String> excluded;
+}
+
+enum AlbumRole { none, send, never }
+
+/// An album is either sent, never sent, or left alone.
+AlbumLists albumListsFrom(Map<String, AlbumRole> roles) => AlbumLists(
+  [
+    for (final entry in roles.entries)
+      if (entry.value == AlbumRole.send) entry.key,
+  ],
+  [
+    for (final entry in roles.entries)
+      if (entry.value == AlbumRole.never) entry.key,
+  ],
+);
+
+class AlbumListsSheet extends StatefulWidget {
+  const AlbumListsSheet({
+    super.key,
+    required this.albums,
+    required this.more,
+    required this.excluded,
+  });
+
+  final List<BackupAlbum> albums;
+  final List<String> more;
+  final List<String> excluded;
+
+  @override
+  State<AlbumListsSheet> createState() => _AlbumListsSheetState();
+}
+
+class _AlbumListsSheetState extends State<AlbumListsSheet> {
+  late final Map<String, AlbumRole> _roles = {
+    for (final id in widget.more) id: AlbumRole.send,
+    for (final id in widget.excluded) id: AlbumRole.never,
+  };
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.7,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'A photo in a "Never" album is not sent, even if it is also in another album.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              children: [
+                for (final album in widget.albums)
+                  ListTile(
+                    title: Text(album.title),
+                    subtitle: Text('${album.count}'),
+                    trailing: DropdownButton<AlbumRole>(
+                      value: _roles[album.id] ?? AlbumRole.none,
+                      items: const [
+                        DropdownMenuItem(
+                          value: AlbumRole.none,
+                          child: Text('Not added'),
+                        ),
+                        DropdownMenuItem(
+                          value: AlbumRole.send,
+                          child: Text('Back up'),
+                        ),
+                        DropdownMenuItem(
+                          value: AlbumRole.never,
+                          child: Text('Never'),
+                        ),
+                      ],
+                      onChanged: (role) => setState(
+                        () => _roles[album.id] = role ?? AlbumRole.none,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: GoldButton(
+              label: 'Save',
+              onPressed: () => Navigator.pop(context, albumListsFrom(_roles)),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

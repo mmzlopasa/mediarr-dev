@@ -38,6 +38,12 @@ enum BackupChannel {
       case "setWifiOnly":
         engine.setWifiOnly(arguments["value"] as? Bool ?? true)
         result(nil)
+      case "setAlbumLists":
+        engine.setAlbumLists(
+          more: arguments["more"] as? [String] ?? [],
+          excluded: arguments["excluded"] as? [String] ?? [],
+          onlyNew: arguments["onlyNew"] as? Bool ?? false)
+        result(nil)
       case "setServer":
         if let value = arguments["value"] as? String { engine.setServer(value) }
         result(nil)

@@ -213,4 +213,43 @@ void main() {
 
     await const FlutterSecureStorage().delete(key: 'app_settings');
   });
+
+  testWidgets('a second album is sent too', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    final element = tester.element(find.byType(AssetPicture).first);
+    final container = ProviderScope.containerOf(element);
+    final session = container.read(sessionProvider).value!;
+    final backup = container.read(backupProvider);
+
+    await addPhotoToAlbum('MediarrFirst');
+    final extra = await addPhotoToAlbum('MediarrSecond');
+    final albums = await backup.albums();
+    final first = albums.firstWhere((a) => a.title == 'MediarrFirst');
+    final second = albums.firstWhere((a) => a.title == 'MediarrSecond');
+    await backup.enable(
+      session,
+      wifiOnly: false,
+      onlyNew: false,
+      albumId: first.id,
+      albumName: first.title,
+    );
+    await backup.setAlbumLists(
+      more: [second.id],
+      excluded: const [],
+      onlyNew: false,
+    );
+
+    final end = DateTime.now().add(const Duration(minutes: 3));
+    var state = await backup.statuses([extra.id]);
+    while (state[extra.id] != 'verified' && DateTime.now().isBefore(end)) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(seconds: 1)),
+      );
+      state = await backup.statuses([extra.id]);
+    }
+    expect(state[extra.id], 'verified');
+    await backup.disable(session);
+  }, skip: Platform.isIOS);
 }

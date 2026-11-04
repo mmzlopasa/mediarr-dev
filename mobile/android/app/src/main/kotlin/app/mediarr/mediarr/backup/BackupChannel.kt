@@ -73,6 +73,14 @@ class BackupChannel(context: Context, messenger: BinaryMessenger) {
                 "disable" -> reply { engine.disable(); null }
                 "setWifiOnly" -> reply { engine.setWifiOnly(call.argument<Boolean>("value") ?: true); null }
                 "setChargingOnly" -> reply { engine.setChargingOnly(call.argument<Boolean>("value") ?: false); null }
+                "setAlbumLists" -> reply {
+                    engine.setAlbumLists(
+                        call.argument<List<String>>("more") ?: emptyList(),
+                        call.argument<List<String>>("excluded") ?: emptyList(),
+                        call.argument<Boolean>("onlyNew") ?: false,
+                    )
+                    null
+                }
                 "setServer" -> reply { call.argument<String>("value")?.let(engine::setServer); null }
                 "retryFailed" -> reply { engine.retryFailed(); null }
                 "status" -> reply { engine.status() }
