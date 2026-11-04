@@ -40,6 +40,7 @@ doc/CreateUserRequest.md
 doc/CropBox.md
 doc/DefaultApi.md
 doc/DeviceKey.md
+doc/Documents.md
 doc/DuplicateGroup.md
 doc/DuplicateItem.md
 doc/Duplicates.md
@@ -148,6 +149,7 @@ lib/model/create_device_key_request.dart
 lib/model/create_user_request.dart
 lib/model/crop_box.dart
 lib/model/device_key.dart
+lib/model/documents.dart
 lib/model/duplicate_group.dart
 lib/model/duplicate_item.dart
 lib/model/duplicates.dart
@@ -209,8 +211,4 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
-test/backup_run_request_test.dart
-test/backup_run_test.dart
-test/backup_settings_test.dart
-test/backup_settings_update_test.dart
-test/feature_update_test.dart
+test/documents_test.dart

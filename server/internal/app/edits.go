@@ -31,6 +31,9 @@ func editsFromAPI(body *api.AssetEdits) *jobs.Edits {
 	if body.Saturation != nil {
 		out.Saturation = *body.Saturation
 	}
+	if body.Filter != nil {
+		out.Filter = string(*body.Filter)
+	}
 	if crop := body.Crop; crop != nil {
 		out.Crop = &jobs.CropBox{X: crop.X, Y: crop.Y, Width: crop.Width, Height: crop.Height}
 	}
@@ -46,6 +49,10 @@ func editsToAPI(edits *jobs.Edits) *api.AssetEdits {
 		Brightness: optional(edits.Brightness, edits.Brightness != 0),
 		Contrast:   optional(edits.Contrast, edits.Contrast != 0),
 		Saturation: optional(edits.Saturation, edits.Saturation != 0),
+	}
+	if edits.Filter != "" {
+		filter := api.AssetEditsFilter(edits.Filter)
+		out.Filter = &filter
 	}
 	if crop := edits.Crop; crop != nil {
 		out.Crop = &api.CropBox{X: crop.X, Y: crop.Y, Width: crop.Width, Height: crop.Height}
@@ -115,6 +122,17 @@ func (s *apiServer) SetAssetEdits(w http.ResponseWriter, r *http.Request, id ope
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	if edits.Filter != "" {
+		on, err := s.featureOn(r.Context(), featureFilters)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		if !on {
+			writeError(w, http.StatusConflict, "filters are turned off on this server")
+			return
+		}
+	}
 	s.storeEdits(w, r, id, edits)
 }
 
@@ -152,4 +170,37 @@ func (s *apiServer) serveSourcePreview(w http.ResponseWriter, r *http.Request, i
 	w.Header().Set("Cache-Control", "private, no-cache")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	serveFile(w, r, path)
+}
+
+const (
+	minDocumentText = 40
+	maxDocuments    = 1000
+)
+
+// GetDocuments is the album of photos of documents, from the text already read for search.
+func (s *apiServer) GetDocuments(w http.ResponseWriter, r *http.Request) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	ctx := r.Context()
+	on, err := s.featureOn(ctx, featureDocuments)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out := api.Documents{Enabled: on, AnalysisOn: s.MLURL != "", Items: []api.TimelineItem{}}
+	if on {
+		rows, err := s.queries.ListDocuments(ctx, db.ListDocumentsParams{UserID: user.ID, MinText: minDocumentText, RowLimit: maxDocuments})
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		buckets := make([]db.TimelineBucketRow, len(rows))
+		for i := range rows {
+			buckets[i] = db.TimelineBucketRow(rows[i])
+		}
+		out.Items = timelineItems(buckets, user.ID)
+	}
+	writeJSON(w, http.StatusOK, out)
 }

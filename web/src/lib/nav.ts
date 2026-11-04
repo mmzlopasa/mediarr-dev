@@ -75,6 +75,14 @@ export const appNav: NavItem[] = [
 		emptyEn: 'This folder is empty.'
 	},
 	{
+		path: '/documents',
+		icon: 'list',
+		hr: 'Dokumenti',
+		en: 'Documents',
+		emptyHr: 'Još nema dokumenata.',
+		emptyEn: 'No documents yet.'
+	},
+	{
 		path: '/duplicates',
 		icon: 'copy',
 		hr: 'Duplikati',

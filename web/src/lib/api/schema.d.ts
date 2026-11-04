@@ -2045,6 +2045,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Photos of documents, found by the text on them */
+        get: operations["getDocuments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/memories": {
         parameters: {
             query?: never;
@@ -2189,6 +2206,8 @@ export interface components {
             brightness?: number;
             contrast?: number;
             saturation?: number;
+            /** @enum {string} */
+            filter?: "mono" | "warm" | "cool" | "vintage" | "vivid";
         };
         /** @description A part of the rotated picture, in fractions of its sides */
         CropBox: {
@@ -2390,6 +2409,13 @@ export interface components {
             startedAt: string;
             /** Format: date-time */
             finishedAt?: string;
+        };
+        Documents: {
+            /** @description The administrator has turned this on */
+            enabled: boolean;
+            /** @description Picture analysis runs, without which no text is read */
+            analysisOn: boolean;
+            items: components["schemas"]["TimelineItem"][];
         };
         Memory: {
             /** @enum {string} */
@@ -6335,6 +6361,27 @@ export interface operations {
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    getDocuments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The album */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Documents"];
+                };
+            };
+            401: components["responses"]["Error"];
         };
     };
     listMemories: {

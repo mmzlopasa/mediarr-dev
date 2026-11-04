@@ -68,6 +68,7 @@ Method | HTTP request | Description
 [**getCollectionOriginal**](DefaultApi.md#getcollectionoriginal) | **GET** /api/collections/{scope}/assets/{id}/original | The original of an asset in a collection
 [**getCollectionThumbnail**](DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 [**getCollectionVideoFile**](DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
+[**getDocuments**](DefaultApi.md#getdocuments) | **GET** /api/documents | Photos of documents, found by the text on them
 [**getExternalLibrary**](DefaultApi.md#getexternallibrary) | **GET** /api/admin/external | The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 [**getFeatures**](DefaultApi.md#getfeatures) | **GET** /api/features | Which additions the administrator has turned on
 [**getFolder**](DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
@@ -2548,6 +2549,43 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getDocuments**
+> Documents getDocuments()
+
+Photos of documents, found by the text on them
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getDocuments();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getDocuments: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**Documents**](Documents.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -103,6 +103,19 @@ WHERE a.id IN (SELECT f.asset_id FROM faces f WHERE f.person_id = sqlc.arg('pers
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
 ORDER BY a.local_at DESC, a.id DESC;
 
+-- name: ListDocuments :many
+-- What has real text on it: a receipt or a letter, not a sign in the background.
+SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
+       false::boolean AS is_live,
+       0::bigint AS stack_members
+FROM assets a
+JOIN asset_search s ON s.asset_id = a.id
+WHERE a.user_id = sqlc.arg('user_id') AND a.kind = 'photo' AND a.status = 'ready' AND a.deleted_at IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+  AND length(s.ocr_text) >= sqlc.arg('min_text')::int
+ORDER BY a.local_at DESC, a.id DESC
+LIMIT sqlc.arg('row_limit');
+
 -- name: ListSearchTerms :many
 -- What a query can name: people, places and cameras in this library.
 SELECT 'person'::text AS kind, p.name AS value, p.id::text AS ref FROM people p WHERE p.user_id = $1 AND p.name <> ''

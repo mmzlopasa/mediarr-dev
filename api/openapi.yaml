@@ -1891,6 +1891,17 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/documents:
+    get:
+      operationId: getDocuments
+      summary: Photos of documents, found by the text on them
+      responses:
+        "200":
+          description: The album
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Documents" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/memories:
     get:
       operationId: listMemories
@@ -2028,6 +2039,7 @@ components:
         brightness: { type: integer, minimum: -100, maximum: 100 }
         contrast: { type: integer, minimum: -100, maximum: 100 }
         saturation: { type: integer, minimum: -100, maximum: 100 }
+        filter: { type: string, enum: [mono, warm, cool, vintage, vivid] }
     CropBox:
       type: object
       description: A part of the rotated picture, in fractions of its sides
@@ -2221,6 +2233,13 @@ components:
         files: { type: integer, format: int64 }
         startedAt: { type: string, format: date-time }
         finishedAt: { type: string, format: date-time }
+    Documents:
+      type: object
+      required: [enabled, analysisOn, items]
+      properties:
+        enabled: { type: boolean, description: "The administrator has turned this on" }
+        analysisOn: { type: boolean, description: "Picture analysis runs, without which no text is read" }
+        items: { type: array, items: { $ref: "#/components/schemas/TimelineItem" } }
     Memory:
       type: object
       required: [kind, title, items]

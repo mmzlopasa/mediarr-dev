@@ -79,6 +79,115 @@ List<double> editColorMatrix(int brightness, int contrast, int saturation) {
   ];
 }
 
+/// A preview of each look, close to the table the server applies.
+List<double>? lookMatrix(AssetEditsFilterEnum? look) {
+  const r = 0.2126;
+  const g = 0.7152;
+  const b = 0.0722;
+  if (look == AssetEditsFilterEnum.mono) {
+    return const [r, g, b, 0, 0, r, g, b, 0, 0, r, g, b, 0, 0, 0, 0, 0, 1, 0];
+  }
+  if (look == AssetEditsFilterEnum.warm) {
+    return const [
+      1.08,
+      0,
+      0,
+      0,
+      5,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.9,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ];
+  }
+  if (look == AssetEditsFilterEnum.cool) {
+    return const [
+      0.9,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1.08,
+      0,
+      5,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ];
+  }
+  if (look == AssetEditsFilterEnum.vintage) {
+    return const [
+      0.86,
+      0,
+      0,
+      0,
+      20,
+      0,
+      0.82,
+      0,
+      0,
+      18,
+      0,
+      0,
+      0.68,
+      0,
+      25,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ];
+  }
+  if (look == AssetEditsFilterEnum.vivid) {
+    const p = 1.35;
+    final q = 1 - p;
+    return [
+      q * r + p,
+      q * g,
+      q * b,
+      0,
+      0,
+      q * r,
+      q * g + p,
+      q * b,
+      0,
+      0,
+      q * r,
+      q * g,
+      q * b + p,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ];
+  }
+  return null;
+}
+
 /// Edits a photo as a list of changes. The original on the server is never touched. Returns true
 /// when the previews changed.
 class PhotoEditorScreen extends StatefulWidget {
@@ -101,6 +210,8 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
   int _brightness = 0;
   int _contrast = 0;
   int _saturation = 0;
+  AssetEditsFilterEnum? _look;
+  bool _filtersOn = false;
   Size? _pictureSize;
   bool _busy = false;
   ImageStream? _stream;
@@ -141,7 +252,16 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
       _brightness = edits?.brightness ?? 0;
       _contrast = edits?.contrast ?? 0;
       _saturation = edits?.saturation ?? 0;
+      _look = edits?.filter;
     });
+    try {
+      final features = await widget.session.api.getFeatures();
+      if (mounted) {
+        setState(() => _filtersOn = features?['filters'] ?? false);
+      }
+    } on ApiException {
+      // The rest of the editor works without filters.
+    }
     final image = NetworkImage(_sourceUrl, headers: widget.session.headers);
     _stream = image.resolve(ImageConfiguration.empty);
     _listener = ImageStreamListener((info, _) {
@@ -202,6 +322,7 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
         brightness: _brightness,
         contrast: _contrast,
         saturation: _saturation,
+        filter: _look,
       ),
     ),
   );
@@ -225,12 +346,17 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
                   colorFilter: ColorFilter.matrix(
                     editColorMatrix(_brightness, _contrast, _saturation),
                   ),
-                  child: RotatedBox(
-                    quarterTurns: _rotate ~/ 90,
-                    child: Image.network(
-                      _sourceUrl,
-                      headers: widget.session.headers,
-                      fit: BoxFit.fill,
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.matrix(
+                      lookMatrix(_look) ?? editColorMatrix(0, 0, 0),
+                    ),
+                    child: RotatedBox(
+                      quarterTurns: _rotate ~/ 90,
+                      child: Image.network(
+                        _sourceUrl,
+                        headers: widget.session.headers,
+                        fit: BoxFit.fill,
+                      ),
                     ),
                   ),
                 ),
@@ -331,6 +457,41 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
             _slider('Brightness', _brightness, (v) => _brightness = v),
             _slider('Contrast', _contrast, (v) => _contrast = v),
             _slider('Saturation', _saturation, (v) => _saturation = v),
+            if (_filtersOn)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DropdownButton<AssetEditsFilterEnum?>(
+                  isExpanded: true,
+                  value: _look,
+                  dropdownColor: Palette.bg2,
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('No filter')),
+                    DropdownMenuItem(
+                      value: AssetEditsFilterEnum.mono,
+                      child: Text('Black and white'),
+                    ),
+                    DropdownMenuItem(
+                      value: AssetEditsFilterEnum.warm,
+                      child: Text('Warm'),
+                    ),
+                    DropdownMenuItem(
+                      value: AssetEditsFilterEnum.cool,
+                      child: Text('Cool'),
+                    ),
+                    DropdownMenuItem(
+                      value: AssetEditsFilterEnum.vintage,
+                      child: Text('Vintage'),
+                    ),
+                    DropdownMenuItem(
+                      value: AssetEditsFilterEnum.vivid,
+                      child: Text('Vivid'),
+                    ),
+                  ],
+                  onChanged: _busy
+                      ? null
+                      : (next) => setState(() => _look = next),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(

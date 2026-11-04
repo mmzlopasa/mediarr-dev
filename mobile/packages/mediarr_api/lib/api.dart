@@ -67,6 +67,7 @@ part 'model/create_device_key_request.dart';
 part 'model/create_user_request.dart';
 part 'model/crop_box.dart';
 part 'model/device_key.dart';
+part 'model/documents.dart';
 part 'model/duplicate_group.dart';
 part 'model/duplicate_item.dart';
 part 'model/duplicates.dart';

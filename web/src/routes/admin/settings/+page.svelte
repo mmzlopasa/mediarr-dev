@@ -119,6 +119,7 @@
 
 	const FEATURE_LABELS: Record<string, { hr: string; en: string }> = {
 		backup: { hr: 'Zakazani backup', en: 'Scheduled backup' },
+		filters: { hr: 'Filteri u editoru', en: 'Filters in the editor' },
 		documents: { hr: 'Album Dokumenti', en: 'Documents album' },
 		family: { hr: 'Obiteljska biblioteka', en: 'Family library' },
 		webhooks: { hr: 'Webhooks', en: 'Webhooks' },

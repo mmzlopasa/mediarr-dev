@@ -248,6 +248,33 @@ func (e AssetDetailStatus) Valid() bool {
 	}
 }
 
+// Defines values for AssetEditsFilter.
+const (
+	Cool    AssetEditsFilter = "cool"
+	Mono    AssetEditsFilter = "mono"
+	Vintage AssetEditsFilter = "vintage"
+	Vivid   AssetEditsFilter = "vivid"
+	Warm    AssetEditsFilter = "warm"
+)
+
+// Valid indicates whether the value is a known member of the AssetEditsFilter enum.
+func (e AssetEditsFilter) Valid() bool {
+	switch e {
+	case Cool:
+		return true
+	case Mono:
+		return true
+	case Vintage:
+		return true
+	case Vivid:
+		return true
+	case Warm:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for BackupRunKind.
 const (
 	BackupRunKindBackup      BackupRunKind = "backup"
@@ -1012,12 +1039,16 @@ type AssetEdits struct {
 	Contrast   *int `json:"contrast,omitempty"`
 
 	// Crop A part of the rotated picture, in fractions of its sides
-	Crop *CropBox `json:"crop,omitempty"`
+	Crop   *CropBox          `json:"crop,omitempty"`
+	Filter *AssetEditsFilter `json:"filter,omitempty"`
 
 	// Rotate Clockwise: 0, 90, 180 or 270
 	Rotate     *int `json:"rotate,omitempty"`
 	Saturation *int `json:"saturation,omitempty"`
 }
+
+// AssetEditsFilter defines model for AssetEdits.Filter.
+type AssetEditsFilter string
 
 // AssetIds defines model for AssetIds.
 type AssetIds struct {
@@ -1187,6 +1218,16 @@ type CropBox struct {
 type DeviceKey struct {
 	Id  openapi_types.UUID `json:"id"`
 	Key string             `json:"key"`
+}
+
+// Documents defines model for Documents.
+type Documents struct {
+	// AnalysisOn Picture analysis runs, without which no text is read
+	AnalysisOn bool `json:"analysisOn"`
+
+	// Enabled The administrator has turned this on
+	Enabled bool           `json:"enabled"`
+	Items   []TimelineItem `json:"items"`
 }
 
 // DuplicateGroup defines model for DuplicateGroup.
@@ -2202,6 +2243,9 @@ type ServerInterface interface {
 	// GetCollectionBucket Assets of one month in a collection
 	// (GET /api/collections/{scope}/buckets/{month})
 	GetCollectionBucket(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketParamsScope, month string)
+	// GetDocuments Photos of documents, found by the text on them
+	// (GET /api/documents)
+	GetDocuments(w http.ResponseWriter, r *http.Request)
 	// ListDuplicates Groups of photos that look alike. Only a proposal, nothing is removed without asking
 	// (GET /api/duplicates)
 	ListDuplicates(w http.ResponseWriter, r *http.Request)
@@ -2856,6 +2900,12 @@ func (_ Unimplemented) GetCollectionBuckets(w http.ResponseWriter, r *http.Reque
 // GetCollectionBucket Assets of one month in a collection
 // (GET /api/collections/{scope}/buckets/{month})
 func (_ Unimplemented) GetCollectionBucket(w http.ResponseWriter, r *http.Request, scope GetCollectionBucketParamsScope, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetDocuments Photos of documents, found by the text on them
+// (GET /api/documents)
+func (_ Unimplemented) GetDocuments(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5171,6 +5221,20 @@ func (siw *ServerInterfaceWrapper) GetCollectionBucket(w http.ResponseWriter, r 
 	handler.ServeHTTP(w, r)
 }
 
+// GetDocuments operation middleware
+func (siw *ServerInterfaceWrapper) GetDocuments(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetDocuments(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListDuplicates operation middleware
 func (siw *ServerInterfaceWrapper) ListDuplicates(w http.ResponseWriter, r *http.Request) {
 
@@ -7187,6 +7251,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/api/assets/{id}/edits", wrapper.SetAssetEdits)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/documents", wrapper.GetDocuments)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/memories", wrapper.ListMemories)

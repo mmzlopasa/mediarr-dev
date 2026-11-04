@@ -90,3 +90,42 @@ func TestEditedPreviewsLeaveTheOriginalAlone(t *testing.T) {
 		t.Fatal("the original changed")
 	}
 }
+
+func TestAFilterChangesThePreviewAndOnlyThat(t *testing.T) {
+	dir := t.TempDir()
+	ctx := context.Background()
+	original := filepath.Join(dir, "a.jpg")
+	if _, err := runTool(ctx, "ffmpeg", "-nostdin", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=320x240:rate=1", "-frames:v", "1", "-update", "1", original); err != nil {
+		t.Fatal(err)
+	}
+	mono, err := MakeThumbnails(ctx, original, "photo", filepath.Join(dir, "mono"), "a", &Edits{Filter: "mono"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := runTool(ctx, "ffmpeg", "-nostdin", "-v", "error", "-i", mono.Large.Path, "-vf", "format=rgb24", "-frames:v", "1", "-f", "rawvideo", "-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i+2 < len(out); i += 3 {
+		r, g, b := int(out[i]), int(out[i+1]), int(out[i+2])
+		if max(r, g, b)-min(r, g, b) > 12 {
+			t.Fatalf("colour is left at %d: %d %d %d", i, r, g, b)
+		}
+	}
+	if err := (&Edits{Filter: "nonsense"}).Validate(); err == nil {
+		t.Error("an unknown filter was accepted")
+	}
+}
+
+func TestEveryLookKeepsColoursInRange(t *testing.T) {
+	for _, name := range EditFilters {
+		for _, value := range []float64{0, 0.5, 1} {
+			r, g, b := filterColor(name, value, 1-value, value)
+			for _, channel := range []float64{r, g, b} {
+				if channel < 0 || channel > 1 {
+					t.Errorf("%s: %f", name, channel)
+				}
+			}
+		}
+	}
+}

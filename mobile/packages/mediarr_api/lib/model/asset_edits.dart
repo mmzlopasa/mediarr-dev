@@ -18,6 +18,7 @@ class AssetEdits {
     this.brightness,
     this.contrast,
     this.saturation,
+    this.filter,
   });
 
   /// Clockwise: 0, 90, 180 or 270
@@ -67,6 +68,8 @@ class AssetEdits {
   ///
   int? saturation;
 
+  AssetEditsFilterEnum? filter;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -75,7 +78,8 @@ class AssetEdits {
           other.crop == crop &&
           other.brightness == brightness &&
           other.contrast == contrast &&
-          other.saturation == saturation;
+          other.saturation == saturation &&
+          other.filter == filter;
 
   @override
   int get hashCode =>
@@ -84,11 +88,12 @@ class AssetEdits {
       (crop == null ? 0 : crop!.hashCode) +
       (brightness == null ? 0 : brightness!.hashCode) +
       (contrast == null ? 0 : contrast!.hashCode) +
-      (saturation == null ? 0 : saturation!.hashCode);
+      (saturation == null ? 0 : saturation!.hashCode) +
+      (filter == null ? 0 : filter!.hashCode);
 
   @override
   String toString() =>
-      'AssetEdits[rotate=$rotate, crop=$crop, brightness=$brightness, contrast=$contrast, saturation=$saturation]';
+      'AssetEdits[rotate=$rotate, crop=$crop, brightness=$brightness, contrast=$contrast, saturation=$saturation, filter=$filter]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -116,6 +121,11 @@ class AssetEdits {
       json[r'saturation'] = this.saturation;
     } else {
       json[r'saturation'] = null;
+    }
+    if (this.filter != null) {
+      json[r'filter'] = this.filter;
+    } else {
+      json[r'filter'] = null;
     }
     return json;
   }
@@ -146,6 +156,7 @@ class AssetEdits {
         brightness: mapValueOfType<int>(json, r'brightness'),
         contrast: mapValueOfType<int>(json, r'contrast'),
         saturation: mapValueOfType<int>(json, r'saturation'),
+        filter: AssetEditsFilterEnum.fromJson(json[r'filter']),
       );
     }
     return null;
@@ -202,4 +213,95 @@ class AssetEdits {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{};
+}
+
+class AssetEditsFilterEnum {
+  /// Instantiate a new enum with the provided [value].
+  const AssetEditsFilterEnum._(this.value);
+
+  /// The underlying value of this enum member.
+  final String value;
+
+  @override
+  String toString() => value;
+
+  String toJson() => value;
+
+  static const mono = AssetEditsFilterEnum._(r'mono');
+  static const warm = AssetEditsFilterEnum._(r'warm');
+  static const cool = AssetEditsFilterEnum._(r'cool');
+  static const vintage = AssetEditsFilterEnum._(r'vintage');
+  static const vivid = AssetEditsFilterEnum._(r'vivid');
+
+  /// List of all possible values in this [enum][AssetEditsFilterEnum].
+  static const values = <AssetEditsFilterEnum>[
+    mono,
+    warm,
+    cool,
+    vintage,
+    vivid,
+  ];
+
+  static AssetEditsFilterEnum? fromJson(dynamic value) =>
+      AssetEditsFilterEnumTypeTransformer().decode(value);
+
+  static List<AssetEditsFilterEnum> listFromJson(
+    dynamic json, {
+    bool growable = false,
+  }) {
+    final result = <AssetEditsFilterEnum>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = AssetEditsFilterEnum.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
+}
+
+/// Transformation class that can [encode] an instance of [AssetEditsFilterEnum] to String,
+/// and [decode] dynamic data back to [AssetEditsFilterEnum].
+class AssetEditsFilterEnumTypeTransformer {
+  factory AssetEditsFilterEnumTypeTransformer() =>
+      _instance ??= const AssetEditsFilterEnumTypeTransformer._();
+
+  const AssetEditsFilterEnumTypeTransformer._();
+
+  String encode(AssetEditsFilterEnum data) => data.value;
+
+  /// Decodes a [dynamic value][data] to a AssetEditsFilterEnum.
+  ///
+  /// If [allowNull] is true and the [dynamic value][data] cannot be decoded successfully,
+  /// then null is returned. However, if [allowNull] is false and the [dynamic value][data]
+  /// cannot be decoded successfully, then an [UnimplementedError] is thrown.
+  ///
+  /// The [allowNull] is very handy when an API changes and a new enum value is added or removed,
+  /// and users are still using an old app with the old code.
+  AssetEditsFilterEnum? decode(dynamic data, {bool allowNull = true}) {
+    if (data != null) {
+      switch (data) {
+        case r'mono':
+          return AssetEditsFilterEnum.mono;
+        case r'warm':
+          return AssetEditsFilterEnum.warm;
+        case r'cool':
+          return AssetEditsFilterEnum.cool;
+        case r'vintage':
+          return AssetEditsFilterEnum.vintage;
+        case r'vivid':
+          return AssetEditsFilterEnum.vivid;
+        default:
+          if (!allowNull) {
+            throw ArgumentError('Unknown enum value to decode: $data');
+          }
+      }
+    }
+    return null;
+  }
+
+  /// Singleton [AssetEditsFilterEnumTypeTransformer] instance.
+  static AssetEditsFilterEnumTypeTransformer? _instance;
 }

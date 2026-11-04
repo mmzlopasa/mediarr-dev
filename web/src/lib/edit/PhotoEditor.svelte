@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api, type AssetDetail } from '#lib/api.ts';
+	import { api, type AssetDetail, type AssetEdits } from '#lib/api.ts';
 	import Button from '#lib/design/components/Button.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
@@ -25,6 +25,8 @@
 	let brightness = $state(0);
 	let contrast = $state(0);
 	let saturation = $state(0);
+	let look = $state<NonNullable<AssetEdits['filter']> | ''>('');
+	let filtersOn = $state(false);
 	let picture = $state<HTMLImageElement>();
 	let canvas = $state<HTMLCanvasElement>();
 	let busy = $state(false);
@@ -37,6 +39,11 @@
 		brightness = edits?.brightness ?? 0;
 		contrast = edits?.contrast ?? 0;
 		saturation = edits?.saturation ?? 0;
+		look = edits?.filter ?? '';
+		api
+			.features()
+			.then((features) => (filtersOn = features.filters ?? false))
+			.catch(() => undefined);
 		const image = new Image();
 		image.onload = () => (picture = image);
 		image.onerror = () => (failed = true);
@@ -119,14 +126,23 @@
 				crop: isWhole ? undefined : crop,
 				brightness,
 				contrast,
-				saturation
+				saturation,
+				filter: look || undefined
 			})
 		);
 	const reset = () => finish(() => api.clearEdits(detail.id));
 
 	const corners: Corner[] = ['tl', 'tr', 'bl', 'br'];
+	// An approximation for the preview: the server applies the real lookup table.
+	const LOOKS: Record<string, string> = {
+		mono: 'grayscale(1)',
+		warm: 'sepia(0.18) saturate(1.1)',
+		cool: 'hue-rotate(12deg) saturate(0.95)',
+		vintage: 'sepia(0.35) contrast(0.86) brightness(1.04)',
+		vivid: 'saturate(1.35)'
+	};
 	const filter = $derived(
-		`brightness(${100 + brightness / 2}%) contrast(${100 + contrast}%) saturate(${100 + saturation}%)`
+		`brightness(${100 + brightness / 2}%) contrast(${100 + contrast}%) saturate(${100 + saturation}%) ${look ? LOOKS[look] : ''}`
 	);
 </script>
 
@@ -185,6 +201,19 @@
 			>{tr('Zasićenost', 'Saturation')}
 			<input type="range" min="-100" max="100" bind:value={saturation} /></label
 		>
+		{#if filtersOn}
+			<label
+				>{tr('Filter', 'Filter')}
+				<select bind:value={look}>
+					<option value="">{tr('Bez filtera', 'None')}</option>
+					<option value="mono">{tr('Crno-bijelo', 'Black and white')}</option>
+					<option value="warm">{tr('Toplo', 'Warm')}</option>
+					<option value="cool">{tr('Hladno', 'Cool')}</option>
+					<option value="vintage">{tr('Staro', 'Vintage')}</option>
+					<option value="vivid">{tr('Živo', 'Vivid')}</option>
+				</select></label
+			>
+		{/if}
 		<div class="editor-acts">
 			<Button variant="gold" disabled={busy} onclick={save}>{tr('Spremi', 'Save')}</Button>
 			{#if detail.edits}

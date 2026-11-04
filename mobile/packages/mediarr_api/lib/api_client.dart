@@ -303,6 +303,8 @@ class ApiClient {
           return CropBox.fromJson(value);
         case 'DeviceKey':
           return DeviceKey.fromJson(value);
+        case 'Documents':
+          return Documents.fromJson(value);
         case 'DuplicateGroup':
           return DuplicateGroup.fromJson(value);
         case 'DuplicateItem':

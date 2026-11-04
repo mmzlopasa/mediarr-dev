@@ -95,6 +95,12 @@ func TestBackupSecretsNeverComeBack(t *testing.T) {
 	if !got.HasPassword || !got.HasS3Key || got.Hour != 4 {
 		t.Fatalf("%s", body)
 	}
+	// Removing the destination forgets the secrets too.
+	resp, body = c.send(http.MethodPut, "/api/admin/backup", map[string]any{"repository": "", "hour": 3})
+	expect(t, resp, body, http.StatusOK)
+	if got := decode[api.BackupSettings](t, body); got.HasPassword || got.HasS3Key {
+		t.Fatalf("%s", body)
+	}
 }
 
 // The gate of this part: a backup comes back on an empty installation, with every file intact.
@@ -241,4 +247,48 @@ func originalNameOf(path string) string {
 		}
 	}
 	return base
+}
+
+func TestDocumentsAndFiltersWaitForTheirSwitch(t *testing.T) {
+	s := newStack(t)
+	c := s.admin()
+	other := s.user(c, "other@example.com")
+	ctx := context.Background()
+	letter := c.newPhoto(t, "letter.jpg", "2024-01-01T10:00:00Z")
+	sign := c.newPhoto(t, "sign.jpg", "2024-01-02T10:00:00Z")
+	hidden := c.newPhoto(t, "hidden.jpg", "2024-01-03T10:00:00Z")
+	foreign := other.newPhoto(t, "foreign.jpg", "2024-01-04T10:00:00Z")
+	long := "Poštovani, ovim putem potvrđujemo vašu narudžbu broj 42 od prošlog tjedna."
+	for id, text := range map[string]string{letter: long, sign: "STOP", hidden: long, foreign: long} {
+		if _, err := s.pool.Exec(ctx, `INSERT INTO asset_search (asset_id, embedding, ocr_text) VALUES ($1, array_fill(0.1::real, ARRAY[768])::vector, $2)`, id, text); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := s.pool.Exec(ctx, "UPDATE assets SET vault_at=now() WHERE id=$1", hidden); err != nil {
+		t.Fatal(err)
+	}
+	resp, body := c.get("/api/documents")
+	expect(t, resp, body, http.StatusOK)
+	if got := decode[api.Documents](t, body); got.Enabled || len(got.Items) != 0 {
+		t.Fatalf("while off: %s", body)
+	}
+	resp, body = c.send(http.MethodPut, "/api/admin/features/documents", map[string]bool{"enabled": true})
+	expect(t, resp, body, http.StatusNoContent)
+	resp, body = c.get("/api/documents")
+	expect(t, resp, body, http.StatusOK)
+	got := decode[api.Documents](t, body)
+	if !got.Enabled || len(got.Items) != 1 || got.Items[0].Id.String() != letter {
+		t.Fatalf("%s", body)
+	}
+
+	resp, body = c.send(http.MethodPut, "/api/assets/"+letter+"/edits", map[string]any{"filter": "mono"})
+	expect(t, resp, body, http.StatusConflict)
+	resp, body = c.send(http.MethodPut, "/api/admin/features/filters", map[string]bool{"enabled": true})
+	expect(t, resp, body, http.StatusNoContent)
+	resp, body = c.send(http.MethodPut, "/api/assets/"+letter+"/edits", map[string]any{"filter": "nonsense"})
+	if resp.StatusCode == http.StatusNoContent {
+		t.Fatalf("%s", body)
+	}
+	resp, body = c.send(http.MethodPut, "/api/assets/"+letter+"/edits", map[string]any{"filter": "mono"})
+	expect(t, resp, body, http.StatusNoContent)
 }

@@ -17,7 +17,12 @@ import (
 )
 
 // features are the additions an administrator turns on. All are off until then.
-var features = []string{jobs.FeatureBackup, "documents", "family", "webhooks", "kiosk", "descriptions"}
+var features = []string{jobs.FeatureBackup, featureFilters, featureDocuments, "family", "webhooks", "kiosk", "descriptions"}
+
+const (
+	featureFilters   = "filters"
+	featureDocuments = "documents"
+)
 
 func (s *apiServer) featureOn(ctx context.Context, name string) (bool, error) {
 	value, err := s.state(ctx, jobs.StateFeaturePrefix+name)
@@ -127,6 +132,10 @@ func (s *apiServer) SetBackupSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	if body.S3Secret != nil {
 		values[jobs.StateBackupS3Secret] = *body.S3Secret
+	}
+	// Without a destination the secrets have no use, and should not stay behind.
+	if repository == "" {
+		values[jobs.StateBackupPassword], values[jobs.StateBackupS3Key], values[jobs.StateBackupS3Secret] = "", "", ""
 	}
 	ctx := r.Context()
 	for key, value := range values {

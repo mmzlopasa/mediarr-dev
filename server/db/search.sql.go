@@ -205,6 +205,74 @@ func (q *Queries) ListAssetPeople(ctx context.Context, assetID pgtype.UUID) ([]L
 	return items, nil
 }
 
+const listDocuments = `-- name: ListDocuments :many
+SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
+       false::boolean AS is_live,
+       0::bigint AS stack_members
+FROM assets a
+JOIN asset_search s ON s.asset_id = a.id
+WHERE a.user_id = $1 AND a.kind = 'photo' AND a.status = 'ready' AND a.deleted_at IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+  AND length(s.ocr_text) >= $2::int
+ORDER BY a.local_at DESC, a.id DESC
+LIMIT $3
+`
+
+type ListDocumentsParams struct {
+	UserID   pgtype.UUID
+	MinText  int32
+	RowLimit int32
+}
+
+type ListDocumentsRow struct {
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
+}
+
+// What has real text on it: a receipt or a letter, not a sign in the background.
+func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([]ListDocumentsRow, error) {
+	rows, err := q.db.Query(ctx, listDocuments, arg.UserID, arg.MinText, arg.RowLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListDocumentsRow
+	for rows.Next() {
+		var i ListDocumentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Kind,
+			&i.Width,
+			&i.Height,
+			&i.AspectRatio,
+			&i.Blurhash,
+			&i.IsFavorite,
+			&i.LocalAt,
+			&i.DurationMs,
+			&i.IsLive,
+			&i.StackMembers,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPeople = `-- name: ListPeople :many
 SELECT p.id, p.name, p.hidden, count(DISTINCT a.id) AS asset_count
 FROM people p

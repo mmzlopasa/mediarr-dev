@@ -14,6 +14,7 @@ import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'api_keys_screen.dart';
 import 'map_screen.dart';
+import 'documents_screen.dart';
 import 'duplicates_screen.dart';
 import 'folders_screen.dart';
 import 'memories_screen.dart';
@@ -68,6 +69,12 @@ class OrganizeLinks extends StatelessWidget {
           leading: const Icon(Icons.folder_outlined),
           title: const Text('Folders'),
           onTap: () => open(const FoldersScreen()),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.description_outlined),
+          title: const Text('Documents'),
+          onTap: () => open(const DocumentsScreen()),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,

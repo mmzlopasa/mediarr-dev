@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **brightness** | **int** |  | [optional] 
 **contrast** | **int** |  | [optional] 
 **saturation** | **int** |  | [optional] 
+**filter** | **String** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

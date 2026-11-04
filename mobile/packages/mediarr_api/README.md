@@ -119,6 +119,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getCollectionOriginal**](doc//DefaultApi.md#getcollectionoriginal) | **GET** /api/collections/{scope}/assets/{id}/original | The original of an asset in a collection
 *DefaultApi* | [**getCollectionThumbnail**](doc//DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 *DefaultApi* | [**getCollectionVideoFile**](doc//DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
+*DefaultApi* | [**getDocuments**](doc//DefaultApi.md#getdocuments) | **GET** /api/documents | Photos of documents, found by the text on them
 *DefaultApi* | [**getExternalLibrary**](doc//DefaultApi.md#getexternallibrary) | **GET** /api/admin/external | The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 *DefaultApi* | [**getFeatures**](doc//DefaultApi.md#getfeatures) | **GET** /api/features | Which additions the administrator has turned on
 *DefaultApi* | [**getFolder**](doc//DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
@@ -242,6 +243,7 @@ Class | Method | HTTP request | Description
  - [CreateUserRequest](doc//CreateUserRequest.md)
  - [CropBox](doc//CropBox.md)
  - [DeviceKey](doc//DeviceKey.md)
+ - [Documents](doc//Documents.md)
  - [DuplicateGroup](doc//DuplicateGroup.md)
  - [DuplicateItem](doc//DuplicateItem.md)
  - [Duplicates](doc//Duplicates.md)

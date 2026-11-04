@@ -30,6 +30,7 @@ test('app sidebar has the planned sections and navigates', async ({ page }) => {
 		'Dijeljeno',
 		'Memories',
 		'Mape',
+		'Dokumenti',
 		'Duplikati',
 		'Arhiva',
 		'Smeće',
@@ -491,7 +492,9 @@ test('a backup is set up, runs, and its test of coming back passes', async ({ pa
 	await page.goto('/admin/settings');
 	const secret = 'e2e-backup-password';
 	await page.getByLabel(/Odredište|Destination/).fill(`/backup/e2e-${Date.now()}`);
-	await page.getByLabel(/Lozinka backupa|Backup password/).fill(secret);
+	await page
+		.getByLabel(/Lozinka backupa|Backup password|Lozinka \(spremljena|Password \(saved/)
+		.fill(secret);
 	await page.getByTestId('backup-save').click();
 	await expect(page.getByLabel(/Lozinka \(spremljena|Password \(saved/)).toBeVisible();
 	expect(await page.content()).not.toContain(secret);

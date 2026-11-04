@@ -23,6 +23,7 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type Documents = components['schemas']['Documents'];
 export type Features = Record<string, boolean>;
 export type BackupSettings = components['schemas']['BackupSettings'];
 export type BackupSettingsUpdate = components['schemas']['BackupSettingsUpdate'];
@@ -241,6 +242,7 @@ export const api = {
 	backupRuns: () => request<BackupRun[]>(fetch, '/api/admin/backup/runs'),
 	startBackupRun: (kind: BackupRun['kind']) =>
 		request<void>(fetch, '/api/admin/backup/runs', { kind }),
+	documents: () => request<Documents>(fetch, '/api/documents'),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>
