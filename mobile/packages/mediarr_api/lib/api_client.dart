@@ -269,6 +269,8 @@ class ApiClient {
           return AssetTagChange.fromJson(value);
         case 'AuditEntry':
           return AuditEntry.fromJson(value);
+        case 'AuthMethods':
+          return AuthMethods.fromJson(value);
         case 'AuthStatus':
           return AuthStatus.fromJson(value);
         case 'BulkRequest':
@@ -329,6 +331,12 @@ class ApiClient {
           return MemberRole.fromJson(value);
         case 'Memory':
           return Memory.fromJson(value);
+        case 'OIDCExchange':
+          return OIDCExchange.fromJson(value);
+        case 'OIDCSettings':
+          return OIDCSettings.fromJson(value);
+        case 'OIDCSettingsUpdate':
+          return OIDCSettingsUpdate.fromJson(value);
         case 'PartnerEntry':
           return PartnerEntry.fromJson(value);
         case 'PartnerShare':
@@ -337,6 +345,8 @@ class ApiClient {
           return PartnerTimeline.fromJson(value);
         case 'Partners':
           return Partners.fromJson(value);
+        case 'Passkey':
+          return Passkey.fromJson(value);
         case 'PasswordConfirm':
           return PasswordConfirm.fromJson(value);
         case 'PeopleList':

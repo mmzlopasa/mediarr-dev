@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api, type AnalysisProgress, type ExternalLibrary, type User } from '#lib/api.ts';
+	import {
+		api,
+		type AnalysisProgress,
+		type ExternalLibrary,
+		type OIDCSettings,
+		type User
+	} from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
 	import Button from '#lib/design/components/Button.svelte';
@@ -34,6 +40,38 @@
 			failed = true;
 		}
 	});
+
+	let oidc = $state<OIDCSettings>();
+	let oidcSecret = $state('');
+
+	onMount(async () => {
+		try {
+			oidc = await api.oidcSettings();
+		} catch {
+			oidc = undefined;
+		}
+	});
+
+	async function saveOIDC(event: SubmitEvent) {
+		event.preventDefault();
+		if (!oidc) return;
+		try {
+			oidc = await api.setOIDCSettings({
+				issuer: oidc.issuer,
+				clientId: oidc.clientId,
+				label: oidc.label,
+				autoCreate: oidc.autoCreate,
+				secret: oidcSecret || undefined
+			});
+			oidcSecret = '';
+			showToast('ok', tr('Spremljeno.', 'Saved.'));
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
+			);
+		}
+	}
 
 	async function externalAction(action: () => Promise<unknown>) {
 		try {
@@ -141,6 +179,39 @@
 			{/if}
 		{/if}
 	</Card>
+	{#if oidc}
+		<Card title={tr('Jedinstvena prijava (OIDC)', 'Single sign-on (OIDC)')}>
+			<form class="form" onsubmit={saveOIDC}>
+				<p class="alb-meta">
+					{tr(
+						'Po želji. Prazan izdavatelj je isključuje, a lozinka uvijek ostaje dostupna. Adresa povratka kod pružatelja:',
+						'Optional. An empty issuer turns it off, and passwords always keep working. The redirect address at the provider:'
+					)}
+					<code>{location.origin}/api/auth/oidc/callback</code>
+				</p>
+				<Input label={tr('Izdavatelj', 'Issuer')} bind:value={oidc.issuer} />
+				<Input label="Client ID" bind:value={oidc.clientId} />
+				<Input
+					label={oidc.hasSecret
+						? tr(
+								'Client secret (spremljen, upišite za promjenu)',
+								'Client secret (saved, type to change)'
+							)
+						: 'Client secret'}
+					bind:value={oidcSecret}
+				/>
+				<Input label={tr('Natpis na gumbu', 'Button label')} bind:value={oidc.label} />
+				<label>
+					<input type="checkbox" bind:checked={oidc.autoCreate} />
+					{tr(
+						'Stvori račun onome tko ga još nema (običan korisnik)',
+						'Create an account for someone who has none (a plain user)'
+					)}
+				</label>
+				<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
+			</form>
+		</Card>
+	{/if}
 	<Card title={tr('Karta', 'Map')}>
 		<form class="form" onsubmit={save}>
 			<p class="alb-meta">

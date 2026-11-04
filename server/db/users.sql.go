@@ -64,6 +64,29 @@ func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) (pgt
 	return id, err
 }
 
+const createPasskey = `-- name: CreatePasskey :one
+INSERT INTO passkeys (user_id, credential_id, name, credential) VALUES ($1, $2, $3, $4) RETURNING id
+`
+
+type CreatePasskeyParams struct {
+	UserID       pgtype.UUID
+	CredentialID []byte
+	Name         string
+	Credential   []byte
+}
+
+func (q *Queries) CreatePasskey(ctx context.Context, arg CreatePasskeyParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createPasskey,
+		arg.UserID,
+		arg.CredentialID,
+		arg.Name,
+		arg.Credential,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createSession = `-- name: CreateSession :exec
 INSERT INTO sessions (user_id, token_hash, expires_at) VALUES ($1, $2, $3)
 `
@@ -149,6 +172,20 @@ type DeleteOtherSessionsParams struct {
 
 func (q *Queries) DeleteOtherSessions(ctx context.Context, arg DeleteOtherSessionsParams) error {
 	_, err := q.db.Exec(ctx, deleteOtherSessions, arg.UserID, arg.Keep)
+	return err
+}
+
+const deletePasskey = `-- name: DeletePasskey :exec
+DELETE FROM passkeys WHERE id = $1 AND user_id = $2
+`
+
+type DeletePasskeyParams struct {
+	ID     pgtype.UUID
+	UserID pgtype.UUID
+}
+
+func (q *Queries) DeletePasskey(ctx context.Context, arg DeletePasskeyParams) error {
+	_, err := q.db.Exec(ctx, deletePasskey, arg.ID, arg.UserID)
 	return err
 }
 
@@ -338,6 +375,38 @@ func (q *Queries) ListAPIKeys(ctx context.Context, userID pgtype.UUID) ([]ListAP
 	return items, nil
 }
 
+const listPasskeys = `-- name: ListPasskeys :many
+SELECT id, user_id, credential_id, name, credential, created_at, last_used_at FROM passkeys WHERE user_id = $1 ORDER BY created_at
+`
+
+func (q *Queries) ListPasskeys(ctx context.Context, userID pgtype.UUID) ([]Passkey, error) {
+	rows, err := q.db.Query(ctx, listPasskeys, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Passkey
+	for rows.Next() {
+		var i Passkey
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.CredentialID,
+			&i.Name,
+			&i.Credential,
+			&i.CreatedAt,
+			&i.LastUsedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUserStorage = `-- name: ListUserStorage :many
 SELECT u.id, u.name, u.email, u.quota_bytes,
        coalesce(sum(a.size_bytes) FILTER (WHERE l.kind = 'upload'), 0)::bigint AS stored_bytes,
@@ -474,6 +543,20 @@ func (q *Queries) SetUserQuota(ctx context.Context, arg SetUserQuotaParams) (int
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const updatePasskeyCredential = `-- name: UpdatePasskeyCredential :exec
+UPDATE passkeys SET credential = $2, last_used_at = now() WHERE credential_id = $1
+`
+
+type UpdatePasskeyCredentialParams struct {
+	CredentialID []byte
+	Credential   []byte
+}
+
+func (q *Queries) UpdatePasskeyCredential(ctx context.Context, arg UpdatePasskeyCredentialParams) error {
+	_, err := q.db.Exec(ctx, updatePasskeyCredential, arg.CredentialID, arg.Credential)
+	return err
 }
 
 const upsertUser = `-- name: UpsertUser :one

@@ -62,6 +62,8 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultApi* | [**addAlbumAssets**](doc//DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+*DefaultApi* | [**beginPasskeyLogin**](doc//DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
+*DefaultApi* | [**beginPasskeyRegistration**](doc//DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey
 *DefaultApi* | [**bulkAssets**](doc//DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
 *DefaultApi* | [**cancelUpload**](doc//DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
 *DefaultApi* | [**changeAssetTags**](doc//DefaultApi.md#changeassettags) | **POST** /api/assets/tags | Add a tag to the user's own assets, or remove it
@@ -80,6 +82,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteAlbum**](doc//DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 *DefaultApi* | [**deleteAlbumComment**](doc//DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
+*DefaultApi* | [**deletePasskey**](doc//DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 *DefaultApi* | [**deleteTag**](doc//DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
 *DefaultApi* | [**disableTotp**](doc//DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 *DefaultApi* | [**dismissDuplicates**](doc//DefaultApi.md#dismissduplicates) | **POST** /api/duplicates/dismiss | These photos are not duplicates of each other, and are not proposed again
@@ -87,6 +90,10 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**downloadAssets**](doc//DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
 *DefaultApi* | [**emptyTrash**](doc//DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 *DefaultApi* | [**enableTotp**](doc//DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
+*DefaultApi* | [**exchangeOIDC**](doc//DefaultApi.md#exchangeoidc) | **POST** /api/auth/oidc/exchange | The app turns a one-time code into a session
+*DefaultApi* | [**finishOIDC**](doc//DefaultApi.md#finishoidc) | **GET** /api/auth/oidc/callback | Where the identity provider sends the browser back
+*DefaultApi* | [**finishPasskeyLogin**](doc//DefaultApi.md#finishpasskeylogin) | **POST** /api/auth/passkey/finish | Finish signing in with a passkey
+*DefaultApi* | [**finishPasskeyRegistration**](doc//DefaultApi.md#finishpasskeyregistration) | **POST** /api/me/passkeys/finish | Finish adding a passkey
 *DefaultApi* | [**getAdminHealth**](doc//DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
 *DefaultApi* | [**getAdminJobs**](doc//DefaultApi.md#getadminjobs) | **GET** /api/admin/jobs | The job queues, and the jobs that gave up
 *DefaultApi* | [**getAdminOverview**](doc//DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
@@ -100,6 +107,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAssetOriginal**](doc//DefaultApi.md#getassetoriginal) | **GET** /api/assets/{id}/original | Read the unmodified original. Supports Range requests for video.
 *DefaultApi* | [**getAssetThumbnail**](doc//DefaultApi.md#getassetthumbnail) | **GET** /api/assets/{id}/thumbnail | Read a WebP thumbnail
 *DefaultApi* | [**getAssetVideoFile**](doc//DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
+*DefaultApi* | [**getAuthMethods**](doc//DefaultApi.md#getauthmethods) | **GET** /api/auth/methods | The ways of signing in that this address offers, besides a password
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 *DefaultApi* | [**getCollectionAsset**](doc//DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 *DefaultApi* | [**getCollectionBucket**](doc//DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
@@ -114,6 +122,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getMapPoints**](doc//DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 *DefaultApi* | [**getMapStyle**](doc//DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
 *DefaultApi* | [**getMapTrips**](doc//DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
+*DefaultApi* | [**getOIDCSettings**](doc//DefaultApi.md#getoidcsettings) | **GET** /api/admin/oidc | Single sign-on settings, without the secret
 *DefaultApi* | [**getPartnerBucket**](doc//DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 *DefaultApi* | [**getPartnerBuckets**](doc//DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
 *DefaultApi* | [**getPersonBucket**](doc//DefaultApi.md#getpersonbucket) | **GET** /api/people/{id}/buckets/{month} | Photos of this person in one month
@@ -147,6 +156,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listDuplicates**](doc//DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
+*DefaultApi* | [**listPasskeys**](doc//DefaultApi.md#listpasskeys) | **GET** /api/me/passkeys | The current user's passkeys
 *DefaultApi* | [**listPeople**](doc//DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 *DefaultApi* | [**listTags**](doc//DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 *DefaultApi* | [**listUsers**](doc//DefaultApi.md#listusers) | **GET** /api/admin/users | List users
@@ -169,6 +179,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 *DefaultApi* | [**setMapStyle**](doc//DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
+*DefaultApi* | [**setOIDCSettings**](doc//DefaultApi.md#setoidcsettings) | **PUT** /api/admin/oidc | Change single sign-on. An empty issuer turns it off
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 *DefaultApi* | [**setPartnerTimeline**](doc//DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
 *DefaultApi* | [**setStackMain**](doc//DefaultApi.md#setstackmain) | **PUT** /api/assets/{id}/stack/main | Make this shot the one the timeline shows
@@ -176,6 +187,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setVaultPin**](doc//DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 *DefaultApi* | [**setup**](doc//DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 *DefaultApi* | [**setupTotp**](doc//DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
+*DefaultApi* | [**startOIDC**](doc//DefaultApi.md#startoidc) | **GET** /api/auth/oidc/start | Go to the identity provider
 *DefaultApi* | [**unlockPublicLink**](doc//DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 *DefaultApi* | [**unlockVault**](doc//DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 *DefaultApi* | [**updateAlbum**](doc//DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
@@ -204,6 +216,7 @@ Class | Method | HTTP request | Description
  - [AssetList](doc//AssetList.md)
  - [AssetTagChange](doc//AssetTagChange.md)
  - [AuditEntry](doc//AuditEntry.md)
+ - [AuthMethods](doc//AuthMethods.md)
  - [AuthStatus](doc//AuthStatus.md)
  - [BulkRequest](doc//BulkRequest.md)
  - [BulkResponse](doc//BulkResponse.md)
@@ -234,10 +247,14 @@ Class | Method | HTTP request | Description
  - [MapStyle](doc//MapStyle.md)
  - [MemberRole](doc//MemberRole.md)
  - [Memory](doc//Memory.md)
+ - [OIDCExchange](doc//OIDCExchange.md)
+ - [OIDCSettings](doc//OIDCSettings.md)
+ - [OIDCSettingsUpdate](doc//OIDCSettingsUpdate.md)
  - [PartnerEntry](doc//PartnerEntry.md)
  - [PartnerShare](doc//PartnerShare.md)
  - [PartnerTimeline](doc//PartnerTimeline.md)
  - [Partners](doc//Partners.md)
+ - [Passkey](doc//Passkey.md)
  - [PasswordConfirm](doc//PasswordConfirm.md)
  - [PeopleList](doc//PeopleList.md)
  - [Person](doc//Person.md)

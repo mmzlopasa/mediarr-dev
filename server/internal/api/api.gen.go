@@ -928,6 +928,15 @@ type AuditEntry struct {
 	UserEmail string    `json:"userEmail"`
 }
 
+// AuthMethods defines model for AuthMethods.
+type AuthMethods struct {
+	// Passkeys This address can use passkeys: HTTPS and a domain name
+	Passkeys bool `json:"passkeys"`
+
+	// SsoLabel The name of the single sign-on button, if it is turned on
+	SsoLabel *string `json:"ssoLabel,omitempty"`
+}
+
 // AuthStatus defines model for AuthStatus.
 type AuthStatus struct {
 	SetupRequired bool  `json:"setupRequired"`
@@ -1162,6 +1171,33 @@ type Memory struct {
 // MemoryKind defines model for Memory.Kind.
 type MemoryKind string
 
+// OIDCExchange defines model for OIDCExchange.
+type OIDCExchange struct {
+	Code     string `json:"code"`
+	Verifier string `json:"verifier"`
+}
+
+// OIDCSettings defines model for OIDCSettings.
+type OIDCSettings struct {
+	// AutoCreate A person without an account gets one on first sign-in
+	AutoCreate bool   `json:"autoCreate"`
+	ClientId   string `json:"clientId"`
+	HasSecret  bool   `json:"hasSecret"`
+	Issuer     string `json:"issuer"`
+	Label      string `json:"label"`
+}
+
+// OIDCSettingsUpdate defines model for OIDCSettingsUpdate.
+type OIDCSettingsUpdate struct {
+	AutoCreate bool   `json:"autoCreate"`
+	ClientId   string `json:"clientId"`
+	Issuer     string `json:"issuer"`
+	Label      string `json:"label"`
+
+	// Secret Left out keeps the one that is saved
+	Secret *string `json:"secret,omitempty"`
+}
+
 // PartnerEntry defines model for PartnerEntry.
 type PartnerEntry struct {
 	InTimeline bool                `json:"inTimeline"`
@@ -1184,6 +1220,14 @@ type PartnerTimeline struct {
 type Partners struct {
 	Given    []PartnerEntry `json:"given"`
 	Received []PartnerEntry `json:"received"`
+}
+
+// Passkey defines model for Passkey.
+type Passkey struct {
+	CreatedAt  time.Time          `json:"createdAt"`
+	Id         openapi_types.UUID `json:"id"`
+	LastUsedAt *time.Time         `json:"lastUsedAt,omitempty"`
+	Name       string             `json:"name"`
 }
 
 // PasswordConfirm defines model for PasswordConfirm.
@@ -1490,6 +1534,26 @@ type GetAssetThumbnailParams struct {
 // GetAssetThumbnailParamsSize defines parameters for GetAssetThumbnail.
 type GetAssetThumbnailParamsSize string
 
+// FinishOIDCParams defines parameters for FinishOIDC.
+type FinishOIDCParams struct {
+	Code  *string `form:"code,omitempty" json:"code,omitempty"`
+	State *string `form:"state,omitempty" json:"state,omitempty"`
+}
+
+// StartOIDCParams defines parameters for StartOIDC.
+type StartOIDCParams struct {
+	Next *string `form:"next,omitempty" json:"next,omitempty"`
+
+	// AppChallenge SHA-256 of a secret the app keeps, base64url
+	AppChallenge *string `form:"appChallenge,omitempty" json:"appChallenge,omitempty"`
+}
+
+// BeginPasskeyLoginJSONBody defines parameters for BeginPasskeyLogin.
+type BeginPasskeyLoginJSONBody map[string]interface{}
+
+// FinishPasskeyLoginJSONBody defines parameters for FinishPasskeyLogin.
+type FinishPasskeyLoginJSONBody map[string]interface{}
+
 // GetCollectionAssetParamsScope defines parameters for GetCollectionAsset.
 type GetCollectionAssetParamsScope string
 
@@ -1536,6 +1600,12 @@ type GetMapPointsParams struct {
 	To   *openapi_types.Date `form:"to,omitempty" json:"to,omitempty"`
 }
 
+// BeginPasskeyRegistrationJSONBody defines parameters for BeginPasskeyRegistration.
+type BeginPasskeyRegistrationJSONBody map[string]interface{}
+
+// FinishPasskeyRegistrationJSONBody defines parameters for FinishPasskeyRegistration.
+type FinishPasskeyRegistrationJSONBody map[string]interface{}
+
 // ListMemoriesParams defines parameters for ListMemories.
 type ListMemoriesParams struct {
 	// Date The user's own date, which decides what today is
@@ -1562,6 +1632,9 @@ type SearchAssetsParams struct {
 
 // SetExternalLibraryJSONRequestBody defines body for SetExternalLibrary for application/json ContentType.
 type SetExternalLibraryJSONRequestBody = ExternalLibraryOwner
+
+// SetOIDCSettingsJSONRequestBody defines body for SetOIDCSettings for application/json ContentType.
+type SetOIDCSettingsJSONRequestBody = OIDCSettingsUpdate
 
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
@@ -1605,6 +1678,15 @@ type SetAssetEditsJSONRequestBody = AssetEdits
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
 
+// ExchangeOIDCJSONRequestBody defines body for ExchangeOIDC for application/json ContentType.
+type ExchangeOIDCJSONRequestBody = OIDCExchange
+
+// BeginPasskeyLoginJSONRequestBody defines body for BeginPasskeyLogin for application/json ContentType.
+type BeginPasskeyLoginJSONRequestBody BeginPasskeyLoginJSONBody
+
+// FinishPasskeyLoginJSONRequestBody defines body for FinishPasskeyLogin for application/json ContentType.
+type FinishPasskeyLoginJSONRequestBody FinishPasskeyLoginJSONBody
+
 // SetupJSONRequestBody defines body for Setup for application/json ContentType.
 type SetupJSONRequestBody = SetupRequest
 
@@ -1619,6 +1701,12 @@ type CreateAPIKeyJSONRequestBody = ApiKeyCreate
 
 // CreateDeviceKeyJSONRequestBody defines body for CreateDeviceKey for application/json ContentType.
 type CreateDeviceKeyJSONRequestBody = CreateDeviceKeyRequest
+
+// BeginPasskeyRegistrationJSONRequestBody defines body for BeginPasskeyRegistration for application/json ContentType.
+type BeginPasskeyRegistrationJSONRequestBody BeginPasskeyRegistrationJSONBody
+
+// FinishPasskeyRegistrationJSONRequestBody defines body for FinishPasskeyRegistration for application/json ContentType.
+type FinishPasskeyRegistrationJSONRequestBody FinishPasskeyRegistrationJSONBody
 
 // ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
 type ChangePasswordJSONRequestBody = ChangePasswordRequest
@@ -1685,6 +1773,12 @@ type ServerInterface interface {
 	// RetryJob Try a failed job again
 	// (POST /api/admin/jobs/{id}/retry)
 	RetryJob(w http.ResponseWriter, r *http.Request, id int64)
+	// GetOIDCSettings Single sign-on settings, without the secret
+	// (GET /api/admin/oidc)
+	GetOIDCSettings(w http.ResponseWriter, r *http.Request)
+	// SetOIDCSettings Change single sign-on. An empty issuer turns it off
+	// (PUT /api/admin/oidc)
+	SetOIDCSettings(w http.ResponseWriter, r *http.Request)
 	// GetAdminOverview Live statistics of the whole server, read from the database and the library disk
 	// (GET /api/admin/overview)
 	GetAdminOverview(w http.ResponseWriter, r *http.Request)
@@ -1808,6 +1902,24 @@ type ServerInterface interface {
 	// Logout End the current session
 	// (POST /api/auth/logout)
 	Logout(w http.ResponseWriter, r *http.Request)
+	// GetAuthMethods The ways of signing in that this address offers, besides a password
+	// (GET /api/auth/methods)
+	GetAuthMethods(w http.ResponseWriter, r *http.Request)
+	// FinishOIDC Where the identity provider sends the browser back
+	// (GET /api/auth/oidc/callback)
+	FinishOIDC(w http.ResponseWriter, r *http.Request, params FinishOIDCParams)
+	// ExchangeOIDC The app turns a one-time code into a session
+	// (POST /api/auth/oidc/exchange)
+	ExchangeOIDC(w http.ResponseWriter, r *http.Request)
+	// StartOIDC Go to the identity provider
+	// (GET /api/auth/oidc/start)
+	StartOIDC(w http.ResponseWriter, r *http.Request, params StartOIDCParams)
+	// BeginPasskeyLogin Start signing in with a passkey
+	// (POST /api/auth/passkey/begin)
+	BeginPasskeyLogin(w http.ResponseWriter, r *http.Request)
+	// FinishPasskeyLogin Finish signing in with a passkey
+	// (POST /api/auth/passkey/finish)
+	FinishPasskeyLogin(w http.ResponseWriter, r *http.Request)
 	// Setup Create the first administrator. Closed once any user exists.
 	// (POST /api/auth/setup)
 	Setup(w http.ResponseWriter, r *http.Request)
@@ -1868,6 +1980,18 @@ type ServerInterface interface {
 	// RevokeDeviceKey Revoke one of the current user's device keys
 	// (DELETE /api/me/device-keys/{id})
 	RevokeDeviceKey(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ListPasskeys The current user's passkeys
+	// (GET /api/me/passkeys)
+	ListPasskeys(w http.ResponseWriter, r *http.Request)
+	// BeginPasskeyRegistration Start adding a passkey
+	// (POST /api/me/passkeys/begin)
+	BeginPasskeyRegistration(w http.ResponseWriter, r *http.Request)
+	// FinishPasskeyRegistration Finish adding a passkey
+	// (POST /api/me/passkeys/finish)
+	FinishPasskeyRegistration(w http.ResponseWriter, r *http.Request)
+	// DeletePasskey Remove a passkey
+	// (DELETE /api/me/passkeys/{id})
+	DeletePasskey(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ChangePassword Change the current user's password and end their other sessions
 	// (POST /api/me/password)
 	ChangePassword(w http.ResponseWriter, r *http.Request)
@@ -2078,6 +2202,18 @@ func (_ Unimplemented) ResumeJobQueue(w http.ResponseWriter, r *http.Request, qu
 // RetryJob Try a failed job again
 // (POST /api/admin/jobs/{id}/retry)
 func (_ Unimplemented) RetryJob(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetOIDCSettings Single sign-on settings, without the secret
+// (GET /api/admin/oidc)
+func (_ Unimplemented) GetOIDCSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetOIDCSettings Change single sign-on. An empty issuer turns it off
+// (PUT /api/admin/oidc)
+func (_ Unimplemented) SetOIDCSettings(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2327,6 +2463,42 @@ func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetAuthMethods The ways of signing in that this address offers, besides a password
+// (GET /api/auth/methods)
+func (_ Unimplemented) GetAuthMethods(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// FinishOIDC Where the identity provider sends the browser back
+// (GET /api/auth/oidc/callback)
+func (_ Unimplemented) FinishOIDC(w http.ResponseWriter, r *http.Request, params FinishOIDCParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ExchangeOIDC The app turns a one-time code into a session
+// (POST /api/auth/oidc/exchange)
+func (_ Unimplemented) ExchangeOIDC(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// StartOIDC Go to the identity provider
+// (GET /api/auth/oidc/start)
+func (_ Unimplemented) StartOIDC(w http.ResponseWriter, r *http.Request, params StartOIDCParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// BeginPasskeyLogin Start signing in with a passkey
+// (POST /api/auth/passkey/begin)
+func (_ Unimplemented) BeginPasskeyLogin(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// FinishPasskeyLogin Finish signing in with a passkey
+// (POST /api/auth/passkey/finish)
+func (_ Unimplemented) FinishPasskeyLogin(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Setup Create the first administrator. Closed once any user exists.
 // (POST /api/auth/setup)
 func (_ Unimplemented) Setup(w http.ResponseWriter, r *http.Request) {
@@ -2444,6 +2616,30 @@ func (_ Unimplemented) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
 // RevokeDeviceKey Revoke one of the current user's device keys
 // (DELETE /api/me/device-keys/{id})
 func (_ Unimplemented) RevokeDeviceKey(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListPasskeys The current user's passkeys
+// (GET /api/me/passkeys)
+func (_ Unimplemented) ListPasskeys(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// BeginPasskeyRegistration Start adding a passkey
+// (POST /api/me/passkeys/begin)
+func (_ Unimplemented) BeginPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// FinishPasskeyRegistration Finish adding a passkey
+// (POST /api/me/passkeys/finish)
+func (_ Unimplemented) FinishPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeletePasskey Remove a passkey
+// (DELETE /api/me/passkeys/{id})
+func (_ Unimplemented) DeletePasskey(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2949,6 +3145,34 @@ func (siw *ServerInterfaceWrapper) RetryJob(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RetryJob(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOIDCSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetOIDCSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOIDCSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetOIDCSettings operation middleware
+func (siw *ServerInterfaceWrapper) SetOIDCSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetOIDCSettings(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4046,6 +4270,154 @@ func (siw *ServerInterfaceWrapper) Logout(w http.ResponseWriter, r *http.Request
 	handler.ServeHTTP(w, r)
 }
 
+// GetAuthMethods operation middleware
+func (siw *ServerInterfaceWrapper) GetAuthMethods(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAuthMethods(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// FinishOIDC operation middleware
+func (siw *ServerInterfaceWrapper) FinishOIDC(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params FinishOIDCParams
+
+	// ------------- Optional query parameter "code" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "code", r.URL.Query(), &params.Code, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "code"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "code", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FinishOIDC(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExchangeOIDC operation middleware
+func (siw *ServerInterfaceWrapper) ExchangeOIDC(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExchangeOIDC(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StartOIDC operation middleware
+func (siw *ServerInterfaceWrapper) StartOIDC(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params StartOIDCParams
+
+	// ------------- Optional query parameter "next" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "next", r.URL.Query(), &params.Next, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "next"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "next", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "appChallenge" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "appChallenge", r.URL.Query(), &params.AppChallenge, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "appChallenge"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "appChallenge", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartOIDC(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// BeginPasskeyLogin operation middleware
+func (siw *ServerInterfaceWrapper) BeginPasskeyLogin(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BeginPasskeyLogin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// FinishPasskeyLogin operation middleware
+func (siw *ServerInterfaceWrapper) FinishPasskeyLogin(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FinishPasskeyLogin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // Setup operation middleware
 func (siw *ServerInterfaceWrapper) Setup(w http.ResponseWriter, r *http.Request) {
 
@@ -4559,6 +4931,74 @@ func (siw *ServerInterfaceWrapper) RevokeDeviceKey(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RevokeDeviceKey(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListPasskeys operation middleware
+func (siw *ServerInterfaceWrapper) ListPasskeys(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListPasskeys(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// BeginPasskeyRegistration operation middleware
+func (siw *ServerInterfaceWrapper) BeginPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BeginPasskeyRegistration(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// FinishPasskeyRegistration operation middleware
+func (siw *ServerInterfaceWrapper) FinishPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FinishPasskeyRegistration(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeletePasskey operation middleware
+func (siw *ServerInterfaceWrapper) DeletePasskey(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeletePasskey(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6204,6 +6644,42 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/trash/summary", wrapper.GetTrashSummary)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/auth/methods", wrapper.GetAuthMethods)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/auth/oidc/start", wrapper.StartOIDC)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/auth/oidc/callback", wrapper.FinishOIDC)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/oidc/exchange", wrapper.ExchangeOIDC)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/oidc", wrapper.GetOIDCSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/oidc", wrapper.SetOIDCSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/me/passkeys", wrapper.ListPasskeys)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/me/passkeys/{id}", wrapper.DeletePasskey)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/me/passkeys/begin", wrapper.BeginPasskeyRegistration)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/me/passkeys/finish", wrapper.FinishPasskeyRegistration)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/passkey/begin", wrapper.BeginPasskeyLogin)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/passkey/finish", wrapper.FinishPasskeyLogin)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

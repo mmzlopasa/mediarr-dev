@@ -1,6 +1,10 @@
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:crypto/crypto.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' show Response;
 import 'package:mediarr_api/api.dart';
@@ -109,6 +113,24 @@ String normalizeServerUrl(String input) {
   return url.replaceAll(RegExp(r'/+$'), '');
 }
 
+/// A secret that proves later that this app is the one that started the sign-in.
+String newSsoVerifier() {
+  final random = Random.secure();
+  return base64UrlEncode(List<int>.generate(32, (_) => random.nextInt(256)))
+      .replaceAll('=', '');
+}
+
+/// Where a sign-in starts. The server sees only the hash of the secret.
+String ssoStartUrl(String server, String verifier) {
+  final challenge = base64UrlEncode(sha256.convert(utf8.encode(verifier)).bytes)
+      .replaceAll('=', '');
+  return '$server/api/auth/oidc/start?appChallenge=$challenge';
+}
+
+/// The one-time code in the address the browser came back with, if the sign-in worked.
+String? ssoCodeFrom(String callback) =>
+    Uri.tryParse(callback)?.queryParameters['code'];
+
 /// Reads the session token from a Set-Cookie header.
 String? sessionCookieFrom(String? setCookie) {
   if (setCookie == null) return null;
@@ -188,6 +210,48 @@ class SessionNotifier extends AsyncNotifier<Session?> {
 
     final cookie = sessionCookieFrom(response.headers['set-cookie']);
     final user = User.fromJson(jsonDecode(response.body));
+    if (cookie == null || user == null) {
+      throw LoginFailure('The server did not start a session.');
+    }
+    await _storage.write(key: _serverKey, value: url);
+    await _storage.write(key: _cookieKey, value: cookie);
+    state = AsyncData(Session(serverUrl: url, cookie: cookie, user: user));
+  }
+
+  /// Signs in through the server's identity provider, in the system's browser.
+  Future<void> signInWithProvider(String server) async {
+    final url = normalizeServerUrl(server);
+    final verifier = newSsoVerifier();
+    final String answer;
+    try {
+      answer = await FlutterWebAuth2.authenticate(
+        url: ssoStartUrl(url, verifier),
+        callbackUrlScheme: 'mediarr',
+      );
+    } on PlatformException catch (cause) {
+      if (cause.code == 'CANCELED') {
+        throw LoginFailure('Signing in was cancelled.');
+      }
+      throw LoginFailure('Single sign-on is not turned on for this server.');
+    }
+    final code = ssoCodeFrom(answer);
+    if (code == null) {
+      throw LoginFailure(
+        'Single sign-on did not work. You may not have an account on this server.',
+      );
+    }
+    final Response response;
+    try {
+      response = await DefaultApi(
+        ApiClient(basePath: url),
+      ).exchangeOIDCWithHttpInfo(OIDCExchange(code: code, verifier: verifier));
+    } on ApiException catch (cause) {
+      throw LoginFailure('Could not reach the server. (${cause.message})');
+    }
+    final cookie = sessionCookieFrom(response.headers['set-cookie']);
+    final user = response.statusCode == 200
+        ? User.fromJson(jsonDecode(response.body))
+        : null;
     if (cookie == null || user == null) {
       throw LoginFailure('The server did not start a session.');
     }

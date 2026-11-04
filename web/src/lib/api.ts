@@ -23,6 +23,10 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type AuthMethods = components['schemas']['AuthMethods'];
+export type OIDCSettings = components['schemas']['OIDCSettings'];
+export type OIDCSettingsUpdate = components['schemas']['OIDCSettingsUpdate'];
+export type Passkey = components['schemas']['Passkey'];
 export type AdminJobs = components['schemas']['AdminJobs'];
 export type AdminHealth = components['schemas']['AdminHealth'];
 export type UserStorage = components['schemas']['UserStorage'];
@@ -212,6 +216,13 @@ export const api = {
 	setQuota: (id: string, quotaBytes?: number) =>
 		request<void>(fetch, `/api/admin/users/${id}/quota`, { quotaBytes }, 'PUT'),
 	trashSummary: () => request<TrashSummary>(fetch, '/api/trash/summary'),
+	authMethods: () => request<AuthMethods>(fetch, '/api/auth/methods'),
+	oidcSettings: () => request<OIDCSettings>(fetch, '/api/admin/oidc'),
+	setOIDCSettings: (body: OIDCSettingsUpdate) =>
+		request<OIDCSettings>(fetch, '/api/admin/oidc', body, 'PUT'),
+	passkeys: () => request<Passkey[]>(fetch, '/api/me/passkeys'),
+	deletePasskey: (id: string) =>
+		request<void>(fetch, `/api/me/passkeys/${id}`, undefined, 'DELETE'),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>

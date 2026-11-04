@@ -63,7 +63,9 @@ Future<void> signIn(WidgetTester tester, String server, String pass) async {
   for (var i = 0; i < 10; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
-  await tester.tap(find.text('Sign in'));
+  await tester.ensureVisible(find.text('Sign in'));
+  await tester.pump(const Duration(milliseconds: 300));
+  await tester.tap(find.text('Sign in'), warnIfMissed: false);
 }
 
 void main() {

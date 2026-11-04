@@ -13,7 +13,7 @@ import (
 // Reachable without an account, on purpose. Anything new has to be added here knowingly.
 var publicRoutes = []*regexp.Regexp{
 	regexp.MustCompile(`^/api/health$`),
-	regexp.MustCompile(`^/api/auth/(status|login|setup|logout)$`),
+	regexp.MustCompile(`^/api/auth/(status|login|setup|logout|methods|oidc/.+|passkey/.+)$`),
 	regexp.MustCompile(`^/api/public/`),
 }
 
@@ -105,6 +105,7 @@ var ownOnlyRoutes = map[string]bool{
 	"DELETE /api/partners/{userId}":                true,
 	"PUT /api/partners/{userId}/timeline":          true,
 	"DELETE /api/me/device-keys/{id}":              true,
+	"DELETE /api/me/passkeys/{id}":                 true,
 	// Tus uploads are checked by their own tests, and an id belongs to the upload in progress.
 	"DELETE /api/uploads/{id}": true,
 	"HEAD /api/uploads/{id}":   true,

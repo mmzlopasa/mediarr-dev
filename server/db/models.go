@@ -199,6 +199,16 @@ type PartnerShare struct {
 	CreatedAt  pgtype.Timestamptz
 }
 
+type Passkey struct {
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	CredentialID []byte
+	Name         string
+	Credential   []byte
+	CreatedAt    pgtype.Timestamptz
+	LastUsedAt   pgtype.Timestamptz
+}
+
 type Person struct {
 	ID        pgtype.UUID
 	UserID    pgtype.UUID

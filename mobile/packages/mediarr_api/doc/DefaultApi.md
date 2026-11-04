@@ -11,6 +11,8 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**addAlbumAssets**](DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
 [**appendUpload**](DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+[**beginPasskeyLogin**](DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
+[**beginPasskeyRegistration**](DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey
 [**bulkAssets**](DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
 [**cancelUpload**](DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
 [**changeAssetTags**](DefaultApi.md#changeassettags) | **POST** /api/assets/tags | Add a tag to the user's own assets, or remove it
@@ -29,6 +31,7 @@ Method | HTTP request | Description
 [**deleteAlbum**](DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 [**deleteAlbumComment**](DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 [**deleteAlbumLink**](DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
+[**deletePasskey**](DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 [**deleteTag**](DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
 [**disableTotp**](DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 [**dismissDuplicates**](DefaultApi.md#dismissduplicates) | **POST** /api/duplicates/dismiss | These photos are not duplicates of each other, and are not proposed again
@@ -36,6 +39,10 @@ Method | HTTP request | Description
 [**downloadAssets**](DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
 [**emptyTrash**](DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 [**enableTotp**](DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
+[**exchangeOIDC**](DefaultApi.md#exchangeoidc) | **POST** /api/auth/oidc/exchange | The app turns a one-time code into a session
+[**finishOIDC**](DefaultApi.md#finishoidc) | **GET** /api/auth/oidc/callback | Where the identity provider sends the browser back
+[**finishPasskeyLogin**](DefaultApi.md#finishpasskeylogin) | **POST** /api/auth/passkey/finish | Finish signing in with a passkey
+[**finishPasskeyRegistration**](DefaultApi.md#finishpasskeyregistration) | **POST** /api/me/passkeys/finish | Finish adding a passkey
 [**getAdminHealth**](DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
 [**getAdminJobs**](DefaultApi.md#getadminjobs) | **GET** /api/admin/jobs | The job queues, and the jobs that gave up
 [**getAdminOverview**](DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
@@ -49,6 +56,7 @@ Method | HTTP request | Description
 [**getAssetOriginal**](DefaultApi.md#getassetoriginal) | **GET** /api/assets/{id}/original | Read the unmodified original. Supports Range requests for video.
 [**getAssetThumbnail**](DefaultApi.md#getassetthumbnail) | **GET** /api/assets/{id}/thumbnail | Read a WebP thumbnail
 [**getAssetVideoFile**](DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
+[**getAuthMethods**](DefaultApi.md#getauthmethods) | **GET** /api/auth/methods | The ways of signing in that this address offers, besides a password
 [**getAuthStatus**](DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 [**getCollectionAsset**](DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 [**getCollectionBucket**](DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
@@ -63,6 +71,7 @@ Method | HTTP request | Description
 [**getMapPoints**](DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 [**getMapStyle**](DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
 [**getMapTrips**](DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
+[**getOIDCSettings**](DefaultApi.md#getoidcsettings) | **GET** /api/admin/oidc | Single sign-on settings, without the secret
 [**getPartnerBucket**](DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 [**getPartnerBuckets**](DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
 [**getPersonBucket**](DefaultApi.md#getpersonbucket) | **GET** /api/people/{id}/buckets/{month} | Photos of this person in one month
@@ -96,6 +105,7 @@ Method | HTTP request | Description
 [**listDuplicates**](DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
 [**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 [**listPartners**](DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
+[**listPasskeys**](DefaultApi.md#listpasskeys) | **GET** /api/me/passkeys | The current user's passkeys
 [**listPeople**](DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 [**listTags**](DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 [**listUsers**](DefaultApi.md#listusers) | **GET** /api/admin/users | List users
@@ -118,6 +128,7 @@ Method | HTTP request | Description
 [**setAssetEdits**](DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 [**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 [**setMapStyle**](DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
+[**setOIDCSettings**](DefaultApi.md#setoidcsettings) | **PUT** /api/admin/oidc | Change single sign-on. An empty issuer turns it off
 [**setPartner**](DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 [**setPartnerTimeline**](DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
 [**setStackMain**](DefaultApi.md#setstackmain) | **PUT** /api/assets/{id}/stack/main | Make this shot the one the timeline shows
@@ -125,6 +136,7 @@ Method | HTTP request | Description
 [**setVaultPin**](DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 [**setup**](DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 [**setupTotp**](DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
+[**startOIDC**](DefaultApi.md#startoidc) | **GET** /api/auth/oidc/start | Go to the identity provider
 [**unlockPublicLink**](DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 [**unlockVault**](DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 [**updateAlbum**](DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
@@ -210,6 +222,88 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **beginPasskeyLogin**
+> Map<String, Object> beginPasskeyLogin(requestBody)
+
+Start signing in with a passkey
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final requestBody = Map<String, Object>(); // Map<String, Object> | 
+
+try {
+    final result = api_instance.beginPasskeyLogin(requestBody);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->beginPasskeyLogin: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **requestBody** | [**Map<String, Object>**](Object.md)|  | [optional] 
+
+### Return type
+
+[**Map<String, Object>**](Object.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **beginPasskeyRegistration**
+> Map<String, Object> beginPasskeyRegistration(requestBody)
+
+Start adding a passkey
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final requestBody = Map<String, Object>(); // Map<String, Object> | 
+
+try {
+    final result = api_instance.beginPasskeyRegistration(requestBody);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->beginPasskeyRegistration: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **requestBody** | [**Map<String, Object>**](Object.md)|  | [optional] 
+
+### Return type
+
+[**Map<String, Object>**](Object.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -947,6 +1041,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **deletePasskey**
+> deletePasskey(id)
+
+Remove a passkey
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.deletePasskey(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->deletePasskey: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **deleteTag**
 > deleteTag(id)
 
@@ -1213,6 +1347,171 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **exchangeOIDC**
+> User exchangeOIDC(oIDCExchange)
+
+The app turns a one-time code into a session
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final oIDCExchange = OIDCExchange(); // OIDCExchange | 
+
+try {
+    final result = api_instance.exchangeOIDC(oIDCExchange);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->exchangeOIDC: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **oIDCExchange** | [**OIDCExchange**](OIDCExchange.md)|  | 
+
+### Return type
+
+[**User**](User.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **finishOIDC**
+> finishOIDC(code, state)
+
+Where the identity provider sends the browser back
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final code = code_example; // String | 
+final state = state_example; // String | 
+
+try {
+    api_instance.finishOIDC(code, state);
+} catch (e) {
+    print('Exception when calling DefaultApi->finishOIDC: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **code** | **String**|  | [optional] 
+ **state** | **String**|  | [optional] 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **finishPasskeyLogin**
+> Map<String, Object> finishPasskeyLogin(requestBody)
+
+Finish signing in with a passkey
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final requestBody = Map<String, Object>(); // Map<String, Object> | 
+
+try {
+    final result = api_instance.finishPasskeyLogin(requestBody);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->finishPasskeyLogin: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **requestBody** | [**Map<String, Object>**](Object.md)|  | [optional] 
+
+### Return type
+
+[**Map<String, Object>**](Object.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **finishPasskeyRegistration**
+> Map<String, Object> finishPasskeyRegistration(requestBody)
+
+Finish adding a passkey
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final requestBody = Map<String, Object>(); // Map<String, Object> | 
+
+try {
+    final result = api_instance.finishPasskeyRegistration(requestBody);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->finishPasskeyRegistration: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **requestBody** | [**Map<String, Object>**](Object.md)|  | [optional] 
+
+### Return type
+
+[**Map<String, Object>**](Object.md)
 
 ### Authorization
 
@@ -1743,6 +2042,43 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getAuthMethods**
+> AuthMethods getAuthMethods()
+
+The ways of signing in that this address offers, besides a password
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getAuthMethods();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getAuthMethods: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**AuthMethods**](AuthMethods.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -2308,6 +2644,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**List<Trip>**](Trip.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getOIDCSettings**
+> OIDCSettings getOIDCSettings()
+
+Single sign-on settings, without the secret
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getOIDCSettings();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getOIDCSettings: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**OIDCSettings**](OIDCSettings.md)
 
 ### Authorization
 
@@ -3670,6 +4043,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listPasskeys**
+> List<Passkey> listPasskeys()
+
+The current user's passkeys
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listPasskeys();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listPasskeys: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<Passkey>**](Passkey.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listPeople**
 > PeopleList listPeople()
 
@@ -4550,6 +4960,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **setOIDCSettings**
+> OIDCSettings setOIDCSettings(oIDCSettingsUpdate)
+
+Change single sign-on. An empty issuer turns it off
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final oIDCSettingsUpdate = OIDCSettingsUpdate(); // OIDCSettingsUpdate | 
+
+try {
+    final result = api_instance.setOIDCSettings(oIDCSettingsUpdate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setOIDCSettings: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **oIDCSettingsUpdate** | [**OIDCSettingsUpdate**](OIDCSettingsUpdate.md)|  | 
+
+### Return type
+
+[**OIDCSettings**](OIDCSettings.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **setPartner**
 > setPartner(userId, partnerShare)
 
@@ -4822,6 +5273,48 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**TotpSetup**](TotpSetup.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **startOIDC**
+> startOIDC(next, appChallenge)
+
+Go to the identity provider
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final next = next_example; // String | 
+final appChallenge = appChallenge_example; // String | SHA-256 of a secret the app keeps, base64url
+
+try {
+    api_instance.startOIDC(next, appChallenge);
+} catch (e) {
+    print('Exception when calling DefaultApi->startOIDC: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **next** | **String**|  | [optional] 
+ **appChallenge** | **String**| SHA-256 of a secret the app keeps, base64url | [optional] 
+
+### Return type
+
+void (empty response body)
 
 ### Authorization
 

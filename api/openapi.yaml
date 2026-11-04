@@ -1518,6 +1518,178 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/TrashSummary" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/auth/methods:
+    get:
+      operationId: getAuthMethods
+      summary: The ways of signing in that this address offers, besides a password
+      responses:
+        "200":
+          description: The methods
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthMethods" }
+  /api/auth/oidc/start:
+    get:
+      operationId: startOIDC
+      summary: Go to the identity provider
+      parameters:
+        - { name: next, in: query, schema: { type: string } }
+        - { name: appChallenge, in: query, description: "SHA-256 of a secret the app keeps, base64url", schema: { type: string } }
+      responses:
+        "302": { description: To the provider }
+        "404": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+  /api/auth/oidc/callback:
+    get:
+      operationId: finishOIDC
+      summary: Where the identity provider sends the browser back
+      parameters:
+        - { name: code, in: query, schema: { type: string } }
+        - { name: state, in: query, schema: { type: string } }
+      responses:
+        "302": { description: "Into the library, or back to sign-in" }
+  /api/auth/oidc/exchange:
+    post:
+      operationId: exchangeOIDC
+      summary: The app turns a one-time code into a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OIDCExchange" }
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/admin/oidc:
+    get:
+      operationId: getOIDCSettings
+      summary: Single sign-on settings, without the secret
+      responses:
+        "200":
+          description: The settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OIDCSettings" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setOIDCSettings
+      summary: Change single sign-on. An empty issuer turns it off
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OIDCSettingsUpdate" }
+      responses:
+        "200":
+          description: The settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OIDCSettings" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/me/passkeys:
+    get:
+      operationId: listPasskeys
+      summary: The current user's passkeys
+      responses:
+        "200":
+          description: The passkeys
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Passkey" } }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/me/passkeys/{id}:
+    delete:
+      operationId: deletePasskey
+      summary: Remove a passkey
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/me/passkeys/begin:
+    post:
+      operationId: beginPasskeyRegistration
+      summary: Start adding a passkey
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: The answer
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "204": { description: Done }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/me/passkeys/finish:
+    post:
+      operationId: finishPasskeyRegistration
+      summary: Finish adding a passkey
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: The answer
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "204": { description: Done }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/auth/passkey/begin:
+    post:
+      operationId: beginPasskeyLogin
+      summary: Start signing in with a passkey
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: The answer
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "204": { description: Done }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/auth/passkey/finish:
+    post:
+      operationId: finishPasskeyLogin
+      summary: Finish signing in with a passkey
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: The answer
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        "204": { description: Done }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
   /api/admin/external:
     get:
       operationId: getExternalLibrary
@@ -1824,6 +1996,44 @@ components:
       properties:
         assets: { type: integer, format: int64 }
         bytes: { type: integer, format: int64 }
+    AuthMethods:
+      type: object
+      required: [passkeys]
+      properties:
+        passkeys: { type: boolean, description: "This address can use passkeys: HTTPS and a domain name" }
+        ssoLabel: { type: string, description: "The name of the single sign-on button, if it is turned on" }
+    OIDCExchange:
+      type: object
+      required: [code, verifier]
+      properties:
+        code: { type: string }
+        verifier: { type: string }
+    OIDCSettings:
+      type: object
+      required: [issuer, clientId, label, autoCreate, hasSecret]
+      properties:
+        issuer: { type: string }
+        clientId: { type: string }
+        label: { type: string }
+        autoCreate: { type: boolean, description: "A person without an account gets one on first sign-in" }
+        hasSecret: { type: boolean }
+    OIDCSettingsUpdate:
+      type: object
+      required: [issuer, clientId, label, autoCreate]
+      properties:
+        issuer: { type: string }
+        clientId: { type: string }
+        label: { type: string }
+        autoCreate: { type: boolean }
+        secret: { type: string, description: "Left out keeps the one that is saved" }
+    Passkey:
+      type: object
+      required: [id, name, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        createdAt: { type: string, format: date-time }
+        lastUsedAt: { type: string, format: date-time }
     Memory:
       type: object
       required: [kind, title, items]

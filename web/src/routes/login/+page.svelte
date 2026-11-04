@@ -2,7 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { api, ApiError } from '#lib/api.ts';
+	import { onMount } from 'svelte';
+	import { api, ApiError, type AuthMethods } from '#lib/api.ts';
+	import { signInWithPasskey } from '#lib/passkeys.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import AuthLayout from '#lib/design/components/AuthLayout.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
@@ -18,6 +20,36 @@
 	let error = $state('');
 	let showForgot = $state(false);
 	let busy = $state(false);
+
+	let methods = $state<AuthMethods>();
+
+	onMount(async () => {
+		try {
+			methods = await api.authMethods();
+		} catch {
+			// The form below still works.
+		}
+		if (page.url.searchParams.get('sso') === 'failed') {
+			error = tr(
+				'Jedinstvena prijava nije uspjela. Možda nemate račun na ovom serveru.',
+				'Single sign-on did not work. You may not have an account on this server.'
+			);
+		}
+	});
+
+	async function passkey() {
+		busy = true;
+		error = '';
+		try {
+			await signInWithPasskey();
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- validated local path
+			await goto(nextPath(), { invalidateAll: true });
+		} catch {
+			error = tr('Prijava passkeyem nije uspjela.', 'Signing in with a passkey did not work.');
+		} finally {
+			busy = false;
+		}
+	}
 
 	// Only local paths, so a crafted link cannot send the user to another site after sign-in.
 	function nextPath() {
@@ -120,6 +152,18 @@
 			</label>
 			<button class="as-btn" type="submit" disabled={busy}>{tr('Prijavi se', 'Sign in')}</button>
 		</form>
+		{#if methods?.ssoLabel}
+			<a
+				class="as-btn"
+				rel="external"
+				href="/api/auth/oidc/start?next={encodeURIComponent(nextPath())}">{methods.ssoLabel}</a
+			>
+		{/if}
+		{#if methods?.passkeys}
+			<button class="as-btn" type="button" disabled={busy} onclick={passkey}
+				>{tr('Prijava passkeyem', 'Sign in with a passkey')}</button
+			>
+		{/if}
 		<p class="as-links">
 			<a
 				href="#forgot"

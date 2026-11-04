@@ -89,3 +89,15 @@ LEFT JOIN assets a ON a.user_id = u.id
 LEFT JOIN libraries l ON l.id = a.library_id
 GROUP BY u.id
 ORDER BY stored_bytes DESC, u.email;
+
+-- name: CreatePasskey :one
+INSERT INTO passkeys (user_id, credential_id, name, credential) VALUES ($1, $2, $3, $4) RETURNING id;
+
+-- name: ListPasskeys :many
+SELECT id, user_id, credential_id, name, credential, created_at, last_used_at FROM passkeys WHERE user_id = $1 ORDER BY created_at;
+
+-- name: UpdatePasskeyCredential :exec
+UPDATE passkeys SET credential = $2, last_used_at = now() WHERE credential_id = $1;
+
+-- name: DeletePasskey :exec
+DELETE FROM passkeys WHERE id = $1 AND user_id = $2;

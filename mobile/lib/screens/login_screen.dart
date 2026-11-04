@@ -65,6 +65,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _singleSignOn() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(sessionProvider.notifier).signInWithProvider(_server.text);
+    } on LoginFailure catch (failure) {
+      if (mounted) setState(() => _error = failure.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
@@ -147,6 +161,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       busy: _busy,
                       onPressed: _submit,
                     ),
+                    if (!_needsCode) ...[
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _busy ? null : _singleSignOn,
+                        child: const Text('Use single sign-on'),
+                      ),
+                    ],
                   ],
                 ),
               ),

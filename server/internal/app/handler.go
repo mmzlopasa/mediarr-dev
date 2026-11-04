@@ -60,15 +60,18 @@ type Deps struct {
 
 type apiServer struct {
 	Deps
-	queries       *db.Queries
-	userLimiter   *auth.Limiter
-	ipLimiter     *auth.Limiter
-	linkPasswords *auth.Limiter
-	linkUploads   *auth.Limiter
-	vaultPins     *auth.Limiter
-	limits        *rateLimits
-	guestBytes    *byteBudget
-	uploads       *tusd.UnroutedHandler
+	queries           *db.Queries
+	userLimiter       *auth.Limiter
+	ipLimiter         *auth.Limiter
+	linkPasswords     *auth.Limiter
+	linkUploads       *auth.Limiter
+	vaultPins         *auth.Limiter
+	limits            *rateLimits
+	oidcFlows         *shortLived[oidcFlow]
+	oidcCodes         *shortLived[oidcAppCode]
+	passkeyChallenges *shortLived[passkeyChallenge]
+	guestBytes        *byteBudget
+	uploads           *tusd.UnroutedHandler
 	// fullPreviews limits how many full resolution previews are made at once.
 	fullPreviews chan struct{}
 	embeddings   *ml.Cache
@@ -77,15 +80,18 @@ type apiServer struct {
 // NewHandler returns the root HTTP handler.
 func NewHandler(deps Deps) (http.Handler, error) {
 	server := &apiServer{
-		Deps:          deps,
-		userLimiter:   auth.NewLimiter(loginFailuresUser, loginWindow),
-		ipLimiter:     auth.NewLimiter(loginFailuresIP, loginWindow),
-		linkPasswords: auth.NewLimiter(linkPasswordFailures, loginWindow),
-		linkUploads:   auth.NewLimiter(linkUploadsPerHour, time.Hour),
-		vaultPins:     auth.NewLimiter(vaultPinFailures, loginWindow),
-		fullPreviews:  make(chan struct{}, 2),
-		limits:        newRateLimits(),
-		guestBytes:    newByteBudget(),
+		Deps:              deps,
+		userLimiter:       auth.NewLimiter(loginFailuresUser, loginWindow),
+		ipLimiter:         auth.NewLimiter(loginFailuresIP, loginWindow),
+		linkPasswords:     auth.NewLimiter(linkPasswordFailures, loginWindow),
+		linkUploads:       auth.NewLimiter(linkUploadsPerHour, time.Hour),
+		vaultPins:         auth.NewLimiter(vaultPinFailures, loginWindow),
+		fullPreviews:      make(chan struct{}, 2),
+		limits:            newRateLimits(),
+		oidcFlows:         newShortLived[oidcFlow](),
+		oidcCodes:         newShortLived[oidcAppCode](),
+		passkeyChallenges: newShortLived[passkeyChallenge](),
+		guestBytes:        newByteBudget(),
 	}
 	if deps.Pool != nil {
 		server.queries = db.New(deps.Pool)

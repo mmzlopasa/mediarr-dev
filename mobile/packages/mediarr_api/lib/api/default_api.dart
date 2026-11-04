@@ -132,6 +132,126 @@ class DefaultApi {
     }
   }
 
+  /// Start signing in with a passkey
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, Object>] requestBody:
+  Future<Response> beginPasskeyLoginWithHttpInfo({
+    Map<String, Object>? requestBody,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/passkey/begin';
+
+    // ignore: prefer_final_locals
+    Object? postBody = requestBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Start signing in with a passkey
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, Object>] requestBody:
+  Future<Map<String, Object>?> beginPasskeyLogin({
+    Map<String, Object>? requestBody,
+  }) async {
+    final response = await beginPasskeyLoginWithHttpInfo(
+      requestBody: requestBody,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return Map<String, Object>.from(
+        await apiClient.deserializeAsync(
+            await _decodeBodyBytes(response), 'Map<String, Object>'),
+      );
+    }
+    return null;
+  }
+
+  /// Start adding a passkey
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, Object>] requestBody:
+  Future<Response> beginPasskeyRegistrationWithHttpInfo({
+    Map<String, Object>? requestBody,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/passkeys/begin';
+
+    // ignore: prefer_final_locals
+    Object? postBody = requestBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Start adding a passkey
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, Object>] requestBody:
+  Future<Map<String, Object>?> beginPasskeyRegistration({
+    Map<String, Object>? requestBody,
+  }) async {
+    final response = await beginPasskeyRegistrationWithHttpInfo(
+      requestBody: requestBody,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return Map<String, Object>.from(
+        await apiClient.deserializeAsync(
+            await _decodeBodyBytes(response), 'Map<String, Object>'),
+      );
+    }
+    return null;
+  }
+
   /// Apply an action to several of the current user's assets. Other assets are ignored.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1131,6 +1251,55 @@ class DefaultApi {
     }
   }
 
+  /// Remove a passkey
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deletePasskeyWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/passkeys/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Remove a passkey
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deletePasskey(
+    String id,
+  ) async {
+    final response = await deletePasskeyWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Delete a tag. The photos stay.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1484,6 +1653,249 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// The app turns a one-time code into a session
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [OIDCExchange] oIDCExchange (required):
+  Future<Response> exchangeOIDCWithHttpInfo(
+    OIDCExchange oIDCExchange,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/oidc/exchange';
+
+    // ignore: prefer_final_locals
+    Object? postBody = oIDCExchange;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The app turns a one-time code into a session
+  ///
+  /// Parameters:
+  ///
+  /// * [OIDCExchange] oIDCExchange (required):
+  Future<User?> exchangeOIDC(
+    OIDCExchange oIDCExchange,
+  ) async {
+    final response = await exchangeOIDCWithHttpInfo(
+      oIDCExchange,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'User',
+      ) as User;
+    }
+    return null;
+  }
+
+  /// Where the identity provider sends the browser back
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] code:
+  ///
+  /// * [String] state:
+  Future<Response> finishOIDCWithHttpInfo({
+    String? code,
+    String? state,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/oidc/callback';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (code != null) {
+      queryParams.addAll(_queryParams('', 'code', code));
+    }
+    if (state != null) {
+      queryParams.addAll(_queryParams('', 'state', state));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Where the identity provider sends the browser back
+  ///
+  /// Parameters:
+  ///
+  /// * [String] code:
+  ///
+  /// * [String] state:
+  Future<void> finishOIDC({
+    String? code,
+    String? state,
+  }) async {
+    final response = await finishOIDCWithHttpInfo(
+      code: code,
+      state: state,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Finish signing in with a passkey
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, Object>] requestBody:
+  Future<Response> finishPasskeyLoginWithHttpInfo({
+    Map<String, Object>? requestBody,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/passkey/finish';
+
+    // ignore: prefer_final_locals
+    Object? postBody = requestBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Finish signing in with a passkey
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, Object>] requestBody:
+  Future<Map<String, Object>?> finishPasskeyLogin({
+    Map<String, Object>? requestBody,
+  }) async {
+    final response = await finishPasskeyLoginWithHttpInfo(
+      requestBody: requestBody,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return Map<String, Object>.from(
+        await apiClient.deserializeAsync(
+            await _decodeBodyBytes(response), 'Map<String, Object>'),
+      );
+    }
+    return null;
+  }
+
+  /// Finish adding a passkey
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, Object>] requestBody:
+  Future<Response> finishPasskeyRegistrationWithHttpInfo({
+    Map<String, Object>? requestBody,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/passkeys/finish';
+
+    // ignore: prefer_final_locals
+    Object? postBody = requestBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Finish adding a passkey
+  ///
+  /// Parameters:
+  ///
+  /// * [Map<String, Object>] requestBody:
+  Future<Map<String, Object>?> finishPasskeyRegistration({
+    Map<String, Object>? requestBody,
+  }) async {
+    final response = await finishPasskeyRegistrationWithHttpInfo(
+      requestBody: requestBody,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return Map<String, Object>.from(
+        await apiClient.deserializeAsync(
+            await _decodeBodyBytes(response), 'Map<String, Object>'),
+      );
+    }
+    return null;
   }
 
   /// Whether the worker and the analysis service are running
@@ -2235,6 +2647,52 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'MultipartFile',
       ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// The ways of signing in that this address offers, besides a password
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getAuthMethodsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/methods';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The ways of signing in that this address offers, besides a password
+  Future<AuthMethods?> getAuthMethods() async {
+    final response = await getAuthMethodsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AuthMethods',
+      ) as AuthMethods;
     }
     return null;
   }
@@ -3111,6 +3569,52 @@ class DefaultApi {
               as List)
           .cast<Trip>()
           .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// Single sign-on settings, without the secret
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getOIDCSettingsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/oidc';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Single sign-on settings, without the secret
+  Future<OIDCSettings?> getOIDCSettings() async {
+    final response = await getOIDCSettingsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'OIDCSettings',
+      ) as OIDCSettings;
     }
     return null;
   }
@@ -5144,6 +5648,53 @@ class DefaultApi {
     return null;
   }
 
+  /// The current user's passkeys
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listPasskeysWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/passkeys';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The current user's passkeys
+  Future<List<Passkey>?> listPasskeys() async {
+    final response = await listPasskeysWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<Passkey>')
+              as List)
+          .cast<Passkey>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// People recognised in the current user's library
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6297,6 +6848,66 @@ class DefaultApi {
     return null;
   }
 
+  /// Change single sign-on. An empty issuer turns it off
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [OIDCSettingsUpdate] oIDCSettingsUpdate (required):
+  Future<Response> setOIDCSettingsWithHttpInfo(
+    OIDCSettingsUpdate oIDCSettingsUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/oidc';
+
+    // ignore: prefer_final_locals
+    Object? postBody = oIDCSettingsUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change single sign-on. An empty issuer turns it off
+  ///
+  /// Parameters:
+  ///
+  /// * [OIDCSettingsUpdate] oIDCSettingsUpdate (required):
+  Future<OIDCSettings?> setOIDCSettings(
+    OIDCSettingsUpdate oIDCSettingsUpdate,
+  ) async {
+    final response = await setOIDCSettingsWithHttpInfo(
+      oIDCSettingsUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'OIDCSettings',
+      ) as OIDCSettings;
+    }
+    return null;
+  }
+
   /// Share your library with a user, all of it or from a date
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6668,6 +7279,71 @@ class DefaultApi {
       ) as TotpSetup;
     }
     return null;
+  }
+
+  /// Go to the identity provider
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] next:
+  ///
+  /// * [String] appChallenge:
+  ///   SHA-256 of a secret the app keeps, base64url
+  Future<Response> startOIDCWithHttpInfo({
+    String? next,
+    String? appChallenge,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/oidc/start';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (next != null) {
+      queryParams.addAll(_queryParams('', 'next', next));
+    }
+    if (appChallenge != null) {
+      queryParams.addAll(_queryParams('', 'appChallenge', appChallenge));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Go to the identity provider
+  ///
+  /// Parameters:
+  ///
+  /// * [String] next:
+  ///
+  /// * [String] appChallenge:
+  ///   SHA-256 of a secret the app keeps, base64url
+  Future<void> startOIDC({
+    String? next,
+    String? appChallenge,
+  }) async {
+    final response = await startOIDCWithHttpInfo(
+      next: next,
+      appChallenge: appChallenge,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Send a link's password. Success sets a cookie valid only for this link.

@@ -2,7 +2,15 @@
 	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import type { PageProps } from './$types';
-	import { api, ApiError, type ApiKey, type TotpSetup } from '#lib/api.ts';
+	import {
+		api,
+		ApiError,
+		type ApiKey,
+		type AuthMethods,
+		type Passkey,
+		type TotpSetup
+	} from '#lib/api.ts';
+	import { registerPasskey } from '#lib/passkeys.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Card from '#lib/design/components/Card.svelte';
@@ -42,7 +50,45 @@
 		}
 	}
 
-	onMount(loadKeys);
+	let methods = $state<AuthMethods>();
+	let passkeys = $state<Passkey[]>([]);
+	let passkeyName = $state('');
+	let passkeyError = $state('');
+
+	async function loadPasskeys() {
+		passkeys = await api.passkeys();
+	}
+
+	onMount(async () => {
+		await loadKeys();
+		try {
+			methods = await api.authMethods();
+			if (methods.passkeys) await loadPasskeys();
+		} catch (cause) {
+			passkeyError = message(cause);
+		}
+	});
+
+	async function addPasskey(event: SubmitEvent) {
+		event.preventDefault();
+		passkeyError = '';
+		try {
+			await registerPasskey(passkeyName);
+			passkeyName = '';
+			await loadPasskeys();
+		} catch (cause) {
+			passkeyError = cause instanceof Error ? cause.message : message(cause);
+		}
+	}
+
+	async function removePasskey(id: string) {
+		try {
+			await api.deletePasskey(id);
+			await loadPasskeys();
+		} catch (cause) {
+			passkeyError = message(cause);
+		}
+	}
 
 	async function createKey(event: SubmitEvent) {
 		event.preventDefault();
@@ -158,6 +204,22 @@
 			</div>
 		</form>
 	</Card>
+
+	{#if methods?.passkeys}
+		<Card title="Passkeys">
+			{#if passkeyError}<Alert kind="err">{passkeyError}</Alert>{/if}
+			{#each passkeys as key (key.id)}
+				<div class="alb-list">
+					<b>{key.name}</b>
+					<Button small onclick={() => removePasskey(key.id)}>{tr('Ukloni', 'Remove')}</Button>
+				</div>
+			{/each}
+			<form class="form" onsubmit={addPasskey}>
+				<Input label={tr('Naziv passkeya', 'Passkey name')} bind:value={passkeyName} />
+				<Button type="submit" variant="gold" small>{tr('Dodaj passkey', 'Add a passkey')}</Button>
+			</form>
+		</Card>
+	{/if}
 
 	<Card title={tr('API ključevi', 'API keys')}>
 		<p class="alb-meta">
