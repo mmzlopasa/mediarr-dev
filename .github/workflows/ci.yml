@@ -27,15 +27,15 @@ jobs:
         working-directory: .
         run: |
           mkdir -p .dev/cache .dev/library .dev/media-cache
-          docker compose -f deploy/compose.dev.yaml build server
-          docker compose -f deploy/compose.dev.yaml up -d --wait db
-          docker compose -f deploy/compose.dev.yaml run --rm --no-deps --user "$(id -u):$(id -g)" server go test ./...
+          docker compose -f docker/docker-compose.dev.yml build server
+          docker compose -f docker/docker-compose.dev.yml up -d --wait db
+          docker compose -f docker/docker-compose.dev.yml run --rm --no-deps --user "$(id -u):$(id -g)" server go test ./...
 
   ml:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ml
+        working-directory: machine-learning
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -82,15 +82,32 @@ jobs:
       - run: flutter analyze
       - run: flutter test
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: |
+          mkdir -p docs/static/install
+          cp docker/docker-compose.yml docker/example.env docs/monitoring/grafana-dashboard.json docs/static/install/
+      - run: pnpm install --frozen-lockfile
+        working-directory: docs
+      - run: pnpm build
+        working-directory: docs
   compose:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cp deploy/.env.example deploy/.env
-      - run: docker compose -f deploy/compose-docker.yml config --quiet
-      - run: docker compose -f deploy/compose-docker.yml -f deploy/compose.build.yaml config --quiet
-      - run: docker compose -f deploy/compose.dev.yaml config --quiet
-      - run: docker compose -f deploy/compose.landing.yaml config --quiet
+      - run: cp docker/example.env docker/.env
+      - run: docker compose -f docker/docker-compose.yml config --quiet
+      - run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml config --quiet
+      - run: docker compose -f docker/docker-compose.dev.yml config --quiet
+      - run: docker compose -f docker/docker-compose.landing.yml config --quiet
 
   bench:
     runs-on: ubuntu-latest
@@ -104,7 +121,7 @@ jobs:
           node-version: 22
       - run: pnpm install --frozen-lockfile
         working-directory: web
-      - run: docker build -t mediarr-dev-go -f deploy/dev.Dockerfile deploy
+      - run: docker build -t mediarr-dev-go -f docker/dev.Dockerfile docker
       # Search is measured with the real model, which is too large to fetch on every run.
       - uses: actions/cache@v4
         with:

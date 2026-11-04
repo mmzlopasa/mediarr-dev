@@ -63,7 +63,7 @@ services:
 
   ml:
     build:
-      context: ../ml
+      context: ../machine-learning
     user: ${DEV_UID:-1000}:${DEV_GID:-1000}
     environment:
       HOME: /tmp
@@ -71,7 +71,7 @@ services:
       ML_THREADS: "4"
     volumes:
       - ${DEV_MODELS:-../.dev/models}:/models
-      - ../ml/app:/app/app:ro
+      - ../machine-learning/app:/app/app:ro
     mem_limit: 4g
     restart: unless-stopped
 

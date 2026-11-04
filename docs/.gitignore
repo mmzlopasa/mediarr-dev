@@ -1,0 +1,4 @@
+static/install/
+build/
+.docusaurus/
+node_modules/

@@ -1,0 +1,44 @@
+const config = {
+  title: 'Mediarr',
+  tagline: 'Your photos and videos, on your own server',
+  favicon: 'img/logo.svg',
+  url: 'https://docs.mediarr.app',
+  baseUrl: '/',
+  trailingSlash: false,
+  onBrokenLinks: 'throw',
+  markdown: { hooks: { onBrokenMarkdownLinks: 'throw' } },
+  i18n: { defaultLocale: 'en', locales: ['en'] },
+  themes: [
+    [
+      '@easyops-cn/docusaurus-search-local',
+      { hashed: true, docsRouteBasePath: '/', indexBlog: false, indexPages: false },
+    ],
+  ],
+  presets: [
+    [
+      'classic',
+      {
+        docs: { routeBasePath: '/', sidebarPath: './sidebars.js' },
+        blog: false,
+        theme: { customCss: './src/css/custom.css' },
+      },
+    ],
+  ],
+  themeConfig: {
+    colorMode: { defaultMode: 'dark', respectPrefersColorScheme: true },
+    navbar: {
+      title: 'Mediarr',
+      logo: { alt: 'Mediarr', src: 'img/logo.svg' },
+      items: [
+        { to: '/install/docker-compose', label: 'Install', position: 'left' },
+        { to: '/features/mobile-app', label: 'Features', position: 'left' },
+        { to: '/administration/users', label: 'Administration', position: 'left' },
+        { href: 'https://mediarr.app', label: 'Website', position: 'right' },
+        { href: 'https://demo.mediarr.app', label: 'Demo', position: 'right' },
+      ],
+    },
+    footer: { copyright: `Copyright © ${new Date().getFullYear()} Mediarr` },
+    prism: { additionalLanguages: ['bash', 'nginx', 'yaml'] },
+  },
+};
+export default config;

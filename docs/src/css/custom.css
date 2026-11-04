@@ -1,0 +1,41 @@
+@font-face { font-family: Sora; src: url(/fonts/sora-latin-wght-normal.woff2) format('woff2'); font-weight: 100 800; font-display: swap; }
+@font-face { font-family: Sora; src: url(/fonts/sora-latin-ext-wght-normal.woff2) format('woff2'); font-weight: 100 800; font-display: swap; unicode-range: U+0100-02AF; }
+@font-face { font-family: 'Geist Mono'; src: url(/fonts/geist-mono-latin-wght-normal.woff2) format('woff2'); font-weight: 100 900; font-display: swap; }
+
+:root {
+  --ifm-font-family-base: Sora, system-ui, sans-serif;
+  --ifm-font-family-monospace: 'Geist Mono', ui-monospace, monospace;
+  --ifm-color-primary: #5b4fc4;
+  --ifm-color-primary-dark: #5145b6;
+  --ifm-color-primary-darker: #4c41ab;
+  --ifm-color-primary-darkest: #3f368d;
+  --ifm-color-primary-light: #6b60cc;
+  --ifm-color-primary-lighter: #736ad0;
+  --ifm-color-primary-lightest: #8d85da;
+  --ifm-background-color: #eef0f3;
+  --ifm-navbar-background-color: rgba(238, 240, 243, 0.8);
+  --ifm-code-font-size: 92%;
+  --ifm-heading-font-weight: 600;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #ffd76a;
+  --ifm-color-primary-dark: #ffcf4b;
+  --ifm-color-primary-darker: #ffcb3b;
+  --ifm-color-primary-darkest: #f5b50a;
+  --ifm-color-primary-light: #ffdf89;
+  --ifm-color-primary-lighter: #ffe399;
+  --ifm-color-primary-lightest: #ffefc4;
+  --ifm-background-color: #0d0f14;
+  --ifm-background-surface-color: #13161d;
+  --ifm-navbar-background-color: rgba(13, 15, 20, 0.72);
+  --ifm-footer-background-color: #0d0f14;
+  --ifm-font-color-base: #f3f5f7;
+  --ifm-toc-border-color: rgba(255, 255, 255, 0.08);
+  --ifm-color-emphasis-200: rgba(255, 255, 255, 0.08);
+  --docsearch-searchbox-background: #13161d;
+}
+
+.navbar { backdrop-filter: blur(14px); box-shadow: none; border-bottom: 1px solid var(--ifm-toc-border-color); }
+.footer { border-top: 1px solid var(--ifm-toc-border-color); }
+.markdown h1 { letter-spacing: -0.02em; }

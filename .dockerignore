@@ -1,6 +1,6 @@
 .git
 .dev
-deploy/.env
+docker/.env
 mobile
 docs
 **/node_modules

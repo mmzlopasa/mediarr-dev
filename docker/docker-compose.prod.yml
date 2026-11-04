@@ -9,4 +9,4 @@ services:
       context: ..
       dockerfile: server/Dockerfile
   ml:
-    build: ../ml
+    build: ../machine-learning

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Mediarr">
+  <defs>
+    <clipPath id="disc"><circle cx="32" cy="32" r="30"/></clipPath>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3478"/><stop offset="1" stop-color="#1F1B4A"/></linearGradient>
+  </defs>
+  <g clip-path="url(#disc)">
+    <rect width="64" height="64" fill="url(#sky)"/>
+    <circle cx="44" cy="19" r="9" fill="#FFD76A"/>
+    <circle cx="47" cy="16.5" r="1.5" fill="#E9B84A"/>
+    <circle cx="41" cy="22" r="1.1" fill="#E9B84A"/>
+    <path d="M-2 50 L19 24 L33 41 L41 32 L66 60 V66 H-2Z" fill="#6E63C9"/>
+    <path d="M-2 62 L14 44 L27 54 L40 43 L66 66 H-2Z" fill="#8B7CFF"/>
+  </g>
+</svg>

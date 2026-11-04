@@ -1,69 +1,74 @@
-# Mediarr
+<p align="center">
+  <img src="web/static/favicon.svg" width="96" alt="Mediarr">
+</p>
 
+<h1 align="center">Mediarr</h1>
 
-## Tok zahtjeva
+<p align="center">A self-hosted photo and video library, with apps for iPhone and Android.</p>
 
-```
-kod korisnika:       preglednik -> IP-servera:9851 -> nginx (Compose) -> server
-mediarr.app:         internet -> host nginx (80/443, TLS) -> 127.0.0.1:9851 -> landing (statički)
-demo.mediarr.app:    internet -> host nginx (80/443, TLS) -> 127.0.0.1:9852 -> dev stack
-```
+<p align="center">
+  <a href="https://docs.mediarr.app">Documentation</a> ·
+  <a href="https://demo.mediarr.app">Demo</a> ·
+  <a href="https://mediarr.app">Website</a>
+</p>
 
-## Instalacija
+## Features
 
-Korisniku trebaju samo `deploy/compose-docker.yml` i `deploy/.env.example`, kopiran kao `.env`:
+| Feature | Web | Mobile |
+| --- | --- | --- |
+| Automatic background backup | | Yes |
+| Timeline, albums, favourites, archive, trash | Yes | Yes |
+| Locked vault | Yes | Yes |
+| Smart search in plain language | Yes | Yes |
+| People and face recognition | Yes | Yes |
+| Map, places and trips | Yes | Yes |
+| Memories | Yes | Yes |
+| Partner sharing, shared albums, public links | Yes | Yes |
+| Non-destructive editing | Yes | Yes |
+| Duplicates and stacks | Yes | Yes |
+| External libraries | Yes | Yes |
+| Family library | Yes | Yes |
+| AI descriptions with a local model | Yes | Yes |
+| Import from Immich, Google Takeout, iCloud | Yes | |
+| Encrypted backups, restore testing | Yes | |
+| OIDC, two-factor sign-in, API keys | Yes | Yes |
+| Passkeys, kiosk | Yes | |
 
-```sh
-docker compose -f compose-docker.yml up -d
-```
+## Install
 
-Aplikacija se otvara na `http://IP-servera:9851`, bez domene. Domenu i HTTPS korisnik po želji rješava sam, vlastitim reverse proxyjem ispred. Direktoriji iz `UPLOAD_LOCATION` i `CACHE_LOCATION` moraju pripadati korisniku `PUID:PGID`. `--profile ml` uključuje ML servis.
-
-Zaboravljena lozinka ili izgubljen 2FA postavljaju se iz naredbene linije (lozinka se čita sa stdin, a 2FA se isključuje):
-
-```sh
-docker compose exec -T server /mediarr user upsert ime@primjer.hr "Ime" --admin
-```
-
-## Razvoj i demo
-
-```sh
-make dev     # http://127.0.0.1:9852, javno https://demo.mediarr.app
-make lint test e2e lighthouse
-```
-
-`demo.mediarr.app` servira dev stack, pa se promjene koda vide odmah. Zato dev stack ostaje upaljen; `make down` gasi i demo.
-
-## Landing (mediarr.app)
-
-Statička stranica u `landing/`, odvojena od aplikacije. Koristi `dash.css` i fontove iz `web/src/lib/design/`.
-
-```sh
-make landing
-curl https://mediarr.app/health
-```
-
-## Provjera produkcijskog imagea
-
-```sh
-make deploy   # gradi iz repoa, sluša na vrijednosti HTTP_PORT iz deploy/.env (9855)
+```bash
+mkdir -p ~/mediarr && cd ~/mediarr
+curl -fsSL -o docker-compose.yml https://docs.mediarr.app/install/docker-compose.yml
+curl -fsSL -o .env https://docs.mediarr.app/install/example.env
 ```
 
-## Host nginx siteovi (jednom, traži sudo)
+Edit `.env`, make the folders it names, then:
 
-```sh
-sudo cp deploy/nginx/mediarr.app.conf /etc/nginx/sites-available/mediarr.app
-sudo ln -s /etc/nginx/sites-available/mediarr.app /etc/nginx/sites-enabled/mediarr.app
-sudo cp deploy/nginx/demo.mediarr.app.conf /etc/nginx/sites-available/demo.mediarr.app
-sudo cp deploy/nginx/cdn.mediarr.app.conf /etc/nginx/sites-available/cdn.mediarr.app
-sudo ln -s /etc/nginx/sites-available/cdn.mediarr.app /etc/nginx/sites-enabled/cdn.mediarr.app
-sudo ln -s /etc/nginx/sites-available/demo.mediarr.app /etc/nginx/sites-enabled/demo.mediarr.app
-sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d mediarr.app -d www.mediarr.app
-sudo certbot --nginx -d demo.mediarr.app
-sudo certbot --nginx -d cdn.mediarr.app
+```bash
+docker compose up -d
 ```
 
-## Licenca
+Mediarr opens at `http://your-server-ip:9851`. The [installation guide](https://docs.mediarr.app/install/docker-compose) has every step.
 
-Sva prava pridržana. Vidi `LICENSE`.
+## Mobile apps
+
+- [Android (.apk)](https://cdn.mediarr.app/apps/mediarr.apk)
+- [iPhone (.ipa)](https://cdn.mediarr.app/apps/mediarr.ipa)
+
+## Repository
+
+| Folder | Contents |
+| --- | --- |
+| `server/` | API and background worker, in Go |
+| `web/` | Web interface, in SvelteKit |
+| `mobile/` | Flutter app |
+| `machine-learning/` | Search and face recognition service, in Python |
+| `open-api/` | API definition, the source of all clients |
+| `docker/` | Compose files and `example.env` |
+| `docs/` | Documentation site |
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) to work on the code.
+
+## License
+
+All rights reserved. See [LICENSE](LICENSE).

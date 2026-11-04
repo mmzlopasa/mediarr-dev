@@ -3,15 +3,15 @@ export DEV_UID := $(shell id -u)
 export DEV_GID := $(shell id -g)
 
 # Optional per-machine settings, such as DEV_LIBRARY on a separate disk.
--include deploy/.env.dev
+-include docker/.env.dev
 export DEV_LIBRARY DEV_MEDIA_CACHE DEV_MODELS
 
-DEV_COMPOSE := docker compose -f deploy/compose.dev.yaml
+DEV_COMPOSE := docker compose -f docker/docker-compose.dev.yml
 GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down deploy landing testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e lighthouse
+.PHONY: dev down deploy landing docs testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e lighthouse
 
 dev:
 	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache .dev/models .dev/external .dev/backup .dev/ollama
@@ -22,11 +22,18 @@ down:
 
 # Builds the production image from this checkout and runs it locally, to check it.
 deploy:
-	docker compose -f deploy/compose-docker.yml -f deploy/compose.build.yaml up -d --build --wait
+	docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d --build --wait
+
+# Builds the documentation and publishes it on docs.mediarr.app.
+docs:
+	mkdir -p docs/static/install
+	cp docker/docker-compose.yml docker/example.env docs/monitoring/grafana-dashboard.json docs/static/install/
+	cd docs && pnpm install --frozen-lockfile && pnpm build
+	docker compose -f docker/docker-compose.docs.yml up -d --wait
 
 # Publishes landing/ on mediarr.app.
 landing:
-	docker compose -f deploy/compose.landing.yaml up -d --wait
+	docker compose -f docker/docker-compose.landing.yml up -d --wait
 
 TESTDATA ?= $(CURDIR)/.dev/testdata
 SCALE ?= 5
@@ -59,11 +66,11 @@ bench:
 	BENCH_SKIP_FPS=$(BENCH_SKIP_FPS) scripts/bench.sh
 
 gen:
-	cd server && $(GO_TOOL) oapi-codegen -config oapi-codegen.yaml ../api/openapi.yaml
+	cd server && $(GO_TOOL) oapi-codegen -config oapi-codegen.yaml ../open-api/openapi.yaml
 	cd server && $(GO_TOOL) sqlc generate
-	cd web && pnpm exec openapi-typescript ../api/openapi.yaml -o src/lib/api/schema.d.ts
+	cd web && pnpm exec openapi-typescript ../open-api/openapi.yaml -o src/lib/api/schema.d.ts
 	docker run --rm --user $(DEV_UID):$(DEV_GID) -v "$(CURDIR):/repo" $(GENERATOR_IMAGE) generate \
-		-g dart -i /repo/api/openapi.yaml -o /repo/mobile/packages/mediarr_api \
+		-g dart -i /repo/open-api/openapi.yaml -o /repo/mobile/packages/mediarr_api \
 		--additional-properties=pubName=mediarr_api
 	cd mobile/packages/mediarr_api && dart format .
 
@@ -74,13 +81,13 @@ web-build:
 
 lint:
 	cd server && $(GO_TOOL) golangci-lint run ./...
-	cd ml && uv run ruff check . && uv run ruff format --check .
+	cd machine-learning && uv run ruff check . && uv run ruff format --check .
 	cd web && pnpm lint && pnpm check
 	cd mobile && flutter analyze --suppress-analytics
 
 test:
 	$(DEV_COMPOSE) exec -T server go test ./...
-	cd ml && uv run pytest
+	cd machine-learning && uv run pytest
 	cd web && pnpm test
 	cd mobile && flutter test --suppress-analytics
 

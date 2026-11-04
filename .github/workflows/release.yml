@@ -18,8 +18,8 @@ jobs:
             context: .
             dockerfile: server/Dockerfile
           - image: mediarr-ml
-            context: ml
-            dockerfile: ml/Dockerfile
+            context: machine-learning
+            dockerfile: machine-learning/Dockerfile
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
