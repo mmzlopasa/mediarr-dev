@@ -29,7 +29,7 @@ docs:
 	mkdir -p docs/static/install
 	cp docker/docker-compose.yml docker/example.env docs/monitoring/grafana-dashboard.json docs/static/install/
 	cd docs && pnpm install --frozen-lockfile && pnpm build
-	docker compose -f docker/docker-compose.docs.yml up -d --wait
+	docker compose -f docker/docker-compose.docs.yml up -d --force-recreate --wait
 
 # Publishes landing/ on mediarr.app.
 landing:
