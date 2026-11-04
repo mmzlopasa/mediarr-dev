@@ -27,6 +27,7 @@ class BackupStatus {
   const BackupStatus({
     this.enabled = false,
     this.wifiOnly = true,
+    this.chargingOnly = false,
     this.unauthorized = false,
     this.pending = 0,
     this.working = 0,
@@ -42,6 +43,7 @@ class BackupStatus {
   factory BackupStatus.fromMap(Map<Object?, Object?> map) => BackupStatus(
     enabled: map['enabled'] == true,
     wifiOnly: map['wifiOnly'] != false,
+    chargingOnly: map['chargingOnly'] == true,
     unauthorized: map['unauthorized'] == true,
     pending: (map['pending'] as num?)?.toInt() ?? 0,
     working: (map['working'] as num?)?.toInt() ?? 0,
@@ -68,6 +70,7 @@ class BackupStatus {
 
   final bool enabled;
   final bool wifiOnly;
+  final bool chargingOnly;
   final bool unauthorized;
   final int pending;
   final int working;
@@ -208,6 +211,9 @@ class BackupService {
 
   Future<void> setWifiOnly(bool value) =>
       _channel.invokeMethod<void>('setWifiOnly', {'value': value});
+
+  Future<void> setChargingOnly(bool value) =>
+      _channel.invokeMethod<void>('setChargingOnly', {'value': value});
 
   Future<void> retryFailed() => _channel.invokeMethod<void>('retryFailed');
 }

@@ -73,6 +73,7 @@ class BackupEngine(context: Context) {
     private val server get() = prefs.getString(KEY_SERVER, null)
     private val key get() = prefs.getString(KEY_KEY, null)
     private val wifiOnly get() = prefs.getBoolean(KEY_WIFI, true)
+    private val chargingOnly get() = prefs.getBoolean(KEY_CHARGING, false)
     private val albumId get() = prefs.getString(KEY_ALBUM_ID, null)
     private val albumName get() = prefs.getString(KEY_ALBUM_NAME, null)
 
@@ -118,6 +119,12 @@ class BackupEngine(context: Context) {
         runNow()
     }
 
+    fun setChargingOnly(value: Boolean) {
+        prefs.edit().putBoolean(KEY_CHARGING, value).apply()
+        schedule()
+        runNow()
+    }
+
     fun retryFailed() {
         store.retryFailed()
         runNow()
@@ -125,6 +132,7 @@ class BackupEngine(context: Context) {
 
     private fun constraints() = Constraints.Builder()
         .setRequiredNetworkType(if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED)
+        .setRequiresCharging(chargingOnly)
         .build()
 
     /** Android decides when this runs, at most every 15 minutes, also with the app closed. */
@@ -360,6 +368,7 @@ class BackupEngine(context: Context) {
         return mapOf(
             "enabled" to enabled,
             "wifiOnly" to wifiOnly,
+            "chargingOnly" to chargingOnly,
             "unauthorized" to prefs.getBoolean(KEY_UNAUTHORIZED, false),
             "pending" to (counts[BackupStatus.PENDING] ?: 0),
             "working" to (counts[BackupStatus.UPLOADING] ?: 0),
@@ -387,6 +396,7 @@ class BackupEngine(context: Context) {
         private const val KEY_SERVER = "server"
         private const val KEY_KEY = "key"
         private const val KEY_WIFI = "wifiOnly"
+        private const val KEY_CHARGING = "chargingOnly"
         private const val KEY_ALBUM_ID = "albumId"
         private const val KEY_ALBUM_NAME = "albumName"
     }

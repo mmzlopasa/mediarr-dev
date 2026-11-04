@@ -44,6 +44,7 @@ final class BackupEngine: NSObject {
     static let enabled = "backup.enabled"
     static let server = "backup.server"
     static let wifiOnly = "backup.wifiOnly"
+    static let chargingOnly = "backup.chargingOnly"
     static let albumID = "backup.albumID"
     static let albumName = "backup.albumName"
     static let onlyNewPending = "backup.onlyNewPending"
@@ -103,6 +104,8 @@ final class BackupEngine: NSObject {
 
   private var enabled: Bool { defaults.bool(forKey: Keys.enabled) }
   private var wifiOnly: Bool { defaults.object(forKey: Keys.wifiOnly) as? Bool ?? true }
+  private var chargingOnly: Bool { defaults.bool(forKey: Keys.chargingOnly) }
+  private var pluggedIn = false
   private var paused: Bool { defaults.bool(forKey: Keys.unauthorized) }
 
   // MARK: Starting and stopping
@@ -110,6 +113,7 @@ final class BackupEngine: NSObject {
   /// Called at launch, including when iOS launches the app in the background.
   func activate() {
     _ = session
+    watchBattery()
     queue.async { [self] in
       guard enabled else { return }
       // An older version could back up everything. Without a chosen album, nothing may be sent.
@@ -214,6 +218,34 @@ final class BackupEngine: NSObject {
     }
   }
 
+  /// UIDevice belongs to the main thread, so the engine keeps its own copy of the answer.
+  private func watchBattery() {
+    DispatchQueue.main.async { [self] in
+      UIDevice.current.isBatteryMonitoringEnabled = true
+      NotificationCenter.default.addObserver(
+        forName: UIDevice.batteryStateDidChangeNotification, object: nil, queue: .main
+      ) { [weak self] _ in self?.readBattery() }
+      readBattery()
+    }
+  }
+
+  private func readBattery() {
+    let state = UIDevice.current.batteryState
+    let plugged = state == .charging || state == .full
+    queue.async { [self] in
+      pluggedIn = plugged
+      pump()
+    }
+  }
+
+  func setChargingOnly(_ value: Bool) {
+    queue.async { [self] in
+      defaults.set(value, forKey: Keys.chargingOnly)
+      scheduleBackgroundWork()
+      pump()
+    }
+  }
+
   func setWifiOnly(_ value: Bool) {
     queue.async { [self] in
       defaults.set(value, forKey: Keys.wifiOnly)
@@ -307,6 +339,7 @@ final class BackupEngine: NSObject {
 
   /// Starts more transfers, while the queue has room. Called whenever anything finishes.
   private func pump() {
+    if chargingOnly && !pluggedIn { return }
     guard enabled, !paused else {
       finishIfIdle()
       return
@@ -502,6 +535,7 @@ final class BackupEngine: NSObject {
       var out: [String: Any] = [
         "enabled": enabled,
         "wifiOnly": wifiOnly,
+        "chargingOnly": chargingOnly,
         "unauthorized": paused,
         "pending": counts["pending"] ?? 0,
         "working": (counts["exporting"] ?? 0) + (counts["uploading"] ?? 0),
@@ -556,7 +590,7 @@ final class BackupEngine: NSObject {
 
     let processing = BGProcessingTaskRequest(identifier: BackupEngine.processingTaskID)
     processing.requiresNetworkConnectivity = true
-    processing.requiresExternalPower = false
+    processing.requiresExternalPower = chargingOnly
     processing.earliestBeginDate = Date(timeIntervalSinceNow: BackupEngine.checkInterval)
     try? BGTaskScheduler.shared.submit(processing)
   }

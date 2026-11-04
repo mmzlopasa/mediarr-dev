@@ -38,6 +38,9 @@ enum BackupChannel {
       case "setWifiOnly":
         engine.setWifiOnly(arguments["value"] as? Bool ?? true)
         result(nil)
+      case "setChargingOnly":
+        engine.setChargingOnly(arguments["value"] as? Bool ?? false)
+        result(nil)
       case "retryFailed":
         engine.retryFailed()
         result(nil)

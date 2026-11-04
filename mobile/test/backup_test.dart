@@ -43,6 +43,7 @@ void main() {
     final status = BackupStatus.fromMap({
       'enabled': true,
       'wifiOnly': false,
+      'chargingOnly': true,
       'pending': 2,
       'working': 1,
       'verified': 7,
@@ -54,6 +55,7 @@ void main() {
     });
     expect(status.total, 11);
     expect(status.wifiOnly, isFalse);
+    expect(status.chargingOnly, isTrue);
     expect(status.lastFinished, DateTime.fromMillisecondsSinceEpoch(1000000));
     expect(status.failures.single.error, 'damaged');
   });

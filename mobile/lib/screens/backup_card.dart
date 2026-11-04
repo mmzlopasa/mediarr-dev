@@ -245,6 +245,21 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                 ),
               ],
             ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Only while charging', style: text.bodyMedium),
+                ),
+                Switch(
+                  value: status.chargingOnly,
+                  activeTrackColor: Palette.gold,
+                  onChanged: (value) async {
+                    await ref.read(backupProvider).setChargingOnly(value);
+                    await _refresh();
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 4),
             Text(
               '${status.verified} of ${status.total} verified on the server',
