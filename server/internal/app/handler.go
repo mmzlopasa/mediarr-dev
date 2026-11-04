@@ -53,7 +53,9 @@ type Deps struct {
 	ProxyHops int
 	// MaxUploadBytes limits one file, if above zero.
 	MaxUploadBytes int64
-	CachePath      string
+	// MetricsToken turns on /metrics, for whoever has it.
+	MetricsToken string
+	CachePath    string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
 }
@@ -67,6 +69,7 @@ type apiServer struct {
 	linkUploads       *auth.Limiter
 	vaultPins         *auth.Limiter
 	limits            *rateLimits
+	metrics           *metrics
 	oidcFlows         *shortLived[oidcFlow]
 	oidcCodes         *shortLived[oidcAppCode]
 	passkeyChallenges *shortLived[passkeyChallenge]
@@ -103,7 +106,10 @@ func NewHandler(deps Deps) (http.Handler, error) {
 	}
 
 	server.embeddings = ml.NewCache(ml.New(deps.MLURL))
+	server.metrics = newMetrics(server)
 	r := chi.NewRouter()
+	r.Use(traced)
+	r.Use(server.metrics.observe)
 	r.Use(middleware.Recoverer)
 	r.Use(trustProxies(deps.ProxyHops))
 	r.Use(requireJSONForWrites)
@@ -113,6 +119,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		r.Use(server.limitAndAudit)
 	}
 	r.NotFound(notFound)
+	r.Get("/metrics", server.serveMetrics)
 	api.HandlerFromMux(server, r)
 	return r, nil
 }

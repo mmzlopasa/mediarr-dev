@@ -16,6 +16,7 @@ type Config struct {
 	ExternalPath      string
 	ProxyHops         int
 	MaxUploadBytes    int64
+	MetricsToken      string
 	WorkerConcurrency int
 	VideoAccel        string
 	MLURL             string
@@ -30,6 +31,7 @@ func Load() Config {
 		CachePath:         env("CACHE_PATH", "/data/cache"),
 		ExternalPath:      env("EXTERNAL_PATH", "/external"),
 		ProxyHops:         envInt("TRUSTED_PROXY_HOPS", 0),
+		MetricsToken:      os.Getenv("METRICS_TOKEN"),
 		MaxUploadBytes:    int64(envInt("MAX_UPLOAD_MB", 0)) * 1024 * 1024,
 		WorkerConcurrency: concurrency(os.Getenv("WORKER_CONCURRENCY"), runtime.NumCPU()),
 		VideoAccel:        os.Getenv("VIDEO_ACCEL"),

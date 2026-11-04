@@ -107,11 +107,16 @@ func serve(ctx context.Context, cfg config.Config) error {
 	if err := prepareStorage(ctx, cfg, queries); err != nil {
 		return err
 	}
+	stopTracing, err := app.StartTracing(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = stopTracing(context.WithoutCancel(ctx)) }()
 	inserter, err := jobs.NewInserter(pool)
 	if err != nil {
 		return fmt.Errorf("create job client: %w", err)
 	}
-	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, ProxyHops: cfg.ProxyHops, MaxUploadBytes: cfg.MaxUploadBytes})
+	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, ProxyHops: cfg.ProxyHops, MaxUploadBytes: cfg.MaxUploadBytes, MetricsToken: cfg.MetricsToken})
 	if err != nil {
 		return err
 	}

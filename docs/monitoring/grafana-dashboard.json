@@ -1,0 +1,22 @@
+{
+  "title": "Mediarr",
+  "uid": "mediarr",
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "panels": [
+    { "id": 1, "title": "Requests per second", "type": "timeseries", "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [{ "expr": "sum by (status) (rate(mediarr_http_request_seconds_count[5m]))" }] },
+    { "id": 2, "title": "Slowest routes, p95 seconds", "type": "timeseries", "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [{ "expr": "topk(5, histogram_quantile(0.95, sum by (route, le) (rate(mediarr_http_request_seconds_bucket[5m]))))" }] },
+    { "id": 3, "title": "Free disk space", "type": "gauge", "gridPos": { "x": 0, "y": 8, "w": 6, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 } },
+      "targets": [{ "expr": "mediarr_disk_bytes{state=\"free\"} / mediarr_disk_bytes{state=\"total\"}" }] },
+    { "id": 4, "title": "Assets", "type": "timeseries", "gridPos": { "x": 6, "y": 8, "w": 6, "h": 8 },
+      "targets": [{ "expr": "mediarr_assets" }] },
+    { "id": 5, "title": "Jobs waiting and failed", "type": "timeseries", "gridPos": { "x": 12, "y": 8, "w": 6, "h": 8 },
+      "targets": [{ "expr": "mediarr_jobs{state=~\"queued|failed\"}" }] },
+    { "id": 6, "title": "Server memory", "type": "timeseries", "gridPos": { "x": 18, "y": 8, "w": 6, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "targets": [{ "expr": "process_resident_memory_bytes" }] }
+  ]
+}
