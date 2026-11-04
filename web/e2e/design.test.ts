@@ -66,6 +66,8 @@ async function shootMediarr(page: Page, path: string, theme: string, selector?: 
 	await page.goto(path);
 	await page.locator(selector ?? 'main').waitFor();
 	await page.waitForLoadState('networkidle');
+	// The owner asked for these beside the reference design, so they are not compared with it.
+	await page.addStyleTag({ content: '.srv-wrap, .nav-more { visibility: hidden; }' });
 	return shoot(page, selector);
 }
 

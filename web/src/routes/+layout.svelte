@@ -8,6 +8,14 @@
 	let { children }: LayoutProps = $props();
 
 	$effect(() => watchTheme());
+	// The loader from app.html covers the page until it can be used.
+	$effect(() => {
+		const boot = document.getElementById('boot');
+		if (!boot) return;
+		boot.style.opacity = '0';
+		const timer = setTimeout(() => boot.remove(), 200);
+		return () => clearTimeout(timer);
+	});
 	$effect(() => {
 		document.documentElement.lang = lang();
 	});

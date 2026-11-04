@@ -113,6 +113,7 @@ part 'model/public_link.dart';
 part 'model/quota_update.dart';
 part 'model/search_filters.dart';
 part 'model/search_result.dart';
+part 'model/server_status.dart';
 part 'model/setup_request.dart';
 part 'model/share_link.dart';
 part 'model/share_link_create.dart';

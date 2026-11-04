@@ -50,6 +50,7 @@ export type Duplicates = components['schemas']['Duplicates'];
 export type DuplicateGroup = components['schemas']['DuplicateGroup'];
 export type MapPoints = components['schemas']['MapPoints'];
 export type Memory = components['schemas']['Memory'];
+export type ServerStatus = components['schemas']['ServerStatus'];
 export type StoryExport = components['schemas']['StoryExport'];
 export type SearchResult = components['schemas']['SearchResult'];
 export type Person = components['schemas']['Person'];
@@ -187,6 +188,7 @@ export const api = {
 	mergePeople: (id: string, ids: string[]) =>
 		request<void>(fetch, `/api/people/${id}/merge`, { ids }),
 	analysisProgress: () => request<AnalysisProgress>(fetch, '/api/admin/analysis'),
+	serverStatus: () => request<ServerStatus>(fetch, '/api/server/status'),
 	memories: (date: string) => request<Memory[]>(fetch, `/api/memories?date=${date}`),
 	createStory: (title: string, ids: string[]) =>
 		request<StoryExport>(fetch, '/api/stories', { title, ids }),

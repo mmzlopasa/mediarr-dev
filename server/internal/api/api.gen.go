@@ -1686,6 +1686,17 @@ type SearchResult struct {
 	Smart bool `json:"smart"`
 }
 
+// ServerStatus defines model for ServerStatus.
+type ServerStatus struct {
+	DiskTotalBytes int64 `json:"diskTotalBytes"`
+	DiskUsedBytes  int64 `json:"diskUsedBytes"`
+
+	// LatestVersion Known only when the update check is on and has answered
+	LatestVersion   *string `json:"latestVersion,omitempty"`
+	UpdateAvailable bool    `json:"updateAvailable"`
+	Version         string  `json:"version"`
+}
+
 // SetupRequest defines model for SetupRequest.
 type SetupRequest struct {
 	Email    string `json:"email"`
@@ -2588,6 +2599,9 @@ type ServerInterface interface {
 	// AskSearch Turn a question into words to search for, with the local model
 	// (POST /api/search/ask)
 	AskSearch(w http.ResponseWriter, r *http.Request)
+	// GetServerStatus The version of this server, whether a newer one exists, and its disk
+	// (GET /api/server/status)
+	GetServerStatus(w http.ResponseWriter, r *http.Request)
 	// CreateStoryExport Make a video of the chosen photos. Runs in the background.
 	// (POST /api/stories)
 	CreateStoryExport(w http.ResponseWriter, r *http.Request)
@@ -3470,6 +3484,12 @@ func (_ Unimplemented) SearchAssets(w http.ResponseWriter, r *http.Request, para
 // AskSearch Turn a question into words to search for, with the local model
 // (POST /api/search/ask)
 func (_ Unimplemented) AskSearch(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetServerStatus The version of this server, whether a newer one exists, and its disk
+// (GET /api/server/status)
+func (_ Unimplemented) GetServerStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6899,6 +6919,20 @@ func (siw *ServerInterfaceWrapper) AskSearch(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// GetServerStatus operation middleware
+func (siw *ServerInterfaceWrapper) GetServerStatus(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetServerStatus(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateStoryExport operation middleware
 func (siw *ServerInterfaceWrapper) CreateStoryExport(w http.ResponseWriter, r *http.Request) {
 
@@ -7467,6 +7501,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/admin/users", wrapper.CreateUser)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/server/status", wrapper.GetServerStatus)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/overview", wrapper.GetAdminOverview)

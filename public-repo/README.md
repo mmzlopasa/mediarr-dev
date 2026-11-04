@@ -93,7 +93,7 @@ Smart search, faces and AI descriptions are optional. Everything else works with
 
 - Your files stay on your disk, and originals are read only.
 - Search, faces, places and AI descriptions all run on your server.
-- By default, the only outside request is for the map's background, from `cdn.mediarr.app`. You can change it in the settings.
+- By default there are two outside requests, and neither carries your photos: the map's background from `cdn.mediarr.app`, and a check for a new version on GitHub. You can change or turn off both.
 
 ## How much it needs
 

@@ -151,6 +151,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getPublicOriginal**](doc//DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 *DefaultApi* | [**getPublicThumbnail**](doc//DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 *DefaultApi* | [**getPublicVideoFile**](doc//DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+*DefaultApi* | [**getServerStatus**](doc//DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
 *DefaultApi* | [**getStoryExport**](doc//DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
 *DefaultApi* | [**getStoryVideo**](doc//DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
 *DefaultApi* | [**getTagBucket**](doc//DefaultApi.md#gettagbucket) | **GET** /api/tags/{id}/buckets/{month} | Photos carrying a tag in one month
@@ -304,6 +305,7 @@ Class | Method | HTTP request | Description
  - [QuotaUpdate](doc//QuotaUpdate.md)
  - [SearchFilters](doc//SearchFilters.md)
  - [SearchResult](doc//SearchResult.md)
+ - [ServerStatus](doc//ServerStatus.md)
  - [SetupRequest](doc//SetupRequest.md)
  - [ShareLink](doc//ShareLink.md)
  - [ShareLinkCreate](doc//ShareLinkCreate.md)

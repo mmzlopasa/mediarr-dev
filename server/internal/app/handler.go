@@ -51,6 +51,8 @@ type Deps struct {
 	ExternalPath string
 	// ProxyHops is how many reverse proxies stand in front of the bundled nginx.
 	ProxyHops int
+	// CheckUpdates asks the public repository now and then whether a newer version exists.
+	CheckUpdates bool
 	// DemoEmail is an account anyone may sign in to, so it can look at everything and change nothing.
 	DemoEmail string
 	// MaxUploadBytes limits one file, if above zero.
@@ -99,6 +101,9 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		oidcCodes:         newShortLived[oidcAppCode](),
 		passkeyChallenges: newShortLived[passkeyChallenge](),
 		guestBytes:        newByteBudget(),
+	}
+	if deps.CheckUpdates && Version != "dev" {
+		go server.watchUpdates()
 	}
 	if deps.Pool != nil {
 		server.queries = db.New(deps.Pool)

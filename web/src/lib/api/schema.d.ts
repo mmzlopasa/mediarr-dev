@@ -227,6 +227,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/server/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The version of this server, whether a newer one exists, and its disk */
+        get: operations["getServerStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/overview": {
         parameters: {
             query?: never;
@@ -3024,6 +3041,16 @@ export interface components {
         PasswordConfirm: {
             password: string;
         };
+        ServerStatus: {
+            version: string;
+            /** @description Known only when the update check is on and has answered */
+            latestVersion?: string;
+            updateAvailable: boolean;
+            /** Format: int64 */
+            diskUsedBytes: number;
+            /** Format: int64 */
+            diskTotalBytes: number;
+        };
         AdminOverview: {
             /** Format: int64 */
             users: number;
@@ -3599,6 +3626,27 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    getServerStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerStatus"];
+                };
+            };
+            401: components["responses"]["Error"];
         };
     };
     getAdminOverview: {

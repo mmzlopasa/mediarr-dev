@@ -1152,3 +1152,157 @@ video.viewer-media {
 .main:has(.ppl-grid) {
 	max-width: none;
 }
+
+/* Storage, server state and version, at the bottom of the side menu. */
+.srv {
+	display: grid;
+	gap: 8px;
+	padding: 0 4px 12px;
+	font-size: 0.8rem;
+}
+.srv-card {
+	display: grid;
+	gap: 4px;
+	padding: 10px 12px;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	background: var(--soft);
+}
+.srv-card small {
+	color: var(--haze);
+}
+.srv-bar {
+	display: block;
+	height: 5px;
+	margin-top: 4px;
+	overflow: hidden;
+	border-radius: 3px;
+	background: var(--line);
+}
+.srv-bar span {
+	display: block;
+	height: 100%;
+	background: var(--gold);
+}
+.srv-line {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	color: var(--haze);
+}
+.srv-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--ok);
+}
+.srv-dot.off {
+	background: var(--err);
+}
+.srv-v {
+	margin-left: auto;
+	color: var(--dim);
+}
+.srv-new {
+	padding: 6px 10px;
+	border: 1px solid var(--gold);
+	border-radius: 10px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+.srv-cmd {
+	padding: 10px 12px;
+	overflow-x: auto;
+	border-radius: 10px;
+	background: var(--soft-2);
+	font-size: 0.8rem;
+}
+
+/* The albums under their entry in the side menu. */
+.nav-row {
+	position: relative;
+}
+.nav-more {
+	position: absolute;
+	top: 50%;
+	right: 6px;
+	display: grid;
+	place-items: center;
+	width: 28px;
+	height: 28px;
+	translate: 0 -50%;
+	border: 0;
+	border-radius: 8px;
+	background: none;
+	color: inherit;
+	cursor: pointer;
+}
+.nav-more:hover {
+	background: var(--soft-2);
+}
+.nav-more svg {
+	transition: rotate 0.15s;
+}
+.nav-more.open svg {
+	rotate: 180deg;
+}
+.nav-sub {
+	display: grid;
+	gap: 2px;
+	margin: 2px 0 4px 34px;
+}
+.nav-sub a {
+	padding: 5px 10px;
+	overflow: hidden;
+	border-radius: 8px;
+	color: var(--haze);
+	font-size: 0.85rem;
+	text-decoration: none;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.nav-sub a:hover,
+.nav-sub a.on {
+	background: var(--soft-2);
+	color: var(--ink);
+}
+
+/* Memories above the timeline. */
+.day-strip {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 18px;
+	padding-bottom: 4px;
+	overflow-x: auto;
+}
+.day-card {
+	position: relative;
+	flex: none;
+	width: clamp(150px, 22vw, 300px);
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	border-radius: 14px;
+	color: #fff;
+	text-decoration: none;
+}
+.day-card img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.day-card span {
+	position: absolute;
+	inset: auto 0 0;
+	padding: 24px 12px 10px;
+	background: linear-gradient(transparent, #000a);
+	font-weight: 500;
+}
+.srv-wrap {
+	margin-top: auto;
+}
+.srv-wrap + .side-foot {
+	margin-top: 0;
+}

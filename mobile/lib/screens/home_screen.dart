@@ -12,6 +12,7 @@ import '../services/shared_files.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
 import 'account_screen.dart';
+import 'server_status.dart';
 import 'albums_screen.dart';
 import 'timeline_screen.dart';
 import 'upload_screen.dart';
@@ -31,6 +32,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final session = ref.read(sessionProvider).value;
+      if (mounted && session != null) {
+        unawaited(showUpdateNoticeIfNew(context, session));
+      }
+    });
     SharedFilesChannel.listen((files) {
       if (!mounted) return;
       ref.read(uploadsProvider.notifier).addShared(files);

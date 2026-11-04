@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -21,6 +22,8 @@
 		roleLabel,
 		footLabel,
 		footLinks,
+		sideExtra,
+		navChildren = {},
 		children
 	}: {
 		nav: NavItem[];
@@ -29,8 +32,48 @@
 		roleLabel: string;
 		footLabel: string;
 		footLinks: { href: string; icon: IconName; label: string }[];
+		sideExtra?: Snippet;
+		navChildren?: Record<string, () => Promise<{ href: string; label: string }[]>>;
 		children: Snippet;
 	} = $props();
+
+	const OPEN_KEY = 'mediarr_nav_open';
+	let openPaths = $state<string[]>([]);
+	let children_ = $state<Record<string, { href: string; label: string }[]>>({});
+
+	async function loadChildren(path: string) {
+		try {
+			children_[path] = (await navChildren[path]?.()) ?? [];
+		} catch {
+			children_[path] = [];
+		}
+	}
+
+	function toggleChildren(path: string) {
+		if (openPaths.includes(path)) {
+			openPaths = openPaths.filter((other) => other !== path);
+		} else {
+			openPaths = [...openPaths, path];
+			loadChildren(path);
+		}
+		try {
+			localStorage.setItem(OPEN_KEY, JSON.stringify(openPaths));
+		} catch {
+			// Storage can be blocked; the menu still works on this page.
+		}
+	}
+
+	onMount(() => {
+		try {
+			const saved: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? '[]');
+			if (Array.isArray(saved)) {
+				openPaths = saved.filter((path) => path in navChildren);
+				openPaths.forEach(loadChildren);
+			}
+		} catch {
+			// Nothing was saved in a form that can be read.
+		}
+	});
 
 	const closeSide = () => document.documentElement.classList.remove('side-open');
 	const openSide = () => document.documentElement.classList.add('side-open');
@@ -76,13 +119,43 @@
 		<nav class="nav">
 			{#each nav as item (item.path)}
 				{@const on = page.url.pathname === item.path}
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- paths come from the static nav list -->
-				<a href={item.path} class="nav-i" class:on aria-current={on ? 'page' : undefined}>
-					<span class="ic"><Icon name={item.icon} /></span>
-					<span>{tr(item.hr, item.en)}</span>
-				</a>
+				<div class="nav-row">
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- paths come from the static nav list -->
+					<a href={item.path} class="nav-i" class:on aria-current={on ? 'page' : undefined}>
+						<span class="ic"><Icon name={item.icon} /></span>
+						<span>{tr(item.hr, item.en)}</span>
+					</a>
+					{#if navChildren[item.path]}
+						<button
+							type="button"
+							class="nav-more"
+							class:open={openPaths.includes(item.path)}
+							aria-expanded={openPaths.includes(item.path)}
+							aria-label={tr(`Proširi: ${item.hr}`, `Expand ${item.en}`)}
+							onclick={() => toggleChildren(item.path)}
+						>
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"><path d="m6 9 6 6 6-6" /></svg
+							>
+						</button>
+					{/if}
+				</div>
+				{#if openPaths.includes(item.path)}
+					<div class="nav-sub">
+						{#each children_[item.path] ?? [] as child (child.href)}
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved path -->
+							<a href={child.href} class:on={page.url.pathname === child.href}>{child.label}</a>
+						{/each}
+					</div>
+				{/if}
 			{/each}
 		</nav>
+		{@render sideExtra?.()}
 		<div class="side-foot">
 			{#each footLinks as link (link.href)}
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved href -->

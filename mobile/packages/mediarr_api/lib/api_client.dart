@@ -395,6 +395,8 @@ class ApiClient {
           return SearchFilters.fromJson(value);
         case 'SearchResult':
           return SearchResult.fromJson(value);
+        case 'ServerStatus':
+          return ServerStatus.fromJson(value);
         case 'SetupRequest':
           return SetupRequest.fromJson(value);
         case 'ShareLink':

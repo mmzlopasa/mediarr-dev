@@ -12,6 +12,7 @@ import '../services/uploads.dart';
 import '../theme.dart';
 import '../services/settings.dart';
 import '../timeline/layout.dart';
+import 'stories_strip.dart';
 import 'album_sheets.dart';
 import 'asset_picture.dart';
 import 'organize_screens.dart';
@@ -144,6 +145,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       );
     } else {
       body = TimelineGrid(
+        header: StoriesStrip(session: session),
         store: store,
         session: session,
         selected: _selected,
@@ -238,8 +240,10 @@ class TimelineGrid extends StatelessWidget {
     required this.selected,
     required this.onToggle,
     required this.onOpen,
+    this.header,
   });
 
+  final Widget? header;
   final TimelineStore store;
   final Session session;
   final Set<String> selected;
@@ -261,6 +265,7 @@ class TimelineGrid extends StatelessWidget {
             key: PageStorageKey(store),
             scrollCacheExtent: const ScrollCacheExtent.pixels(900),
             slivers: [
+              if (header != null) SliverToBoxAdapter(child: header),
               for (final month in months)
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: side),

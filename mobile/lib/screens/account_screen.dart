@@ -6,6 +6,7 @@ import '../services/backup.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'organize_screens.dart';
+import 'server_status.dart';
 import 'settings_screen.dart';
 
 class AccountScreen extends ConsumerWidget {
@@ -46,6 +47,8 @@ class AccountScreen extends ConsumerWidget {
           row('Email', session.user.email),
           Divider(color: Palette.line),
           row('Server', session.serverUrl),
+          const SizedBox(height: 18),
+          const ServerStatusCard(),
           const SizedBox(height: 12),
           ListTile(
             contentPadding: EdgeInsets.zero,

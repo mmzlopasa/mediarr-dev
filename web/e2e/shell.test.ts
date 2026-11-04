@@ -166,6 +166,27 @@ test('a sign-in link cannot redirect to another site', async ({ page }) => {
 	expect(new URL(page.url()).host).not.toBe('example.com');
 });
 
+test('the side menu shows the disk, the server and its version', async ({ page }) => {
+	await signIn(page, 'user');
+	await page.goto('/');
+	await expect(page.locator('.srv-card')).toBeVisible();
+	await expect(page.locator('.srv-line')).toContainText(/\S/);
+	await expect(page.locator('.srv-dot.off')).toHaveCount(0);
+});
+
+test('albums open under their entry in the side menu', async ({ page }) => {
+	await signIn(page, 'user');
+	await page.goto('/');
+	const more = page.locator('.nav-more');
+	await expect(more).toHaveAttribute('aria-expanded', 'false');
+	await more.click();
+	await expect(more).toHaveAttribute('aria-expanded', 'true');
+	await expect(page.locator('.nav-sub')).toBeAttached();
+	await page.reload();
+	await expect(page.locator('.nav-more')).toHaveAttribute('aria-expanded', 'true');
+	await page.locator('.nav-more').click();
+});
+
 test('signing out ends the session', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/');

@@ -86,6 +86,7 @@ doc/PublicLink.md
 doc/QuotaUpdate.md
 doc/SearchFilters.md
 doc/SearchResult.md
+doc/ServerStatus.md
 doc/SetupRequest.md
 doc/ShareLink.md
 doc/ShareLinkCreate.md
@@ -205,6 +206,7 @@ lib/model/public_link.dart
 lib/model/quota_update.dart
 lib/model/search_filters.dart
 lib/model/search_result.dart
+lib/model/server_status.dart
 lib/model/setup_request.dart
 lib/model/share_link.dart
 lib/model/share_link_create.dart
@@ -231,3 +233,4 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
+test/server_status_test.dart

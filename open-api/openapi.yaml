@@ -208,6 +208,17 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/server/status:
+    get:
+      operationId: getServerStatus
+      summary: The version of this server, whether a newer one exists, and its disk
+      responses:
+        "200":
+          description: Current status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerStatus" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/admin/overview:
     get:
       operationId: getAdminOverview
@@ -2879,6 +2890,15 @@ components:
       required: [password]
       properties:
         password: { type: string }
+    ServerStatus:
+      type: object
+      required: [version, updateAvailable, diskUsedBytes, diskTotalBytes]
+      properties:
+        version: { type: string }
+        latestVersion: { type: string, description: "Known only when the update check is on and has answered" }
+        updateAvailable: { type: boolean }
+        diskUsedBytes: { type: integer, format: int64 }
+        diskTotalBytes: { type: integer, format: int64 }
     AdminOverview:
       type: object
       required: [users, photos, videos, processing, failed, libraryBytes, diskTotalBytes, diskFreeBytes, jobs, version, databaseVersion]

@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { api, type AssetList } from '#lib/api.ts';
+	import Stories from '#lib/organize/Stories.svelte';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Badge from '#lib/design/components/Badge.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
@@ -164,6 +165,8 @@
 		</div>
 	</section>
 {/if}
+
+<Stories />
 
 <Timeline bind:this={timeline} onOpen={open} onCount={(count) => (total = count)}>
 	{#snippet selectionActions(ids, clear)}

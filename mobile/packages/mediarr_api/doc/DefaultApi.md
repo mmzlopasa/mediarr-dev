@@ -100,6 +100,7 @@ Method | HTTP request | Description
 [**getPublicOriginal**](DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 [**getPublicThumbnail**](DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 [**getPublicVideoFile**](DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+[**getServerStatus**](DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
 [**getStoryExport**](DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
 [**getStoryVideo**](DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
 [**getTagBucket**](DefaultApi.md#gettagbucket) | **GET** /api/tags/{id}/buckets/{month} | Photos carrying a tag in one month
@@ -3857,6 +3858,43 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getServerStatus**
+> ServerStatus getServerStatus()
+
+The version of this server, whether a newer one exists, and its disk
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getServerStatus();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getServerStatus: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**ServerStatus**](ServerStatus.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

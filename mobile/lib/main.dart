@@ -46,7 +46,24 @@ class MediarrApp extends ConsumerWidget {
       },
       home: session.when(
         loading: () => Scaffold(
-          body: Center(child: CircularProgressIndicator(color: Palette.gold)),
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'mediarr.',
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 34,
+                    fontWeight: FontWeight.w700,
+                    color: Palette.gold,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                CircularProgressIndicator(color: Palette.gold),
+              ],
+            ),
+          ),
         ),
         error: (_, _) => const LoginScreen(),
         data: (value) =>

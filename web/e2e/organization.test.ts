@@ -11,6 +11,7 @@ async function upload(page: Page, name: string) {
 	await page.locator('main').waitFor();
 	// The first look at the server has to finish, or there is nothing to count yet.
 	await page.waitForLoadState('networkidle');
+	await page.waitForTimeout(800);
 	const before = await page.locator('.tl-tile').count();
 	await page.locator('input[type=file]').last().setInputFiles(photo(name));
 	await expect(page.locator('.tl-tile')).toHaveCount(before + 1, { timeout: 40000 });
