@@ -20,6 +20,7 @@ git -C "$ROOT" archive HEAD "${INCLUDE[@]}" | tar -x -C "$EXPORT"
 for path in "${EXCLUDE[@]}"; do rm -rf "${EXPORT:?}/$path"; done
 cp -r "$ROOT/public-repo/.github/." "$EXPORT/.github/"
 cp "$ROOT/public-repo/README.md" "$EXPORT/README.md"
+cp -r "$ROOT/public-repo/design" "$EXPORT/design"
 cp "$ROOT/public-repo/docker-README.md" "$EXPORT/docker/README.md"
 
 FORBID=$HOME/.config/mediarr-publish-forbid
