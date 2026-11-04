@@ -165,3 +165,32 @@ test('a public link with a password shows the album, also on a phone', async ({
 
 	await owner.request.delete(`/api/albums/${album.id}`);
 });
+
+test('a link becomes a slideshow for a TV, once the administrator allows it', async ({
+	page,
+	browser
+}) => {
+	await signIn(page, 'owner');
+	const albums = await page.request.post('/api/albums', { data: { title: 'E2E frame' } });
+	const album = await albums.json();
+	const made = await page.request.post(`/api/albums/${album.id}/links`, { data: {} });
+	const { token } = await made.json();
+	const baseURL = new URL(page.url() === 'about:blank' ? 'http://127.0.0.1:9852' : page.url())
+		.origin;
+
+	const guest = await browser.newContext({ baseURL });
+	const tv = await guest.newPage();
+	await tv.goto(`/kiosk/${token}`);
+	await expect(tv.getByText(/nije uključio|has not turned/)).toBeVisible();
+
+	const admin = await browser.newContext({ baseURL });
+	await admin.request.post('/api/auth/login', {
+		data: { email: 'e2e-admin@example.com', password: process.env.E2E_PASSWORD }
+	});
+	await admin.request.put('/api/admin/features/kiosk', { data: { enabled: true } });
+	await tv.reload();
+	await expect(tv.getByText(/Ovaj album je prazan|This album is empty/)).toBeVisible();
+	await admin.request.put('/api/admin/features/kiosk', { data: { enabled: false } });
+	await admin.close();
+	await guest.close();
+});

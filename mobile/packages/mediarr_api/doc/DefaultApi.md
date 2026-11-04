@@ -30,11 +30,13 @@ Method | HTTP request | Description
 [**createStoryExport**](DefaultApi.md#createstoryexport) | **POST** /api/stories | Make a video of the chosen photos. Runs in the background.
 [**createUpload**](DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 [**createUser**](DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
+[**createWebhook**](DefaultApi.md#createwebhook) | **POST** /api/admin/webhooks | Add an address. Its signing secret is shown only once
 [**deleteAlbum**](DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 [**deleteAlbumComment**](DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 [**deleteAlbumLink**](DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 [**deletePasskey**](DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 [**deleteTag**](DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
+[**deleteWebhook**](DefaultApi.md#deletewebhook) | **DELETE** /api/admin/webhooks/{id} | Stop telling this address
 [**disableTotp**](DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 [**dismissDuplicates**](DefaultApi.md#dismissduplicates) | **POST** /api/duplicates/dismiss | These photos are not duplicates of each other, and are not proposed again
 [**dissolveStack**](DefaultApi.md#dissolvestack) | **DELETE** /api/assets/{id}/stack | Split a stack back into single shots. It is not put together again by itself
@@ -116,6 +118,7 @@ Method | HTTP request | Description
 [**listPeople**](DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 [**listTags**](DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 [**listUsers**](DefaultApi.md#listusers) | **GET** /api/admin/users | List users
+[**listWebhooks**](DefaultApi.md#listwebhooks) | **GET** /api/admin/webhooks | Addresses told about events, without their secrets
 [**lockVault**](DefaultApi.md#lockvault) | **POST** /api/vault/lock | Lock the vault again
 [**login**](DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 [**logout**](DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
@@ -147,6 +150,7 @@ Method | HTTP request | Description
 [**setupTotp**](DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
 [**startBackupRun**](DefaultApi.md#startbackuprun) | **POST** /api/admin/backup/runs | Back up now, or test bringing the newest backup back
 [**startOIDC**](DefaultApi.md#startoidc) | **GET** /api/auth/oidc/start | Go to the identity provider
+[**testWebhook**](DefaultApi.md#testwebhook) | **POST** /api/admin/webhooks/{id}/test | Send a test event now
 [**unlockPublicLink**](DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 [**unlockVault**](DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 [**updateAlbum**](DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
@@ -1008,6 +1012,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **createWebhook**
+> WebhookCreated createWebhook(webhookCreate)
+
+Add an address. Its signing secret is shown only once
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final webhookCreate = WebhookCreate(); // WebhookCreate | 
+
+try {
+    final result = api_instance.createWebhook(webhookCreate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->createWebhook: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **webhookCreate** | [**WebhookCreate**](WebhookCreate.md)|  | 
+
+### Return type
+
+[**WebhookCreated**](WebhookCreated.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **deleteAlbum**
 > deleteAlbum(id)
 
@@ -1188,6 +1233,46 @@ try {
     api_instance.deleteTag(id);
 } catch (e) {
     print('Exception when calling DefaultApi->deleteTag: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteWebhook**
+> deleteWebhook(id)
+
+Stop telling this address
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.deleteWebhook(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->deleteWebhook: $e\n');
 }
 ```
 
@@ -4467,6 +4552,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listWebhooks**
+> List<Webhook> listWebhooks()
+
+Addresses told about events, without their secrets
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listWebhooks();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listWebhooks: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<Webhook>**](Webhook.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **lockVault**
 > lockVault()
 
@@ -5710,6 +5832,46 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **next** | **String**|  | [optional] 
  **appChallenge** | **String**| SHA-256 of a secret the app keeps, base64url | [optional] 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **testWebhook**
+> testWebhook(id)
+
+Send a test event now
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.testWebhook(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->testWebhook: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
 
 ### Return type
 

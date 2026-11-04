@@ -250,7 +250,13 @@ func (s *apiServer) GetPublicLink(w http.ResponseWriter, r *http.Request, token 
 		writeJSON(w, http.StatusOK, api.PublicLink{Locked: true})
 		return
 	}
+	kiosk, err := s.featureOn(r.Context(), featureKiosk)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
 	out := api.PublicLink{
+		Kiosk:         kiosk,
 		AllowDownload: link.AllowDownload, AllowUpload: link.AllowUpload,
 		UploadOnly: link.UploadOnly, Watermarked: link.Watermark.Valid,
 	}

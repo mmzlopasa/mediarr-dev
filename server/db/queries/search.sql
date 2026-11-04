@@ -41,6 +41,9 @@ UPDATE albums SET rules = jsonb_set(rules, '{person}', to_jsonb(sqlc.arg('target
 WHERE owner_id = sqlc.arg('user_id') AND rules IS NOT NULL
   AND (rules->>'person')::uuid = ANY(sqlc.arg('sources')::uuid[]);
 
+-- name: CountUserPeople :one
+SELECT count(*) FROM people WHERE user_id = $1;
+
 -- name: CreatePerson :one
 INSERT INTO people (user_id) VALUES ($1) RETURNING id;
 

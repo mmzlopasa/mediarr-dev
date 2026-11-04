@@ -1812,6 +1812,56 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/admin/webhooks:
+    get:
+      operationId: listWebhooks
+      summary: Addresses told about events, without their secrets
+      responses:
+        "200":
+          description: The webhooks
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Webhook" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createWebhook
+      summary: Add an address. Its signing secret is shown only once
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookCreate" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WebhookCreated" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/webhooks/{id}:
+    delete:
+      operationId: deleteWebhook
+      summary: Stop telling this address
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/webhooks/{id}/test:
+    post:
+      operationId: testWebhook
+      summary: Send a test event now
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "202": { description: Queued }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/admin/external:
     get:
       operationId: getExternalLibrary
@@ -2240,6 +2290,28 @@ components:
         enabled: { type: boolean, description: "The administrator has turned this on" }
         analysisOn: { type: boolean, description: "Picture analysis runs, without which no text is read" }
         items: { type: array, items: { $ref: "#/components/schemas/TimelineItem" } }
+    Webhook:
+      type: object
+      required: [id, url, events, lastStatus, lastError]
+      properties:
+        id: { type: string, format: uuid }
+        url: { type: string }
+        events: { type: array, items: { type: string, enum: [asset.ready, person.created, backup.finished] } }
+        lastStatus: { type: integer }
+        lastError: { type: string }
+        lastAt: { type: string, format: date-time }
+    WebhookCreate:
+      type: object
+      required: [url, events]
+      properties:
+        url: { type: string }
+        events: { type: array, items: { type: string, enum: [asset.ready, person.created, backup.finished] } }
+    WebhookCreated:
+      type: object
+      required: [id, secret]
+      properties:
+        id: { type: string, format: uuid }
+        secret: { type: string }
     Memory:
       type: object
       required: [kind, title, items]
@@ -2489,7 +2561,7 @@ components:
         watermark: { type: string }
     PublicLink:
       type: object
-      required: [locked, allowDownload, allowUpload, uploadOnly, watermarked]
+      required: [locked, allowDownload, allowUpload, uploadOnly, watermarked, kiosk]
       properties:
         locked: { type: boolean, description: A password is needed first. Nothing else is told until then. }
         title: { type: string }
@@ -2498,6 +2570,7 @@ components:
         allowUpload: { type: boolean }
         uploadOnly: { type: boolean }
         watermarked: { type: boolean }
+        kiosk: { type: boolean, description: "This server allows this link as a slideshow" }
     LinkPassword:
       type: object
       required: [password]

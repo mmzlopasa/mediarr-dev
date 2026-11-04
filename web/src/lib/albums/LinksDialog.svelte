@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { api, type Album, type ShareLink } from '#lib/api.ts';
+	import { api, type Album, type ShareLink, type Features } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Checkbox from '#lib/design/components/Checkbox.svelte';
@@ -14,6 +14,8 @@
 	let links = $state<ShareLink[]>();
 	let failed = $state(false);
 	let created = $state<string>();
+	let createdKiosk = $state<string>();
+	let kioskOn = $state(false);
 	let busy = $state(false);
 
 	let label = $state('');
@@ -61,6 +63,8 @@
 			});
 			// Built from the address in use, so this works on an IP address as well as on a domain.
 			created = `${location.origin}/s/${link.token}`;
+			createdKiosk = `${location.origin}/kiosk/${link.token}`;
+			kioskOn = (await api.features().catch(() => ({ kiosk: false }) as Features)).kiosk ?? false;
 			label = password = expires = limit = watermark = '';
 			await load();
 		} catch (cause) {
@@ -124,6 +128,20 @@
 			<input class="in" readonly value={created} aria-label={tr('Adresa linka', 'Link address')} />
 			<Button small variant="gold" onclick={copy}>{tr('Kopiraj', 'Copy')}</Button>
 		</div>
+		{#if kioskOn}
+			<p class="alb-meta">
+				{tr(
+					'Slideshow za TV ili tablet, bez prijave:',
+					'A slideshow for a TV or tablet, with no sign-in:'
+				)}
+			</p>
+			<input
+				class="in"
+				readonly
+				value={createdKiosk}
+				aria-label={tr('Adresa slideshowa', 'Slideshow address')}
+			/>
+		{/if}
 	{/if}
 	{#if failed}
 		<Alert kind="err">{tr('Linkovi se nisu učitali.', 'Links could not be loaded.')}</Alert>

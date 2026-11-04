@@ -128,6 +128,9 @@ part 'model/vault_pin_change.dart';
 part 'model/vault_session.dart';
 part 'model/vault_status.dart';
 part 'model/vault_unlock.dart';
+part 'model/webhook.dart';
+part 'model/webhook_create.dart';
+part 'model/webhook_created.dart';
 
 /// An [ApiClient] instance that uses the default values obtained from
 /// the OpenAPI specification file.

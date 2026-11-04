@@ -10,7 +10,8 @@
 		type ImportEntry,
 		type BackupRun,
 		type BackupSettings,
-		type Features
+		type Features,
+		type Webhook
 	} from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
@@ -194,6 +195,41 @@
 				'err',
 				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
 			);
+		}
+	}
+
+	let webhooks = $state<Webhook[]>([]);
+	let hookUrl = $state('');
+	let hookEvents = $state<Webhook['events']>(['asset.ready']);
+	let hookSecret = $state('');
+
+	async function loadHooks() {
+		webhooks = await api.webhooks().catch(() => webhooks);
+	}
+
+	onMount(loadHooks);
+
+	async function addHook(event: SubmitEvent) {
+		event.preventDefault();
+		try {
+			const made = await api.createWebhook(hookUrl, hookEvents);
+			hookSecret = made.secret;
+			hookUrl = '';
+			await loadHooks();
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
+			);
+		}
+	}
+
+	async function hookAction(action: () => Promise<void>) {
+		try {
+			await action();
+			await loadHooks();
+		} catch {
+			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
 		}
 	}
 
@@ -479,6 +515,45 @@
 					</span>
 				</div>
 			{/each}
+		</Card>
+	{/if}
+	{#if features.webhooks}
+		<Card title="Webhooks">
+			<p class="alb-meta">
+				{tr(
+					'Javlja drugim programima što se dogodilo, samo po ID-u, potpisano zaglavljem X-Mediarr-Signature. Adrese na lokalnoj mreži su dopuštene, a sam ovaj server i metadata servisi nisu.',
+					'Tells other programs what happened, by id only, signed in the X-Mediarr-Signature header. Addresses on the local network are allowed, but not this server itself or metadata services.'
+				)}
+			</p>
+			{#if hookSecret}
+				<Alert kind="ok"
+					>{tr('Tajna za potpis, prikazuje se samo sada:', 'The signing secret, shown only now:')}
+					<code data-testid="hook-secret">{hookSecret}</code></Alert
+				>
+			{/if}
+			{#each webhooks as hook (hook.id)}
+				<div class="alb-list" data-hook={hook.url}>
+					<b>{hook.url}</b>
+					<span class="alb-meta">
+						{hook.events.join(', ')}
+						{#if hook.lastStatus}· {hook.lastStatus}{/if}
+						{#if hook.lastError}· {hook.lastError}{/if}
+					</span>
+					<Button small onclick={() => hookAction(() => api.testWebhook(hook.id))}
+						>{tr('Testiraj', 'Test')}</Button
+					>
+					<Button small onclick={() => hookAction(() => api.deleteWebhook(hook.id))}
+						>{tr('Ukloni', 'Remove')}</Button
+					>
+				</div>
+			{/each}
+			<form class="form" onsubmit={addHook}>
+				<Input label={tr('Adresa webhooka', 'Webhook address')} bind:value={hookUrl} />
+				{#each ['asset.ready', 'person.created', 'backup.finished'] as const as name (name)}
+					<label><input type="checkbox" bind:group={hookEvents} value={name} /> {name}</label>
+				{/each}
+				<Button type="submit" variant="gold" small>{tr('Dodaj webhook', 'Add a webhook')}</Button>
+			</form>
 		</Card>
 	{/if}
 	<Card title={tr('Karta', 'Map')}>

@@ -425,6 +425,12 @@ class ApiClient {
           return VaultStatus.fromJson(value);
         case 'VaultUnlock':
           return VaultUnlock.fromJson(value);
+        case 'Webhook':
+          return Webhook.fromJson(value);
+        case 'WebhookCreate':
+          return WebhookCreate.fromJson(value);
+        case 'WebhookCreated':
+          return WebhookCreated.fromJson(value);
         default:
           dynamic match;
           if (value is List &&

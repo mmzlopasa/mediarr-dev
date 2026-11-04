@@ -96,7 +96,9 @@ type Options struct {
 	ExternalPath string
 	// DatabaseURL is what a backup reads the database with.
 	DatabaseURL string
-	VideoAccel  string
+	// AllowLocalWebhooks is for tests, whose receiver is on this machine.
+	AllowLocalWebhooks bool
+	VideoAccel         string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
 }
@@ -125,6 +127,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &organizeWorker{deps: d})
 	river.AddWorker(workers, &importWorker{deps: d})
 	river.AddWorker(workers, &backupWorker{deps: d})
+	river.AddWorker(workers, &webhookWorker{deps: d})
 	river.AddWorker(workers, &backupTickWorker{deps: d})
 	river.AddWorker(workers, &externalScanWorker{deps: d})
 
@@ -309,7 +312,7 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 		}
 	}
 
-	return pgx.BeginFunc(ctx, w.pool, func(tx pgx.Tx) error {
+	err = pgx.BeginFunc(ctx, w.pool, func(tx pgx.Tx) error {
 		q := w.queries.WithTx(tx)
 		if motionPath != "" {
 			if err := q.UpsertAssetFile(ctx, db.UpsertAssetFileParams{AssetID: id, Kind: "motion_video", Path: motionPath}); err != nil {
@@ -337,6 +340,14 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 		_, err := w.client().InsertTx(ctx, tx, AnalyzeArgs{AssetID: job.Args.AssetID, Revision: asset.EditRevision}, nil)
 		return err
 	})
+	if err != nil {
+		return err
+	}
+	// Only a new asset is news: an edited one has been ready all along.
+	if asset.Status != "ready" {
+		w.emitWebhook(ctx, EventAssetReady, map[string]string{"assetId": assetID, "userId": uuidString(asset.UserID)})
+	}
+	return nil
 }
 
 type sidecarWorker struct {

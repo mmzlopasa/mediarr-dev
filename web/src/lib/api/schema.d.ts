@@ -1975,6 +1975,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Addresses told about events, without their secrets */
+        get: operations["listWebhooks"];
+        put?: never;
+        /** Add an address. Its signing secret is shown only once */
+        post: operations["createWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/webhooks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Stop telling this address */
+        delete: operations["deleteWebhook"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/webhooks/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a test event now */
+        post: operations["testWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/external": {
         parameters: {
             query?: never;
@@ -2417,6 +2469,25 @@ export interface components {
             analysisOn: boolean;
             items: components["schemas"]["TimelineItem"][];
         };
+        Webhook: {
+            /** Format: uuid */
+            id: string;
+            url: string;
+            events: ("asset.ready" | "person.created" | "backup.finished")[];
+            lastStatus: number;
+            lastError: string;
+            /** Format: date-time */
+            lastAt?: string;
+        };
+        WebhookCreate: {
+            url: string;
+            events: ("asset.ready" | "person.created" | "backup.finished")[];
+        };
+        WebhookCreated: {
+            /** Format: uuid */
+            id: string;
+            secret: string;
+        };
         Memory: {
             /** @enum {string} */
             kind: "on_this_day" | "week";
@@ -2669,6 +2740,8 @@ export interface components {
             allowUpload: boolean;
             uploadOnly: boolean;
             watermarked: boolean;
+            /** @description This server allows this link as a slideshow */
+            kiosk: boolean;
         };
         LinkPassword: {
             password: string;
@@ -6215,6 +6288,100 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    listWebhooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The webhooks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    createWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebhookCreate"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookCreated"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    deleteWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    testWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     getExternalLibrary: {

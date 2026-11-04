@@ -1195,6 +1195,66 @@ class DefaultApi {
     return null;
   }
 
+  /// Add an address. Its signing secret is shown only once
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [WebhookCreate] webhookCreate (required):
+  Future<Response> createWebhookWithHttpInfo(
+    WebhookCreate webhookCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/webhooks';
+
+    // ignore: prefer_final_locals
+    Object? postBody = webhookCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Add an address. Its signing secret is shown only once
+  ///
+  /// Parameters:
+  ///
+  /// * [WebhookCreate] webhookCreate (required):
+  Future<WebhookCreated?> createWebhook(
+    WebhookCreate webhookCreate,
+  ) async {
+    final response = await createWebhookWithHttpInfo(
+      webhookCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'WebhookCreated',
+      ) as WebhookCreated;
+    }
+    return null;
+  }
+
   /// Delete an album, but not its photos. Owner only.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1451,6 +1511,55 @@ class DefaultApi {
     String id,
   ) async {
     final response = await deleteTagWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Stop telling this address
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteWebhookWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/webhooks/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop telling this address
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteWebhook(
+    String id,
+  ) async {
+    final response = await deleteWebhookWithHttpInfo(
       id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -6176,6 +6285,53 @@ class DefaultApi {
     return null;
   }
 
+  /// Addresses told about events, without their secrets
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listWebhooksWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/webhooks';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Addresses told about events, without their secrets
+  Future<List<Webhook>?> listWebhooks() async {
+    final response = await listWebhooksWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<Webhook>')
+              as List)
+          .cast<Webhook>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// Lock the vault again
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7846,6 +8002,55 @@ class DefaultApi {
     final response = await startOIDCWithHttpInfo(
       next: next,
       appChallenge: appChallenge,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Send a test event now
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> testWebhookWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/webhooks/{id}/test'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Send a test event now
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> testWebhook(
+    String id,
+  ) async {
+    final response = await testWebhookWithHttpInfo(
+      id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

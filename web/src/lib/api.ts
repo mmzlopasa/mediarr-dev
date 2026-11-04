@@ -23,6 +23,7 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type Webhook = components['schemas']['Webhook'];
 export type Documents = components['schemas']['Documents'];
 export type Features = Record<string, boolean>;
 export type BackupSettings = components['schemas']['BackupSettings'];
@@ -243,6 +244,12 @@ export const api = {
 	startBackupRun: (kind: BackupRun['kind']) =>
 		request<void>(fetch, '/api/admin/backup/runs', { kind }),
 	documents: () => request<Documents>(fetch, '/api/documents'),
+	webhooks: () => request<Webhook[]>(fetch, '/api/admin/webhooks'),
+	createWebhook: (url: string, events: Webhook['events']) =>
+		request<{ id: string; secret: string }>(fetch, '/api/admin/webhooks', { url, events }),
+	deleteWebhook: (id: string) =>
+		request<void>(fetch, `/api/admin/webhooks/${id}`, undefined, 'DELETE'),
+	testWebhook: (id: string) => request<void>(fetch, `/api/admin/webhooks/${id}/test`, {}),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>

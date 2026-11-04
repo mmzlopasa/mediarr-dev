@@ -353,3 +353,14 @@ type VaultSession struct {
 	UserID    pgtype.UUID
 	ExpiresAt pgtype.Timestamptz
 }
+
+type Webhook struct {
+	ID         pgtype.UUID
+	Url        string
+	Secret     string
+	Events     []string
+	LastStatus int32
+	LastError  string
+	LastAt     pgtype.Timestamptz
+	CreatedAt  pgtype.Timestamptz
+}

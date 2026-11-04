@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countUserPeople = `-- name: CountUserPeople :one
+SELECT count(*) FROM people WHERE user_id = $1
+`
+
+func (q *Queries) CountUserPeople(ctx context.Context, userID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countUserPeople, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createPerson = `-- name: CreatePerson :one
 INSERT INTO people (user_id) VALUES ($1) RETURNING id
 `

@@ -17,11 +17,12 @@ import (
 )
 
 // features are the additions an administrator turns on. All are off until then.
-var features = []string{jobs.FeatureBackup, featureFilters, featureDocuments, "family", "webhooks", "kiosk", "descriptions"}
+var features = []string{jobs.FeatureBackup, featureFilters, featureDocuments, "family", "webhooks", featureKiosk, "descriptions"}
 
 const (
 	featureFilters   = "filters"
 	featureDocuments = "documents"
+	featureKiosk     = "kiosk"
 )
 
 func (s *apiServer) featureOn(ctx context.Context, name string) (bool, error) {

@@ -70,7 +70,19 @@ type analyzeWorker struct {
 }
 
 func (w *analyzeWorker) Work(ctx context.Context, job *river.Job[AnalyzeArgs]) error {
-	err := AnalyzeAsset(ctx, w.pool, w.queries, w.client, toPG(job.Args.AssetID))
+	id := toPG(job.Args.AssetID)
+	var owner pgtype.UUID
+	before := int64(-1)
+	if asset, err := w.queries.GetAsset(ctx, id); err == nil {
+		owner = asset.UserID
+		before, _ = w.queries.CountUserPeople(ctx, owner)
+	}
+	err := AnalyzeAsset(ctx, w.pool, w.queries, w.client, id)
+	if err == nil && before >= 0 {
+		if after, countErr := w.queries.CountUserPeople(ctx, owner); countErr == nil && after > before {
+			w.emitWebhook(ctx, EventPersonCreated, map[string]string{"assetId": uuidString(id), "userId": uuidString(owner)})
+		}
+	}
 	var status *ml.StatusError
 	if errors.As(err, &status) && status.Unreadable() {
 		slog.Warn("the analysis could not read a picture", "asset", job.Args.AssetID, "error", err)

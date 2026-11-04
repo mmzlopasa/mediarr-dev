@@ -20,6 +20,7 @@ class PublicLink {
     required this.allowUpload,
     required this.uploadOnly,
     required this.watermarked,
+    required this.kiosk,
   });
 
   /// A password is needed first. Nothing else is told until then.
@@ -49,6 +50,9 @@ class PublicLink {
 
   bool watermarked;
 
+  /// This server allows this link as a slideshow
+  bool kiosk;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -59,7 +63,8 @@ class PublicLink {
           other.allowDownload == allowDownload &&
           other.allowUpload == allowUpload &&
           other.uploadOnly == uploadOnly &&
-          other.watermarked == watermarked;
+          other.watermarked == watermarked &&
+          other.kiosk == kiosk;
 
   @override
   int get hashCode =>
@@ -70,11 +75,12 @@ class PublicLink {
       (allowDownload.hashCode) +
       (allowUpload.hashCode) +
       (uploadOnly.hashCode) +
-      (watermarked.hashCode);
+      (watermarked.hashCode) +
+      (kiosk.hashCode);
 
   @override
   String toString() =>
-      'PublicLink[locked=$locked, title=$title, description=$description, allowDownload=$allowDownload, allowUpload=$allowUpload, uploadOnly=$uploadOnly, watermarked=$watermarked]';
+      'PublicLink[locked=$locked, title=$title, description=$description, allowDownload=$allowDownload, allowUpload=$allowUpload, uploadOnly=$uploadOnly, watermarked=$watermarked, kiosk=$kiosk]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -93,6 +99,7 @@ class PublicLink {
     json[r'allowUpload'] = this.allowUpload;
     json[r'uploadOnly'] = this.uploadOnly;
     json[r'watermarked'] = this.watermarked;
+    json[r'kiosk'] = this.kiosk;
     return json;
   }
 
@@ -124,6 +131,7 @@ class PublicLink {
         allowUpload: mapValueOfType<bool>(json, r'allowUpload')!,
         uploadOnly: mapValueOfType<bool>(json, r'uploadOnly')!,
         watermarked: mapValueOfType<bool>(json, r'watermarked')!,
+        kiosk: mapValueOfType<bool>(json, r'kiosk')!,
       );
     }
     return null;
@@ -185,5 +193,6 @@ class PublicLink {
     'allowUpload',
     'uploadOnly',
     'watermarked',
+    'kiosk',
   };
 }

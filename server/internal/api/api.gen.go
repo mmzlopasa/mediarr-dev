@@ -536,6 +536,48 @@ func (e TimelineItemKind) Valid() bool {
 	}
 }
 
+// Defines values for WebhookEvents.
+const (
+	WebhookEventsAssetReady     WebhookEvents = "asset.ready"
+	WebhookEventsBackupFinished WebhookEvents = "backup.finished"
+	WebhookEventsPersonCreated  WebhookEvents = "person.created"
+)
+
+// Valid indicates whether the value is a known member of the WebhookEvents enum.
+func (e WebhookEvents) Valid() bool {
+	switch e {
+	case WebhookEventsAssetReady:
+		return true
+	case WebhookEventsBackupFinished:
+		return true
+	case WebhookEventsPersonCreated:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for WebhookCreateEvents.
+const (
+	WebhookCreateEventsAssetReady     WebhookCreateEvents = "asset.ready"
+	WebhookCreateEventsBackupFinished WebhookCreateEvents = "backup.finished"
+	WebhookCreateEventsPersonCreated  WebhookCreateEvents = "person.created"
+)
+
+// Valid indicates whether the value is a known member of the WebhookCreateEvents enum.
+func (e WebhookCreateEvents) Valid() bool {
+	switch e {
+	case WebhookCreateEventsAssetReady:
+		return true
+	case WebhookCreateEventsBackupFinished:
+		return true
+	case WebhookCreateEventsPersonCreated:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListAlbumsParamsSort.
 const (
 	Date    ListAlbumsParamsSort = "date"
@@ -1528,6 +1570,9 @@ type PublicLink struct {
 	AllowUpload   bool    `json:"allowUpload"`
 	Description   *string `json:"description,omitempty"`
 
+	// Kiosk This server allows this link as a slideshow
+	Kiosk bool `json:"kiosk"`
+
 	// Locked A password is needed first. Nothing else is told until then.
 	Locked      bool    `json:"locked"`
 	Title       *string `json:"title,omitempty"`
@@ -1745,6 +1790,34 @@ type VaultUnlock struct {
 	Pin string `json:"pin"`
 }
 
+// Webhook defines model for Webhook.
+type Webhook struct {
+	Events     []WebhookEvents    `json:"events"`
+	Id         openapi_types.UUID `json:"id"`
+	LastAt     *time.Time         `json:"lastAt,omitempty"`
+	LastError  string             `json:"lastError"`
+	LastStatus int                `json:"lastStatus"`
+	Url        string             `json:"url"`
+}
+
+// WebhookEvents defines model for Webhook.Events.
+type WebhookEvents string
+
+// WebhookCreate defines model for WebhookCreate.
+type WebhookCreate struct {
+	Events []WebhookCreateEvents `json:"events"`
+	Url    string                `json:"url"`
+}
+
+// WebhookCreateEvents defines model for WebhookCreate.Events.
+type WebhookCreateEvents string
+
+// WebhookCreated defines model for WebhookCreated.
+type WebhookCreated struct {
+	Id     openapi_types.UUID `json:"id"`
+	Secret string             `json:"secret"`
+}
+
 // ListAuditLogParams defines parameters for ListAuditLog.
 type ListAuditLogParams struct {
 	// Before Entries older than this id
@@ -1913,6 +1986,9 @@ type CreateUserJSONRequestBody = CreateUserRequest
 
 // SetUserQuotaJSONRequestBody defines body for SetUserQuota for application/json ContentType.
 type SetUserQuotaJSONRequestBody = QuotaUpdate
+
+// CreateWebhookJSONRequestBody defines body for CreateWebhook for application/json ContentType.
+type CreateWebhookJSONRequestBody = WebhookCreate
 
 // CreateAlbumJSONRequestBody defines body for CreateAlbum for application/json ContentType.
 type CreateAlbumJSONRequestBody = AlbumCreate
@@ -2090,6 +2166,18 @@ type ServerInterface interface {
 	// SetUserQuota Set how much a user may store. Without a value there is no limit
 	// (PUT /api/admin/users/{id}/quota)
 	SetUserQuota(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ListWebhooks Addresses told about events, without their secrets
+	// (GET /api/admin/webhooks)
+	ListWebhooks(w http.ResponseWriter, r *http.Request)
+	// CreateWebhook Add an address. Its signing secret is shown only once
+	// (POST /api/admin/webhooks)
+	CreateWebhook(w http.ResponseWriter, r *http.Request)
+	// DeleteWebhook Stop telling this address
+	// (DELETE /api/admin/webhooks/{id})
+	DeleteWebhook(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// TestWebhook Send a test event now
+	// (POST /api/admin/webhooks/{id}/test)
+	TestWebhook(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ListAlbums Albums the current user owns or that are shared with them
 	// (GET /api/albums)
 	ListAlbums(w http.ResponseWriter, r *http.Request, params ListAlbumsParams)
@@ -2594,6 +2682,30 @@ func (_ Unimplemented) CreateUser(w http.ResponseWriter, r *http.Request) {
 // SetUserQuota Set how much a user may store. Without a value there is no limit
 // (PUT /api/admin/users/{id}/quota)
 func (_ Unimplemented) SetUserQuota(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListWebhooks Addresses told about events, without their secrets
+// (GET /api/admin/webhooks)
+func (_ Unimplemented) ListWebhooks(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateWebhook Add an address. Its signing secret is shown only once
+// (POST /api/admin/webhooks)
+func (_ Unimplemented) CreateWebhook(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteWebhook Stop telling this address
+// (DELETE /api/admin/webhooks/{id})
+func (_ Unimplemented) DeleteWebhook(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// TestWebhook Send a test event now
+// (POST /api/admin/webhooks/{id}/test)
+func (_ Unimplemented) TestWebhook(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3753,6 +3865,86 @@ func (siw *ServerInterfaceWrapper) SetUserQuota(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SetUserQuota(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListWebhooks operation middleware
+func (siw *ServerInterfaceWrapper) ListWebhooks(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListWebhooks(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateWebhook operation middleware
+func (siw *ServerInterfaceWrapper) CreateWebhook(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateWebhook(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteWebhook operation middleware
+func (siw *ServerInterfaceWrapper) DeleteWebhook(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteWebhook(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// TestWebhook operation middleware
+func (siw *ServerInterfaceWrapper) TestWebhook(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TestWebhook(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -7233,6 +7425,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/admin/backup/runs", wrapper.StartBackupRun)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/webhooks", wrapper.ListWebhooks)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/webhooks", wrapper.CreateWebhook)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/admin/webhooks/{id}", wrapper.DeleteWebhook)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/webhooks/{id}/test", wrapper.TestWebhook)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

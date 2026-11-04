@@ -81,11 +81,13 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**createStoryExport**](doc//DefaultApi.md#createstoryexport) | **POST** /api/stories | Make a video of the chosen photos. Runs in the background.
 *DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
 *DefaultApi* | [**createUser**](doc//DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
+*DefaultApi* | [**createWebhook**](doc//DefaultApi.md#createwebhook) | **POST** /api/admin/webhooks | Add an address. Its signing secret is shown only once
 *DefaultApi* | [**deleteAlbum**](doc//DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 *DefaultApi* | [**deleteAlbumComment**](doc//DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 *DefaultApi* | [**deletePasskey**](doc//DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 *DefaultApi* | [**deleteTag**](doc//DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
+*DefaultApi* | [**deleteWebhook**](doc//DefaultApi.md#deletewebhook) | **DELETE** /api/admin/webhooks/{id} | Stop telling this address
 *DefaultApi* | [**disableTotp**](doc//DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 *DefaultApi* | [**dismissDuplicates**](doc//DefaultApi.md#dismissduplicates) | **POST** /api/duplicates/dismiss | These photos are not duplicates of each other, and are not proposed again
 *DefaultApi* | [**dissolveStack**](doc//DefaultApi.md#dissolvestack) | **DELETE** /api/assets/{id}/stack | Split a stack back into single shots. It is not put together again by itself
@@ -167,6 +169,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listPeople**](doc//DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 *DefaultApi* | [**listTags**](doc//DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 *DefaultApi* | [**listUsers**](doc//DefaultApi.md#listusers) | **GET** /api/admin/users | List users
+*DefaultApi* | [**listWebhooks**](doc//DefaultApi.md#listwebhooks) | **GET** /api/admin/webhooks | Addresses told about events, without their secrets
 *DefaultApi* | [**lockVault**](doc//DefaultApi.md#lockvault) | **POST** /api/vault/lock | Lock the vault again
 *DefaultApi* | [**login**](doc//DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
@@ -198,6 +201,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setupTotp**](doc//DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
 *DefaultApi* | [**startBackupRun**](doc//DefaultApi.md#startbackuprun) | **POST** /api/admin/backup/runs | Back up now, or test bringing the newest backup back
 *DefaultApi* | [**startOIDC**](doc//DefaultApi.md#startoidc) | **GET** /api/auth/oidc/start | Go to the identity provider
+*DefaultApi* | [**testWebhook**](doc//DefaultApi.md#testwebhook) | **POST** /api/admin/webhooks/{id}/test | Send a test event now
 *DefaultApi* | [**unlockPublicLink**](doc//DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 *DefaultApi* | [**unlockVault**](doc//DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 *DefaultApi* | [**updateAlbum**](doc//DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
@@ -304,6 +308,9 @@ Class | Method | HTTP request | Description
  - [VaultSession](doc//VaultSession.md)
  - [VaultStatus](doc//VaultStatus.md)
  - [VaultUnlock](doc//VaultUnlock.md)
+ - [Webhook](doc//Webhook.md)
+ - [WebhookCreate](doc//WebhookCreate.md)
+ - [WebhookCreated](doc//WebhookCreated.md)
 
 
 ## Documentation For Authorization

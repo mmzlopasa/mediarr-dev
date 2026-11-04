@@ -33,6 +33,23 @@ func (s *stack) startWorker(t *testing.T) {
 	})
 }
 
+func (s *stack) startLocalHookWorker(t *testing.T) {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	worker, err := jobs.NewWorker(s.pool, jobs.Options{Concurrency: 2, LibraryPath: s.library, CachePath: s.cache, AllowLocalWebhooks: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- jobs.Run(ctx, worker) }()
+	t.Cleanup(func() {
+		cancel()
+		if err := <-done; err != nil {
+			t.Errorf("worker: %v", err)
+		}
+	})
+}
+
 func (c *client) detail(id string) api.AssetDetail {
 	c.s.t.Helper()
 	resp, body := c.get("/api/assets/" + id)
