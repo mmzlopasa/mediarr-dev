@@ -19,6 +19,7 @@ FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
   AND a.local_at >= $2 AND a.local_at < $3
   AND CASE $4::text
+        WHEN 'favorites' THEN a.is_favorite AND a.deleted_at IS NULL AND a.vault_at IS NULL
         WHEN 'archive' THEN a.archived_at IS NOT NULL AND a.deleted_at IS NULL AND a.vault_at IS NULL
         WHEN 'trash' THEN a.deleted_at IS NOT NULL AND a.vault_at IS NULL
         WHEN 'vault' THEN a.vault_at IS NOT NULL AND a.deleted_at IS NULL
@@ -91,6 +92,7 @@ SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
   AND CASE $2::text
+        WHEN 'favorites' THEN a.is_favorite AND a.deleted_at IS NULL AND a.vault_at IS NULL
         WHEN 'archive' THEN a.archived_at IS NOT NULL AND a.deleted_at IS NULL AND a.vault_at IS NULL
         WHEN 'trash' THEN a.deleted_at IS NOT NULL AND a.vault_at IS NULL
         WHEN 'vault' THEN a.vault_at IS NOT NULL AND a.deleted_at IS NULL
@@ -228,6 +230,7 @@ FROM assets a
 JOIN assets p ON p.id = COALESCE(a.live_photo_of, a.id)
 WHERE a.id = $1 AND a.user_id = $2
   AND CASE $3::text
+        WHEN 'favorites' THEN p.is_favorite AND p.deleted_at IS NULL AND p.vault_at IS NULL
         WHEN 'archive' THEN p.archived_at IS NOT NULL AND p.deleted_at IS NULL AND p.vault_at IS NULL
         WHEN 'trash' THEN p.deleted_at IS NOT NULL AND p.vault_at IS NULL
         WHEN 'vault' THEN p.vault_at IS NOT NULL AND p.deleted_at IS NULL

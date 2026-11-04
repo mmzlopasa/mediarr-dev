@@ -962,7 +962,7 @@ paths:
       operationId: getCollectionBuckets
       summary: Months in the archive, the trash or the unlocked vault
       parameters:
-        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [favorites, archive, trash, vault] } }
       responses:
         "200":
           description: Months
@@ -976,7 +976,7 @@ paths:
       operationId: getCollectionBucket
       summary: Assets of one month in a collection
       parameters:
-        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [favorites, archive, trash, vault] } }
         - { name: month, in: path, required: true, schema: { type: string } }
       responses:
         "200":
@@ -992,7 +992,7 @@ paths:
       operationId: getCollectionAsset
       summary: An asset in a collection
       parameters:
-        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [favorites, archive, trash, vault] } }
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
         "200":
@@ -1007,7 +1007,7 @@ paths:
       operationId: getCollectionThumbnail
       summary: A preview of an asset in a collection
       parameters:
-        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [favorites, archive, trash, vault] } }
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
         - name: size
           in: query
@@ -1025,7 +1025,7 @@ paths:
       operationId: getCollectionOriginal
       summary: The original of an asset in a collection
       parameters:
-        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [favorites, archive, trash, vault] } }
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
         - { name: download, in: query, schema: { type: boolean } }
       responses:
@@ -1041,7 +1041,7 @@ paths:
       operationId: getCollectionMotion
       summary: The video inside a Motion Photo in a collection
       parameters:
-        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [favorites, archive, trash, vault] } }
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
         "200":
@@ -1056,7 +1056,7 @@ paths:
       operationId: getCollectionVideoFile
       summary: HLS files of a video in a collection
       parameters:
-        - { name: scope, in: path, required: true, schema: { type: string, enum: [archive, trash, vault] } }
+        - { name: scope, in: path, required: true, schema: { type: string, enum: [favorites, archive, trash, vault] } }
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
         - { name: file, in: path, required: true, schema: { type: string } }
       responses:

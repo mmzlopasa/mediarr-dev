@@ -4947,7 +4947,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault";
             };
             cookie?: never;
         };
@@ -4971,7 +4971,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault";
                 month: string;
             };
             cookie?: never;
@@ -4997,7 +4997,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault";
                 id: string;
             };
             cookie?: never;
@@ -5024,7 +5024,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                scope: "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault";
                 id: string;
             };
             cookie?: never;
@@ -5051,7 +5051,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                scope: "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault";
                 id: string;
             };
             cookie?: never;
@@ -5076,7 +5076,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault";
                 id: string;
             };
             cookie?: never;
@@ -5101,7 +5101,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault";
                 id: string;
                 file: string;
             };

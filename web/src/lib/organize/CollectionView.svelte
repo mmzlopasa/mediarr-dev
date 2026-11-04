@@ -16,7 +16,7 @@
 		item,
 		selectionActions
 	}: {
-		scope: 'archive' | 'trash' | 'vault';
+		scope: 'favorites' | 'archive' | 'trash' | 'vault';
 		item: NavItem;
 		selectionActions: Snippet<[string[], () => void]>;
 	} = $props();

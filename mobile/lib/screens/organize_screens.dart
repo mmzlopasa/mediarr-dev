@@ -50,6 +50,12 @@ class OrganizeLinks extends ConsumerWidget {
       children: [
         ListTile(
           contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.star_outline),
+          title: const Text('Favorites'),
+          onTap: () => open(const FavoritesScreen()),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.auto_awesome_outlined),
           title: const Text('Memories'),
           onTap: () => open(const MemoriesScreen()),
@@ -297,6 +303,52 @@ Future<void> _bulk(
       _tell(context, 'The action failed. ${cause.message ?? ''}');
     }
   }
+}
+
+class FavoritesScreen extends ConsumerStatefulWidget {
+  const FavoritesScreen({super.key});
+
+  @override
+  ConsumerState<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
+  late final _session = CollectionSession(
+    ref.read(sessionProvider).value!,
+    'favorites',
+  );
+  late final _store = TimelineStore.collection(_session);
+
+  @override
+  void dispose() {
+    _store.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Favorites')),
+    body: _PhotoGrid(
+      store: _store,
+      session: _session,
+      emptyText: 'No favorites yet. Mark a photo with the star.',
+      actions: (selected, clear) => [
+        IconButton(
+          tooltip: 'Remove from favorites',
+          icon: const Icon(Icons.star_outline),
+          onPressed: () => _bulk(
+            context,
+            _session,
+            _store,
+            selected,
+            clear,
+            BulkRequestActionEnum.unfavorite,
+            'Removed from favorites',
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class ArchiveScreen extends ConsumerStatefulWidget {

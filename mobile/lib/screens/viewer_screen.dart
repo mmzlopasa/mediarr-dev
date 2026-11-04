@@ -255,45 +255,49 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
             ),
         ],
       ),
-      body: PageView.builder(
-        controller: _pages,
-        physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
-        itemCount: items.length,
-        onPageChanged: (value) {
-          setState(() {
-            _index = value;
-            _zoomed = false;
-          });
-          // Moving towards the end of what is loaded fetches the next month.
-          if (value >= items.length - 3) {
-            final months = store.months ?? const <TimelineMonth>[];
-            for (final month in months) {
-              if (month.items == null) {
-                store.load(month);
-                break;
+      body: DragToDismiss(
+        enabled: !_zoomed,
+        onDismiss: () => Navigator.of(context).maybePop(),
+        child: PageView.builder(
+          controller: _pages,
+          physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+          itemCount: items.length,
+          onPageChanged: (value) {
+            setState(() {
+              _index = value;
+              _zoomed = false;
+            });
+            // Moving towards the end of what is loaded fetches the next month.
+            if (value >= items.length - 3) {
+              final months = store.months ?? const <TimelineMonth>[];
+              for (final month in months) {
+                if (month.items == null) {
+                  store.load(month);
+                  break;
+                }
               }
             }
-          }
-        },
-        itemBuilder: (context, page) {
-          final item = items[page];
-          if (item.kind == TimelineItemKindEnum.video) {
-            return _VideoPage(
-              key: ValueKey(item.id),
+          },
+          itemBuilder: (context, page) {
+            final item = items[page];
+            if (item.kind == TimelineItemKindEnum.video) {
+              return _VideoPage(
+                key: ValueKey(item.id),
+                session: session,
+                id: item.id,
+                active: page == index,
+              );
+            }
+            return _PhotoPage(
+              key: ValueKey('${item.id}-$_revision'),
               session: session,
               id: item.id,
-              active: page == index,
+              onZoom: (zoomed) {
+                if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+              },
             );
-          }
-          return _PhotoPage(
-            key: ValueKey('${item.id}-$_revision'),
-            session: session,
-            id: item.id,
-            onZoom: (zoomed) {
-              if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
-            },
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -667,5 +671,88 @@ class _InfoSheet extends StatelessWidget {
     return seconds != null && seconds > 0 && seconds < 1
         ? '1/${(1 / seconds).round()}'
         : value;
+  }
+}
+
+/// Pulling a photo down closes it, as in the phone's own gallery. It listens to the raw pointer
+/// because the zoom underneath takes every gesture that is offered to it.
+class DragToDismiss extends StatefulWidget {
+  const DragToDismiss({
+    super.key,
+    required this.enabled,
+    required this.onDismiss,
+    required this.child,
+  });
+
+  final bool enabled;
+  final VoidCallback onDismiss;
+  final Widget child;
+
+  @override
+  State<DragToDismiss> createState() => _DragToDismissState();
+}
+
+class _DragToDismissState extends State<DragToDismiss> {
+  static const _startAfter = 18.0;
+  static const _closeAfter = 110.0;
+
+  final _pointers = <int>{};
+  Offset? _start;
+  double _offset = 0;
+  bool _dragging = false;
+
+  void _reset() {
+    _start = null;
+    _dragging = false;
+    setState(() => _offset = 0);
+  }
+
+  void _move(PointerMoveEvent event) {
+    final start = _start;
+    if (start == null || !widget.enabled || _pointers.length != 1) return;
+    final moved = event.position - start;
+    if (!_dragging) {
+      if (moved.dy < _startAfter || moved.dy.abs() < moved.dx.abs() * 1.5) {
+        return;
+      }
+      _dragging = true;
+    }
+    setState(() => _offset = moved.dy.clamp(0, double.infinity).toDouble());
+  }
+
+  void _up(PointerUpEvent event) {
+    _pointers.remove(event.pointer);
+    final close = _dragging && _offset >= _closeAfter;
+    _reset();
+    if (close) widget.onDismiss();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final height = MediaQuery.sizeOf(context).height;
+    final progress = (_offset / height).clamp(0.0, 1.0);
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (event) {
+        _pointers.add(event.pointer);
+        _start = _pointers.length == 1 ? event.position : null;
+      },
+      onPointerMove: _move,
+      onPointerUp: _up,
+      onPointerCancel: (event) {
+        _pointers.remove(event.pointer);
+        _reset();
+      },
+      child: Opacity(
+        opacity: 1 - progress * 0.6,
+        child: Transform.translate(
+          offset: Offset(0, _offset),
+          child: Transform.scale(
+            scale: 1 - progress * 0.25,
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
   }
 }

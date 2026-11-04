@@ -304,8 +304,9 @@ export const publicSource = (token: string) => sourceAt(`/api/public/${token}`);
 export const familySource = () => sourceAt('/api/family');
 export const tagSource = (id: string) => sourceAt(`/api/tags/${id}`);
 export const personSource = (id: string) => sourceAt(`/api/people/${id}`);
-export const collectionBase = (scope: 'archive' | 'trash' | 'vault') => `/api/collections/${scope}`;
-export const collectionSource = (scope: 'archive' | 'trash' | 'vault') =>
+export const collectionBase = (scope: 'favorites' | 'archive' | 'trash' | 'vault') =>
+	`/api/collections/${scope}`;
+export const collectionSource = (scope: 'favorites' | 'archive' | 'trash' | 'vault') =>
 	sourceAt(collectionBase(scope));
 
 export function initialsOf(name: string) {

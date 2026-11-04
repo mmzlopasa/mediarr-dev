@@ -71,6 +71,30 @@ test('the archive takes a photo off the timeline and gives it back', async ({ pa
 	await expect(page.getByText('The archive is empty.')).toBeVisible();
 });
 
+test('a starred photo is in Favorites until the star is taken away', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await upload(page, 'favorite.jpg');
+	await select(page);
+	await page
+		.getByRole('button', { name: /favorite/i })
+		.first()
+		.click();
+	await page.goto('/favorites');
+	await expect(page.locator('.tl-tile')).toHaveCount(1);
+	await select(page);
+	await page.getByRole('button', { name: 'Remove from favorites' }).click();
+	await expect(page.getByText('No favorites yet.', { exact: false })).toBeVisible();
+});
+
+test('the library uses the whole width of a very wide screen', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await page.setViewportSize({ width: 3440, height: 1440 });
+	await page.goto('/');
+	await page.locator('.tl').waitFor();
+	const width = await page.locator('.tl').evaluate((element) => element.clientWidth);
+	expect(width).toBeGreaterThan(2800);
+});
+
 test('the vault hides a photo until the PIN opens it', async ({ page }) => {
 	await signIn(page, 'organizer');
 	const count = await upload(page, 'vault.jpg');

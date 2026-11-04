@@ -41,6 +41,10 @@
 					return;
 				}
 				const instance = new Hls();
+				// Start at the best quality. It lowers itself if the connection cannot keep up.
+				instance.on(Hls.Events.MANIFEST_PARSED, (_event, data) => {
+					instance.startLevel = data.levels.length - 1;
+				});
 				player = instance;
 				instance.on(Hls.Events.ERROR, (_event, data) => {
 					if (data.fatal) {

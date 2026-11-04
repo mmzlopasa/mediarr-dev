@@ -646,15 +646,18 @@ func (e GetAssetThumbnailParamsSize) Valid() bool {
 
 // Defines values for GetCollectionAssetParamsScope.
 const (
-	GetCollectionAssetParamsScopeArchive GetCollectionAssetParamsScope = "archive"
-	GetCollectionAssetParamsScopeTrash   GetCollectionAssetParamsScope = "trash"
-	GetCollectionAssetParamsScopeVault   GetCollectionAssetParamsScope = "vault"
+	GetCollectionAssetParamsScopeArchive   GetCollectionAssetParamsScope = "archive"
+	GetCollectionAssetParamsScopeFavorites GetCollectionAssetParamsScope = "favorites"
+	GetCollectionAssetParamsScopeTrash     GetCollectionAssetParamsScope = "trash"
+	GetCollectionAssetParamsScopeVault     GetCollectionAssetParamsScope = "vault"
 )
 
 // Valid indicates whether the value is a known member of the GetCollectionAssetParamsScope enum.
 func (e GetCollectionAssetParamsScope) Valid() bool {
 	switch e {
 	case GetCollectionAssetParamsScopeArchive:
+		return true
+	case GetCollectionAssetParamsScopeFavorites:
 		return true
 	case GetCollectionAssetParamsScopeTrash:
 		return true
@@ -667,15 +670,18 @@ func (e GetCollectionAssetParamsScope) Valid() bool {
 
 // Defines values for GetCollectionMotionParamsScope.
 const (
-	GetCollectionMotionParamsScopeArchive GetCollectionMotionParamsScope = "archive"
-	GetCollectionMotionParamsScopeTrash   GetCollectionMotionParamsScope = "trash"
-	GetCollectionMotionParamsScopeVault   GetCollectionMotionParamsScope = "vault"
+	GetCollectionMotionParamsScopeArchive   GetCollectionMotionParamsScope = "archive"
+	GetCollectionMotionParamsScopeFavorites GetCollectionMotionParamsScope = "favorites"
+	GetCollectionMotionParamsScopeTrash     GetCollectionMotionParamsScope = "trash"
+	GetCollectionMotionParamsScopeVault     GetCollectionMotionParamsScope = "vault"
 )
 
 // Valid indicates whether the value is a known member of the GetCollectionMotionParamsScope enum.
 func (e GetCollectionMotionParamsScope) Valid() bool {
 	switch e {
 	case GetCollectionMotionParamsScopeArchive:
+		return true
+	case GetCollectionMotionParamsScopeFavorites:
 		return true
 	case GetCollectionMotionParamsScopeTrash:
 		return true
@@ -688,15 +694,18 @@ func (e GetCollectionMotionParamsScope) Valid() bool {
 
 // Defines values for GetCollectionOriginalParamsScope.
 const (
-	GetCollectionOriginalParamsScopeArchive GetCollectionOriginalParamsScope = "archive"
-	GetCollectionOriginalParamsScopeTrash   GetCollectionOriginalParamsScope = "trash"
-	GetCollectionOriginalParamsScopeVault   GetCollectionOriginalParamsScope = "vault"
+	GetCollectionOriginalParamsScopeArchive   GetCollectionOriginalParamsScope = "archive"
+	GetCollectionOriginalParamsScopeFavorites GetCollectionOriginalParamsScope = "favorites"
+	GetCollectionOriginalParamsScopeTrash     GetCollectionOriginalParamsScope = "trash"
+	GetCollectionOriginalParamsScopeVault     GetCollectionOriginalParamsScope = "vault"
 )
 
 // Valid indicates whether the value is a known member of the GetCollectionOriginalParamsScope enum.
 func (e GetCollectionOriginalParamsScope) Valid() bool {
 	switch e {
 	case GetCollectionOriginalParamsScopeArchive:
+		return true
+	case GetCollectionOriginalParamsScopeFavorites:
 		return true
 	case GetCollectionOriginalParamsScopeTrash:
 		return true
@@ -730,15 +739,18 @@ func (e GetCollectionThumbnailParamsSize) Valid() bool {
 
 // Defines values for GetCollectionThumbnailParamsScope.
 const (
-	GetCollectionThumbnailParamsScopeArchive GetCollectionThumbnailParamsScope = "archive"
-	GetCollectionThumbnailParamsScopeTrash   GetCollectionThumbnailParamsScope = "trash"
-	GetCollectionThumbnailParamsScopeVault   GetCollectionThumbnailParamsScope = "vault"
+	GetCollectionThumbnailParamsScopeArchive   GetCollectionThumbnailParamsScope = "archive"
+	GetCollectionThumbnailParamsScopeFavorites GetCollectionThumbnailParamsScope = "favorites"
+	GetCollectionThumbnailParamsScopeTrash     GetCollectionThumbnailParamsScope = "trash"
+	GetCollectionThumbnailParamsScopeVault     GetCollectionThumbnailParamsScope = "vault"
 )
 
 // Valid indicates whether the value is a known member of the GetCollectionThumbnailParamsScope enum.
 func (e GetCollectionThumbnailParamsScope) Valid() bool {
 	switch e {
 	case GetCollectionThumbnailParamsScopeArchive:
+		return true
+	case GetCollectionThumbnailParamsScopeFavorites:
 		return true
 	case GetCollectionThumbnailParamsScopeTrash:
 		return true
@@ -751,15 +763,18 @@ func (e GetCollectionThumbnailParamsScope) Valid() bool {
 
 // Defines values for GetCollectionVideoFileParamsScope.
 const (
-	GetCollectionVideoFileParamsScopeArchive GetCollectionVideoFileParamsScope = "archive"
-	GetCollectionVideoFileParamsScopeTrash   GetCollectionVideoFileParamsScope = "trash"
-	GetCollectionVideoFileParamsScopeVault   GetCollectionVideoFileParamsScope = "vault"
+	GetCollectionVideoFileParamsScopeArchive   GetCollectionVideoFileParamsScope = "archive"
+	GetCollectionVideoFileParamsScopeFavorites GetCollectionVideoFileParamsScope = "favorites"
+	GetCollectionVideoFileParamsScopeTrash     GetCollectionVideoFileParamsScope = "trash"
+	GetCollectionVideoFileParamsScopeVault     GetCollectionVideoFileParamsScope = "vault"
 )
 
 // Valid indicates whether the value is a known member of the GetCollectionVideoFileParamsScope enum.
 func (e GetCollectionVideoFileParamsScope) Valid() bool {
 	switch e {
 	case GetCollectionVideoFileParamsScopeArchive:
+		return true
+	case GetCollectionVideoFileParamsScopeFavorites:
 		return true
 	case GetCollectionVideoFileParamsScopeTrash:
 		return true
@@ -772,15 +787,18 @@ func (e GetCollectionVideoFileParamsScope) Valid() bool {
 
 // Defines values for GetCollectionBucketsParamsScope.
 const (
-	GetCollectionBucketsParamsScopeArchive GetCollectionBucketsParamsScope = "archive"
-	GetCollectionBucketsParamsScopeTrash   GetCollectionBucketsParamsScope = "trash"
-	GetCollectionBucketsParamsScopeVault   GetCollectionBucketsParamsScope = "vault"
+	GetCollectionBucketsParamsScopeArchive   GetCollectionBucketsParamsScope = "archive"
+	GetCollectionBucketsParamsScopeFavorites GetCollectionBucketsParamsScope = "favorites"
+	GetCollectionBucketsParamsScopeTrash     GetCollectionBucketsParamsScope = "trash"
+	GetCollectionBucketsParamsScopeVault     GetCollectionBucketsParamsScope = "vault"
 )
 
 // Valid indicates whether the value is a known member of the GetCollectionBucketsParamsScope enum.
 func (e GetCollectionBucketsParamsScope) Valid() bool {
 	switch e {
 	case GetCollectionBucketsParamsScopeArchive:
+		return true
+	case GetCollectionBucketsParamsScopeFavorites:
 		return true
 	case GetCollectionBucketsParamsScopeTrash:
 		return true
@@ -793,15 +811,18 @@ func (e GetCollectionBucketsParamsScope) Valid() bool {
 
 // Defines values for GetCollectionBucketParamsScope.
 const (
-	GetCollectionBucketParamsScopeArchive GetCollectionBucketParamsScope = "archive"
-	GetCollectionBucketParamsScopeTrash   GetCollectionBucketParamsScope = "trash"
-	GetCollectionBucketParamsScopeVault   GetCollectionBucketParamsScope = "vault"
+	GetCollectionBucketParamsScopeArchive   GetCollectionBucketParamsScope = "archive"
+	GetCollectionBucketParamsScopeFavorites GetCollectionBucketParamsScope = "favorites"
+	GetCollectionBucketParamsScopeTrash     GetCollectionBucketParamsScope = "trash"
+	GetCollectionBucketParamsScopeVault     GetCollectionBucketParamsScope = "vault"
 )
 
 // Valid indicates whether the value is a known member of the GetCollectionBucketParamsScope enum.
 func (e GetCollectionBucketParamsScope) Valid() bool {
 	switch e {
 	case GetCollectionBucketParamsScopeArchive:
+		return true
+	case GetCollectionBucketParamsScopeFavorites:
 		return true
 	case GetCollectionBucketParamsScopeTrash:
 		return true
