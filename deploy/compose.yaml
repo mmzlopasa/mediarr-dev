@@ -16,6 +16,8 @@ x-server: &server
     - ${CACHE_LOCATION}:/data/cache
     # Optional, and read only: Mediarr never changes or copies these files.
     - ${EXTERNAL_LIBRARY_PATH:-/dev/null}:/external:ro
+    # Optional: a folder or disk for backups. S3 needs no folder at all.
+    - ${BACKUP_PATH:-/dev/null}:/backup
   depends_on:
     db:
       condition: service_healthy

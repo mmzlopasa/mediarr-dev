@@ -248,6 +248,63 @@ func (e AssetDetailStatus) Valid() bool {
 	}
 }
 
+// Defines values for BackupRunKind.
+const (
+	BackupRunKindBackup      BackupRunKind = "backup"
+	BackupRunKindRestoreTest BackupRunKind = "restore_test"
+)
+
+// Valid indicates whether the value is a known member of the BackupRunKind enum.
+func (e BackupRunKind) Valid() bool {
+	switch e {
+	case BackupRunKindBackup:
+		return true
+	case BackupRunKindRestoreTest:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BackupRunStatus.
+const (
+	BackupRunStatusDone    BackupRunStatus = "done"
+	BackupRunStatusFailed  BackupRunStatus = "failed"
+	BackupRunStatusRunning BackupRunStatus = "running"
+)
+
+// Valid indicates whether the value is a known member of the BackupRunStatus enum.
+func (e BackupRunStatus) Valid() bool {
+	switch e {
+	case BackupRunStatusDone:
+		return true
+	case BackupRunStatusFailed:
+		return true
+	case BackupRunStatusRunning:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for BackupRunRequestKind.
+const (
+	BackupRunRequestKindBackup      BackupRunRequestKind = "backup"
+	BackupRunRequestKindRestoreTest BackupRunRequestKind = "restore_test"
+)
+
+// Valid indicates whether the value is a known member of the BackupRunRequestKind enum.
+func (e BackupRunRequestKind) Valid() bool {
+	switch e {
+	case BackupRunRequestKindBackup:
+		return true
+	case BackupRunRequestKindRestoreTest:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for BulkRequestAction.
 const (
 	BulkRequestActionArchive    BulkRequestAction = "archive"
@@ -1009,6 +1066,53 @@ type AuthStatus struct {
 	User          *User `json:"user,omitempty"`
 }
 
+// BackupRun defines model for BackupRun.
+type BackupRun struct {
+	Files      int64              `json:"files"`
+	FinishedAt *time.Time         `json:"finishedAt,omitempty"`
+	Id         openapi_types.UUID `json:"id"`
+	Kind       BackupRunKind      `json:"kind"`
+	Message    string             `json:"message"`
+	StartedAt  time.Time          `json:"startedAt"`
+	Status     BackupRunStatus    `json:"status"`
+}
+
+// BackupRunKind defines model for BackupRun.Kind.
+type BackupRunKind string
+
+// BackupRunStatus defines model for BackupRun.Status.
+type BackupRunStatus string
+
+// BackupRunRequest defines model for BackupRunRequest.
+type BackupRunRequest struct {
+	Kind BackupRunRequestKind `json:"kind"`
+}
+
+// BackupRunRequestKind defines model for BackupRunRequest.Kind.
+type BackupRunRequestKind string
+
+// BackupSettings defines model for BackupSettings.
+type BackupSettings struct {
+	HasPassword bool `json:"hasPassword"`
+	HasS3Key    bool `json:"hasS3Key"`
+
+	// Hour The hour of the day, by the server's clock
+	Hour int `json:"hour"`
+
+	// LocalFolder Where BACKUP_PATH from .env is mounted
+	LocalFolder string `json:"localFolder"`
+	Repository  string `json:"repository"`
+}
+
+// BackupSettingsUpdate defines model for BackupSettingsUpdate.
+type BackupSettingsUpdate struct {
+	Hour       int     `json:"hour"`
+	Password   *string `json:"password,omitempty"`
+	Repository string  `json:"repository"`
+	S3Key      *string `json:"s3Key,omitempty"`
+	S3Secret   *string `json:"s3Secret,omitempty"`
+}
+
 // BulkRequest defines model for BulkRequest.
 type BulkRequest struct {
 	Action BulkRequestAction `json:"action"`
@@ -1148,6 +1252,14 @@ type FailedJob struct {
 	Kind  string    `json:"kind"`
 	Queue string    `json:"queue"`
 }
+
+// FeatureUpdate defines model for FeatureUpdate.
+type FeatureUpdate struct {
+	Enabled bool `json:"enabled"`
+}
+
+// Features defines model for Features.
+type Features map[string]bool
 
 // Folder defines model for Folder.
 type Folder struct {
@@ -1737,8 +1849,17 @@ type SearchAssetsParams struct {
 	Q string `form:"q" json:"q"`
 }
 
+// SetBackupSettingsJSONRequestBody defines body for SetBackupSettings for application/json ContentType.
+type SetBackupSettingsJSONRequestBody = BackupSettingsUpdate
+
+// StartBackupRunJSONRequestBody defines body for StartBackupRun for application/json ContentType.
+type StartBackupRunJSONRequestBody = BackupRunRequest
+
 // SetExternalLibraryJSONRequestBody defines body for SetExternalLibrary for application/json ContentType.
 type SetExternalLibraryJSONRequestBody = ExternalLibraryOwner
+
+// SetFeatureJSONRequestBody defines body for SetFeature for application/json ContentType.
+type SetFeatureJSONRequestBody = FeatureUpdate
 
 // CreateImportJSONRequestBody defines body for CreateImport for application/json ContentType.
 type CreateImportJSONRequestBody = ImportCreate
@@ -1859,6 +1980,18 @@ type ServerInterface interface {
 	// ListAuditLog Who changed what, newest first. Never the content of a request
 	// (GET /api/admin/audit)
 	ListAuditLog(w http.ResponseWriter, r *http.Request, params ListAuditLogParams)
+	// GetBackupSettings Where backups go, without any secret
+	// (GET /api/admin/backup)
+	GetBackupSettings(w http.ResponseWriter, r *http.Request)
+	// SetBackupSettings Change where backups go. A secret left out stays as it was
+	// (PUT /api/admin/backup)
+	SetBackupSettings(w http.ResponseWriter, r *http.Request)
+	// ListBackupRuns Backups and tests of bringing one back, the newest first
+	// (GET /api/admin/backup/runs)
+	ListBackupRuns(w http.ResponseWriter, r *http.Request)
+	// StartBackupRun Back up now, or test bringing the newest backup back
+	// (POST /api/admin/backup/runs)
+	StartBackupRun(w http.ResponseWriter, r *http.Request)
 	// GetExternalLibrary The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 	// (GET /api/admin/external)
 	GetExternalLibrary(w http.ResponseWriter, r *http.Request)
@@ -1868,6 +2001,9 @@ type ServerInterface interface {
 	// ScanExternalLibrary Look through the folder for changes now
 	// (POST /api/admin/external/scan)
 	ScanExternalLibrary(w http.ResponseWriter, r *http.Request)
+	// SetFeature Turn an addition on or off
+	// (PUT /api/admin/features/{name})
+	SetFeature(w http.ResponseWriter, r *http.Request, name string)
 	// GetAdminHealth Whether the worker and the analysis service are running
 	// (GET /api/admin/health)
 	GetAdminHealth(w http.ResponseWriter, r *http.Request)
@@ -2072,6 +2208,9 @@ type ServerInterface interface {
 	// DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 	// (POST /api/duplicates/dismiss)
 	DismissDuplicates(w http.ResponseWriter, r *http.Request)
+	// GetFeatures Which additions the administrator has turned on
+	// (GET /api/features)
+	GetFeatures(w http.ResponseWriter, r *http.Request)
 	// GetFolder One folder of the external library, for the user who owns it
 	// (GET /api/folders)
 	GetFolder(w http.ResponseWriter, r *http.Request, params GetFolderParams)
@@ -2276,6 +2415,30 @@ func (_ Unimplemented) ListAuditLog(w http.ResponseWriter, r *http.Request, para
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetBackupSettings Where backups go, without any secret
+// (GET /api/admin/backup)
+func (_ Unimplemented) GetBackupSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetBackupSettings Change where backups go. A secret left out stays as it was
+// (PUT /api/admin/backup)
+func (_ Unimplemented) SetBackupSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListBackupRuns Backups and tests of bringing one back, the newest first
+// (GET /api/admin/backup/runs)
+func (_ Unimplemented) ListBackupRuns(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// StartBackupRun Back up now, or test bringing the newest backup back
+// (POST /api/admin/backup/runs)
+func (_ Unimplemented) StartBackupRun(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetExternalLibrary The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 // (GET /api/admin/external)
 func (_ Unimplemented) GetExternalLibrary(w http.ResponseWriter, r *http.Request) {
@@ -2291,6 +2454,12 @@ func (_ Unimplemented) SetExternalLibrary(w http.ResponseWriter, r *http.Request
 // ScanExternalLibrary Look through the folder for changes now
 // (POST /api/admin/external/scan)
 func (_ Unimplemented) ScanExternalLibrary(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetFeature Turn an addition on or off
+// (PUT /api/admin/features/{name})
+func (_ Unimplemented) SetFeature(w http.ResponseWriter, r *http.Request, name string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2699,6 +2868,12 @@ func (_ Unimplemented) ListDuplicates(w http.ResponseWriter, r *http.Request) {
 // DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 // (POST /api/duplicates/dismiss)
 func (_ Unimplemented) DismissDuplicates(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetFeatures Which additions the administrator has turned on
+// (GET /api/features)
+func (_ Unimplemented) GetFeatures(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3143,6 +3318,62 @@ func (siw *ServerInterfaceWrapper) ListAuditLog(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// GetBackupSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetBackupSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetBackupSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetBackupSettings operation middleware
+func (siw *ServerInterfaceWrapper) SetBackupSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetBackupSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListBackupRuns operation middleware
+func (siw *ServerInterfaceWrapper) ListBackupRuns(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBackupRuns(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StartBackupRun operation middleware
+func (siw *ServerInterfaceWrapper) StartBackupRun(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartBackupRun(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetExternalLibrary operation middleware
 func (siw *ServerInterfaceWrapper) GetExternalLibrary(w http.ResponseWriter, r *http.Request) {
 
@@ -3176,6 +3407,32 @@ func (siw *ServerInterfaceWrapper) ScanExternalLibrary(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ScanExternalLibrary(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetFeature operation middleware
+func (siw *ServerInterfaceWrapper) SetFeature(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetFeature(w, r, name)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -4933,6 +5190,20 @@ func (siw *ServerInterfaceWrapper) DismissDuplicates(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DismissDuplicates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFeatures operation middleware
+func (siw *ServerInterfaceWrapper) GetFeatures(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFeatures(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6880,6 +7151,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/admin/imports/{id}/cancel", wrapper.CancelImport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/features", wrapper.GetFeatures)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/features/{name}", wrapper.SetFeature)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/backup", wrapper.GetBackupSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/backup", wrapper.SetBackupSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/backup/runs", wrapper.ListBackupRuns)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/backup/runs", wrapper.StartBackupRun)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

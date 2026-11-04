@@ -1729,6 +1729,89 @@ paths:
         "204": { description: Stopped }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/features:
+    get:
+      operationId: getFeatures
+      summary: Which additions the administrator has turned on
+      responses:
+        "200":
+          description: Each feature and whether it is on
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Features" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/admin/features/{name}:
+    put:
+      operationId: setFeature
+      summary: Turn an addition on or off
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FeatureUpdate" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/backup:
+    get:
+      operationId: getBackupSettings
+      summary: Where backups go, without any secret
+      responses:
+        "200":
+          description: The settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupSettings" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setBackupSettings
+      summary: Change where backups go. A secret left out stays as it was
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BackupSettingsUpdate" }
+      responses:
+        "200":
+          description: The settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupSettings" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/backup/runs:
+    get:
+      operationId: listBackupRuns
+      summary: Backups and tests of bringing one back, the newest first
+      responses:
+        "200":
+          description: The runs
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/BackupRun" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: startBackupRun
+      summary: Back up now, or test bringing the newest backup back
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BackupRunRequest" }
+      responses:
+        "202": { description: Started }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
   /api/admin/external:
     get:
       operationId: getExternalLibrary
@@ -2095,6 +2178,48 @@ components:
         failed: { type: integer }
         lastError: { type: string }
         createdAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time }
+    Features:
+      type: object
+      additionalProperties: { type: boolean }
+    FeatureUpdate:
+      type: object
+      required: [enabled]
+      properties:
+        enabled: { type: boolean }
+    BackupSettings:
+      type: object
+      required: [repository, hour, hasPassword, hasS3Key, localFolder]
+      properties:
+        repository: { type: string }
+        hour: { type: integer, description: "The hour of the day, by the server's clock" }
+        hasPassword: { type: boolean }
+        hasS3Key: { type: boolean }
+        localFolder: { type: string, description: "Where BACKUP_PATH from .env is mounted" }
+    BackupSettingsUpdate:
+      type: object
+      required: [repository, hour]
+      properties:
+        repository: { type: string }
+        hour: { type: integer }
+        password: { type: string }
+        s3Key: { type: string }
+        s3Secret: { type: string }
+    BackupRunRequest:
+      type: object
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [backup, restore_test] }
+    BackupRun:
+      type: object
+      required: [id, kind, status, message, files, startedAt]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [backup, restore_test] }
+        status: { type: string, enum: [running, done, failed] }
+        message: { type: string }
+        files: { type: integer, format: int64 }
+        startedAt: { type: string, format: date-time }
         finishedAt: { type: string, format: date-time }
     Memory:
       type: object

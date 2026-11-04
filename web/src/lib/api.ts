@@ -23,6 +23,10 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type Features = Record<string, boolean>;
+export type BackupSettings = components['schemas']['BackupSettings'];
+export type BackupSettingsUpdate = components['schemas']['BackupSettingsUpdate'];
+export type BackupRun = components['schemas']['BackupRun'];
 export type ImportEntry = components['schemas']['ImportEntry'];
 export type ImportCreate = components['schemas']['ImportCreate'];
 export type AuthMethods = components['schemas']['AuthMethods'];
@@ -228,6 +232,15 @@ export const api = {
 	imports: () => request<ImportEntry[]>(fetch, '/api/admin/imports'),
 	startImport: (body: ImportCreate) => request<{ id: string }>(fetch, '/api/admin/imports', body),
 	cancelImport: (id: string) => request<void>(fetch, `/api/admin/imports/${id}/cancel`, {}),
+	features: () => request<Features>(fetch, '/api/features'),
+	setFeature: (name: string, enabled: boolean) =>
+		request<void>(fetch, `/api/admin/features/${name}`, { enabled }, 'PUT'),
+	backupSettings: () => request<BackupSettings>(fetch, '/api/admin/backup'),
+	setBackupSettings: (body: BackupSettingsUpdate) =>
+		request<BackupSettings>(fetch, '/api/admin/backup', body, 'PUT'),
+	backupRuns: () => request<BackupRun[]>(fetch, '/api/admin/backup/runs'),
+	startBackupRun: (kind: BackupRun['kind']) =>
+		request<void>(fetch, '/api/admin/backup/runs', { kind }),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>

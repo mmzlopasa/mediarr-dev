@@ -7,7 +7,10 @@
 		type OIDCSettings,
 		type User,
 		type ImportCreate,
-		type ImportEntry
+		type ImportEntry,
+		type BackupRun,
+		type BackupSettings,
+		type Features
 	} from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
@@ -106,6 +109,85 @@
 			importKey = '';
 			await loadImports();
 			showToast('ok', tr('Uvoz je pokrenut.', 'The import has started.'));
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
+			);
+		}
+	}
+
+	const FEATURE_LABELS: Record<string, { hr: string; en: string }> = {
+		backup: { hr: 'Zakazani backup', en: 'Scheduled backup' },
+		documents: { hr: 'Album Dokumenti', en: 'Documents album' },
+		family: { hr: 'Obiteljska biblioteka', en: 'Family library' },
+		webhooks: { hr: 'Webhooks', en: 'Webhooks' },
+		kiosk: { hr: 'Kiosk za TV i tablet', en: 'Kiosk for TV and tablet' },
+		descriptions: { hr: 'AI opisi i chat-pretraga', en: 'AI descriptions and chat search' }
+	};
+	let features = $state<Features>({});
+	let backup = $state<BackupSettings>();
+	let backupRuns = $state<BackupRun[]>([]);
+	let backupPassword = $state('');
+	let backupKey = $state('');
+	let backupSecret = $state('');
+	let backupHour = $state('3');
+
+	async function loadBackup() {
+		backupRuns = await api.backupRuns().catch(() => backupRuns);
+	}
+
+	onMount(() => {
+		api
+			.features()
+			.then((value) => (features = value))
+			.catch(() => undefined);
+		api
+			.backupSettings()
+			.then((value) => {
+				backup = value;
+				backupHour = String(value.hour);
+			})
+			.catch(() => undefined);
+		loadBackup();
+		const timer = setInterval(loadBackup, 5000);
+		return () => clearInterval(timer);
+	});
+
+	async function toggleFeature(name: string, enabled: boolean) {
+		try {
+			await api.setFeature(name, enabled);
+			features = { ...features, [name]: enabled };
+		} catch {
+			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		}
+	}
+
+	async function saveBackup(event: SubmitEvent) {
+		event.preventDefault();
+		if (!backup) return;
+		try {
+			backup = await api.setBackupSettings({
+				repository: backup.repository,
+				hour: Number(backupHour),
+				password: backupPassword || undefined,
+				s3Key: backupKey || undefined,
+				s3Secret: backupSecret || undefined
+			});
+			backupPassword = backupKey = backupSecret = '';
+			showToast('ok', tr('Spremljeno.', 'Saved.'));
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
+			);
+		}
+	}
+
+	async function runBackup(kind: BackupRun['kind']) {
+		try {
+			await api.startBackupRun(kind);
+			await loadBackup();
 		} catch (cause) {
 			showToast(
 				'err',
@@ -323,6 +405,81 @@
 			</div>
 		{/each}
 	</Card>
+	<Card title={tr('Dodaci', 'Additions')}>
+		<p class="alb-meta">
+			{tr(
+				'Svaki je isključen dok ga ne uključite, i tada ne mijenja ništa.',
+				'Each is off until you turn it on, and changes nothing until then.'
+			)}
+		</p>
+		{#each Object.keys(FEATURE_LABELS) as name (name)}
+			<label class="alb-list">
+				<input
+					type="checkbox"
+					data-feature={name}
+					checked={features[name] ?? false}
+					onchange={(event) => toggleFeature(name, event.currentTarget.checked)}
+				/>
+				{tr(FEATURE_LABELS[name].hr, FEATURE_LABELS[name].en)}
+			</label>
+		{/each}
+	</Card>
+	{#if backup}
+		<Card title="Backup">
+			<form class="form" onsubmit={saveBackup}>
+				<p class="alb-meta">
+					{tr(
+						`Originali i baza, šifrirano. Odredište je mapa unutar ${backup.localFolder}, ili s3: ili b2: adresa. Sličice se ne spremaju jer se mogu ponovno napraviti.`,
+						`Originals and the database, encrypted. The destination is a folder inside ${backup.localFolder}, or an s3: or b2: address. Previews are left out, as they can be made again.`
+					)}
+				</p>
+				<Alert kind="warn"
+					>{tr(
+						'Zapišite lozinku negdje izvan ovog servera. Bez nje se backup nikako ne može vratiti.',
+						'Write the password down somewhere other than this server. Without it, a backup can never be brought back.'
+					)}</Alert
+				>
+				<Input label={tr('Odredište', 'Destination')} bind:value={backup.repository} />
+				<Input
+					label={backup.hasPassword
+						? tr('Lozinka (spremljena, upišite za promjenu)', 'Password (saved, type to change)')
+						: tr('Lozinka backupa', 'Backup password')}
+					bind:value={backupPassword}
+				/>
+				<Input
+					label={backup.hasS3Key
+						? tr('Pristupni ključ (spremljen)', 'Access key (saved)')
+						: tr('Pristupni ključ (S3, B2)', 'Access key (S3, B2)')}
+					bind:value={backupKey}
+				/>
+				<Input
+					label={tr('Tajni ključ (S3, B2)', 'Secret key (S3, B2)')}
+					bind:value={backupSecret}
+				/>
+				<Input label={tr('Sat u danu (0-23)', 'Hour of the day (0-23)')} bind:value={backupHour} />
+				<Button data-testid="backup-save" type="submit" variant="gold" small
+					>{tr('Spremi', 'Save')}</Button
+				>
+			</form>
+			<div class="dup-actions">
+				<Button small onclick={() => runBackup('backup')}>{tr('Backup sada', 'Back up now')}</Button
+				>
+				<Button small onclick={() => runBackup('restore_test')}
+					>{tr('Testiraj vraćanje', 'Test bringing it back')}</Button
+				>
+			</div>
+			{#each backupRuns as run (run.id)}
+				<div class="alb-list" data-backup-run={run.kind}>
+					<b>{run.kind === 'backup' ? 'Backup' : tr('Test vraćanja', 'Restore test')}</b>
+					<span class="alb-meta">
+						{run.status} · {new Date(run.startedAt).toLocaleString()} · {tr('datoteka', 'files')}
+						{run.files}
+						{#if run.message}· {run.message}{/if}
+					</span>
+				</div>
+			{/each}
+		</Card>
+	{/if}
 	<Card title={tr('Karta', 'Map')}>
 		<form class="form" onsubmit={save}>
 			<p class="alb-meta">

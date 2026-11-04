@@ -94,7 +94,9 @@ type Options struct {
 	CachePath   string
 	// ExternalPath is where a folder to import from is mounted, read only.
 	ExternalPath string
-	VideoAccel   string
+	// DatabaseURL is what a backup reads the database with.
+	DatabaseURL string
+	VideoAccel  string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
 }
@@ -122,6 +124,8 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &storyWorker{deps: d})
 	river.AddWorker(workers, &organizeWorker{deps: d})
 	river.AddWorker(workers, &importWorker{deps: d})
+	river.AddWorker(workers, &backupWorker{deps: d})
+	river.AddWorker(workers, &backupTickWorker{deps: d})
 	river.AddWorker(workers, &externalScanWorker{deps: d})
 
 	var err error
@@ -145,6 +149,8 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 			river.NewPeriodicJob(river.PeriodicInterval(organizeInterval),
 				func() (river.JobArgs, *river.InsertOpts) { return OrganizeArgs{}, nil },
 				&river.PeriodicJobOpts{RunOnStart: true}),
+			river.NewPeriodicJob(river.PeriodicInterval(backupTickEvery),
+				func() (river.JobArgs, *river.InsertOpts) { return BackupTickArgs{}, nil }, nil),
 			river.NewPeriodicJob(river.PeriodicInterval(externalScanInterval),
 				func() (river.JobArgs, *river.InsertOpts) { return ExternalScanArgs{}, nil },
 				&river.PeriodicJobOpts{RunOnStart: true}),

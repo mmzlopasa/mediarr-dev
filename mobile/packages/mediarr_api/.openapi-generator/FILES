@@ -24,6 +24,10 @@ doc/AssetTagChange.md
 doc/AuditEntry.md
 doc/AuthMethods.md
 doc/AuthStatus.md
+doc/BackupRun.md
+doc/BackupRunRequest.md
+doc/BackupSettings.md
+doc/BackupSettingsUpdate.md
 doc/BulkRequest.md
 doc/BulkResponse.md
 doc/ChangePasswordRequest.md
@@ -43,6 +47,7 @@ doc/Error.md
 doc/ExternalLibrary.md
 doc/ExternalLibraryOwner.md
 doc/FailedJob.md
+doc/FeatureUpdate.md
 doc/Folder.md
 doc/FolderEntry.md
 doc/Health.md
@@ -128,6 +133,10 @@ lib/model/asset_tag_change.dart
 lib/model/audit_entry.dart
 lib/model/auth_methods.dart
 lib/model/auth_status.dart
+lib/model/backup_run.dart
+lib/model/backup_run_request.dart
+lib/model/backup_settings.dart
+lib/model/backup_settings_update.dart
 lib/model/bulk_request.dart
 lib/model/bulk_response.dart
 lib/model/change_password_request.dart
@@ -146,6 +155,7 @@ lib/model/error.dart
 lib/model/external_library.dart
 lib/model/external_library_owner.dart
 lib/model/failed_job.dart
+lib/model/feature_update.dart
 lib/model/folder.dart
 lib/model/folder_entry.dart
 lib/model/health.dart
@@ -199,5 +209,8 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
-test/import_create_test.dart
-test/import_entry_test.dart
+test/backup_run_request_test.dart
+test/backup_run_test.dart
+test/backup_settings_test.dart
+test/backup_settings_update_test.dart
+test/feature_update_test.dart

@@ -28,6 +28,7 @@ x-go: &go
     - ${DEV_LIBRARY:-../.dev/library}:/data/library
     - ${DEV_MEDIA_CACHE:-../.dev/media-cache}:/data/cache
     - ${DEV_EXTERNAL:-../.dev/external}:/external:ro
+    - ${DEV_BACKUP:-../.dev/backup}:/backup
   mem_limit: 2g
   restart: unless-stopped
 

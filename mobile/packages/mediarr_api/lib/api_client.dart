@@ -273,6 +273,14 @@ class ApiClient {
           return AuthMethods.fromJson(value);
         case 'AuthStatus':
           return AuthStatus.fromJson(value);
+        case 'BackupRun':
+          return BackupRun.fromJson(value);
+        case 'BackupRunRequest':
+          return BackupRunRequest.fromJson(value);
+        case 'BackupSettings':
+          return BackupSettings.fromJson(value);
+        case 'BackupSettingsUpdate':
+          return BackupSettingsUpdate.fromJson(value);
         case 'BulkRequest':
           return BulkRequest.fromJson(value);
         case 'BulkResponse':
@@ -309,6 +317,8 @@ class ApiClient {
           return ExternalLibraryOwner.fromJson(value);
         case 'FailedJob':
           return FailedJob.fromJson(value);
+        case 'FeatureUpdate':
+          return FeatureUpdate.fromJson(value);
         case 'Folder':
           return Folder.fromJson(value);
         case 'FolderEntry':

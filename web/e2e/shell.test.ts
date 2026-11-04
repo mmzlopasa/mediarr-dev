@@ -484,3 +484,30 @@ test('jobs can be paused, and storage shows each user', async ({ page }) => {
 	await page.goto('/admin/health');
 	await expect(page.getByText(/Pozadinski poslovi rade|Background jobs are running/)).toBeVisible();
 });
+
+test('a backup is set up, runs, and its test of coming back passes', async ({ page }) => {
+	test.setTimeout(180000);
+	await signIn(page, 'admin');
+	await page.goto('/admin/settings');
+	const secret = 'e2e-backup-password';
+	await page.getByLabel(/Odredište|Destination/).fill(`/backup/e2e-${Date.now()}`);
+	await page.getByLabel(/Lozinka backupa|Backup password/).fill(secret);
+	await page.getByTestId('backup-save').click();
+	await expect(page.getByLabel(/Lozinka \(spremljena|Password \(saved/)).toBeVisible();
+	expect(await page.content()).not.toContain(secret);
+
+	await page.getByRole('button', { name: /Backup sada|Back up now/ }).click();
+	const backup = page.locator('[data-backup-run="backup"]').first();
+	await expect(backup).toContainText('done', { timeout: 90000 });
+	await page.getByRole('button', { name: /Testiraj vraćanje|Test bringing it back/ }).click();
+	const test_ = page.locator('[data-backup-run="restore_test"]').first();
+	await expect(test_).toContainText('done', { timeout: 90000 });
+
+	await page.locator('[data-feature="kiosk"]').check();
+	await page.reload();
+	await expect(page.locator('[data-feature="kiosk"]')).toBeChecked();
+	await page.locator('[data-feature="kiosk"]').uncheck();
+
+	// The test leaves the demo as it found it.
+	await page.request.put('/api/admin/backup', { data: { repository: '', hour: 3 } });
+});

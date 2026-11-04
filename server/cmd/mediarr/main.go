@@ -65,6 +65,8 @@ func run(ctx context.Context, args []string) error {
 		return reprocess(ctx, cfg)
 	case "user":
 		return upsertUser(ctx, cfg, args[1:])
+	case "restore-backup":
+		return restoreBackup(ctx, cfg)
 	default:
 		return errors.New(usage)
 	}
@@ -116,7 +118,7 @@ func serve(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return fmt.Errorf("create job client: %w", err)
 	}
-	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, ProxyHops: cfg.ProxyHops, MaxUploadBytes: cfg.MaxUploadBytes, MetricsToken: cfg.MetricsToken})
+	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, ProxyHops: cfg.ProxyHops, MaxUploadBytes: cfg.MaxUploadBytes, MetricsToken: cfg.MetricsToken, BackupPath: cfg.BackupPath})
 	if err != nil {
 		return err
 	}
@@ -161,7 +163,7 @@ func worker(ctx context.Context, cfg config.Config) error {
 	if err := jobs.ReleaseInterrupted(ctx, pool); err != nil {
 		return err
 	}
-	client, err := jobs.NewWorker(pool, jobs.Options{MLURL: cfg.MLURL, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, VideoAccel: cfg.VideoAccel})
+	client, err := jobs.NewWorker(pool, jobs.Options{MLURL: cfg.MLURL, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, DatabaseURL: cfg.DatabaseURL, VideoAccel: cfg.VideoAccel})
 	if err != nil {
 		return fmt.Errorf("create worker: %w", err)
 	}
@@ -313,6 +315,19 @@ func deleteUser(ctx context.Context, cfg config.Config, rawEmail string) error {
 		}
 	}
 	return nil
+}
+
+// restoreBackup brings a backup back onto an empty installation, on a server that lost everything:
+// the settings in its database are gone too, so they come from the environment.
+func restoreBackup(ctx context.Context, cfg config.Config) error {
+	settings := &jobs.BackupSettings{
+		Repository: os.Getenv("RESTIC_REPOSITORY"), Password: os.Getenv("RESTIC_PASSWORD"),
+		S3Key: os.Getenv("AWS_ACCESS_KEY_ID"), S3Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+	}
+	if settings.Repository == "" || settings.Password == "" {
+		return errors.New("set RESTIC_REPOSITORY and RESTIC_PASSWORD")
+	}
+	return jobs.RestoreBackup(ctx, settings, cfg.DatabaseURL, cfg.CachePath)
 }
 
 func healthcheck(ctx context.Context, cfg config.Config) error {

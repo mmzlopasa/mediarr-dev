@@ -2852,6 +2852,52 @@ class DefaultApi {
     return null;
   }
 
+  /// Where backups go, without any secret
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getBackupSettingsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/backup';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Where backups go, without any secret
+  Future<BackupSettings?> getBackupSettings() async {
+    final response = await getBackupSettingsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BackupSettings',
+      ) as BackupSettings;
+    }
+    return null;
+  }
+
   /// An asset in a collection
   ///
   /// Note: This method returns the HTTP [Response].
@@ -3399,6 +3445,52 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'ExternalLibrary',
       ) as ExternalLibrary;
+    }
+    return null;
+  }
+
+  /// Which additions the administrator has turned on
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getFeaturesWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/features';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Which additions the administrator has turned on
+  Future<Map<String, bool>?> getFeatures() async {
+    final response = await getFeaturesWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return Map<String, bool>.from(
+        await apiClient.deserializeAsync(
+            await _decodeBodyBytes(response), 'Map<String, bool>'),
+      );
     }
     return null;
   }
@@ -5504,6 +5596,53 @@ class DefaultApi {
     return null;
   }
 
+  /// Backups and tests of bringing one back, the newest first
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listBackupRunsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/backup/runs';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Backups and tests of bringing one back, the newest first
+  Future<List<BackupRun>?> listBackupRuns() async {
+    final response = await listBackupRunsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<BackupRun>')
+              as List)
+          .cast<BackupRun>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// Cameras in the current user's library, for smart album rules
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6884,6 +7023,66 @@ class DefaultApi {
     }
   }
 
+  /// Change where backups go. A secret left out stays as it was
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [BackupSettingsUpdate] backupSettingsUpdate (required):
+  Future<Response> setBackupSettingsWithHttpInfo(
+    BackupSettingsUpdate backupSettingsUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/backup';
+
+    // ignore: prefer_final_locals
+    Object? postBody = backupSettingsUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change where backups go. A secret left out stays as it was
+  ///
+  /// Parameters:
+  ///
+  /// * [BackupSettingsUpdate] backupSettingsUpdate (required):
+  Future<BackupSettings?> setBackupSettings(
+    BackupSettingsUpdate backupSettingsUpdate,
+  ) async {
+    final response = await setBackupSettingsWithHttpInfo(
+      backupSettingsUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BackupSettings',
+      ) as BackupSettings;
+    }
+    return null;
+  }
+
   /// Choose whose photos the folder holds, and start reading it
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6942,6 +7141,62 @@ class DefaultApi {
       ) as ExternalLibrary;
     }
     return null;
+  }
+
+  /// Turn an addition on or off
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] name (required):
+  ///
+  /// * [FeatureUpdate] featureUpdate (required):
+  Future<Response> setFeatureWithHttpInfo(
+    String name,
+    FeatureUpdate featureUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/features/{name}'.replaceAll('{name}', name);
+
+    // ignore: prefer_final_locals
+    Object? postBody = featureUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Turn an addition on or off
+  ///
+  /// Parameters:
+  ///
+  /// * [String] name (required):
+  ///
+  /// * [FeatureUpdate] featureUpdate (required):
+  Future<void> setFeature(
+    String name,
+    FeatureUpdate featureUpdate,
+  ) async {
+    final response = await setFeatureWithHttpInfo(
+      name,
+      featureUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Choose the map's background. Administrators only. Empty goes back to the default.
@@ -7435,6 +7690,55 @@ class DefaultApi {
       ) as TotpSetup;
     }
     return null;
+  }
+
+  /// Back up now, or test bringing the newest backup back
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [BackupRunRequest] backupRunRequest (required):
+  Future<Response> startBackupRunWithHttpInfo(
+    BackupRunRequest backupRunRequest,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/backup/runs';
+
+    // ignore: prefer_final_locals
+    Object? postBody = backupRunRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Back up now, or test bringing the newest backup back
+  ///
+  /// Parameters:
+  ///
+  /// * [BackupRunRequest] backupRunRequest (required):
+  Future<void> startBackupRun(
+    BackupRunRequest backupRunRequest,
+  ) async {
+    final response = await startBackupRunWithHttpInfo(
+      backupRunRequest,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Go to the identity provider

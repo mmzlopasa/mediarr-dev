@@ -55,7 +55,9 @@ type Deps struct {
 	MaxUploadBytes int64
 	// MetricsToken turns on /metrics, for whoever has it.
 	MetricsToken string
-	CachePath    string
+	// BackupPath is where the folder of BACKUP_PATH is mounted.
+	BackupPath string
+	CachePath  string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
 }

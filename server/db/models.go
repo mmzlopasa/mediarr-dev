@@ -144,6 +144,16 @@ type AuditLog struct {
 	Ip        string
 }
 
+type BackupRun struct {
+	ID         pgtype.UUID
+	Kind       string
+	Status     string
+	Message    string
+	Files      int64
+	StartedAt  pgtype.Timestamptz
+	FinishedAt pgtype.Timestamptz
+}
+
 type Exif struct {
 	AssetID      pgtype.UUID
 	Make         pgtype.Text

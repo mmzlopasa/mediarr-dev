@@ -111,6 +111,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAssetVideoFile**](doc//DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
 *DefaultApi* | [**getAuthMethods**](doc//DefaultApi.md#getauthmethods) | **GET** /api/auth/methods | The ways of signing in that this address offers, besides a password
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
+*DefaultApi* | [**getBackupSettings**](doc//DefaultApi.md#getbackupsettings) | **GET** /api/admin/backup | Where backups go, without any secret
 *DefaultApi* | [**getCollectionAsset**](doc//DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 *DefaultApi* | [**getCollectionBucket**](doc//DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
 *DefaultApi* | [**getCollectionBuckets**](doc//DefaultApi.md#getcollectionbuckets) | **GET** /api/collections/{scope}/buckets | Months in the archive, the trash or the unlocked vault
@@ -119,6 +120,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getCollectionThumbnail**](doc//DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 *DefaultApi* | [**getCollectionVideoFile**](doc//DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
 *DefaultApi* | [**getExternalLibrary**](doc//DefaultApi.md#getexternallibrary) | **GET** /api/admin/external | The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
+*DefaultApi* | [**getFeatures**](doc//DefaultApi.md#getfeatures) | **GET** /api/features | Which additions the administrator has turned on
 *DefaultApi* | [**getFolder**](doc//DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
 *DefaultApi* | [**getMapPoints**](doc//DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
@@ -153,6 +155,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listAlbums**](doc//DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
 *DefaultApi* | [**listAssets**](doc//DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 *DefaultApi* | [**listAuditLog**](doc//DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
+*DefaultApi* | [**listBackupRuns**](doc//DefaultApi.md#listbackupruns) | **GET** /api/admin/backup/runs | Backups and tests of bringing one back, the newest first
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 *DefaultApi* | [**listDuplicates**](doc//DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
@@ -180,7 +183,9 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setAlbumHeart**](doc//DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 *DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
+*DefaultApi* | [**setBackupSettings**](doc//DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
+*DefaultApi* | [**setFeature**](doc//DefaultApi.md#setfeature) | **PUT** /api/admin/features/{name} | Turn an addition on or off
 *DefaultApi* | [**setMapStyle**](doc//DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
 *DefaultApi* | [**setOIDCSettings**](doc//DefaultApi.md#setoidcsettings) | **PUT** /api/admin/oidc | Change single sign-on. An empty issuer turns it off
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
@@ -190,6 +195,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setVaultPin**](doc//DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 *DefaultApi* | [**setup**](doc//DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 *DefaultApi* | [**setupTotp**](doc//DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
+*DefaultApi* | [**startBackupRun**](doc//DefaultApi.md#startbackuprun) | **POST** /api/admin/backup/runs | Back up now, or test bringing the newest backup back
 *DefaultApi* | [**startOIDC**](doc//DefaultApi.md#startoidc) | **GET** /api/auth/oidc/start | Go to the identity provider
 *DefaultApi* | [**unlockPublicLink**](doc//DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 *DefaultApi* | [**unlockVault**](doc//DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
@@ -221,6 +227,10 @@ Class | Method | HTTP request | Description
  - [AuditEntry](doc//AuditEntry.md)
  - [AuthMethods](doc//AuthMethods.md)
  - [AuthStatus](doc//AuthStatus.md)
+ - [BackupRun](doc//BackupRun.md)
+ - [BackupRunRequest](doc//BackupRunRequest.md)
+ - [BackupSettings](doc//BackupSettings.md)
+ - [BackupSettingsUpdate](doc//BackupSettingsUpdate.md)
  - [BulkRequest](doc//BulkRequest.md)
  - [BulkResponse](doc//BulkResponse.md)
  - [ChangePasswordRequest](doc//ChangePasswordRequest.md)
@@ -239,6 +249,7 @@ Class | Method | HTTP request | Description
  - [ExternalLibrary](doc//ExternalLibrary.md)
  - [ExternalLibraryOwner](doc//ExternalLibraryOwner.md)
  - [FailedJob](doc//FailedJob.md)
+ - [FeatureUpdate](doc//FeatureUpdate.md)
  - [Folder](doc//Folder.md)
  - [FolderEntry](doc//FolderEntry.md)
  - [Health](doc//Health.md)
