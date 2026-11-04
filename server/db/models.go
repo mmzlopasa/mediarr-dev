@@ -58,6 +58,8 @@ type ApiKey struct {
 	KeyHash    []byte
 	CreatedAt  pgtype.Timestamptz
 	LastUsedAt pgtype.Timestamptz
+	Scopes     []string
+	ExpiresAt  pgtype.Timestamptz
 }
 
 type Asset struct {

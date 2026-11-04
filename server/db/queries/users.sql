@@ -58,12 +58,15 @@ DELETE FROM api_keys WHERE user_id = $1;
 DELETE FROM sessions WHERE expires_at <= now();
 
 -- name: CreateAPIKey :one
-INSERT INTO api_keys (user_id, name, key_hash) VALUES ($1, $2, $3) RETURNING id;
+INSERT INTO api_keys (user_id, name, key_hash, scopes, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING id;
+
+-- name: ListAPIKeys :many
+SELECT id, name, scopes, created_at, last_used_at, expires_at FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC;
 
 -- name: GetUserByAPIKey :one
 UPDATE api_keys k SET last_used_at = now() FROM users u
-WHERE k.key_hash = $1 AND u.id = k.user_id
-RETURNING u.*;
+WHERE k.key_hash = $1 AND u.id = k.user_id AND (k.expires_at IS NULL OR k.expires_at > now())
+RETURNING sqlc.embed(u), k.scopes;
 
 -- name: DeleteAPIKey :exec
 DELETE FROM api_keys WHERE id = $1 AND user_id = $2;

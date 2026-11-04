@@ -372,7 +372,7 @@ func TestAPIKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := q.CreateAPIKey(ctx, db.CreateAPIKeyParams{UserID: user.ID, Name: "test", KeyHash: hash}); err != nil {
+	if _, err := q.CreateAPIKey(ctx, db.CreateAPIKeyParams{UserID: user.ID, Name: "test", KeyHash: hash, Scopes: []string{"admin"}}); err != nil {
 		t.Fatal(err)
 	}
 	c := s.client()
@@ -667,7 +667,7 @@ func TestDeviceKeyCannotBeRevokedByAnotherUser(t *testing.T) {
 	}
 	resp, body = other.do(http.MethodDelete, "/api/me/device-keys/"+key.Id.String(), nil, nil)
 	expect(t, resp, body, http.StatusNoContent)
-	resp, body = s.client().do(http.MethodGet, "/api/assets", map[string]string{apiKeyHeader: key.Key}, nil)
+	resp, body = s.client().sendWith(http.MethodPost, "/api/assets/check", map[string]string{apiKeyHeader: key.Key}, map[string]any{"checksums": []string{}})
 	expect(t, resp, body, http.StatusOK)
 
 	resp, body = s.client().post("/api/me/device-keys", api.CreateDeviceKeyRequest{Name: "x"})
@@ -744,7 +744,7 @@ func TestMigrationsGoDownAndUp(t *testing.T) {
 	s := newStack(t)
 	ctx := context.Background()
 	// Every schema migration after the first must be able to go down.
-	for range 13 {
+	for range 14 {
 		if err := db.MigrateDown(ctx, s.dbURL); err != nil {
 			t.Fatal(err)
 		}

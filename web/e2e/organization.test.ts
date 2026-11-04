@@ -223,3 +223,35 @@ test('a memory plays as a story and becomes a video', async ({ page }) => {
 	await story.getByRole('button', { name: 'Close' }).click();
 	await expect(story).toHaveCount(0);
 });
+
+test('a key is created with chosen rights, shown once, and revoked', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await page.goto('/account');
+	await page.getByLabel('Key name').fill('e2e script');
+	await page.getByRole('button', { name: 'Create a key' }).click();
+	const key = await page.getByTestId('new-key').textContent();
+	expect(key?.length).toBeGreaterThan(20);
+
+	// A key given only the right to read cannot change anything.
+	const headers = { 'X-Api-Key': key as string };
+	const fresh = await page
+		.context()
+		.browser()!
+		.newContext({ baseURL: new URL(page.url()).origin });
+	const read = await fresh.request.get('/api/timeline/buckets', { headers });
+	expect(read.status()).toBe(200);
+	const write = await fresh.request.post('/api/albums', { headers, data: { title: 'x' } });
+	expect(write.status()).toBe(403);
+
+	await page.reload();
+	await expect(page.getByText('e2e script')).toBeVisible();
+	await expect(page.getByText(key as string)).toHaveCount(0);
+	await page
+		.locator('.alb-list', { hasText: 'e2e script' })
+		.getByRole('button', { name: 'Revoke' })
+		.click();
+	await expect(page.getByText('e2e script')).toHaveCount(0);
+	const after = await fresh.request.get('/api/timeline/buckets', { headers });
+	expect(after.status()).toBe(401);
+	await fresh.close();
+});

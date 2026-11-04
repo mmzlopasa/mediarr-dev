@@ -23,6 +23,7 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type ApiKey = components['schemas']['ApiKey'];
 export type AuditEntry = components['schemas']['AuditEntry'];
 export type AssetEdits = components['schemas']['AssetEdits'];
 export type Folder = components['schemas']['Folder'];
@@ -189,6 +190,15 @@ export const api = {
 	clearEdits: (id: string) => request<void>(fetch, `/api/assets/${id}/edits`, undefined, 'DELETE'),
 	auditLog: (before?: number) =>
 		request<AuditEntry[]>(fetch, `/api/admin/audit${before ? `?before=${before}` : ''}`),
+	apiKeys: () => request<ApiKey[]>(fetch, '/api/me/api-keys'),
+	createApiKey: (name: string, scopes: ApiKey['scopes'], expiresInDays?: number) =>
+		request<{ id: string; key: string }>(fetch, '/api/me/api-keys', {
+			name,
+			scopes,
+			expiresInDays
+		}),
+	revokeApiKey: (id: string) =>
+		request<void>(fetch, `/api/me/device-keys/${id}`, undefined, 'DELETE'),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>

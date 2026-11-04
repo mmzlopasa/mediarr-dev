@@ -40,17 +40,25 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 }
 
 const createAPIKey = `-- name: CreateAPIKey :one
-INSERT INTO api_keys (user_id, name, key_hash) VALUES ($1, $2, $3) RETURNING id
+INSERT INTO api_keys (user_id, name, key_hash, scopes, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING id
 `
 
 type CreateAPIKeyParams struct {
-	UserID  pgtype.UUID
-	Name    string
-	KeyHash []byte
+	UserID    pgtype.UUID
+	Name      string
+	KeyHash   []byte
+	Scopes    []string
+	ExpiresAt pgtype.Timestamptz
 }
 
 func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createAPIKey, arg.UserID, arg.Name, arg.KeyHash)
+	row := q.db.QueryRow(ctx, createAPIKey,
+		arg.UserID,
+		arg.Name,
+		arg.KeyHash,
+		arg.Scopes,
+		arg.ExpiresAt,
+	)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -209,25 +217,31 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 
 const getUserByAPIKey = `-- name: GetUserByAPIKey :one
 UPDATE api_keys k SET last_used_at = now() FROM users u
-WHERE k.key_hash = $1 AND u.id = k.user_id
-RETURNING u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash
+WHERE k.key_hash = $1 AND u.id = k.user_id AND (k.expires_at IS NULL OR k.expires_at > now())
+RETURNING u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, k.scopes
 `
 
-func (q *Queries) GetUserByAPIKey(ctx context.Context, keyHash []byte) (User, error) {
+type GetUserByAPIKeyRow struct {
+	User   User
+	Scopes []string
+}
+
+func (q *Queries) GetUserByAPIKey(ctx context.Context, keyHash []byte) (GetUserByAPIKeyRow, error) {
 	row := q.db.QueryRow(ctx, getUserByAPIKey, keyHash)
-	var i User
+	var i GetUserByAPIKeyRow
 	err := row.Scan(
-		&i.ID,
-		&i.Email,
-		&i.Name,
-		&i.PasswordHash,
-		&i.IsAdmin,
-		&i.TotpSecret,
-		&i.TotpEnabled,
-		&i.TotpLastStep,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.VaultPinHash,
+		&i.User.ID,
+		&i.User.Email,
+		&i.User.Name,
+		&i.User.PasswordHash,
+		&i.User.IsAdmin,
+		&i.User.TotpSecret,
+		&i.User.TotpEnabled,
+		&i.User.TotpLastStep,
+		&i.User.CreatedAt,
+		&i.User.UpdatedAt,
+		&i.User.VaultPinHash,
+		&i.Scopes,
 	)
 	return i, err
 }
@@ -277,6 +291,46 @@ func (q *Queries) GetUserBySessionToken(ctx context.Context, tokenHash []byte) (
 		&i.VaultPinHash,
 	)
 	return i, err
+}
+
+const listAPIKeys = `-- name: ListAPIKeys :many
+SELECT id, name, scopes, created_at, last_used_at, expires_at FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC
+`
+
+type ListAPIKeysRow struct {
+	ID         pgtype.UUID
+	Name       string
+	Scopes     []string
+	CreatedAt  pgtype.Timestamptz
+	LastUsedAt pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+}
+
+func (q *Queries) ListAPIKeys(ctx context.Context, userID pgtype.UUID) ([]ListAPIKeysRow, error) {
+	rows, err := q.db.Query(ctx, listAPIKeys, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAPIKeysRow
+	for rows.Next() {
+		var i ListAPIKeysRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Scopes,
+			&i.CreatedAt,
+			&i.LastUsedAt,
+			&i.ExpiresAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listUsers = `-- name: ListUsers :many

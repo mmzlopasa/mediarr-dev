@@ -68,6 +68,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**changePassword**](doc//DefaultApi.md#changepassword) | **POST** /api/me/password | Change the current user's password and end their other sessions
 *DefaultApi* | [**checkAssets**](doc//DefaultApi.md#checkassets) | **POST** /api/assets/check | Report which SHA-256 checksums the current user already has, so uploads can be skipped
 *DefaultApi* | [**clearAssetEdits**](doc//DefaultApi.md#clearassetedits) | **DELETE** /api/assets/{id}/edits | Go back to the photo as it was taken
+*DefaultApi* | [**createAPIKey**](doc//DefaultApi.md#createapikey) | **POST** /api/me/api-keys | Create a key with chosen rights. It is shown only once
 *DefaultApi* | [**createAlbum**](doc//DefaultApi.md#createalbum) | **POST** /api/albums | Create an album. With rules it is a smart album.
 *DefaultApi* | [**createAlbumComment**](doc//DefaultApi.md#createalbumcomment) | **POST** /api/albums/{id}/comments | Comment on an album or on a photo in it
 *DefaultApi* | [**createAlbumLink**](doc//DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
@@ -131,6 +132,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getTimelineBuckets**](doc//DefaultApi.md#gettimelinebuckets) | **GET** /api/timeline/buckets | List the months that have photos, newest first
 *DefaultApi* | [**getUploadOffset**](doc//DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 *DefaultApi* | [**getVaultStatus**](doc//DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
+*DefaultApi* | [**listAPIKeys**](doc//DefaultApi.md#listapikeys) | **GET** /api/me/api-keys | The current user's keys, without the keys themselves
 *DefaultApi* | [**listAlbumComments**](doc//DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 *DefaultApi* | [**listAlbumLinks**](doc//DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 *DefaultApi* | [**listAlbums**](doc//DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
@@ -183,6 +185,8 @@ Class | Method | HTTP request | Description
  - [AlbumRules](doc//AlbumRules.md)
  - [AlbumUpdate](doc//AlbumUpdate.md)
  - [AnalysisProgress](doc//AnalysisProgress.md)
+ - [ApiKey](doc//ApiKey.md)
+ - [ApiKeyCreate](doc//ApiKeyCreate.md)
  - [Asset](doc//Asset.md)
  - [AssetDetail](doc//AssetDetail.md)
  - [AssetEdits](doc//AssetEdits.md)

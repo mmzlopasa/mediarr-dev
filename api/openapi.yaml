@@ -122,6 +122,34 @@ paths:
       responses:
         "204": { description: TOTP disabled }
         "401": { $ref: "#/components/responses/Error" }
+  /api/me/api-keys:
+    get:
+      operationId: listAPIKeys
+      summary: The current user's keys, without the keys themselves
+      responses:
+        "200":
+          description: The keys
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ApiKey" } }
+        "401": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createAPIKey
+      summary: Create a key with chosen rights. It is shown only once
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ApiKeyCreate" }
+      responses:
+        "201":
+          description: The key
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeviceKey" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/me/device-keys:
     post:
       operationId: createDeviceKey
@@ -1630,6 +1658,23 @@ components:
         target: { type: string }
         status: { type: integer }
         ip: { type: string }
+    ApiKey:
+      type: object
+      required: [id, name, scopes, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        scopes: { type: array, items: { type: string, enum: [read, upload, write, admin] } }
+        createdAt: { type: string, format: date-time }
+        lastUsedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+    ApiKeyCreate:
+      type: object
+      required: [name, scopes]
+      properties:
+        name: { type: string }
+        scopes: { type: array, items: { type: string, enum: [read, upload, write, admin] } }
+        expiresInDays: { type: integer, minimum: 1, maximum: 3650 }
     Memory:
       type: object
       required: [kind, title, items]

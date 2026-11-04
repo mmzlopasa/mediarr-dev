@@ -11,6 +11,7 @@ import '../services/session.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import 'album_sheets.dart';
+import 'api_keys_screen.dart';
 import 'map_screen.dart';
 import 'duplicates_screen.dart';
 import 'folders_screen.dart';
@@ -90,6 +91,12 @@ class OrganizeLinks extends StatelessWidget {
           leading: const Icon(Icons.lock_outline),
           title: const Text('Vault'),
           onTap: () => open(const VaultScreen()),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.key_outlined),
+          title: const Text('API keys'),
+          onTap: () => open(const ApiKeysScreen()),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,

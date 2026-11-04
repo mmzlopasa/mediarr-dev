@@ -157,6 +157,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The current user's keys, without the keys themselves */
+        get: operations["listAPIKeys"];
+        put?: never;
+        /** Create a key with chosen rights. It is shown only once */
+        post: operations["createAPIKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/device-keys": {
         parameters: {
             query?: never;
@@ -1766,6 +1784,23 @@ export interface components {
             status: number;
             ip: string;
         };
+        ApiKey: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            scopes: ("read" | "upload" | "write" | "admin")[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastUsedAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+        };
+        ApiKeyCreate: {
+            name: string;
+            scopes: ("read" | "upload" | "write" | "admin")[];
+            expiresInDays?: number;
+        };
         Memory: {
             /** @enum {string} */
             kind: "on_this_day" | "week";
@@ -2524,6 +2559,54 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Error"];
+        };
+    };
+    listAPIKeys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKey"][];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    createAPIKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyCreate"];
+            };
+        };
+        responses: {
+            /** @description The key */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceKey"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     createDeviceKey: {

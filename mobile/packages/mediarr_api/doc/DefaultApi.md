@@ -17,6 +17,7 @@ Method | HTTP request | Description
 [**changePassword**](DefaultApi.md#changepassword) | **POST** /api/me/password | Change the current user's password and end their other sessions
 [**checkAssets**](DefaultApi.md#checkassets) | **POST** /api/assets/check | Report which SHA-256 checksums the current user already has, so uploads can be skipped
 [**clearAssetEdits**](DefaultApi.md#clearassetedits) | **DELETE** /api/assets/{id}/edits | Go back to the photo as it was taken
+[**createAPIKey**](DefaultApi.md#createapikey) | **POST** /api/me/api-keys | Create a key with chosen rights. It is shown only once
 [**createAlbum**](DefaultApi.md#createalbum) | **POST** /api/albums | Create an album. With rules it is a smart album.
 [**createAlbumComment**](DefaultApi.md#createalbumcomment) | **POST** /api/albums/{id}/comments | Comment on an album or on a photo in it
 [**createAlbumLink**](DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
@@ -80,6 +81,7 @@ Method | HTTP request | Description
 [**getTimelineBuckets**](DefaultApi.md#gettimelinebuckets) | **GET** /api/timeline/buckets | List the months that have photos, newest first
 [**getUploadOffset**](DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 [**getVaultStatus**](DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
+[**listAPIKeys**](DefaultApi.md#listapikeys) | **GET** /api/me/api-keys | The current user's keys, without the keys themselves
 [**listAlbumComments**](DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 [**listAlbumLinks**](DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 [**listAlbums**](DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
@@ -443,6 +445,47 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **createAPIKey**
+> DeviceKey createAPIKey(apiKeyCreate)
+
+Create a key with chosen rights. It is shown only once
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final apiKeyCreate = ApiKeyCreate(); // ApiKeyCreate | 
+
+try {
+    final result = api_instance.createAPIKey(apiKeyCreate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->createAPIKey: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **apiKeyCreate** | [**ApiKeyCreate**](ApiKeyCreate.md)|  | 
+
+### Return type
+
+[**DeviceKey**](DeviceKey.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -3022,6 +3065,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**VaultStatus**](VaultStatus.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listAPIKeys**
+> List<ApiKey> listAPIKeys()
+
+The current user's keys, without the keys themselves
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listAPIKeys();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listAPIKeys: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<ApiKey>**](ApiKey.md)
 
 ### Authorization
 

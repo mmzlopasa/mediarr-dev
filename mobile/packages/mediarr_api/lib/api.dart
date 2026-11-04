@@ -39,6 +39,8 @@ part 'model/album_member.dart';
 part 'model/album_rules.dart';
 part 'model/album_update.dart';
 part 'model/analysis_progress.dart';
+part 'model/api_key.dart';
+part 'model/api_key_create.dart';
 part 'model/asset.dart';
 part 'model/asset_detail.dart';
 part 'model/asset_edits.dart';

@@ -116,6 +116,54 @@ func (e AlbumUpdateOrder) Valid() bool {
 	}
 }
 
+// Defines values for ApiKeyScopes.
+const (
+	ApiKeyScopesAdmin  ApiKeyScopes = "admin"
+	ApiKeyScopesRead   ApiKeyScopes = "read"
+	ApiKeyScopesUpload ApiKeyScopes = "upload"
+	ApiKeyScopesWrite  ApiKeyScopes = "write"
+)
+
+// Valid indicates whether the value is a known member of the ApiKeyScopes enum.
+func (e ApiKeyScopes) Valid() bool {
+	switch e {
+	case ApiKeyScopesAdmin:
+		return true
+	case ApiKeyScopesRead:
+		return true
+	case ApiKeyScopesUpload:
+		return true
+	case ApiKeyScopesWrite:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ApiKeyCreateScopes.
+const (
+	ApiKeyCreateScopesAdmin  ApiKeyCreateScopes = "admin"
+	ApiKeyCreateScopesRead   ApiKeyCreateScopes = "read"
+	ApiKeyCreateScopesUpload ApiKeyCreateScopes = "upload"
+	ApiKeyCreateScopesWrite  ApiKeyCreateScopes = "write"
+)
+
+// Valid indicates whether the value is a known member of the ApiKeyCreateScopes enum.
+func (e ApiKeyCreateScopes) Valid() bool {
+	switch e {
+	case ApiKeyCreateScopesAdmin:
+		return true
+	case ApiKeyCreateScopesRead:
+		return true
+	case ApiKeyCreateScopesUpload:
+		return true
+	case ApiKeyCreateScopesWrite:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AssetKind.
 const (
 	AssetKindPhoto   AssetKind = "photo"
@@ -701,6 +749,29 @@ type AnalysisProgress struct {
 	Enabled  bool  `json:"enabled"`
 	Total    int64 `json:"total"`
 }
+
+// ApiKey defines model for ApiKey.
+type ApiKey struct {
+	CreatedAt  time.Time          `json:"createdAt"`
+	ExpiresAt  *time.Time         `json:"expiresAt,omitempty"`
+	Id         openapi_types.UUID `json:"id"`
+	LastUsedAt *time.Time         `json:"lastUsedAt,omitempty"`
+	Name       string             `json:"name"`
+	Scopes     []ApiKeyScopes     `json:"scopes"`
+}
+
+// ApiKeyScopes defines model for ApiKey.Scopes.
+type ApiKeyScopes string
+
+// ApiKeyCreate defines model for ApiKeyCreate.
+type ApiKeyCreate struct {
+	ExpiresInDays *int                 `json:"expiresInDays,omitempty"`
+	Name          string               `json:"name"`
+	Scopes        []ApiKeyCreateScopes `json:"scopes"`
+}
+
+// ApiKeyCreateScopes defines model for ApiKeyCreate.Scopes.
+type ApiKeyCreateScopes string
 
 // Asset defines model for Asset.
 type Asset struct {
@@ -1484,6 +1555,9 @@ type DismissDuplicatesJSONRequestBody = AssetIds
 // SetMapStyleJSONRequestBody defines body for SetMapStyle for application/json ContentType.
 type SetMapStyleJSONRequestBody = MapStyle
 
+// CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
+type CreateAPIKeyJSONRequestBody = ApiKeyCreate
+
 // CreateDeviceKeyJSONRequestBody defines body for CreateDeviceKey for application/json ContentType.
 type CreateDeviceKeyJSONRequestBody = CreateDeviceKeyRequest
 
@@ -1702,6 +1776,12 @@ type ServerInterface interface {
 	// GetMapTrips Journeys found from the time and distance between photos
 	// (GET /api/map/trips)
 	GetMapTrips(w http.ResponseWriter, r *http.Request)
+	// ListAPIKeys The current user's keys, without the keys themselves
+	// (GET /api/me/api-keys)
+	ListAPIKeys(w http.ResponseWriter, r *http.Request)
+	// CreateAPIKey Create a key with chosen rights. It is shown only once
+	// (POST /api/me/api-keys)
+	CreateAPIKey(w http.ResponseWriter, r *http.Request)
 	// CreateDeviceKey Create a long-lived key for this device, used by background backup
 	// (POST /api/me/device-keys)
 	CreateDeviceKey(w http.ResponseWriter, r *http.Request)
@@ -2215,6 +2295,18 @@ func (_ Unimplemented) SetMapStyle(w http.ResponseWriter, r *http.Request) {
 // GetMapTrips Journeys found from the time and distance between photos
 // (GET /api/map/trips)
 func (_ Unimplemented) GetMapTrips(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAPIKeys The current user's keys, without the keys themselves
+// (GET /api/me/api-keys)
+func (_ Unimplemented) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateAPIKey Create a key with chosen rights. It is shown only once
+// (POST /api/me/api-keys)
+func (_ Unimplemented) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4131,6 +4223,34 @@ func (siw *ServerInterfaceWrapper) GetMapTrips(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// ListAPIKeys operation middleware
+func (siw *ServerInterfaceWrapper) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAPIKeys(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateAPIKey(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateDeviceKey operation middleware
 func (siw *ServerInterfaceWrapper) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
 
@@ -5490,6 +5610,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/me/totp/disable", wrapper.DisableTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/me/api-keys", wrapper.ListAPIKeys)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/me/api-keys", wrapper.CreateAPIKey)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/me/device-keys", wrapper.CreateDeviceKey)

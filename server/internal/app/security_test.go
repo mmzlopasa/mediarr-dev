@@ -80,7 +80,7 @@ func TestChangingThePasswordEndsAllOtherAccess(t *testing.T) {
 	expect(t, resp, body, http.StatusOK)
 }
 
-func TestAPasswordChangeByKeyEndsAllSessions(t *testing.T) {
+func TestAKeyCannotChangeThePassword(t *testing.T) {
 	s := newStack(t)
 	c := s.admin()
 	resp, body := c.post("/api/me/device-keys", api.CreateDeviceKeyRequest{Name: "phone"})
@@ -90,11 +90,9 @@ func TestAPasswordChangeByKeyEndsAllSessions(t *testing.T) {
 	resp, body = byKey.do(http.MethodPost, "/api/me/password", map[string]string{
 		apiKeyHeader: key, "Content-Type": "application/json",
 	}, strings.NewReader(`{"currentPassword":"`+testPassword+`","newPassword":"a-completely-new-password"}`))
-	if resp.StatusCode >= http.StatusBadRequest {
-		t.Fatalf("%s", body)
-	}
+	expect(t, resp, body, http.StatusForbidden)
 	resp, body = c.get("/api/timeline/buckets")
-	expect(t, resp, body, http.StatusUnauthorized)
+	expect(t, resp, body, http.StatusOK)
 }
 
 func TestAnotherSiteCannotUseTheCookie(t *testing.T) {

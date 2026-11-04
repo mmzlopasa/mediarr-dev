@@ -247,6 +247,10 @@ class ApiClient {
           return AlbumUpdate.fromJson(value);
         case 'AnalysisProgress':
           return AnalysisProgress.fromJson(value);
+        case 'ApiKey':
+          return ApiKey.fromJson(value);
+        case 'ApiKeyCreate':
+          return ApiKeyCreate.fromJson(value);
         case 'Asset':
           return Asset.fromJson(value);
         case 'AssetDetail':

@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import type { PageProps } from './$types';
-	import { api, ApiError, type TotpSetup } from '#lib/api.ts';
+	import { api, ApiError, type ApiKey, type TotpSetup } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Card from '#lib/design/components/Card.svelte';
@@ -19,6 +20,56 @@
 	let code = $state('');
 	let disablePassword = $state('');
 	let totpError = $state('');
+
+	const SCOPES: { id: ApiKey['scopes'][number]; hr: string; en: string }[] = [
+		{ id: 'read', hr: 'Čitanje', en: 'Read' },
+		{ id: 'upload', hr: 'Slanje datoteka', en: 'Upload' },
+		{ id: 'write', hr: 'Izmjene i brisanje', en: 'Change and delete' },
+		{ id: 'admin', hr: 'Administracija', en: 'Administration' }
+	];
+	let keys = $state<ApiKey[]>();
+	let keyName = $state('');
+	let keyScopes = $state<ApiKey['scopes']>(['read']);
+	let keyDays = $state('');
+	let newKey = $state('');
+	let keyError = $state('');
+
+	async function loadKeys() {
+		try {
+			keys = await api.apiKeys();
+		} catch (cause) {
+			keyError = message(cause);
+		}
+	}
+
+	onMount(loadKeys);
+
+	async function createKey(event: SubmitEvent) {
+		event.preventDefault();
+		keyError = '';
+		try {
+			const made = await api.createApiKey(
+				keyName,
+				keyScopes,
+				keyDays ? Number(keyDays) : undefined
+			);
+			newKey = made.key;
+			keyName = '';
+			keyDays = '';
+			await loadKeys();
+		} catch (cause) {
+			keyError = message(cause);
+		}
+	}
+
+	async function revokeKey(id: string) {
+		try {
+			await api.revokeApiKey(id);
+			await loadKeys();
+		} catch (cause) {
+			keyError = message(cause);
+		}
+	}
 
 	const message = (cause: unknown) =>
 		cause instanceof ApiError ? cause.message : tr('Nešto nije u redu.', 'Something went wrong.');
@@ -105,6 +156,51 @@
 			<div class="btn-row">
 				<Button type="submit" variant="gold">{tr('Promijeni lozinku', 'Change password')}</Button>
 			</div>
+		</form>
+	</Card>
+
+	<Card title={tr('API ključevi', 'API keys')}>
+		<p class="alb-meta">
+			{tr(
+				'Ključ daje programu samo odabrana prava i ne može upravljati računom. Promjena lozinke opoziva sve ključeve.',
+				'A key gives a program only the chosen rights, and cannot manage the account. Changing the password revokes all keys.'
+			)}
+		</p>
+		{#if keyError}<Alert kind="err">{keyError}</Alert>{/if}
+		{#if newKey}
+			<Alert kind="ok"
+				>{tr(
+					'Spremite ga sada, jer se više neće prikazati:',
+					'Save it now, because it will not be shown again:'
+				)} <code data-testid="new-key">{newKey}</code></Alert
+			>
+		{/if}
+		{#each keys ?? [] as key (key.id)}
+			<div class="alb-list">
+				<b>{key.name}</b>
+				<span class="alb-meta">
+					{key.scopes.join(', ')}
+					{#if key.expiresAt}· {tr('istječe', 'expires')}
+						{new Date(key.expiresAt).toLocaleDateString()}{/if}
+				</span>
+				<Button small onclick={() => revokeKey(key.id)}>{tr('Opozovi', 'Revoke')}</Button>
+			</div>
+		{/each}
+		<form class="form" onsubmit={createKey}>
+			<Input label={tr('Naziv ključa', 'Key name')} bind:value={keyName} />
+			{#each SCOPES as scope (scope.id)}
+				{#if scope.id !== 'admin' || data.user.isAdmin}
+					<label>
+						<input type="checkbox" bind:group={keyScopes} value={scope.id} />
+						{tr(scope.hr, scope.en)}
+					</label>
+				{/if}
+			{/each}
+			<Input
+				label={tr('Istječe za dana (po želji)', 'Expires in days (optional)')}
+				bind:value={keyDays}
+			/>
+			<Button type="submit" variant="gold" small>{tr('Stvori ključ', 'Create a key')}</Button>
 		</form>
 	</Card>
 

@@ -35,7 +35,8 @@ func (s *apiServer) loadUser(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		user, err := s.authenticate(r)
+		ctx := r.Context()
+		user, err := s.authenticate(r, &ctx)
 		if err != nil {
 			if !db.IsNotFound(err) {
 				internalError(w, r, err)
@@ -44,13 +45,23 @@ func (s *apiServer) loadUser(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userKey{}, &user)))
+		r = r.WithContext(context.WithValue(ctx, userKey{}, &user))
+		if scopes, ok := ctx.Value(scopesKey{}).([]string); ok && !keyMayDo(scopes, r.Method, r.URL.Path) {
+			writeError(w, http.StatusForbidden, "this key does not have the right to do that")
+			return
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 
-func (s *apiServer) authenticate(r *http.Request) (db.User, error) {
+func (s *apiServer) authenticate(r *http.Request, ctx *context.Context) (db.User, error) {
 	if key := r.Header.Get(apiKeyHeader); key != "" {
-		return s.queries.GetUserByAPIKey(r.Context(), auth.HashToken(key))
+		row, err := s.queries.GetUserByAPIKey(r.Context(), auth.HashToken(key))
+		if err != nil {
+			return db.User{}, err
+		}
+		*ctx = context.WithValue(*ctx, scopesKey{}, row.Scopes)
+		return row.User, nil
 	}
 	cookie, err := r.Cookie(sessionCookie)
 	if err != nil {
@@ -456,7 +467,10 @@ func (s *apiServer) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
-	id, err := s.queries.CreateAPIKey(r.Context(), db.CreateAPIKeyParams{UserID: user.ID, Name: name, KeyHash: hash})
+	// A phone's backup only ever sends files, so a stolen phone key cannot read the library.
+	id, err := s.queries.CreateAPIKey(r.Context(), db.CreateAPIKeyParams{
+		UserID: user.ID, Name: name, KeyHash: hash, Scopes: []string{scopeUpload},
+	})
 	if err != nil {
 		internalError(w, r, err)
 		return

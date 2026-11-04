@@ -11,6 +11,8 @@ doc/AlbumMember.md
 doc/AlbumRules.md
 doc/AlbumUpdate.md
 doc/AnalysisProgress.md
+doc/ApiKey.md
+doc/ApiKeyCreate.md
 doc/Asset.md
 doc/AssetDetail.md
 doc/AssetEdits.md
@@ -99,6 +101,8 @@ lib/model/album_member.dart
 lib/model/album_rules.dart
 lib/model/album_update.dart
 lib/model/analysis_progress.dart
+lib/model/api_key.dart
+lib/model/api_key_create.dart
 lib/model/asset.dart
 lib/model/asset_detail.dart
 lib/model/asset_edits.dart
