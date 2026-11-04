@@ -238,6 +238,13 @@ final class BackupEngine: NSObject {
     }
   }
 
+  func setServer(_ value: String) {
+    queue.async { [self] in
+      defaults.set(value, forKey: Keys.server)
+      pump()
+    }
+  }
+
   func setChargingOnly(_ value: Bool) {
     queue.async { [self] in
       defaults.set(value, forKey: Keys.chargingOnly)
@@ -339,8 +346,7 @@ final class BackupEngine: NSObject {
 
   /// Starts more transfers, while the queue has room. Called whenever anything finishes.
   private func pump() {
-    if chargingOnly && !pluggedIn { return }
-    guard enabled, !paused else {
+    guard enabled, !paused, !chargingOnly || pluggedIn else {
       finishIfIdle()
       return
     }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../services/session.dart';
 import '../services/settings.dart';
 import '../theme.dart';
 import 'free_space_screen.dart';
@@ -55,6 +56,8 @@ class SettingsScreen extends ConsumerWidget {
                   notifier.change(settings.copyWith(gridSize: chosen.first)),
             ),
           ),
+          heading('Server'),
+          const _SecondAddress(),
           heading('This phone'),
           if (!settings.readOnly)
             ListTile(
@@ -87,4 +90,93 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _SecondAddress extends ConsumerStatefulWidget {
+  const _SecondAddress();
+
+  @override
+  ConsumerState<_SecondAddress> createState() => _SecondAddressState();
+}
+
+class _SecondAddressState extends ConsumerState<_SecondAddress> {
+  final _field = TextEditingController();
+  String? _main;
+  String? _message;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final notifier = ref.read(sessionProvider.notifier);
+    final main = await notifier.mainServer();
+    final second = await notifier.secondServer();
+    if (!mounted) return;
+    setState(() {
+      _main = main;
+      _field.text = second ?? '';
+    });
+  }
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    String message;
+    try {
+      await ref.read(sessionProvider.notifier).setSecondServer(_field.text);
+      message = _field.text.trim().isEmpty ? 'Removed.' : 'Saved.';
+    } on LoginFailure catch (cause) {
+      message = cause.message;
+    }
+    if (mounted) {
+      setState(() {
+        _busy = false;
+        _message = message;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_main != null) Text('Main address: $_main'),
+        const SizedBox(height: 10),
+        TextField(
+          controller: _field,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          decoration: const InputDecoration(
+            labelText: 'Second address',
+            helperText: 'Used when the main one does not answer, such as away from home',
+            helperMaxLines: 2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            TextButton(
+              onPressed: _busy ? null : _save,
+              child: const Text('Save'),
+            ),
+            if (_message != null) Expanded(child: Text(_message!)),
+          ],
+        ),
+      ],
+    ),
+  );
 }

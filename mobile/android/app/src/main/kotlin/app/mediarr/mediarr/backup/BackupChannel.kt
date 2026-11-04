@@ -73,6 +73,7 @@ class BackupChannel(context: Context, messenger: BinaryMessenger) {
                 "disable" -> reply { engine.disable(); null }
                 "setWifiOnly" -> reply { engine.setWifiOnly(call.argument<Boolean>("value") ?: true); null }
                 "setChargingOnly" -> reply { engine.setChargingOnly(call.argument<Boolean>("value") ?: false); null }
+                "setServer" -> reply { call.argument<String>("value")?.let(engine::setServer); null }
                 "retryFailed" -> reply { engine.retryFailed(); null }
                 "status" -> reply { engine.status() }
                 "statuses" -> reply { engine.store.statuses(call.argument<List<String>>("ids") ?: emptyList()) }

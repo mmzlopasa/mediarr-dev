@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediarr/screens/settings_screen.dart';
+import 'package:mediarr/services/session.dart';
 import 'package:mediarr/services/settings.dart';
 import 'package:mediarr/timeline/layout.dart';
 
@@ -76,6 +77,27 @@ void main() {
       rowHeightFor(400, GridSize.small.scale),
       lessThan(rowHeightFor(400)),
     );
+  });
+
+  group('choosing a server address', () {
+    Future<bool> Function(String) only(Set<String> up) =>
+        (server) async => up.contains(server);
+
+    test('with one address nothing is asked', () async {
+      expect(await pickServer('a', null, only({})), 'a');
+    });
+
+    test('the main address wins when both answer', () async {
+      expect(await pickServer('a', 'b', only({'a', 'b'})), 'a');
+    });
+
+    test('the second is used when the main does not answer', () async {
+      expect(await pickServer('a', 'b', only({'b'})), 'b');
+    });
+
+    test('with neither there is no answer', () async {
+      expect(await pickServer('a', 'b', only({})), isNull);
+    });
   });
 
   testWidgets('choosing a grid size and read-only mode changes the settings', (

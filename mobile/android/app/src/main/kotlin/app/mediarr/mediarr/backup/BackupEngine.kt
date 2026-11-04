@@ -125,6 +125,11 @@ class BackupEngine(context: Context) {
         runNow()
     }
 
+    fun setServer(value: String) {
+        prefs.edit().putString(KEY_SERVER, value).apply()
+        runNow()
+    }
+
     fun retryFailed() {
         store.retryFailed()
         runNow()

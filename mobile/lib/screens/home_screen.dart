@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../services/backup.dart';
+import '../services/session.dart';
 import '../services/settings.dart';
 import '../services/shared_files.dart';
 import '../services/uploads.dart';
@@ -17,17 +22,40 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
   int _tab = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     SharedFilesChannel.listen((files) {
       if (!mounted) return;
       ref.read(uploadsProvider.notifier).addShared(files);
       setState(() => _tab = 2);
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_recheckServer());
+  }
+
+  Future<void> _recheckServer() async {
+    final moved = await ref.read(sessionProvider.notifier).recheckServer();
+    if (moved == null) return;
+    try {
+      await ref.read(backupProvider).setServer(moved);
+    } on MissingPluginException {
+      // No native backup on this platform.
+    }
   }
 
   @override

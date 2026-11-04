@@ -215,5 +215,8 @@ class BackupService {
   Future<void> setChargingOnly(bool value) =>
       _channel.invokeMethod<void>('setChargingOnly', {'value': value});
 
+  Future<void> setServer(String server) =>
+      _channel.invokeMethod<void>('setServer', {'value': server});
+
   Future<void> retryFailed() => _channel.invokeMethod<void>('retryFailed');
 }

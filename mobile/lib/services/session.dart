@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http show get;
 import 'package:http/http.dart' show Response;
 import 'package:mediarr_api/api.dart';
 
@@ -113,6 +114,32 @@ String normalizeServerUrl(String input) {
   return url.replaceAll(RegExp(r'/+$'), '');
 }
 
+/// Answers whether a Mediarr server is at this address, within a short time.
+Future<bool> serverAnswers(String server) async {
+  try {
+    final answer = await http
+        .get(Uri.parse('$server/api/auth/status'))
+        .timeout(serverProbeWait);
+    return answer.statusCode == 200;
+  } on Exception {
+    return false;
+  }
+}
+
+const serverProbeWait = Duration(seconds: 3);
+
+/// The first address that answers. The main one wins when both do.
+Future<String?> pickServer(
+  String main,
+  String? second,
+  Future<bool> Function(String server) answers,
+) async {
+  if (second == null || second.isEmpty) return main;
+  final results = await Future.wait([answers(main), answers(second)]);
+  if (results[0]) return main;
+  return results[1] ? second : null;
+}
+
 /// A secret that proves later that this app is the one that started the sign-in.
 String newSsoVerifier() {
   final random = Random.secure();
@@ -145,6 +172,7 @@ final sessionProvider = AsyncNotifierProvider<SessionNotifier, Session?>(
 class SessionNotifier extends AsyncNotifier<Session?> {
   static const _serverKey = 'server_url';
   static const _cookieKey = 'session_cookie';
+  static const _secondKey = 'server_second';
   static const _storage = FlutterSecureStorage();
 
   /// Restores the last session, if the server still accepts it.
@@ -153,8 +181,10 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     final server = await _storage.read(key: _serverKey);
     final cookie = await _storage.read(key: _cookieKey);
     if (server == null || cookie == null) return null;
+    final second = await _storage.read(key: _secondKey);
+    final reachable = await pickServer(server, second, serverAnswers) ?? server;
 
-    final client = ApiClient(basePath: server);
+    final client = ApiClient(basePath: reachable);
     client.addDefaultHeader('Cookie', cookie);
     try {
       final status = await DefaultApi(client).getAuthStatus();
@@ -163,7 +193,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
         await _storage.delete(key: _cookieKey);
         return null;
       }
-      return Session(serverUrl: server, cookie: cookie, user: user);
+      return Session(serverUrl: reachable, cookie: cookie, user: user);
     } on ApiException {
       // The server is unreachable right now. Keep the cookie and ask again on the login screen.
       return null;
@@ -171,6 +201,39 @@ class SessionNotifier extends AsyncNotifier<Session?> {
   }
 
   Future<String?> lastServer() => _storage.read(key: _serverKey);
+
+  Future<String?> mainServer() => _storage.read(key: _serverKey);
+
+  Future<String?> secondServer() => _storage.read(key: _secondKey);
+
+  /// A second way to the same server, such as a home address and an outside one.
+  Future<void> setSecondServer(String? input) async {
+    final text = input?.trim() ?? '';
+    if (text.isEmpty) {
+      await _storage.delete(key: _secondKey);
+      return;
+    }
+    final url = normalizeServerUrl(text);
+    if (!await serverAnswers(url)) {
+      throw LoginFailure('No Mediarr server answered at that address.');
+    }
+    await _storage.write(key: _secondKey, value: url);
+  }
+
+  /// After coming back to the app: moves to the other address only if this one stopped answering.
+  Future<String?> recheckServer() async {
+    final session = state.value;
+    if (session == null || await serverAnswers(session.serverUrl)) return null;
+    final main = await _storage.read(key: _serverKey);
+    final second = await _storage.read(key: _secondKey);
+    if (main == null || second == null) return null;
+    final other = session.serverUrl == main ? second : main;
+    if (!await serverAnswers(other)) return null;
+    state = AsyncData(
+      Session(serverUrl: other, cookie: session.cookie, user: session.user),
+    );
+    return other;
+  }
 
   Future<void> signIn({
     required String server,
@@ -270,6 +333,8 @@ class SessionNotifier extends AsyncNotifier<Session?> {
       }
     }
     await _storage.delete(key: _cookieKey);
+    // It belongs to this server, and the next sign-in may be to another one.
+    await _storage.delete(key: _secondKey);
     state = const AsyncData(null);
   }
 }
