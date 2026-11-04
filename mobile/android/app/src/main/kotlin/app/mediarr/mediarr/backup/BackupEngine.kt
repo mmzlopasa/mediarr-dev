@@ -118,6 +118,22 @@ class BackupEngine(context: Context) {
         runNow()
     }
 
+    /** For each chosen album, the checksums of its photos that are safely on the server. */
+    fun albumChecksums(): List<Map<String, Any>> {
+        val all = albums()
+        val verified = store.verifiedChecksums()
+        val never = excludedAlbums
+        return (listOfNotNull(findAlbum(albumId, albumName, all)) + all.filter { it.id in moreAlbums })
+            .distinctBy { it.id }
+            .filter { it.id !in never }
+            .map { album ->
+                mapOf(
+                    "title" to album.title,
+                    "checksums" to assetsIn(album).flatMap { verified[it.id] ?: emptyList() },
+                )
+            }
+    }
+
     /** Everything in the chosen albums, except what is also in an excluded one. */
     private fun assetsToSend(): List<LocalAsset> {
         val all = albums()

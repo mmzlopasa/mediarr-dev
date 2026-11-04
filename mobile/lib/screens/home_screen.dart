@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mediarr_api/api.dart';
 
 import '../services/backup.dart';
 import '../services/session.dart';
@@ -45,7 +46,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) unawaited(_recheckServer());
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_recheckServer());
+      unawaited(_mirrorAlbums());
+    }
+  }
+
+  Future<void> _mirrorAlbums() async {
+    final settings = ref.read(settingsProvider);
+    final session = ref.read(sessionProvider).value;
+    if (!settings.mirrorAlbums || settings.readOnly || session == null) return;
+    try {
+      final phone = await ref.read(backupProvider).albumChecksums();
+      await mirrorAlbums(session.api, phone);
+    } on ApiException {
+      // Next time: nothing is lost, as only the album membership waits.
+    } on MissingPluginException {
+      // No native backup on this platform.
+    } on PlatformException {
+      // The same.
+    }
   }
 
   Future<void> _recheckServer() async {

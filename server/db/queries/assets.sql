@@ -31,7 +31,7 @@ SELECT count(*) AS total,
 FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL;
 
 -- name: FindExistingChecksums :many
-SELECT checksum FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checksum = ANY($2::bytea[]);
+SELECT checksum, id FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checksum = ANY($2::bytea[]);
 
 -- name: UpdateAssetMetadata :exec
 UPDATE assets

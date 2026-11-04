@@ -3212,6 +3212,10 @@ export interface components {
         };
         ChecksumCheckResponse: {
             existing: string[];
+            /** @description The asset for each existing checksum */
+            ids: {
+                [key: string]: string;
+            };
         };
     };
     responses: {

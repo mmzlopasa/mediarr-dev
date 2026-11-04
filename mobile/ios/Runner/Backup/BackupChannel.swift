@@ -44,6 +44,8 @@ enum BackupChannel {
           excluded: arguments["excluded"] as? [String] ?? [],
           onlyNew: arguments["onlyNew"] as? Bool ?? false)
         result(nil)
+      case "albumChecksums":
+        engine.albumChecksums { value in DispatchQueue.main.async { result(value) } }
       case "setServer":
         if let value = arguments["value"] as? String { engine.setServer(value) }
         result(nil)

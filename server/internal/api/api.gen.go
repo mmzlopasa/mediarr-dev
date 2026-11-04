@@ -1248,6 +1248,9 @@ type ChecksumCheckRequest struct {
 // ChecksumCheckResponse defines model for ChecksumCheckResponse.
 type ChecksumCheckResponse struct {
 	Existing []string `json:"existing"`
+
+	// Ids The asset for each existing checksum
+	Ids map[string]openapi_types.UUID `json:"ids"`
 }
 
 // Comment defines model for Comment.

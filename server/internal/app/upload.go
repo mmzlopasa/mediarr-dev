@@ -27,6 +27,7 @@ import (
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/jobs"
 	"github.com/mediarr-app/mediarr/server/internal/storage"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -390,8 +391,10 @@ func (s *apiServer) CheckAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	existing := make([]string, len(found))
-	for i, sum := range found {
-		existing[i] = hex.EncodeToString(sum)
+	ids := make(map[string]openapi_types.UUID, len(found))
+	for i, row := range found {
+		existing[i] = hex.EncodeToString(row.Checksum)
+		ids[existing[i]] = openapi_types.UUID(row.ID.Bytes)
 	}
-	writeJSON(w, http.StatusOK, api.ChecksumCheckResponse{Existing: existing})
+	writeJSON(w, http.StatusOK, api.ChecksumCheckResponse{Existing: existing, Ids: ids})
 }

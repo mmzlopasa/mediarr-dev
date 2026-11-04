@@ -81,6 +81,7 @@ class BackupChannel(context: Context, messenger: BinaryMessenger) {
                     )
                     null
                 }
+                "albumChecksums" -> reply { engine.albumChecksums() }
                 "setServer" -> reply { call.argument<String>("value")?.let(engine::setServer); null }
                 "retryFailed" -> reply { engine.retryFailed(); null }
                 "status" -> reply { engine.status() }

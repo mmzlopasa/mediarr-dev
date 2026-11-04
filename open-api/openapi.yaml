@@ -3040,8 +3040,12 @@ components:
           items: { type: string }
     ChecksumCheckResponse:
       type: object
-      required: [existing]
+      required: [existing, ids]
       properties:
         existing:
           type: array
           items: { type: string }
+        ids:
+          type: object
+          description: "The asset for each existing checksum"
+          additionalProperties: { type: string, format: uuid }

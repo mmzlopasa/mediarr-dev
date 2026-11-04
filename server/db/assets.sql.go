@@ -125,7 +125,7 @@ func (q *Queries) DeleteUserAssets(ctx context.Context, userID pgtype.UUID) erro
 }
 
 const findExistingChecksums = `-- name: FindExistingChecksums :many
-SELECT checksum FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checksum = ANY($2::bytea[])
+SELECT checksum, id FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checksum = ANY($2::bytea[])
 `
 
 type FindExistingChecksumsParams struct {
@@ -133,19 +133,24 @@ type FindExistingChecksumsParams struct {
 	Column2 [][]byte
 }
 
-func (q *Queries) FindExistingChecksums(ctx context.Context, arg FindExistingChecksumsParams) ([][]byte, error) {
+type FindExistingChecksumsRow struct {
+	Checksum []byte
+	ID       pgtype.UUID
+}
+
+func (q *Queries) FindExistingChecksums(ctx context.Context, arg FindExistingChecksumsParams) ([]FindExistingChecksumsRow, error) {
 	rows, err := q.db.Query(ctx, findExistingChecksums, arg.UserID, arg.Column2)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items [][]byte
+	var items []FindExistingChecksumsRow
 	for rows.Next() {
-		var checksum []byte
-		if err := rows.Scan(&checksum); err != nil {
+		var i FindExistingChecksumsRow
+		if err := rows.Scan(&i.Checksum, &i.ID); err != nil {
 			return nil, err
 		}
-		items = append(items, checksum)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

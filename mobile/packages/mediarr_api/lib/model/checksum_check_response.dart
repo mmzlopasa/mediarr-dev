@@ -14,27 +14,33 @@ class ChecksumCheckResponse {
   /// Returns a new [ChecksumCheckResponse] instance.
   ChecksumCheckResponse({
     this.existing = const [],
+    this.ids = const {},
   });
 
   List<String> existing;
+
+  /// The asset for each existing checksum
+  Map<String, String> ids;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ChecksumCheckResponse &&
-          _deepEquality.equals(other.existing, existing);
+          _deepEquality.equals(other.existing, existing) &&
+          _deepEquality.equals(other.ids, ids);
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (existing.hashCode);
+      (existing.hashCode) + (ids.hashCode);
 
   @override
-  String toString() => 'ChecksumCheckResponse[existing=$existing]';
+  String toString() => 'ChecksumCheckResponse[existing=$existing, ids=$ids]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'existing'] = this.existing;
+    json[r'ids'] = this.ids;
     return json;
   }
 
@@ -64,6 +70,7 @@ class ChecksumCheckResponse {
                 .cast<String>()
                 .toList(growable: false)
             : const [],
+        ids: mapCastOfType<String, String>(json, r'ids')!,
       );
     }
     return null;
@@ -121,5 +128,6 @@ class ChecksumCheckResponse {
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
     'existing',
+    'ids',
   };
 }

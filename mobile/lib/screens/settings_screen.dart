@@ -74,6 +74,17 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           SwitchListTile(
+            secondary: const Icon(Icons.photo_album_outlined),
+            title: const Text('Copy albums to the server'),
+            subtitle: const Text(
+              'Backed-up albums get an album of the same name on the server. Photos are only added, never removed',
+            ),
+            value: settings.mirrorAlbums,
+            activeThumbColor: Palette.gold,
+            onChanged: (value) =>
+                notifier.change(settings.copyWith(mirrorAlbums: value)),
+          ),
+          SwitchListTile(
             secondary: const Icon(Icons.visibility_outlined),
             title: const Text('Read-only mode'),
             subtitle: const Text(

@@ -15,6 +15,13 @@ class BackupAlbum {
   final int count;
 }
 
+class PhoneAlbum {
+  const PhoneAlbum(this.title, this.checksums);
+
+  final String title;
+  final List<String> checksums;
+}
+
 class BackupFailure {
   BackupFailure(this.assetId, this.error);
 
@@ -236,8 +243,75 @@ class BackupService {
     'onlyNew': onlyNew,
   });
 
+  /// Each chosen album on this phone, with the checksums already safe on the server.
+  Future<List<PhoneAlbum>> albumChecksums() async {
+    final list = await _channel.invokeListMethod<Object?>('albumChecksums');
+    return [
+      for (final raw in list ?? const <Object?>[])
+        if (raw is Map)
+          PhoneAlbum(
+            raw['title']?.toString() ?? '',
+            _strings(raw['checksums']),
+          ),
+    ];
+  }
+
   Future<void> setServer(String server) =>
       _channel.invokeMethod<void>('setServer', {'value': server});
 
   Future<void> retryFailed() => _channel.invokeMethod<void>('retryFailed');
+}
+
+const _syncBatch = 1000;
+
+/// Makes the server's albums follow the phone's, one way: photos are added, and nothing is removed.
+/// Returns how many albums were looked at.
+Future<int> mirrorAlbums(DefaultApi api, List<PhoneAlbum> phone) async {
+  final existing = await api.listAlbums() ?? const <Album>[];
+  var done = 0;
+  for (final album in phone) {
+    if (album.title.isEmpty || album.checksums.isEmpty) continue;
+    final ids = <String>{};
+    for (var start = 0; start < album.checksums.length; start += _syncBatch) {
+      final answer = await api.checkAssets(
+        ChecksumCheckRequest(
+          checksums: album.checksums.sublist(
+            start,
+            (start + _syncBatch).clamp(0, album.checksums.length),
+          ),
+        ),
+      );
+      ids.addAll(answer?.ids.values ?? const <String>[]);
+    }
+    if (ids.isEmpty) continue;
+    var id = _ownAlbum(existing, album.title);
+    if (id == null) {
+      final created = await api.createAlbum(AlbumCreate(title: album.title));
+      if (created == null) continue;
+      existing.add(created);
+      id = created.id;
+    }
+    final all = ids.toList();
+    for (var start = 0; start < all.length; start += _syncBatch) {
+      await api.addAlbumAssets(
+        id,
+        AssetIds(
+          ids: all.sublist(start, (start + _syncBatch).clamp(0, all.length)),
+        ),
+      );
+    }
+    done++;
+  }
+  return done;
+}
+
+String? _ownAlbum(List<Album> albums, String title) {
+  for (final album in albums) {
+    if (album.title == title &&
+        !album.isSmart &&
+        album.role == AlbumRoleEnum.owner) {
+      return album.id;
+    }
+  }
+  return null;
 }

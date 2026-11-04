@@ -579,6 +579,10 @@ func TestDedup(t *testing.T) {
 	if !strings.Contains(string(body), sumHex) {
 		t.Errorf("did not report the existing checksum: %s", body)
 	}
+	var answer api.ChecksumCheckResponse
+	if err := json.Unmarshal(body, &answer); err != nil || len(answer.Ids) != len(answer.Existing) {
+		t.Errorf("checksums without their asset: %s, %v", body, err)
+	}
 
 	// Libraries are private, so another user's copy is a separate asset.
 	resp, body = other.post("/api/assets/check", api.ChecksumCheckRequest{Checksums: []string{sumHex}})

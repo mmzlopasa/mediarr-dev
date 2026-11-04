@@ -1,3 +1,8 @@
+import 'dart:convert';
+
+import 'package:http/http.dart';
+import 'package:http/testing.dart';
+import 'package:mediarr_api/api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -196,4 +201,83 @@ void freeSpaceTests() {
     expect(lists.more, ['a']);
     expect(lists.excluded, ['b']);
   });
+
+  group('copying albums to the server', () {
+    DefaultApi fake(List<Map<String, dynamic>> albums, List<String> requests) {
+      final client = ApiClient(basePath: 'http://server');
+      client.client = MockClient((request) async {
+        requests.add('${request.method} ${request.url.path}');
+        final path = request.url.path;
+        if (path == '/api/assets/check') {
+          return Response(
+            jsonEncode({
+              'existing': ['aa'],
+              'ids': {'aa': 'asset-1'},
+            }),
+            200,
+          );
+        }
+        if (path == '/api/albums' && request.method == 'GET') {
+          return Response(jsonEncode(albums), 200);
+        }
+        if (path == '/api/albums' && request.method == 'POST') {
+          return Response(jsonEncode(_album('new', 'Holiday')), 201);
+        }
+        return Response(jsonEncode({'changed': 1}), 200);
+      });
+      return DefaultApi(client);
+    }
+
+    test('a missing album is created, then filled', () async {
+      final requests = <String>[];
+      final done = await mirrorAlbums(fake([], requests), const [
+        PhoneAlbum('Holiday', ['aa']),
+      ]);
+      expect(done, 1);
+      expect(requests, contains('POST /api/albums'));
+      expect(requests, contains('POST /api/albums/new/assets'));
+    });
+
+    test('an album of the same name is reused', () async {
+      final requests = <String>[];
+      await mirrorAlbums(fake([_album('old', 'Holiday')], requests), const [
+        PhoneAlbum('Holiday', ['aa']),
+      ]);
+      expect(requests, isNot(contains('POST /api/albums')));
+      expect(requests, contains('POST /api/albums/old/assets'));
+    });
+
+    test('someone else\'s album of that name is left alone', () async {
+      final requests = <String>[];
+      await mirrorAlbums(
+        fake([_album('theirs', 'Holiday', role: 'viewer')], requests),
+        const [
+          PhoneAlbum('Holiday', ['aa']),
+        ],
+      );
+      expect(requests, contains('POST /api/albums'));
+      expect(requests, isNot(contains('POST /api/albums/theirs/assets')));
+    });
+
+    test('an album with nothing on the server yet is not created', () async {
+      final requests = <String>[];
+      await mirrorAlbums(fake([], requests), const [PhoneAlbum('Empty', [])]);
+      expect(requests, isNot(contains('POST /api/albums')));
+    });
+  });
 }
+
+Map<String, dynamic> _album(String id, String title, {String role = 'owner'}) =>
+    {
+      'id': id,
+      'title': title,
+      'description': '',
+      'role': role,
+      'ownerId': 'me',
+      'ownerName': 'me',
+      'assetCount': 0,
+      'order': 'newest',
+      'isSmart': false,
+      'createdAt': '2026-01-01T00:00:00Z',
+      'updatedAt': '2026-01-01T00:00:00Z',
+    };

@@ -84,6 +84,7 @@ class AppSettings {
   const AppSettings({
     this.gridSize = GridSize.medium,
     this.readOnly = false,
+    this.mirrorAlbums = false,
     this.freeSpace = const FreeSpaceRules(),
   });
 
@@ -93,6 +94,7 @@ class AppSettings {
       orElse: () => GridSize.medium,
     ),
     readOnly: json['readOnly'] as bool? ?? false,
+    mirrorAlbums: json['mirrorAlbums'] as bool? ?? false,
     freeSpace: FreeSpaceRules.fromJson(
       json['freeSpace'] as Map<String, dynamic>? ?? const {},
     ),
@@ -100,21 +102,25 @@ class AppSettings {
 
   final GridSize gridSize;
   final bool readOnly;
+  final bool mirrorAlbums;
   final FreeSpaceRules freeSpace;
 
   Map<String, dynamic> toJson() => {
     'gridSize': gridSize.name,
     'readOnly': readOnly,
+    'mirrorAlbums': mirrorAlbums,
     'freeSpace': freeSpace.toJson(),
   };
 
   AppSettings copyWith({
     GridSize? gridSize,
     bool? readOnly,
+    bool? mirrorAlbums,
     FreeSpaceRules? freeSpace,
   }) => AppSettings(
     gridSize: gridSize ?? this.gridSize,
     readOnly: readOnly ?? this.readOnly,
+    mirrorAlbums: mirrorAlbums ?? this.mirrorAlbums,
     freeSpace: freeSpace ?? this.freeSpace,
   );
 }

@@ -195,6 +195,27 @@ final class BackupEngine: NSObject {
     }
   }
 
+  /// For each chosen album, the checksums of its photos that are safely on the server.
+  func albumChecksums(reply: @escaping ([[String: Any]]) -> Void) {
+    queue.async { [self] in
+      guard let store = openStore() else { return reply([]) }
+      let verified = store.verifiedChecksums()
+      let all = loadAlbums()
+      let excluded = excludedAlbums
+      let chosen = ([currentAlbum()?.id].compactMap { $0 } + moreAlbums).filter {
+        !excluded.contains($0)
+      }
+      reply(
+        Array(Set(chosen)).compactMap { id in
+          guard let album = all.first(where: { $0.id == id }) else { return nil }
+          return [
+            "title": album.title,
+            "checksums": assets(inAlbums: [id]).flatMap { verified[$0.id] ?? [] },
+          ]
+        })
+    }
+  }
+
   /// More albums beside the chosen one, and albums whose photos are never sent.
   func setAlbumLists(more: [String], excluded: [String], onlyNew: Bool) {
     queue.async { [self] in
