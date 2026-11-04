@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mediarr/main.dart';
 import 'package:mediarr/screens/asset_picture.dart';
+import 'package:mediarr/screens/settings_screen.dart';
 import 'package:mediarr/services/backup.dart';
 import 'package:mediarr/services/session.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -198,11 +199,21 @@ void main() {
     await tester.tap(find.text('Account'));
     await waitFor(tester, find.text('Settings'));
     await tester.tap(find.text('Settings'));
-    await waitFor(tester, find.text('Read-only mode'));
+    await waitFor(tester, find.text('Photo grid'));
+    await tester.scrollUntilVisible(
+      find.text('Read-only mode'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(SettingsScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.tap(find.text('Read-only mode'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
     await tester.pageBack();
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Upload'), findsNothing);
     await tester.tap(find.text('Media'));

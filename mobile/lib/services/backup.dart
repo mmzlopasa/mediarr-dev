@@ -267,7 +267,7 @@ const _syncBatch = 1000;
 /// Makes the server's albums follow the phone's, one way: photos are added, and nothing is removed.
 /// Returns how many albums were looked at.
 Future<int> mirrorAlbums(DefaultApi api, List<PhoneAlbum> phone) async {
-  final existing = await api.listAlbums() ?? const <Album>[];
+  final existing = [...?await api.listAlbums()];
   var done = 0;
   for (final album in phone) {
     if (album.title.isEmpty || album.checksums.isEmpty) continue;
