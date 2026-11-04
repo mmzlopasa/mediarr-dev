@@ -41,14 +41,6 @@ jobs:
           flutter build ios --simulator --debug --target=integration_test/app_test.dart
           xcrun simctl install "$DEVICE" build/ios/iphonesimulator/Runner.app
           xcrun simctl privacy "$DEVICE" grant photos app.mediarr.mediarr
-          # In this Xcode the command alone leaves the app without access, so it also goes in directly.
-          TCC="$HOME/Library/Developer/CoreSimulator/Devices/$DEVICE/data/Library/TCC/TCC.db"
-          echo "after the command:"; sqlite3 "$TCC" "SELECT service, client, auth_value FROM access WHERE client='app.mediarr.mediarr'"
-          xcrun simctl shutdown "$DEVICE"
-          sqlite3 "$TCC" "INSERT OR REPLACE INTO access (service, client, client_type, auth_value, auth_reason, auth_version, flags, last_modified) VALUES ('kTCCServicePhotos', 'app.mediarr.mediarr', 0, 2, 3, 1, 0, strftime('%s','now'))"
-          echo "after the insert:"; sqlite3 "$TCC" "SELECT service, client, auth_value FROM access WHERE client='app.mediarr.mediarr'"
-          xcrun simctl boot "$DEVICE"
-          xcrun simctl bootstatus "$DEVICE" > /dev/null
       - name: Run the tests, keeping what the app logs
         timeout-minutes: 20
         run: |
