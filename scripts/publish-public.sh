@@ -22,6 +22,10 @@ cp -r "$ROOT/public-repo/.github/." "$EXPORT/.github/"
 cp "$ROOT/public-repo/README.md" "$EXPORT/README.md"
 cp "$ROOT/public-repo/docker-README.md" "$EXPORT/docker/README.md"
 
+FORBID=$HOME/.config/mediarr-publish-forbid
+[ -f "$FORBID" ] || { echo "Missing $FORBID."; exit 1; }
+if grep -rIil -f "$FORBID" "$EXPORT"; then
+  echo "The export holds words that must not be published."; exit 1
 fi
 
 if [ "${1:-}" = "--check" ]; then
