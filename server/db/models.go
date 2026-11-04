@@ -19,6 +19,7 @@ type Album struct {
 	Rules        []byte
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
+	IsFamily     bool
 }
 
 type AlbumAsset struct {
@@ -199,6 +200,11 @@ type FaceHint struct {
 	Y1       float32
 	X2       float32
 	Y2       float32
+}
+
+type FamilyMember struct {
+	UserID  pgtype.UUID
+	AddedAt pgtype.Timestamptz
 }
 
 type Import struct {

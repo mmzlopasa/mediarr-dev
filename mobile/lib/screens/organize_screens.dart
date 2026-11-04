@@ -72,6 +72,12 @@ class OrganizeLinks extends StatelessWidget {
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.family_restroom),
+          title: const Text('Family'),
+          onTap: () => open(const FamilyScreen()),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.description_outlined),
           title: const Text('Documents'),
           onTap: () => open(const DocumentsScreen()),
@@ -908,5 +914,219 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
         ),
       ],
     ),
+  );
+}
+
+/// Why there is nothing to show, for someone who cannot see the family library.
+String? familyClosedText(Family family) {
+  if (!family.enabled) return 'An administrator has not turned this on.';
+  if (!family.member) return 'You are not in the family library yet.';
+  return null;
+}
+
+class FamilyScreen extends ConsumerStatefulWidget {
+  const FamilyScreen({super.key});
+
+  @override
+  ConsumerState<FamilyScreen> createState() => _FamilyScreenState();
+}
+
+class _FamilyScreenState extends ConsumerState<FamilyScreen> {
+  late final Session _session = ref.read(sessionProvider).value!;
+  late final _store = TimelineStore.family(_session);
+  Family? _family;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _store.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final family = await _session.api.getFamily();
+      if (!mounted) return;
+      setState(() {
+        _family = family;
+        _failed = false;
+      });
+      if (family != null && familyClosedText(family) == null) {
+        await _store.refresh(reloadLoaded: true);
+      }
+    } on ApiException {
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  void _rules() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute<void>(
+            builder: (_) => _FamilyRulesScreen(family: _family!),
+          ),
+        )
+        .then((_) => _load());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final family = _family;
+    final closed = family == null ? null : familyClosedText(family);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Family'),
+        actions: [
+          if (family != null && closed == null)
+            IconButton(
+              tooltip: 'What I share',
+              icon: const Icon(Icons.tune),
+              onPressed: _rules,
+            ),
+        ],
+      ),
+      body: family == null
+          ? _failed
+                ? const EmptyMessage(
+                    icon: Icons.cloud_off,
+                    text: 'The family library could not be loaded.',
+                  )
+                : const Center(
+                    child: CircularProgressIndicator(color: Palette.gold),
+                  )
+          : closed != null
+          ? EmptyMessage(icon: Icons.family_restroom, text: closed)
+          : _PhotoGrid(
+              store: _store,
+              session: _session,
+              emptyText: 'Nobody has shared anything with the family yet.',
+              actions: (selected, clear) => const [],
+            ),
+    );
+  }
+}
+
+class _FamilyRulesScreen extends ConsumerStatefulWidget {
+  const _FamilyRulesScreen({required this.family});
+
+  final Family family;
+
+  @override
+  ConsumerState<_FamilyRulesScreen> createState() => _FamilyRulesScreenState();
+}
+
+class _FamilyRulesScreenState extends ConsumerState<_FamilyRulesScreen> {
+  late final Session _session = ref.read(sessionProvider).value!;
+  late List<FamilyRule> _rules = widget.family.rules;
+
+  Future<void> _reload() async {
+    final family = await _session.api.getFamily();
+    if (mounted && family != null) setState(() => _rules = family.rules);
+  }
+
+  Future<void> _add() async {
+    final title = TextEditingController();
+    final from = TextEditingController();
+    final place = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Share with the family'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: title,
+              decoration: const InputDecoration(labelText: 'Rule name'),
+            ),
+            TextField(
+              controller: from,
+              decoration: const InputDecoration(
+                labelText: 'From date (2024-06-01)',
+              ),
+            ),
+            TextField(
+              controller: place,
+              decoration: const InputDecoration(labelText: 'Place'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Share'),
+          ),
+        ],
+      ),
+    );
+    final name = title.text.trim();
+    final since = DateTime.tryParse(from.text.trim());
+    final where = place.text.trim();
+    title.dispose();
+    from.dispose();
+    place.dispose();
+    if (confirmed != true) return;
+    try {
+      await _session.api.createFamilyRule(
+        FamilyRuleCreate(
+          title: name,
+          rules: AlbumRules(from: since, place: where.isEmpty ? null : where),
+        ),
+      );
+      await _reload();
+    } on ApiException catch (cause) {
+      if (mounted) _tell(context, 'It was not saved. ${cause.message ?? ''}');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('What I share'),
+      actions: [
+        IconButton(
+          tooltip: 'New rule',
+          icon: const Icon(Icons.add),
+          onPressed: _add,
+        ),
+      ],
+    ),
+    body: _rules.isEmpty
+        ? const EmptyMessage(
+            icon: Icons.family_restroom,
+            text: 'You share nothing with the family yet.',
+          )
+        : ListView(
+            children: [
+              for (final rule in _rules)
+                ListTile(
+                  title: Text(rule.title),
+                  trailing: IconButton(
+                    tooltip: 'Stop sharing',
+                    icon: const Icon(Icons.close),
+                    onPressed: () async {
+                      try {
+                        await _session.api.deleteFamilyRule(rule.id);
+                        await _reload();
+                      } on ApiException {
+                        if (context.mounted) {
+                          _tell(context, 'The action failed.');
+                        }
+                      }
+                    },
+                  ),
+                ),
+            ],
+          ),
   );
 }

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { photo, signIn } from './helpers';
+import { photo, signIn, users } from './helpers';
 
 test.setTimeout(90000);
 test.describe.configure({ mode: 'serial' });
@@ -254,4 +254,33 @@ test('a key is created with chosen rights, shown once, and revoked', async ({ pa
 	const after = await fresh.request.get('/api/timeline/buckets', { headers });
 	expect(after.status()).toBe(401);
 	await fresh.close();
+});
+
+test('a family shares by rules, and only once it is turned on', async ({ page, browser }) => {
+	test.setTimeout(120000);
+	await signIn(page, 'organizer');
+	await page.goto('/family');
+	await expect(page.getByText(/nije uključio|has not turned/)).toBeVisible();
+
+	const origin = new URL(page.url()).origin;
+	const admin = await browser.newContext({ baseURL: origin });
+	await admin.request.post('/api/auth/login', {
+		data: { email: users.admin, password: process.env.E2E_PASSWORD }
+	});
+	await admin.request.put('/api/admin/features/family', { data: { enabled: true } });
+	const all = await (await admin.request.get('/api/admin/users')).json();
+	const me = all.find((user: { email: string }) => user.email === users.organizer);
+	await admin.request.put(`/api/admin/family/${me.id}`, { data: {} });
+
+	await page.reload();
+	await page.getByLabel(/Naziv pravila|Rule name/).fill('Since 2000');
+	await page.getByLabel(/^(Od datuma|From date)/).fill('2000-01-01');
+	await page.getByRole('button', { name: /Dijeli s obitelji|Share with the family/ }).click();
+	await expect(page.locator('.alb-list', { hasText: 'Since 2000' })).toBeVisible();
+	await page.locator('.alb-list', { hasText: 'Since 2000' }).getByRole('button').click();
+	await expect(page.locator('.alb-list', { hasText: 'Since 2000' })).toHaveCount(0);
+
+	await admin.request.delete(`/api/admin/family/${me.id}`);
+	await admin.request.put('/api/admin/features/family', { data: { enabled: false } });
+	await admin.close();
 });

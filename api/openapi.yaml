@@ -1862,6 +1862,102 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/family:
+    get:
+      operationId: getFamily
+      summary: The family library, and what this user shares with it
+      responses:
+        "200":
+          description: The state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Family" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/family/rules:
+    post:
+      operationId: createFamilyRule
+      summary: Share what matches a rule with the family. Photos are not copied
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FamilyRuleCreate" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: { type: string } }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/family/rules/{id}:
+    delete:
+      operationId: deleteFamilyRule
+      summary: Stop sharing what this rule covers
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Stopped }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/family/buckets:
+    get:
+      operationId: getFamilyBuckets
+      summary: Months in the family library
+      responses:
+        "200":
+          description: The months
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBuckets" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/family/buckets/{month}:
+    get:
+      operationId: getFamilyBucket
+      summary: Assets of one month in the family library
+      parameters:
+        - { name: month, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The assets
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimelineBucket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/family:
+    get:
+      operationId: listFamilyMembersAdmin
+      summary: Who is in the family library
+      responses:
+        "200":
+          description: The members
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/UserRef" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/family/{userId}:
+    parameters:
+      - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      operationId: addFamilyMember
+      summary: Add someone to the family library
+      responses:
+        "204": { description: Added }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: removeFamilyMember
+      summary: Remove someone. Their photos stay in their own library
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/admin/external:
     get:
       operationId: getExternalLibrary
@@ -2312,6 +2408,27 @@ components:
       properties:
         id: { type: string, format: uuid }
         secret: { type: string }
+    Family:
+      type: object
+      required: [enabled, member, members, rules]
+      properties:
+        enabled: { type: boolean }
+        member: { type: boolean }
+        members: { type: array, items: { $ref: "#/components/schemas/UserRef" } }
+        rules: { type: array, items: { $ref: "#/components/schemas/FamilyRule" } }
+    FamilyRule:
+      type: object
+      required: [id, title, rules]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        rules: { $ref: "#/components/schemas/AlbumRules" }
+    FamilyRuleCreate:
+      type: object
+      required: [title, rules]
+      properties:
+        title: { type: string }
+        rules: { $ref: "#/components/schemas/AlbumRules" }
     Memory:
       type: object
       required: [kind, title, items]

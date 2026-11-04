@@ -233,6 +233,21 @@
 		}
 	}
 
+	let familyIds = $state<string[]>([]);
+
+	onMount(async () => {
+		familyIds = (await api.familyMembers().catch(() => [])).map((member) => member.id);
+	});
+
+	async function toggleFamily(id: string, member: boolean) {
+		try {
+			await api.setFamilyMember(id, member);
+			familyIds = member ? [...familyIds, id] : familyIds.filter((other) => other !== id);
+		} catch {
+			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		}
+	}
+
 	async function externalAction(action: () => Promise<unknown>) {
 		try {
 			await action();
@@ -514,6 +529,27 @@
 						{#if run.message}· {run.message}{/if}
 					</span>
 				</div>
+			{/each}
+		</Card>
+	{/if}
+	{#if features.family}
+		<Card title={tr('Obiteljska biblioteka', 'Family library')}>
+			<p class="alb-meta">
+				{tr(
+					'Članovi dijele fotke po pravilima koja sami postave. Uklonjeni član prestaje dijeliti i vidjeti, a njegove fotke ostaju njegove.',
+					'Members share photos by rules they set themselves. A member who is removed stops sharing and seeing, and their photos stay theirs.'
+				)}
+			</p>
+			{#each users as user (user.id)}
+				<label class="alb-list">
+					<input
+						type="checkbox"
+						data-family={user.email}
+						checked={familyIds.includes(user.id)}
+						onchange={(event) => toggleFamily(user.id, event.currentTarget.checked)}
+					/>
+					{user.name} ({user.email})
+				</label>
 			{/each}
 		</Card>
 	{/if}

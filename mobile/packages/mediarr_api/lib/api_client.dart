@@ -319,6 +319,12 @@ class ApiClient {
           return ExternalLibraryOwner.fromJson(value);
         case 'FailedJob':
           return FailedJob.fromJson(value);
+        case 'Family':
+          return Family.fromJson(value);
+        case 'FamilyRule':
+          return FamilyRule.fromJson(value);
+        case 'FamilyRuleCreate':
+          return FamilyRuleCreate.fromJson(value);
         case 'FeatureUpdate':
           return FeatureUpdate.fromJson(value);
         case 'Folder':

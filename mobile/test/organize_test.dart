@@ -78,6 +78,7 @@ Future<void> _show(
 }
 
 void main() {
+  familyTests();
   setUp(() {
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -172,5 +173,19 @@ void main() {
     expect(find.text('Beach'), findsOneWidget);
     expect(find.text('4'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
+  });
+}
+
+void familyTests() {
+  test('someone outside the family is told why there is nothing', () {
+    expect(
+      familyClosedText(Family(enabled: false, member: true)),
+      contains('administrator'),
+    );
+    expect(
+      familyClosedText(Family(enabled: true, member: false)),
+      contains('not in the family'),
+    );
+    expect(familyClosedText(Family(enabled: true, member: true)), isNull);
   });
 }

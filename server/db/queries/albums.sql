@@ -10,7 +10,7 @@ SELECT al.id, al.owner_id, al.title, al.description, al.cover_asset_id, al.asset
 FROM albums al
 JOIN users u ON u.id = al.owner_id
 LEFT JOIN album_members m ON m.album_id = al.id AND m.user_id = sqlc.arg('user_id')
-WHERE al.owner_id = sqlc.arg('user_id') OR m.user_id IS NOT NULL
+WHERE (al.owner_id = sqlc.arg('user_id') OR m.user_id IS NOT NULL) AND NOT al.is_family
 ORDER BY al.updated_at DESC, al.id;
 
 -- name: GetAlbumForUser :one

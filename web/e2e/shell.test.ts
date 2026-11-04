@@ -28,6 +28,7 @@ test('app sidebar has the planned sections and navigates', async ({ page }) => {
 		'Ljudi',
 		'Albumi',
 		'Dijeljeno',
+		'Obitelj',
 		'Memories',
 		'Mape',
 		'Dokumenti',

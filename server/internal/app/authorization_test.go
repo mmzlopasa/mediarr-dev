@@ -106,6 +106,7 @@ var ownOnlyRoutes = map[string]bool{
 	"PUT /api/partners/{userId}/timeline":          true,
 	"DELETE /api/me/device-keys/{id}":              true,
 	"DELETE /api/me/passkeys/{id}":                 true,
+	"GET /api/family/buckets/{month}":              true,
 	// Tus uploads are checked by their own tests, and an id belongs to the upload in progress.
 	"DELETE /api/uploads/{id}": true,
 	"HEAD /api/uploads/{id}":   true,
@@ -159,6 +160,21 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 			t.Fatalf("%s: %d %s", path, resp.StatusCode, body)
 		}
 	}
+	for _, step := range []func() (*http.Response, []byte){
+		func() (*http.Response, []byte) {
+			return owner.send(http.MethodPut, "/api/admin/features/family", map[string]bool{"enabled": true})
+		},
+		func() (*http.Response, []byte) {
+			return owner.send(http.MethodPut, "/api/admin/family/"+s.userID("admin@example.com"), map[string]any{})
+		},
+		func() (*http.Response, []byte) {
+			return owner.post("/api/family/rules", map[string]any{"title": "Mine", "rules": map[string]string{"from": "2024-01-01"}})
+		},
+	} {
+		if resp, body := step(); resp.StatusCode >= http.StatusBadRequest {
+			t.Fatalf("%d %s", resp.StatusCode, body)
+		}
+	}
 	ids := map[string]string{
 		"assets/id": photo, "albums/id": album, "assetId": photo, "month": "2024-07", "file": "master.m3u8",
 		"scope": "archive", "userId": s.userID("admin@example.com"),
@@ -166,6 +182,7 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 	for name, query := range map[string]string{
 		"tags/id":        "SELECT id::text FROM tags LIMIT 1",
 		"people/id":      "SELECT id::text FROM people LIMIT 1",
+		"rules/id":       "SELECT id::text FROM albums WHERE is_family LIMIT 1",
 		"commentId":      "SELECT id::text FROM album_comments LIMIT 1",
 		"linkId":         "SELECT id::text FROM share_links LIMIT 1",
 		"device-keys/id": "SELECT id::text FROM api_keys LIMIT 1",

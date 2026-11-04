@@ -59,6 +59,14 @@ export const appNav: NavItem[] = [
 		emptyEn: 'Nothing has been shared yet.'
 	},
 	{
+		path: '/family',
+		icon: 'users',
+		hr: 'Obitelj',
+		en: 'Family',
+		emptyHr: 'Obiteljska biblioteka je prazna.',
+		emptyEn: 'The family library is empty.'
+	},
+	{
 		path: '/memories',
 		icon: 'spark',
 		hr: 'Memories',

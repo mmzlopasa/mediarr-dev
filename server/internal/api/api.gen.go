@@ -1336,6 +1336,30 @@ type FailedJob struct {
 	Queue string    `json:"queue"`
 }
 
+// Family defines model for Family.
+type Family struct {
+	Enabled bool         `json:"enabled"`
+	Member  bool         `json:"member"`
+	Members []UserRef    `json:"members"`
+	Rules   []FamilyRule `json:"rules"`
+}
+
+// FamilyRule defines model for FamilyRule.
+type FamilyRule struct {
+	Id openapi_types.UUID `json:"id"`
+
+	// Rules Conditions that must all hold.
+	Rules AlbumRules `json:"rules"`
+	Title string     `json:"title"`
+}
+
+// FamilyRuleCreate defines model for FamilyRuleCreate.
+type FamilyRuleCreate struct {
+	// Rules Conditions that must all hold.
+	Rules AlbumRules `json:"rules"`
+	Title string     `json:"title"`
+}
+
 // FeatureUpdate defines model for FeatureUpdate.
 type FeatureUpdate struct {
 	Enabled bool `json:"enabled"`
@@ -2041,6 +2065,9 @@ type SetupJSONRequestBody = SetupRequest
 // DismissDuplicatesJSONRequestBody defines body for DismissDuplicates for application/json ContentType.
 type DismissDuplicatesJSONRequestBody = AssetIds
 
+// CreateFamilyRuleJSONRequestBody defines body for CreateFamilyRule for application/json ContentType.
+type CreateFamilyRuleJSONRequestBody = FamilyRuleCreate
+
 // SetMapStyleJSONRequestBody defines body for SetMapStyle for application/json ContentType.
 type SetMapStyleJSONRequestBody = MapStyle
 
@@ -2118,6 +2145,15 @@ type ServerInterface interface {
 	// ScanExternalLibrary Look through the folder for changes now
 	// (POST /api/admin/external/scan)
 	ScanExternalLibrary(w http.ResponseWriter, r *http.Request)
+	// ListFamilyMembersAdmin Who is in the family library
+	// (GET /api/admin/family)
+	ListFamilyMembersAdmin(w http.ResponseWriter, r *http.Request)
+	// RemoveFamilyMember Remove someone. Their photos stay in their own library
+	// (DELETE /api/admin/family/{userId})
+	RemoveFamilyMember(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID)
+	// AddFamilyMember Add someone to the family library
+	// (PUT /api/admin/family/{userId})
+	AddFamilyMember(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID)
 	// SetFeature Turn an addition on or off
 	// (PUT /api/admin/features/{name})
 	SetFeature(w http.ResponseWriter, r *http.Request, name string)
@@ -2340,6 +2376,21 @@ type ServerInterface interface {
 	// DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 	// (POST /api/duplicates/dismiss)
 	DismissDuplicates(w http.ResponseWriter, r *http.Request)
+	// GetFamily The family library, and what this user shares with it
+	// (GET /api/family)
+	GetFamily(w http.ResponseWriter, r *http.Request)
+	// GetFamilyBuckets Months in the family library
+	// (GET /api/family/buckets)
+	GetFamilyBuckets(w http.ResponseWriter, r *http.Request)
+	// GetFamilyBucket Assets of one month in the family library
+	// (GET /api/family/buckets/{month})
+	GetFamilyBucket(w http.ResponseWriter, r *http.Request, month string)
+	// CreateFamilyRule Share what matches a rule with the family. Photos are not copied
+	// (POST /api/family/rules)
+	CreateFamilyRule(w http.ResponseWriter, r *http.Request)
+	// DeleteFamilyRule Stop sharing what this rule covers
+	// (DELETE /api/family/rules/{id})
+	DeleteFamilyRule(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetFeatures Which additions the administrator has turned on
 	// (GET /api/features)
 	GetFeatures(w http.ResponseWriter, r *http.Request)
@@ -2586,6 +2637,24 @@ func (_ Unimplemented) SetExternalLibrary(w http.ResponseWriter, r *http.Request
 // ScanExternalLibrary Look through the folder for changes now
 // (POST /api/admin/external/scan)
 func (_ Unimplemented) ScanExternalLibrary(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListFamilyMembersAdmin Who is in the family library
+// (GET /api/admin/family)
+func (_ Unimplemented) ListFamilyMembersAdmin(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemoveFamilyMember Remove someone. Their photos stay in their own library
+// (DELETE /api/admin/family/{userId})
+func (_ Unimplemented) RemoveFamilyMember(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AddFamilyMember Add someone to the family library
+// (PUT /api/admin/family/{userId})
+func (_ Unimplemented) AddFamilyMember(w http.ResponseWriter, r *http.Request, userId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3030,6 +3099,36 @@ func (_ Unimplemented) ListDuplicates(w http.ResponseWriter, r *http.Request) {
 // DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 // (POST /api/duplicates/dismiss)
 func (_ Unimplemented) DismissDuplicates(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetFamily The family library, and what this user shares with it
+// (GET /api/family)
+func (_ Unimplemented) GetFamily(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetFamilyBuckets Months in the family library
+// (GET /api/family/buckets)
+func (_ Unimplemented) GetFamilyBuckets(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetFamilyBucket Assets of one month in the family library
+// (GET /api/family/buckets/{month})
+func (_ Unimplemented) GetFamilyBucket(w http.ResponseWriter, r *http.Request, month string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateFamilyRule Share what matches a rule with the family. Photos are not copied
+// (POST /api/family/rules)
+func (_ Unimplemented) CreateFamilyRule(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteFamilyRule Stop sharing what this rule covers
+// (DELETE /api/family/rules/{id})
+func (_ Unimplemented) DeleteFamilyRule(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3569,6 +3668,72 @@ func (siw *ServerInterfaceWrapper) ScanExternalLibrary(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ScanExternalLibrary(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListFamilyMembersAdmin operation middleware
+func (siw *ServerInterfaceWrapper) ListFamilyMembersAdmin(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListFamilyMembersAdmin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveFamilyMember operation middleware
+func (siw *ServerInterfaceWrapper) RemoveFamilyMember(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveFamilyMember(w, r, userId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AddFamilyMember operation middleware
+func (siw *ServerInterfaceWrapper) AddFamilyMember(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "userId" -------------
+	var userId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", chi.URLParam(r, "userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AddFamilyMember(w, r, userId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5446,6 +5611,100 @@ func (siw *ServerInterfaceWrapper) DismissDuplicates(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DismissDuplicates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFamily operation middleware
+func (siw *ServerInterfaceWrapper) GetFamily(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFamily(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFamilyBuckets operation middleware
+func (siw *ServerInterfaceWrapper) GetFamilyBuckets(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFamilyBuckets(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetFamilyBucket operation middleware
+func (siw *ServerInterfaceWrapper) GetFamilyBucket(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "month" -------------
+	var month string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "month", chi.URLParam(r, "month"), &month, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "month", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFamilyBucket(w, r, month)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateFamilyRule operation middleware
+func (siw *ServerInterfaceWrapper) CreateFamilyRule(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateFamilyRule(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteFamilyRule operation middleware
+func (siw *ServerInterfaceWrapper) DeleteFamilyRule(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteFamilyRule(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -7437,6 +7696,30 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/admin/webhooks/{id}/test", wrapper.TestWebhook)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/family", wrapper.GetFamily)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/family/rules", wrapper.CreateFamilyRule)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/family/rules/{id}", wrapper.DeleteFamilyRule)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/family/buckets", wrapper.GetFamilyBuckets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/family/buckets/{month}", wrapper.GetFamilyBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/family", wrapper.ListFamilyMembersAdmin)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/admin/family/{userId}", wrapper.RemoveFamilyMember)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/family/{userId}", wrapper.AddFamilyMember)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

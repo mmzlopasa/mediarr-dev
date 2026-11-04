@@ -23,6 +23,7 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type Family = components['schemas']['Family'];
 export type Webhook = components['schemas']['Webhook'];
 export type Documents = components['schemas']['Documents'];
 export type Features = Record<string, boolean>;
@@ -250,6 +251,19 @@ export const api = {
 	deleteWebhook: (id: string) =>
 		request<void>(fetch, `/api/admin/webhooks/${id}`, undefined, 'DELETE'),
 	testWebhook: (id: string) => request<void>(fetch, `/api/admin/webhooks/${id}/test`, {}),
+	family: () => request<Family>(fetch, '/api/family'),
+	addFamilyRule: (title: string, rules: AlbumRules) =>
+		request<{ id: string }>(fetch, '/api/family/rules', { title, rules }),
+	deleteFamilyRule: (id: string) =>
+		request<void>(fetch, `/api/family/rules/${id}`, undefined, 'DELETE'),
+	familyMembers: () => request<UserRef[]>(fetch, '/api/admin/family'),
+	setFamilyMember: (id: string, member: boolean) =>
+		request<void>(
+			fetch,
+			`/api/admin/family/${id}`,
+			member ? {} : undefined,
+			member ? 'PUT' : 'DELETE'
+		),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>
@@ -281,6 +295,7 @@ export const librarySource = sourceAt('/api/timeline');
 export const albumSource = (id: string) => sourceAt(`/api/albums/${id}`);
 export const partnerSource = (id: string) => sourceAt(`/api/partners/${id}`);
 export const publicSource = (token: string) => sourceAt(`/api/public/${token}`);
+export const familySource = () => sourceAt('/api/family');
 export const tagSource = (id: string) => sourceAt(`/api/tags/${id}`);
 export const personSource = (id: string) => sourceAt(`/api/people/${id}`);
 export const collectionBase = (scope: 'archive' | 'trash' | 'vault') => `/api/collections/${scope}`;

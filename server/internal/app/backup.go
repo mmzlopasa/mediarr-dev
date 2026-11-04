@@ -17,7 +17,7 @@ import (
 )
 
 // features are the additions an administrator turns on. All are off until then.
-var features = []string{jobs.FeatureBackup, featureFilters, featureDocuments, "family", "webhooks", featureKiosk, "descriptions"}
+var features = []string{jobs.FeatureBackup, featureFilters, featureDocuments, featureFamily, "webhooks", featureKiosk, "descriptions"}
 
 const (
 	featureFilters   = "filters"

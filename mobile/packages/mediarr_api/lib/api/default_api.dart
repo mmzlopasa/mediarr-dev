@@ -83,6 +83,55 @@ class DefaultApi {
     return null;
   }
 
+  /// Add someone to the family library
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  Future<Response> addFamilyMemberWithHttpInfo(
+    String userId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/family/{userId}'.replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Add someone to the family library
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  Future<void> addFamilyMember(
+    String userId,
+  ) async {
+    final response = await addFamilyMemberWithHttpInfo(
+      userId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -931,6 +980,66 @@ class DefaultApi {
     return null;
   }
 
+  /// Share what matches a rule with the family. Photos are not copied
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [FamilyRuleCreate] familyRuleCreate (required):
+  Future<Response> createFamilyRuleWithHttpInfo(
+    FamilyRuleCreate familyRuleCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/family/rules';
+
+    // ignore: prefer_final_locals
+    Object? postBody = familyRuleCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Share what matches a rule with the family. Photos are not copied
+  ///
+  /// Parameters:
+  ///
+  /// * [FamilyRuleCreate] familyRuleCreate (required):
+  Future<Map<String, String>?> createFamilyRule(
+    FamilyRuleCreate familyRuleCreate,
+  ) async {
+    final response = await createFamilyRuleWithHttpInfo(
+      familyRuleCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return Map<String, String>.from(
+        await apiClient.deserializeAsync(
+            await _decodeBodyBytes(response), 'Map<String, String>'),
+      );
+    }
+    return null;
+  }
+
   /// Bring a library in from Immich, Google Takeout or an iCloud export
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1414,6 +1523,55 @@ class DefaultApi {
     final response = await deleteAlbumLinkWithHttpInfo(
       id,
       linkId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Stop sharing what this rule covers
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteFamilyRuleWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/family/rules/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop sharing what this rule covers
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteFamilyRule(
+    String id,
+  ) async {
+    final response = await deleteFamilyRuleWithHttpInfo(
+      id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -3600,6 +3758,158 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'ExternalLibrary',
       ) as ExternalLibrary;
+    }
+    return null;
+  }
+
+  /// The family library, and what this user shares with it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getFamilyWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/family';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The family library, and what this user shares with it
+  Future<Family?> getFamily() async {
+    final response = await getFamilyWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Family',
+      ) as Family;
+    }
+    return null;
+  }
+
+  /// Assets of one month in the family library
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] month (required):
+  Future<Response> getFamilyBucketWithHttpInfo(
+    String month,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/family/buckets/{month}'.replaceAll('{month}', month);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Assets of one month in the family library
+  ///
+  /// Parameters:
+  ///
+  /// * [String] month (required):
+  Future<TimelineBucket?> getFamilyBucket(
+    String month,
+  ) async {
+    final response = await getFamilyBucketWithHttpInfo(
+      month,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBucket',
+      ) as TimelineBucket;
+    }
+    return null;
+  }
+
+  /// Months in the family library
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getFamilyBucketsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/family/buckets';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Months in the family library
+  Future<TimelineBuckets?> getFamilyBuckets() async {
+    final response = await getFamilyBucketsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'TimelineBuckets',
+      ) as TimelineBuckets;
     }
     return null;
   }
@@ -5938,6 +6248,53 @@ class DefaultApi {
     return null;
   }
 
+  /// Who is in the family library
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listFamilyMembersAdminWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/family';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Who is in the family library
+  Future<List<UserRef>?> listFamilyMembersAdmin() async {
+    final response = await listFamilyMembersAdminWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<UserRef>')
+              as List)
+          .cast<UserRef>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// Imports, the newest first
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6744,6 +7101,55 @@ class DefaultApi {
   ) async {
     final response = await removeAlbumMemberWithHttpInfo(
       id,
+      userId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Remove someone. Their photos stay in their own library
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  Future<Response> removeFamilyMemberWithHttpInfo(
+    String userId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/family/{userId}'.replaceAll('{userId}', userId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Remove someone. Their photos stay in their own library
+  ///
+  /// Parameters:
+  ///
+  /// * [String] userId (required):
+  Future<void> removeFamilyMember(
+    String userId,
+  ) async {
+    final response = await removeFamilyMemberWithHttpInfo(
       userId,
     );
     if (response.statusCode >= HttpStatus.badRequest) {

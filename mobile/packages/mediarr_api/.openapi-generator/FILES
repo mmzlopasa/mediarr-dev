@@ -48,6 +48,9 @@ doc/Error.md
 doc/ExternalLibrary.md
 doc/ExternalLibraryOwner.md
 doc/FailedJob.md
+doc/Family.md
+doc/FamilyRule.md
+doc/FamilyRuleCreate.md
 doc/FeatureUpdate.md
 doc/Folder.md
 doc/FolderEntry.md
@@ -160,6 +163,9 @@ lib/model/error.dart
 lib/model/external_library.dart
 lib/model/external_library_owner.dart
 lib/model/failed_job.dart
+lib/model/family.dart
+lib/model/family_rule.dart
+lib/model/family_rule_create.dart
 lib/model/feature_update.dart
 lib/model/folder.dart
 lib/model/folder_entry.dart
@@ -217,6 +223,6 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/webhook_create_test.dart
-test/webhook_created_test.dart
-test/webhook_test.dart
+test/family_rule_create_test.dart
+test/family_rule_test.dart
+test/family_test.dart

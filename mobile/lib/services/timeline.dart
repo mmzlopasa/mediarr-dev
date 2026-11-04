@@ -35,6 +35,11 @@ class TimelineStore extends ChangeNotifier {
     : _buckets = ((api) => api.getPartnerBuckets(userId)),
       _bucket = ((api, month) => api.getPartnerBucket(userId, month));
 
+  /// What the members of the family share with each other.
+  TimelineStore.family(this.session)
+    : _buckets = ((api) => api.getFamilyBuckets()),
+      _bucket = ((api, month) => api.getFamilyBucket(month));
+
   /// Photos carrying one tag.
   TimelineStore.tag(this.session, String tagId)
     : _buckets = ((api) => api.getTagBuckets(tagId)),
