@@ -1,8 +1,3 @@
-# Mediarr install file. This file and .env are all a user needs:
-#   curl -O <release>/compose.yaml && curl -o .env <release>/.env.example
-#   edit .env, then: docker compose up -d
-#   open http://<server-ip>:9851
-# Building from source instead: see compose.build.yaml.
 name: mediarr
 
 x-server: &server
@@ -14,9 +9,7 @@ x-server: &server
   volumes:
     - ${UPLOAD_LOCATION}:/data/library
     - ${CACHE_LOCATION}:/data/cache
-    # Optional, and read only: Mediarr never changes or copies these files.
     - ${EXTERNAL_LIBRARY_PATH:-/dev/null}:/external:ro
-    # Optional: a folder or disk for backups. S3 needs no folder at all.
     - ${BACKUP_PATH:-/dev/null}:/backup
   depends_on:
     db:
@@ -34,7 +27,6 @@ services:
       retries: 3
       start_period: 10s
 
-  # Starts after the server, which applies migrations and prepares storage.
   worker:
     <<: *server
     command: ["worker"]
@@ -50,7 +42,6 @@ services:
       - model-cache:/models
     restart: unless-stopped
 
-  # Optional, for AI descriptions and asking questions: COMPOSE_PROFILES=ai in .env.
   ollama:
     image: ollama/ollama:latest
     profiles: ["ai"]
@@ -77,8 +68,6 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      # Open at http://<server-ip>:9851. No domain or TLS is needed on a local network.
-      # Docker-published ports bypass ufw, so do not expose this port directly to the internet.
       - "${BIND_ADDRESS:-0.0.0.0}:${HTTP_PORT:-9851}:80"
     configs:
       - source: nginx
@@ -94,7 +83,6 @@ services:
       start_period: 5s
     restart: unless-stopped
 
-# Inline, so that installing needs no other files. `$$` is a literal `$` for nginx.
 configs:
   nginx:
     content: |
@@ -113,14 +101,11 @@ configs:
           server_name _;
           server_tokens off;
 
-          # Uploads are streamed to the server, which enforces its own limits.
           client_max_body_size 0;
           proxy_request_buffering off;
 
-          # Resolve at request time, because the server's IP changes when it is recreated.
           resolver 127.0.0.11 valid=5s;
 
-          # Liveness of nginx itself, so an API outage does not restart the proxy.
           location = /nginx-health {
               access_log off;
               default_type text/plain;
@@ -133,7 +118,6 @@ configs:
               proxy_http_version 1.1;
               proxy_read_timeout 1h;
 
-              # $$http_host keeps the port, which resumable upload URLs need when opened by IP.
               proxy_set_header Host $$http_host;
               proxy_set_header Upgrade $$http_upgrade;
               proxy_set_header Connection $$connection_upgrade;

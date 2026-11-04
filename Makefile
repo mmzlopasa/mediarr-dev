@@ -22,7 +22,7 @@ down:
 
 # Builds the production image from this checkout and runs it locally, to check it.
 deploy:
-	docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml up -d --build --wait
+	docker compose -f deploy/compose-docker.yml -f deploy/compose.build.yaml up -d --build --wait
 
 # Publishes landing/ on mediarr.app.
 landing:

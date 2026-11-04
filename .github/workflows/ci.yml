@@ -87,8 +87,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cp deploy/.env.example deploy/.env
-      - run: docker compose -f deploy/compose.yaml config --quiet
-      - run: docker compose -f deploy/compose.yaml -f deploy/compose.build.yaml config --quiet
+      - run: docker compose -f deploy/compose-docker.yml config --quiet
+      - run: docker compose -f deploy/compose-docker.yml -f deploy/compose.build.yaml config --quiet
       - run: docker compose -f deploy/compose.dev.yaml config --quiet
       - run: docker compose -f deploy/compose.landing.yaml config --quiet
 

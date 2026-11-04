@@ -1,0 +1,71 @@
+# Configuration
+
+Every setting Mediarr reads from `.env`. Only the ones in `deploy/.env.example` are needed.
+
+```sh
+MEDIARR_VERSION=latest
+
+# Use only letters and digits, because these are placed in a connection URL.
+DB_USER=mediarr
+DB_PASSWORD=change-me
+
+# Absolute paths on the host. Choose any disk.
+# UPLOAD_LOCATION holds your original files. It can be the main disk, a second disk, a USB drive
+# or a mounted network share such as SMB or NFS.
+UPLOAD_LOCATION=/path/to/mediarr/library
+# CACHE_LOCATION holds thumbnails, which can always be generated again. A fast disk helps.
+CACHE_LOCATION=/path/to/mediarr/cache
+# DB_LOCATION must be a local disk. Databases can be corrupted on network shares.
+DB_LOCATION=/path/to/mediarr/db
+
+# Optional: a folder of photos you already have, shown in Mediarr without copying them. Mediarr only
+# reads it, so nothing there is ever changed or deleted. After starting, choose whose photos these
+# are in Admin, Settings. Changes are noticed at once on a local disk. On a network share such as
+# SMB that does not work, so they appear after the scan that runs every 6 hours, or when you press
+# "Scan now". PUID must be allowed to read the folder.
+# EXTERNAL_LIBRARY_PATH=/path/to/your/photos
+
+# Optional: a folder for backups, best on another disk. Backups are set up in Admin, Settings, and
+# can also go to S3 or Backblaze B2 with no folder at all. PUID must be allowed to write here.
+# BACKUP_PATH=/path/to/backups
+
+# The user that owns UPLOAD_LOCATION and CACHE_LOCATION.
+PUID=1000
+PGID=1000
+
+# Mediarr opens at http://<server-ip>:HTTP_PORT. No domain is needed.
+# For a domain, put your own TLS reverse proxy in front and set BIND_ADDRESS=127.0.0.1.
+BIND_ADDRESS=0.0.0.0
+HTTP_PORT=9851
+
+# If your own reverse proxy stands in front of Mediarr, say how many (usually 1). Otherwise all
+# visitors look like one, and one person's failed sign-ins lock out everyone.
+# TRUSTED_PROXY_HOPS=1
+
+# The largest file one upload may be, in MB. Default: no limit other than free disk space.
+# MAX_UPLOAD_MB=20000
+
+# Optional monitoring. With a token set, Prometheus can read /metrics using it as a bearer token.
+# A dashboard for Grafana is in the documentation (docs/monitoring/grafana-dashboard.json).
+# METRICS_TOKEN=choose-a-long-random-value
+# Traces go to an OpenTelemetry collector only if this is set.
+# OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318
+
+# Optional AI descriptions and asking questions, with a local model. Photos stay on your server.
+# Add ai to the profiles (COMPOSE_PROFILES=ml,ai), and in Admin, Settings, set the address to
+# http://ollama:11434. The models take about 3 GB, and without a graphics card each photo takes a while.
+
+# How many background jobs run at once. Default: half of the CPU cores.
+# WORKER_CONCURRENCY=2
+
+# Video encoding hardware: none, qsv, nvenc or vaapi.
+# VIDEO_ACCEL=none
+
+# Smart search and face recognition are optional. Without them everything else works.
+# To turn them on, remove the # from both lines. The models are downloaded on first use
+# (about 1 GB), and the service needs about 2 GB of memory.
+# COMPOSE_PROFILES=ml
+# ML_URL=http://ml:8000
+# ML_FACE_MODEL=buffalo_l   # buffalo_s is smaller and faster, but less accurate.
+# ML_THREADS=4              # How many CPU threads it may use. Default: all of them.
+```

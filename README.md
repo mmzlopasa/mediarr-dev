@@ -11,10 +11,10 @@ demo.mediarr.app:    internet -> host nginx (80/443, TLS) -> 127.0.0.1:9852 -> d
 
 ## Instalacija
 
-Korisniku trebaju samo `deploy/compose.yaml` i `deploy/.env.example`, kopiran kao `.env`:
+Korisniku trebaju samo `deploy/compose-docker.yml` i `deploy/.env.example`, kopiran kao `.env`:
 
 ```sh
-docker compose up -d
+docker compose -f compose-docker.yml up -d
 ```
 
 Aplikacija se otvara na `http://IP-servera:9851`, bez domene. Domenu i HTTPS korisnik po želji rješava sam, vlastitim reverse proxyjem ispred. Direktoriji iz `UPLOAD_LOCATION` i `CACHE_LOCATION` moraju pripadati korisniku `PUID:PGID`. `--profile ml` uključuje ML servis.

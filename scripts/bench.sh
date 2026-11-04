@@ -42,7 +42,7 @@ YAML
 
 # Compose reads deploy/.env for the containers, so it has to exist on a fresh checkout too.
 [ -e "$ROOT/deploy/.env" ] || cp "$ROOT/deploy/.env.example" "$ROOT/deploy/.env"
-COMPOSE=(docker compose -p mediarr-bench --profile ml --env-file "$WORK/env" -f "$ROOT/deploy/compose.yaml" -f "$ROOT/deploy/compose.build.yaml" -f "$WORK/override.yaml")
+COMPOSE=(docker compose -p mediarr-bench --profile ml --env-file "$WORK/env" -f "$ROOT/deploy/compose-docker.yml" -f "$ROOT/deploy/compose.build.yaml" -f "$WORK/override.yaml")
 
 cleanup() {
 	"${COMPOSE[@]}" down -v >/dev/null 2>&1 || true
