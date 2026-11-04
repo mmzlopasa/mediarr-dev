@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
-	import { api, type SearchResult } from '#lib/api.ts';
+	import { api, type Features, type SearchResult } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Badge from '#lib/design/components/Badge.svelte';
 	import Button from '#lib/design/components/Button.svelte';
@@ -45,6 +46,34 @@
 		};
 	});
 
+	let askOn = $state(false);
+	let asking = $state(false);
+	let asked = $state('');
+
+	onMount(async () => {
+		const features = await api.features().catch(() => ({}) as Features);
+		askOn = features.descriptions ?? false;
+	});
+
+	// A model on a machine with no graphics card can take a while, and says so meanwhile.
+	async function ask() {
+		const question = typed.trim();
+		if (!question) return;
+		asking = true;
+		try {
+			const { query: words } = await api.askSearch(question);
+			asked = question;
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- the same page, with a query
+			await goto(`${page.url.pathname}?q=${encodeURIComponent(words)}`);
+		} catch {
+			asked = '';
+			// eslint-disable-next-line svelte/no-navigation-without-resolve -- the same page, with a query
+			await goto(`${page.url.pathname}?q=${encodeURIComponent(question)}`);
+		} finally {
+			asking = false;
+		}
+	}
+
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the same page, with a query
@@ -69,7 +98,17 @@
 		bind:value={typed}
 	/>
 	<Button type="submit" variant="gold" disabled={!typed.trim()}>{tr('Traži', 'Search')}</Button>
+	{#if askOn}
+		<Button disabled={!typed.trim() || asking} onclick={ask}>
+			{asking ? tr('Razmišljam…', 'Thinking…') : tr('Pitaj', 'Ask')}
+		</Button>
+	{/if}
 </form>
+{#if asked && query}
+	<p class="alb-meta" data-testid="asked">
+		{tr('Za pitanje', 'For the question')} „{asked}”: {query}
+	</p>
+{/if}
 
 {#if failed}
 	<Alert kind="err">{tr('Pretraga nije uspjela.', 'The search failed.')}</Alert>

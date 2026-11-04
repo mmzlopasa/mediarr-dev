@@ -14,7 +14,7 @@ PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/packag
 .PHONY: dev down deploy landing testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e lighthouse
 
 dev:
-	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache .dev/models .dev/external .dev/backup
+	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache .dev/models .dev/external .dev/backup .dev/ollama
 	$(DEV_COMPOSE) up -d --build --wait
 
 down:

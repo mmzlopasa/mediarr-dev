@@ -111,6 +111,14 @@ type Asset struct {
 	ImportLongitude    pgtype.Float8
 }
 
+type AssetDescription struct {
+	AssetID     pgtype.UUID
+	Description string
+	Model       string
+	Tsv         interface{}
+	CreatedAt   pgtype.Timestamptz
+}
+
 type AssetFile struct {
 	AssetID   pgtype.UUID
 	Kind      string

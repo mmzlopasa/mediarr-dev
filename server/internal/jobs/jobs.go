@@ -127,6 +127,8 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &organizeWorker{deps: d})
 	river.AddWorker(workers, &importWorker{deps: d})
 	river.AddWorker(workers, &backupWorker{deps: d})
+	river.AddWorker(workers, &describeWorker{deps: d})
+	river.AddWorker(workers, &describeBackfillWorker{deps: d})
 	river.AddWorker(workers, &webhookWorker{deps: d})
 	river.AddWorker(workers, &backupTickWorker{deps: d})
 	river.AddWorker(workers, &externalScanWorker{deps: d})
@@ -140,6 +142,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 			videoQueue:         {MaxWorkers: 1},
 			mlQueue:            {MaxWorkers: 1},
 			importQueue:        {MaxWorkers: 1},
+			describeQueue:      {MaxWorkers: 1},
 		},
 		Workers: workers,
 		PeriodicJobs: []*river.PeriodicJob{
@@ -151,6 +154,9 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 				&river.PeriodicJobOpts{RunOnStart: true}),
 			river.NewPeriodicJob(river.PeriodicInterval(organizeInterval),
 				func() (river.JobArgs, *river.InsertOpts) { return OrganizeArgs{}, nil },
+				&river.PeriodicJobOpts{RunOnStart: true}),
+			river.NewPeriodicJob(river.PeriodicInterval(describeBackfillEvery),
+				func() (river.JobArgs, *river.InsertOpts) { return DescribeBackfillArgs{}, nil },
 				&river.PeriodicJobOpts{RunOnStart: true}),
 			river.NewPeriodicJob(river.PeriodicInterval(backupTickEvery),
 				func() (river.JobArgs, *river.InsertOpts) { return BackupTickArgs{}, nil }, nil),

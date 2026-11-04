@@ -50,6 +50,14 @@ services:
       - model-cache:/models
     restart: unless-stopped
 
+  # Optional, for AI descriptions and asking questions: COMPOSE_PROFILES=ai in .env.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
   db:
     image: pgvector/pgvector:pg17
     environment:
@@ -136,4 +144,5 @@ configs:
       }
 
 volumes:
+  ollama-models:
   model-cache:

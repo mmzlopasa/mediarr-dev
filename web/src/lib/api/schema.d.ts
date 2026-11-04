@@ -2149,6 +2149,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turn a question into words to search for, with the local model */
+        post: operations["askSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/ai": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The local Ollama server and how far descriptions have come */
+        get: operations["getAISettings"];
+        /** Name the Ollama server. Previews of photos are sent to it */
+        put: operations["setAISettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/external": {
         parameters: {
             query?: never;
@@ -2626,6 +2661,28 @@ export interface components {
             title: string;
             rules: components["schemas"]["AlbumRules"];
         };
+        AskRequest: {
+            question: string;
+        };
+        AskAnswer: {
+            query: string;
+        };
+        AISettings: {
+            address: string;
+            visionModel: string;
+            textModel: string;
+            reachable: boolean;
+            modelsReady: boolean;
+            /** Format: int64 */
+            described: number;
+            /** Format: int64 */
+            total: number;
+        };
+        AISettingsUpdate: {
+            address: string;
+            visionModel: string;
+            textModel: string;
+        };
         Memory: {
             /** @enum {string} */
             kind: "on_this_day" | "week";
@@ -3059,6 +3116,8 @@ export interface components {
             edits?: components["schemas"]["AssetEdits"];
             /** @description New previews are being made after an edit */
             isEditing?: boolean;
+            /** @description From the local model. Only for the owner */
+            description?: string;
             /** @description The file of an external library was not found on the last scan */
             isMissing?: boolean;
             /** @description Only for the owner */
@@ -6704,6 +6763,82 @@ export interface operations {
                 };
                 content?: never;
             };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    askSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AskRequest"];
+            };
+        };
+        responses: {
+            /** @description What to search for */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskAnswer"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    getAISettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISettings"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    setAISettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AISettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description The settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AISettings"];
+                };
+            };
+            400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
         };

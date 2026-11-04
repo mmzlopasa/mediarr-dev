@@ -550,6 +550,9 @@
 					>
 				{/if}
 				<Kv label={tr('Naziv', 'Name')} value={detail.originalName} />
+				{#if detail.description}
+					<Kv label={tr('Opis', 'Description')} value={detail.description} />
+				{/if}
 				<Kv
 					label={detail.hasCaptureTime ? tr('Snimljeno', 'Taken') : tr('Dodano', 'Added')}
 					value={formatDateTime(detail.localAt, locale)}

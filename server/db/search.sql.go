@@ -691,6 +691,8 @@ LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.id IN (
         SELECT o.asset_id FROM asset_search o WHERE o.ocr_tsv @@ plainto_tsquery('simple', $1)
         UNION
+        SELECT d.asset_id FROM asset_descriptions d WHERE d.tsv @@ plainto_tsquery('simple', $1)
+        UNION
         SELECT n.id FROM assets n WHERE n.original_name ILIKE $2 AND n.user_id = $3
       )
   AND a.user_id = $3 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL

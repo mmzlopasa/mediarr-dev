@@ -63,6 +63,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**addAlbumAssets**](doc//DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
 *DefaultApi* | [**addFamilyMember**](doc//DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+*DefaultApi* | [**askSearch**](doc//DefaultApi.md#asksearch) | **POST** /api/search/ask | Turn a question into words to search for, with the local model
 *DefaultApi* | [**beginPasskeyLogin**](doc//DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
 *DefaultApi* | [**beginPasskeyRegistration**](doc//DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey
 *DefaultApi* | [**bulkAssets**](doc//DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
@@ -101,6 +102,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**finishOIDC**](doc//DefaultApi.md#finishoidc) | **GET** /api/auth/oidc/callback | Where the identity provider sends the browser back
 *DefaultApi* | [**finishPasskeyLogin**](doc//DefaultApi.md#finishpasskeylogin) | **POST** /api/auth/passkey/finish | Finish signing in with a passkey
 *DefaultApi* | [**finishPasskeyRegistration**](doc//DefaultApi.md#finishpasskeyregistration) | **POST** /api/me/passkeys/finish | Finish adding a passkey
+*DefaultApi* | [**getAISettings**](doc//DefaultApi.md#getaisettings) | **GET** /api/admin/ai | The local Ollama server and how far descriptions have come
 *DefaultApi* | [**getAdminHealth**](doc//DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
 *DefaultApi* | [**getAdminJobs**](doc//DefaultApi.md#getadminjobs) | **GET** /api/admin/jobs | The job queues, and the jobs that gave up
 *DefaultApi* | [**getAdminOverview**](doc//DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
@@ -192,6 +194,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 *DefaultApi* | [**scanExternalLibrary**](doc//DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 *DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
+*DefaultApi* | [**setAISettings**](doc//DefaultApi.md#setaisettings) | **PUT** /api/admin/ai | Name the Ollama server. Previews of photos are sent to it
 *DefaultApi* | [**setAlbumHeart**](doc//DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 *DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
@@ -218,6 +221,8 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AISettings](doc//AISettings.md)
+ - [AISettingsUpdate](doc//AISettingsUpdate.md)
  - [Activity](doc//Activity.md)
  - [AdminHealth](doc//AdminHealth.md)
  - [AdminJobs](doc//AdminJobs.md)
@@ -231,6 +236,8 @@ Class | Method | HTTP request | Description
  - [AnalysisProgress](doc//AnalysisProgress.md)
  - [ApiKey](doc//ApiKey.md)
  - [ApiKeyCreate](doc//ApiKeyCreate.md)
+ - [AskAnswer](doc//AskAnswer.md)
+ - [AskRequest](doc//AskRequest.md)
  - [Asset](doc//Asset.md)
  - [AssetDetail](doc//AssetDetail.md)
  - [AssetEdits](doc//AssetEdits.md)

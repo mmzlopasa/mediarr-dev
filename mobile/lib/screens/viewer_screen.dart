@@ -600,6 +600,8 @@ class _InfoSheet extends StatelessWidget {
                 'The file was not found on the last scan of the external library. The original is available again once the file is back.',
               ),
             ('Name', detail.originalName),
+            if (detail.description != null)
+              ('Description', detail.description!),
             (
               detail.hasCaptureTime == true ? 'Taken' : 'Added',
               formatDateTime(detail.localAt),

@@ -45,6 +45,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   SearchResult? _result;
   bool _busy = false;
   bool _failed = false;
+  bool _askOn = false;
 
   @override
   void dispose() {
@@ -67,6 +68,38 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _session.api.getFeatures().then((features) {
+      if (mounted) {
+        setState(() => _askOn = features?['descriptions'] ?? false);
+      }
+    }, onError: (Object _) {});
+  }
+
+  /// A model on a machine with no graphics card can take a while. If it fails, the question itself
+  /// is searched.
+  Future<void> _ask() async {
+    final question = _query.text.trim();
+    if (question.isEmpty) return;
+    setState(() {
+      _busy = true;
+      _failed = false;
+    });
+    try {
+      final answer = await _session.api.askSearch(
+        AskRequest(question: question),
+      );
+      if (answer != null && answer.query.isNotEmpty && mounted) {
+        _query.text = answer.query;
+      }
+    } on ApiException {
+      // The search below still runs, with the question as it is.
+    }
+    await _search();
   }
 
   void _open(int index) {
@@ -169,6 +202,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           onSubmitted: (_) => _search(),
         ),
         actions: [
+          if (_askOn)
+            IconButton(
+              tooltip: 'Ask',
+              icon: const Icon(Icons.auto_awesome_outlined),
+              onPressed: _busy ? null : _ask,
+            ),
           IconButton(
             tooltip: 'Search',
             icon: const Icon(Icons.search),

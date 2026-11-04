@@ -833,6 +833,24 @@ func (e GetPublicThumbnailParamsSize) Valid() bool {
 	}
 }
 
+// AISettings defines model for AISettings.
+type AISettings struct {
+	Address     string `json:"address"`
+	Described   int64  `json:"described"`
+	ModelsReady bool   `json:"modelsReady"`
+	Reachable   bool   `json:"reachable"`
+	TextModel   string `json:"textModel"`
+	Total       int64  `json:"total"`
+	VisionModel string `json:"visionModel"`
+}
+
+// AISettingsUpdate defines model for AISettingsUpdate.
+type AISettingsUpdate struct {
+	Address     string `json:"address"`
+	TextModel   string `json:"textModel"`
+	VisionModel string `json:"visionModel"`
+}
+
 // Activity defines model for Activity.
 type Activity struct {
 	Comments []Comment `json:"comments"`
@@ -980,6 +998,16 @@ type ApiKeyCreate struct {
 // ApiKeyCreateScopes defines model for ApiKeyCreate.Scopes.
 type ApiKeyCreateScopes string
 
+// AskAnswer defines model for AskAnswer.
+type AskAnswer struct {
+	Query string `json:"query"`
+}
+
+// AskRequest defines model for AskRequest.
+type AskRequest struct {
+	Question string `json:"question"`
+}
+
 // Asset defines model for Asset.
 type Asset struct {
 	Blurhash *string `json:"blurhash,omitempty"`
@@ -1010,6 +1038,9 @@ type AssetDetail struct {
 	City      *string   `json:"city,omitempty"`
 	Country   *string   `json:"country,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
+
+	// Description From the local model. Only for the owner
+	Description *string `json:"description,omitempty"`
 
 	// DownloadAllowed False on a public link that does not allow downloads
 	DownloadAllowed *bool       `json:"downloadAllowed,omitempty"`
@@ -1987,6 +2018,9 @@ type SearchAssetsParams struct {
 	Q string `form:"q" json:"q"`
 }
 
+// SetAISettingsJSONRequestBody defines body for SetAISettings for application/json ContentType.
+type SetAISettingsJSONRequestBody = AISettingsUpdate
+
 // SetBackupSettingsJSONRequestBody defines body for SetBackupSettings for application/json ContentType.
 type SetBackupSettingsJSONRequestBody = BackupSettingsUpdate
 
@@ -2107,6 +2141,9 @@ type MergePeopleJSONRequestBody = AssetIds
 // UnlockPublicLinkJSONRequestBody defines body for UnlockPublicLink for application/json ContentType.
 type UnlockPublicLinkJSONRequestBody = LinkPassword
 
+// AskSearchJSONRequestBody defines body for AskSearch for application/json ContentType.
+type AskSearchJSONRequestBody = AskRequest
+
 // CreateStoryExportJSONRequestBody defines body for CreateStoryExport for application/json ContentType.
 type CreateStoryExportJSONRequestBody = StoryRequest
 
@@ -2118,6 +2155,12 @@ type UnlockVaultJSONRequestBody = VaultUnlock
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// GetAISettings The local Ollama server and how far descriptions have come
+	// (GET /api/admin/ai)
+	GetAISettings(w http.ResponseWriter, r *http.Request)
+	// SetAISettings Name the Ollama server. Previews of photos are sent to it
+	// (PUT /api/admin/ai)
+	SetAISettings(w http.ResponseWriter, r *http.Request)
 	// GetAnalysisProgress How far picture analysis has come. Administrators only.
 	// (GET /api/admin/analysis)
 	GetAnalysisProgress(w http.ResponseWriter, r *http.Request)
@@ -2517,6 +2560,9 @@ type ServerInterface interface {
 	// SearchAssets Search in natural language. Dates, people, places and cameras in the query become filters.
 	// (GET /api/search)
 	SearchAssets(w http.ResponseWriter, r *http.Request, params SearchAssetsParams)
+	// AskSearch Turn a question into words to search for, with the local model
+	// (POST /api/search/ask)
+	AskSearch(w http.ResponseWriter, r *http.Request)
 	// CreateStoryExport Make a video of the chosen photos. Runs in the background.
 	// (POST /api/stories)
 	CreateStoryExport(w http.ResponseWriter, r *http.Request)
@@ -2585,6 +2631,18 @@ type ServerInterface interface {
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// GetAISettings The local Ollama server and how far descriptions have come
+// (GET /api/admin/ai)
+func (_ Unimplemented) GetAISettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetAISettings Name the Ollama server. Previews of photos are sent to it
+// (PUT /api/admin/ai)
+func (_ Unimplemented) SetAISettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // GetAnalysisProgress How far picture analysis has come. Administrators only.
 // (GET /api/admin/analysis)
@@ -3384,6 +3442,12 @@ func (_ Unimplemented) SearchAssets(w http.ResponseWriter, r *http.Request, para
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// AskSearch Turn a question into words to search for, with the local model
+// (POST /api/search/ask)
+func (_ Unimplemented) AskSearch(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // CreateStoryExport Make a video of the chosen photos. Runs in the background.
 // (POST /api/stories)
 func (_ Unimplemented) CreateStoryExport(w http.ResponseWriter, r *http.Request) {
@@ -3518,6 +3582,34 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetAISettings operation middleware
+func (siw *ServerInterfaceWrapper) GetAISettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAISettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetAISettings operation middleware
+func (siw *ServerInterfaceWrapper) SetAISettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetAISettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // GetAnalysisProgress operation middleware
 func (siw *ServerInterfaceWrapper) GetAnalysisProgress(w http.ResponseWriter, r *http.Request) {
@@ -6768,6 +6860,20 @@ func (siw *ServerInterfaceWrapper) SearchAssets(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// AskSearch operation middleware
+func (siw *ServerInterfaceWrapper) AskSearch(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AskSearch(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateStoryExport operation middleware
 func (siw *ServerInterfaceWrapper) CreateStoryExport(w http.ResponseWriter, r *http.Request) {
 
@@ -7720,6 +7826,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/api/admin/family/{userId}", wrapper.AddFamilyMember)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/search/ask", wrapper.AskSearch)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/ai", wrapper.GetAISettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/ai", wrapper.SetAISettings)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

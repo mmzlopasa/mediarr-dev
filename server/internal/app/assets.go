@@ -212,6 +212,9 @@ func (s *apiServer) GetAsset(w http.ResponseWriter, r *http.Request, id openapi_
 		}
 		detail.Tags = &tags
 		detail.IsMissing = optional(true, row.MissingAt.Valid)
+		if text, err := s.queries.GetDescription(ctx, row.ID); err == nil && text != "" {
+			detail.Description = &text
+		}
 		edits, err := jobs.ParseEdits(row.Edits)
 		if err != nil {
 			internalError(w, r, err)

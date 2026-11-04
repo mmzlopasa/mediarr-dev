@@ -181,6 +181,66 @@ class DefaultApi {
     }
   }
 
+  /// Turn a question into words to search for, with the local model
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [AskRequest] askRequest (required):
+  Future<Response> askSearchWithHttpInfo(
+    AskRequest askRequest,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/search/ask';
+
+    // ignore: prefer_final_locals
+    Object? postBody = askRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Turn a question into words to search for, with the local model
+  ///
+  /// Parameters:
+  ///
+  /// * [AskRequest] askRequest (required):
+  Future<AskAnswer?> askSearch(
+    AskRequest askRequest,
+  ) async {
+    final response = await askSearchWithHttpInfo(
+      askRequest,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AskAnswer',
+      ) as AskAnswer;
+    }
+    return null;
+  }
+
   /// Start signing in with a passkey
   ///
   /// Note: This method returns the HTTP [Response].
@@ -2270,6 +2330,52 @@ class DefaultApi {
         await apiClient.deserializeAsync(
             await _decodeBodyBytes(response), 'Map<String, Object>'),
       );
+    }
+    return null;
+  }
+
+  /// The local Ollama server and how far descriptions have come
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getAISettingsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/ai';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The local Ollama server and how far descriptions have come
+  Future<AISettings?> getAISettings() async {
+    final response = await getAISettingsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AISettings',
+      ) as AISettings;
     }
     return null;
   }
@@ -7448,6 +7554,66 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'SearchResult',
       ) as SearchResult;
+    }
+    return null;
+  }
+
+  /// Name the Ollama server. Previews of photos are sent to it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [AISettingsUpdate] aISettingsUpdate (required):
+  Future<Response> setAISettingsWithHttpInfo(
+    AISettingsUpdate aISettingsUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/ai';
+
+    // ignore: prefer_final_locals
+    Object? postBody = aISettingsUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Name the Ollama server. Previews of photos are sent to it
+  ///
+  /// Parameters:
+  ///
+  /// * [AISettingsUpdate] aISettingsUpdate (required):
+  Future<AISettings?> setAISettings(
+    AISettingsUpdate aISettingsUpdate,
+  ) async {
+    final response = await setAISettingsWithHttpInfo(
+      aISettingsUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AISettings',
+      ) as AISettings;
     }
     return null;
   }

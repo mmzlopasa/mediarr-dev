@@ -23,6 +23,7 @@ export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
 export type Tag = components['schemas']['Tag'];
+export type AISettings = components['schemas']['AISettings'];
 export type Family = components['schemas']['Family'];
 export type Webhook = components['schemas']['Webhook'];
 export type Documents = components['schemas']['Documents'];
@@ -264,6 +265,11 @@ export const api = {
 			member ? {} : undefined,
 			member ? 'PUT' : 'DELETE'
 		),
+	aiSettings: () => request<AISettings>(fetch, '/api/admin/ai'),
+	setAISettings: (address: string, visionModel: string, textModel: string) =>
+		request<AISettings>(fetch, '/api/admin/ai', { address, visionModel, textModel }, 'PUT'),
+	askSearch: (question: string) =>
+		request<{ query: string }>(fetch, '/api/search/ask', { question }),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
 	setStackMain: (id: string) =>

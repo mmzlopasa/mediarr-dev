@@ -11,7 +11,8 @@
 		type BackupRun,
 		type BackupSettings,
 		type Features,
-		type Webhook
+		type Webhook,
+		type AISettings
 	} from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
@@ -245,6 +246,32 @@
 			familyIds = member ? [...familyIds, id] : familyIds.filter((other) => other !== id);
 		} catch {
 			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		}
+	}
+
+	let ai = $state<AISettings>();
+
+	async function loadAI() {
+		ai = await api.aiSettings().catch(() => ai);
+	}
+
+	onMount(() => {
+		loadAI();
+		const timer = setInterval(loadAI, 15000);
+		return () => clearInterval(timer);
+	});
+
+	async function saveAI(event: SubmitEvent) {
+		event.preventDefault();
+		if (!ai) return;
+		try {
+			ai = await api.setAISettings(ai.address, ai.visionModel, ai.textModel);
+			showToast('ok', tr('Spremljeno.', 'Saved.'));
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
+			);
 		}
 	}
 
@@ -551,6 +578,33 @@
 					{user.name} ({user.email})
 				</label>
 			{/each}
+		</Card>
+	{/if}
+	{#if features.descriptions && ai}
+		<Card title={tr('AI opisi i pitanja', 'AI descriptions and questions')}>
+			<form class="form" onsubmit={saveAI}>
+				<p class="alb-meta">
+					{tr(
+						'Lokalni Ollama server dobiva pregled svake fotke. Upišite samo server kojem vjerujete, jer fotke tamo odlaze. Modeli se sami preuzmu.',
+						'A local Ollama server receives a preview of each photo. Name only a server you trust, because the photos go there. The models download by themselves.'
+					)}
+				</p>
+				<Input label={tr('Adresa Ollame', 'Ollama address')} bind:value={ai.address} />
+				<Input label={tr('Model za slike', 'Model for pictures')} bind:value={ai.visionModel} />
+				<Input label={tr('Model za pitanja', 'Model for questions')} bind:value={ai.textModel} />
+				<Kv
+					label={tr('Stanje', 'State')}
+					value={!ai.address
+						? tr('Nije postavljeno', 'Not set')
+						: !ai.reachable
+							? tr('Ollama ne odgovara', 'Ollama is not answering')
+							: ai.modelsReady
+								? tr('Radi', 'Running')
+								: tr('Modeli se preuzimaju', 'The models are downloading')}
+				/>
+				<Kv label={tr('Opisano', 'Described')} value="{ai.described} / {ai.total}" />
+				<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
+			</form>
 		</Card>
 	{/if}
 	{#if features.webhooks}

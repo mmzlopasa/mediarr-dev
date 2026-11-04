@@ -1958,6 +1958,53 @@ paths:
         "204": { description: Removed }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/search/ask:
+    post:
+      operationId: askSearch
+      summary: Turn a question into words to search for, with the local model
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AskRequest" }
+      responses:
+        "200":
+          description: What to search for
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AskAnswer" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/admin/ai:
+    get:
+      operationId: getAISettings
+      summary: The local Ollama server and how far descriptions have come
+      responses:
+        "200":
+          description: The settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AISettings" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setAISettings
+      summary: Name the Ollama server. Previews of photos are sent to it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AISettingsUpdate" }
+      responses:
+        "200":
+          description: The settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AISettings" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/admin/external:
     get:
       operationId: getExternalLibrary
@@ -2429,6 +2476,34 @@ components:
       properties:
         title: { type: string }
         rules: { $ref: "#/components/schemas/AlbumRules" }
+    AskRequest:
+      type: object
+      required: [question]
+      properties:
+        question: { type: string }
+    AskAnswer:
+      type: object
+      required: [query]
+      properties:
+        query: { type: string }
+    AISettings:
+      type: object
+      required: [address, visionModel, textModel, reachable, modelsReady, described, total]
+      properties:
+        address: { type: string }
+        visionModel: { type: string }
+        textModel: { type: string }
+        reachable: { type: boolean }
+        modelsReady: { type: boolean }
+        described: { type: integer, format: int64 }
+        total: { type: integer, format: int64 }
+    AISettingsUpdate:
+      type: object
+      required: [address, visionModel, textModel]
+      properties:
+        address: { type: string }
+        visionModel: { type: string }
+        textModel: { type: string }
     Memory:
       type: object
       required: [kind, title, items]
@@ -2882,6 +2957,7 @@ components:
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
         edits: { $ref: "#/components/schemas/AssetEdits" }
         isEditing: { type: boolean, description: "New previews are being made after an edit" }
+        description: { type: string, description: "From the local model. Only for the owner" }
         isMissing: { type: boolean, description: "The file of an external library was not found on the last scan" }
         tags: { type: array, items: { type: string }, description: "Only for the owner" }
         stack: { type: array, items: { type: string, format: uuid }, description: "All shots of its stack, the main one first. Only for the owner" }

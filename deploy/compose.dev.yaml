@@ -54,6 +54,13 @@ services:
       server:
         condition: service_healthy
 
+  # The demo's AI descriptions. No limits, by the owner's decision.
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ${DEV_OLLAMA:-../.dev/ollama}:/root/.ollama
+    restart: unless-stopped
+
   ml:
     build:
       context: ../ml

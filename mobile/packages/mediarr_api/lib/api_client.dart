@@ -229,6 +229,10 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
+        case 'AISettings':
+          return AISettings.fromJson(value);
+        case 'AISettingsUpdate':
+          return AISettingsUpdate.fromJson(value);
         case 'Activity':
           return Activity.fromJson(value);
         case 'AdminHealth':
@@ -255,6 +259,10 @@ class ApiClient {
           return ApiKey.fromJson(value);
         case 'ApiKeyCreate':
           return ApiKeyCreate.fromJson(value);
+        case 'AskAnswer':
+          return AskAnswer.fromJson(value);
+        case 'AskRequest':
+          return AskRequest.fromJson(value);
         case 'Asset':
           return Asset.fromJson(value);
         case 'AssetDetail':

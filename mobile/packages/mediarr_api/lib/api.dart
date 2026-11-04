@@ -30,6 +30,8 @@ part 'auth/http_bearer_auth.dart';
 
 part 'api/default_api.dart';
 
+part 'model/ai_settings.dart';
+part 'model/ai_settings_update.dart';
 part 'model/activity.dart';
 part 'model/admin_health.dart';
 part 'model/admin_jobs.dart';
@@ -43,6 +45,8 @@ part 'model/album_update.dart';
 part 'model/analysis_progress.dart';
 part 'model/api_key.dart';
 part 'model/api_key_create.dart';
+part 'model/ask_answer.dart';
+part 'model/ask_request.dart';
 part 'model/asset.dart';
 part 'model/asset_detail.dart';
 part 'model/asset_edits.dart';
