@@ -109,6 +109,7 @@ type Asset struct {
 	ImportTakenAt      pgtype.Timestamptz
 	ImportLatitude     pgtype.Float8
 	ImportLongitude    pgtype.Float8
+	ChecksumSha1       []byte
 }
 
 type AssetDescription struct {

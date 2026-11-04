@@ -38,6 +38,7 @@ const (
 	importRequestWait   = 2 * time.Minute
 	maxImportError      = 400
 	foreignKeyViolation = "23503"
+	fingerprintBatch    = 500
 	maxImportAnswer     = 64 << 20
 	maxSidecarBytes     = 1 << 20
 	maxImportPages      = 200000
@@ -487,32 +488,37 @@ func (i *importRun) immichHints(ctx context.Context, remote string, local pgtype
 }
 
 func (i *importRun) immichFile(ctx context.Context, asset *immichAsset, albums []pgtype.UUID) error {
-	tmp, err := i.immichDownload(ctx, asset.ID, asset.Checksum)
-	if err != nil {
-		return err
-	}
 	item := importItem{
 		name: asset.OriginalFileName, favorite: asset.IsFavorite, archived: asset.Visibility == "archive", albums: albums,
 	}
 	if when, err := time.Parse(time.RFC3339, asset.FileCreatedAt); err == nil {
 		item.takenAt = &when
 	}
-	local, isNew, err := i.store(ctx, tmp, &item)
+	local, known, err := i.knownLocally(ctx, asset.Checksum)
 	if err != nil {
-		_ = os.Remove(tmp)
 		return err
 	}
-	// A Live Photo's video is a file of its own, and they find each other when it is read.
-	if asset.LivePhotoVideoID != nil && *asset.LivePhotoVideoID != "" {
-		video, err := i.immichDownload(ctx, *asset.LivePhotoVideoID, "")
+	isNew := false
+	if known {
+		if err := i.applyKnown(ctx, local, &item); err != nil {
+			return err
+		}
+	} else {
+		tmp, err := i.immichDownload(ctx, asset.ID, asset.Checksum)
 		if err != nil {
 			return err
 		}
-		stem := strings.TrimSuffix(asset.OriginalFileName, filepath.Ext(asset.OriginalFileName))
-		if _, _, err := i.store(ctx, video, &importItem{name: stem + ".mov", takenAt: item.takenAt}); err != nil {
-			_ = os.Remove(video)
+		local, isNew, err = i.store(ctx, tmp, &item)
+		if err != nil {
+			_ = os.Remove(tmp)
 			return err
 		}
+		if err := i.remember(ctx, local, asset.Checksum); err != nil {
+			return err
+		}
+	}
+	if err := i.immichLiveVideo(ctx, asset, item.takenAt); err != nil {
+		return err
 	}
 	if err := i.immichHints(ctx, asset.ID, local); err != nil {
 		return err
@@ -524,7 +530,114 @@ func (i *importRun) immichFile(ctx context.Context, asset *immichAsset, albums [
 	return i.count(ctx, added, skipped, 0, "")
 }
 
+// fingerprintLibrary gives everything this user has the SHA-1 Immich lists, by reading the files
+// already here. It is much less work than downloading them all again to find that out.
+func (i *importRun) fingerprintLibrary(ctx context.Context) error {
+	var after pgtype.UUID
+	after.Valid = true
+	for {
+		rows, err := i.queries.ListAssetsWithoutSHA1(ctx, db.ListAssetsWithoutSHA1Params{
+			UserID: i.row.UserID, ID: after, Limit: fingerprintBatch,
+		})
+		if err != nil || len(rows) == 0 {
+			return err
+		}
+		for _, row := range rows {
+			after = row.ID
+			if err := i.stillRunning(ctx); err != nil {
+				return err
+			}
+			sum, err := fileSHA1(row.OriginalPath)
+			if err != nil {
+				// A file that cannot be read now is simply not known. It is compared after a download.
+				continue
+			}
+			if err := i.queries.SetAssetSHA1(ctx, db.SetAssetSHA1Params{ID: row.ID, ChecksumSha1: sum}); err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func fileSHA1(path string) ([]byte, error) {
+	file, err := os.Open(path) //nolint:gosec // From the database.
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = file.Close() }()
+	hash := sha1.New() //nolint:gosec // Only to compare with what Immich lists.
+	if _, err := io.Copy(hash, file); err != nil {
+		return nil, err
+	}
+	return hash.Sum(nil), nil
+}
+
+// knownLocally finds the asset with the checksum Immich gave, if it is here already.
+func (i *importRun) knownLocally(ctx context.Context, checksum string) (pgtype.UUID, bool, error) {
+	sum, err := base64.StdEncoding.DecodeString(checksum)
+	if err != nil || len(sum) == 0 {
+		return pgtype.UUID{}, false, nil //nolint:nilerr // Without a usable checksum, it is downloaded.
+	}
+	id, err := i.queries.GetAssetIDBySHA1(ctx, db.GetAssetIDBySHA1Params{UserID: i.row.UserID, ChecksumSha1: sum})
+	if db.IsNotFound(err) {
+		return id, false, nil
+	}
+	return id, err == nil, err
+}
+
+func (i *importRun) remember(ctx context.Context, id pgtype.UUID, checksum string) error {
+	sum, err := base64.StdEncoding.DecodeString(checksum)
+	if err != nil || len(sum) == 0 {
+		return nil //nolint:nilerr // It is worked out from the file next time.
+	}
+	return i.queries.SetAssetSHA1(ctx, db.SetAssetSHA1Params{ID: id, ChecksumSha1: sum})
+}
+
+// applyKnown brings what Immich says about a file that needs no download.
+func (i *importRun) applyKnown(ctx context.Context, id pgtype.UUID, item *importItem) error {
+	if item.favorite {
+		if err := i.queries.MarkImportedFavorite(ctx, id); err != nil {
+			return err
+		}
+	}
+	for _, album := range item.albums {
+		if _, err := i.queries.AddAlbumAssets(ctx, db.AddAlbumAssetsParams{AlbumID: album, UserID: i.row.UserID, Ids: []pgtype.UUID{id}}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// immichLiveVideo brings a Live Photo's video, a file of its own. The two find each other when it is read.
+func (i *importRun) immichLiveVideo(ctx context.Context, asset *immichAsset, takenAt *time.Time) error {
+	if asset.LivePhotoVideoID == nil || *asset.LivePhotoVideoID == "" {
+		return nil
+	}
+	var details immichAsset
+	path := "/api/assets/" + url.PathEscape(*asset.LivePhotoVideoID)
+	if err := i.immichCall(ctx, http.MethodGet, path, nil, &details); err != nil {
+		return err
+	}
+	if _, known, err := i.knownLocally(ctx, details.Checksum); err != nil || known {
+		return err
+	}
+	video, err := i.immichDownload(ctx, *asset.LivePhotoVideoID, details.Checksum)
+	if err != nil {
+		return err
+	}
+	stem := strings.TrimSuffix(asset.OriginalFileName, filepath.Ext(asset.OriginalFileName))
+	local, _, err := i.store(ctx, video, &importItem{name: stem + ".mov", takenAt: takenAt})
+	if err != nil {
+		_ = os.Remove(video)
+		return err
+	}
+	return i.remember(ctx, local, details.Checksum)
+}
+
 func (i *importRun) immich(ctx context.Context) error {
+	if err := i.fingerprintLibrary(ctx); err != nil {
+		return err
+	}
 	if err := i.immichPeople(ctx); err != nil {
 		return err
 	}

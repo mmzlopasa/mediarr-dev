@@ -3,12 +3,18 @@ package app
 import (
 	"bytes"
 	"context"
+	"crypto/sha1" //nolint:gosec // What Immich lists.
+	"encoding/base64"
+	"encoding/json"
 	"image"
 	"image/color"
 	"image/jpeg"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -178,6 +184,83 @@ func TestICloudExportComesIn(t *testing.T) {
 	}
 	if got := s.count(t, `SELECT count(*) FROM assets WHERE original_name='IMG_3.jpg' AND archived_at IS NOT NULL`); got != 1 {
 		t.Fatal("a hidden photo should be archived")
+	}
+}
+
+// A stand-in for Immich that counts what is downloaded, because that is the point here.
+func fakeImmich(t *testing.T, files map[string][]byte) (*httptest.Server, *atomic.Int32) {
+	t.Helper()
+	downloads := &atomic.Int32{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.URL.Path == "/api/people":
+			_, _ = w.Write([]byte(`{"people":[],"hasNextPage":false}`))
+		case r.URL.Path == "/api/albums":
+			_, _ = w.Write([]byte(`[]`))
+		case r.URL.Path == "/api/faces":
+			_, _ = w.Write([]byte(`[]`))
+		case r.URL.Path == "/api/search/metadata":
+			items := []map[string]any{}
+			for name, data := range files {
+				sum := sha1.Sum(data) //nolint:gosec // What Immich lists.
+				items = append(items, map[string]any{
+					"id": name, "originalFileName": name, "visibility": "timeline",
+					"checksum": base64.StdEncoding.EncodeToString(sum[:]),
+				})
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{"assets": map[string]any{"items": items}})
+		case strings.HasSuffix(r.URL.Path, "/original"):
+			downloads.Add(1)
+			name := strings.Split(r.URL.Path, "/")[3]
+			_, _ = w.Write(files[name])
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+	return server, downloads
+}
+
+func TestImmichImportOnlyDownloadsWhatIsMissing(t *testing.T) {
+	s := newStack(t)
+	s.startWorker(t)
+	c := s.admin()
+	owner := s.userID("admin@example.com")
+	already, first, second := pictureOf(t, 11), pictureOf(t, 22), pictureOf(t, 33)
+	// A file that came another way has no SHA-1 yet, and the import works it out from the file.
+	earlier, _ := fakeImmich(t, map[string][]byte{"already.jpg": already})
+	entry := c.startImport(t, map[string]any{"source": "immich", "ownerId": owner, "address": earlier.URL, "apiKey": "key"})
+	if entry.Added != 1 {
+		t.Fatalf("earlier: %+v", entry)
+	}
+	s.settle(t)
+	if _, err := s.pool.Exec(context.Background(), "UPDATE assets SET checksum_sha1 = NULL"); err != nil {
+		t.Fatal(err)
+	}
+
+	server, downloads := fakeImmich(t, map[string][]byte{"already.jpg": already, "first.jpg": first})
+	payload := map[string]any{"source": "immich", "ownerId": owner, "address": server.URL, "apiKey": "key"}
+	entry = c.startImport(t, payload)
+	if entry.Added != 1 || entry.Skipped != 1 || entry.Failed != 0 {
+		t.Fatalf("first: %+v", entry)
+	}
+	if got := downloads.Load(); got != 1 {
+		t.Fatalf("a file that was already here was downloaded: %d", got)
+	}
+
+	entry = c.startImport(t, payload)
+	if entry.Added != 0 || entry.Skipped != 2 || entry.Failed != 0 {
+		t.Fatalf("again: %+v", entry)
+	}
+	if got := downloads.Load(); got != 1 {
+		t.Fatalf("the second run downloaded: %d", got)
+	}
+
+	more, downloads := fakeImmich(t, map[string][]byte{"already.jpg": already, "first.jpg": first, "second.jpg": second})
+	payload["address"] = more.URL
+	entry = c.startImport(t, payload)
+	if entry.Added != 1 || entry.Skipped != 2 || downloads.Load() != 1 {
+		t.Fatalf("a new file: %+v, %d", entry, downloads.Load())
 	}
 }
 

@@ -223,7 +223,7 @@ func (q *Queries) EnsureTag(ctx context.Context, arg EnsureTagParams) (pgtype.UU
 }
 
 const getCollectionAsset = `-- name: GetCollectionAsset :one
-SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude
+SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1
 FROM assets a
 JOIN assets p ON p.id = COALESCE(a.live_photo_of, a.id)
 WHERE a.id = $1 AND a.user_id = $2
@@ -290,6 +290,7 @@ func (q *Queries) GetCollectionAsset(ctx context.Context, arg GetCollectionAsset
 		&i.ImportTakenAt,
 		&i.ImportLatitude,
 		&i.ImportLongitude,
+		&i.ChecksumSha1,
 	)
 	return i, err
 }
@@ -364,7 +365,7 @@ func (q *Queries) ListExpiredTrash(ctx context.Context, before pgtype.Timestampt
 }
 
 const listPurgeFamily = `-- name: ListPurgeFamily :many
-SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, l.kind AS library_kind
+SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, l.kind AS library_kind
 FROM assets a JOIN libraries l ON l.id = a.library_id
 WHERE a.id = ANY($1::uuid[]) OR a.live_photo_of = ANY($1::uuid[])
 `
@@ -415,6 +416,7 @@ type ListPurgeFamilyRow struct {
 	ImportTakenAt      pgtype.Timestamptz
 	ImportLatitude     pgtype.Float8
 	ImportLongitude    pgtype.Float8
+	ChecksumSha1       []byte
 	LibraryKind        string
 }
 
@@ -474,6 +476,7 @@ func (q *Queries) ListPurgeFamily(ctx context.Context, dollar_1 []pgtype.UUID) (
 			&i.ImportTakenAt,
 			&i.ImportLatitude,
 			&i.ImportLongitude,
+			&i.ChecksumSha1,
 			&i.LibraryKind,
 		); err != nil {
 			return nil, err

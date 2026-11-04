@@ -119,6 +119,22 @@ func (q *Queries) FinishImport(ctx context.Context, arg FinishImportParams) erro
 	return err
 }
 
+const getAssetIDBySHA1 = `-- name: GetAssetIDBySHA1 :one
+SELECT id FROM assets WHERE user_id = $1 AND checksum_sha1 = $2 LIMIT 1
+`
+
+type GetAssetIDBySHA1Params struct {
+	UserID       pgtype.UUID
+	ChecksumSha1 []byte
+}
+
+func (q *Queries) GetAssetIDBySHA1(ctx context.Context, arg GetAssetIDBySHA1Params) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getAssetIDBySHA1, arg.UserID, arg.ChecksumSha1)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getImport = `-- name: GetImport :one
 SELECT id, user_id, source, status, address, secret, folder, page, added, skipped, failed, last_error, created_at, finished_at FROM imports WHERE id = $1
 `
@@ -166,6 +182,43 @@ func (q *Queries) GetImportMap(ctx context.Context, arg GetImportMapParams) (pgt
 	var local_id pgtype.UUID
 	err := row.Scan(&local_id)
 	return local_id, err
+}
+
+const listAssetsWithoutSHA1 = `-- name: ListAssetsWithoutSHA1 :many
+SELECT id, original_path FROM assets
+WHERE user_id = $1 AND checksum_sha1 IS NULL AND id > $2
+ORDER BY id LIMIT $3
+`
+
+type ListAssetsWithoutSHA1Params struct {
+	UserID pgtype.UUID
+	ID     pgtype.UUID
+	Limit  int32
+}
+
+type ListAssetsWithoutSHA1Row struct {
+	ID           pgtype.UUID
+	OriginalPath string
+}
+
+func (q *Queries) ListAssetsWithoutSHA1(ctx context.Context, arg ListAssetsWithoutSHA1Params) ([]ListAssetsWithoutSHA1Row, error) {
+	rows, err := q.db.Query(ctx, listAssetsWithoutSHA1, arg.UserID, arg.ID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAssetsWithoutSHA1Row
+	for rows.Next() {
+		var i ListAssetsWithoutSHA1Row
+		if err := rows.Scan(&i.ID, &i.OriginalPath); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listFaceHints = `-- name: ListFaceHints :many
@@ -312,6 +365,20 @@ type MovePersonImportsParams struct {
 
 func (q *Queries) MovePersonImports(ctx context.Context, arg MovePersonImportsParams) error {
 	_, err := q.db.Exec(ctx, movePersonImports, arg.Target, arg.UserID, arg.Sources)
+	return err
+}
+
+const setAssetSHA1 = `-- name: SetAssetSHA1 :exec
+UPDATE assets SET checksum_sha1 = $2 WHERE id = $1
+`
+
+type SetAssetSHA1Params struct {
+	ID           pgtype.UUID
+	ChecksumSha1 []byte
+}
+
+func (q *Queries) SetAssetSHA1(ctx context.Context, arg SetAssetSHA1Params) error {
+	_, err := q.db.Exec(ctx, setAssetSHA1, arg.ID, arg.ChecksumSha1)
 	return err
 }
 

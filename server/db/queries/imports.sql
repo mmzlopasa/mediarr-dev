@@ -53,3 +53,14 @@ INSERT INTO face_hints (asset_id, person_id, x1, y1, x2, y2)
 SELECT asset_id, sqlc.arg('target'), x1, y1, x2, y2 FROM face_hints
 WHERE person_id = ANY(sqlc.arg('sources')::uuid[])
 ON CONFLICT DO NOTHING;
+
+-- name: ListAssetsWithoutSHA1 :many
+SELECT id, original_path FROM assets
+WHERE user_id = $1 AND checksum_sha1 IS NULL AND id > $2
+ORDER BY id LIMIT $3;
+
+-- name: SetAssetSHA1 :exec
+UPDATE assets SET checksum_sha1 = $2 WHERE id = $1;
+
+-- name: GetAssetIDBySHA1 :one
+SELECT id FROM assets WHERE user_id = $1 AND checksum_sha1 = $2 LIMIT 1;
