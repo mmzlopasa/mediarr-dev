@@ -181,6 +181,56 @@ class DefaultApi {
     }
   }
 
+  /// Let this device sign in
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> approveDeviceWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/admin/security/devices/{id}/approve'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Let this device sign in
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> approveDevice(
+    String id,
+  ) async {
+    final response = await approveDeviceWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Turn a question into words to search for, with the local model
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1583,6 +1633,55 @@ class DefaultApi {
     final response = await deleteAlbumLinkWithHttpInfo(
       id,
       linkId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Forget this device, which then has to be approved again
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteDeviceWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/security/devices/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Forget this device, which then has to be approved again
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteDevice(
+    String id,
+  ) async {
+    final response = await deleteDeviceWithHttpInfo(
+      id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -5274,6 +5373,52 @@ class DefaultApi {
     return null;
   }
 
+  /// Who may reach this server, and the devices that have tried
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getSecurityWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/security';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Who may reach this server, and the devices that have tried
+  Future<SecuritySettings?> getSecurity() async {
+    final response = await getSecurityWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'SecuritySettings',
+      ) as SecuritySettings;
+    }
+    return null;
+  }
+
   /// The version of this server, whether a newer one exists, and its disk
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6696,6 +6841,73 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'PeopleList',
       ) as PeopleList;
+    }
+    return null;
+  }
+
+  /// Attempts to get in, newest first
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [int] before:
+  ///   Entries older than this one
+  Future<Response> listSecurityEventsWithHttpInfo({
+    int? before,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/security/events';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (before != null) {
+      queryParams.addAll(_queryParams('', 'before', before));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Attempts to get in, newest first
+  ///
+  /// Parameters:
+  ///
+  /// * [int] before:
+  ///   Entries older than this one
+  Future<List<SecurityEvent>?> listSecurityEvents({
+    int? before,
+  }) async {
+    final response = await listSecurityEventsWithHttpInfo(
+      before: before,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<SecurityEvent>') as List)
+          .cast<SecurityEvent>()
+          .toList(growable: false);
     }
     return null;
   }
@@ -8250,6 +8462,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Change the rules. Refused if it would lock out the person asking
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [SecurityUpdate] securityUpdate (required):
+  Future<Response> setSecurityWithHttpInfo(
+    SecurityUpdate securityUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/security';
+
+    // ignore: prefer_final_locals
+    Object? postBody = securityUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change the rules. Refused if it would lock out the person asking
+  ///
+  /// Parameters:
+  ///
+  /// * [SecurityUpdate] securityUpdate (required):
+  Future<SecuritySettings?> setSecurity(
+    SecurityUpdate securityUpdate,
+  ) async {
+    final response = await setSecurityWithHttpInfo(
+      securityUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'SecuritySettings',
+      ) as SecuritySettings;
+    }
+    return null;
   }
 
   /// Make this shot the one the timeline shows

@@ -318,6 +318,10 @@ func (s *apiServer) FinishPasskeyLogin(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	if !s.deviceMaySignIn(w, r, owner.user.Email) {
+		writeError(w, http.StatusForbidden, deviceNotApproved)
+		return
+	}
 	if err := s.startSession(ctx, w, r, owner.user.ID); err != nil {
 		internalError(w, r, err)
 		return

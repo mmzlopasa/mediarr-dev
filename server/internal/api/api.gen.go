@@ -494,6 +494,33 @@ func (e MemoryKind) Valid() bool {
 	}
 }
 
+// Defines values for SecurityEventKind.
+const (
+	DeviceBlocked SecurityEventKind = "device_blocked"
+	IpBlocked     SecurityEventKind = "ip_blocked"
+	LoginFailed   SecurityEventKind = "login_failed"
+	LoginLocked   SecurityEventKind = "login_locked"
+	LoginOk       SecurityEventKind = "login_ok"
+)
+
+// Valid indicates whether the value is a known member of the SecurityEventKind enum.
+func (e SecurityEventKind) Valid() bool {
+	switch e {
+	case DeviceBlocked:
+		return true
+	case IpBlocked:
+		return true
+	case LoginFailed:
+		return true
+	case LoginLocked:
+		return true
+	case LoginOk:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for StoryExportStatus.
 const (
 	StoryExportStatusFailed  StoryExportStatus = "failed"
@@ -1686,6 +1713,49 @@ type SearchResult struct {
 	Smart bool `json:"smart"`
 }
 
+// SecurityDevice defines model for SecurityDevice.
+type SecurityDevice struct {
+	Approved  bool               `json:"approved"`
+	Email     string             `json:"email"`
+	FirstSeen time.Time          `json:"firstSeen"`
+	Id        openapi_types.UUID `json:"id"`
+	Ip        string             `json:"ip"`
+	LastSeen  time.Time          `json:"lastSeen"`
+	UserAgent string             `json:"userAgent"`
+}
+
+// SecurityEvent defines model for SecurityEvent.
+type SecurityEvent struct {
+	At        time.Time         `json:"at"`
+	Detail    string            `json:"detail"`
+	Email     string            `json:"email"`
+	Id        int64             `json:"id"`
+	Ip        string            `json:"ip"`
+	Kind      SecurityEventKind `json:"kind"`
+	UserAgent string            `json:"userAgent"`
+}
+
+// SecurityEventKind defines model for SecurityEvent.Kind.
+type SecurityEventKind string
+
+// SecuritySettings defines model for SecuritySettings.
+type SecuritySettings struct {
+	DeviceApprovalEnabled bool             `json:"deviceApprovalEnabled"`
+	Devices               []SecurityDevice `json:"devices"`
+	IpAllowlist           []string         `json:"ipAllowlist"`
+	IpAllowlistEnabled    bool             `json:"ipAllowlistEnabled"`
+
+	// YourAddress The address this server sees for the person asking
+	YourAddress string `json:"yourAddress"`
+}
+
+// SecurityUpdate defines model for SecurityUpdate.
+type SecurityUpdate struct {
+	DeviceApprovalEnabled bool     `json:"deviceApprovalEnabled"`
+	IpAllowlist           []string `json:"ipAllowlist"`
+	IpAllowlistEnabled    bool     `json:"ipAllowlistEnabled"`
+}
+
 // ServerStatus defines model for ServerStatus.
 type ServerStatus struct {
 	DiskTotalBytes int64 `json:"diskTotalBytes"`
@@ -1919,6 +1989,12 @@ type ListAuditLogParams struct {
 	Limit  *int   `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// ListSecurityEventsParams defines parameters for ListSecurityEvents.
+type ListSecurityEventsParams struct {
+	// Before Entries older than this one
+	Before *int64 `form:"before,omitempty" json:"before,omitempty"`
+}
+
 // ListAlbumsParams defines parameters for ListAlbums.
 type ListAlbumsParams struct {
 	Sort *ListAlbumsParamsSort `form:"sort,omitempty" json:"sort,omitempty"`
@@ -2074,6 +2150,9 @@ type CreateImportJSONRequestBody = ImportCreate
 
 // SetOIDCSettingsJSONRequestBody defines body for SetOIDCSettings for application/json ContentType.
 type SetOIDCSettingsJSONRequestBody = OIDCSettingsUpdate
+
+// SetSecurityJSONRequestBody defines body for SetSecurity for application/json ContentType.
+type SetSecurityJSONRequestBody = SecurityUpdate
 
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
@@ -2269,6 +2348,21 @@ type ServerInterface interface {
 	// GetAdminOverview Live statistics of the whole server, read from the database and the library disk
 	// (GET /api/admin/overview)
 	GetAdminOverview(w http.ResponseWriter, r *http.Request)
+	// GetSecurity Who may reach this server, and the devices that have tried
+	// (GET /api/admin/security)
+	GetSecurity(w http.ResponseWriter, r *http.Request)
+	// SetSecurity Change the rules. Refused if it would lock out the person asking
+	// (PUT /api/admin/security)
+	SetSecurity(w http.ResponseWriter, r *http.Request)
+	// DeleteDevice Forget this device, which then has to be approved again
+	// (DELETE /api/admin/security/devices/{id})
+	DeleteDevice(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ApproveDevice Let this device sign in
+	// (POST /api/admin/security/devices/{id}/approve)
+	ApproveDevice(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ListSecurityEvents Attempts to get in, newest first
+	// (GET /api/admin/security/events)
+	ListSecurityEvents(w http.ResponseWriter, r *http.Request, params ListSecurityEventsParams)
 	// GetAdminStorage How much each user stores
 	// (GET /api/admin/storage)
 	GetAdminStorage(w http.ResponseWriter, r *http.Request)
@@ -2824,6 +2918,36 @@ func (_ Unimplemented) SetOIDCSettings(w http.ResponseWriter, r *http.Request) {
 // GetAdminOverview Live statistics of the whole server, read from the database and the library disk
 // (GET /api/admin/overview)
 func (_ Unimplemented) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetSecurity Who may reach this server, and the devices that have tried
+// (GET /api/admin/security)
+func (_ Unimplemented) GetSecurity(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetSecurity Change the rules. Refused if it would lock out the person asking
+// (PUT /api/admin/security)
+func (_ Unimplemented) SetSecurity(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteDevice Forget this device, which then has to be approved again
+// (DELETE /api/admin/security/devices/{id})
+func (_ Unimplemented) DeleteDevice(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ApproveDevice Let this device sign in
+// (POST /api/admin/security/devices/{id}/approve)
+func (_ Unimplemented) ApproveDevice(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListSecurityEvents Attempts to get in, newest first
+// (GET /api/admin/security/events)
+func (_ Unimplemented) ListSecurityEvents(w http.ResponseWriter, r *http.Request, params ListSecurityEventsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4099,6 +4223,119 @@ func (siw *ServerInterfaceWrapper) GetAdminOverview(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAdminOverview(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetSecurity operation middleware
+func (siw *ServerInterfaceWrapper) GetSecurity(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSecurity(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetSecurity operation middleware
+func (siw *ServerInterfaceWrapper) SetSecurity(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetSecurity(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteDevice operation middleware
+func (siw *ServerInterfaceWrapper) DeleteDevice(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteDevice(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ApproveDevice operation middleware
+func (siw *ServerInterfaceWrapper) ApproveDevice(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApproveDevice(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListSecurityEvents operation middleware
+func (siw *ServerInterfaceWrapper) ListSecurityEvents(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListSecurityEventsParams
+
+	// ------------- Optional query parameter "before" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "before", r.URL.Query(), &params.Before, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "before"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "before", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListSecurityEvents(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -7765,6 +8002,21 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/audit", wrapper.ListAuditLog)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/security", wrapper.GetSecurity)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/security", wrapper.SetSecurity)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/security/events", wrapper.ListSecurityEvents)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/security/devices/{id}/approve", wrapper.ApproveDevice)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/admin/security/devices/{id}", wrapper.DeleteDevice)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/jobs", wrapper.GetAdminJobs)

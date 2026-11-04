@@ -248,6 +248,7 @@ func (s *apiServer) Login(w http.ResponseWriter, r *http.Request) {
 	ip := clientIP(r)
 	userKey := email + "|" + ip
 	if !s.userLimiter.Allowed(userKey) || !s.ipLimiter.Allowed(ip) {
+		s.recordSecurity(r, eventLoginLocked, email, "too many attempts")
 		writeError(w, http.StatusTooManyRequests, "too many attempts; try again later")
 		return
 	}
@@ -255,6 +256,7 @@ func (s *apiServer) Login(w http.ResponseWriter, r *http.Request) {
 	failed := func(totpRequired bool) {
 		s.userLimiter.Fail(userKey)
 		s.ipLimiter.Fail(ip)
+		s.recordSecurity(r, eventLoginFailed, email, "")
 		writeJSON(w, http.StatusUnauthorized, api.LoginError{Message: "wrong email, password or code", TotpRequired: totpRequired})
 	}
 
@@ -294,10 +296,15 @@ func (s *apiServer) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.userLimiter.Reset(userKey)
+	if !s.deviceMaySignIn(w, r, email) {
+		writeError(w, http.StatusForbidden, deviceNotApproved)
+		return
+	}
 	if err := s.startSession(r.Context(), w, r, user.ID); err != nil {
 		internalError(w, r, err)
 		return
 	}
+	s.recordSecurity(r, eventLoginOK, email, "password")
 	writeJSON(w, http.StatusOK, toAPIUser(&user))
 }
 

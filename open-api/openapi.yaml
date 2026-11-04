@@ -1432,6 +1432,71 @@ paths:
               schema: { type: array, items: { $ref: "#/components/schemas/AuditEntry" } }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/admin/security:
+    get:
+      operationId: getSecurity
+      summary: Who may reach this server, and the devices that have tried
+      responses:
+        "200":
+          description: The rules
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SecuritySettings" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setSecurity
+      summary: Change the rules. Refused if it would lock out the person asking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SecurityUpdate" }
+      responses:
+        "200":
+          description: The rules now
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SecuritySettings" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/security/events:
+    get:
+      operationId: listSecurityEvents
+      summary: Attempts to get in, newest first
+      parameters:
+        - { name: before, in: query, description: "Entries older than this one", schema: { type: integer, format: int64 } }
+      responses:
+        "200":
+          description: The attempts
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/SecurityEvent" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/security/devices/{id}/approve:
+    post:
+      operationId: approveDevice
+      summary: Let this device sign in
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Approved }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/security/devices/{id}:
+    delete:
+      operationId: deleteDevice
+      summary: Forget this device, which then has to be approved again
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Forgotten }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/admin/jobs:
     get:
       operationId: getAdminJobs
@@ -2890,6 +2955,44 @@ components:
       required: [password]
       properties:
         password: { type: string }
+    SecuritySettings:
+      type: object
+      required: [ipAllowlistEnabled, ipAllowlist, deviceApprovalEnabled, yourAddress, devices]
+      properties:
+        ipAllowlistEnabled: { type: boolean }
+        ipAllowlist: { type: array, items: { type: string } }
+        deviceApprovalEnabled: { type: boolean }
+        yourAddress: { type: string, description: "The address this server sees for the person asking" }
+        devices: { type: array, items: { $ref: "#/components/schemas/SecurityDevice" } }
+    SecurityUpdate:
+      type: object
+      required: [ipAllowlistEnabled, ipAllowlist, deviceApprovalEnabled]
+      properties:
+        ipAllowlistEnabled: { type: boolean }
+        ipAllowlist: { type: array, items: { type: string } }
+        deviceApprovalEnabled: { type: boolean }
+    SecurityDevice:
+      type: object
+      required: [id, email, ip, userAgent, firstSeen, lastSeen, approved]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        ip: { type: string }
+        userAgent: { type: string }
+        firstSeen: { type: string, format: date-time }
+        lastSeen: { type: string, format: date-time }
+        approved: { type: boolean }
+    SecurityEvent:
+      type: object
+      required: [id, at, kind, email, ip, userAgent, detail]
+      properties:
+        id: { type: integer, format: int64 }
+        at: { type: string, format: date-time }
+        kind: { type: string, enum: [login_ok, login_failed, login_locked, ip_blocked, device_blocked] }
+        email: { type: string }
+        ip: { type: string }
+        userAgent: { type: string }
+        detail: { type: string }
     ServerStatus:
       type: object
       required: [version, updateAvailable, diskUsedBytes, diskTotalBytes]

@@ -31,3 +31,15 @@ export function photo(name: string) {
 		buffer: Buffer.concat([jpeg, Buffer.from(`${name}${Math.random()}`)])
 	};
 }
+
+/** How many photos the timeline shows, once that number has stopped changing. */
+export async function settledTiles(page: Page) {
+	let last = -1;
+	let current = await page.locator('.tl-tile').count();
+	for (let round = 0; round < 40 && (current !== last || round < 3); round++) {
+		await page.waitForTimeout(250);
+		last = current;
+		current = await page.locator('.tl-tile').count();
+	}
+	return current;
+}

@@ -356,10 +356,15 @@ func (s *apiServer) FinishOIDC(w http.ResponseWriter, r *http.Request, params ap
 		http.Redirect(w, r, oidcAppScheme+"?code="+url.QueryEscape(code), http.StatusFound)
 		return
 	}
+	if !s.deviceMaySignIn(w, r, user.Email) {
+		http.Redirect(w, r, "/login?sso=failed", http.StatusFound)
+		return
+	}
 	if err := s.startSession(ctx, w, r, user.ID); err != nil {
 		internalError(w, r, err)
 		return
 	}
+	s.recordSecurity(r, eventLoginOK, user.Email, "single sign-on")
 	http.Redirect(w, r, flow.next, http.StatusFound)
 }
 
@@ -383,10 +388,15 @@ func (s *apiServer) ExchangeOIDC(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	if !s.deviceMaySignIn(w, r, user.Email) {
+		writeError(w, http.StatusForbidden, deviceNotApproved)
+		return
+	}
 	if err := s.startSession(ctx, w, r, user.ID); err != nil {
 		internalError(w, r, err)
 		return
 	}
+	s.recordSecurity(r, eventLoginOK, user.Email, "single sign-on")
 	writeJSON(w, http.StatusOK, toAPIUser(&user))
 }
 

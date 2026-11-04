@@ -63,6 +63,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**addAlbumAssets**](doc//DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
 *DefaultApi* | [**addFamilyMember**](doc//DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+*DefaultApi* | [**approveDevice**](doc//DefaultApi.md#approvedevice) | **POST** /api/admin/security/devices/{id}/approve | Let this device sign in
 *DefaultApi* | [**askSearch**](doc//DefaultApi.md#asksearch) | **POST** /api/search/ask | Turn a question into words to search for, with the local model
 *DefaultApi* | [**beginPasskeyLogin**](doc//DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
 *DefaultApi* | [**beginPasskeyRegistration**](doc//DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey, which takes the account's password
@@ -88,6 +89,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteAlbum**](doc//DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 *DefaultApi* | [**deleteAlbumComment**](doc//DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
+*DefaultApi* | [**deleteDevice**](doc//DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 *DefaultApi* | [**deleteFamilyRule**](doc//DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
 *DefaultApi* | [**deletePasskey**](doc//DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 *DefaultApi* | [**deleteTag**](doc//DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
@@ -151,6 +153,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getPublicOriginal**](doc//DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 *DefaultApi* | [**getPublicThumbnail**](doc//DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 *DefaultApi* | [**getPublicVideoFile**](doc//DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+*DefaultApi* | [**getSecurity**](doc//DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
 *DefaultApi* | [**getServerStatus**](doc//DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
 *DefaultApi* | [**getStoryExport**](doc//DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
 *DefaultApi* | [**getStoryVideo**](doc//DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
@@ -177,6 +180,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
 *DefaultApi* | [**listPasskeys**](doc//DefaultApi.md#listpasskeys) | **GET** /api/me/passkeys | The current user's passkeys
 *DefaultApi* | [**listPeople**](doc//DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
+*DefaultApi* | [**listSecurityEvents**](doc//DefaultApi.md#listsecurityevents) | **GET** /api/admin/security/events | Attempts to get in, newest first
 *DefaultApi* | [**listTags**](doc//DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
 *DefaultApi* | [**listUsers**](doc//DefaultApi.md#listusers) | **GET** /api/admin/users | List users
 *DefaultApi* | [**listWebhooks**](doc//DefaultApi.md#listwebhooks) | **GET** /api/admin/webhooks | Addresses told about events, without their secrets
@@ -206,6 +210,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setOIDCSettings**](doc//DefaultApi.md#setoidcsettings) | **PUT** /api/admin/oidc | Change single sign-on. An empty issuer turns it off
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 *DefaultApi* | [**setPartnerTimeline**](doc//DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
+*DefaultApi* | [**setSecurity**](doc//DefaultApi.md#setsecurity) | **PUT** /api/admin/security | Change the rules. Refused if it would lock out the person asking
 *DefaultApi* | [**setStackMain**](doc//DefaultApi.md#setstackmain) | **PUT** /api/assets/{id}/stack/main | Make this shot the one the timeline shows
 *DefaultApi* | [**setUserQuota**](doc//DefaultApi.md#setuserquota) | **PUT** /api/admin/users/{id}/quota | Set how much a user may store. Without a value there is no limit
 *DefaultApi* | [**setVaultPin**](doc//DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
@@ -305,6 +310,10 @@ Class | Method | HTTP request | Description
  - [QuotaUpdate](doc//QuotaUpdate.md)
  - [SearchFilters](doc//SearchFilters.md)
  - [SearchResult](doc//SearchResult.md)
+ - [SecurityDevice](doc//SecurityDevice.md)
+ - [SecurityEvent](doc//SecurityEvent.md)
+ - [SecuritySettings](doc//SecuritySettings.md)
+ - [SecurityUpdate](doc//SecurityUpdate.md)
  - [ServerStatus](doc//ServerStatus.md)
  - [SetupRequest](doc//SetupRequest.md)
  - [ShareLink](doc//ShareLink.md)

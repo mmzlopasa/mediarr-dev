@@ -51,6 +51,9 @@ export type DuplicateGroup = components['schemas']['DuplicateGroup'];
 export type MapPoints = components['schemas']['MapPoints'];
 export type Memory = components['schemas']['Memory'];
 export type ServerStatus = components['schemas']['ServerStatus'];
+export type SecuritySettings = components['schemas']['SecuritySettings'];
+export type SecurityUpdate = components['schemas']['SecurityUpdate'];
+export type SecurityEvent = components['schemas']['SecurityEvent'];
 export type StoryExport = components['schemas']['StoryExport'];
 export type SearchResult = components['schemas']['SearchResult'];
 export type Person = components['schemas']['Person'];
@@ -230,6 +233,14 @@ export const api = {
 	trashSummary: () => request<TrashSummary>(fetch, '/api/trash/summary'),
 	authMethods: () => request<AuthMethods>(fetch, '/api/auth/methods'),
 	oidcSettings: () => request<OIDCSettings>(fetch, '/api/admin/oidc'),
+	security: () => request<SecuritySettings>(fetch, '/api/admin/security'),
+	setSecurity: (body: SecurityUpdate) =>
+		request<SecuritySettings>(fetch, '/api/admin/security', body, 'PUT'),
+	securityEvents: () => request<SecurityEvent[]>(fetch, '/api/admin/security/events'),
+	approveDevice: (id: string) =>
+		request<void>(fetch, `/api/admin/security/devices/${id}/approve`, {}),
+	deleteDevice: (id: string) =>
+		request<void>(fetch, `/api/admin/security/devices/${id}`, undefined, 'DELETE'),
 	setOIDCSettings: (body: OIDCSettingsUpdate) =>
 		request<OIDCSettings>(fetch, '/api/admin/oidc', body, 'PUT'),
 	passkeys: () => request<Passkey[]>(fetch, '/api/me/passkeys'),

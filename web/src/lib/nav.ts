@@ -174,6 +174,14 @@ export const adminNav: NavItem[] = [
 		emptyEn: 'Settings arrive in a later phase.'
 	},
 	{
+		path: '/admin/security',
+		icon: 'lock',
+		hr: 'Sigurnost',
+		en: 'Security',
+		emptyHr: 'Još nema zapisa.',
+		emptyEn: 'Nothing recorded yet.'
+	},
+	{
 		path: '/admin/audit',
 		icon: 'shield',
 		hr: 'Dnevnik aktivnosti',

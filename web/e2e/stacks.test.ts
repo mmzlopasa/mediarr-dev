@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { join } from 'node:path';
-import { signIn } from './helpers';
+import { signIn, settledTiles } from './helpers';
 
 // The search for stacks and duplicates runs once a minute.
 const WORKER_WAIT = 130000;
@@ -13,7 +13,7 @@ async function upload(page: Page, names: string[]) {
 	await page.goto('/');
 	await page.locator('main').waitFor();
 	await page.waitForLoadState('networkidle');
-	const before = await page.locator('.tl-tile').count();
+	const before = await settledTiles(page);
 	await page.locator('input[type=file]').last().setInputFiles(names.map(fixture));
 	await expect(page.locator('.tl-tile')).toHaveCount(before + names.length, { timeout: 60000 });
 }
@@ -51,7 +51,7 @@ test('a burst shows as one photo, and can be looked through and split', async ({
 	await page.goto('/');
 	await page.locator('main').waitFor();
 	await page.waitForLoadState('networkidle');
-	const before = await page.locator('.tl-tile').count();
+	const before = await settledTiles(page);
 	await page
 		.locator('input[type=file]')
 		.last()
@@ -59,7 +59,7 @@ test('a burst shows as one photo, and can be looked through and split', async ({
 	// Leaving the page would stop an upload. The stack may already have formed by the time they all show.
 	await expect(async () => {
 		const stacked = await page.locator('.tl-tile .tl-video').count();
-		expect(stacked > 0 || (await page.locator('.tl-tile').count()) === before + 3).toBe(true);
+		expect(stacked > 0 || (await settledTiles(page)) === before + 3).toBe(true);
 	}).toPass({ timeout: 60000 });
 
 	await expect(async () => {

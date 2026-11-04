@@ -91,6 +91,9 @@ class CollectionSession extends Session {
   Future<AssetDetail?> detail(String id) => api.getCollectionAsset(scope, id);
 }
 
+const deviceNotApprovedMessage =
+    'An administrator has to approve this device before it can sign in.';
+
 /// A user-facing sign-in failure.
 class LoginFailure implements Exception {
   LoginFailure(this.message, {this.totpRequired = false});
@@ -173,6 +176,26 @@ class SessionNotifier extends AsyncNotifier<Session?> {
   static const _serverKey = 'server_url';
   static const _cookieKey = 'session_cookie';
   static const _secondKey = 'server_second';
+  static const _deviceKey = 'device_id';
+
+  /// Names this phone to the server, which can require a device to be approved.
+  Future<String> _deviceId() async {
+    final saved = await _storage.read(key: _deviceKey);
+    if (saved != null) return saved;
+    final random = Random.secure();
+    final fresh = base64UrlEncode(
+      List<int>.generate(32, (_) => random.nextInt(256)),
+    ).replaceAll('=', '');
+    await _storage.write(key: _deviceKey, value: fresh);
+    return fresh;
+  }
+
+  Future<ApiClient> _signInClient(String url) async {
+    final client = ApiClient(basePath: url);
+    client.addDefaultHeader('X-Device-Id', await _deviceId());
+    return client;
+  }
+
   static const _storage = FlutterSecureStorage();
 
   /// Restores the last session, if the server still accepts it.
@@ -242,7 +265,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     String? code,
   }) async {
     final url = normalizeServerUrl(server);
-    final api = DefaultApi(ApiClient(basePath: url));
+    final api = DefaultApi(await _signInClient(url));
     final Response response;
     try {
       response = await api.loginWithHttpInfo(
@@ -263,6 +286,9 @@ class SessionNotifier extends AsyncNotifier<Session?> {
             : 'Wrong email or password.',
         totpRequired: totp,
       );
+    }
+    if (response.statusCode == 403) {
+      throw LoginFailure(deviceNotApprovedMessage);
     }
     if (response.statusCode == 429) {
       throw LoginFailure('Too many attempts. Try again later.');
@@ -306,7 +332,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     final Response response;
     try {
       response = await DefaultApi(
-        ApiClient(basePath: url),
+        await _signInClient(url),
       ).exchangeOIDCWithHttpInfo(OIDCExchange(code: code, verifier: verifier));
     } on ApiException catch (cause) {
       throw LoginFailure('Could not reach the server. (${cause.message})');

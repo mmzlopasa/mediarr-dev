@@ -194,7 +194,8 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);
     await waitFor(tester, find.byType(AssetPicture));
-    expect(find.text('Upload'), findsOneWidget);
+    final uploadTab = find.widgetWithText(NavigationDestination, 'Upload');
+    expect(uploadTab, findsOneWidget);
 
     await tester.tap(find.text('Account'));
     await waitFor(tester, find.text('Settings'));
@@ -215,7 +216,7 @@ void main() {
     await tester.pageBack();
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('Upload'), findsNothing);
+    expect(uploadTab, findsNothing);
     await tester.tap(find.text('Media'));
     await waitFor(tester, find.byType(AssetPicture));
     await tester.tap(find.byType(AssetPicture).first, warnIfMissed: false);

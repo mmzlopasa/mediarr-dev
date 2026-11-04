@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { photo, signIn, users } from './helpers';
+import { photo, signIn, users, settledTiles } from './helpers';
 
 test.beforeEach(async ({ page }) => {
 	await page.addInitScript(() => {
@@ -187,6 +187,18 @@ test('albums open under their entry in the side menu', async ({ page }) => {
 	await page.locator('.nav-more').click();
 });
 
+test('security refuses a list that would lock out the person setting it', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'admin');
+	await page.goto('/admin/security');
+	await expect(page.getByText('The server sees you at')).toBeVisible();
+	await page.getByLabel('Allow only these addresses and networks').check();
+	await page.getByLabel('One a line').fill('203.0.113.9');
+	await page.getByRole('button', { name: 'Save' }).click();
+	await expect(page.getByText('lock you out')).toBeVisible();
+	await expect(page.getByRole('heading', { name: /Attempts to connect/ })).toBeVisible();
+});
+
 test('signing out ends the session', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/');
@@ -225,7 +237,7 @@ test.describe('timeline', () => {
 		await signIn(page, 'uploader');
 		await page.goto('/');
 		await page.locator('main').waitFor();
-		const before = await page.locator('.tl-tile').count();
+		const before = await settledTiles(page);
 		const file = await uploadPhoto(page, `e2e-${Date.now()}.jpg`);
 		await expect(page.locator('.tl-tile')).toHaveCount(before + 1, { timeout: 45000 });
 		const image = page.locator('.tl-tile img').first();
@@ -287,7 +299,7 @@ test.describe('timeline', () => {
 		await bar.getByRole('button', { name: 'Dodaj u favorite' }).click();
 		await expect(page.locator('.tl-fav').first()).toBeVisible();
 
-		const before = await page.locator('.tl-tile').count();
+		const before = await settledTiles(page);
 		await tile.hover();
 		await tile.locator('.tl-check').click();
 		await bar.getByRole('button', { name: 'Obriši' }).click();
@@ -299,7 +311,7 @@ test.describe('timeline', () => {
 		await signIn(page, 'uploader');
 		await page.goto('/');
 		await page.locator('main').waitFor();
-		const before = await page.locator('.tl-tile').count();
+		const before = await settledTiles(page);
 		for (const batch of [
 			[1, 2, 3, 4, 5],
 			[6, 7]

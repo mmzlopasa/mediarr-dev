@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { photo, signIn, users } from './helpers';
+import { photo, signIn, users, settledTiles } from './helpers';
 
 test.setTimeout(90000);
 test.describe.configure({ mode: 'serial' });
@@ -11,8 +11,7 @@ async function upload(page: Page, name: string) {
 	await page.locator('main').waitFor();
 	// The first look at the server has to finish, or there is nothing to count yet.
 	await page.waitForLoadState('networkidle');
-	await page.waitForTimeout(800);
-	const before = await page.locator('.tl-tile').count();
+	const before = await settledTiles(page);
 	await page.locator('input[type=file]').last().setInputFiles(photo(name));
 	await expect(page.locator('.tl-tile')).toHaveCount(before + 1, { timeout: 40000 });
 	return before + 1;
@@ -162,7 +161,7 @@ test('a photo with a location appears on the map under its place name', async ({
 	await page.goto('/');
 	await page.locator('main').waitFor();
 	await page.waitForLoadState('networkidle');
-	const before = await page.locator('.tl-tile').count();
+	const before = await settledTiles(page);
 	await page
 		.locator('input[type=file]')
 		.last()

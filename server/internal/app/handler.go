@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -69,6 +70,8 @@ type Deps struct {
 type apiServer struct {
 	Deps
 	queries           *db.Queries
+	blockedLogged     *auth.Limiter
+	security          atomic.Pointer[securityRules]
 	userLimiter       *auth.Limiter
 	ipLimiter         *auth.Limiter
 	linkPasswords     *auth.Limiter
@@ -101,6 +104,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		oidcCodes:         newShortLived[oidcAppCode](),
 		passkeyChallenges: newShortLived[passkeyChallenge](),
 		guestBytes:        newByteBudget(),
+		blockedLogged:     auth.NewLimiter(1, time.Minute),
 	}
 	if deps.CheckUpdates && Version != "dev" {
 		go server.watchUpdates()
@@ -121,6 +125,9 @@ func NewHandler(deps Deps) (http.Handler, error) {
 	r.Use(server.metrics.observe)
 	r.Use(middleware.Recoverer)
 	r.Use(trustProxies(deps.ProxyHops))
+	if server.queries != nil {
+		r.Use(server.enforceIPAllowlist)
+	}
 	r.Use(requireJSONForWrites)
 	r.Use(sameOriginWrites)
 	if server.queries != nil {

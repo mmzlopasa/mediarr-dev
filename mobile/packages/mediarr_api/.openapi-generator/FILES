@@ -86,6 +86,10 @@ doc/PublicLink.md
 doc/QuotaUpdate.md
 doc/SearchFilters.md
 doc/SearchResult.md
+doc/SecurityDevice.md
+doc/SecurityEvent.md
+doc/SecuritySettings.md
+doc/SecurityUpdate.md
 doc/ServerStatus.md
 doc/SetupRequest.md
 doc/ShareLink.md
@@ -206,6 +210,10 @@ lib/model/public_link.dart
 lib/model/quota_update.dart
 lib/model/search_filters.dart
 lib/model/search_result.dart
+lib/model/security_device.dart
+lib/model/security_event.dart
+lib/model/security_settings.dart
+lib/model/security_update.dart
 lib/model/server_status.dart
 lib/model/setup_request.dart
 lib/model/share_link.dart
@@ -233,4 +241,7 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/server_status_test.dart
+test/security_device_test.dart
+test/security_event_test.dart
+test/security_settings_test.dart
+test/security_update_test.dart

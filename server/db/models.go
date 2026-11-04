@@ -294,6 +294,16 @@ type Place struct {
 	Lon     float32
 }
 
+type SecurityEvent struct {
+	ID        int64
+	At        pgtype.Timestamptz
+	Kind      string
+	Email     string
+	Ip        string
+	UserAgent string
+	Detail    string
+}
+
 type Session struct {
 	ID        pgtype.UUID
 	UserID    pgtype.UUID
@@ -353,6 +363,17 @@ type Tag struct {
 	UserID    pgtype.UUID
 	Name      string
 	CreatedAt pgtype.Timestamptz
+}
+
+type TrustedDevice struct {
+	ID         pgtype.UUID
+	TokenHash  []byte
+	Email      string
+	Ip         string
+	UserAgent  string
+	FirstSeen  pgtype.Timestamptz
+	LastSeen   pgtype.Timestamptz
+	ApprovedAt pgtype.Timestamptz
 }
 
 type User struct {

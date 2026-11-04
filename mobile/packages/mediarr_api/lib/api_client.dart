@@ -395,6 +395,14 @@ class ApiClient {
           return SearchFilters.fromJson(value);
         case 'SearchResult':
           return SearchResult.fromJson(value);
+        case 'SecurityDevice':
+          return SecurityDevice.fromJson(value);
+        case 'SecurityEvent':
+          return SecurityEvent.fromJson(value);
+        case 'SecuritySettings':
+          return SecuritySettings.fromJson(value);
+        case 'SecurityUpdate':
+          return SecurityUpdate.fromJson(value);
         case 'ServerStatus':
           return ServerStatus.fromJson(value);
         case 'SetupRequest':
