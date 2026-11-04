@@ -27,6 +27,10 @@ func handler(root fs.FS) http.Handler {
 	files := http.FileServerFS(root)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Another site must not be able to show this in a frame and trick someone into clicking it.
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+		w.Header().Set("Content-Security-Policy", "frame-ancestors 'self'")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.NotFound(w, r)
 			return

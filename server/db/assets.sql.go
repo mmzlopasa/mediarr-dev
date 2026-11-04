@@ -278,7 +278,7 @@ func (q *Queries) GetLiveVideo(ctx context.Context, livePhotoOf pgtype.UUID) (pg
 }
 
 const getOwnedAsset = `-- name: GetOwnedAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL AND vault_at IS NULL
 `
 
 type GetOwnedAssetParams struct {

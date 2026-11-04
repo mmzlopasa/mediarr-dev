@@ -277,6 +277,11 @@ func (s *apiServer) UpdateAlbum(w http.ResponseWriter, r *http.Request, id opena
 		params.AssetOrder = string(*body.Order)
 	}
 	if body.Rules != nil {
+		// A rule can match the owner's whole library, so it is the owner's decision alone.
+		if album.OwnerID != user.ID {
+			writeError(w, http.StatusForbidden, "only the owner can change what a smart album shows")
+			return
+		}
 		if album.Rules == nil {
 			writeError(w, http.StatusBadRequest, "this album is not a smart album")
 			return

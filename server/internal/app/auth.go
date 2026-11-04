@@ -99,6 +99,8 @@ func isHTTPS(r *http.Request) bool {
 	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 }
 
+const maxEmailLength = 320
+
 func clientIP(r *http.Request) string {
 	if ip := r.Header.Get("X-Real-IP"); ip != "" {
 		return ip
@@ -226,7 +228,12 @@ func (s *apiServer) Login(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body) {
 		return
 	}
+	if len(body.Email) > maxEmailLength {
+		writeError(w, http.StatusBadRequest, "that email address is too long")
+		return
+	}
 	email := strings.ToLower(strings.TrimSpace(body.Email))
+	noteAuditEmail(r, email)
 	ip := clientIP(r)
 	userKey := email + "|" + ip
 	if !s.userLimiter.Allowed(userKey) || !s.ipLimiter.Allowed(ip) {
@@ -351,7 +358,11 @@ func (s *apiServer) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		if err := q.SetPassword(r.Context(), db.SetPasswordParams{ID: user.ID, PasswordHash: hash}); err != nil {
 			return err
 		}
-		return q.DeleteOtherSessions(r.Context(), db.DeleteOtherSessionsParams{UserID: user.ID, TokenHash: keep})
+		// Someone who got in before the change must not stay in. A phone signs in again for its backup.
+		if err := q.DeleteUserAPIKeys(r.Context(), user.ID); err != nil {
+			return err
+		}
+		return q.DeleteOtherSessions(r.Context(), db.DeleteOtherSessionsParams{UserID: user.ID, Keep: keep})
 	})
 	if err != nil {
 		internalError(w, r, err)

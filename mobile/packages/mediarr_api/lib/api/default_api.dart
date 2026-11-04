@@ -4522,6 +4522,83 @@ class DefaultApi {
     return null;
   }
 
+  /// Who changed what, newest first. Never the content of a request
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [int] before:
+  ///   Entries older than this id
+  ///
+  /// * [int] limit:
+  Future<Response> listAuditLogWithHttpInfo({
+    int? before,
+    int? limit,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/audit';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (before != null) {
+      queryParams.addAll(_queryParams('', 'before', before));
+    }
+    if (limit != null) {
+      queryParams.addAll(_queryParams('', 'limit', limit));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Who changed what, newest first. Never the content of a request
+  ///
+  /// Parameters:
+  ///
+  /// * [int] before:
+  ///   Entries older than this id
+  ///
+  /// * [int] limit:
+  Future<List<AuditEntry>?> listAuditLog({
+    int? before,
+    int? limit,
+  }) async {
+    final response = await listAuditLogWithHttpInfo(
+      before: before,
+      limit: limit,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<AuditEntry>')
+              as List)
+          .cast<AuditEntry>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// Cameras in the current user's library, for smart album rules
   ///
   /// Note: This method returns the HTTP [Response].

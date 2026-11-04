@@ -56,9 +56,11 @@ func (s *apiServer) newUploadHandler() (*tusd.UnroutedHandler, error) {
 	filelocker.New(tmp).UseIn(composer)
 
 	return tusd.NewUnroutedHandler(tusd.Config{
-		BasePath:                  uploadBasePath,
-		StoreComposer:             composer,
-		DisableDownload:           true,
+		BasePath:        uploadBasePath,
+		StoreComposer:   composer,
+		DisableDownload: true,
+		// It reads other uploads by a path from the client, which could reach any readable file.
+		DisableConcatenation:      true,
 		RespectForwardedHeaders:   true,
 		Cors:                      &tusd.CorsConfig{Disable: true},
 		Logger:                    slog.New(slog.NewTextHandler(io.Discard, nil)),
@@ -72,6 +74,12 @@ func (s *apiServer) beforeUpload(hook tusd.HookEvent) (tusd.HTTPResponse, tusd.F
 	user, ok := hook.Context.Value(userKey{}).(*db.User)
 	if !ok || user == nil {
 		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_UNAUTHORIZED", "sign in first", http.StatusUnauthorized)
+	}
+	if hook.Upload.IsFinal || hook.Upload.IsPartial {
+		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_NO_CONCAT", "uploads cannot be put together", http.StatusBadRequest)
+	}
+	if err := s.checkDiskRoom(hook.Upload.Size); err != nil {
+		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, err
 	}
 	meta := hook.Upload.MetaData
 	if sum := meta[metaChecksum]; sum != "" && !checksumHex.MatchString(sum) {

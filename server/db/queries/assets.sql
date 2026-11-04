@@ -96,7 +96,7 @@ WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archi
 ORDER BY a.local_at DESC, a.id DESC;
 
 -- name: GetOwnedAsset :one
-SELECT * FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL;
+SELECT * FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL AND vault_at IS NULL;
 
 -- name: NewerAsset :one
 SELECT id FROM assets

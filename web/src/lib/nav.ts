@@ -154,8 +154,8 @@ export const adminNav: NavItem[] = [
 		icon: 'shield',
 		hr: 'Dnevnik aktivnosti',
 		en: 'Activity log',
-		emptyHr: 'Dnevnik aktivnosti stiže u kasnijoj fazi.',
-		emptyEn: 'The activity log arrives in a later phase.'
+		emptyHr: 'Još nema zapisa.',
+		emptyEn: 'Nothing recorded yet.'
 	},
 	{
 		path: '/admin/health',

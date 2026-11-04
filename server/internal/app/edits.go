@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
+	"path/filepath"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -92,6 +95,12 @@ func (s *apiServer) storeEdits(w http.ResponseWriter, r *http.Request, id openap
 	if err != nil {
 		internalError(w, r, err)
 		return
+	}
+	// Links keep marked previews of their own, which would still show the picture as it was.
+	if stale, err := filepath.Glob(filepath.Join(s.CachePath, "links", "*", uuid.UUID(row.ID.Bytes).String()+"-*")); err == nil {
+		for _, path := range stale {
+			_ = os.Remove(path)
+		}
 	}
 	w.WriteHeader(http.StatusNoContent)
 }

@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	auditKeptFor     = 365 * 24 * time.Hour
 	maxAttempts      = 5
 	staleUploadAge   = 7 * 24 * time.Hour
 	cleanupInterval  = 6 * time.Hour
@@ -447,6 +448,9 @@ func (w *cleanupWorker) Work(ctx context.Context, _ *river.Job[CleanupArgs]) err
 		return err
 	}
 	if err := GeocodePending(ctx, w.queries); err != nil {
+		return err
+	}
+	if err := w.queries.DeleteOldAudit(ctx, pgtype.Timestamptz{Time: time.Now().Add(-auditKeptFor), Valid: true}); err != nil {
 		return err
 	}
 	if err := removeOldStories(ctx, w.queries, time.Now()); err != nil {

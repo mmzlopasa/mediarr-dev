@@ -830,6 +830,18 @@ type AssetTagChange struct {
 	Remove *bool                `json:"remove,omitempty"`
 }
 
+// AuditEntry defines model for AuditEntry.
+type AuditEntry struct {
+	At        time.Time `json:"at"`
+	Id        int64     `json:"id"`
+	Ip        string    `json:"ip"`
+	Method    string    `json:"method"`
+	Route     string    `json:"route"`
+	Status    int       `json:"status"`
+	Target    string    `json:"target"`
+	UserEmail string    `json:"userEmail"`
+}
+
 // AuthStatus defines model for AuthStatus.
 type AuthStatus struct {
 	SetupRequired bool  `json:"setupRequired"`
@@ -1302,6 +1314,13 @@ type VaultUnlock struct {
 	Pin string `json:"pin"`
 }
 
+// ListAuditLogParams defines parameters for ListAuditLog.
+type ListAuditLogParams struct {
+	// Before Entries older than this id
+	Before *int64 `form:"before,omitempty" json:"before,omitempty"`
+	Limit  *int   `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // ListAlbumsParams defines parameters for ListAlbums.
 type ListAlbumsParams struct {
 	Sort *ListAlbumsParamsSort `form:"sort,omitempty" json:"sort,omitempty"`
@@ -1506,6 +1525,9 @@ type ServerInterface interface {
 	// GetAnalysisProgress How far picture analysis has come. Administrators only.
 	// (GET /api/admin/analysis)
 	GetAnalysisProgress(w http.ResponseWriter, r *http.Request)
+	// ListAuditLog Who changed what, newest first. Never the content of a request
+	// (GET /api/admin/audit)
+	ListAuditLog(w http.ResponseWriter, r *http.Request, params ListAuditLogParams)
 	// GetExternalLibrary The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 	// (GET /api/admin/external)
 	GetExternalLibrary(w http.ResponseWriter, r *http.Request)
@@ -1839,6 +1861,12 @@ type Unimplemented struct{}
 // GetAnalysisProgress How far picture analysis has come. Administrators only.
 // (GET /api/admin/analysis)
 func (_ Unimplemented) GetAnalysisProgress(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAuditLog Who changed what, newest first. Never the content of a request
+// (GET /api/admin/audit)
+func (_ Unimplemented) ListAuditLog(w http.ResponseWriter, r *http.Request, params ListAuditLogParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2504,6 +2532,52 @@ func (siw *ServerInterfaceWrapper) GetAnalysisProgress(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAnalysisProgress(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAuditLog operation middleware
+func (siw *ServerInterfaceWrapper) ListAuditLog(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAuditLogParams
+
+	// ------------- Optional query parameter "before" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "before", r.URL.Query(), &params.Before, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "before"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "before", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAuditLog(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5686,6 +5760,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/duplicates/dismiss", wrapper.DismissDuplicates)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/audit", wrapper.ListAuditLog)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

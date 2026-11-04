@@ -111,7 +111,7 @@ func serve(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return fmt.Errorf("create job client: %w", err)
 	}
-	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath})
+	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, ProxyHops: cfg.ProxyHops, MaxUploadBytes: cfg.MaxUploadBytes})
 	if err != nil {
 		return err
 	}
@@ -212,8 +212,16 @@ func upsertUser(ctx context.Context, cfg config.Config, args []string) error {
 		return fmt.Errorf("open database: %w", err)
 	}
 	defer pool.Close()
-	_, err = db.New(pool).UpsertUser(ctx, db.UpsertUserParams{Email: email, Name: args[2], PasswordHash: hash, IsAdmin: isAdmin})
-	return err
+	queries := db.New(pool)
+	user, err := queries.UpsertUser(ctx, db.UpsertUserParams{Email: email, Name: args[2], PasswordHash: hash, IsAdmin: isAdmin})
+	if err != nil {
+		return err
+	}
+	// A reset is what someone does after losing control of the account.
+	if err := queries.DeleteUserAPIKeys(ctx, user.ID); err != nil {
+		return err
+	}
+	return queries.DeleteOtherSessions(ctx, db.DeleteOtherSessionsParams{UserID: user.ID})
 }
 
 // reprocess queues every ready asset for processing again, so files from an older version get what

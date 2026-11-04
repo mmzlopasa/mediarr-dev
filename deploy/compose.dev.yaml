@@ -20,6 +20,8 @@ x-go: &go
     CACHE_PATH: /data/cache
     WORKER_CONCURRENCY: "2"
     ML_URL: http://ml:8000
+    # The demo stands behind the host nginx.
+    TRUSTED_PROXY_HOPS: "1"
   volumes:
     - ../server:/src/server
     - ../.dev/cache:/cache

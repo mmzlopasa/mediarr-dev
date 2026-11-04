@@ -45,6 +45,7 @@ part 'model/asset_edits.dart';
 part 'model/asset_ids.dart';
 part 'model/asset_list.dart';
 part 'model/asset_tag_change.dart';
+part 'model/audit_entry.dart';
 part 'model/auth_status.dart';
 part 'model/bulk_request.dart';
 part 'model/bulk_response.dart';

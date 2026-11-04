@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -28,6 +30,7 @@ const (
 	sessionLifetime   = 30 * 24 * time.Hour
 	apiKeyHeader      = "X-Api-Key" //nolint:gosec // A header name, not a credential.
 	loginWindow       = 15 * time.Minute
+	minFreeDiskBytes  = 1 << 30
 	loginFailuresUser = 10
 	loginFailuresIP   = 50
 	maxJSONBody       = 64 * 1024
@@ -46,7 +49,11 @@ type Deps struct {
 	LibraryPath string
 	// ExternalPath is where the folder of EXTERNAL_LIBRARY_PATH is mounted, read only.
 	ExternalPath string
-	CachePath    string
+	// ProxyHops is how many reverse proxies stand in front of the bundled nginx.
+	ProxyHops int
+	// MaxUploadBytes limits one file, if above zero.
+	MaxUploadBytes int64
+	CachePath      string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
 }
@@ -59,6 +66,8 @@ type apiServer struct {
 	linkPasswords *auth.Limiter
 	linkUploads   *auth.Limiter
 	vaultPins     *auth.Limiter
+	limits        *rateLimits
+	guestBytes    *byteBudget
 	uploads       *tusd.UnroutedHandler
 	// fullPreviews limits how many full resolution previews are made at once.
 	fullPreviews chan struct{}
@@ -75,6 +84,8 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		linkUploads:   auth.NewLimiter(linkUploadsPerHour, time.Hour),
 		vaultPins:     auth.NewLimiter(vaultPinFailures, loginWindow),
 		fullPreviews:  make(chan struct{}, 2),
+		limits:        newRateLimits(),
+		guestBytes:    newByteBudget(),
 	}
 	if deps.Pool != nil {
 		server.queries = db.New(deps.Pool)
@@ -88,9 +99,12 @@ func NewHandler(deps Deps) (http.Handler, error) {
 	server.embeddings = ml.NewCache(ml.New(deps.MLURL))
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
+	r.Use(trustProxies(deps.ProxyHops))
 	r.Use(requireJSONForWrites)
+	r.Use(sameOriginWrites)
 	if server.queries != nil {
 		r.Use(server.loadUser)
+		r.Use(server.limitAndAudit)
 	}
 	r.NotFound(notFound)
 	api.HandlerFromMux(server, r)
@@ -115,6 +129,61 @@ func requireJSONForWrites(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// sameOriginWrites stops another site from using the cookie of a signed-in user. A form with no
+// body gets past the JSON check above, and a page on another port of the same address is same-site
+// to the browser, so cookies alone do not settle it. Apps send no Origin at all.
+func sameOriginWrites(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" && isWrite(r.Method) && strings.HasPrefix(r.URL.Path, "/api/") {
+			parsed, err := url.Parse(origin)
+			if err != nil || !strings.EqualFold(parsed.Host, r.Host) {
+				writeError(w, http.StatusForbidden, "this request came from another site")
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// forwardedClient finds the visitor's address in X-Forwarded-For, counting from the right, because
+// anything further left was written by the visitor. It returns nothing if there are too few entries.
+func forwardedClient(header string, hops int) string {
+	parts := strings.Split(header, ",")
+	at := len(parts) - 1 - hops
+	if hops <= 0 || at < 0 {
+		return ""
+	}
+	return strings.TrimSpace(parts[at])
+}
+
+// trustProxies makes the limits and the log see the visitor instead of the user's own proxy.
+func trustProxies(hops int) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if client := forwardedClient(r.Header.Get("X-Forwarded-For"), hops); client != "" {
+				r.Header.Set("X-Real-IP", client)
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// checkDiskRoom refuses a file that would fill the disk, which would also stop the database.
+func (s *apiServer) checkDiskRoom(size int64) error {
+	if s.MaxUploadBytes > 0 && size > s.MaxUploadBytes {
+		return tusd.NewError("ERR_TOO_LARGE", "this file is larger than this server allows", http.StatusRequestEntityTooLarge)
+	}
+	var disk syscall.Statfs_t
+	if err := syscall.Statfs(s.LibraryPath, &disk); err != nil {
+		return nil //nolint:nilerr // The upload then fails on its own if the disk really is the problem.
+	}
+	free := int64(disk.Bavail) * disk.Bsize //nolint:gosec // Disk sizes fit.
+	if free-size < minFreeDiskBytes {
+		return tusd.NewError("ERR_DISK_FULL", "the server's disk is full", http.StatusInsufficientStorage)
+	}
+	return nil
 }
 
 func isPublicUpload(path string) bool {

@@ -49,7 +49,10 @@ WHERE s.token_hash = $1 AND s.expires_at > now();
 DELETE FROM sessions WHERE token_hash = $1;
 
 -- name: DeleteOtherSessions :exec
-DELETE FROM sessions WHERE user_id = $1 AND token_hash <> $2;
+DELETE FROM sessions WHERE user_id = sqlc.arg('user_id') AND token_hash IS DISTINCT FROM sqlc.arg('keep');
+
+-- name: DeleteUserAPIKeys :exec
+DELETE FROM api_keys WHERE user_id = $1;
 
 -- name: DeleteExpiredSessions :exec
 DELETE FROM sessions WHERE expires_at <= now();

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -113,4 +114,25 @@ func applyEdits(ctx context.Context, source, work string, edits *Edits) (string,
 		return "", err
 	}
 	return edited, nil
+}
+
+// StripLocation writes a copy without where it was taken, for sharing. The original is not touched.
+// The copy appears at dest only when it is complete, and tools that cannot write a format fail, so
+// a caller never ends up with a file that still has the location.
+func StripLocation(ctx context.Context, original, dest string) error {
+	if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil {
+		return err
+	}
+	work, err := os.MkdirTemp(filepath.Dir(dest), ".strip-*")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = os.RemoveAll(work) }()
+	tmp := filepath.Join(work, "out"+filepath.Ext(dest))
+	if _, err := runToolNoLimit(ctx, "exiftool", "-q", "-m", "-gps:all=", "-xmp:gps*=", "-xmp:geotag=",
+		"-xmp:Location*=", "-iptc:City=", "-iptc:Country*=", "-xmp:City=", "-xmp:Country=", "-xmp:State=",
+		"-Keys:GPSCoordinates=", "-UserData:GPSCoordinates=", "-ItemList:GPSCoordinates=", "-o", tmp, original); err != nil {
+		return err
+	}
+	return os.Rename(tmp, dest)
 }

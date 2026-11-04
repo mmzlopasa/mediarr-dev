@@ -130,16 +130,16 @@ func (q *Queries) DeleteExpiredSessions(ctx context.Context) error {
 }
 
 const deleteOtherSessions = `-- name: DeleteOtherSessions :exec
-DELETE FROM sessions WHERE user_id = $1 AND token_hash <> $2
+DELETE FROM sessions WHERE user_id = $1 AND token_hash IS DISTINCT FROM $2
 `
 
 type DeleteOtherSessionsParams struct {
-	UserID    pgtype.UUID
-	TokenHash []byte
+	UserID pgtype.UUID
+	Keep   []byte
 }
 
 func (q *Queries) DeleteOtherSessions(ctx context.Context, arg DeleteOtherSessionsParams) error {
-	_, err := q.db.Exec(ctx, deleteOtherSessions, arg.UserID, arg.TokenHash)
+	_, err := q.db.Exec(ctx, deleteOtherSessions, arg.UserID, arg.Keep)
 	return err
 }
 
@@ -149,6 +149,15 @@ DELETE FROM sessions WHERE token_hash = $1
 
 func (q *Queries) DeleteSession(ctx context.Context, tokenHash []byte) error {
 	_, err := q.db.Exec(ctx, deleteSession, tokenHash)
+	return err
+}
+
+const deleteUserAPIKeys = `-- name: DeleteUserAPIKeys :exec
+DELETE FROM api_keys WHERE user_id = $1
+`
+
+func (q *Queries) DeleteUserAPIKeys(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUserAPIKeys, userID)
 	return err
 }
 

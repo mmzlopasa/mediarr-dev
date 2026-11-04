@@ -41,12 +41,20 @@ func (l *Limiter) Allowed(key string) bool {
 	return len(l.recent(key, l.now())) < l.max
 }
 
+// A visitor can make up any number of keys, so old ones are cleared once there are many.
+const maxTrackedKeys = 10000
+
 // Fail records a failed attempt.
 func (l *Limiter) Fail(key string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	now := l.now()
 	l.hits[key] = append(l.recent(key, now), now)
+	if len(l.hits) > maxTrackedKeys {
+		for other := range l.hits {
+			l.recent(other, now)
+		}
+	}
 }
 
 // Reset forgets a key after a successful attempt.

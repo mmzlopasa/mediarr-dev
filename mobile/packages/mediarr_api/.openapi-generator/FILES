@@ -17,6 +17,7 @@ doc/AssetEdits.md
 doc/AssetIds.md
 doc/AssetList.md
 doc/AssetTagChange.md
+doc/AuditEntry.md
 doc/AuthStatus.md
 doc/BulkRequest.md
 doc/BulkResponse.md
@@ -104,6 +105,7 @@ lib/model/asset_edits.dart
 lib/model/asset_ids.dart
 lib/model/asset_list.dart
 lib/model/asset_tag_change.dart
+lib/model/audit_entry.dart
 lib/model/auth_status.dart
 lib/model/bulk_request.dart
 lib/model/bulk_response.dart
@@ -165,5 +167,3 @@ lib/model/vault_session.dart
 lib/model/vault_status.dart
 lib/model/vault_unlock.dart
 pubspec.yaml
-test/asset_edits_test.dart
-test/crop_box_test.dart

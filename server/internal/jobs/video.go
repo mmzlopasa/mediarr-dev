@@ -124,7 +124,7 @@ func transcodeArgs(source, dir string, info *VideoInfo, accel string) []string {
 		fmt.Fprintf(&graph, ";[s%d]scale=-2:%d%s[v%d]", i, height, hwFilter, i)
 	}
 
-	args := []string{"-n", "15", "ffmpeg", "-nostdin", "-v", "error", "-y"}
+	args := []string{"-n", "15", "ffmpeg", "-protocol_whitelist", "file,pipe,crypto", "-nostdin", "-v", "error", "-y"}
 	args = append(args, input...)
 	args = append(args, "-i", source, "-filter_complex", graph.String())
 	streams := make([]string, 0, len(heights))

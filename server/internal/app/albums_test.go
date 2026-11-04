@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -513,6 +514,18 @@ func TestPublicLinkShowsOnlyItsAlbum(t *testing.T) {
 	resp, body = guest.get(base + "/assets/" + shared + "/original")
 	expect(t, resp, body, http.StatusForbidden)
 
+	// A real picture, because the location is taken out of what a guest downloads.
+	var stored string
+	if err := s.pool.QueryRow(context.Background(), "SELECT original_path FROM assets WHERE id=$1", shared).Scan(&stored); err != nil {
+		t.Fatal(err)
+	}
+	// Originals are read-only, so it takes the place of the file.
+	if err := os.Remove(stored); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(stored, landscapeJPEG(t), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	// The limit holds: one download, then none.
 	resp, body = guest.get(base + "/assets/" + shared + "/original?download=true")
 	expect(t, resp, body, http.StatusOK)

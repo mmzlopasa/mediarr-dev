@@ -1101,3 +1101,29 @@ video.viewer-media {
 		max-height: 50vh;
 	}
 }
+
+/* Audit log */
+.audit-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+.audit-row {
+	display: grid;
+	grid-template-columns: 170px 200px minmax(0, 1fr) 200px 130px;
+	gap: 10px;
+	align-items: baseline;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--line);
+	overflow-wrap: anywhere;
+}
+.audit-failed span {
+	color: var(--err, #ff9aa8);
+}
+@media (max-width: 900px) {
+	.audit-row {
+		grid-template-columns: 1fr;
+		gap: 2px;
+	}
+}

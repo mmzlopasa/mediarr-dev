@@ -1511,6 +1511,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who changed what, newest first. Never the content of a request */
+        get: operations["listAuditLog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/external": {
         parameters: {
             query?: never;
@@ -1736,6 +1753,18 @@ export interface components {
             width: number;
             /** Format: double */
             height: number;
+        };
+        AuditEntry: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            at: string;
+            userEmail: string;
+            method: string;
+            route: string;
+            target: string;
+            status: number;
+            ip: string;
         };
         Memory: {
             /** @enum {string} */
@@ -4722,6 +4751,32 @@ export interface operations {
             };
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
+        };
+    };
+    listAuditLog: {
+        parameters: {
+            query?: {
+                /** @description Entries older than this id */
+                before?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The entries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditEntry"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     getExternalLibrary: {

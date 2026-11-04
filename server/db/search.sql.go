@@ -253,14 +253,14 @@ const listSearchTerms = `-- name: ListSearchTerms :many
 SELECT 'person'::text AS kind, p.name AS value, p.id::text AS ref FROM people p WHERE p.user_id = $1 AND p.name <> ''
 UNION
 SELECT 'place', x.value, '' FROM (
-    SELECT e.city AS value FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND e.city IS NOT NULL
-    UNION SELECT e.state FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND e.state IS NOT NULL AND e.state <> ''
-    UNION SELECT e.country FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND e.country IS NOT NULL
+    SELECT e.city AS value FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.city IS NOT NULL
+    UNION SELECT e.state FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.state IS NOT NULL AND e.state <> ''
+    UNION SELECT e.country FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.country IS NOT NULL
 ) x
 UNION
 SELECT 'camera', x.value, '' FROM (
-    SELECT e.make AS value FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND e.make IS NOT NULL
-    UNION SELECT e.model FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND e.model IS NOT NULL
+    SELECT e.make AS value FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.make IS NOT NULL
+    UNION SELECT e.model FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.model IS NOT NULL
 ) x
 `
 

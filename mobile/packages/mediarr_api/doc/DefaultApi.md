@@ -84,6 +84,7 @@ Method | HTTP request | Description
 [**listAlbumLinks**](DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 [**listAlbums**](DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
 [**listAssets**](DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
+[**listAuditLog**](DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
 [**listCameras**](DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 [**listDirectory**](DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 [**listDuplicates**](DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
@@ -3189,6 +3190,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**AssetList**](AssetList.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listAuditLog**
+> List<AuditEntry> listAuditLog(before, limit)
+
+Who changed what, newest first. Never the content of a request
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final before = 789; // int | Entries older than this id
+final limit = 56; // int | 
+
+try {
+    final result = api_instance.listAuditLog(before, limit);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listAuditLog: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **before** | **int**| Entries older than this id | [optional] 
+ **limit** | **int**|  | [optional] 
+
+### Return type
+
+[**List<AuditEntry>**](AuditEntry.md)
 
 ### Authorization
 

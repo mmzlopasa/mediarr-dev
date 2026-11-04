@@ -26,13 +26,23 @@ const (
 	saltLen      = 16
 )
 
+// Each check takes 64 MiB, so without a limit parallel sign-ins could run the server out of memory,
+// and the login limiter only counts a failure after its check has finished.
+var argonSlots = make(chan struct{}, 4)
+
+func argonKey(password, salt []byte, time, memory uint32, threads uint8, length uint32) []byte {
+	argonSlots <- struct{}{}
+	defer func() { <-argonSlots }()
+	return argon2.IDKey(password, salt, time, memory, threads, length)
+}
+
 // HashPassword returns an argon2id hash in the standard encoded format.
 func HashPassword(password string) (string, error) {
 	salt := make([]byte, saltLen)
 	if _, err := rand.Read(salt); err != nil {
 		return "", fmt.Errorf("generate salt: %w", err)
 	}
-	key := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, argonThreads, argonKeyLen)
+	key := argonKey([]byte(password), salt, argonTime, argonMemory, argonThreads, argonKeyLen)
 	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, argonMemory, argonTime, argonThreads,
 		base64.RawStdEncoding.EncodeToString(salt), base64.RawStdEncoding.EncodeToString(key)), nil
 }
@@ -60,7 +70,7 @@ func VerifyPassword(encoded, password string) bool {
 	if err != nil || len(want) == 0 || len(want) > 128 {
 		return false
 	}
-	got := argon2.IDKey([]byte(password), salt, iterations, memory, threads, uint32(len(want))) //nolint:gosec // len is bounded above.
+	got := argonKey([]byte(password), salt, iterations, memory, threads, uint32(len(want))) //nolint:gosec // len is bounded above.
 	return subtle.ConstantTimeCompare(got, want) == 1
 }
 

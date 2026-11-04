@@ -135,6 +135,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listAlbumLinks**](doc//DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 *DefaultApi* | [**listAlbums**](doc//DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
 *DefaultApi* | [**listAssets**](doc//DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
+*DefaultApi* | [**listAuditLog**](doc//DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 *DefaultApi* | [**listDuplicates**](doc//DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
@@ -188,6 +189,7 @@ Class | Method | HTTP request | Description
  - [AssetIds](doc//AssetIds.md)
  - [AssetList](doc//AssetList.md)
  - [AssetTagChange](doc//AssetTagChange.md)
+ - [AuditEntry](doc//AuditEntry.md)
  - [AuthStatus](doc//AuthStatus.md)
  - [BulkRequest](doc//BulkRequest.md)
  - [BulkResponse](doc//BulkResponse.md)

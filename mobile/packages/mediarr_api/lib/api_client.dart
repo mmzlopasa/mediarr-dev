@@ -259,6 +259,8 @@ class ApiClient {
           return AssetList.fromJson(value);
         case 'AssetTagChange':
           return AssetTagChange.fromJson(value);
+        case 'AuditEntry':
+          return AuditEntry.fromJson(value);
         case 'AuthStatus':
           return AuthStatus.fromJson(value);
         case 'BulkRequest':

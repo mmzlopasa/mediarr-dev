@@ -14,6 +14,8 @@ type Config struct {
 	LibraryPath       string
 	CachePath         string
 	ExternalPath      string
+	ProxyHops         int
+	MaxUploadBytes    int64
 	WorkerConcurrency int
 	VideoAccel        string
 	MLURL             string
@@ -27,6 +29,8 @@ func Load() Config {
 		LibraryPath:       env("LIBRARY_PATH", "/data/library"),
 		CachePath:         env("CACHE_PATH", "/data/cache"),
 		ExternalPath:      env("EXTERNAL_PATH", "/external"),
+		ProxyHops:         envInt("TRUSTED_PROXY_HOPS", 0),
+		MaxUploadBytes:    int64(envInt("MAX_UPLOAD_MB", 0)) * 1024 * 1024,
 		WorkerConcurrency: concurrency(os.Getenv("WORKER_CONCURRENCY"), runtime.NumCPU()),
 		VideoAccel:        os.Getenv("VIDEO_ACCEL"),
 		MLURL:             os.Getenv("ML_URL"),
@@ -38,6 +42,14 @@ func concurrency(value string, cpus int) int {
 		return n
 	}
 	return max(1, cpus/2)
+}
+
+func envInt(key string, fallback int) int {
+	value, err := strconv.Atoi(os.Getenv(key))
+	if err != nil {
+		return fallback
+	}
+	return value
 }
 
 func env(key, fallback string) string {

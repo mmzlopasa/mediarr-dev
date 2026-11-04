@@ -406,7 +406,11 @@ func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, row
 		return
 	}
 	w.Header().Set("Content-Type", "image/webp")
-	w.Header().Set("Cache-Control", thumbCacheAge)
+	cache := thumbCacheAge
+	if row.VaultAt.Valid {
+		cache = "no-store"
+	}
+	w.Header().Set("Cache-Control", cache)
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	serveFile(w, r, path)
 }
@@ -554,6 +558,11 @@ func (s *apiServer) GetAssetOriginal(w http.ResponseWriter, r *http.Request, id 
 	}
 	if err != nil {
 		internalError(w, r, err)
+		return
+	}
+	// Someone the photo is shared with does not get what the owner cropped out.
+	if row.UserID != user.ID && len(row.Edits) > 0 {
+		s.serveFullPreview(w, r, &row)
 		return
 	}
 	serveOriginal(w, r, &row, params.Download != nil && *params.Download)

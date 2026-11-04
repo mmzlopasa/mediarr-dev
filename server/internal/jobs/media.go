@@ -63,6 +63,11 @@ func runToolNoLimit(ctx context.Context, name string, args ...string) ([]byte, e
 		problem = "ffmpeg"
 	}
 
+	// A crafted file, such as a playlist named as a video, could otherwise make ffmpeg fetch addresses
+	// or read other files on the server.
+	if command == "ffmpeg" {
+		args = append([]string{"-protocol_whitelist", "file,pipe,crypto"}, args...)
+	}
 	var stdout, stderr bytes.Buffer
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Stdout = &stdout

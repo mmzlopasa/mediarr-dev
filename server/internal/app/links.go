@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,6 +28,8 @@ const (
 	linkCookie           = "mediarr_link"
 	linkSessionLifetime  = 24 * time.Hour
 	linkPasswordFailures = 10
+	maxGuestFileBytes    = 20 << 30
+	guestBytesPerDay     = 200 << 30
 	linkUploadsPerHour   = 500
 	maxWatermark         = 100
 	publicCacheAge       = "private, max-age=3600"
@@ -366,7 +370,8 @@ func (s *apiServer) GetPublicThumbnail(w http.ResponseWriter, r *http.Request, t
 	if params.Size != nil && *params.Size != api.GetPublicThumbnailParamsSizeSmall {
 		kind = "thumb_large"
 	}
-	if !link.Watermark.Valid && params.Size != nil && *params.Size == api.GetPublicThumbnailParamsSizeFull {
+	// Without downloads, a full size preview would be the download.
+	if !link.Watermark.Valid && link.AllowDownload && params.Size != nil && *params.Size == api.GetPublicThumbnailParamsSizeFull {
 		row, err := s.queries.GetAsset(ctx, pgUUID(id))
 		if err != nil {
 			internalError(w, r, err)
@@ -439,7 +444,7 @@ func (s *apiServer) GetPublicOriginal(w http.ResponseWriter, r *http.Request, to
 			writeError(w, http.StatusForbidden, "this link does not allow this file")
 			return
 		}
-		serveOriginal(w, r, &row, false)
+		s.serveLinkOriginal(w, r, link.ID, link.ShowLocation, &row, false)
 		return
 	}
 	// Every request is one whole download. Honouring Range would let a client take a file piece by
@@ -454,7 +459,33 @@ func (s *apiServer) GetPublicOriginal(w http.ResponseWriter, r *http.Request, to
 		writeError(w, http.StatusForbidden, "this link has no downloads left")
 		return
 	}
-	serveOriginal(w, r, &row, true)
+	s.serveLinkOriginal(w, r, link.ID, link.ShowLocation, &row, true)
+}
+
+// serveLinkOriginal gives a guest the file, without what the link does not share: the location, and
+// what the owner cropped out.
+func (s *apiServer) serveLinkOriginal(w http.ResponseWriter, r *http.Request, link pgtype.UUID, showLocation bool, row *db.Asset, download bool) {
+	if len(row.Edits) > 0 {
+		s.serveFullPreview(w, r, row)
+		return
+	}
+	if showLocation {
+		serveOriginal(w, r, row, download)
+		return
+	}
+	id := uuid.UUID(row.ID.Bytes).String()
+	dest := filepath.Join(s.linkCacheDir(link), id+"-nolocation"+strings.ToLower(filepath.Ext(row.OriginalName)))
+	if _, err := os.Stat(dest); err != nil {
+		if err := jobs.StripLocation(r.Context(), row.OriginalPath, dest); err != nil {
+			// Never fall back to the original, which is the very thing this avoids.
+			slog.Warn("a location could not be removed for a link", "asset", id, "error", err)
+			writeError(w, http.StatusForbidden, "this file cannot be shared without its location")
+			return
+		}
+	}
+	copied := *row
+	copied.OriginalPath = dest
+	serveOriginal(w, r, &copied, download)
 }
 
 func (s *apiServer) GetPublicMotion(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID) {
@@ -511,6 +542,14 @@ func (s *apiServer) CreatePublicUpload(w http.ResponseWriter, r *http.Request, t
 		writeError(w, http.StatusBadRequest, "send the whole file in one request")
 		return
 	}
+	if size > maxGuestFileBytes {
+		writeError(w, http.StatusRequestEntityTooLarge, "this file is too large for a shared link")
+		return
+	}
+	if !s.guestBytes.spend(hex.EncodeToString(link.TokenHash), size, time.Now()) {
+		writeError(w, http.StatusTooManyRequests, "this link has received a lot today; try again later")
+		return
+	}
 	key := hex.EncodeToString(link.TokenHash) + "|" + clientIP(r)
 	if !s.linkUploads.Allowed(key) {
 		writeError(w, http.StatusTooManyRequests, "too many uploads; try again later")
@@ -527,4 +566,33 @@ func (s *apiServer) CreatePublicUpload(w http.ResponseWriter, r *http.Request, t
 	ctx := context.WithValue(r.Context(), userKey{}, &owner)
 	ctx = context.WithValue(ctx, guestAlbumKey{}, link.AlbumID)
 	s.uploads.Middleware(http.HandlerFunc(s.uploads.PostFile)).ServeHTTP(w, r.WithContext(ctx))
+}
+
+// byteBudget limits how much one link can receive in a day, so that a leaked link cannot fill the disk.
+type byteBudget struct {
+	mu    sync.Mutex
+	spent map[string]budgetDay
+}
+
+type budgetDay struct {
+	day   string
+	bytes int64
+}
+
+func newByteBudget() *byteBudget { return &byteBudget{spent: map[string]budgetDay{}} }
+
+func (b *byteBudget) spend(key string, size int64, now time.Time) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	today := now.UTC().Format(time.DateOnly)
+	current := b.spent[key]
+	if current.day != today {
+		current = budgetDay{day: today}
+	}
+	if current.bytes+size > guestBytesPerDay {
+		return false
+	}
+	current.bytes += size
+	b.spent[key] = current
+	return true
 }

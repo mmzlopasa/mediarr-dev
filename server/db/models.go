@@ -127,6 +127,18 @@ type AssetTag struct {
 	TagID   pgtype.UUID
 }
 
+type AuditLog struct {
+	ID        int64
+	At        pgtype.Timestamptz
+	UserID    pgtype.UUID
+	UserEmail string
+	Method    string
+	Route     string
+	Target    string
+	Status    int32
+	Ip        string
+}
+
 type Exif struct {
 	AssetID      pgtype.UUID
 	Make         pgtype.Text
