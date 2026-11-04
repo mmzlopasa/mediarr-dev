@@ -11,17 +11,12 @@ permissions:
 jobs:
   server:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: server/go.mod
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - run: go vet ./...
-      - run: go test ./...
+      - name: Vet and test, with the same media tools as the image
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo/server golang:1.27-alpine sh -c \
+            "apk add --no-cache vips-tools vips-heif exiftool ffmpeg libheif-tools libraw-tools curl font-dejavu restic postgresql17-client && go vet ./... && go test ./..."
 
   machine-learning:
     runs-on: ubuntu-latest
