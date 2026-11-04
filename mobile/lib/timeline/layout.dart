@@ -37,7 +37,8 @@ class TilesRow extends TimelineRow {
   final double height;
 }
 
-double rowHeightFor(double width) => width < 600 ? 110 : 170;
+double rowHeightFor(double width, [double scale = 1]) =>
+    (width < 600 ? 110 : 170) * scale;
 
 double _clamp(double ratio) =>
     ratio.isFinite && ratio > 0 ? ratio.clamp(0.4, 4.0).toDouble() : 1;
@@ -84,8 +85,9 @@ List<TimelineRow> layoutMonth(
   required double width,
   required String monthLabel,
   required String Function(String localAt) dayLabel,
+  double scale = 1,
 }) {
-  final target = rowHeightFor(width);
+  final target = rowHeightFor(width, scale);
   final rows = <TimelineRow>[HeaderRow(monthLabel, isMonth: true)];
   var from = 0;
   while (from < items.length) {
@@ -102,8 +104,8 @@ List<TimelineRow> layoutMonth(
 }
 
 /// Height of a month that has not loaded yet.
-double estimateMonthHeight(int count, double width) {
-  final target = rowHeightFor(width);
+double estimateMonthHeight(int count, double width, [double scale = 1]) {
+  final target = rowHeightFor(width, scale);
   final perRow = (width / (1.4 * target + gap)).clamp(1.0, 100.0);
   final rows = (count / perRow).ceil();
   return monthHeaderHeight +

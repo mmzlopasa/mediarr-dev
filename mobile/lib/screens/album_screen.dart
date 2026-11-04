@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
+import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import 'album_sheets.dart';
@@ -66,9 +67,12 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
     }
   }
 
-  void _toggle(String id) => setState(() {
-    if (!_selected.remove(id)) _selected.add(id);
-  });
+  void _toggle(String id) {
+    if (ref.read(settingsProvider).readOnly) return;
+    setState(() {
+      if (!_selected.remove(id)) _selected.add(id);
+    });
+  }
 
   void _message(String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
@@ -215,6 +219,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         ? null
         : AlbumRights(album.role, isSmart: album.isSmart);
     final selecting = _selected.isNotEmpty;
+    final readOnly = ref.watch(settingsProvider).readOnly;
 
     return Scaffold(
       appBar: AppBar(
@@ -242,7 +247,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
                 icon: const Icon(Icons.delete_outline),
                 onPressed: _removeSelected,
               ),
-          ] else if (album != null && rights != null) ...[
+          ] else if (album != null && rights != null && !readOnly) ...[
             IconButton(
               tooltip: 'Comments',
               icon: const Icon(Icons.mode_comment_outlined),

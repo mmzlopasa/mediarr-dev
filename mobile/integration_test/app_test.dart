@@ -186,4 +186,31 @@ void main() {
     // The simulator records the access, yet the app still reads it as not decided, and a dialog
     // nobody can answer then waits forever. On iOS this has to be confirmed on a real iPhone.
   }, skip: Platform.isIOS);
+
+  testWidgets('read-only mode takes away uploading and deleting', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    expect(find.text('Upload'), findsOneWidget);
+
+    await tester.tap(find.text('Account'));
+    await waitFor(tester, find.text('Settings'));
+    await tester.tap(find.text('Settings'));
+    await waitFor(tester, find.text('Read-only mode'));
+    await tester.tap(find.text('Read-only mode'));
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Upload'), findsNothing);
+    await tester.tap(find.text('Media'));
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byType(AssetPicture).first, warnIfMissed: false);
+    await waitFor(tester, find.byTooltip('Details'));
+    expect(find.byTooltip('Delete'), findsNothing);
+
+    await const FlutterSecureStorage().delete(key: 'app_settings');
+  });
 }

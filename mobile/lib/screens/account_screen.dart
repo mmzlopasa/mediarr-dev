@@ -6,6 +6,7 @@ import '../services/backup.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'organize_screens.dart';
+import 'settings_screen.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -46,6 +47,15 @@ class AccountScreen extends ConsumerWidget {
           const Divider(color: Palette.line),
           row('Server', session.serverUrl),
           const SizedBox(height: 12),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Settings'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+            ),
+          ),
           const OrganizeLinks(),
           const SizedBox(height: 28),
           OutlinedButton.icon(

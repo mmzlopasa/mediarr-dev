@@ -10,6 +10,7 @@ import '../services/session.dart';
 import '../services/timeline.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
+import '../services/settings.dart';
 import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'asset_picture.dart';
@@ -46,7 +47,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
   TimelineStore get _store => ref.read(timelineProvider);
 
-  void _toggle(String id) => setState(() {
+  void _toggle(String id) {
+    if (ref.read(settingsProvider).readOnly) return;
+    _toggleNow(id);
+  }
+
+  void _toggleNow(String id) => setState(() {
     if (!_selected.remove(id)) _selected.add(id);
   });
 
@@ -277,7 +283,7 @@ class TimelineGrid extends StatelessWidget {
   }
 }
 
-class _MonthSliver extends StatelessWidget {
+class _MonthSliver extends ConsumerWidget {
   const _MonthSliver({
     required this.store,
     required this.month,
@@ -297,7 +303,8 @@ class _MonthSliver extends StatelessWidget {
   final void Function(int index) onOpen;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scale = ref.watch(settingsProvider).gridSize.scale;
     final items = month.items;
     if (items == null) {
       // Built only when this month comes near the screen, which is when it loads.
@@ -310,7 +317,7 @@ class _MonthSliver extends StatelessWidget {
             );
           }
           return SizedBox(
-            height: estimateMonthHeight(month.count, width),
+            height: estimateMonthHeight(month.count, width, scale),
             child: Align(
               alignment: Alignment.topLeft,
               child: Padding(
@@ -339,6 +346,7 @@ class _MonthSliver extends StatelessWidget {
       width: width,
       monthLabel: formatMonth(month.month),
       dayLabel: formatDay,
+      scale: scale,
     );
     final text = Theme.of(context).textTheme;
     return SliverList.builder(

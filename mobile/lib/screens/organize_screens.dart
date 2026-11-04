@@ -8,6 +8,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
+import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
@@ -36,11 +37,12 @@ Future<void> forgetVaultPin() async {
   }
 }
 
-class OrganizeLinks extends StatelessWidget {
+class OrganizeLinks extends ConsumerWidget {
   const OrganizeLinks({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final readOnly = ref.watch(settingsProvider).readOnly;
     void open(Widget screen) =>
         Navigator.of(context)
             .push(MaterialPageRoute<void>(builder: (_) => screen));
@@ -82,30 +84,34 @@ class OrganizeLinks extends StatelessWidget {
           title: const Text('Documents'),
           onTap: () => open(const DocumentsScreen()),
         ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.copy_all_outlined),
-          title: const Text('Duplicates'),
-          onTap: () => open(const DuplicatesScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.archive_outlined),
-          title: const Text('Archive'),
-          onTap: () => open(const ArchiveScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.delete_outline),
-          title: const Text('Trash'),
-          onTap: () => open(const TrashScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.lock_outline),
-          title: const Text('Vault'),
-          onTap: () => open(const VaultScreen()),
-        ),
+        if (!readOnly)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.copy_all_outlined),
+            title: const Text('Duplicates'),
+            onTap: () => open(const DuplicatesScreen()),
+          ),
+        if (!readOnly)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.archive_outlined),
+            title: const Text('Archive'),
+            onTap: () => open(const ArchiveScreen()),
+          ),
+        if (!readOnly)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.delete_outline),
+            title: const Text('Trash'),
+            onTap: () => open(const TrashScreen()),
+          ),
+        if (!readOnly)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.lock_outline),
+            title: const Text('Vault'),
+            onTap: () => open(const VaultScreen()),
+          ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.key_outlined),

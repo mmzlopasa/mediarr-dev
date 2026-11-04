@@ -4,6 +4,7 @@ import 'package:mediarr_api/api.dart';
 import 'package:video_player/video_player.dart';
 
 import '../services/session.dart';
+import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
@@ -156,6 +157,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
   @override
   Widget build(BuildContext context) {
     final library = ref.watch(timelineProvider);
+    ref.watch(settingsProvider);
     final store = widget.store ?? library;
     final session = widget.session ?? ref.watch(sessionProvider).value;
     return ListenableBuilder(
@@ -172,7 +174,10 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     final index = _index.clamp(0, items.length - 1);
     final current = items[index];
     // Someone else's photo can be looked at, but only its owner changes it.
-    final mine = !widget.readOnly && current.isShared != true;
+    final mine =
+        !widget.readOnly &&
+        !ref.read(settingsProvider).readOnly &&
+        current.isShared != true;
 
     return Scaffold(
       backgroundColor: Colors.black,

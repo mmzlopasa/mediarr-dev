@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
+import '../services/settings.dart';
 import '../theme.dart';
 import 'album_screen.dart';
 import 'album_sheets.dart';
@@ -137,11 +138,12 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                     PopupMenuItem(value: 'date', child: Text('Photo date')),
                   ],
                 ),
-                IconButton(
-                  tooltip: 'New album',
-                  icon: const Icon(Icons.add),
-                  onPressed: () => _create(session),
-                ),
+                if (!ref.watch(settingsProvider).readOnly)
+                  IconButton(
+                    tooltip: 'New album',
+                    icon: const Icon(Icons.add),
+                    onPressed: () => _create(session),
+                  ),
               ],
             ),
           ),
