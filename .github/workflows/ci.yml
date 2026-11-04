@@ -94,7 +94,7 @@ jobs:
           node-version: 22
       - run: |
           mkdir -p docs/static/install
-          cp docker/docker-compose.yml docker/example.env docs/monitoring/grafana-dashboard.json docs/static/install/
+          cp docs/monitoring/grafana-dashboard.json docs/static/install/
       - run: pnpm install --frozen-lockfile
         working-directory: docs
       - run: pnpm build

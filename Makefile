@@ -24,10 +24,11 @@ down:
 deploy:
 	docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d --build --wait
 
-# Builds the documentation and publishes it on docs.mediarr.app.
+# Builds the documentation for docs.mediarr.app, and publishes the install files on cdn.mediarr.app.
 docs:
-	mkdir -p docs/static/install
-	cp docker/docker-compose.yml docker/example.env docs/monitoring/grafana-dashboard.json docs/static/install/
+	mkdir -p docs/static/install $(HOME)/mediarr-apps/install
+	cp docs/monitoring/grafana-dashboard.json docs/static/install/
+	cp docker/docker-compose.yml docker/example.env $(HOME)/mediarr-apps/install/
 	cd docs && pnpm install --frozen-lockfile && pnpm build
 	docker compose -f docker/docker-compose.docs.yml up -d --force-recreate --wait
 

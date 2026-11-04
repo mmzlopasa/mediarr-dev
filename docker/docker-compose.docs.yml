@@ -21,12 +21,6 @@ services:
 configs:
   nginx:
     content: |
-      types {
-          text/yaml yml;
-          text/plain env;
-      }
-      include /etc/nginx/mime.types;
-
       server {
           listen 80;
           server_name _;

@@ -15,8 +15,8 @@ mkdir -p ~/mediarr && cd ~/mediarr
 ## 2. Download the two files
 
 ```bash
-curl -fsSL -o docker-compose.yml https://docs.mediarr.app/install/docker-compose.yml
-curl -fsSL -o .env https://docs.mediarr.app/install/example.env
+curl -fsSL -o docker-compose.yml https://cdn.mediarr.app/install/docker-compose.yml
+curl -fsSL -o .env https://cdn.mediarr.app/install/example.env
 ```
 
 ## 3. Edit `.env`

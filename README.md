@@ -38,8 +38,8 @@
 
 ```bash
 mkdir -p ~/mediarr && cd ~/mediarr
-curl -fsSL -o docker-compose.yml https://docs.mediarr.app/install/docker-compose.yml
-curl -fsSL -o .env https://docs.mediarr.app/install/example.env
+curl -fsSL -o docker-compose.yml https://cdn.mediarr.app/install/docker-compose.yml
+curl -fsSL -o .env https://cdn.mediarr.app/install/example.env
 ```
 
 Edit `.env`, make the folders it names, then:
