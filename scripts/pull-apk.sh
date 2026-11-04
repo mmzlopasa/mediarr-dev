@@ -4,17 +4,31 @@
 # The signing key stays on this server: Android refuses an update signed with any other key.
 set -euo pipefail
 
+CHANNEL=${1:-}
+if [ -z "$CHANNEL" ]; then
+	status=0
+	"$0" stable || status=$?
+	"$0" dev || status=$?
+	exit "$status"
+fi
+case "$CHANNEL" in
+stable) SUFFIX= ; ;;
+dev) SUFFIX=-dev ;;
+*) echo "usage: $0 [stable|dev]" >&2; exit 2 ;;
+esac
+
 REPO=mmzlopasa/mediarr-dev
 TOKEN_FILE=$HOME/.config/mediarr-gh-token
 KEY_DIR=$HOME/.config/mediarr-android
 TOOLS_DIR=$HOME/.local/share/mediarr-android
 DEST_DIR=$HOME/mediarr-apps
-DEST=$DEST_DIR/mediarr.apk
-STATE=$DEST_DIR/.apk-run-id
+DEST=$DEST_DIR/mediarr$SUFFIX.apk
+STATE=$DEST_DIR/.apk$SUFFIX-run-id
+ARTIFACT=Mediarr-apk$SUFFIX
 JAVA_IMAGE=eclipse-temurin:21-jre
 TOOLS_URL=https://dl.google.com/android/repository/build-tools_r34-linux.zip
 
-exec 9>"$DEST_DIR/.pull-apk.lock"
+exec 9>"$DEST_DIR/.pull-apk$SUFFIX.lock"
 flock -n 9 || exit 0
 
 github() {
@@ -24,15 +38,22 @@ github() {
 
 json() { python3 -I -c "import json,sys;d=json.load(sys.stdin);$1"; }
 
-runs=$(github "https://api.github.com/repos/$REPO/actions/workflows/android.yml/runs?branch=main&status=success&per_page=5")
-run_id=$(json "
-r=[x for x in d['workflow_runs'] if x['conclusion']=='success']
+runs=$(github "https://api.github.com/repos/$REPO/actions/workflows/android.yml/runs?status=completed&per_page=30")
+# Stable comes only from a tag that passed everything. Dev is the newest build, even if a test failed.
+run_id=$(CHANNEL=$CHANNEL json "
+import os
+stable=os.environ['CHANNEL']=='stable'
+def wanted(x):
+    if stable:
+        return x['head_branch'].startswith('app-v') and x['conclusion'] == 'success'
+    return x['head_branch'] == 'main' and x['conclusion'] in ('success', 'failure')
+r = [x for x in d['workflow_runs'] if wanted(x)]
 print(r[0]['id'] if r else '')" <<<"$runs")
 [ -n "$run_id" ] || exit 0
 [ "$(cat "$STATE" 2>/dev/null || true)" != "$run_id" ] || exit 0
 
 artifacts=$(github "https://api.github.com/repos/$REPO/actions/runs/$run_id/artifacts")
-url=$(json "a=[x for x in d['artifacts'] if x['name']=='Mediarr-apk' and not x['expired']];print(a[0]['archive_download_url'] if a else '')" <<<"$artifacts")
+url=$(json "a=[x for x in d['artifacts'] if x['name']=='$ARTIFACT' and not x['expired']];print(a[0]['archive_download_url'] if a else '')" <<<"$artifacts")
 [ -n "$url" ] || exit 0
 
 if [ ! -f "$TOOLS_DIR/apksigner.jar" ]; then
@@ -70,4 +91,4 @@ java_run java -jar /tools/apksigner.jar verify /work/mediarr.apk
 chmod 644 "$work/mediarr.apk"
 mv "$work/mediarr.apk" "$DEST"
 printf '%s\n' "$run_id" >"$STATE"
-echo "$(date -Is) published the Android build from run $run_id"
+echo "$(date -Is) published the $CHANNEL Android build from run $run_id"

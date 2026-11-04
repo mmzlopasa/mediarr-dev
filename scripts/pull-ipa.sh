@@ -1,16 +1,31 @@
 #!/bin/bash
-# Copies the newest successful iOS build from GitHub Actions to the folder behind
-# https://cdn.mediarr.app/apps/mediarr.ipa. Runs from cron. Does nothing when there is no new build.
+# Copies the newest iOS builds from GitHub Actions to the folder behind cdn.mediarr.app/apps/.
+# Runs from cron. Does nothing when there is no new build. Without an argument, both channels.
 set -euo pipefail
+
+CHANNEL=${1:-}
+if [ -z "$CHANNEL" ]; then
+	status=0
+	"$0" stable || status=$?
+	"$0" dev || status=$?
+	exit "$status"
+fi
+case "$CHANNEL" in
+stable) SUFFIX= ; ;;
+dev) SUFFIX=-dev ;;
+*) echo "usage: $0 [stable|dev]" >&2; exit 2 ;;
+esac
 
 REPO=mmzlopasa/mediarr-dev
 TOKEN_FILE=$HOME/.config/mediarr-gh-token
 DEST_DIR=$HOME/mediarr-apps
-DEST=$DEST_DIR/mediarr.ipa
-STATE=$DEST_DIR/.ipa-run-id
+DEST=$DEST_DIR/mediarr$SUFFIX.ipa
+STATE=$DEST_DIR/.ipa$SUFFIX-run-id
+ARTIFACT=Mediarr-ipa$SUFFIX
 BUNDLE_ID=app.mediarr.mediarr
+[ "$CHANNEL" = stable ] || BUNDLE_ID=app.mediarr.mediarr.dev
 
-exec 9>"$DEST_DIR/.pull.lock"
+exec 9>"$DEST_DIR/.pull$SUFFIX.lock"
 flock -n 9 || exit 0
 
 # The token goes through stdin, so it never appears in the process list.
@@ -21,16 +36,25 @@ github() {
 
 json() { python3 -I -c "import json,sys;d=json.load(sys.stdin);$1"; }
 
-runs=$(github "https://api.github.com/repos/$REPO/actions/workflows/ios.yml/runs?branch=main&status=success&per_page=1")
-run_id=$(json "r=d['workflow_runs'];print(r[0]['id'] if r else '')" <<<"$runs")
+runs=$(github "https://api.github.com/repos/$REPO/actions/workflows/ios.yml/runs?status=completed&per_page=30")
+# Stable comes only from a tag that passed everything. Dev is the newest build, even if a test failed.
+run_id=$(CHANNEL=$CHANNEL json "
+import os
+stable=os.environ['CHANNEL']=='stable'
+def wanted(x):
+    if stable:
+        return x['head_branch'].startswith('app-v') and x['conclusion'] == 'success'
+    return x['head_branch'] == 'main' and x['conclusion'] in ('success', 'failure')
+r = [x for x in d['workflow_runs'] if wanted(x)]
+print(r[0]['id'] if r else '')" <<<"$runs")
 [ -n "$run_id" ] || exit 0
 [ "$(cat "$STATE" 2>/dev/null || true)" != "$run_id" ] || exit 0
 
 artifacts=$(github "https://api.github.com/repos/$REPO/actions/runs/$run_id/artifacts")
-url=$(json "a=[x for x in d['artifacts'] if x['name']=='Mediarr-ipa' and not x['expired']];print(a[0]['archive_download_url'] if a else '')" <<<"$artifacts")
+url=$(json "a=[x for x in d['artifacts'] if x['name']=='$ARTIFACT' and not x['expired']];print(a[0]['archive_download_url'] if a else '')" <<<"$artifacts")
 if [ -z "$url" ]; then
-	echo "$(date -Is) run $run_id has no build to download"
-	exit 1
+	# A cancelled or failed run has none, and the build already published stays.
+	exit 0
 fi
 
 work=$(mktemp -d "$DEST_DIR/.pull-XXXXXX")
@@ -53,4 +77,4 @@ PY
 chmod 644 "$work/Mediarr.ipa"
 mv "$work/Mediarr.ipa" "$DEST"
 printf '%s\n' "$run_id" >"$STATE"
-echo "$(date -Is) published build $build from run $run_id"
+echo "$(date -Is) published $CHANNEL build $build from run $run_id"

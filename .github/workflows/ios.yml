@@ -1,10 +1,11 @@
 name: iOS app
 
-# Builds an unsigned .ipa for sideloading through Feather, which signs it on install.
-# Published on https://cdn.mediarr.app/apps/mediarr.ipa, never as a GitHub release.
+# Builds an unsigned .ipa for sideloading through Feather, which signs it on install. Never a GitHub release.
+# A push to main is Mediarr Dev (cdn.mediarr.app/apps/mediarr-dev.ipa). A tag app-v* is the stable app.
 on:
   workflow_dispatch:
   push:
+    tags: ["app-v*"]
     branches: [main]
     paths:
       - mobile/**
@@ -15,7 +16,7 @@ permissions:
 
 jobs:
   ipa:
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     defaults:
       run:
         working-directory: mobile
@@ -26,6 +27,9 @@ jobs:
           flutter-version: 3.47.9
           channel: stable
           cache: true
+      - name: Make it Mediarr Dev
+        if: github.ref_type != 'tag'
+        run: dev-channel/apply.sh
       - run: flutter pub get
       - run: flutter test
       - name: Test the native backup code
@@ -47,7 +51,7 @@ jobs:
           ls -la Mediarr.ipa
       - uses: actions/upload-artifact@v4
         with:
-          name: Mediarr-ipa
+          name: ${{ github.ref_type == 'tag' && 'Mediarr-ipa' || 'Mediarr-ipa-dev' }}
           path: mobile/build/ipa/Mediarr.ipa
           retention-days: 30
           if-no-files-found: error
