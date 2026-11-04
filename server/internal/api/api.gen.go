@@ -1542,6 +1542,9 @@ type OIDCSettings struct {
 	HasSecret  bool   `json:"hasSecret"`
 	Issuer     string `json:"issuer"`
 	Label      string `json:"label"`
+
+	// LinkAdmins Also link administrators by email. Off is safer
+	LinkAdmins bool `json:"linkAdmins"`
 }
 
 // OIDCSettingsUpdate defines model for OIDCSettingsUpdate.
@@ -1550,6 +1553,7 @@ type OIDCSettingsUpdate struct {
 	ClientId   string `json:"clientId"`
 	Issuer     string `json:"issuer"`
 	Label      string `json:"label"`
+	LinkAdmins *bool  `json:"linkAdmins,omitempty"`
 
 	// Secret Left out keeps the one that is saved
 	Secret *string `json:"secret,omitempty"`
@@ -1988,9 +1992,6 @@ type GetMapPointsParams struct {
 	To   *openapi_types.Date `form:"to,omitempty" json:"to,omitempty"`
 }
 
-// BeginPasskeyRegistrationJSONBody defines parameters for BeginPasskeyRegistration.
-type BeginPasskeyRegistrationJSONBody map[string]interface{}
-
 // FinishPasskeyRegistrationJSONBody defines parameters for FinishPasskeyRegistration.
 type FinishPasskeyRegistrationJSONBody map[string]interface{}
 
@@ -2112,7 +2113,7 @@ type CreateAPIKeyJSONRequestBody = ApiKeyCreate
 type CreateDeviceKeyJSONRequestBody = CreateDeviceKeyRequest
 
 // BeginPasskeyRegistrationJSONRequestBody defines body for BeginPasskeyRegistration for application/json ContentType.
-type BeginPasskeyRegistrationJSONRequestBody BeginPasskeyRegistrationJSONBody
+type BeginPasskeyRegistrationJSONRequestBody = PasswordConfirm
 
 // FinishPasskeyRegistrationJSONRequestBody defines body for FinishPasskeyRegistration for application/json ContentType.
 type FinishPasskeyRegistrationJSONRequestBody FinishPasskeyRegistrationJSONBody
@@ -2467,7 +2468,7 @@ type ServerInterface interface {
 	// ListPasskeys The current user's passkeys
 	// (GET /api/me/passkeys)
 	ListPasskeys(w http.ResponseWriter, r *http.Request)
-	// BeginPasskeyRegistration Start adding a passkey
+	// BeginPasskeyRegistration Start adding a passkey, which takes the account's password
 	// (POST /api/me/passkeys/begin)
 	BeginPasskeyRegistration(w http.ResponseWriter, r *http.Request)
 	// FinishPasskeyRegistration Finish adding a passkey
@@ -3256,7 +3257,7 @@ func (_ Unimplemented) ListPasskeys(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// BeginPasskeyRegistration Start adding a passkey
+// BeginPasskeyRegistration Start adding a passkey, which takes the account's password
 // (POST /api/me/passkeys/begin)
 func (_ Unimplemented) BeginPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)

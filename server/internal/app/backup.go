@@ -66,6 +66,17 @@ func (s *apiServer) SetFeature(w http.ResponseWriter, r *http.Request, name stri
 		internalError(w, r, err)
 		return
 	}
+	// Family albums give access through their members, so off must mean no access at all.
+	if name == featureFamily {
+		change := s.queries.LeaveAllFamilyAlbums
+		if body.Enabled {
+			change = s.queries.JoinAllFamilyAlbums
+		}
+		if err := change(r.Context()); err != nil {
+			internalError(w, r, err)
+			return
+		}
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 

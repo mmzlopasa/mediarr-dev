@@ -52,3 +52,12 @@ FROM assets a
 WHERE a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
   AND a.id IN (SELECT album_item_ids(al.id) FROM albums al WHERE al.is_family)
 ORDER BY a.local_at DESC, a.id DESC;
+
+-- name: LeaveAllFamilyAlbums :exec
+DELETE FROM album_members m USING albums al WHERE m.album_id = al.id AND al.is_family;
+
+-- name: JoinAllFamilyAlbums :exec
+INSERT INTO album_members (album_id, user_id, role)
+SELECT al.id, f.user_id, 'viewer' FROM albums al CROSS JOIN family_members f
+WHERE al.is_family AND f.user_id <> al.owner_id
+ON CONFLICT DO NOTHING;

@@ -475,6 +475,9 @@ func (s *apiServer) serveLinkOriginal(w http.ResponseWriter, r *http.Request, li
 		s.serveFullPreview(w, r, row)
 		return
 	}
+	if s.refuseCropped(w, r, row.ID, pgtype.UUID{}) {
+		return
+	}
 	if showLocation {
 		serveOriginal(w, r, row, download)
 		return
@@ -499,6 +502,9 @@ func (s *apiServer) GetPublicMotion(w http.ResponseWriter, r *http.Request, toke
 	if !ok {
 		return
 	}
+	if s.refuseCropped(w, r, pgUUID(id), pgtype.UUID{}) {
+		return
+	}
 	if link.Watermark.Valid {
 		writeError(w, http.StatusForbidden, "this link shows only marked previews")
 		return
@@ -512,6 +518,17 @@ func (s *apiServer) GetPublicMotion(w http.ResponseWriter, r *http.Request, toke
 		internalError(w, r, err)
 		return
 	}
+	if !link.ShowLocation {
+		// The video inside a Motion Photo can carry the place as well.
+		dest := filepath.Join(s.linkCacheDir(link.ID), id.String()+"-motion-nolocation.mp4")
+		if _, err := os.Stat(dest); err != nil {
+			if err := jobs.StripLocation(r.Context(), path, dest); err != nil {
+				writeError(w, http.StatusForbidden, "this file cannot be shared without its location")
+				return
+			}
+		}
+		path = dest
+	}
 	w.Header().Set("Content-Type", "video/mp4")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Cache-Control", publicCacheAge)
@@ -521,6 +538,9 @@ func (s *apiServer) GetPublicMotion(w http.ResponseWriter, r *http.Request, toke
 func (s *apiServer) GetPublicVideoFile(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, file string) {
 	link, ok := s.viewLinkAsset(w, r, token, id)
 	if !ok {
+		return
+	}
+	if s.refuseCropped(w, r, pgUUID(id), pgtype.UUID{}) {
 		return
 	}
 	if link.Watermark.Valid {

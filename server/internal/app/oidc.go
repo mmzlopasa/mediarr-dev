@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -28,12 +29,14 @@ const (
 	stateOIDCSecret     = "oidc_client_secret" //nolint:gosec // The name of a setting, not its value.
 	stateOIDCLabel      = "oidc_label"
 	stateOIDCAutoCreate = "oidc_auto_create"
+	stateOIDCLinkAdmins = "oidc_link_admins"
 
 	oidcCookie       = "mediarr_oidc"
 	oidcCookieAge    = 10 * time.Minute
 	oidcAppCodeAge   = time.Minute
 	oidcCallbackPath = "/api/auth/oidc/callback"
 	oidcAppScheme    = "mediarr://oidc"
+	maxShortLived    = 10000
 )
 
 // shortLived holds what a sign-in needs between two of its steps, and only for a moment.
@@ -58,6 +61,13 @@ func (s *shortLived[T]) put(key string, value T, age time.Duration) {
 	for other, item := range s.items {
 		if now.After(item.expires) {
 			delete(s.items, other)
+		}
+	}
+	// Anyone can start a sign-in, so this cannot grow without end.
+	if len(s.items) >= maxShortLived {
+		for other := range s.items {
+			delete(s.items, other)
+			break
 		}
 	}
 	s.items[key] = shortLivedItem[T]{value, now.Add(age)}
@@ -89,7 +99,7 @@ type oidcAppCode struct {
 
 type oidcSettings struct {
 	issuer, clientID, secret, label string
-	autoCreate                      bool
+	autoCreate, linkAdmins          bool
 }
 
 func (s *apiServer) state(ctx context.Context, key string) (string, error) {
@@ -114,6 +124,11 @@ func (s *apiServer) loadOIDC(ctx context.Context) (oidcSettings, error) {
 		*target = value
 	}
 	out.autoCreate = auto == "1"
+	admins, err := s.state(ctx, stateOIDCLinkAdmins)
+	if err != nil {
+		return out, err
+	}
+	out.linkAdmins = admins == "1"
 	return out, nil
 }
 
@@ -147,6 +162,10 @@ func randomText() (string, error) {
 }
 
 func localPath(next string) string {
+	// Browsers drop tabs and line breaks from addresses, so "/<tab>/evil" would become "//evil".
+	if strings.ContainsFunc(next, unicode.IsControl) {
+		return "/"
+	}
 	if strings.HasPrefix(next, "/") && !strings.HasPrefix(next, "//") && !strings.HasPrefix(next, "/\\") {
 		return next
 	}
@@ -229,8 +248,17 @@ func (s *apiServer) oidcUser(ctx context.Context, r *http.Request, flow *oidcFlo
 	if err := idToken.Claims(&claims); err != nil {
 		return nil, err
 	}
-	// An address nobody has verified could be someone else's, and would open that person's account.
-	if claims.EmailVerified != nil && !*claims.EmailVerified {
+	// Someone who came this way before is known by who they are at the provider, not by an email.
+	known, err := s.queries.GetOIDCIdentity(ctx, db.GetOIDCIdentityParams{Issuer: settings.issuer, Subject: idToken.Subject})
+	if err == nil {
+		return &known, nil
+	}
+	if !db.IsNotFound(err) {
+		return nil, err
+	}
+	// Otherwise the email decides, so it must be one the provider has verified. A provider that does
+	// not say, or lets people change it, could otherwise open someone else's account.
+	if claims.EmailVerified == nil || !*claims.EmailVerified {
 		return nil, errors.New("the provider has not verified this email address")
 	}
 	email, err := auth.NormalizeEmail(claims.Email)
@@ -238,16 +266,27 @@ func (s *apiServer) oidcUser(ctx context.Context, r *http.Request, flow *oidcFlo
 		return nil, errors.New("the provider gave no usable email address")
 	}
 	user, err := s.queries.GetUserByEmail(ctx, email)
-	if err == nil {
-		return &user, nil
+	switch {
+	case err == nil:
+		// An administrator's account is too much to hand over by email alone.
+		if user.IsAdmin && !settings.linkAdmins {
+			return nil, errors.New("an administrator's account is not linked by email")
+		}
+	case !db.IsNotFound(err):
+		return nil, err
+	case !settings.autoCreate:
+		return nil, errors.New("this person has no account here")
+	default:
+		created, err := s.createOIDCUser(ctx, email, claims.Name)
+		if err != nil {
+			return nil, err
+		}
+		user = *created
 	}
-	if !db.IsNotFound(err) {
+	if err := s.queries.AddOIDCIdentity(ctx, db.AddOIDCIdentityParams{Issuer: settings.issuer, Subject: idToken.Subject, UserID: user.ID}); err != nil {
 		return nil, err
 	}
-	if !settings.autoCreate {
-		return nil, errors.New("this person has no account here")
-	}
-	return s.createOIDCUser(ctx, email, claims.Name)
+	return &user, nil
 }
 
 func (s *apiServer) createOIDCUser(ctx context.Context, email, name string) (*db.User, error) {
@@ -371,7 +410,7 @@ func (s *apiServer) GetAuthMethods(w http.ResponseWriter, r *http.Request) {
 func oidcToAPI(settings *oidcSettings) api.OIDCSettings {
 	return api.OIDCSettings{
 		Issuer: settings.issuer, ClientId: settings.clientID, Label: settings.label,
-		AutoCreate: settings.autoCreate, HasSecret: settings.secret != "",
+		AutoCreate: settings.autoCreate, HasSecret: settings.secret != "", LinkAdmins: settings.linkAdmins,
 	}
 }
 
@@ -407,8 +446,13 @@ func (s *apiServer) SetOIDCSettings(w http.ResponseWriter, r *http.Request) {
 	if body.AutoCreate {
 		auto = "1"
 	}
+	linkAdmins := "0"
+	if body.LinkAdmins != nil && *body.LinkAdmins {
+		linkAdmins = "1"
+	}
 	values := map[string]string{
-		stateOIDCIssuer: issuer, stateOIDCClientID: strings.TrimSpace(body.ClientId),
+		stateOIDCLinkAdmins: linkAdmins,
+		stateOIDCIssuer:     issuer, stateOIDCClientID: strings.TrimSpace(body.ClientId),
 		stateOIDCLabel: strings.TrimSpace(body.Label), stateOIDCAutoCreate: auto,
 	}
 	// Left out means keep it: the secret is never sent back to fill the form.

@@ -127,6 +127,18 @@ func TestDescriptionsMakePhotosFindable(t *testing.T) {
 	}
 }
 
+func TestARefusalIsNotSearchedFor(t *testing.T) {
+	for answer, want := range map[string]string{
+		"torta 2024": "torta 2024",
+		"I can't assist with that, can I help instead?":                                                  "",
+		"Here is a very long explanation of what the words might be and why they could be useful to you": "",
+	} {
+		if got := cleanAskAnswer(answer); got != want {
+			t.Errorf("%q: %q", answer, got)
+		}
+	}
+}
+
 func TestAskingTurnsAQuestionIntoASearch(t *testing.T) {
 	s := newStack(t)
 	c := s.admin()

@@ -252,6 +252,13 @@ type Library struct {
 	ScanError      pgtype.Text
 }
 
+type OidcIdentity struct {
+	Issuer    string
+	Subject   string
+	UserID    pgtype.UUID
+	CreatedAt pgtype.Timestamptz
+}
+
 type PartnerShare struct {
 	OwnerID    pgtype.UUID
 	PartnerID  pgtype.UUID

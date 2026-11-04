@@ -1617,12 +1617,12 @@ paths:
   /api/me/passkeys/begin:
     post:
       operationId: beginPasskeyRegistration
-      summary: Start adding a passkey
+      summary: Start adding a passkey, which takes the account's password
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
-            schema: { type: object, additionalProperties: true }
+            schema: { $ref: "#/components/schemas/PasswordConfirm" }
       responses:
         "200":
           description: The answer
@@ -2337,12 +2337,13 @@ components:
         verifier: { type: string }
     OIDCSettings:
       type: object
-      required: [issuer, clientId, label, autoCreate, hasSecret]
+      required: [issuer, clientId, label, autoCreate, hasSecret, linkAdmins]
       properties:
         issuer: { type: string }
         clientId: { type: string }
         label: { type: string }
         autoCreate: { type: boolean, description: "A person without an account gets one on first sign-in" }
+        linkAdmins: { type: boolean, description: "Also link administrators by email. Off is safer" }
         hasSecret: { type: boolean }
     OIDCSettingsUpdate:
       type: object
@@ -2353,6 +2354,7 @@ components:
         label: { type: string }
         autoCreate: { type: boolean }
         secret: { type: string, description: "Left out keeps the one that is saved" }
+        linkAdmins: { type: boolean }
     Passkey:
       type: object
       required: [id, name, createdAt]

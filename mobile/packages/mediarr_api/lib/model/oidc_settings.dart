@@ -17,6 +17,7 @@ class OIDCSettings {
     required this.clientId,
     required this.label,
     required this.autoCreate,
+    required this.linkAdmins,
     required this.hasSecret,
   });
 
@@ -29,6 +30,9 @@ class OIDCSettings {
   /// A person without an account gets one on first sign-in
   bool autoCreate;
 
+  /// Also link administrators by email. Off is safer
+  bool linkAdmins;
+
   bool hasSecret;
 
   @override
@@ -39,6 +43,7 @@ class OIDCSettings {
           other.clientId == clientId &&
           other.label == label &&
           other.autoCreate == autoCreate &&
+          other.linkAdmins == linkAdmins &&
           other.hasSecret == hasSecret;
 
   @override
@@ -48,11 +53,12 @@ class OIDCSettings {
       (clientId.hashCode) +
       (label.hashCode) +
       (autoCreate.hashCode) +
+      (linkAdmins.hashCode) +
       (hasSecret.hashCode);
 
   @override
   String toString() =>
-      'OIDCSettings[issuer=$issuer, clientId=$clientId, label=$label, autoCreate=$autoCreate, hasSecret=$hasSecret]';
+      'OIDCSettings[issuer=$issuer, clientId=$clientId, label=$label, autoCreate=$autoCreate, linkAdmins=$linkAdmins, hasSecret=$hasSecret]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -60,6 +66,7 @@ class OIDCSettings {
     json[r'clientId'] = this.clientId;
     json[r'label'] = this.label;
     json[r'autoCreate'] = this.autoCreate;
+    json[r'linkAdmins'] = this.linkAdmins;
     json[r'hasSecret'] = this.hasSecret;
     return json;
   }
@@ -89,6 +96,7 @@ class OIDCSettings {
         clientId: mapValueOfType<String>(json, r'clientId')!,
         label: mapValueOfType<String>(json, r'label')!,
         autoCreate: mapValueOfType<bool>(json, r'autoCreate')!,
+        linkAdmins: mapValueOfType<bool>(json, r'linkAdmins')!,
         hasSecret: mapValueOfType<bool>(json, r'hasSecret')!,
       );
     }
@@ -150,6 +158,7 @@ class OIDCSettings {
     'clientId',
     'label',
     'autoCreate',
+    'linkAdmins',
     'hasSecret',
   };
 }

@@ -126,13 +126,17 @@ func (s *apiServer) limitAndAudit(next http.Handler) http.Handler {
 		note := &auditNote{}
 		wrapped := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 		next.ServeHTTP(wrapped, r.WithContext(context.WithValue(r.Context(), auditKey{}, note)))
+		// Addresses that lead nowhere are not worth keeping for a year, and could hold anything.
+		if route := chi.RouteContext(r.Context()); route == nil || route.RoutePattern() == "" {
+			return
+		}
 		s.recordAudit(r, user, note, wrapped.Status())
 	})
 }
 
 func (s *apiServer) recordAudit(r *http.Request, user *db.User, note *auditNote, status int) {
 	params := db.InsertAuditParams{
-		UserEmail: note.email, Method: r.Method, Route: r.URL.Path, Target: auditTarget(r),
+		UserEmail: note.email, Method: r.Method, Route: "unknown", Target: auditTarget(r),
 		Status: int32(status), //nolint:gosec // An HTTP status.
 		Ip:     hostOnly(clientIP(r)),
 	}

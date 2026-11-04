@@ -18,6 +18,7 @@ class OIDCSettingsUpdate {
     required this.label,
     required this.autoCreate,
     this.secret,
+    this.linkAdmins,
   });
 
   String issuer;
@@ -37,6 +38,14 @@ class OIDCSettingsUpdate {
   ///
   String? secret;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? linkAdmins;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -45,7 +54,8 @@ class OIDCSettingsUpdate {
           other.clientId == clientId &&
           other.label == label &&
           other.autoCreate == autoCreate &&
-          other.secret == secret;
+          other.secret == secret &&
+          other.linkAdmins == linkAdmins;
 
   @override
   int get hashCode =>
@@ -54,11 +64,12 @@ class OIDCSettingsUpdate {
       (clientId.hashCode) +
       (label.hashCode) +
       (autoCreate.hashCode) +
-      (secret == null ? 0 : secret!.hashCode);
+      (secret == null ? 0 : secret!.hashCode) +
+      (linkAdmins == null ? 0 : linkAdmins!.hashCode);
 
   @override
   String toString() =>
-      'OIDCSettingsUpdate[issuer=$issuer, clientId=$clientId, label=$label, autoCreate=$autoCreate, secret=$secret]';
+      'OIDCSettingsUpdate[issuer=$issuer, clientId=$clientId, label=$label, autoCreate=$autoCreate, secret=$secret, linkAdmins=$linkAdmins]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -70,6 +81,11 @@ class OIDCSettingsUpdate {
       json[r'secret'] = this.secret;
     } else {
       json[r'secret'] = null;
+    }
+    if (this.linkAdmins != null) {
+      json[r'linkAdmins'] = this.linkAdmins;
+    } else {
+      json[r'linkAdmins'] = null;
     }
     return json;
   }
@@ -100,6 +116,7 @@ class OIDCSettingsUpdate {
         label: mapValueOfType<String>(json, r'label')!,
         autoCreate: mapValueOfType<bool>(json, r'autoCreate')!,
         secret: mapValueOfType<String>(json, r'secret'),
+        linkAdmins: mapValueOfType<bool>(json, r'linkAdmins'),
       );
     }
     return null;

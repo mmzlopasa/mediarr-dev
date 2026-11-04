@@ -18,6 +18,7 @@ import (
 
 	"github.com/mmzlopasa/mediarr-app/server/db"
 	"github.com/mmzlopasa/mediarr-app/server/internal/api"
+	"github.com/mmzlopasa/mediarr-app/server/internal/auth"
 )
 
 const (
@@ -128,6 +129,15 @@ func (s *apiServer) DeletePasskey(w http.ResponseWriter, r *http.Request, id ope
 func (s *apiServer) BeginPasskeyRegistration(w http.ResponseWriter, r *http.Request) {
 	user := requireUser(w, r)
 	if user == nil || passkeysOff(w, r) {
+		return
+	}
+	// A way back in must not be something a stolen session can add by itself.
+	var confirm api.PasswordConfirm
+	if !readJSON(w, r, &confirm) {
+		return
+	}
+	if !auth.VerifyPassword(user.PasswordHash, confirm.Password) {
+		writeError(w, http.StatusUnauthorized, "the password is wrong")
 		return
 	}
 	ctx := r.Context()
@@ -293,6 +303,11 @@ func (s *apiServer) FinishPasskeyLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	noteAuditEmail(r, owner.user.Email)
+	if credential.Authenticator.CloneWarning {
+		slog.Warn("a passkey looks copied, and was refused", "user", owner.user.Email)
+		writeError(w, http.StatusUnauthorized, "this passkey was refused")
+		return
+	}
 	raw, err := json.Marshal(credential)
 	if err != nil {
 		internalError(w, r, err)

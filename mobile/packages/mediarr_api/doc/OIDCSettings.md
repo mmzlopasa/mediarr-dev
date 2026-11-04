@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **clientId** | **String** |  | 
 **label** | **String** |  | 
 **autoCreate** | **bool** | A person without an account gets one on first sign-in | 
+**linkAdmins** | **bool** | Also link administrators by email. Off is safer | 
 **hasSecret** | **bool** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -15,6 +15,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -466,9 +467,52 @@ func (s *apiServer) makeFullPreview(ctx context.Context, row *db.Asset) (string,
 	return dest, err
 }
 
+// croppedForViewer says whether this file would show what the owner cropped out, to someone else.
+// The moving part of a Live Photo counts, as its picture was edited even if the video has no edits.
+func (s *apiServer) croppedForViewer(ctx context.Context, row *db.Asset, viewer pgtype.UUID) (bool, error) {
+	if row.UserID == viewer {
+		return false, nil
+	}
+	if len(row.Edits) > 0 {
+		return true, nil
+	}
+	if !row.LivePhotoOf.Valid {
+		return false, nil
+	}
+	parent, err := s.queries.GetAsset(ctx, row.LivePhotoOf)
+	if db.IsNotFound(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return len(parent.Edits) > 0, nil
+}
+
+// refuseCropped answers by itself when the file cannot be shown, or the check failed.
+func (s *apiServer) refuseCropped(w http.ResponseWriter, r *http.Request, id pgtype.UUID, viewer pgtype.UUID) bool {
+	row, err := s.queries.GetAsset(r.Context(), id)
+	if db.IsNotFound(err) {
+		return false
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return true
+	}
+	cropped, err := s.croppedForViewer(r.Context(), &row, viewer)
+	if err != nil {
+		internalError(w, r, err)
+		return true
+	}
+	if cropped {
+		writeError(w, http.StatusNotFound, "the owner has edited this, so its video is not shared")
+	}
+	return cropped
+}
+
 func (s *apiServer) GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	user := requireUser(w, r)
-	if user == nil {
+	if user == nil || s.refuseCropped(w, r, pgUUID(id), user.ID) {
 		return
 	}
 	path, err := s.queries.GetVisibleAssetFile(r.Context(), db.GetVisibleAssetFileParams{AssetID: pgUUID(id), Kind: "motion_video", UserID: user.ID})
@@ -491,7 +535,7 @@ var hlsFileName = regexp.MustCompile(`^(master|[0-9]+)\.m3u8$|^[0-9]+_[0-9]+\.ts
 // GetAssetVideoFile serves HLS files. The name must match exactly, so it can never leave the folder.
 func (s *apiServer) GetAssetVideoFile(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, file string) {
 	user := requireUser(w, r)
-	if user == nil {
+	if user == nil || s.refuseCropped(w, r, pgUUID(id), user.ID) {
 		return
 	}
 	s.serveVideoFile(w, r, file, func(kind string) (string, error) {
@@ -529,7 +573,8 @@ func (s *apiServer) serveVideoFile(w http.ResponseWriter, r *http.Request, file 
 }
 
 func serveFile(w http.ResponseWriter, r *http.Request, path string) {
-	f, err := os.Open(path) //nolint:gosec // From the database, and video file names must match hlsFileName first.
+	// O_NOFOLLOW, because someone who can write to an external folder could leave a link in it.
+	f, err := os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW, 0) //nolint:gosec // From the database, and video file names must match hlsFileName first.
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			slog.Error("file in the database is missing on disk", "path", path)
@@ -566,6 +611,9 @@ func (s *apiServer) GetAssetOriginal(w http.ResponseWriter, r *http.Request, id 
 	// Someone the photo is shared with does not get what the owner cropped out.
 	if row.UserID != user.ID && len(row.Edits) > 0 {
 		s.serveFullPreview(w, r, &row)
+		return
+	}
+	if s.refuseCropped(w, r, row.ID, user.ID) {
 		return
 	}
 	serveOriginal(w, r, &row, params.Download != nil && *params.Download)
@@ -680,6 +728,15 @@ func (s *apiServer) DownloadAssets(w http.ResponseWriter, r *http.Request, param
 	archive := zip.NewWriter(w)
 	used := map[string]int{}
 	for i := range rows {
+		// What someone else cropped out does not leave through a ZIP either.
+		cropped, err := s.croppedForViewer(r.Context(), &rows[i], user.ID)
+		if err != nil {
+			slog.Error("download failed", "error", err)
+			panic(http.ErrAbortHandler)
+		}
+		if cropped {
+			continue
+		}
 		if err := addToZip(archive, &rows[i], used); err != nil {
 			// The status is already sent, so the only signal left is a broken ZIP.
 			slog.Error("download failed", "asset", uuid.UUID(rows[i].ID.Bytes).String(), "error", err)

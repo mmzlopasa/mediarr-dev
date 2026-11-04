@@ -48,7 +48,12 @@ func (m *metrics) observe(next http.Handler) http.Handler {
 		if found := chi.RouteContext(r.Context()); found != nil && found.RoutePattern() != "" {
 			route = found.RoutePattern()
 		}
-		m.requests.WithLabelValues(r.Method, route, strconv.Itoa(wrapped.Status())).Observe(time.Since(start).Seconds())
+		// Only what a route can answer: a client can invent methods, and each would stay in memory.
+		method := r.Method
+		if route == "unknown" {
+			method = "other"
+		}
+		m.requests.WithLabelValues(method, route, strconv.Itoa(wrapped.Status())).Observe(time.Since(start).Seconds())
 	})
 }
 

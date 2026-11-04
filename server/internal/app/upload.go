@@ -75,6 +75,10 @@ func (s *apiServer) beforeUpload(hook tusd.HookEvent) (tusd.HTTPResponse, tusd.F
 	if !ok || user == nil {
 		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_UNAUTHORIZED", "sign in first", http.StatusUnauthorized)
 	}
+	// A size given only later would get past the checks below, which run once, here.
+	if hook.Upload.SizeIsDeferred {
+		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_SIZE_NEEDED", "say the size of the file at the start", http.StatusBadRequest)
+	}
 	if hook.Upload.IsFinal || hook.Upload.IsPartial {
 		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_NO_CONCAT", "uploads cannot be put together", http.StatusBadRequest)
 	}

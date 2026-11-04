@@ -16,6 +16,7 @@ const (
 	askTimeout     = 90 * time.Second
 	aiCheckTimeout = 3 * time.Second
 	maxQuestion    = 500
+	maxAskWords    = 12
 )
 
 func (s *apiServer) aiToAPI(ctx context.Context) (api.AISettings, error) {
@@ -130,6 +131,16 @@ func cleanAskAnswer(answer string) string {
 	line = strings.Trim(strings.TrimSpace(line), "\"'`.")
 	if len(line) > maxQueryLength {
 		return ""
+	}
+	// A small model sometimes refuses or explains instead, which is no use as search words.
+	if len(strings.Fields(line)) > maxAskWords {
+		return ""
+	}
+	folded := strings.ToLower(line)
+	for _, refusal := range []string{"i can't", "i cannot", "i'm sorry", "i am sorry", "as an ai"} {
+		if strings.Contains(folded, refusal) {
+			return ""
+		}
 	}
 	return line
 }

@@ -170,6 +170,18 @@ func (q *Queries) IsFamilyMember(ctx context.Context, userID pgtype.UUID) (bool,
 	return column_1, err
 }
 
+const joinAllFamilyAlbums = `-- name: JoinAllFamilyAlbums :exec
+INSERT INTO album_members (album_id, user_id, role)
+SELECT al.id, f.user_id, 'viewer' FROM albums al CROSS JOIN family_members f
+WHERE al.is_family AND f.user_id <> al.owner_id
+ON CONFLICT DO NOTHING
+`
+
+func (q *Queries) JoinAllFamilyAlbums(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, joinAllFamilyAlbums)
+	return err
+}
+
 const joinFamilyAlbums = `-- name: JoinFamilyAlbums :exec
 INSERT INTO album_members (album_id, user_id, role)
 SELECT al.id, $1, 'viewer' FROM albums al
@@ -179,6 +191,15 @@ ON CONFLICT DO NOTHING
 
 func (q *Queries) JoinFamilyAlbums(ctx context.Context, userID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, joinFamilyAlbums, userID)
+	return err
+}
+
+const leaveAllFamilyAlbums = `-- name: LeaveAllFamilyAlbums :exec
+DELETE FROM album_members m USING albums al WHERE m.album_id = al.id AND al.is_family
+`
+
+func (q *Queries) LeaveAllFamilyAlbums(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, leaveAllFamilyAlbums)
 	return err
 }
 

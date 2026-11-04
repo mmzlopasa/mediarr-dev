@@ -11,6 +11,21 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addOIDCIdentity = `-- name: AddOIDCIdentity :exec
+INSERT INTO oidc_identities (issuer, subject, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING
+`
+
+type AddOIDCIdentityParams struct {
+	Issuer  string
+	Subject string
+	UserID  pgtype.UUID
+}
+
+func (q *Queries) AddOIDCIdentity(ctx context.Context, arg AddOIDCIdentityParams) error {
+	_, err := q.db.Exec(ctx, addOIDCIdentity, arg.Issuer, arg.Subject, arg.UserID)
+	return err
+}
+
 const claimTotpStep = `-- name: ClaimTotpStep :execrows
 UPDATE users SET totp_last_step = $2 WHERE id = $1 AND totp_last_step < $2
 `
@@ -207,6 +222,24 @@ func (q *Queries) DeleteUserAPIKeys(ctx context.Context, userID pgtype.UUID) err
 	return err
 }
 
+const deleteUserOIDCIdentities = `-- name: DeleteUserOIDCIdentities :exec
+DELETE FROM oidc_identities WHERE user_id = $1
+`
+
+func (q *Queries) DeleteUserOIDCIdentities(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUserOIDCIdentities, userID)
+	return err
+}
+
+const deleteUserPasskeys = `-- name: DeleteUserPasskeys :exec
+DELETE FROM passkeys WHERE user_id = $1
+`
+
+func (q *Queries) DeleteUserPasskeys(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUserPasskeys, userID)
+	return err
+}
+
 const disableTotp = `-- name: DisableTotp :exec
 UPDATE users SET totp_enabled = false, totp_secret = NULL, updated_at = now() WHERE id = $1
 `
@@ -228,6 +261,35 @@ type EnableTotpParams struct {
 func (q *Queries) EnableTotp(ctx context.Context, arg EnableTotpParams) error {
 	_, err := q.db.Exec(ctx, enableTotp, arg.ID, arg.TotpLastStep)
 	return err
+}
+
+const getOIDCIdentity = `-- name: GetOIDCIdentity :one
+SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes FROM oidc_identities i JOIN users u ON u.id = i.user_id WHERE i.issuer = $1 AND i.subject = $2
+`
+
+type GetOIDCIdentityParams struct {
+	Issuer  string
+	Subject string
+}
+
+func (q *Queries) GetOIDCIdentity(ctx context.Context, arg GetOIDCIdentityParams) (User, error) {
+	row := q.db.QueryRow(ctx, getOIDCIdentity, arg.Issuer, arg.Subject)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Name,
+		&i.PasswordHash,
+		&i.IsAdmin,
+		&i.TotpSecret,
+		&i.TotpEnabled,
+		&i.TotpLastStep,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.VaultPinHash,
+		&i.QuotaBytes,
+	)
+	return i, err
 }
 
 const getUser = `-- name: GetUser :one

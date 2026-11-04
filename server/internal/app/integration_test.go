@@ -140,6 +140,33 @@ func (c *client) post(path string, payload any) (*http.Response, []byte) {
 	return c.do(http.MethodPost, path, map[string]string{"Content-Type": "application/json"}, bytes.NewReader(encoded))
 }
 
+// doHost makes a request as if the server were at another address, which passkeys depend on.
+func (c *client) doHost(host, method, path string, headers map[string]string, body string) (*http.Response, []byte) {
+	c.s.t.Helper()
+	request, err := http.NewRequestWithContext(context.Background(), method, c.s.url+path, strings.NewReader(body))
+	if err != nil {
+		c.s.t.Fatal(err)
+	}
+	request.Host = host
+	// The cookie jar goes by the address asked for, so it would keep the session back.
+	for _, cookie := range c.http.Jar.Cookies(request.URL) {
+		request.AddCookie(cookie)
+	}
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
+	response, err := c.http.Do(request)
+	if err != nil {
+		c.s.t.Fatal(err)
+	}
+	defer func() { _ = response.Body.Close() }()
+	data, err := io.ReadAll(response.Body)
+	if err != nil {
+		c.s.t.Fatal(err)
+	}
+	return response, data
+}
+
 func (c *client) get(path string) (*http.Response, []byte) {
 	c.s.t.Helper()
 	return c.do(http.MethodGet, path, nil, nil)
@@ -744,7 +771,7 @@ func TestMigrationsGoDownAndUp(t *testing.T) {
 	s := newStack(t)
 	ctx := context.Background()
 	// Every schema migration after the first must be able to go down.
-	for range 21 {
+	for range 22 {
 		if err := db.MigrateDown(ctx, s.dbURL); err != nil {
 			t.Fatal(err)
 		}

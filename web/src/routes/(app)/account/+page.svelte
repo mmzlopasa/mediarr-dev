@@ -53,6 +53,7 @@
 	let methods = $state<AuthMethods>();
 	let passkeys = $state<Passkey[]>([]);
 	let passkeyName = $state('');
+	let passkeyPassword = $state('');
 	let passkeyError = $state('');
 
 	async function loadPasskeys() {
@@ -73,7 +74,8 @@
 		event.preventDefault();
 		passkeyError = '';
 		try {
-			await registerPasskey(passkeyName);
+			await registerPasskey(passkeyName, passkeyPassword);
+			passkeyPassword = '';
 			passkeyName = '';
 			await loadPasskeys();
 		} catch (cause) {
@@ -216,6 +218,12 @@
 			{/each}
 			<form class="form" onsubmit={addPasskey}>
 				<Input label={tr('Naziv passkeya', 'Passkey name')} bind:value={passkeyName} />
+				<Input
+					label={tr('Vaša lozinka', 'Your password')}
+					type="password"
+					autocomplete="current-password"
+					bind:value={passkeyPassword}
+				/>
 				<Button type="submit" variant="gold" small>{tr('Dodaj passkey', 'Add a passkey')}</Button>
 			</form>
 		</Card>

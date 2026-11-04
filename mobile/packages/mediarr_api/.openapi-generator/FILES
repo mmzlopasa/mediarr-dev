@@ -231,7 +231,3 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/ai_settings_test.dart
-test/ai_settings_update_test.dart
-test/ask_answer_test.dart
-test/ask_request_test.dart

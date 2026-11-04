@@ -373,6 +373,9 @@ func (s *apiServer) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		if err := q.DeleteUserAPIKeys(r.Context(), user.ID); err != nil {
 			return err
 		}
+		if err := q.DeleteUserPasskeys(r.Context(), user.ID); err != nil {
+			return err
+		}
 		return q.DeleteOtherSessions(r.Context(), db.DeleteOtherSessionsParams{UserID: user.ID, Keep: keep})
 	})
 	if err != nil {

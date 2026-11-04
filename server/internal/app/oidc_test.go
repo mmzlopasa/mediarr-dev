@@ -146,7 +146,11 @@ func TestSingleSignOn(t *testing.T) {
 
 	// Someone who has an account gets in, to that account.
 	person := s.client()
-	p.says(map[string]any{"email": "ADMIN@example.com", "email_verified": true})
+	resp, body = admin.send(http.MethodPut, "/api/admin/oidc", map[string]any{
+		"issuer": p.server.URL, "clientId": "mediarr", "label": "Family login", "autoCreate": false, "linkAdmins": true,
+	})
+	expect(t, resp, body, http.StatusOK)
+	p.says(map[string]any{"sub": "person-admin", "email": "ADMIN@example.com", "email_verified": true})
 	resp, _ = p.signInWith(person, "/api/auth/oidc/start?next=/albums")
 	if resp.StatusCode != http.StatusFound || resp.Header.Get("Location") != "/albums" {
 		t.Fatalf("after signing in: %d %s", resp.StatusCode, resp.Header.Get("Location"))
@@ -156,7 +160,7 @@ func TestSingleSignOn(t *testing.T) {
 
 	// Without an account, and with creating them off, not.
 	stranger := s.client()
-	p.says(map[string]any{"email": "new@example.com"})
+	p.says(map[string]any{"sub": "person-new", "email": "new@example.com", "email_verified": true})
 	resp, _ = p.signInWith(stranger, "/api/auth/oidc/start")
 	if !strings.Contains(resp.Header.Get("Location"), "sso=failed") {
 		t.Fatalf("a stranger: %s", resp.Header.Get("Location"))
@@ -167,7 +171,7 @@ func TestSingleSignOn(t *testing.T) {
 
 	// With it on, they get a plain account of their own, which can upload.
 	s.turnOnOIDC(t, admin, p, true)
-	p.says(map[string]any{"email": "new@example.com", "name": "New Person"})
+	p.says(map[string]any{"sub": "person-new", "email": "new@example.com", "email_verified": true, "name": "New Person"})
 	stranger = s.client()
 	resp, _ = p.signInWith(stranger, "/api/auth/oidc/start")
 	if resp.Header.Get("Location") != "/" {
@@ -180,14 +184,39 @@ func TestSingleSignOn(t *testing.T) {
 	}
 
 	// An address the provider has not verified opens nothing, or it would open the admin's account.
-	p.says(map[string]any{"email": "admin@example.com", "email_verified": false})
-	liar := s.client()
-	resp, _ = p.signInWith(liar, "/api/auth/oidc/start")
-	if !strings.Contains(resp.Header.Get("Location"), "sso=failed") {
-		t.Fatalf("unverified: %s", resp.Header.Get("Location"))
+	// Saying nothing about it counts as not verified.
+	for _, claims := range []map[string]any{
+		{"sub": "liar-1", "email": "admin@example.com", "email_verified": false},
+		{"sub": "liar-2", "email": "admin@example.com"},
+	} {
+		p.says(claims)
+		liar := s.client()
+		resp, _ = p.signInWith(liar, "/api/auth/oidc/start")
+		if !strings.Contains(resp.Header.Get("Location"), "sso=failed") {
+			t.Fatalf("unverified: %s", resp.Header.Get("Location"))
+		}
+		resp, body = liar.get("/api/timeline/buckets")
+		expect(t, resp, body, http.StatusUnauthorized)
 	}
-	resp, body = liar.get("/api/timeline/buckets")
-	expect(t, resp, body, http.StatusUnauthorized)
+
+	// Someone known stays themselves, whatever email the provider reports later.
+	p.says(map[string]any{"sub": "person-new", "email": "admin@example.com", "email_verified": true})
+	stranger = s.client()
+	resp, _ = p.signInWith(stranger, "/api/auth/oidc/start")
+	if resp.Header.Get("Location") != "/" {
+		t.Fatalf("known: %s", resp.Header.Get("Location"))
+	}
+	resp, body = stranger.get("/api/admin/users")
+	expect(t, resp, body, http.StatusForbidden)
+
+	// By default, an administrator is not linked by email at all.
+	s.turnOnOIDC(t, admin, p, true)
+	p.says(map[string]any{"sub": "other-admin", "email": "admin@example.com", "email_verified": true})
+	claimed := s.client()
+	resp, _ = p.signInWith(claimed, "/api/auth/oidc/start")
+	if !strings.Contains(resp.Header.Get("Location"), "sso=failed") {
+		t.Fatalf("admin by email: %s", resp.Header.Get("Location"))
+	}
 }
 
 func TestSingleSignOnRefusesWhatItDidNotStart(t *testing.T) {
@@ -195,7 +224,7 @@ func TestSingleSignOnRefusesWhatItDidNotStart(t *testing.T) {
 	admin := s.admin()
 	p := newFakeProvider(t)
 	s.turnOnOIDC(t, admin, p, true)
-	p.says(map[string]any{"email": "admin@example.com"})
+	p.says(map[string]any{"sub": "a", "email": "admin@example.com", "email_verified": true})
 
 	// Coming back with no flow of its own: someone trying to sign a victim in to their account.
 	victim := s.client()
@@ -226,20 +255,26 @@ func TestSingleSignOnRefusesWhatItDidNotStart(t *testing.T) {
 	if got := localPath("//evil.example"); got != "/" {
 		t.Errorf("next: %s", got)
 	}
+	if got := localPath("/\t/evil.example"); got != "/" {
+		t.Errorf("next with a tab: %q", got)
+	}
 }
 
 func TestTheAppGetsItsSessionOnlyWithItsSecret(t *testing.T) {
 	s := newStack(t)
 	admin := s.admin()
 	p := newFakeProvider(t)
-	s.turnOnOIDC(t, admin, p, false)
-	p.says(map[string]any{"email": "admin@example.com"})
+	resp, body := admin.send(http.MethodPut, "/api/admin/oidc", map[string]any{
+		"issuer": p.server.URL, "clientId": "mediarr", "label": "x", "autoCreate": false, "linkAdmins": true,
+	})
+	expect(t, resp, body, http.StatusOK)
+	p.says(map[string]any{"sub": "a", "email": "admin@example.com", "email_verified": true})
 
 	const verifier = "the-secret-only-the-app-knows"
 	sum := sha256.Sum256([]byte(verifier))
 	challenge := base64.RawURLEncoding.EncodeToString(sum[:])
 	browser := s.client()
-	resp, _ := p.signInWith(browser, "/api/auth/oidc/start?appChallenge="+challenge)
+	resp, _ = p.signInWith(browser, "/api/auth/oidc/start?appChallenge="+challenge)
 	location := resp.Header.Get("Location")
 	if !strings.HasPrefix(location, oidcAppScheme+"?code=") {
 		t.Fatalf("redirect: %s", location)
@@ -250,7 +285,7 @@ func TestTheAppGetsItsSessionOnlyWithItsSecret(t *testing.T) {
 	}
 	code := parsed.Query().Get("code")
 	// The browser itself has no session: only the app gets one.
-	resp, body := browser.get("/api/timeline/buckets")
+	resp, body = browser.get("/api/timeline/buckets")
 	expect(t, resp, body, http.StatusUnauthorized)
 
 	// Another app that caught the redirect has only the code.

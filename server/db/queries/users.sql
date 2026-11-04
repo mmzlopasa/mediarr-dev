@@ -101,3 +101,15 @@ UPDATE passkeys SET credential = $2, last_used_at = now() WHERE credential_id = 
 
 -- name: DeletePasskey :exec
 DELETE FROM passkeys WHERE id = $1 AND user_id = $2;
+
+-- name: DeleteUserPasskeys :exec
+DELETE FROM passkeys WHERE user_id = $1;
+
+-- name: GetOIDCIdentity :one
+SELECT u.* FROM oidc_identities i JOIN users u ON u.id = i.user_id WHERE i.issuer = $1 AND i.subject = $2;
+
+-- name: AddOIDCIdentity :exec
+INSERT INTO oidc_identities (issuer, subject, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;
+
+-- name: DeleteUserOIDCIdentities :exec
+DELETE FROM oidc_identities WHERE user_id = $1;

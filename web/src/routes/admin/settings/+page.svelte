@@ -68,6 +68,7 @@
 				clientId: oidc.clientId,
 				label: oidc.label,
 				autoCreate: oidc.autoCreate,
+				linkAdmins: oidc.linkAdmins,
 				secret: oidcSecret || undefined
 			});
 			oidcSecret = '';
@@ -408,6 +409,13 @@
 					{tr(
 						'Stvori račun onome tko ga još nema (običan korisnik)',
 						'Create an account for someone who has none (a plain user)'
+					)}
+				</label>
+				<label>
+					<input type="checkbox" bind:checked={oidc.linkAdmins} />
+					{tr(
+						'Poveži i administratore po e-adresi (manje sigurno)',
+						'Also link administrators by email (less safe)'
 					)}
 				</label>
 				<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>

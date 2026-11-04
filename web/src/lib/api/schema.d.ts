@@ -1811,7 +1811,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Start adding a passkey */
+        /** Start adding a passkey, which takes the account's password */
         post: operations["beginPasskeyRegistration"];
         delete?: never;
         options?: never;
@@ -2526,6 +2526,8 @@ export interface components {
             label: string;
             /** @description A person without an account gets one on first sign-in */
             autoCreate: boolean;
+            /** @description Also link administrators by email. Off is safer */
+            linkAdmins: boolean;
             hasSecret: boolean;
         };
         OIDCSettingsUpdate: {
@@ -2535,6 +2537,7 @@ export interface components {
             autoCreate: boolean;
             /** @description Left out keeps the one that is saved */
             secret?: string;
+            linkAdmins?: boolean;
         };
         Passkey: {
             /** Format: uuid */
@@ -6123,11 +6126,9 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["PasswordConfirm"];
             };
         };
         responses: {

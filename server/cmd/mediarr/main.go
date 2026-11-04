@@ -228,6 +228,12 @@ func upsertUser(ctx context.Context, cfg config.Config, args []string) error {
 	if err := queries.DeleteUserAPIKeys(ctx, user.ID); err != nil {
 		return err
 	}
+	if err := queries.DeleteUserPasskeys(ctx, user.ID); err != nil {
+		return err
+	}
+	if err := queries.DeleteUserOIDCIdentities(ctx, user.ID); err != nil {
+		return err
+	}
 	return queries.DeleteOtherSessions(ctx, db.DeleteOtherSessionsParams{UserID: user.ID})
 }
 

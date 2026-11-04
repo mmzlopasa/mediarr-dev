@@ -14,7 +14,7 @@ Method | HTTP request | Description
 [**appendUpload**](DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 [**askSearch**](DefaultApi.md#asksearch) | **POST** /api/search/ask | Turn a question into words to search for, with the local model
 [**beginPasskeyLogin**](DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
-[**beginPasskeyRegistration**](DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey
+[**beginPasskeyRegistration**](DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey, which takes the account's password
 [**bulkAssets**](DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
 [**cancelImport**](DefaultApi.md#cancelimport) | **POST** /api/admin/imports/{id}/cancel | Stop an import. What it has brought in stays
 [**cancelUpload**](DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
@@ -374,19 +374,19 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **beginPasskeyRegistration**
-> Map<String, Object> beginPasskeyRegistration(requestBody)
+> Map<String, Object> beginPasskeyRegistration(passwordConfirm)
 
-Start adding a passkey
+Start adding a passkey, which takes the account's password
 
 ### Example
 ```dart
 import 'package:mediarr_api/api.dart';
 
 final api_instance = DefaultApi();
-final requestBody = Map<String, Object>(); // Map<String, Object> | 
+final passwordConfirm = PasswordConfirm(); // PasswordConfirm | 
 
 try {
-    final result = api_instance.beginPasskeyRegistration(requestBody);
+    final result = api_instance.beginPasskeyRegistration(passwordConfirm);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->beginPasskeyRegistration: $e\n');
@@ -397,7 +397,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **requestBody** | [**Map<String, Object>**](Object.md)|  | [optional] 
+ **passwordConfirm** | [**PasswordConfirm**](PasswordConfirm.md)|  | 
 
 ### Return type
 

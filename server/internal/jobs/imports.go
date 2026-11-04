@@ -18,6 +18,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,6 +36,10 @@ const (
 	immichPageSize    = 250
 	importRequestWait = 2 * time.Minute
 	maxImportError    = 400
+	maxImportAnswer   = 64 << 20
+	maxSidecarBytes   = 1 << 20
+	maxImportPages    = 200000
+	minImportFree     = 2 << 30
 	statusDone        = "done"
 	statusFailed      = "failed"
 	sourceImmich      = "immich"
@@ -230,6 +235,19 @@ func (i *importRun) store(ctx context.Context, tmp string, item *importItem) (pg
 	return id, isNew, nil
 }
 
+// roomFor stops an import before it fills the disk, which would also stop the database. It is
+// refused, not retried, because trying again will not make room.
+func (i *importRun) roomFor(size int64) error {
+	var disk syscall.Statfs_t
+	if err := syscall.Statfs(i.opts.LibraryPath, &disk); err != nil {
+		return nil //nolint:nilerr // Then the copy itself fails if the disk is the problem.
+	}
+	if int64(disk.Bavail)*disk.Bsize-max(size, 0) < minImportFree { //nolint:gosec // Disk sizes fit.
+		return &errImportRefused{"the server's disk is nearly full, so the import stopped"}
+	}
+	return nil
+}
+
 func (i *importRun) tempFile() (*os.File, error) {
 	dir := storage.TmpDir(i.opts.LibraryPath)
 	if err := os.MkdirAll(dir, 0o750); err != nil {
@@ -285,7 +303,11 @@ type immichFace struct {
 	} `json:"person"`
 }
 
-var importHTTP = &http.Client{Transport: &http.Transport{ResponseHeaderTimeout: importRequestWait}}
+// importHTTP follows no redirects: it would carry the key along, and fetch whatever it is sent to.
+var importHTTP = &http.Client{
+	Transport:     &http.Transport{ResponseHeaderTimeout: importRequestWait},
+	CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+}
 
 func (i *importRun) immichCall(ctx context.Context, method, path string, body, out any) error {
 	var reader io.Reader
@@ -316,11 +338,11 @@ func (i *importRun) immichCall(ctx context.Context, method, path string, body, o
 	if response.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("immich answered %d to %s", response.StatusCode, path)
 	}
-	return json.NewDecoder(response.Body).Decode(out)
+	return json.NewDecoder(io.LimitReader(response.Body, maxImportAnswer)).Decode(out)
 }
 
 func (i *importRun) immichPeople(ctx context.Context) error {
-	for page := 1; ; page++ {
+	for page := 1; page < maxImportPages; page++ {
 		var answer struct {
 			People []struct {
 				ID       string `json:"id"`
@@ -356,6 +378,7 @@ func (i *importRun) immichPeople(ctx context.Context) error {
 			return nil
 		}
 	}
+	return &errImportRefused{"the Immich server does not stop listing people"}
 }
 
 // immichAlbums says which albums each asset is in, as the listing of assets does not.
@@ -374,7 +397,10 @@ func (i *importRun) immichAlbums(ctx context.Context) (map[string][]pgtype.UUID,
 		if err != nil {
 			return nil, err
 		}
-		for page := 1; ; page++ {
+		for page := 1; page < maxImportPages; page++ {
+			if err := i.stillRunning(ctx); err != nil {
+				return nil, err
+			}
 			var answer immichSearch
 			body := map[string]any{"albumIds": []string{album.ID}, "page": page, "size": immichPageSize}
 			if err := i.immichCall(ctx, http.MethodPost, "/api/search/metadata", body, &answer); err != nil {
@@ -414,6 +440,9 @@ func (i *importRun) immichDownload(ctx context.Context, id, checksum string) (st
 	defer func() { _ = response.Body.Close() }()
 	if response.StatusCode != http.StatusOK {
 		return remove(fmt.Errorf("immich answered %d for a file", response.StatusCode))
+	}
+	if err := i.roomFor(response.ContentLength); err != nil {
+		return remove(err)
 	}
 	hash := sha1.New() //nolint:gosec // See the import.
 	if _, err := io.Copy(io.MultiWriter(file, hash), response.Body); err != nil {
@@ -496,7 +525,7 @@ func (i *importRun) immich(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	for page := int(i.row.Page); ; page++ {
+	for page := int(i.row.Page); page < maxImportPages; page++ {
 		var answer immichSearch
 		body := map[string]any{"page": page, "size": immichPageSize}
 		if err := i.immichCall(ctx, http.MethodPost, "/api/search/metadata", body, &answer); err != nil {
@@ -507,7 +536,9 @@ func (i *importRun) immich(ctx context.Context) error {
 			if err := i.stillRunning(ctx); err != nil {
 				return err
 			}
-			if asset.IsOffline {
+			// What Immich keeps locked is the user's to move on purpose, not by an import. "hidden" is
+			// the moving part of a Live Photo, which comes with its picture.
+			if asset.IsOffline || asset.Visibility == "locked" || asset.Visibility == "hidden" {
 				continue
 			}
 			if err := i.immichFile(ctx, asset, albums[asset.ID]); err != nil {
@@ -531,6 +562,7 @@ func (i *importRun) immich(ctx context.Context) error {
 			return err
 		}
 	}
+	return &errImportRefused{"the Immich server does not stop listing photos"}
 }
 
 // --- Folders given through the read-only mount ---
@@ -550,6 +582,11 @@ func (i *importRun) copyIn(ctx context.Context, path string, item *importItem) e
 		return err
 	}
 	defer func() { _ = source.Close() }()
+	if info, err := source.Stat(); err == nil {
+		if err := i.roomFor(info.Size()); err != nil {
+			return err
+		}
+	}
 	file, err := i.tempFile()
 	if err != nil {
 		return err
@@ -669,9 +706,22 @@ func parseTakeoutSidecar(raw []byte) (*importItem, bool, error) {
 	return item, sidecar.Trashed, nil
 }
 
+// readSmallFile reads a sidecar only if it is one: a link or a pipe in an export could hang or read
+// something else, and a huge file could use up the memory.
+func readSmallFile(path string) ([]byte, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() || info.Size() > maxSidecarBytes {
+		return nil, errors.New("not a sidecar")
+	}
+	return os.ReadFile(path) //nolint:gosec // Within the chosen folder.
+}
+
 // takeoutAlbum names a folder's album from its metadata.json, which year folders do not have.
 func takeoutAlbum(dir string) string {
-	raw, err := os.ReadFile(filepath.Join(dir, "metadata.json")) //nolint:gosec // Within the chosen folder.
+	raw, err := readSmallFile(filepath.Join(dir, "metadata.json"))
 	if err != nil {
 		return ""
 	}
@@ -716,7 +766,7 @@ func (i *importRun) takeout(ctx context.Context) error {
 		dir, name := filepath.Dir(path), filepath.Base(path)
 		item := &importItem{}
 		if sidecar := FindTakeoutSidecar(name, listing[dir]); sidecar != "" {
-			raw, err := os.ReadFile(filepath.Join(dir, sidecar)) //nolint:gosec // Within the chosen folder.
+			raw, err := readSmallFile(filepath.Join(dir, sidecar))
 			if err == nil {
 				parsed, trashed, err := parseTakeoutSidecar(raw)
 				if err == nil {

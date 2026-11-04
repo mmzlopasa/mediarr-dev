@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,6 +31,7 @@ const (
 	backupKindTest    = "restore_test"
 	backupDumpName    = "mediarr-database.dump"
 	maxToolMessage    = 500
+	minRestoreFree    = 1 << 30
 )
 
 // The names of the backup's settings, and of each feature's switch.
@@ -151,9 +153,40 @@ func withDatabaseName(databaseURL, name string) (string, error) {
 	return parsed.String(), nil
 }
 
+// roomForRestore makes sure a whole copy fits, because the test really brings everything back.
+func roomForRestore(ctx context.Context, settings *BackupSettings, cachePath string) error {
+	out, err := restic(ctx, settings, "stats", "latest", "--json", "--tag", "mediarr", "--mode", "restore-size")
+	if err != nil {
+		return err
+	}
+	var stats struct {
+		TotalSize int64 `json:"total_size"`
+	}
+	if err := json.Unmarshal(out, &stats); err != nil {
+		return err
+	}
+	var disk syscall.Statfs_t
+	if err := syscall.Statfs(cachePath, &disk); err != nil {
+		return err
+	}
+	if free := int64(disk.Bavail) * disk.Bsize; free < stats.TotalSize+minRestoreFree { //nolint:gosec // Disk sizes fit.
+		return fmt.Errorf("the test needs %d MB free on the cache disk, and there are %d", (stats.TotalSize+minRestoreFree)>>20, free>>20)
+	}
+	return nil
+}
+
 // TestRestore brings the newest backup back beside the live data, in a folder and a database of its
 // own, and compares every original with the checksum the restored database has for it.
 func TestRestore(ctx context.Context, settings *BackupSettings, databaseURL, cachePath string) (int64, error) {
+	// A run that was killed leaves its copy behind, which would soon fill the disk.
+	if old, err := filepath.Glob(filepath.Join(cachePath, ".restore-test-*")); err == nil {
+		for _, dir := range old {
+			_ = os.RemoveAll(dir)
+		}
+	}
+	if err := roomForRestore(ctx, settings, cachePath); err != nil {
+		return 0, err
+	}
 	work, err := os.MkdirTemp(cachePath, ".restore-test-*")
 	if err != nil {
 		return 0, err

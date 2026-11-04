@@ -22,8 +22,8 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 	return (response.status === 204 ? undefined : await response.json()) as T;
 }
 
-export async function registerPasskey(name: string) {
-	const begun = await post<Begin>('/api/me/passkeys/begin', {});
+export async function registerPasskey(name: string, password: string) {
+	const begun = await post<Begin>('/api/me/passkeys/begin', { password });
 	const created = await navigator.credentials.create({
 		publicKey: PublicKeyCredential.parseCreationOptionsFromJSON(begun.options.publicKey)
 	});

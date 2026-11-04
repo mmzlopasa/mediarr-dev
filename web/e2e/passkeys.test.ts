@@ -27,6 +27,7 @@ test('a passkey is added, signs in, and is removed, with a software authenticato
 
 	await page.goto(`${ORIGIN}/account`);
 	await page.getByLabel('Passkey name').fill('Laptop');
+	await page.getByLabel('Your password').fill(process.env.E2E_PASSWORD as string);
 	await page.getByRole('button', { name: 'Add a passkey' }).click();
 	await expect(page.locator('.alb-list', { hasText: 'Laptop' })).toBeVisible();
 

@@ -301,21 +301,21 @@ class DefaultApi {
     return null;
   }
 
-  /// Start adding a passkey
+  /// Start adding a passkey, which takes the account's password
   ///
   /// Note: This method returns the HTTP [Response].
   ///
   /// Parameters:
   ///
-  /// * [Map<String, Object>] requestBody:
-  Future<Response> beginPasskeyRegistrationWithHttpInfo({
-    Map<String, Object>? requestBody,
-  }) async {
+  /// * [PasswordConfirm] passwordConfirm (required):
+  Future<Response> beginPasskeyRegistrationWithHttpInfo(
+    PasswordConfirm passwordConfirm,
+  ) async {
     // ignore: prefer_const_declarations
     final path = r'/api/me/passkeys/begin';
 
     // ignore: prefer_final_locals
-    Object? postBody = requestBody;
+    Object? postBody = passwordConfirm;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
@@ -334,16 +334,16 @@ class DefaultApi {
     );
   }
 
-  /// Start adding a passkey
+  /// Start adding a passkey, which takes the account's password
   ///
   /// Parameters:
   ///
-  /// * [Map<String, Object>] requestBody:
-  Future<Map<String, Object>?> beginPasskeyRegistration({
-    Map<String, Object>? requestBody,
-  }) async {
+  /// * [PasswordConfirm] passwordConfirm (required):
+  Future<Map<String, Object>?> beginPasskeyRegistration(
+    PasswordConfirm passwordConfirm,
+  ) async {
     final response = await beginPasskeyRegistrationWithHttpInfo(
-      requestBody: requestBody,
+      passwordConfirm,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

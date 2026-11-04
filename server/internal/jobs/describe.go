@@ -39,7 +39,7 @@ const (
 	describeTimeout       = 20 * time.Minute
 	ollamaPullTimeout     = 2 * time.Hour
 	maxDescription        = 2000
-	describePrompt        = "Describe this photo in one or two plain sentences: who or what is in it, what is happening, and where."
+	describePrompt        = "Describe this image."
 	askPrompt             = "Turn this question about a photo library into a few search words. Keep names, places and dates. Answer with the words only, in the language of the question.\n\nQuestion: "
 	maxOllamaAnswerBytes  = 1 << 20
 )

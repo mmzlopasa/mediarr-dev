@@ -54,6 +54,9 @@
 	// Only local paths, so a crafted link cannot send the user to another site after sign-in.
 	function nextPath() {
 		const next = page.url.searchParams.get('next') ?? '';
+		// Browsers drop tabs and line breaks from addresses, so "/<tab>/evil" would become "//evil".
+		// eslint-disable-next-line no-control-regex
+		if (/[\u0000-\u001f\u007f]/.test(next)) return '/';
 		return next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '/';
 	}
 
