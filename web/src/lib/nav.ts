@@ -27,6 +27,14 @@ export const appNav: NavItem[] = [
 		emptyEn: 'Search becomes available once you add photos.'
 	},
 	{
+		path: '/explore',
+		icon: 'spark',
+		hr: 'Istraži',
+		en: 'Explore',
+		emptyHr: 'Još nema ničega za istraživanje. Dodajte fotke.',
+		emptyEn: 'Nothing to explore yet. Add some photos.'
+	},
+	{
 		path: '/map',
 		icon: 'map',
 		hr: 'Karta',

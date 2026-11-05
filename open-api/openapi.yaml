@@ -2396,6 +2396,17 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/explore/places:
+    get:
+      operationId: listExplorePlaces
+      summary: The places in the user's own photos, those with the most first
+      responses:
+        "200":
+          description: Places
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExplorePlaces" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/places:
     get:
       operationId: searchPlaces
@@ -2918,6 +2929,19 @@ components:
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
+    ExplorePlace:
+      type: object
+      required: [name, country, assetCount, coverId]
+      properties:
+        name: { type: string }
+        country: { type: string }
+        assetCount: { type: integer, format: int64 }
+        coverId: { type: string, format: uuid }
+    ExplorePlaces:
+      type: object
+      required: [places]
+      properties:
+        places: { type: array, items: { $ref: "#/components/schemas/ExplorePlace" } }
     AssetFacts:
       type: object
       properties:

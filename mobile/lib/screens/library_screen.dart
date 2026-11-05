@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import 'explore_screen.dart';
 import 'app_header.dart';
 import 'organize_screens.dart';
 import 'shared_screen.dart';
@@ -25,6 +26,17 @@ class LibraryScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const RingIcon(Icons.explore_outlined),
+                      title: const Text('Explore'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ExploreScreen(),
+                        ),
+                      ),
+                    ),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const RingIcon(Icons.people_outline),

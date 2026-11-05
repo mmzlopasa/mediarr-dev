@@ -118,6 +118,23 @@ class FakeServer {
       await _json(request, 200, {'enabled': true, 'people': []});
       return;
     }
+    if (path == '/api/explore/places') {
+      await _json(request, 200, {
+        'places': [
+          {
+            'name': 'Hvar',
+            'country': 'HR',
+            'assetCount': 3,
+            'coverId': photoId,
+          },
+        ],
+      });
+      return;
+    }
+    if (path == '/api/memories') {
+      await _json(request, 200, []);
+      return;
+    }
     if (path == '/api/notifications') {
       await _json(request, 200, {
         'unread': 1,

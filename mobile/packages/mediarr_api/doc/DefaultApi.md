@@ -134,6 +134,7 @@ Method | HTTP request | Description
 [**listCameras**](DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 [**listDirectory**](DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 [**listDuplicates**](DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
+[**listExplorePlaces**](DefaultApi.md#listexploreplaces) | **GET** /api/explore/places | The places in the user's own photos, those with the most first
 [**listFamilyMembersAdmin**](DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 [**listImports**](DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 [**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
@@ -5209,6 +5210,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**Duplicates**](Duplicates.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listExplorePlaces**
+> ExplorePlaces listExplorePlaces()
+
+The places in the user's own photos, those with the most first
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listExplorePlaces();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listExplorePlaces: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**ExplorePlaces**](ExplorePlaces.md)
 
 ### Authorization
 

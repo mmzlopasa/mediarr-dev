@@ -195,6 +195,29 @@ test('a photo gets a new date, place and description, and can go back to its fil
 	await expect(dialog).toBeHidden();
 });
 
+test('Explore shows people, places and memories, and each leads further', async ({ page }) => {
+	await signIn(page, 'organizer');
+	const cover = '00000000-0000-4000-8000-000000000004';
+	await page.route('**/api/explore/places', (route) =>
+		route.fulfill({
+			json: { places: [{ name: 'Hvar', country: 'HR', assetCount: 3, coverId: cover }] }
+		})
+	);
+	await page.goto('/explore');
+	await expect(page.getByRole('heading', { name: 'Explore', level: 1 })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'People' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Memories' })).toBeVisible();
+	await page.getByRole('link', { name: /Hvar/ }).click();
+	await expect(page).toHaveURL(/\/search\?q=Hvar/);
+});
+
+test('Explore says when no photo has a place yet', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await page.route('**/api/explore/places', (route) => route.fulfill({ json: { places: [] } }));
+	await page.goto('/explore');
+	await expect(page.getByText('No photos with a place yet.')).toBeVisible();
+});
+
 test('a date of birth is saved with the person', async ({ page }) => {
 	await signIn(page, 'organizer');
 	const person = '00000000-0000-4000-8000-000000000001';

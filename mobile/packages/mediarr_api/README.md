@@ -185,6 +185,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 *DefaultApi* | [**listDuplicates**](doc//DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
+*DefaultApi* | [**listExplorePlaces**](doc//DefaultApi.md#listexploreplaces) | **GET** /api/explore/places | The places in the user's own photos, those with the most first
 *DefaultApi* | [**listFamilyMembersAdmin**](doc//DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 *DefaultApi* | [**listImports**](doc//DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
@@ -302,6 +303,8 @@ Class | Method | HTTP request | Description
  - [EmailSettings](doc//EmailSettings.md)
  - [EmailSettingsUpdate](doc//EmailSettingsUpdate.md)
  - [Error](doc//Error.md)
+ - [ExplorePlace](doc//ExplorePlace.md)
+ - [ExplorePlaces](doc//ExplorePlaces.md)
  - [ExternalLibrary](doc//ExternalLibrary.md)
  - [ExternalLibraryOwner](doc//ExternalLibraryOwner.md)
  - [FaceAssign](doc//FaceAssign.md)

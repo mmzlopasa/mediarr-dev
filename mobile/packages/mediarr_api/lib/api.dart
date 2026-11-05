@@ -82,6 +82,8 @@ part 'model/duplicates.dart';
 part 'model/email_settings.dart';
 part 'model/email_settings_update.dart';
 part 'model/error.dart';
+part 'model/explore_place.dart';
+part 'model/explore_places.dart';
 part 'model/external_library.dart';
 part 'model/external_library_owner.dart';
 part 'model/face_assign.dart';

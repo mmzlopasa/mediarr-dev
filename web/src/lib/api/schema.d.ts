@@ -2600,6 +2600,23 @@ export interface paths {
         patch: operations["setAssetFacts"];
         trace?: never;
     };
+    "/api/explore/places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The places in the user's own photos, those with the most first */
+        get: operations["listExplorePlaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/places": {
         parameters: {
             query?: never;
@@ -3125,6 +3142,17 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+        };
+        ExplorePlace: {
+            name: string;
+            country: string;
+            /** Format: int64 */
+            assetCount: number;
+            /** Format: uuid */
+            coverId: string;
+        };
+        ExplorePlaces: {
+            places: components["schemas"]["ExplorePlace"][];
         };
         AssetFacts: {
             /** @description RFC 3339 with the offset of where it was taken */
@@ -8208,6 +8236,27 @@ export interface operations {
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    listExplorePlaces: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Places */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExplorePlaces"];
+                };
+            };
+            401: components["responses"]["Error"];
         };
     };
     searchPlaces: {

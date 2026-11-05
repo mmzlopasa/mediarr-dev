@@ -1580,6 +1580,19 @@ type Error struct {
 	Message string `json:"message"`
 }
 
+// ExplorePlace defines model for ExplorePlace.
+type ExplorePlace struct {
+	AssetCount int64              `json:"assetCount"`
+	Country    string             `json:"country"`
+	CoverId    openapi_types.UUID `json:"coverId"`
+	Name       string             `json:"name"`
+}
+
+// ExplorePlaces defines model for ExplorePlaces.
+type ExplorePlaces struct {
+	Places []ExplorePlace `json:"places"`
+}
+
 // ExternalLibrary defines model for ExternalLibrary.
 type ExternalLibrary struct {
 	Assets int64 `json:"assets"`
@@ -2944,6 +2957,9 @@ type ServerInterface interface {
 	// DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 	// (POST /api/duplicates/dismiss)
 	DismissDuplicates(w http.ResponseWriter, r *http.Request)
+	// ListExplorePlaces The places in the user's own photos, those with the most first
+	// (GET /api/explore/places)
+	ListExplorePlaces(w http.ResponseWriter, r *http.Request)
 	// RemoveFace Say this is not a person. Analysing the picture again does not bring it back
 	// (DELETE /api/faces/{id})
 	RemoveFace(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -3817,6 +3833,12 @@ func (_ Unimplemented) ListDuplicates(w http.ResponseWriter, r *http.Request) {
 // DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 // (POST /api/duplicates/dismiss)
 func (_ Unimplemented) DismissDuplicates(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListExplorePlaces The places in the user's own photos, those with the most first
+// (GET /api/explore/places)
+func (_ Unimplemented) ListExplorePlaces(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6741,6 +6763,20 @@ func (siw *ServerInterfaceWrapper) DismissDuplicates(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
+// ListExplorePlaces operation middleware
+func (siw *ServerInterfaceWrapper) ListExplorePlaces(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListExplorePlaces(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RemoveFace operation middleware
 func (siw *ServerInterfaceWrapper) RemoveFace(w http.ResponseWriter, r *http.Request) {
 
@@ -9209,6 +9245,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/api/assets/{id}/facts", wrapper.SetAssetFacts)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/explore/places", wrapper.ListExplorePlaces)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/places", wrapper.SearchPlaces)

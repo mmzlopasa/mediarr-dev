@@ -209,6 +209,16 @@ void main() {
     await waitFor(tester, find.text('Use what the file says'));
   });
 
+  testWidgets('Explore shows the places in the library', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.text('Library').last);
+    await waitFor(tester, find.text('Explore'));
+    await tester.tap(find.text('Explore'));
+    await waitFor(tester, find.text('Hvar'));
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

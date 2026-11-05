@@ -333,6 +333,10 @@ class ApiClient {
           return EmailSettingsUpdate.fromJson(value);
         case 'Error':
           return Error.fromJson(value);
+        case 'ExplorePlace':
+          return ExplorePlace.fromJson(value);
+        case 'ExplorePlaces':
+          return ExplorePlaces.fromJson(value);
         case 'ExternalLibrary':
           return ExternalLibrary.fromJson(value);
         case 'ExternalLibraryOwner':

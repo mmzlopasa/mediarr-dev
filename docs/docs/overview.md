@@ -33,3 +33,5 @@ Smart search, faces and AI descriptions are optional. Everything else works with
 3. Follow the [first steps](/install/post-install).
 
 You can look around first at [demo.mediarr.app](https://demo.mediarr.app).
+
+**Explore** brings together the people, places and memories in your library. It is in the menu on the web and under Library in the app.

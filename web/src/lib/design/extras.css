@@ -1425,3 +1425,14 @@ video.viewer-media {
 	gap: 6px;
 	min-width: 160px;
 }
+
+.explore-part {
+	margin-bottom: 26px;
+}
+.explore-part h2 {
+	margin: 0 0 12px;
+}
+.explore-part h2 a {
+	color: inherit;
+	text-decoration: none;
+}

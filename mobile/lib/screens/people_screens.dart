@@ -33,7 +33,10 @@ List<String> filterLabels(SearchFilters filters) {
 }
 
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.initialQuery});
+
+  /// What to look for at once, when arriving from a place.
+  final String? initialQuery;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -73,6 +76,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   void initState() {
     super.initState();
+    final first = widget.initialQuery;
+    if (first != null) {
+      _query.text = first;
+      unawaited(_search());
+    }
     _session.api.getFeatures().then((features) {
       if (mounted) {
         setState(() => _askOn = features?['descriptions'] ?? false);

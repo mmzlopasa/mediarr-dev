@@ -69,6 +69,51 @@ func (q *Queries) ListGeocodePending(ctx context.Context) ([]pgtype.UUID, error)
 	return items, nil
 }
 
+const listPlacesOfUser = `-- name: ListPlacesOfUser :many
+SELECT e.city::text AS name, COALESCE(e.country, '')::text AS country, count(*) AS asset_count,
+       (array_agg(a.id ORDER BY a.local_at DESC, a.id))[1]::uuid AS cover_id
+FROM assets a
+JOIN exif e ON e.asset_id = a.id
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+  AND e.city IS NOT NULL AND e.city <> ''
+GROUP BY e.city, e.country
+ORDER BY asset_count DESC, name
+LIMIT 24
+`
+
+type ListPlacesOfUserRow struct {
+	Name       string
+	Country    string
+	AssetCount int64
+	CoverID    pgtype.UUID
+}
+
+func (q *Queries) ListPlacesOfUser(ctx context.Context, userID pgtype.UUID) ([]ListPlacesOfUserRow, error) {
+	rows, err := q.db.Query(ctx, listPlacesOfUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListPlacesOfUserRow
+	for rows.Next() {
+		var i ListPlacesOfUserRow
+		if err := rows.Scan(
+			&i.Name,
+			&i.Country,
+			&i.AssetCount,
+			&i.CoverID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const mapPoints = `-- name: MapPoints :many
 SELECT a.id, a.kind, a.local_at, e.latitude::float8 AS latitude, e.longitude::float8 AS longitude,
        COALESCE(e.city, '')::text AS city, COALESCE(e.country, '')::text AS country

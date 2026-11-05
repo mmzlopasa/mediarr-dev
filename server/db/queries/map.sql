@@ -41,3 +41,15 @@ SELECT name, state, country, lat, lon FROM places
 WHERE name ILIKE sqlc.arg('prefix')::text || '%'
 ORDER BY name, country, state
 LIMIT 8;
+
+-- name: ListPlacesOfUser :many
+SELECT e.city::text AS name, COALESCE(e.country, '')::text AS country, count(*) AS asset_count,
+       (array_agg(a.id ORDER BY a.local_at DESC, a.id))[1]::uuid AS cover_id
+FROM assets a
+JOIN exif e ON e.asset_id = a.id
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+  AND e.city IS NOT NULL AND e.city <> ''
+GROUP BY e.city, e.country
+ORDER BY asset_count DESC, name
+LIMIT 24;
