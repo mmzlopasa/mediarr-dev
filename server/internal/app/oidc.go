@@ -357,6 +357,9 @@ func (s *apiServer) FinishOIDC(w http.ResponseWriter, r *http.Request, params ap
 		http.Redirect(w, r, oidcAppScheme+"?code="+url.QueryEscape(code), http.StatusFound)
 		return
 	}
+	if s.closedForMaintenance(w, r, user.IsAdmin) {
+		return
+	}
 	if !s.deviceMaySignIn(w, r, user.Email) {
 		http.Redirect(w, r, "/login?sso=failed", http.StatusFound)
 		return
@@ -389,6 +392,9 @@ func (s *apiServer) ExchangeOIDC(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	if s.closedForMaintenance(w, r, user.IsAdmin) {
+		return
+	}
 	if !s.deviceMaySignIn(w, r, user.Email) {
 		writeError(w, http.StatusForbidden, deviceNotApproved)
 		return
@@ -414,6 +420,7 @@ func (s *apiServer) GetAuthMethods(w http.ResponseWriter, r *http.Request) {
 	}
 	out := api.AuthMethods{
 		Passkeys: passkeysAvailable(r), PasswordLogin: server.PasswordLogin, LoginMessage: server.LoginMessage,
+		Maintenance: server.Maintenance,
 	}
 	mail, err := s.loadEmail(r.Context())
 	if err != nil {

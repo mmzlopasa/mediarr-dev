@@ -131,6 +131,12 @@
 	{:else}
 		<h1 class="as-h">{tr('Dobrodošli', 'Welcome')}</h1>
 		<p class="as-p">{tr('Prijavite se svojim računom.', 'Sign in with your account.')}</p>
+		{#if methods?.maintenance}<p class="as-p login-note">
+				{tr(
+					'Poslužitelj je na održavanju. Prijaviti se mogu samo administratori.',
+					'This server is being maintained. Only administrators can sign in.'
+				)}
+			</p>{/if}
 		{#if methods?.loginMessage}<p class="as-p login-note">{methods.loginMessage}</p>{/if}
 		{#if methods?.passwordLogin !== false}<form class="as-f" autocomplete="on" onsubmit={submit}>
 				<label class="as-fl">

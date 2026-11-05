@@ -89,6 +89,7 @@ Method | HTTP request | Description
 [**getFeatures**](DefaultApi.md#getfeatures) | **GET** /api/features | Which additions the administrator has turned on
 [**getFolder**](DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
 [**getHealth**](DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
+[**getIntegrity**](DefaultApi.md#getintegrity) | **GET** /api/admin/integrity | How the originals looked when they were last checked
 [**getMapPoints**](DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 [**getMapStyle**](DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
 [**getMapTrips**](DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
@@ -155,6 +156,7 @@ Method | HTTP request | Description
 [**resumeJobQueue**](DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 [**retryJob**](DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
 [**revokeDeviceKey**](DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
+[**runIntegrity**](DefaultApi.md#runintegrity) | **POST** /api/admin/integrity | Check the originals now. This changes no file
 [**scanExternalLibrary**](DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 [**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
 [**sendTestEmail**](DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
@@ -3403,6 +3405,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getIntegrity**
+> IntegrityReport getIntegrity()
+
+How the originals looked when they were last checked
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getIntegrity();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getIntegrity: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**IntegrityReport**](IntegrityReport.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getMapPoints**
 > MapPoints getMapPoints(from, to)
 
@@ -6024,6 +6063,46 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **runIntegrity**
+> runIntegrity(integrityRun)
+
+Check the originals now. This changes no file
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final integrityRun = IntegrityRun(); // IntegrityRun | 
+
+try {
+    api_instance.runIntegrity(integrityRun);
+} catch (e) {
+    print('Exception when calling DefaultApi->runIntegrity: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **integrityRun** | [**IntegrityRun**](IntegrityRun.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

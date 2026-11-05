@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	externalScanInterval = 6 * time.Hour
-	externalScanTimeout  = 12 * time.Hour
+	externalScanTick    = time.Hour
+	externalScanTimeout = 12 * time.Hour
 	// ExternalSettleTime waits out a whole folder being copied, which fires many events.
 	ExternalSettleTime = 30 * time.Second
 	maxScanError       = 500
@@ -46,7 +46,10 @@ func isExternalMedia(path string) bool {
 }
 
 // ExternalScanArgs looks through the external library for changes.
-type ExternalScanArgs struct{}
+type ExternalScanArgs struct {
+	// Scheduled goes by the administrator's interval. A scan asked for by hand always runs.
+	Scheduled bool `json:"scheduled,omitempty"`
+}
 
 // Kind identifies the job in the queue.
 func (ExternalScanArgs) Kind() string { return "external_scan" }
@@ -68,13 +71,22 @@ func (w *externalScanWorker) Timeout(*river.Job[ExternalScanArgs]) time.Duration
 	return externalScanTimeout
 }
 
-func (w *externalScanWorker) Work(ctx context.Context, _ *river.Job[ExternalScanArgs]) error {
+func (w *externalScanWorker) Work(ctx context.Context, job *river.Job[ExternalScanArgs]) error {
 	library, err := w.queries.GetExternalLibrary(ctx)
 	if db.IsNotFound(err) {
 		return nil
 	}
 	if err != nil {
 		return err
+	}
+	if job.Args.Scheduled && library.ScanFinishedAt.Valid {
+		settings, err := LoadServerSettings(ctx, w.queries)
+		if err != nil {
+			return err
+		}
+		if !scanIsDue(library.ScanFinishedAt.Time, settings.ExternalScanHours, time.Now()) {
+			return nil
+		}
 	}
 	if err := w.queries.StartExternalScan(ctx, library.ID); err != nil {
 		return err
@@ -323,4 +335,9 @@ func watchTree(watcher *fsnotify.Watcher, root string) {
 func IsExternalAvailable(root string) bool {
 	info, err := os.Stat(root)
 	return err == nil && info.IsDir()
+}
+
+// scanIsDue says whether the administrator's interval has passed since the last scan.
+func scanIsDue(finished time.Time, hours int, now time.Time) bool {
+	return now.Sub(finished) >= time.Duration(hours)*time.Hour
 }

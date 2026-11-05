@@ -4456,6 +4456,52 @@ class DefaultApi {
     return null;
   }
 
+  /// How the originals looked when they were last checked
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getIntegrityWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/integrity';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// How the originals looked when they were last checked
+  Future<IntegrityReport?> getIntegrity() async {
+    final response = await getIntegrityWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'IntegrityReport',
+      ) as IntegrityReport;
+    }
+    return null;
+  }
+
   /// Photos with a location that this user may see, oldest first
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8126,6 +8172,55 @@ class DefaultApi {
   ) async {
     final response = await revokeDeviceKeyWithHttpInfo(
       id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Check the originals now. This changes no file
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [IntegrityRun] integrityRun (required):
+  Future<Response> runIntegrityWithHttpInfo(
+    IntegrityRun integrityRun,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/integrity';
+
+    // ignore: prefer_final_locals
+    Object? postBody = integrityRun;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Check the originals now. This changes no file
+  ///
+  /// Parameters:
+  ///
+  /// * [IntegrityRun] integrityRun (required):
+  Future<void> runIntegrity(
+    IntegrityRun integrityRun,
+  ) async {
+    final response = await runIntegrityWithHttpInfo(
+      integrityRun,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

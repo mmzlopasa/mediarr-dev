@@ -20,6 +20,7 @@ class ServerStatusCard extends ConsumerStatefulWidget {
 class _ServerStatusCardState extends ConsumerState<ServerStatusCard> {
   ServerStatus? _status;
   bool _online = true;
+  bool _maintained = false;
 
   @override
   void initState() {
@@ -36,10 +37,16 @@ class _ServerStatusCardState extends ConsumerState<ServerStatusCard> {
         setState(() {
           _status = status;
           _online = true;
+          _maintained = false;
         });
       }
-    } on ApiException {
-      if (mounted) setState(() => _online = false);
+    } on ApiException catch (cause) {
+      if (mounted) {
+        setState(() {
+          _online = false;
+          _maintained = cause.code == 503;
+        });
+      }
     }
   }
 
@@ -73,12 +80,20 @@ class _ServerStatusCardState extends ConsumerState<ServerStatusCard> {
             Icon(
               Icons.circle,
               size: 9,
-              color: _online ? Palette.ok : Palette.err,
+              color: _online
+                  ? Palette.ok
+                  : _maintained
+                  ? Palette.gold
+                  : Palette.err,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _online ? 'Server online' : 'Server offline',
+                _online
+                    ? 'Server online'
+                    : _maintained
+                    ? 'Server is being maintained'
+                    : 'Server offline',
                 style: text.bodyMedium,
               ),
             ),

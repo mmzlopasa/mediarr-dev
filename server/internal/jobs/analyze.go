@@ -70,6 +70,7 @@ type analyzeWorker struct {
 }
 
 func (w *analyzeWorker) Work(ctx context.Context, job *river.Job[AnalyzeArgs]) error {
+	refreshMedia(ctx, w.queries)
 	id := toPG(job.Args.AssetID)
 	var owner pgtype.UUID
 	before := int64(-1)
@@ -159,7 +160,7 @@ func AnalyzeAsset(ctx context.Context, pool beginner, q *db.Queries, client *ml.
 }
 
 func usableFace(face *ml.Face) bool {
-	return face.Score >= minFaceScore &&
+	return face.Score >= currentMedia().FaceMinScore &&
 		face.Box[2]-face.Box[0] >= minFaceSide && face.Box[3]-face.Box[1] >= minFaceSide
 }
 
@@ -276,7 +277,7 @@ func storeFace(ctx context.Context, q *db.Queries, asset *db.Asset, face *ml.Fac
 		return nil
 	}
 	vector := ml.Vector(face.Embedding)
-	near, err := q.PeopleNearFace(ctx, db.PeopleNearFaceParams{Embedding: vector, UserID: asset.UserID, MaxDistance: sameFaceDistance})
+	near, err := q.PeopleNearFace(ctx, db.PeopleNearFaceParams{Embedding: vector, UserID: asset.UserID, MaxDistance: float64(currentMedia().FaceMaxDistance)})
 	if err != nil {
 		return err
 	}

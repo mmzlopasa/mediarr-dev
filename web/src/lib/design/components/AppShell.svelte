@@ -63,7 +63,11 @@
 		}
 	}
 
+	let maintained = $state(false);
+
 	onMount(() => {
+		const onMaintenance = () => (maintained = true);
+		window.addEventListener('mediarr:maintenance', onMaintenance);
 		try {
 			const saved: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? '[]');
 			if (Array.isArray(saved)) {
@@ -206,6 +210,14 @@
 			</div>
 		</header>
 		<main id="main" class="main" tabindex="-1">
+			{#if maintained}
+				<p class="maintenance" role="status">
+					{tr(
+						'Poslužitelj je na održavanju. Pokušajte ponovo kasnije.',
+						'This server is being maintained. Try again later.'
+					)}
+				</p>
+			{/if}
 			{@render children()}
 		</main>
 		<footer class="foot">© {new Date().getFullYear()} Mediarr · {footLabel}</footer>

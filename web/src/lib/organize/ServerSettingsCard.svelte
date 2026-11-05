@@ -75,6 +75,66 @@
 				<input type="checkbox" bind:checked={settings.passwordLogin} />
 				{tr('Dopusti prijavu lozinkom', 'Allow signing in with a password')}
 			</label>
+			<label>
+				<input type="checkbox" bind:checked={settings.maintenance} />
+				{tr(
+					'Način održavanja: poslužitelj mogu koristiti samo administratori',
+					'Maintenance mode: only administrators can use the server'
+				)}
+			</label>
+			<label>
+				{tr('Koliko lice mora biti sigurno (0,1–1)', 'How sure a face must be (0.1–1)')}
+				<input
+					class="in"
+					type="number"
+					min="0.1"
+					max="1"
+					step="0.05"
+					bind:value={settings.faceMinScore}
+				/>
+			</label>
+			<label>
+				{tr(
+					'Koliko slična lica su ista osoba (0,1–2, manje je strože)',
+					'How alike faces must be to be one person (0.1–2, lower is stricter)'
+				)}
+				<input
+					class="in"
+					type="number"
+					min="0.1"
+					max="2"
+					step="0.05"
+					bind:value={settings.faceMaxDistance}
+				/>
+			</label>
+			<label>
+				{tr(
+					'Skeniranje vanjske biblioteke, svakih koliko sati',
+					'Scan the external library every this many hours'
+				)}
+				<input class="in" type="number" min="1" max="720" bind:value={settings.externalScanHours} />
+			</label>
+			<p class="alb-meta">
+				{tr(
+					'Broj poslova vrijedi nakon ponovnog pokretanja workera. Veći broj brže radi i troši više memorije.',
+					'The number of jobs applies after the worker restarts. More is faster and uses more memory.'
+				)}
+			</p>
+			<label>
+				{tr(
+					'Pozadinskih poslova (0 je vrijednost iz .env)',
+					'Background jobs (0 uses the value from .env)'
+				)}
+				<input class="in" type="number" min="0" max="64" bind:value={settings.workerConcurrency} />
+			</label>
+			<label>
+				{tr('Videa odjednom', 'Videos at a time')}
+				<input class="in" type="number" min="1" max="16" bind:value={settings.videoWorkers} />
+			</label>
+			<label>
+				{tr('Analiza odjednom', 'Analyses at a time')}
+				<input class="in" type="number" min="1" max="16" bind:value={settings.analysisWorkers} />
+			</label>
 			<p class="alb-meta">
 				{tr(
 					'Ako se zaključate: docker compose exec server /mediarr security reset',

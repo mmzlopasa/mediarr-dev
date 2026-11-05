@@ -165,7 +165,14 @@ func worker(ctx context.Context, cfg config.Config) error {
 	if err := jobs.ReleaseInterrupted(ctx, pool); err != nil {
 		return err
 	}
-	client, err := jobs.NewWorker(pool, jobs.Options{MLURL: cfg.MLURL, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, DatabaseURL: cfg.DatabaseURL, VideoAccel: cfg.VideoAccel})
+	settings, err := jobs.LoadServerSettings(ctx, db.New(pool))
+	if err != nil {
+		return err
+	}
+	if settings.WorkerConcurrency > 0 {
+		cfg.WorkerConcurrency = settings.WorkerConcurrency
+	}
+	client, err := jobs.NewWorker(pool, jobs.Options{VideoWorkers: settings.VideoWorkers, AnalysisWorkers: settings.AnalysisWorkers, MLURL: cfg.MLURL, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, DatabaseURL: cfg.DatabaseURL, VideoAccel: cfg.VideoAccel})
 	if err != nil {
 		return fmt.Errorf("create worker: %w", err)
 	}

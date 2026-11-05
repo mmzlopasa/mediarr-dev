@@ -316,6 +316,9 @@ func (s *apiServer) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.userLimiter.Reset(userKey)
+	if s.closedForMaintenance(w, r, user.IsAdmin) {
+		return
+	}
 	if !s.deviceMaySignIn(w, r, email) {
 		writeError(w, http.StatusForbidden, deviceNotApproved)
 		return

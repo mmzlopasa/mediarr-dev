@@ -497,6 +497,27 @@ func (e ImportEntryStatus) Valid() bool {
 	}
 }
 
+// Defines values for IntegrityProblemProblem.
+const (
+	Changed    IntegrityProblemProblem = "changed"
+	Missing    IntegrityProblemProblem = "missing"
+	Unreadable IntegrityProblemProblem = "unreadable"
+)
+
+// Valid indicates whether the value is a known member of the IntegrityProblemProblem enum.
+func (e IntegrityProblemProblem) Valid() bool {
+	switch e {
+	case Changed:
+		return true
+	case Missing:
+		return true
+	case Unreadable:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MemberRoleRole.
 const (
 	MemberRoleRoleContributor MemberRoleRole = "contributor"
@@ -1280,6 +1301,7 @@ type AuditEntry struct {
 // AuthMethods defines model for AuthMethods.
 type AuthMethods struct {
 	LoginMessage string `json:"loginMessage"`
+	Maintenance  bool   `json:"maintenance"`
 
 	// Passkeys This address can use passkeys: HTTPS and a domain name
 	Passkeys      bool `json:"passkeys"`
@@ -1630,6 +1652,31 @@ type ImportEntrySource string
 // ImportEntryStatus defines model for ImportEntry.Status.
 type ImportEntryStatus string
 
+// IntegrityProblem defines model for IntegrityProblem.
+type IntegrityProblem struct {
+	Name    string                  `json:"name"`
+	Path    string                  `json:"path"`
+	Problem IntegrityProblemProblem `json:"problem"`
+}
+
+// IntegrityProblemProblem defines model for IntegrityProblem.Problem.
+type IntegrityProblemProblem string
+
+// IntegrityReport defines model for IntegrityReport.
+type IntegrityReport struct {
+	Checked    int64              `json:"checked"`
+	FinishedAt *time.Time         `json:"finishedAt,omitempty"`
+	Problems   []IntegrityProblem `json:"problems"`
+	Thorough   bool               `json:"thorough"`
+	Total      int64              `json:"total"`
+}
+
+// IntegrityRun defines model for IntegrityRun.
+type IntegrityRun struct {
+	// Thorough Also read each file and compare its checksum
+	Thorough bool `json:"thorough"`
+}
+
 // JobQueue defines model for JobQueue.
 type JobQueue struct {
 	Name    string `json:"name"`
@@ -1883,15 +1930,33 @@ type SecurityUpdate struct {
 
 // ServerSettings defines model for ServerSettings.
 type ServerSettings struct {
-	ImageQuality   int    `json:"imageQuality"`
-	LoginMessage   string `json:"loginMessage"`
-	PasswordLogin  bool   `json:"passwordLogin"`
-	PreviewSize    int    `json:"previewSize"`
-	TrashDays      int    `json:"trashDays"`
-	VideoMaxHeight int    `json:"videoMaxHeight"`
+	// AnalysisWorkers Applies after a restart of the worker
+	AnalysisWorkers   int `json:"analysisWorkers"`
+	ExternalScanHours int `json:"externalScanHours"`
+
+	// FaceMaxDistance How alike two faces must be to be one person
+	FaceMaxDistance float32 `json:"faceMaxDistance"`
+
+	// FaceMinScore How sure a face must be
+	FaceMinScore float32 `json:"faceMinScore"`
+	ImageQuality int     `json:"imageQuality"`
+	LoginMessage string  `json:"loginMessage"`
+
+	// Maintenance Only administrators can use the server
+	Maintenance    bool `json:"maintenance"`
+	PasswordLogin  bool `json:"passwordLogin"`
+	PreviewSize    int  `json:"previewSize"`
+	TrashDays      int  `json:"trashDays"`
+	VideoMaxHeight int  `json:"videoMaxHeight"`
 
 	// VideoQuality Lower is better and larger
 	VideoQuality int `json:"videoQuality"`
+
+	// VideoWorkers Applies after a restart of the worker
+	VideoWorkers int `json:"videoWorkers"`
+
+	// WorkerConcurrency 0 uses WORKER_CONCURRENCY. Applies after a restart of the worker
+	WorkerConcurrency int `json:"workerConcurrency"`
 }
 
 // ServerStatus defines model for ServerStatus.
@@ -2316,6 +2381,9 @@ type SetFeatureJSONRequestBody = FeatureUpdate
 // CreateImportJSONRequestBody defines body for CreateImport for application/json ContentType.
 type CreateImportJSONRequestBody = ImportCreate
 
+// RunIntegrityJSONRequestBody defines body for RunIntegrity for application/json ContentType.
+type RunIntegrityJSONRequestBody = IntegrityRun
+
 // SetOIDCSettingsJSONRequestBody defines body for SetOIDCSettings for application/json ContentType.
 type SetOIDCSettingsJSONRequestBody = OIDCSettingsUpdate
 
@@ -2516,6 +2584,12 @@ type ServerInterface interface {
 	// CancelImport Stop an import. What it has brought in stays
 	// (POST /api/admin/imports/{id}/cancel)
 	CancelImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetIntegrity How the originals looked when they were last checked
+	// (GET /api/admin/integrity)
+	GetIntegrity(w http.ResponseWriter, r *http.Request)
+	// RunIntegrity Check the originals now. This changes no file
+	// (POST /api/admin/integrity)
+	RunIntegrity(w http.ResponseWriter, r *http.Request)
 	// GetAdminJobs The job queues, and the jobs that gave up
 	// (GET /api/admin/jobs)
 	GetAdminJobs(w http.ResponseWriter, r *http.Request)
@@ -3113,6 +3187,18 @@ func (_ Unimplemented) CreateImport(w http.ResponseWriter, r *http.Request) {
 // CancelImport Stop an import. What it has brought in stays
 // (POST /api/admin/imports/{id}/cancel)
 func (_ Unimplemented) CancelImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetIntegrity How the originals looked when they were last checked
+// (GET /api/admin/integrity)
+func (_ Unimplemented) GetIntegrity(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RunIntegrity Check the originals now. This changes no file
+// (POST /api/admin/integrity)
+func (_ Unimplemented) RunIntegrity(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4428,6 +4514,34 @@ func (siw *ServerInterfaceWrapper) CancelImport(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CancelImport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetIntegrity operation middleware
+func (siw *ServerInterfaceWrapper) GetIntegrity(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetIntegrity(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RunIntegrity operation middleware
+func (siw *ServerInterfaceWrapper) RunIntegrity(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RunIntegrity(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8532,6 +8646,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/auth/password/reset", wrapper.ResetPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/integrity", wrapper.GetIntegrity)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/integrity", wrapper.RunIntegrity)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/security", wrapper.GetSecurity)

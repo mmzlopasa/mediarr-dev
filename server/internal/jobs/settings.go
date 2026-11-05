@@ -20,13 +20,22 @@ type ServerSettings struct {
 	VideoMaxHeight int    `json:"videoMaxHeight"`
 	LoginMessage   string `json:"loginMessage"`
 	PasswordLogin  bool   `json:"passwordLogin"`
+	Maintenance    bool   `json:"maintenance"`
+
+	FaceMinScore      float32 `json:"faceMinScore"`
+	FaceMaxDistance   float32 `json:"faceMaxDistance"`
+	WorkerConcurrency int     `json:"workerConcurrency"`
+	VideoWorkers      int     `json:"videoWorkers"`
+	AnalysisWorkers   int     `json:"analysisWorkers"`
+	ExternalScanHours int     `json:"externalScanHours"`
 }
 
 // DefaultServerSettings are what a new installation uses.
 func DefaultServerSettings() ServerSettings {
 	return ServerSettings{
 		TrashDays: 30, ImageQuality: 82, PreviewSize: thumbLarge, VideoQuality: 26,
-		VideoMaxHeight: 1080, PasswordLogin: true,
+		VideoMaxHeight: 1080, PasswordLogin: true, FaceMinScore: minFaceScore, FaceMaxDistance: sameFaceDistance,
+		VideoWorkers: 1, AnalysisWorkers: 1, ExternalScanHours: 6,
 	}
 }
 

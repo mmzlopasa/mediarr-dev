@@ -134,6 +134,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 	r.Use(sameOriginWrites)
 	if server.queries != nil {
 		r.Use(server.loadUser)
+		r.Use(server.enforceMaintenance)
 		r.Use(server.demoReadOnly)
 		r.Use(server.limitAndAudit)
 	}

@@ -1330,3 +1330,16 @@ video.viewer-media {
 .login-note {
 	white-space: pre-line;
 }
+
+.maintenance {
+	margin: 0 0 12px;
+	padding: 10px 14px;
+	border-radius: 12px;
+	background: rgba(224, 170, 62, 0.14);
+}
+
+.integrity-run {
+	display: flex;
+	gap: 8px;
+	margin-top: 12px;
+}

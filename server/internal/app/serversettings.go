@@ -16,7 +16,10 @@ func settingsToAPI(in *jobs.ServerSettings) api.ServerSettings {
 	return api.ServerSettings{
 		TrashDays: in.TrashDays, ImageQuality: in.ImageQuality, PreviewSize: in.PreviewSize,
 		VideoQuality: in.VideoQuality, VideoMaxHeight: in.VideoMaxHeight,
-		LoginMessage: in.LoginMessage, PasswordLogin: in.PasswordLogin,
+		LoginMessage: in.LoginMessage, PasswordLogin: in.PasswordLogin, Maintenance: in.Maintenance,
+		FaceMinScore: in.FaceMinScore, FaceMaxDistance: in.FaceMaxDistance,
+		WorkerConcurrency: in.WorkerConcurrency, VideoWorkers: in.VideoWorkers,
+		AnalysisWorkers: in.AnalysisWorkers, ExternalScanHours: in.ExternalScanHours,
 	}
 }
 
@@ -53,6 +56,16 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 		problem = "video quality must be between 18 and 40, where lower is better"
 	case body.VideoMaxHeight != 720 && body.VideoMaxHeight != 1080 && body.VideoMaxHeight != 1440 && body.VideoMaxHeight != 2160:
 		problem = "the largest video must be 720, 1080, 1440 or 2160"
+	case body.FaceMinScore < 0.1 || body.FaceMinScore > 1:
+		problem = "how sure a face must be is between 0.1 and 1"
+	case body.FaceMaxDistance < 0.1 || body.FaceMaxDistance > 2:
+		problem = "how alike two faces must be is between 0.1 and 2"
+	case body.WorkerConcurrency < 0 || body.WorkerConcurrency > 64:
+		problem = "background jobs must be between 0 and 64"
+	case body.VideoWorkers < 1 || body.VideoWorkers > 16 || body.AnalysisWorkers < 1 || body.AnalysisWorkers > 16:
+		problem = "video and analysis jobs must be between 1 and 16"
+	case body.ExternalScanHours < 1 || body.ExternalScanHours > 720:
+		problem = "the scan interval must be between 1 and 720 hours"
 	case len(body.LoginMessage) > maxLoginMessage:
 		problem = "the sign-in message is too long"
 	}
@@ -75,7 +88,10 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(jobs.ServerSettings{
 		TrashDays: body.TrashDays, ImageQuality: body.ImageQuality, PreviewSize: body.PreviewSize,
 		VideoQuality: body.VideoQuality, VideoMaxHeight: body.VideoMaxHeight,
-		LoginMessage: body.LoginMessage, PasswordLogin: body.PasswordLogin,
+		LoginMessage: body.LoginMessage, PasswordLogin: body.PasswordLogin, Maintenance: body.Maintenance,
+		FaceMinScore: body.FaceMinScore, FaceMaxDistance: body.FaceMaxDistance,
+		WorkerConcurrency: body.WorkerConcurrency, VideoWorkers: body.VideoWorkers,
+		AnalysisWorkers: body.AnalysisWorkers, ExternalScanHours: body.ExternalScanHours,
 	})
 	if err != nil {
 		internalError(w, r, err)
@@ -85,5 +101,6 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	s.security.Store(nil)
 	writeJSON(w, http.StatusOK, body)
 }

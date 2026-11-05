@@ -1,20 +1,42 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api, formatBytes, type AdminHealth } from '#lib/api.ts';
+	import { api, formatBytes, type AdminHealth, type IntegrityReport } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Badge from '#lib/design/components/Badge.svelte';
 	import Card from '#lib/design/components/Card.svelte';
 	import Kv from '#lib/design/components/Kv.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
+	import Button from '#lib/design/components/Button.svelte';
+	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import { liveOverview } from '#lib/overview.svelte.ts';
 
 	const overview = liveOverview();
 	let health = $state<AdminHealth>();
+	let integrity = $state<IntegrityReport>();
+	let started = $state(false);
+	const problemNames = $derived({
+		missing: tr('nedostaje', 'missing'),
+		unreadable: tr('ne može se pročitati', 'cannot be read'),
+		changed: tr('promijenjena', 'changed')
+	});
+
+	async function runIntegrity(thorough: boolean) {
+		try {
+			await api.runIntegrity(thorough);
+			started = true;
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Nije pokrenuto.', 'Not started.')
+			);
+		}
+	}
 
 	onMount(async () => {
 		try {
 			health = await api.adminHealth();
+			integrity = await api.integrity();
 		} catch {
 			health = undefined;
 		}
@@ -64,3 +86,39 @@
 {:else if !overview.failed}
 	<Skeleton height="220px" />
 {/if}
+
+<Card title={tr('Provjera originala', 'Check the originals')}>
+	<p class="alb-meta">
+		{tr(
+			'Provjera ne mijenja nijednu datoteku. Temeljita čita svaku datoteku i traje koliko i čitanje cijele biblioteke.',
+			'A check changes no file. A thorough one reads every file and takes as long as reading the whole library.'
+		)}
+	</p>
+	{#if integrity?.finishedAt}
+		<Kv
+			label={tr('Zadnja provjera', 'Last check')}
+			value={new Date(integrity.finishedAt).toLocaleString()}
+		/>
+		<Kv label={tr('Provjereno', 'Checked')} value={String(integrity.checked)} />
+		<Kv label={tr('Problema', 'Problems')} value={String(integrity.total)} />
+		{#each integrity.problems as problem (problem.path)}
+			<Kv label={problemNames[problem.problem]} value={problem.path} />
+		{/each}
+	{:else if integrity}
+		<p class="alb-meta">{tr('Još nije provjereno.', 'Not checked yet.')}</p>
+	{/if}
+	{#if started}
+		<p class="alb-meta" role="status">
+			{tr(
+				'Pokrenuto. Izvještaj će biti ovdje kad završi.',
+				'Started. The report will be here when it finishes.'
+			)}
+		</p>
+	{/if}
+	<div class="integrity-run">
+		<Button variant="gold" small onclick={() => runIntegrity(false)}
+			>{tr('Provjeri sada', 'Check now')}</Button
+		>
+		<Button small onclick={() => runIntegrity(true)}>{tr('Temeljito', 'Thoroughly')}</Button>
+	</div>
+</Card>

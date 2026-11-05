@@ -13,12 +13,15 @@ part of openapi.api;
 class AuthMethods {
   /// Returns a new [AuthMethods] instance.
   AuthMethods({
+    required this.maintenance,
     required this.passwordReset,
     required this.passwordLogin,
     required this.loginMessage,
     required this.passkeys,
     this.ssoLabel,
   });
+
+  bool maintenance;
 
   /// A forgotten password can be reset by email
   bool passwordReset;
@@ -43,6 +46,7 @@ class AuthMethods {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is AuthMethods &&
+          other.maintenance == maintenance &&
           other.passwordReset == passwordReset &&
           other.passwordLogin == passwordLogin &&
           other.loginMessage == loginMessage &&
@@ -52,6 +56,7 @@ class AuthMethods {
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
+      (maintenance.hashCode) +
       (passwordReset.hashCode) +
       (passwordLogin.hashCode) +
       (loginMessage.hashCode) +
@@ -60,10 +65,11 @@ class AuthMethods {
 
   @override
   String toString() =>
-      'AuthMethods[passwordReset=$passwordReset, passwordLogin=$passwordLogin, loginMessage=$loginMessage, passkeys=$passkeys, ssoLabel=$ssoLabel]';
+      'AuthMethods[maintenance=$maintenance, passwordReset=$passwordReset, passwordLogin=$passwordLogin, loginMessage=$loginMessage, passkeys=$passkeys, ssoLabel=$ssoLabel]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+    json[r'maintenance'] = this.maintenance;
     json[r'passwordReset'] = this.passwordReset;
     json[r'passwordLogin'] = this.passwordLogin;
     json[r'loginMessage'] = this.loginMessage;
@@ -97,6 +103,7 @@ class AuthMethods {
       }());
 
       return AuthMethods(
+        maintenance: mapValueOfType<bool>(json, r'maintenance')!,
         passwordReset: mapValueOfType<bool>(json, r'passwordReset')!,
         passwordLogin: mapValueOfType<bool>(json, r'passwordLogin')!,
         loginMessage: mapValueOfType<String>(json, r'loginMessage')!,
@@ -158,6 +165,7 @@ class AuthMethods {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
+    'maintenance',
     'passwordReset',
     'passwordLogin',
     'loginMessage',

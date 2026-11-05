@@ -1720,6 +1720,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/integrity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How the originals looked when they were last checked */
+        get: operations["getIntegrity"];
+        put?: never;
+        /** Check the originals now. This changes no file */
+        post: operations["runIntegrity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/security": {
         parameters: {
             query?: never;
@@ -2754,6 +2772,7 @@ export interface components {
             bytes: number;
         };
         AuthMethods: {
+            maintenance: boolean;
             /** @description A forgotten password can be reset by email */
             passwordReset: boolean;
             passwordLogin: boolean;
@@ -3347,6 +3366,26 @@ export interface components {
             /** Format: int64 */
             bytes: number;
         };
+        IntegrityRun: {
+            /** @description Also read each file and compare its checksum */
+            thorough: boolean;
+        };
+        IntegrityProblem: {
+            name: string;
+            path: string;
+            /** @enum {string} */
+            problem: "missing" | "unreadable" | "changed";
+        };
+        IntegrityReport: {
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            checked: number;
+            thorough: boolean;
+            /** Format: int64 */
+            total: number;
+            problems: components["schemas"]["IntegrityProblem"][];
+        };
         ServerSettings: {
             trashDays: number;
             imageQuality: number;
@@ -3356,6 +3395,25 @@ export interface components {
             videoMaxHeight: number;
             loginMessage: string;
             passwordLogin: boolean;
+            /** @description Only administrators can use the server */
+            maintenance: boolean;
+            /**
+             * Format: float
+             * @description How sure a face must be
+             */
+            faceMinScore: number;
+            /**
+             * Format: float
+             * @description How alike two faces must be to be one person
+             */
+            faceMaxDistance: number;
+            /** @description 0 uses WORKER_CONCURRENCY. Applies after a restart of the worker */
+            workerConcurrency: number;
+            /** @description Applies after a restart of the worker */
+            videoWorkers: number;
+            /** @description Applies after a restart of the worker */
+            analysisWorkers: number;
+            externalScanHours: number;
         };
         EmailSettings: {
             enabled: boolean;
@@ -6446,6 +6504,52 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Error"];
+        };
+    };
+    getIntegrity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrityReport"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    runIntegrity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntegrityRun"];
+            };
+        };
+        responses: {
+            /** @description Started */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     getSecurity: {

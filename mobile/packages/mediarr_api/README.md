@@ -140,6 +140,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getFeatures**](doc//DefaultApi.md#getfeatures) | **GET** /api/features | Which additions the administrator has turned on
 *DefaultApi* | [**getFolder**](doc//DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
+*DefaultApi* | [**getIntegrity**](doc//DefaultApi.md#getintegrity) | **GET** /api/admin/integrity | How the originals looked when they were last checked
 *DefaultApi* | [**getMapPoints**](doc//DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 *DefaultApi* | [**getMapStyle**](doc//DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
 *DefaultApi* | [**getMapTrips**](doc//DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
@@ -206,6 +207,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**resumeJobQueue**](doc//DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 *DefaultApi* | [**retryJob**](doc//DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
 *DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
+*DefaultApi* | [**runIntegrity**](doc//DefaultApi.md#runintegrity) | **POST** /api/admin/integrity | Check the originals now. This changes no file
 *DefaultApi* | [**scanExternalLibrary**](doc//DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 *DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
 *DefaultApi* | [**sendTestEmail**](doc//DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
@@ -301,6 +303,9 @@ Class | Method | HTTP request | Description
  - [Health](doc//Health.md)
  - [ImportCreate](doc//ImportCreate.md)
  - [ImportEntry](doc//ImportEntry.md)
+ - [IntegrityProblem](doc//IntegrityProblem.md)
+ - [IntegrityReport](doc//IntegrityReport.md)
+ - [IntegrityRun](doc//IntegrityRun.md)
  - [JobQueue](doc//JobQueue.md)
  - [LinkPassword](doc//LinkPassword.md)
  - [LoginError](doc//LoginError.md)

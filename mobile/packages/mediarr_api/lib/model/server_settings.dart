@@ -20,6 +20,13 @@ class ServerSettings {
     required this.videoMaxHeight,
     required this.loginMessage,
     required this.passwordLogin,
+    required this.maintenance,
+    required this.faceMinScore,
+    required this.faceMaxDistance,
+    required this.workerConcurrency,
+    required this.videoWorkers,
+    required this.analysisWorkers,
+    required this.externalScanHours,
   });
 
   int trashDays;
@@ -37,6 +44,26 @@ class ServerSettings {
 
   bool passwordLogin;
 
+  /// Only administrators can use the server
+  bool maintenance;
+
+  /// How sure a face must be
+  double faceMinScore;
+
+  /// How alike two faces must be to be one person
+  double faceMaxDistance;
+
+  /// 0 uses WORKER_CONCURRENCY. Applies after a restart of the worker
+  int workerConcurrency;
+
+  /// Applies after a restart of the worker
+  int videoWorkers;
+
+  /// Applies after a restart of the worker
+  int analysisWorkers;
+
+  int externalScanHours;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -47,7 +74,14 @@ class ServerSettings {
           other.videoQuality == videoQuality &&
           other.videoMaxHeight == videoMaxHeight &&
           other.loginMessage == loginMessage &&
-          other.passwordLogin == passwordLogin;
+          other.passwordLogin == passwordLogin &&
+          other.maintenance == maintenance &&
+          other.faceMinScore == faceMinScore &&
+          other.faceMaxDistance == faceMaxDistance &&
+          other.workerConcurrency == workerConcurrency &&
+          other.videoWorkers == videoWorkers &&
+          other.analysisWorkers == analysisWorkers &&
+          other.externalScanHours == externalScanHours;
 
   @override
   int get hashCode =>
@@ -58,11 +92,18 @@ class ServerSettings {
       (videoQuality.hashCode) +
       (videoMaxHeight.hashCode) +
       (loginMessage.hashCode) +
-      (passwordLogin.hashCode);
+      (passwordLogin.hashCode) +
+      (maintenance.hashCode) +
+      (faceMinScore.hashCode) +
+      (faceMaxDistance.hashCode) +
+      (workerConcurrency.hashCode) +
+      (videoWorkers.hashCode) +
+      (analysisWorkers.hashCode) +
+      (externalScanHours.hashCode);
 
   @override
   String toString() =>
-      'ServerSettings[trashDays=$trashDays, imageQuality=$imageQuality, previewSize=$previewSize, videoQuality=$videoQuality, videoMaxHeight=$videoMaxHeight, loginMessage=$loginMessage, passwordLogin=$passwordLogin]';
+      'ServerSettings[trashDays=$trashDays, imageQuality=$imageQuality, previewSize=$previewSize, videoQuality=$videoQuality, videoMaxHeight=$videoMaxHeight, loginMessage=$loginMessage, passwordLogin=$passwordLogin, maintenance=$maintenance, faceMinScore=$faceMinScore, faceMaxDistance=$faceMaxDistance, workerConcurrency=$workerConcurrency, videoWorkers=$videoWorkers, analysisWorkers=$analysisWorkers, externalScanHours=$externalScanHours]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -73,6 +114,13 @@ class ServerSettings {
     json[r'videoMaxHeight'] = this.videoMaxHeight;
     json[r'loginMessage'] = this.loginMessage;
     json[r'passwordLogin'] = this.passwordLogin;
+    json[r'maintenance'] = this.maintenance;
+    json[r'faceMinScore'] = this.faceMinScore;
+    json[r'faceMaxDistance'] = this.faceMaxDistance;
+    json[r'workerConcurrency'] = this.workerConcurrency;
+    json[r'videoWorkers'] = this.videoWorkers;
+    json[r'analysisWorkers'] = this.analysisWorkers;
+    json[r'externalScanHours'] = this.externalScanHours;
     return json;
   }
 
@@ -104,6 +152,13 @@ class ServerSettings {
         videoMaxHeight: mapValueOfType<int>(json, r'videoMaxHeight')!,
         loginMessage: mapValueOfType<String>(json, r'loginMessage')!,
         passwordLogin: mapValueOfType<bool>(json, r'passwordLogin')!,
+        maintenance: mapValueOfType<bool>(json, r'maintenance')!,
+        faceMinScore: mapValueOfType<double>(json, r'faceMinScore')!,
+        faceMaxDistance: mapValueOfType<double>(json, r'faceMaxDistance')!,
+        workerConcurrency: mapValueOfType<int>(json, r'workerConcurrency')!,
+        videoWorkers: mapValueOfType<int>(json, r'videoWorkers')!,
+        analysisWorkers: mapValueOfType<int>(json, r'analysisWorkers')!,
+        externalScanHours: mapValueOfType<int>(json, r'externalScanHours')!,
       );
     }
     return null;
@@ -167,5 +222,12 @@ class ServerSettings {
     'videoMaxHeight',
     'loginMessage',
     'passwordLogin',
+    'maintenance',
+    'faceMinScore',
+    'faceMaxDistance',
+    'workerConcurrency',
+    'videoWorkers',
+    'analysisWorkers',
+    'externalScanHours',
   };
 }

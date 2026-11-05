@@ -351,6 +351,12 @@ class ApiClient {
           return ImportCreate.fromJson(value);
         case 'ImportEntry':
           return ImportEntry.fromJson(value);
+        case 'IntegrityProblem':
+          return IntegrityProblem.fromJson(value);
+        case 'IntegrityReport':
+          return IntegrityReport.fromJson(value);
+        case 'IntegrityRun':
+          return IntegrityRun.fromJson(value);
         case 'JobQueue':
           return JobQueue.fromJson(value);
         case 'LinkPassword':

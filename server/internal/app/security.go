@@ -45,6 +45,7 @@ type securityRules struct {
 	ipEnabled      bool
 	allowed        []netip.Prefix
 	deviceApproval bool
+	maintenance    bool
 }
 
 // parseAllowlist reads addresses and networks, such as 192.168.1.20 or 192.168.1.0/24.
@@ -100,8 +101,13 @@ func (s *apiServer) loadSecurity(ctx context.Context) (*securityRules, error) {
 	if err != nil {
 		return nil, err
 	}
+	server, err := jobs.LoadServerSettings(ctx, s.queries)
+	if err != nil {
+		return nil, err
+	}
 	rules := &securityRules{
-		loaded: time.Now(), ipEnabled: enabled == "1", allowed: allowed, deviceApproval: device == "1",
+		maintenance: server.Maintenance,
+		loaded:      time.Now(), ipEnabled: enabled == "1", allowed: allowed, deviceApproval: device == "1",
 	}
 	s.security.Store(rules)
 	return rules, nil
@@ -147,6 +153,43 @@ func limitedAgent(r *http.Request) string {
 		return agent[:maxUserAgent]
 	}
 	return agent
+}
+
+const underMaintenance = "this server is being maintained; try again later"
+
+// enforceMaintenance leaves only what an administrator needs to sign in and turn it off.
+func (s *apiServer) enforceMaintenance(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if !strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/api/auth/") || path == "/api/health" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		rules, err := s.securityRules(r.Context())
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		if user := currentUser(r); rules.maintenance && (user == nil || !user.IsAdmin) {
+			writeError(w, http.StatusServiceUnavailable, underMaintenance)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// closedForMaintenance turns away everyone who could not turn maintenance off.
+func (s *apiServer) closedForMaintenance(w http.ResponseWriter, r *http.Request, isAdmin bool) bool {
+	rules, err := s.securityRules(r.Context())
+	if err != nil {
+		internalError(w, r, err)
+		return true
+	}
+	if rules.maintenance && !isAdmin {
+		writeError(w, http.StatusForbidden, underMaintenance)
+		return true
+	}
+	return false
 }
 
 func (s *apiServer) recordSecurity(r *http.Request, kind, email, detail string) {
@@ -363,6 +406,7 @@ func ResetSecurity(ctx context.Context, q *db.Queries) error {
 		return err
 	}
 	settings.PasswordLogin = true
+	settings.Maintenance = false
 	data, err := json.Marshal(settings)
 	if err != nil {
 		return err

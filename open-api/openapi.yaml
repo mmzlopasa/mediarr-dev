@@ -1588,6 +1588,30 @@ paths:
       responses:
         "204": { description: Set }
         "400": { $ref: "#/components/responses/Error" }
+  /api/admin/integrity:
+    get:
+      operationId: getIntegrity
+      summary: How the originals looked when they were last checked
+      responses:
+        "200":
+          description: The report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IntegrityReport" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: runIntegrity
+      summary: Check the originals now. This changes no file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/IntegrityRun" }
+      responses:
+        "202": { description: Started }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/admin/security:
     get:
       operationId: getSecurity
@@ -2557,8 +2581,9 @@ components:
         bytes: { type: integer, format: int64 }
     AuthMethods:
       type: object
-      required: [passkeys, passwordLogin, loginMessage, passwordReset]
+      required: [passkeys, passwordLogin, loginMessage, passwordReset, maintenance]
       properties:
+        maintenance: { type: boolean }
         passwordReset: { type: boolean, description: "A forgotten password can be reset by email" }
         passwordLogin: { type: boolean }
         loginMessage: { type: string }
@@ -3186,9 +3211,30 @@ components:
         trashed: { type: integer, format: int64 }
         albums: { type: integer, format: int64 }
         bytes: { type: integer, format: int64 }
+    IntegrityRun:
+      type: object
+      required: [thorough]
+      properties:
+        thorough: { type: boolean, description: "Also read each file and compare its checksum" }
+    IntegrityProblem:
+      type: object
+      required: [name, path, problem]
+      properties:
+        name: { type: string }
+        path: { type: string }
+        problem: { type: string, enum: [missing, unreadable, changed] }
+    IntegrityReport:
+      type: object
+      required: [checked, thorough, total, problems]
+      properties:
+        finishedAt: { type: string, format: date-time }
+        checked: { type: integer, format: int64 }
+        thorough: { type: boolean }
+        total: { type: integer, format: int64 }
+        problems: { type: array, items: { $ref: "#/components/schemas/IntegrityProblem" } }
     ServerSettings:
       type: object
-      required: [trashDays, imageQuality, previewSize, videoQuality, videoMaxHeight, loginMessage, passwordLogin]
+      required: [trashDays, imageQuality, previewSize, videoQuality, videoMaxHeight, loginMessage, passwordLogin, maintenance, faceMinScore, faceMaxDistance, workerConcurrency, videoWorkers, analysisWorkers, externalScanHours]
       properties:
         trashDays: { type: integer }
         imageQuality: { type: integer }
@@ -3197,6 +3243,13 @@ components:
         videoMaxHeight: { type: integer }
         loginMessage: { type: string }
         passwordLogin: { type: boolean }
+        maintenance: { type: boolean, description: "Only administrators can use the server" }
+        faceMinScore: { type: number, format: float, description: "How sure a face must be" }
+        faceMaxDistance: { type: number, format: float, description: "How alike two faces must be to be one person" }
+        workerConcurrency: { type: integer, description: "0 uses WORKER_CONCURRENCY. Applies after a restart of the worker" }
+        videoWorkers: { type: integer, description: "Applies after a restart of the worker" }
+        analysisWorkers: { type: integer, description: "Applies after a restart of the worker" }
+        externalScanHours: { type: integer }
     EmailSettings:
       type: object
       required: [enabled, host, port, username, from, security, publicUrl, hasPassword]

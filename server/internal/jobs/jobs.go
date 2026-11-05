@@ -89,9 +89,11 @@ func NewInserter(pool *pgxpool.Pool) (*Inserter, error) {
 
 // Options for the worker.
 type Options struct {
-	Concurrency int
-	LibraryPath string
-	CachePath   string
+	VideoWorkers    int
+	AnalysisWorkers int
+	Concurrency     int
+	LibraryPath     string
+	CachePath       string
 	// ExternalPath is where a folder to import from is mounted, read only.
 	ExternalPath string
 	// DatabaseURL is what a backup reads the database with.
@@ -132,6 +134,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &webhookWorker{deps: d})
 	river.AddWorker(workers, &backupTickWorker{deps: d})
 	river.AddWorker(workers, &externalScanWorker{deps: d})
+	river.AddWorker(workers, &integrityWorker{deps: d})
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{
@@ -139,8 +142,8 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 		RescueStuckJobsAfter: rescueStuckAfter,
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault: {MaxWorkers: opts.Concurrency},
-			videoQueue:         {MaxWorkers: 1},
-			mlQueue:            {MaxWorkers: 1},
+			videoQueue:         {MaxWorkers: max(opts.VideoWorkers, 1)},
+			mlQueue:            {MaxWorkers: max(opts.AnalysisWorkers, 1)},
 			importQueue:        {MaxWorkers: 1},
 			describeQueue:      {MaxWorkers: 1},
 		},
@@ -160,9 +163,11 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 				&river.PeriodicJobOpts{RunOnStart: true}),
 			river.NewPeriodicJob(river.PeriodicInterval(backupTickEvery),
 				func() (river.JobArgs, *river.InsertOpts) { return BackupTickArgs{}, nil }, nil),
-			river.NewPeriodicJob(river.PeriodicInterval(externalScanInterval),
-				func() (river.JobArgs, *river.InsertOpts) { return ExternalScanArgs{}, nil },
+			river.NewPeriodicJob(river.PeriodicInterval(externalScanTick),
+				func() (river.JobArgs, *river.InsertOpts) { return ExternalScanArgs{Scheduled: true}, nil },
 				&river.PeriodicJobOpts{RunOnStart: true}),
+			river.NewPeriodicJob(river.PeriodicInterval(integrityEvery),
+				func() (river.JobArgs, *river.InsertOpts) { return IntegrityArgs{}, nil }, nil),
 		},
 	})
 	return client, err

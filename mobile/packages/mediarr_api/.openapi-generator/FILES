@@ -64,6 +64,9 @@ doc/FolderEntry.md
 doc/Health.md
 doc/ImportCreate.md
 doc/ImportEntry.md
+doc/IntegrityProblem.md
+doc/IntegrityReport.md
+doc/IntegrityRun.md
 doc/JobQueue.md
 doc/LinkPassword.md
 doc/LoginError.md
@@ -196,6 +199,9 @@ lib/model/folder_entry.dart
 lib/model/health.dart
 lib/model/import_create.dart
 lib/model/import_entry.dart
+lib/model/integrity_problem.dart
+lib/model/integrity_report.dart
+lib/model/integrity_run.dart
 lib/model/job_queue.dart
 lib/model/link_password.dart
 lib/model/login_error.dart
@@ -257,7 +263,6 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/email_settings_test.dart
-test/email_settings_update_test.dart
-test/password_forgot_test.dart
-test/password_reset_test.dart
+test/integrity_problem_test.dart
+test/integrity_report_test.dart
+test/integrity_run_test.dart

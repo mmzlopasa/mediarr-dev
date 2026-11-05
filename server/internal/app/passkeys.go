@@ -318,6 +318,9 @@ func (s *apiServer) FinishPasskeyLogin(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	if s.closedForMaintenance(w, r, owner.user.IsAdmin) {
+		return
+	}
 	if !s.deviceMaySignIn(w, r, owner.user.Email) {
 		writeError(w, http.StatusForbidden, deviceNotApproved)
 		return

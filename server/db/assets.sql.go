@@ -566,6 +566,49 @@ func (q *Queries) ListFailedAssetIDs(ctx context.Context) ([]pgtype.UUID, error)
 	return items, nil
 }
 
+const listOriginals = `-- name: ListOriginals :many
+SELECT id, original_name, original_path, checksum FROM assets
+WHERE id > $1
+ORDER BY id LIMIT $2
+`
+
+type ListOriginalsParams struct {
+	ID    pgtype.UUID
+	Limit int32
+}
+
+type ListOriginalsRow struct {
+	ID           pgtype.UUID
+	OriginalName string
+	OriginalPath string
+	Checksum     []byte
+}
+
+func (q *Queries) ListOriginals(ctx context.Context, arg ListOriginalsParams) ([]ListOriginalsRow, error) {
+	rows, err := q.db.Query(ctx, listOriginals, arg.ID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOriginalsRow
+	for rows.Next() {
+		var i ListOriginalsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OriginalName,
+			&i.OriginalPath,
+			&i.Checksum,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOwnedAssets = `-- name: ListOwnedAssets :many
 SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1 FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
 `

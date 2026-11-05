@@ -173,3 +173,8 @@ DELETE FROM asset_files WHERE asset_id = $1 AND kind = $2;
 
 -- name: ListFailedAssetIDs :many
 SELECT id FROM assets WHERE status = 'failed' AND deleted_at IS NULL;
+
+-- name: ListOriginals :many
+SELECT id, original_name, original_path, checksum FROM assets
+WHERE id > $1
+ORDER BY id LIMIT $2;

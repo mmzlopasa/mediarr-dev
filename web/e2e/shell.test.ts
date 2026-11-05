@@ -227,8 +227,14 @@ test('a message from the administrator shows on the sign-in page', async ({ brow
 	await page.goto('/admin/settings');
 	const field = page.getByLabel('Message on the sign-in page');
 	await field.fill('Welcome to this server');
+	const hours = page.getByLabel('Scan the external library every this many hours');
+	const hoursBefore = await hours.inputValue();
+	await hours.fill('12');
 	await field.locator('xpath=ancestor::form').getByRole('button', { name: 'Save' }).click();
 	await expect(page.getByText('Saved.')).toBeVisible();
+	await page.reload();
+	await expect(hours).toHaveValue('12');
+	await hours.fill(hoursBefore);
 
 	const stranger = await browser.newPage();
 	await stranger.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
@@ -239,6 +245,18 @@ test('a message from the administrator shows on the sign-in page', async ({ brow
 	await field.fill('');
 	await field.locator('xpath=ancestor::form').getByRole('button', { name: 'Save' }).click();
 	await expect(page.getByText('Saved.').last()).toBeVisible();
+});
+
+test('an administrator can check the originals and read the report', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'admin');
+	await page.goto('/admin/health');
+	await page.getByRole('button', { name: 'Check now' }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'Started.' })).toBeVisible();
+	await expect(async () => {
+		await page.reload();
+		await expect(page.getByText('Last check')).toBeVisible({ timeout: 2000 });
+	}).toPass({ timeout: 90_000 });
 });
 
 test('email can be set up, and says what a link needs', async ({ page }) => {

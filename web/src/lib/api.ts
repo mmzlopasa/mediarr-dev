@@ -55,6 +55,7 @@ export type UserSession = components['schemas']['UserSession'];
 export type EmailSettings = components['schemas']['EmailSettings'];
 export type EmailSettingsUpdate = components['schemas']['EmailSettingsUpdate'];
 export type ServerSettings = components['schemas']['ServerSettings'];
+export type IntegrityReport = components['schemas']['IntegrityReport'];
 export type UserPreferences = components['schemas']['UserPreferences'];
 export type AccountStats = components['schemas']['AccountStats'];
 export type SecuritySettings = components['schemas']['SecuritySettings'];
@@ -95,6 +96,9 @@ async function request<T>(
 	});
 	if (response.status === 204) return undefined as T;
 	const data = await response.json().catch(() => ({}));
+	if (response.status === 503 && typeof window !== 'undefined') {
+		window.dispatchEvent(new Event('mediarr:maintenance'));
+	}
 	if (!response.ok) {
 		throw new ApiError(
 			response.status,
@@ -246,6 +250,8 @@ export const api = {
 	trashSummary: () => request<TrashSummary>(fetch, '/api/trash/summary'),
 	authMethods: () => request<AuthMethods>(fetch, '/api/auth/methods'),
 	oidcSettings: () => request<OIDCSettings>(fetch, '/api/admin/oidc'),
+	integrity: () => request<IntegrityReport>(fetch, '/api/admin/integrity'),
+	runIntegrity: (thorough: boolean) => request<void>(fetch, '/api/admin/integrity', { thorough }),
 	serverSettings: () => request<ServerSettings>(fetch, '/api/admin/server-settings'),
 	setServerSettings: (body: ServerSettings) =>
 		request<ServerSettings>(fetch, '/api/admin/server-settings', body, 'PUT'),
