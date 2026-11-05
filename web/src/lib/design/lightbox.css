@@ -1086,3 +1086,50 @@ body.auth-split {
 	font-size: 20px;
 	font-variant-numeric: tabular-nums;
 }
+
+/* The photos around this one: a short strip under the picture, never over it on a phone. */
+.viewer-strip {
+	position: absolute;
+	left: 50%;
+	bottom: 18px;
+	z-index: 2;
+	transform: translateX(-50%);
+	display: flex;
+	gap: 3px;
+	padding: 4px;
+	border-radius: 10px;
+	background: rgba(10, 9, 8, 0.6);
+}
+.viewer-strip button {
+	padding: 0;
+	border: 0;
+	border-radius: 3px;
+	background: none;
+	cursor: pointer;
+	opacity: 0.5;
+	transition: opacity 160ms ease;
+}
+.viewer-strip button:hover,
+.viewer-strip button.on {
+	opacity: 1;
+}
+.viewer-strip button.on {
+	outline: 2px solid var(--ink);
+	outline-offset: 2px;
+}
+.viewer-strip img {
+	display: block;
+	height: 44px;
+	width: auto;
+	max-width: 80px;
+	object-fit: cover;
+	border-radius: 3px;
+}
+@media (max-width: 760px) {
+	.viewer-strip {
+		bottom: 92px;
+	}
+	.viewer-strip img {
+		height: 34px;
+	}
+}

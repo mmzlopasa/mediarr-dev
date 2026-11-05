@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { thumbUrl } from './blur.ts';
 	import AssetFactsDialog from '#lib/organize/AssetFactsDialog.svelte';
 	import RatingStars from '#lib/organize/RatingStars.svelte';
 	import FacesEditor from '#lib/organize/FacesEditor.svelte';
@@ -29,6 +30,7 @@
 		onChanged,
 		base = '/api',
 		neighbours,
+		strip,
 		albumId,
 		previewOnly = false
 	}: {
@@ -38,6 +40,8 @@
 		onChanged: () => void;
 		base?: string;
 		neighbours?: (id: string) => { newer?: string; older?: string };
+		/** The photos around this one, to show as a strip; the ones that are loaded. */
+		strip?: (id: string) => { id: string; blurhash?: string | null }[];
 		albumId?: string;
 		previewOnly?: boolean;
 	} = $props();
@@ -516,6 +520,29 @@
 						>{tr('Razdvoji', 'Split the stack')}</Button
 					>
 				</div>
+			{/if}
+			<!-- A stack shows its own shots in the same place, so the strip steps aside. -->
+			{#if strip && scale === 1 && !detail?.stack}
+				{@const shots = strip(id)}
+				{#if shots.length > 1}
+					<nav
+						class="viewer-strip"
+						aria-label={tr('Susjedne fotke', 'Nearby photos')}
+						onpointerdown={(event) => event.stopPropagation()}
+					>
+						{#each shots as shot (shot.id)}
+							<button
+								type="button"
+								class:on={shot.id === id}
+								aria-current={shot.id === id}
+								aria-label={tr('Otvori fotku', 'Open photo')}
+								onclick={() => go(shot.id)}
+							>
+								<img src={thumbUrl(base, shot.id, shot.blurhash)} alt="" draggable="false" />
+							</button>
+						{/each}
+					</nav>
+				{/if}
 			{/if}
 			{#if newerId && scale === 1}
 				<button

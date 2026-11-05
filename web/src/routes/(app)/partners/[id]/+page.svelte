@@ -68,6 +68,7 @@
 			onNavigate={(photo) => replaceState('', { viewer: photo })}
 			onChanged={() => {}}
 			neighbours={(photo) => timeline?.neighbours(photo) ?? {}}
+			strip={(photo) => timeline?.around(photo) ?? []}
 		/>
 	{/if}
 {/if}

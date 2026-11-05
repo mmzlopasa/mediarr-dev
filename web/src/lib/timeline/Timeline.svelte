@@ -231,6 +231,16 @@
 		return { newer: items[index - 1]?.id, older: items[index + 1]?.id };
 	}
 
+	/** The photos around one, as far as they are loaded, for the viewer's strip. */
+	export function around(id: string, count = 3) {
+		const items = allItems();
+		const index = items.findIndex((item) => item.id === id);
+		if (index < 0) return [];
+		return items
+			.slice(Math.max(0, index - count), index + count + 1)
+			.map((item) => ({ id: item.id, blurhash: item.blurhash }));
+	}
+
 	function allItems() {
 		return (months ?? []).flatMap((entry) => entry.items ?? []);
 	}

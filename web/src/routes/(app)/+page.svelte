@@ -190,5 +190,6 @@
 		onNavigate={(id) => replaceState(resolve('/(app)/photos/[id]', { id }), { viewer: id })}
 		onChanged={() => timeline?.reloadLoaded()}
 		neighbours={partnersShown ? (id) => timeline?.neighbours(id) ?? {} : undefined}
+		strip={(id) => timeline?.around(id) ?? []}
 	/>
 {/if}

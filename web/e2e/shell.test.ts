@@ -364,6 +364,10 @@ test.describe('timeline', () => {
 		await page.locator('.tl-tile').first().click();
 		await expect(page).toHaveURL(/\/photos\//);
 		const first = page.url();
+		// The strip shows the photos around this one, and opens them.
+		const strip = page.getByRole('navigation', { name: 'Susjedne fotke' });
+		await expect(strip.getByRole('button', { name: 'Otvori fotku' }).first()).toBeVisible();
+		await expect(strip.locator('[aria-current="true"]')).toHaveCount(1);
 		await expect(page.getByRole('dialog').locator('img.viewer-media').first()).toBeVisible();
 		await page.keyboard.press('ArrowRight');
 		await expect(page).not.toHaveURL(first);

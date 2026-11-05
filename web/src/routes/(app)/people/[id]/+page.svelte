@@ -108,6 +108,7 @@
 			onNavigate={(photo) => replaceState('', { viewer: photo })}
 			onChanged={() => timeline?.reloadLoaded()}
 			neighbours={(photo) => timeline?.neighbours(photo) ?? {}}
+			strip={(photo) => timeline?.around(photo) ?? []}
 		/>
 	{/if}
 	<Dialog title={tr('Spoji s…', 'Merge with…')} bind:open={merging}>
