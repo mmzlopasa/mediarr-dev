@@ -135,6 +135,7 @@ part 'model/totp_setup.dart';
 part 'model/trash_summary.dart';
 part 'model/trip.dart';
 part 'model/user.dart';
+part 'model/user_preferences.dart';
 part 'model/user_ref.dart';
 part 'model/user_session.dart';
 part 'model/user_storage.dart';

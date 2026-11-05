@@ -394,6 +394,11 @@ type User struct {
 	QuotaBytes   pgtype.Int8
 }
 
+type UserPreference struct {
+	UserID pgtype.UUID
+	Data   []byte
+}
+
 type VaultSession struct {
 	TokenHash []byte
 	UserID    pgtype.UUID

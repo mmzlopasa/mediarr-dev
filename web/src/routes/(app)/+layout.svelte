@@ -7,8 +7,16 @@
 	import ServerStatus from '#lib/design/components/ServerStatus.svelte';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
+	import { loadPreferences, preferences } from '#lib/preferences.svelte.ts';
+	import { onMount } from 'svelte';
 
 	let { children, data }: LayoutProps = $props();
+
+	onMount(loadPreferences);
+
+	const shownNav = $derived(
+		appNav.filter((item) => !preferences()?.hiddenSections.includes(item.path))
+	);
 
 	const navChildren = {
 		'/albums': async () =>
@@ -20,7 +28,7 @@
 </script>
 
 <AppShell
-	nav={appNav}
+	nav={shownNav}
 	{navChildren}
 	user={data.user}
 	roleLabel={tr('Korisnik', 'User')}

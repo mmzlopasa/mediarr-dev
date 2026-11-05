@@ -1218,6 +1218,20 @@ func (q *Queries) SetAlbumMember(ctx context.Context, arg SetAlbumMemberParams) 
 	return err
 }
 
+const setAlbumOrder = `-- name: SetAlbumOrder :exec
+UPDATE albums SET asset_order = $2 WHERE id = $1
+`
+
+type SetAlbumOrderParams struct {
+	ID         pgtype.UUID
+	AssetOrder string
+}
+
+func (q *Queries) SetAlbumOrder(ctx context.Context, arg SetAlbumOrderParams) error {
+	_, err := q.db.Exec(ctx, setAlbumOrder, arg.ID, arg.AssetOrder)
+	return err
+}
+
 const setHeart = `-- name: SetHeart :exec
 INSERT INTO album_hearts (album_id, asset_id, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING
 `

@@ -7,6 +7,7 @@ import 'package:mediarr_api/api.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../services/account_preferences.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
@@ -407,6 +408,7 @@ class PreferenceSettings extends ConsumerWidget {
               ],
             ),
           ),
+          const _AccountChoices(),
           const Divider(height: 34),
           const _Heading(Icons.vibration, 'Haptic feedback'),
           _Toggle(
@@ -898,6 +900,80 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Your library')),
       body: body,
+    );
+  }
+}
+
+/// Choices kept on the server, which follow this person to every device.
+class _AccountChoices extends ConsumerWidget {
+  const _AccountChoices();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prefs = ref.watch(accountPreferencesProvider).value;
+    if (prefs == null) return const SizedBox.shrink();
+    final notifier = ref.read(accountPreferencesProvider.notifier);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: 34),
+        const _Heading(Icons.person_outline, 'Your account'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Seconds for each picture in memories (${prefs.memorySeconds})',
+          ),
+        ),
+        Slider(
+          value: prefs.memorySeconds.toDouble().clamp(1, 20),
+          min: 1,
+          max: 20,
+          divisions: 19,
+          activeColor: Palette.gold,
+          onChanged: (value) {
+            prefs.memorySeconds = value.round();
+            notifier.change(prefs);
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Fewest photos for a person to be listed (${prefs.minFaces})',
+          ),
+        ),
+        Slider(
+          value: prefs.minFaces.toDouble().clamp(1, 20),
+          min: 1,
+          max: 20,
+          divisions: 19,
+          activeColor: Palette.gold,
+          onChanged: (value) {
+            prefs.minFaces = value.round();
+            notifier.change(prefs);
+          },
+        ),
+        ListTile(
+          title: const Text('Order in a new album'),
+          trailing: DropdownButton<UserPreferencesAlbumOrderEnum>(
+            value: prefs.albumOrder,
+            items: const [
+              DropdownMenuItem(
+                value: UserPreferencesAlbumOrderEnum.newest,
+                child: Text('Newest first'),
+              ),
+              DropdownMenuItem(
+                value: UserPreferencesAlbumOrderEnum.oldest,
+                child: Text('Oldest first'),
+              ),
+            ],
+            onChanged: (value) {
+              if (value == null) return;
+              prefs.albumOrder = value;
+              notifier.change(prefs);
+            },
+          ),
+        ),
+      ],
     );
   }
 }

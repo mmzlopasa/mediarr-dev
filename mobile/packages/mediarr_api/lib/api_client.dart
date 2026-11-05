@@ -439,6 +439,8 @@ class ApiClient {
           return Trip.fromJson(value);
         case 'User':
           return User.fromJson(value);
+        case 'UserPreferences':
+          return UserPreferences.fromJson(value);
         case 'UserRef':
           return UserRef.fromJson(value);
         case 'UserSession':

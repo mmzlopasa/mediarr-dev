@@ -209,6 +209,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What this person chose */
+        get: operations["getMyPreferences"];
+        /** Change what this person chose */
+        put: operations["setMyPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/api-keys": {
         parameters: {
             query?: never;
@@ -3199,6 +3217,18 @@ export interface components {
             userAgent: string;
             detail: string;
         };
+        UserPreferences: {
+            videoAutoplay: boolean;
+            videoLoop: boolean;
+            videoOriginal: boolean;
+            photoFull: boolean;
+            confirmDelete: boolean;
+            memorySeconds: number;
+            minFaces: number;
+            /** @enum {string} */
+            albumOrder: "newest" | "oldest";
+            hiddenSections: string[];
+        };
         UserSession: {
             /** Format: uuid */
             id: string;
@@ -3748,6 +3778,53 @@ export interface operations {
                     "application/json": components["schemas"]["AccountStats"];
                 };
             };
+            401: components["responses"]["Error"];
+        };
+    };
+    getMyPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPreferences"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    setMyPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPreferences"];
+            };
+        };
+        responses: {
+            /** @description The preferences now */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserPreferences"];
+                };
+            };
+            400: components["responses"]["Error"];
             401: components["responses"]["Error"];
         };
     };

@@ -207,6 +207,15 @@ func (s *apiServer) CreateAlbum(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	prefs, err := s.preferences(ctx, user.ID)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	if err := s.queries.SetAlbumOrder(ctx, db.SetAlbumOrderParams{ID: id, AssetOrder: string(prefs.AlbumOrder)}); err != nil {
+		internalError(w, r, err)
+		return
+	}
 	s.writeAlbum(w, r, http.StatusCreated, id, user.ID, false)
 }
 

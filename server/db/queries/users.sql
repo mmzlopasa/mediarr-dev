@@ -136,3 +136,10 @@ SELECT
   COALESCE(sum(size_bytes), 0)::bigint AS bytes,
   (SELECT count(*) FROM albums al WHERE al.owner_id = $1) AS albums
 FROM assets WHERE user_id = $1 AND vault_at IS NULL AND live_photo_of IS NULL AND status = 'ready';
+
+-- name: GetUserPreferences :one
+SELECT data FROM user_preferences WHERE user_id = $1;
+
+-- name: SetUserPreferences :exec
+INSERT INTO user_preferences (user_id, data) VALUES ($1, $2)
+ON CONFLICT (user_id) DO UPDATE SET data = EXCLUDED.data;

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { preferences } from '#lib/preferences.svelte.ts';
 	import { onMount } from 'svelte';
 	import { api, formatBytes, type AssetDetail } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
@@ -53,7 +54,7 @@
 	let olderId = $state<string>();
 	let videoFailed = $state(false);
 	let fullLoaded = $state(false);
-	let fullWanted = $state(false);
+	let fullWanted = $state(preferences()?.photoFull ?? false);
 	let playingLive = $state(false);
 	let liveDetail = $state<AssetDetail>();
 	let showInfo = $state(false);
@@ -78,7 +79,7 @@
 		failed = false;
 		videoFailed = false;
 		fullLoaded = false;
-		fullWanted = false;
+		fullWanted = preferences()?.photoFull ?? false;
 		playingLive = false;
 		liveDetail = undefined;
 		scale = 1;
@@ -383,7 +384,9 @@
 							class="icon-btn"
 							aria-label={tr('Obriši', 'Delete')}
 							title={tr('Obriši', 'Delete')}
-							onclick={() => (confirmDelete = true)}><Icon name="trash" /></button
+							onclick={() =>
+								preferences()?.confirmDelete === false ? remove() : (confirmDelete = true)}
+							><Icon name="trash" /></button
 						>{/if}
 				{/if}
 			</div>
@@ -407,11 +410,16 @@
 				<VideoPlayer
 					assetId={id}
 					sources={{
-						hls: detail.hlsReady ? `${base}/assets/${id}/video/master.m3u8` : undefined,
+						hls:
+							detail.hlsReady && !preferences()?.videoOriginal
+								? `${base}/assets/${id}/video/master.m3u8`
+								: undefined,
 						direct: `${base}/assets/${id}/original`
 					}}
 					sprite={detail.sprite}
 					poster="{base}/assets/{id}/thumbnail?size=large"
+					autoplay={preferences()?.videoAutoplay ?? true}
+					loop={preferences()?.videoLoop ?? false}
 					onFailed={() => (videoFailed = true)}
 				/>
 			{:else if detail?.kind === 'video' && !previewOnly}

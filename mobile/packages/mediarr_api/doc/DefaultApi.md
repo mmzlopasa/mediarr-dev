@@ -90,6 +90,7 @@ Method | HTTP request | Description
 [**getMapPoints**](DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 [**getMapStyle**](DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
 [**getMapTrips**](DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
+[**getMyPreferences**](DefaultApi.md#getmypreferences) | **GET** /api/me/preferences | What this person chose
 [**getMyStats**](DefaultApi.md#getmystats) | **GET** /api/me/stats | How much this account holds
 [**getOIDCSettings**](DefaultApi.md#getoidcsettings) | **GET** /api/admin/oidc | Single sign-on settings, without the secret
 [**getPartnerBucket**](DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
@@ -160,6 +161,7 @@ Method | HTTP request | Description
 [**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 [**setFeature**](DefaultApi.md#setfeature) | **PUT** /api/admin/features/{name} | Turn an addition on or off
 [**setMapStyle**](DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
+[**setMyPreferences**](DefaultApi.md#setmypreferences) | **PUT** /api/me/preferences | Change what this person chose
 [**setOIDCSettings**](DefaultApi.md#setoidcsettings) | **PUT** /api/admin/oidc | Change single sign-on. An empty issuer turns it off
 [**setPartner**](DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 [**setPartnerTimeline**](DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
@@ -3434,6 +3436,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getMyPreferences**
+> UserPreferences getMyPreferences()
+
+What this person chose
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getMyPreferences();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getMyPreferences: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**UserPreferences**](UserPreferences.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getMyStats**
 > AccountStats getMyStats()
 
@@ -6227,6 +6266,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**MapStyle**](MapStyle.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setMyPreferences**
+> UserPreferences setMyPreferences(userPreferences)
+
+Change what this person chose
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final userPreferences = UserPreferences(); // UserPreferences | 
+
+try {
+    final result = api_instance.setMyPreferences(userPreferences);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setMyPreferences: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **userPreferences** | [**UserPreferences**](UserPreferences.md)|  | 
+
+### Return type
+
+[**UserPreferences**](UserPreferences.md)
 
 ### Authorization
 

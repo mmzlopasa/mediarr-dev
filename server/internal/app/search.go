@@ -410,7 +410,12 @@ func (s *apiServer) ListPeople(w http.ResponseWriter, r *http.Request) {
 	if user == nil {
 		return
 	}
-	rows, err := s.queries.ListPeople(r.Context(), user.ID)
+	prefs, err := s.preferences(r.Context(), user.ID)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	rows, err := s.queries.ListPeople(r.Context(), db.ListPeopleParams{UserID: user.ID, MinFaces: int64(prefs.MinFaces)})
 	if err != nil {
 		internalError(w, r, err)
 		return

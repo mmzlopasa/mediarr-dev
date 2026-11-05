@@ -224,3 +224,6 @@ SELECT * FROM assets WHERE id = ANY(sqlc.arg('ids')::uuid[]) AND asset_visible_t
 
 -- name: GetUserByID :one
 SELECT * FROM users WHERE id = $1;
+
+-- name: SetAlbumOrder :exec
+UPDATE albums SET asset_order = $2 WHERE id = $1;

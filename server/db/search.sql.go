@@ -291,9 +291,14 @@ JOIN faces f ON f.person_id = p.id
 JOIN assets a ON a.id = f.asset_id AND a.deleted_at IS NULL AND a.vault_at IS NULL
 WHERE p.user_id = $1
 GROUP BY p.id, p.name, p.hidden
-HAVING p.name <> '' OR count(DISTINCT a.id) >= 2
+HAVING p.name <> '' OR count(DISTINCT a.id) >= $2::bigint
 ORDER BY p.name = '', count(DISTINCT a.id) DESC, p.id
 `
+
+type ListPeopleParams struct {
+	UserID   pgtype.UUID
+	MinFaces int64
+}
 
 type ListPeopleRow struct {
 	ID         pgtype.UUID
@@ -303,8 +308,8 @@ type ListPeopleRow struct {
 }
 
 // Someone seen once and without a name is usually a stranger in the background.
-func (q *Queries) ListPeople(ctx context.Context, userID pgtype.UUID) ([]ListPeopleRow, error) {
-	rows, err := q.db.Query(ctx, listPeople, userID)
+func (q *Queries) ListPeople(ctx context.Context, arg ListPeopleParams) ([]ListPeopleRow, error) {
+	rows, err := q.db.Query(ctx, listPeople, arg.UserID, arg.MinFaces)
 	if err != nil {
 		return nil, err
 	}

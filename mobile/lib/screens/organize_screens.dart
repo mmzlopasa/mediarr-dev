@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../services/account_preferences.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
@@ -43,61 +44,71 @@ class OrganizeLinks extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final readOnly = ref.watch(settingsProvider).readOnly;
+    final hidden =
+        ref.watch(accountPreferencesProvider).value?.hiddenSections ??
+        const <String>[];
     void open(Widget screen) =>
         Navigator.of(context)
             .push(MaterialPageRoute<void>(builder: (_) => screen));
     return Column(
       children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.star_outline),
-          title: const Text('Favorites'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const FavoritesScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.auto_awesome_outlined),
-          title: const Text('Memories'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const MemoriesScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.people_outline),
-          title: const Text('People'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const PeopleScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.map_outlined),
-          title: const Text('Map'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const MapScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.folder_outlined),
-          title: const Text('Folders'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const FoldersScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.family_restroom),
-          title: const Text('Family'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const FamilyScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.description_outlined),
-          title: const Text('Documents'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const DocumentsScreen()),
-        ),
-        if (!readOnly)
+        if (!hidden.contains('/favorites'))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const RingIcon(Icons.star_outline),
+            title: const Text('Favorites'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => open(const FavoritesScreen()),
+          ),
+        if (!hidden.contains('/memories'))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const RingIcon(Icons.auto_awesome_outlined),
+            title: const Text('Memories'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => open(const MemoriesScreen()),
+          ),
+        if (!hidden.contains('/people'))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const RingIcon(Icons.people_outline),
+            title: const Text('People'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => open(const PeopleScreen()),
+          ),
+        if (!hidden.contains('/map'))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const RingIcon(Icons.map_outlined),
+            title: const Text('Map'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => open(const MapScreen()),
+          ),
+        if (!hidden.contains('/folders'))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const RingIcon(Icons.folder_outlined),
+            title: const Text('Folders'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => open(const FoldersScreen()),
+          ),
+        if (!hidden.contains('/family'))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const RingIcon(Icons.family_restroom),
+            title: const Text('Family'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => open(const FamilyScreen()),
+          ),
+        if (!hidden.contains('/documents'))
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const RingIcon(Icons.description_outlined),
+            title: const Text('Documents'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => open(const DocumentsScreen()),
+          ),
+        if (!readOnly && !hidden.contains('/duplicates'))
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const RingIcon(Icons.copy_all_outlined),

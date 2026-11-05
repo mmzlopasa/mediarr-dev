@@ -8,6 +8,7 @@
 		sprite,
 		poster,
 		autoplay = false,
+		loop = false,
 		onFailed
 	}: {
 		assetId: string;
@@ -16,6 +17,7 @@
 		sprite?: AssetDetail['sprite'];
 		poster?: string;
 		autoplay?: boolean;
+		loop?: boolean;
 		onFailed: () => void;
 	} = $props();
 
@@ -87,6 +89,7 @@
 
 <div class="vp">
 	<video
+		{loop}
 		bind:this={video}
 		class="viewer-media"
 		controls

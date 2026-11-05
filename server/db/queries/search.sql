@@ -58,9 +58,9 @@ SELECT p.id, p.name, p.hidden, count(DISTINCT a.id) AS asset_count
 FROM people p
 JOIN faces f ON f.person_id = p.id
 JOIN assets a ON a.id = f.asset_id AND a.deleted_at IS NULL AND a.vault_at IS NULL
-WHERE p.user_id = $1
+WHERE p.user_id = sqlc.arg('user_id')
 GROUP BY p.id, p.name, p.hidden
-HAVING p.name <> '' OR count(DISTINCT a.id) >= 2
+HAVING p.name <> '' OR count(DISTINCT a.id) >= sqlc.arg('min_faces')::bigint
 ORDER BY p.name = '', count(DISTINCT a.id) DESC, p.id;
 
 -- name: GetPerson :one

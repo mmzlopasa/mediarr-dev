@@ -563,6 +563,24 @@ func (e TimelineItemKind) Valid() bool {
 	}
 }
 
+// Defines values for UserPreferencesAlbumOrder.
+const (
+	UserPreferencesAlbumOrderNewest UserPreferencesAlbumOrder = "newest"
+	UserPreferencesAlbumOrderOldest UserPreferencesAlbumOrder = "oldest"
+)
+
+// Valid indicates whether the value is a known member of the UserPreferencesAlbumOrder enum.
+func (e UserPreferencesAlbumOrder) Valid() bool {
+	switch e {
+	case UserPreferencesAlbumOrderNewest:
+		return true
+	case UserPreferencesAlbumOrderOldest:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for WebhookEvents.
 const (
 	WebhookEventsAssetReady     WebhookEvents = "asset.ready"
@@ -1927,6 +1945,22 @@ type User struct {
 	TotpEnabled bool               `json:"totpEnabled"`
 }
 
+// UserPreferences defines model for UserPreferences.
+type UserPreferences struct {
+	AlbumOrder     UserPreferencesAlbumOrder `json:"albumOrder"`
+	ConfirmDelete  bool                      `json:"confirmDelete"`
+	HiddenSections []string                  `json:"hiddenSections"`
+	MemorySeconds  int                       `json:"memorySeconds"`
+	MinFaces       int                       `json:"minFaces"`
+	PhotoFull      bool                      `json:"photoFull"`
+	VideoAutoplay  bool                      `json:"videoAutoplay"`
+	VideoLoop      bool                      `json:"videoLoop"`
+	VideoOriginal  bool                      `json:"videoOriginal"`
+}
+
+// UserPreferencesAlbumOrder defines model for UserPreferences.AlbumOrder.
+type UserPreferencesAlbumOrder string
+
 // UserRef defines model for UserRef.
 type UserRef struct {
 	Id   openapi_types.UUID `json:"id"`
@@ -2255,6 +2289,9 @@ type FinishPasskeyRegistrationJSONRequestBody FinishPasskeyRegistrationJSONBody
 
 // ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
 type ChangePasswordJSONRequestBody = ChangePasswordRequest
+
+// SetMyPreferencesJSONRequestBody defines body for SetMyPreferences for application/json ContentType.
+type SetMyPreferencesJSONRequestBody = UserPreferences
 
 // DisableTotpJSONRequestBody defines body for DisableTotp for application/json ContentType.
 type DisableTotpJSONRequestBody = PasswordConfirm
@@ -2630,6 +2667,12 @@ type ServerInterface interface {
 	// ChangePassword Change the current user's password and end their other sessions
 	// (POST /api/me/password)
 	ChangePassword(w http.ResponseWriter, r *http.Request)
+	// GetMyPreferences What this person chose
+	// (GET /api/me/preferences)
+	GetMyPreferences(w http.ResponseWriter, r *http.Request)
+	// SetMyPreferences Change what this person chose
+	// (PUT /api/me/preferences)
+	SetMyPreferences(w http.ResponseWriter, r *http.Request)
 	// EndOtherSessions Sign out everywhere except here
 	// (DELETE /api/me/sessions)
 	EndOtherSessions(w http.ResponseWriter, r *http.Request)
@@ -3473,6 +3516,18 @@ func (_ Unimplemented) DeletePasskey(w http.ResponseWriter, r *http.Request, id 
 // ChangePassword Change the current user's password and end their other sessions
 // (POST /api/me/password)
 func (_ Unimplemented) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetMyPreferences What this person chose
+// (GET /api/me/preferences)
+func (_ Unimplemented) GetMyPreferences(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetMyPreferences Change what this person chose
+// (PUT /api/me/preferences)
+func (_ Unimplemented) SetMyPreferences(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6430,6 +6485,34 @@ func (siw *ServerInterfaceWrapper) ChangePassword(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// GetMyPreferences operation middleware
+func (siw *ServerInterfaceWrapper) GetMyPreferences(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMyPreferences(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetMyPreferences operation middleware
+func (siw *ServerInterfaceWrapper) SetMyPreferences(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetMyPreferences(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // EndOtherSessions operation middleware
 func (siw *ServerInterfaceWrapper) EndOtherSessions(w http.ResponseWriter, r *http.Request) {
 
@@ -7857,6 +7940,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/me/stats", wrapper.GetMyStats)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/me/preferences", wrapper.GetMyPreferences)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/me/preferences", wrapper.SetMyPreferences)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/me/api-keys", wrapper.ListAPIKeys)

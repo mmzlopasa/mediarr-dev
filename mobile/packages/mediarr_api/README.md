@@ -141,6 +141,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getMapPoints**](doc//DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 *DefaultApi* | [**getMapStyle**](doc//DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
 *DefaultApi* | [**getMapTrips**](doc//DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
+*DefaultApi* | [**getMyPreferences**](doc//DefaultApi.md#getmypreferences) | **GET** /api/me/preferences | What this person chose
 *DefaultApi* | [**getMyStats**](doc//DefaultApi.md#getmystats) | **GET** /api/me/stats | How much this account holds
 *DefaultApi* | [**getOIDCSettings**](doc//DefaultApi.md#getoidcsettings) | **GET** /api/admin/oidc | Single sign-on settings, without the secret
 *DefaultApi* | [**getPartnerBucket**](doc//DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
@@ -211,6 +212,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 *DefaultApi* | [**setFeature**](doc//DefaultApi.md#setfeature) | **PUT** /api/admin/features/{name} | Turn an addition on or off
 *DefaultApi* | [**setMapStyle**](doc//DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
+*DefaultApi* | [**setMyPreferences**](doc//DefaultApi.md#setmypreferences) | **PUT** /api/me/preferences | Change what this person chose
 *DefaultApi* | [**setOIDCSettings**](doc//DefaultApi.md#setoidcsettings) | **PUT** /api/admin/oidc | Change single sign-on. An empty issuer turns it off
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 *DefaultApi* | [**setPartnerTimeline**](doc//DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
@@ -336,6 +338,7 @@ Class | Method | HTTP request | Description
  - [TrashSummary](doc//TrashSummary.md)
  - [Trip](doc//Trip.md)
  - [User](doc//User.md)
+ - [UserPreferences](doc//UserPreferences.md)
  - [UserRef](doc//UserRef.md)
  - [UserSession](doc//UserSession.md)
  - [UserStorage](doc//UserStorage.md)

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:mediarr_api/api.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../services/account_preferences.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'asset_picture.dart';
@@ -88,6 +89,12 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => StoryScreen(
+                  secondsPerPicture:
+                      ref
+                          .read(accountPreferencesProvider)
+                          .value
+                          ?.memorySeconds ??
+                      4,
                   session: _session,
                   memory: memory,
                   title: memoryTitle(memory, now),
@@ -142,6 +149,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
 /// Plays a memory picture by picture, and can turn it into a video saved on the phone.
 class StoryScreen extends StatefulWidget {
   const StoryScreen({
+    this.secondsPerPicture = 4,
     super.key,
     required this.session,
     required this.memory,
@@ -151,13 +159,13 @@ class StoryScreen extends StatefulWidget {
   final Session session;
   final Memory memory;
   final String title;
+  final int secondsPerPicture;
 
   @override
   State<StoryScreen> createState() => _StoryScreenState();
 }
 
 class _StoryScreenState extends State<StoryScreen> {
-  static const _perPicture = Duration(seconds: 4);
   static const _exportPoll = Duration(seconds: 2);
 
   int _index = 0;
@@ -169,7 +177,10 @@ class _StoryScreenState extends State<StoryScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(_perPicture, (_) => _move(1));
+    _timer = Timer.periodic(
+      Duration(seconds: widget.secondsPerPicture),
+      (_) => _move(1),
+    );
   }
 
   @override

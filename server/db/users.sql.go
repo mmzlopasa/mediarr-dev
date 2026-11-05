@@ -459,6 +459,17 @@ func (q *Queries) GetUserBySessionToken(ctx context.Context, tokenHash []byte) (
 	return i, err
 }
 
+const getUserPreferences = `-- name: GetUserPreferences :one
+SELECT data FROM user_preferences WHERE user_id = $1
+`
+
+func (q *Queries) GetUserPreferences(ctx context.Context, userID pgtype.UUID) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getUserPreferences, userID)
+	var data []byte
+	err := row.Scan(&data)
+	return data, err
+}
+
 const listAPIKeys = `-- name: ListAPIKeys :many
 SELECT id, name, scopes, created_at, last_used_at, expires_at FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC
 `
@@ -691,6 +702,21 @@ type SetTotpSecretParams struct {
 
 func (q *Queries) SetTotpSecret(ctx context.Context, arg SetTotpSecretParams) error {
 	_, err := q.db.Exec(ctx, setTotpSecret, arg.ID, arg.TotpSecret)
+	return err
+}
+
+const setUserPreferences = `-- name: SetUserPreferences :exec
+INSERT INTO user_preferences (user_id, data) VALUES ($1, $2)
+ON CONFLICT (user_id) DO UPDATE SET data = EXCLUDED.data
+`
+
+type SetUserPreferencesParams struct {
+	UserID pgtype.UUID
+	Data   []byte
+}
+
+func (q *Queries) SetUserPreferences(ctx context.Context, arg SetUserPreferencesParams) error {
+	_, err := q.db.Exec(ctx, setUserPreferences, arg.UserID, arg.Data)
 	return err
 }
 

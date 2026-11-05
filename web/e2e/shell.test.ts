@@ -208,6 +208,19 @@ test('the account page shows the library and this device', async ({ page }) => {
 	await expect(page.getByText('This device')).toBeVisible();
 });
 
+test('a section can be taken off the menu and put back', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'user');
+	await page.goto('/account');
+	const side = page.locator('#side');
+	await expect(side.getByRole('link', { name: 'Map' })).toBeVisible();
+	const toggle = page.locator('main').getByLabel('Map', { exact: true });
+	await toggle.uncheck();
+	await expect(side.getByRole('link', { name: 'Map' })).toHaveCount(0);
+	await toggle.check();
+	await expect(side.getByRole('link', { name: 'Map' })).toBeVisible();
+});
+
 test('signing out ends the session', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/');

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { preferences } from '#lib/preferences.svelte.ts';
 	import { onMount } from 'svelte';
 	import { api, type Memory, type StoryExport } from '#lib/api.ts';
 	import Button from '#lib/design/components/Button.svelte';
@@ -6,7 +7,7 @@
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 
-	const SECONDS_PER_PICTURE = 4000;
+	const pictureMs = (preferences()?.memorySeconds ?? 4) * 1000;
 	const EXPORT_POLL_MS = 2000;
 
 	let { memory, title, onClose }: { memory: Memory; title: string; onClose: () => void } = $props();
@@ -22,7 +23,7 @@
 		dialog?.focus();
 		const timer = setInterval(() => {
 			if (!paused) index = index + 1 < items.length ? index + 1 : 0;
-		}, SECONDS_PER_PICTURE);
+		}, pictureMs);
 		return () => clearInterval(timer);
 	});
 

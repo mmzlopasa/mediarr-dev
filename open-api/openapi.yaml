@@ -160,6 +160,33 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/AccountStats" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/me/preferences:
+    get:
+      operationId: getMyPreferences
+      summary: What this person chose
+      responses:
+        "200":
+          description: The preferences
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserPreferences" }
+        "401": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setMyPreferences
+      summary: Change what this person chose
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UserPreferences" }
+      responses:
+        "200":
+          description: The preferences now
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserPreferences" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/me/api-keys:
     get:
       operationId: listAPIKeys
@@ -3031,6 +3058,19 @@ components:
         ip: { type: string }
         userAgent: { type: string }
         detail: { type: string }
+    UserPreferences:
+      type: object
+      required: [videoAutoplay, videoLoop, videoOriginal, photoFull, confirmDelete, memorySeconds, minFaces, albumOrder, hiddenSections]
+      properties:
+        videoAutoplay: { type: boolean }
+        videoLoop: { type: boolean }
+        videoOriginal: { type: boolean }
+        photoFull: { type: boolean }
+        confirmDelete: { type: boolean }
+        memorySeconds: { type: integer, minimum: 1, maximum: 60 }
+        minFaces: { type: integer, minimum: 1, maximum: 100 }
+        albumOrder: { type: string, enum: [newest, oldest] }
+        hiddenSections: { type: array, items: { type: string } }
     UserSession:
       type: object
       required: [id, userAgent, ip, createdAt, lastSeenAt, current]
