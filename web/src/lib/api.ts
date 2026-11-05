@@ -51,6 +51,8 @@ export type DuplicateGroup = components['schemas']['DuplicateGroup'];
 export type MapPoints = components['schemas']['MapPoints'];
 export type Memory = components['schemas']['Memory'];
 export type ServerStatus = components['schemas']['ServerStatus'];
+export type UserSession = components['schemas']['UserSession'];
+export type AccountStats = components['schemas']['AccountStats'];
 export type SecuritySettings = components['schemas']['SecuritySettings'];
 export type SecurityUpdate = components['schemas']['SecurityUpdate'];
 export type SecurityEvent = components['schemas']['SecurityEvent'];
@@ -191,6 +193,10 @@ export const api = {
 	mergePeople: (id: string, ids: string[]) =>
 		request<void>(fetch, `/api/people/${id}/merge`, { ids }),
 	analysisProgress: () => request<AnalysisProgress>(fetch, '/api/admin/analysis'),
+	mySessions: () => request<UserSession[]>(fetch, '/api/me/sessions'),
+	endSession: (id: string) => request<void>(fetch, `/api/me/sessions/${id}`, undefined, 'DELETE'),
+	endOtherSessions: () => request<void>(fetch, '/api/me/sessions', undefined, 'DELETE'),
+	myStats: () => request<AccountStats>(fetch, '/api/me/stats'),
 	serverStatus: () => request<ServerStatus>(fetch, '/api/server/status'),
 	memories: (date: string) => request<Memory[]>(fetch, `/api/memories?date=${date}`),
 	createStory: (title: string, ids: string[]) =>

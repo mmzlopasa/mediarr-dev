@@ -11,6 +11,43 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const accountStats = `-- name: AccountStats :one
+SELECT
+  count(*) FILTER (WHERE kind = 'photo' AND deleted_at IS NULL AND archived_at IS NULL) AS photos,
+  count(*) FILTER (WHERE kind = 'video' AND deleted_at IS NULL AND archived_at IS NULL) AS videos,
+  count(*) FILTER (WHERE is_favorite AND deleted_at IS NULL) AS favorites,
+  count(*) FILTER (WHERE archived_at IS NOT NULL AND deleted_at IS NULL) AS archived,
+  count(*) FILTER (WHERE deleted_at IS NOT NULL) AS trashed,
+  COALESCE(sum(size_bytes), 0)::bigint AS bytes,
+  (SELECT count(*) FROM albums al WHERE al.owner_id = $1) AS albums
+FROM assets WHERE user_id = $1 AND vault_at IS NULL AND live_photo_of IS NULL AND status = 'ready'
+`
+
+type AccountStatsRow struct {
+	Photos    int64
+	Videos    int64
+	Favorites int64
+	Archived  int64
+	Trashed   int64
+	Bytes     int64
+	Albums    int64
+}
+
+func (q *Queries) AccountStats(ctx context.Context, ownerID pgtype.UUID) (AccountStatsRow, error) {
+	row := q.db.QueryRow(ctx, accountStats, ownerID)
+	var i AccountStatsRow
+	err := row.Scan(
+		&i.Photos,
+		&i.Videos,
+		&i.Favorites,
+		&i.Archived,
+		&i.Trashed,
+		&i.Bytes,
+		&i.Albums,
+	)
+	return i, err
+}
+
 const addOIDCIdentity = `-- name: AddOIDCIdentity :exec
 INSERT INTO oidc_identities (issuer, subject, user_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING
 `
@@ -103,17 +140,25 @@ func (q *Queries) CreatePasskey(ctx context.Context, arg CreatePasskeyParams) (p
 }
 
 const createSession = `-- name: CreateSession :exec
-INSERT INTO sessions (user_id, token_hash, expires_at) VALUES ($1, $2, $3)
+INSERT INTO sessions (user_id, token_hash, expires_at, user_agent, ip) VALUES ($1, $2, $3, $4, $5)
 `
 
 type CreateSessionParams struct {
 	UserID    pgtype.UUID
 	TokenHash []byte
 	ExpiresAt pgtype.Timestamptz
+	UserAgent string
+	Ip        string
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
-	_, err := q.db.Exec(ctx, createSession, arg.UserID, arg.TokenHash, arg.ExpiresAt)
+	_, err := q.db.Exec(ctx, createSession,
+		arg.UserID,
+		arg.TokenHash,
+		arg.ExpiresAt,
+		arg.UserAgent,
+		arg.Ip,
+	)
 	return err
 }
 
@@ -238,6 +283,23 @@ DELETE FROM passkeys WHERE user_id = $1
 func (q *Queries) DeleteUserPasskeys(ctx context.Context, userID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deleteUserPasskeys, userID)
 	return err
+}
+
+const deleteUserSession = `-- name: DeleteUserSession :execrows
+DELETE FROM sessions WHERE id = $1 AND user_id = $2
+`
+
+type DeleteUserSessionParams struct {
+	ID     pgtype.UUID
+	UserID pgtype.UUID
+}
+
+func (q *Queries) DeleteUserSession(ctx context.Context, arg DeleteUserSessionParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteUserSession, arg.ID, arg.UserID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const disableTotp = `-- name: DisableTotp :exec
@@ -469,6 +531,48 @@ func (q *Queries) ListPasskeys(ctx context.Context, userID pgtype.UUID) ([]Passk
 	return items, nil
 }
 
+const listUserSessions = `-- name: ListUserSessions :many
+SELECT id, token_hash, user_agent, ip, created_at, last_seen_at FROM sessions
+WHERE user_id = $1 AND expires_at > now()
+ORDER BY last_seen_at DESC
+`
+
+type ListUserSessionsRow struct {
+	ID         pgtype.UUID
+	TokenHash  []byte
+	UserAgent  string
+	Ip         string
+	CreatedAt  pgtype.Timestamptz
+	LastSeenAt pgtype.Timestamptz
+}
+
+func (q *Queries) ListUserSessions(ctx context.Context, userID pgtype.UUID) ([]ListUserSessionsRow, error) {
+	rows, err := q.db.Query(ctx, listUserSessions, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUserSessionsRow
+	for rows.Next() {
+		var i ListUserSessionsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TokenHash,
+			&i.UserAgent,
+			&i.Ip,
+			&i.CreatedAt,
+			&i.LastSeenAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUserStorage = `-- name: ListUserStorage :many
 SELECT u.id, u.name, u.email, u.quota_bytes,
        coalesce(sum(a.size_bytes) FILTER (WHERE l.kind = 'upload'), 0)::bigint AS stored_bytes,
@@ -605,6 +709,21 @@ func (q *Queries) SetUserQuota(ctx context.Context, arg SetUserQuotaParams) (int
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const touchSession = `-- name: TouchSession :exec
+UPDATE sessions SET last_seen_at = now(), ip = $2
+WHERE token_hash = $1 AND last_seen_at < now() - interval '5 minutes'
+`
+
+type TouchSessionParams struct {
+	TokenHash []byte
+	Ip        string
+}
+
+func (q *Queries) TouchSession(ctx context.Context, arg TouchSessionParams) error {
+	_, err := q.db.Exec(ctx, touchSession, arg.TokenHash, arg.Ip)
+	return err
 }
 
 const updatePasskeyCredential = `-- name: UpdatePasskeyCredential :exec

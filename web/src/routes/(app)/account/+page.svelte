@@ -12,6 +12,7 @@
 	} from '#lib/api.ts';
 	import { registerPasskey } from '#lib/passkeys.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
+	import AccountOverview from '#lib/organize/AccountOverview.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Card from '#lib/design/components/Card.svelte';
 	import Input from '#lib/design/components/Input.svelte';
@@ -182,6 +183,8 @@
 </div>
 
 <div class="grid2">
+	<AccountOverview />
+
 	<Card title={tr('Lozinka', 'Password')}>
 		{#if passwordError}<Alert kind="err">{passwordError}</Alert>{/if}
 		<form class="form" onsubmit={changePassword}>

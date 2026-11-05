@@ -32,6 +32,7 @@ part 'api/default_api.dart';
 
 part 'model/ai_settings.dart';
 part 'model/ai_settings_update.dart';
+part 'model/account_stats.dart';
 part 'model/activity.dart';
 part 'model/admin_health.dart';
 part 'model/admin_jobs.dart';
@@ -135,6 +136,7 @@ part 'model/trash_summary.dart';
 part 'model/trip.dart';
 part 'model/user.dart';
 part 'model/user_ref.dart';
+part 'model/user_session.dart';
 part 'model/user_storage.dart';
 part 'model/vault_pin_change.dart';
 part 'model/vault_session.dart';

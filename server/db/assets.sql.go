@@ -456,10 +456,16 @@ func (q *Queries) ListAssetFiles(ctx context.Context, assetID pgtype.UUID) ([]As
 }
 
 const listAssets = `-- name: ListAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1 FROM assets
-WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL
-  AND ($2::text IS NULL OR status = $2)
-ORDER BY created_at DESC, id DESC
+SELECT assets.id, assets.user_id, assets.library_id, assets.checksum, assets.original_name, assets.original_path, assets.size_bytes, assets.mime_type, assets.kind, assets.status, assets.error, assets.width, assets.height, assets.blurhash, assets.taken_at, assets.taken_offset_minutes, assets.created_at, assets.updated_at, assets.is_favorite, assets.archived_at, assets.deleted_at, assets.aspect_ratio, assets.local_at, assets.content_id, assets.live_photo_of, assets.duration_ms, assets.video_codec, assets.sprite_columns, assets.sprite_rows, assets.sprite_count, assets.sprite_interval_ms, assets.vault_at, assets.stack_parent, assets.stack_free, assets.stack_chosen, assets.phash, assets.sharpness, assets.organized_at, assets.missing_at, assets.edits, assets.edit_revision, assets.edit_applied, assets.import_taken_at, assets.import_latitude, assets.import_longitude, assets.checksum_sha1 FROM assets
+WHERE assets.user_id = $1 AND assets.deleted_at IS NULL AND assets.vault_at IS NULL
+  AND ($2::text IS NULL OR assets.status = $2)
+  -- The moving part of a Live Photo that cannot be read is no problem to report: the photo is there.
+  AND NOT (assets.status = 'failed' AND lower(assets.original_name) LIKE '%.mov' AND EXISTS (
+    SELECT 1 FROM assets photo
+    WHERE photo.user_id = assets.user_id AND photo.kind = 'photo' AND photo.status = 'ready'
+      AND split_part(photo.original_name, '.', 1) = split_part(assets.original_name, '.', 1)
+  ))
+ORDER BY assets.created_at DESC, assets.id DESC
 LIMIT $3
 `
 

@@ -18,10 +18,16 @@ SELECT id FROM assets WHERE user_id = $1 AND checksum = $2;
 SELECT * FROM assets WHERE id = $1;
 
 -- name: ListAssets :many
-SELECT * FROM assets
-WHERE user_id = sqlc.arg('user_id') AND deleted_at IS NULL AND vault_at IS NULL
-  AND (sqlc.narg('status')::text IS NULL OR status = sqlc.narg('status'))
-ORDER BY created_at DESC, id DESC
+SELECT assets.* FROM assets
+WHERE assets.user_id = sqlc.arg('user_id') AND assets.deleted_at IS NULL AND assets.vault_at IS NULL
+  AND (sqlc.narg('status')::text IS NULL OR assets.status = sqlc.narg('status'))
+  -- The moving part of a Live Photo that cannot be read is no problem to report: the photo is there.
+  AND NOT (assets.status = 'failed' AND lower(assets.original_name) LIKE '%.mov' AND EXISTS (
+    SELECT 1 FROM assets photo
+    WHERE photo.user_id = assets.user_id AND photo.kind = 'photo' AND photo.status = 'ready'
+      AND split_part(photo.original_name, '.', 1) = split_part(assets.original_name, '.', 1)
+  ))
+ORDER BY assets.created_at DESC, assets.id DESC
 LIMIT sqlc.arg('row_limit');
 
 -- name: CountAssetStatus :one

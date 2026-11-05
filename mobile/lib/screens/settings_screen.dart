@@ -12,6 +12,7 @@ import '../services/session.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
+import '../timeline/layout.dart';
 import 'app_header.dart';
 import 'free_space_screen.dart';
 import 'memories_screen.dart';
@@ -118,6 +119,18 @@ class SettingsScreen extends StatelessWidget {
             ),
           ]),
           group('Server', [
+            row(
+              Icons.devices_outlined,
+              'Devices',
+              'Where this account is signed in',
+              const DevicesScreen(),
+            ),
+            row(
+              Icons.bar_chart_outlined,
+              'Your library',
+              'How much this account holds',
+              const StatsScreen(),
+            ),
             row(
               Icons.wifi,
               'Networking',
@@ -714,4 +727,177 @@ class _SecondAddressState extends ConsumerState<_SecondAddress> {
       ],
     ),
   );
+}
+
+class DevicesScreen extends ConsumerStatefulWidget {
+  const DevicesScreen({super.key});
+
+  @override
+  ConsumerState<DevicesScreen> createState() => _DevicesScreenState();
+}
+
+class _DevicesScreenState extends ConsumerState<DevicesScreen> {
+  List<UserSession>? _sessions;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final session = ref.read(sessionProvider).value;
+    if (session == null) return;
+    try {
+      final sessions = await session.api.listMySessions();
+      if (mounted) {
+        setState(() {
+          _sessions = sessions ?? const [];
+          _failed = false;
+        });
+      }
+    } on ApiException {
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  Future<void> _act(Future<void> Function(DefaultApi api) work) async {
+    final session = ref.read(sessionProvider).value;
+    if (session == null) return;
+    try {
+      await work(session.api);
+    } on ApiException {
+      if (mounted) setState(() => _failed = true);
+    }
+    await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sessions = _sessions;
+    final Widget body;
+    if (sessions == null) {
+      body = _failed
+          ? const EmptyMessage(
+              icon: Icons.cloud_off,
+              text: 'This could not be loaded.',
+            )
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
+    } else {
+      body = ListView(
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
+        children: [
+          GlassCard(
+            child: Column(
+              children: [
+                for (final item in sessions)
+                  ListTile(
+                    leading: RingIcon(
+                      Icons.smartphone_outlined,
+                      on: item.current,
+                    ),
+                    title: Text(item.current ? 'This device' : item.ip),
+                    subtitle: Text(
+                      '${item.userAgent}\n${item.lastSeenAt.toLocal()}',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: item.current
+                        ? null
+                        : TextButton(
+                            onPressed: () =>
+                                _act((api) => api.endSession(item.id)),
+                            child: const Text('Sign out'),
+                          ),
+                  ),
+              ],
+            ),
+          ),
+          if (sessions.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: TextButton(
+                onPressed: () => _act((api) => api.endOtherSessions()),
+                child: const Text('Sign out all the others'),
+              ),
+            ),
+        ],
+      );
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('Devices')),
+      body: body,
+    );
+  }
+}
+
+class StatsScreen extends ConsumerStatefulWidget {
+  const StatsScreen({super.key});
+
+  @override
+  ConsumerState<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends ConsumerState<StatsScreen> {
+  AccountStats? _stats;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final session = ref.read(sessionProvider).value;
+    if (session == null) return;
+    try {
+      final stats = await session.api.getMyStats();
+      if (mounted) setState(() => _stats = stats);
+    } on ApiException {
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = _stats;
+    final Widget body;
+    if (stats == null) {
+      body = _failed
+          ? const EmptyMessage(
+              icon: Icons.cloud_off,
+              text: 'This could not be loaded.',
+            )
+          : Center(child: CircularProgressIndicator(color: Palette.gold));
+    } else {
+      Widget row(String label, String value) => ListTile(
+        title: Text(label),
+        trailing: Text(value, style: Theme.of(context).textTheme.titleMedium),
+      );
+      body = ListView(
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
+        children: [
+          GlassCard(
+            child: Column(
+              children: [
+                row('Photos', '${stats.photos}'),
+                row('Videos', '${stats.videos}'),
+                row('Albums', '${stats.albums}'),
+                row('Favorites', '${stats.favorites}'),
+                row('Archive', '${stats.archived}'),
+                row('Trash', '${stats.trashed}'),
+                row('Used', formatBytes(stats.bytes)),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+    return Scaffold(
+      appBar: AppBar(title: const Text('Your library')),
+      body: body,
+    );
+  }
 }

@@ -204,7 +204,10 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).last,
     );
-    await tester.tap(find.text('Advanced'));
+    await tester.ensureVisible(find.text('Advanced'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Advanced'), warnIfMissed: false);
+    await tester.pump(const Duration(seconds: 1));
     await waitFor(tester, find.text('Read-only mode'));
     await tester.tap(find.text('Read-only mode'));
     await tester.pump(const Duration(seconds: 1));

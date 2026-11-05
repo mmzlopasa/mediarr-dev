@@ -2190,6 +2190,90 @@ class DefaultApi {
     }
   }
 
+  /// Sign out everywhere except here
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> endOtherSessionsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/sessions';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Sign out everywhere except here
+  Future<void> endOtherSessions() async {
+    final response = await endOtherSessionsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Sign out one device
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> endSessionWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/sessions/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Sign out one device
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> endSession(
+    String id,
+  ) async {
+    final response = await endSessionWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// The app turns a one-time code into a session
   ///
   /// Note: This method returns the HTTP [Response].
@@ -4440,6 +4524,52 @@ class DefaultApi {
               as List)
           .cast<Trip>()
           .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// How much this account holds
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getMyStatsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/stats';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// How much this account holds
+  Future<AccountStats?> getMyStats() async {
+    final response = await getMyStatsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AccountStats',
+      ) as AccountStats;
     }
     return null;
   }
@@ -6701,6 +6831,53 @@ class DefaultApi {
       return (await apiClient.deserializeAsync(responseBody, 'List<Memory>')
               as List)
           .cast<Memory>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// Where this account is signed in
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listMySessionsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/sessions';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Where this account is signed in
+  Future<List<UserSession>?> listMySessions() async {
+    final response = await listMySessionsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<UserSession>') as List)
+          .cast<UserSession>()
           .toList(growable: false);
     }
     return null;

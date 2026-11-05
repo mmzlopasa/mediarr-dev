@@ -157,6 +157,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Where this account is signed in */
+        get: operations["listMySessions"];
+        put?: never;
+        post?: never;
+        /** Sign out everywhere except here */
+        delete: operations["endOtherSessions"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Sign out one device */
+        delete: operations["endSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How much this account holds */
+        get: operations["getMyStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/api-keys": {
         parameters: {
             query?: never;
@@ -3147,6 +3199,33 @@ export interface components {
             userAgent: string;
             detail: string;
         };
+        UserSession: {
+            /** Format: uuid */
+            id: string;
+            userAgent: string;
+            ip: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastSeenAt: string;
+            current: boolean;
+        };
+        AccountStats: {
+            /** Format: int64 */
+            photos: number;
+            /** Format: int64 */
+            videos: number;
+            /** Format: int64 */
+            favorites: number;
+            /** Format: int64 */
+            archived: number;
+            /** Format: int64 */
+            trashed: number;
+            /** Format: int64 */
+            albums: number;
+            /** Format: int64 */
+            bytes: number;
+        };
         ServerStatus: {
             version: string;
             /** @description Known only when the update check is on and has answered */
@@ -3585,6 +3664,89 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    listMySessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sessions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSession"][];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    endOtherSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    endSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getMyStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountStats"];
+                };
             };
             401: components["responses"]["Error"];
         };

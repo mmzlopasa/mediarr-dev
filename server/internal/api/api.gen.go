@@ -899,6 +899,17 @@ type AISettingsUpdate struct {
 	VisionModel string `json:"visionModel"`
 }
 
+// AccountStats defines model for AccountStats.
+type AccountStats struct {
+	Albums    int64 `json:"albums"`
+	Archived  int64 `json:"archived"`
+	Bytes     int64 `json:"bytes"`
+	Favorites int64 `json:"favorites"`
+	Photos    int64 `json:"photos"`
+	Trashed   int64 `json:"trashed"`
+	Videos    int64 `json:"videos"`
+}
+
 // Activity defines model for Activity.
 type Activity struct {
 	Comments []Comment `json:"comments"`
@@ -1922,6 +1933,16 @@ type UserRef struct {
 	Name string             `json:"name"`
 }
 
+// UserSession defines model for UserSession.
+type UserSession struct {
+	CreatedAt  time.Time          `json:"createdAt"`
+	Current    bool               `json:"current"`
+	Id         openapi_types.UUID `json:"id"`
+	Ip         string             `json:"ip"`
+	LastSeenAt time.Time          `json:"lastSeenAt"`
+	UserAgent  string             `json:"userAgent"`
+}
+
 // UserStorage defines model for UserStorage.
 type UserStorage struct {
 	Assets      int64              `json:"assets"`
@@ -2609,6 +2630,18 @@ type ServerInterface interface {
 	// ChangePassword Change the current user's password and end their other sessions
 	// (POST /api/me/password)
 	ChangePassword(w http.ResponseWriter, r *http.Request)
+	// EndOtherSessions Sign out everywhere except here
+	// (DELETE /api/me/sessions)
+	EndOtherSessions(w http.ResponseWriter, r *http.Request)
+	// ListMySessions Where this account is signed in
+	// (GET /api/me/sessions)
+	ListMySessions(w http.ResponseWriter, r *http.Request)
+	// EndSession Sign out one device
+	// (DELETE /api/me/sessions/{id})
+	EndSession(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetMyStats How much this account holds
+	// (GET /api/me/stats)
+	GetMyStats(w http.ResponseWriter, r *http.Request)
 	// DisableTotp Turn off TOTP
 	// (POST /api/me/totp/disable)
 	DisableTotp(w http.ResponseWriter, r *http.Request)
@@ -3440,6 +3473,30 @@ func (_ Unimplemented) DeletePasskey(w http.ResponseWriter, r *http.Request, id 
 // ChangePassword Change the current user's password and end their other sessions
 // (POST /api/me/password)
 func (_ Unimplemented) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// EndOtherSessions Sign out everywhere except here
+// (DELETE /api/me/sessions)
+func (_ Unimplemented) EndOtherSessions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListMySessions Where this account is signed in
+// (GET /api/me/sessions)
+func (_ Unimplemented) ListMySessions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// EndSession Sign out one device
+// (DELETE /api/me/sessions/{id})
+func (_ Unimplemented) EndSession(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetMyStats How much this account holds
+// (GET /api/me/stats)
+func (_ Unimplemented) GetMyStats(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6373,6 +6430,74 @@ func (siw *ServerInterfaceWrapper) ChangePassword(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// EndOtherSessions operation middleware
+func (siw *ServerInterfaceWrapper) EndOtherSessions(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EndOtherSessions(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMySessions operation middleware
+func (siw *ServerInterfaceWrapper) ListMySessions(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMySessions(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// EndSession operation middleware
+func (siw *ServerInterfaceWrapper) EndSession(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EndSession(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMyStats operation middleware
+func (siw *ServerInterfaceWrapper) GetMyStats(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMyStats(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // DisableTotp operation middleware
 func (siw *ServerInterfaceWrapper) DisableTotp(w http.ResponseWriter, r *http.Request) {
 
@@ -7720,6 +7845,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/me/totp/disable", wrapper.DisableTotp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/me/sessions", wrapper.EndOtherSessions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/me/sessions", wrapper.ListMySessions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/me/sessions/{id}", wrapper.EndSession)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/me/stats", wrapper.GetMyStats)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/me/api-keys", wrapper.ListAPIKeys)

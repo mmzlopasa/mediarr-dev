@@ -199,6 +199,15 @@ test('security refuses a list that would lock out the person setting it', async 
 	await expect(page.getByRole('heading', { name: /Attempts to connect/ })).toBeVisible();
 });
 
+test('the account page shows the library and this device', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'user');
+	await page.goto('/account');
+	await expect(page.getByRole('heading', { name: 'Your library' })).toBeVisible();
+	await expect(page.locator('.acct-stats')).toBeVisible();
+	await expect(page.getByText('This device')).toBeVisible();
+});
+
 test('signing out ends the session', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/');

@@ -122,6 +122,44 @@ paths:
       responses:
         "204": { description: TOTP disabled }
         "401": { $ref: "#/components/responses/Error" }
+  /api/me/sessions:
+    get:
+      operationId: listMySessions
+      summary: Where this account is signed in
+      responses:
+        "200":
+          description: The sessions
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/UserSession" } }
+        "401": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: endOtherSessions
+      summary: Sign out everywhere except here
+      responses:
+        "204": { description: Signed out }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/me/sessions/{id}:
+    delete:
+      operationId: endSession
+      summary: Sign out one device
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Signed out }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/me/stats:
+    get:
+      operationId: getMyStats
+      summary: How much this account holds
+      responses:
+        "200":
+          description: The counts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountStats" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/me/api-keys:
     get:
       operationId: listAPIKeys
@@ -2993,6 +3031,27 @@ components:
         ip: { type: string }
         userAgent: { type: string }
         detail: { type: string }
+    UserSession:
+      type: object
+      required: [id, userAgent, ip, createdAt, lastSeenAt, current]
+      properties:
+        id: { type: string, format: uuid }
+        userAgent: { type: string }
+        ip: { type: string }
+        createdAt: { type: string, format: date-time }
+        lastSeenAt: { type: string, format: date-time }
+        current: { type: boolean }
+    AccountStats:
+      type: object
+      required: [photos, videos, favorites, archived, trashed, albums, bytes]
+      properties:
+        photos: { type: integer, format: int64 }
+        videos: { type: integer, format: int64 }
+        favorites: { type: integer, format: int64 }
+        archived: { type: integer, format: int64 }
+        trashed: { type: integer, format: int64 }
+        albums: { type: integer, format: int64 }
+        bytes: { type: integer, format: int64 }
     ServerStatus:
       type: object
       required: [version, updateAvailable, diskUsedBytes, diskTotalBytes]

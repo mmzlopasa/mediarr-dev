@@ -100,6 +100,8 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**downloadAssets**](doc//DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
 *DefaultApi* | [**emptyTrash**](doc//DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 *DefaultApi* | [**enableTotp**](doc//DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
+*DefaultApi* | [**endOtherSessions**](doc//DefaultApi.md#endothersessions) | **DELETE** /api/me/sessions | Sign out everywhere except here
+*DefaultApi* | [**endSession**](doc//DefaultApi.md#endsession) | **DELETE** /api/me/sessions/{id} | Sign out one device
 *DefaultApi* | [**exchangeOIDC**](doc//DefaultApi.md#exchangeoidc) | **POST** /api/auth/oidc/exchange | The app turns a one-time code into a session
 *DefaultApi* | [**finishOIDC**](doc//DefaultApi.md#finishoidc) | **GET** /api/auth/oidc/callback | Where the identity provider sends the browser back
 *DefaultApi* | [**finishPasskeyLogin**](doc//DefaultApi.md#finishpasskeylogin) | **POST** /api/auth/passkey/finish | Finish signing in with a passkey
@@ -139,6 +141,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getMapPoints**](doc//DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 *DefaultApi* | [**getMapStyle**](doc//DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
 *DefaultApi* | [**getMapTrips**](doc//DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
+*DefaultApi* | [**getMyStats**](doc//DefaultApi.md#getmystats) | **GET** /api/me/stats | How much this account holds
 *DefaultApi* | [**getOIDCSettings**](doc//DefaultApi.md#getoidcsettings) | **GET** /api/admin/oidc | Single sign-on settings, without the secret
 *DefaultApi* | [**getPartnerBucket**](doc//DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 *DefaultApi* | [**getPartnerBuckets**](doc//DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
@@ -177,6 +180,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listFamilyMembersAdmin**](doc//DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 *DefaultApi* | [**listImports**](doc//DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
+*DefaultApi* | [**listMySessions**](doc//DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
 *DefaultApi* | [**listPasskeys**](doc//DefaultApi.md#listpasskeys) | **GET** /api/me/passkeys | The current user's passkeys
 *DefaultApi* | [**listPeople**](doc//DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
@@ -229,6 +233,7 @@ Class | Method | HTTP request | Description
 
  - [AISettings](doc//AISettings.md)
  - [AISettingsUpdate](doc//AISettingsUpdate.md)
+ - [AccountStats](doc//AccountStats.md)
  - [Activity](doc//Activity.md)
  - [AdminHealth](doc//AdminHealth.md)
  - [AdminJobs](doc//AdminJobs.md)
@@ -332,6 +337,7 @@ Class | Method | HTTP request | Description
  - [Trip](doc//Trip.md)
  - [User](doc//User.md)
  - [UserRef](doc//UserRef.md)
+ - [UserSession](doc//UserSession.md)
  - [UserStorage](doc//UserStorage.md)
  - [VaultPinChange](doc//VaultPinChange.md)
  - [VaultSession](doc//VaultSession.md)

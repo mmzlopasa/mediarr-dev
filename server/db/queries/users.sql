@@ -39,7 +39,7 @@ UPDATE users SET totp_enabled = false, totp_secret = NULL, updated_at = now() WH
 UPDATE users SET totp_last_step = $2 WHERE id = $1 AND totp_last_step < $2;
 
 -- name: CreateSession :exec
-INSERT INTO sessions (user_id, token_hash, expires_at) VALUES ($1, $2, $3);
+INSERT INTO sessions (user_id, token_hash, expires_at, user_agent, ip) VALUES ($1, $2, $3, $4, $5);
 
 -- name: GetUserBySessionToken :one
 SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id
@@ -113,3 +113,26 @@ INSERT INTO oidc_identities (issuer, subject, user_id) VALUES ($1, $2, $3) ON CO
 
 -- name: DeleteUserOIDCIdentities :exec
 DELETE FROM oidc_identities WHERE user_id = $1;
+
+-- name: ListUserSessions :many
+SELECT id, token_hash, user_agent, ip, created_at, last_seen_at FROM sessions
+WHERE user_id = $1 AND expires_at > now()
+ORDER BY last_seen_at DESC;
+
+-- name: DeleteUserSession :execrows
+DELETE FROM sessions WHERE id = $1 AND user_id = $2;
+
+-- name: TouchSession :exec
+UPDATE sessions SET last_seen_at = now(), ip = $2
+WHERE token_hash = $1 AND last_seen_at < now() - interval '5 minutes';
+
+-- name: AccountStats :one
+SELECT
+  count(*) FILTER (WHERE kind = 'photo' AND deleted_at IS NULL AND archived_at IS NULL) AS photos,
+  count(*) FILTER (WHERE kind = 'video' AND deleted_at IS NULL AND archived_at IS NULL) AS videos,
+  count(*) FILTER (WHERE is_favorite AND deleted_at IS NULL) AS favorites,
+  count(*) FILTER (WHERE archived_at IS NOT NULL AND deleted_at IS NULL) AS archived,
+  count(*) FILTER (WHERE deleted_at IS NOT NULL) AS trashed,
+  COALESCE(sum(size_bytes), 0)::bigint AS bytes,
+  (SELECT count(*) FROM albums al WHERE al.owner_id = $1) AS albums
+FROM assets WHERE user_id = $1 AND vault_at IS NULL AND live_photo_of IS NULL AND status = 'ready';

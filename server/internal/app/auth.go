@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -67,7 +68,16 @@ func (s *apiServer) authenticate(r *http.Request, ctx *context.Context) (db.User
 	if err != nil {
 		return db.User{}, pgx.ErrNoRows
 	}
-	return s.queries.GetUserBySessionToken(r.Context(), auth.HashToken(cookie.Value))
+	user, err := s.queries.GetUserBySessionToken(r.Context(), auth.HashToken(cookie.Value))
+	if err == nil {
+		// Only what changes rarely is written, so reading a page does not become a write each time.
+		if touchErr := s.queries.TouchSession(r.Context(), db.TouchSessionParams{
+			TokenHash: auth.HashToken(cookie.Value), Ip: hostOnly(clientIP(r)),
+		}); touchErr != nil {
+			slog.Warn("a session's last use was not recorded", "error", touchErr)
+		}
+	}
+	return user, err
 }
 
 func currentUser(r *http.Request) *db.User {
@@ -129,6 +139,8 @@ func (s *apiServer) startSession(ctx context.Context, w http.ResponseWriter, r *
 		UserID:    userID,
 		TokenHash: hash,
 		ExpiresAt: pgtype.Timestamptz{Time: expires, Valid: true},
+		UserAgent: limitedAgent(r),
+		Ip:        hostOnly(clientIP(r)),
 	}); err != nil {
 		return err
 	}

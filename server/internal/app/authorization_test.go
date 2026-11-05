@@ -98,6 +98,7 @@ func TestAdminRoutesAreForAdmins(t *testing.T) {
 // These act on the caller's own data, whatever the path says, so a success takes nothing from anyone.
 // TestStrangersReachNothingOfTheOwner still checks that what the owner has stays in place.
 var ownOnlyRoutes = map[string]bool{
+	"DELETE /api/me/sessions/{id}":                 true,
 	"GET /api/timeline/buckets/{month}":            true,
 	"GET /api/collections/{scope}/buckets":         true,
 	"GET /api/collections/{scope}/buckets/{month}": true,

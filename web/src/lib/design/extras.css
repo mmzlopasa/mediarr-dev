@@ -1306,3 +1306,23 @@ video.viewer-media {
 .srv-wrap + .side-foot {
 	margin-top: 0;
 }
+
+/* The counts on the account page. */
+.acct-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+	gap: 12px;
+}
+.acct-stats > div {
+	display: grid;
+	gap: 2px;
+	padding: 12px;
+	border-radius: 12px;
+	background: var(--soft);
+}
+.acct-stats b {
+	font-size: 1.2rem;
+}
+.acct-stats small {
+	color: var(--haze);
+}

@@ -233,6 +233,8 @@ class ApiClient {
           return AISettings.fromJson(value);
         case 'AISettingsUpdate':
           return AISettingsUpdate.fromJson(value);
+        case 'AccountStats':
+          return AccountStats.fromJson(value);
         case 'Activity':
           return Activity.fromJson(value);
         case 'AdminHealth':
@@ -439,6 +441,8 @@ class ApiClient {
           return User.fromJson(value);
         case 'UserRef':
           return UserRef.fromJson(value);
+        case 'UserSession':
+          return UserSession.fromJson(value);
         case 'UserStorage':
           return UserStorage.fromJson(value);
         case 'VaultPinChange':

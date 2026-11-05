@@ -305,11 +305,14 @@ type SecurityEvent struct {
 }
 
 type Session struct {
-	ID        pgtype.UUID
-	UserID    pgtype.UUID
-	TokenHash []byte
-	CreatedAt pgtype.Timestamptz
-	ExpiresAt pgtype.Timestamptz
+	ID         pgtype.UUID
+	UserID     pgtype.UUID
+	TokenHash  []byte
+	CreatedAt  pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	UserAgent  string
+	Ip         string
+	LastSeenAt pgtype.Timestamptz
 }
 
 type ShareLink struct {

@@ -138,11 +138,16 @@ func (s *apiServer) enforceIPAllowlist(next http.Handler) http.Handler {
 	})
 }
 
-func (s *apiServer) recordSecurity(r *http.Request, kind, email, detail string) {
+func limitedAgent(r *http.Request) string {
 	agent := r.UserAgent()
 	if len(agent) > maxUserAgent {
-		agent = agent[:maxUserAgent]
+		return agent[:maxUserAgent]
 	}
+	return agent
+}
+
+func (s *apiServer) recordSecurity(r *http.Request, kind, email, detail string) {
+	agent := limitedAgent(r)
 	if err := s.queries.InsertSecurityEvent(r.Context(), db.InsertSecurityEventParams{
 		Kind: kind, Email: email, Ip: hostOnly(clientIP(r)), UserAgent: agent, Detail: detail,
 	}); err != nil {

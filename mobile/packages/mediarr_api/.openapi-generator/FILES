@@ -4,6 +4,7 @@ README.md
 analysis_options.yaml
 doc/AISettings.md
 doc/AISettingsUpdate.md
+doc/AccountStats.md
 doc/Activity.md
 doc/AdminHealth.md
 doc/AdminJobs.md
@@ -108,6 +109,7 @@ doc/TrashSummary.md
 doc/Trip.md
 doc/User.md
 doc/UserRef.md
+doc/UserSession.md
 doc/UserStorage.md
 doc/VaultPinChange.md
 doc/VaultSession.md
@@ -127,6 +129,7 @@ lib/auth/authentication.dart
 lib/auth/http_basic_auth.dart
 lib/auth/http_bearer_auth.dart
 lib/auth/oauth.dart
+lib/model/account_stats.dart
 lib/model/activity.dart
 lib/model/admin_health.dart
 lib/model/admin_jobs.dart
@@ -232,6 +235,7 @@ lib/model/trash_summary.dart
 lib/model/trip.dart
 lib/model/user.dart
 lib/model/user_ref.dart
+lib/model/user_session.dart
 lib/model/user_storage.dart
 lib/model/vault_pin_change.dart
 lib/model/vault_session.dart
@@ -241,3 +245,5 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
+test/account_stats_test.dart
+test/user_session_test.dart

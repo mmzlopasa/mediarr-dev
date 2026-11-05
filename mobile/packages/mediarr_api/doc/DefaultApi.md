@@ -49,6 +49,8 @@ Method | HTTP request | Description
 [**downloadAssets**](DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
 [**emptyTrash**](DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 [**enableTotp**](DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
+[**endOtherSessions**](DefaultApi.md#endothersessions) | **DELETE** /api/me/sessions | Sign out everywhere except here
+[**endSession**](DefaultApi.md#endsession) | **DELETE** /api/me/sessions/{id} | Sign out one device
 [**exchangeOIDC**](DefaultApi.md#exchangeoidc) | **POST** /api/auth/oidc/exchange | The app turns a one-time code into a session
 [**finishOIDC**](DefaultApi.md#finishoidc) | **GET** /api/auth/oidc/callback | Where the identity provider sends the browser back
 [**finishPasskeyLogin**](DefaultApi.md#finishpasskeylogin) | **POST** /api/auth/passkey/finish | Finish signing in with a passkey
@@ -88,6 +90,7 @@ Method | HTTP request | Description
 [**getMapPoints**](DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 [**getMapStyle**](DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
 [**getMapTrips**](DefaultApi.md#getmaptrips) | **GET** /api/map/trips | Journeys found from the time and distance between photos
+[**getMyStats**](DefaultApi.md#getmystats) | **GET** /api/me/stats | How much this account holds
 [**getOIDCSettings**](DefaultApi.md#getoidcsettings) | **GET** /api/admin/oidc | Single sign-on settings, without the secret
 [**getPartnerBucket**](DefaultApi.md#getpartnerbucket) | **GET** /api/partners/{userId}/buckets/{month} | Assets of one month in a library shared with you
 [**getPartnerBuckets**](DefaultApi.md#getpartnerbuckets) | **GET** /api/partners/{userId}/buckets | Months in a library shared with you
@@ -126,6 +129,7 @@ Method | HTTP request | Description
 [**listFamilyMembersAdmin**](DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 [**listImports**](DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 [**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
+[**listMySessions**](DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
 [**listPartners**](DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
 [**listPasskeys**](DefaultApi.md#listpasskeys) | **GET** /api/me/passkeys | The current user's passkeys
 [**listPeople**](DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
@@ -1794,6 +1798,82 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **endOtherSessions**
+> endOtherSessions()
+
+Sign out everywhere except here
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    api_instance.endOtherSessions();
+} catch (e) {
+    print('Exception when calling DefaultApi->endOtherSessions: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **endSession**
+> endSession(id)
+
+Sign out one device
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.endSession(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->endSession: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **exchangeOIDC**
 > User exchangeOIDC(oIDCExchange)
 
@@ -3354,6 +3434,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getMyStats**
+> AccountStats getMyStats()
+
+How much this account holds
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getMyStats();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getMyStats: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**AccountStats**](AccountStats.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getOIDCSettings**
 > OIDCSettings getOIDCSettings()
 
@@ -4877,6 +4994,43 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**List<Memory>**](Memory.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listMySessions**
+> List<UserSession> listMySessions()
+
+Where this account is signed in
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listMySessions();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listMySessions: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<UserSession>**](UserSession.md)
 
 ### Authorization
 
