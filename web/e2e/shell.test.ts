@@ -17,10 +17,11 @@ test('the interface defaults to English', async ({ page }) => {
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 
-test('app sidebar has the planned sections and navigates', async ({ page }) => {
+test('the dock and More hold the planned sections and navigate', async ({ page }) => {
 	await signIn(page, 'admin');
 	await page.goto('/');
-	const nav = page.getByRole('navigation').first();
+	const nav = page.getByRole('navigation', { name: 'Navigacija' });
+	await nav.getByRole('button', { name: 'Više' }).click();
 	for (const label of [
 		'Mediji',
 		'Pretraga',
@@ -41,6 +42,8 @@ test('app sidebar has the planned sections and navigates', async ({ page }) => {
 	}
 	await nav.getByRole('link', { name: 'Albumi' }).click();
 	await expect(page).toHaveURL(/\/albums$/);
+	// Choosing a place closes More.
+	await expect(nav.getByRole('link', { name: 'Smeće' })).toHaveCount(0);
 	await expect(page.getByRole('heading', { name: 'Albumi' })).toBeVisible();
 	await expect(nav.getByRole('link', { name: 'Albumi' })).toHaveAttribute('aria-current', 'page');
 });
@@ -68,6 +71,7 @@ test('theme toggle persists across reloads', async ({ page }) => {
 		}
 	});
 	await page.goto('/');
+	await page.getByRole('button', { name: 'Račun' }).click();
 	await page.getByRole('button', { name: 'Promijeni temu' }).click();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 	await page.reload();
@@ -77,6 +81,7 @@ test('theme toggle persists across reloads', async ({ page }) => {
 test('language menu switches the interface', async ({ page }) => {
 	await signIn(page, 'admin');
 	await page.goto('/');
+	await page.getByRole('button', { name: 'Račun' }).click();
 	await page.locator('.langdd summary').click();
 	await page.getByRole('menuitem', { name: /English/ }).click();
 	await expect(page.getByRole('link', { name: 'Media', exact: true })).toBeVisible();
@@ -95,14 +100,16 @@ test('command palette opens with Ctrl+K and navigates', async ({ page }) => {
 	await expect(page).toHaveURL(/\/map$/);
 });
 
-test('mobile menu opens and closes', async ({ page }) => {
+test('on a phone, More opens and closes', async ({ page }) => {
 	await signIn(page, 'admin');
 	await page.setViewportSize({ width: 390, height: 800 });
 	await page.goto('/');
-	await page.getByRole('button', { name: 'Otvori izbornik' }).click();
-	await expect(page.locator('html')).toHaveClass(/side-open/);
+	const more = page.getByRole('button', { name: 'Više' });
+	await more.click();
+	await expect(more).toHaveAttribute('aria-expanded', 'true');
+	await expect(page.getByRole('link', { name: 'Smeće' })).toBeVisible();
 	await page.keyboard.press('Escape');
-	await expect(page.locator('html')).not.toHaveClass(/side-open/);
+	await expect(more).toHaveAttribute('aria-expanded', 'false');
 });
 
 test('dialog, sheet and toast work', async ({ page }) => {
@@ -166,25 +173,13 @@ test('a sign-in link cannot redirect to another site', async ({ page }) => {
 	expect(new URL(page.url()).host).not.toBe('example.com');
 });
 
-test('the side menu shows the disk, the server and its version', async ({ page }) => {
+test('More shows the disk, the server and its version', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/');
+	await page.getByRole('button', { name: 'Više' }).click();
 	await expect(page.locator('.srv-card')).toBeVisible();
 	await expect(page.locator('.srv-line')).toContainText(/\S/);
 	await expect(page.locator('.srv-dot.off')).toHaveCount(0);
-});
-
-test('albums open under their entry in the side menu', async ({ page }) => {
-	await signIn(page, 'user');
-	await page.goto('/');
-	const more = page.locator('.nav-more');
-	await expect(more).toHaveAttribute('aria-expanded', 'false');
-	await more.click();
-	await expect(more).toHaveAttribute('aria-expanded', 'true');
-	await expect(page.locator('.nav-sub')).toBeAttached();
-	await page.reload();
-	await expect(page.locator('.nav-more')).toHaveAttribute('aria-expanded', 'true');
-	await page.locator('.nav-more').click();
 });
 
 test('security refuses a list that would lock out the person setting it', async ({ page }) => {
@@ -212,7 +207,7 @@ test('a section can be taken off the menu and put back', async ({ page }) => {
 	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
 	await signIn(page, 'user');
 	await page.goto('/account');
-	const side = page.locator('#side');
+	const side = page.getByRole('navigation', { name: 'Navigation' });
 	await expect(side.getByRole('link', { name: 'Map' })).toBeVisible();
 	const toggle = page.locator('main').getByLabel('Map', { exact: true });
 	await toggle.uncheck();
@@ -292,6 +287,7 @@ test('a link that is not valid says so', async ({ page }) => {
 test('signing out ends the session', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/');
+	await page.getByRole('button', { name: 'Račun' }).click();
 	await page.getByRole('button', { name: 'Odjava' }).click();
 	await expect(page).toHaveURL(/\/login$/);
 	await page.goto('/');

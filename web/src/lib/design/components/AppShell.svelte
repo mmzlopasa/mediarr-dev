@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import NotificationBell from '#lib/organize/NotificationBell.svelte';
 	import type { Snippet } from 'svelte';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { api, initialsOf, type User } from '#lib/api.ts';
+	import NotificationBell from '#lib/organize/NotificationBell.svelte';
 	import type { IconName } from '../icons.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import type { NavItem } from '#lib/nav.ts';
@@ -15,83 +15,79 @@
 	import LangMenu from './LangMenu.svelte';
 	import Logo from './Logo.svelte';
 	import ThemeButton from './ThemeButton.svelte';
+	import UploadButton from './UploadButton.svelte';
 
 	let {
 		nav,
 		tag,
 		user,
 		roleLabel,
-		footLabel,
 		footLinks,
 		sideExtra,
-		navChildren = {},
 		children
 	}: {
 		nav: NavItem[];
 		tag?: string;
 		user: User;
 		roleLabel: string;
-		footLabel: string;
 		footLinks: { href: string; icon: IconName; label: string }[];
 		sideExtra?: Snippet;
-		navChildren?: Record<string, () => Promise<{ href: string; label: string }[]>>;
 		children: Snippet;
 	} = $props();
 
-	const OPEN_KEY = 'mediarr_nav_open';
-	let openPaths = $state<string[]>([]);
-	let children_ = $state<Record<string, { href: string; label: string }[]>>({});
+	// The dock holds the places people go every day; the rest are one tap away under More.
+	const DOCK = ['/', '/people', '/map', '/albums'];
 
-	async function loadChildren(path: string) {
-		try {
-			children_[path] = (await navChildren[path]?.()) ?? [];
-		} catch {
-			children_[path] = [];
-		}
-	}
+	const admin = $derived(Boolean(tag));
+	const docked = $derived(
+		admin
+			? []
+			: DOCK.map((path) => nav.find((item) => item.path === path)).filter(
+					(item): item is NavItem => item !== undefined
+				)
+	);
+	const more = $derived(admin ? nav : nav.filter((item) => !DOCK.includes(item.path)));
 
-	function toggleChildren(path: string) {
-		if (openPaths.includes(path)) {
-			openPaths = openPaths.filter((other) => other !== path);
-		} else {
-			openPaths = [...openPaths, path];
-			loadChildren(path);
-		}
-		try {
-			localStorage.setItem(OPEN_KEY, JSON.stringify(openPaths));
-		} catch {
-			// Storage can be blocked; the menu still works on this page.
-		}
-	}
-
+	let moreOpen = $state(false);
+	let meOpen = $state(false);
 	let maintained = $state(false);
+	let palette = $state<CommandPalette>();
+
+	function current(path: string) {
+		const here = page.url.pathname;
+		if (path === '/' || path === '/admin') return here === path;
+		return here === path || here.startsWith(`${path}/`);
+	}
+
+	function closeAll() {
+		moreOpen = false;
+		meOpen = false;
+	}
+
+	afterNavigate(closeAll);
 
 	onMount(() => {
 		const onMaintenance = () => (maintained = true);
 		window.addEventListener('mediarr:maintenance', onMaintenance);
-		try {
-			const saved: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? '[]');
-			if (Array.isArray(saved)) {
-				openPaths = saved.filter((path) => path in navChildren);
-				openPaths.forEach(loadChildren);
-			}
-		} catch {
-			// Nothing was saved in a form that can be read.
-		}
+		return () => window.removeEventListener('mediarr:maintenance', onMaintenance);
 	});
-
-	const closeSide = () => document.documentElement.classList.remove('side-open');
-	const openSide = () => document.documentElement.classList.add('side-open');
-
-	afterNavigate(closeSide);
 
 	$effect.pre(() => {
 		document.body.className = 'app';
 		return () => {
 			document.body.className = '';
-			closeSide();
 		};
 	});
+
+	function onKey(event: KeyboardEvent) {
+		if (event.key === 'Escape') closeAll();
+	}
+
+	function onPointer(event: PointerEvent) {
+		const target = event.target as HTMLElement;
+		if (!target.closest('.lb-more, .lb-more-b')) moreOpen = false;
+		if (!target.closest('.lb-me')) meOpen = false;
+	}
 
 	async function signOut(event: SubmitEvent) {
 		event.preventDefault();
@@ -109,120 +105,136 @@
 	}
 </script>
 
+<svelte:window onkeydown={onKey} onpointerdown={onPointer} />
+
 <a class="skip" href="#main">{tr('Preskoči na sadržaj', 'Skip to content')}</a>
-<div class="layout">
-	<aside class="side glass" id="side" aria-label={tr('Navigacija', 'Navigation')}>
-		<div class="side-top">
-			<Logo {tag} />
-			<button
-				class="icon-btn side-x"
-				type="button"
-				aria-label={tr('Zatvori izbornik', 'Close menu')}
-				onclick={closeSide}>✕</button
-			>
-		</div>
-		<nav class="nav">
-			{#each nav as item (item.path)}
-				{@const on = page.url.pathname === item.path}
-				<div class="nav-row">
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- paths come from the static nav list -->
-					<a href={item.path} class="nav-i" class:on aria-current={on ? 'page' : undefined}>
-						<span class="ic"><Icon name={item.icon} /></span>
-						<span>{tr(item.hr, item.en)}</span>
-					</a>
-					{#if navChildren[item.path]}
-						<button
-							type="button"
-							class="nav-more"
-							class:open={openPaths.includes(item.path)}
-							aria-expanded={openPaths.includes(item.path)}
-							aria-label={tr(`Proširi: ${item.hr}`, `Expand ${item.en}`)}
-							onclick={() => toggleChildren(item.path)}
-						>
-							<svg
-								width="14"
-								height="14"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"><path d="m6 9 6 6 6-6" /></svg
-							>
-						</button>
-					{/if}
-				</div>
-				{#if openPaths.includes(item.path)}
-					<div class="nav-sub">
-						{#each children_[item.path] ?? [] as child (child.href)}
-							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved path -->
-							<a href={child.href} class:on={page.url.pathname === child.href}>{child.label}</a>
+<div class="lb-shell" class:lb-admin={admin}>
+	<header class="lb-top">
+		<Logo {tag} />
+		<div class="lb-top-r">
+			<NotificationBell />
+			<div class="lb-me">
+				<button
+					type="button"
+					class="lb-me-b"
+					aria-expanded={meOpen}
+					aria-label={tr('Račun', 'Account')}
+					onclick={() => (meOpen = !meOpen)}
+				>
+					<Avatar initials={initialsOf(user.name)} />
+				</button>
+				{#if meOpen}
+					<div class="lb-pop lb-me-m">
+						<div class="lb-me-h"><b>{user.name}</b><small>{roleLabel}</small></div>
+						{#each footLinks as link (link.href)}
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved href -->
+							<a class="lb-pop-i" href={link.href}><Icon name={link.icon} />{link.label}</a>
 						{/each}
+						<div class="lb-me-tools"><LangMenu /><ThemeButton /></div>
+						<form onsubmit={signOut}>
+							<button class="lb-pop-i" type="submit"
+								><Icon name="out" />{tr('Odjava', 'Sign out')}</button
+							>
+						</form>
 					</div>
 				{/if}
-			{/each}
-		</nav>
-		{@render sideExtra?.()}
-		<div class="side-foot">
-			{#each footLinks as link (link.href)}
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved href -->
-				<a class="nav-i" href={link.href}>
-					<span class="ic"><Icon name={link.icon} /></span>
-					<span>{link.label}</span>
-				</a>
-			{/each}
+			</div>
 		</div>
-	</aside>
-	<div class="scrim" role="presentation" onclick={closeSide}></div>
-	<div class="main-col">
-		<header class="topbar">
-			<button
-				class="icon-btn menu-btn"
-				type="button"
-				aria-label={tr('Otvori izbornik', 'Open menu')}
-				onclick={openSide}><Icon name="menu" /></button
+	</header>
+
+	{#if admin}
+		<nav class="lb-side" aria-label={tr('Navigacija', 'Navigation')}>
+			{#each nav as item (item.path)}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- paths come from the static nav list -->
+				<a
+					href={item.path}
+					class="lb-side-i"
+					class:on={current(item.path)}
+					aria-current={current(item.path) ? 'page' : undefined}
+				>
+					<Icon name={item.icon} /><span>{tr(item.hr, item.en)}</span>
+				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
+			{/each}
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a fixed route -->
+			<a href="/" class="lb-side-i lb-side-back"
+				><Icon name="photo" /><span>{tr('Natrag na medije', 'Back to media')}</span></a
 			>
-			<form class="gs" role="search" onsubmit={search}>
+		</nav>
+	{:else}
+		<nav class="lb-dock" aria-label={tr('Navigacija', 'Navigation')}>
+			{#each docked as item (item.path)}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -- paths come from the static nav list -->
+				<a
+					href={item.path}
+					class="lb-dock-i"
+					class:on={current(item.path)}
+					aria-current={current(item.path) ? 'page' : undefined}
+				>
+					<Icon name={item.icon} /><span>{tr(item.hr, item.en)}</span>
+				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
+			{/each}
+			{#if more.length}
+				<button
+					type="button"
+					class="lb-dock-i lb-more-b"
+					class:on={more.some((item) => current(item.path))}
+					aria-expanded={moreOpen}
+					onclick={() => (moreOpen = !moreOpen)}
+				>
+					<Icon name="grid" /><span>{tr('Više', 'More')}</span>
+				</button>
+			{/if}
+			<form class="lb-ask" role="search" onsubmit={search}>
 				<label class="sr" for="gs-q">{tr('Traži', 'Search')}</label>
-				<Icon name="search" size={16} />
+				<Icon name="search" size={18} />
 				<input
 					id="gs-q"
-					class="in"
 					name="q"
 					type="search"
-					placeholder={tr('Traži fotke, osobe, mjesta…', 'Search photos, people, places…')}
+					placeholder={tr('Pitaj svoje fotke', 'Ask your photos')}
 					autocomplete="off"
 				/>
+				<button type="button" class="lb-kbd" onclick={() => palette?.open()}>⌘K</button>
 			</form>
-			<div class="top-r">
-				<NotificationBell />
-				<LangMenu />
-				<ThemeButton />
-				<div class="me">
-					<Avatar initials={initialsOf(user.name)} />
-					<span class="me-t"><b>{user.name}</b><small>{roleLabel}</small></span>
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a fixed route -->
+			<a href="/search" class="lb-dock-i lb-ask-m" aria-label={tr('Traži', 'Search')}
+				><Icon name="search" /></a
+			>
+			<span class="lb-add"><UploadButton compact /></span>
+			{#if moreOpen}
+				<div class="lb-pop lb-more">
+					<div class="lb-more-g">
+						{#each more as item (item.path)}
+							<!-- eslint-disable svelte/no-navigation-without-resolve -- paths come from the static nav list -->
+							<a
+								href={item.path}
+								class="lb-more-i"
+								class:on={current(item.path)}
+								aria-current={current(item.path) ? 'page' : undefined}
+							>
+								<Icon name={item.icon} /><span>{tr(item.hr, item.en)}</span>
+							</a>
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
+						{/each}
+					</div>
+					{@render sideExtra?.()}
 				</div>
-				<form class="inl" onsubmit={signOut}>
-					<button
-						class="icon-btn"
-						title={tr('Odjava', 'Sign out')}
-						aria-label={tr('Odjava', 'Sign out')}
-					>
-						<Icon name="out" />
-					</button>
-				</form>
-			</div>
-		</header>
-		<main id="main" class="main" tabindex="-1">
-			{#if maintained}
-				<p class="maintenance" role="status">
-					{tr(
-						'Poslužitelj je na održavanju. Pokušajte ponovo kasnije.',
-						'This server is being maintained. Try again later.'
-					)}
-				</p>
 			{/if}
-			{@render children()}
-		</main>
-		<footer class="foot">© {new Date().getFullYear()} Mediarr · {footLabel}</footer>
-	</div>
+		</nav>
+	{/if}
+
+	<main id="main" class="main" tabindex="-1">
+		{#if maintained}
+			<p class="maintenance" role="status">
+				{tr(
+					'Poslužitelj je na održavanju. Pokušajte ponovo kasnije.',
+					'This server is being maintained. Try again later.'
+				)}
+			</p>
+		{/if}
+		{@render children()}
+	</main>
 </div>
-<CommandPalette items={nav} />
+<CommandPalette bind:this={palette} items={nav} />

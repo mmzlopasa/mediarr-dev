@@ -13,7 +13,6 @@
 	user={data.user}
 	tag="ADMIN"
 	roleLabel={tr('Administrator', 'Administrator')}
-	footLabel={tr('Administracija', 'Administration')}
 	footLinks={[
 		{ href: resolve('/(app)/account'), icon: 'user', label: tr('Račun', 'Account') },
 		{ href: resolve('/(app)'), icon: 'photo', label: tr('Mediji', 'Media') }

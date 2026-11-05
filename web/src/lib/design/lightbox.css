@@ -1,0 +1,562 @@
+/* Lightbox: the photos are the interface. Loaded after the older stylesheets, which it replaces
+   piece by piece. Tokens are in dash.css (:root and the light theme). */
+
+body {
+	font-family: var(--sans);
+	font-size: 15px;
+	letter-spacing: -0.003em;
+	background: var(--bg);
+}
+::selection {
+	background: var(--acc);
+	color: var(--on-gold);
+}
+:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: 2px;
+}
+* {
+	scrollbar-color: var(--line-2) transparent;
+}
+
+/* ---------- Shell ---------- */
+.lb-shell {
+	min-height: 100vh;
+}
+.lb-top {
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	height: 64px;
+	padding: 0 32px;
+	background: color-mix(in srgb, var(--bg) 92%, transparent);
+}
+.lb-top-r {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+.lb-me {
+	position: relative;
+}
+.lb-me-b {
+	display: grid;
+	place-items: center;
+	padding: 2px;
+	border: 0;
+	border-radius: 50%;
+	background: none;
+	cursor: pointer;
+}
+.lb-me-b .av {
+	width: 34px;
+	height: 34px;
+	background: var(--bg-3);
+	color: var(--ink);
+	box-shadow: none;
+}
+.lb-pop {
+	position: absolute;
+	z-index: 40;
+	min-width: 240px;
+	padding: 8px;
+	border-radius: 16px;
+	background: var(--bg-2);
+	box-shadow: var(--float-shadow);
+	animation: lb-pop 160ms var(--ease);
+	transform-origin: var(--origin, top right);
+}
+@keyframes lb-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.97);
+	}
+}
+.lb-me-m {
+	right: 0;
+	top: calc(100% + 8px);
+}
+.lb-me-h {
+	display: grid;
+	padding: 8px 10px 10px;
+	border-bottom: 1px solid var(--line);
+	margin-bottom: 6px;
+}
+.lb-me-h b {
+	font-weight: 600;
+}
+.lb-me-h small {
+	color: var(--dim);
+	font-size: 13px;
+}
+.lb-pop-i {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 9px 10px;
+	border: 0;
+	border-radius: 10px;
+	background: none;
+	color: var(--ink);
+	font: 500 14.5px var(--sans);
+	text-decoration: none;
+	cursor: pointer;
+}
+.lb-pop-i:hover {
+	background: var(--bg-3);
+}
+.lb-me-tools {
+	display: flex;
+	gap: 6px;
+	padding: 6px 4px;
+	border-top: 1px solid var(--line);
+	border-bottom: 1px solid var(--line);
+	margin: 6px 0;
+}
+
+/* The dock: one solid bar over the photos, legible over any picture and cheap to draw. */
+.lb-dock {
+	position: fixed;
+	left: 50%;
+	bottom: 24px;
+	z-index: 30;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 7px;
+	border-radius: 20px;
+	background: var(--bg-2);
+	box-shadow: var(--float-shadow);
+}
+.lb-dock-i {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 10px 14px;
+	border: 0;
+	border-radius: 14px;
+	background: none;
+	color: var(--dim);
+	font: 500 14.5px var(--sans);
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	transition:
+		background-color 160ms ease,
+		color 160ms ease,
+		transform 120ms var(--ease);
+}
+.lb-dock-i:hover {
+	color: var(--ink);
+}
+.lb-dock-i:active,
+.lb-add .btn:active {
+	transform: scale(0.97);
+}
+.lb-dock-i.on {
+	color: var(--ink);
+	background: var(--bg-3);
+}
+.lb-ask {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	width: 300px;
+	margin: 0 4px;
+	padding: 0 6px 0 14px;
+	height: 42px;
+	border-radius: 14px;
+	background: var(--bg);
+	color: var(--dim);
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+.lb-ask input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	background: none;
+	color: var(--ink);
+	font: 400 14.5px var(--sans);
+	outline: none;
+}
+.lb-ask input::placeholder {
+	color: var(--dim);
+}
+.lb-ask:focus-within {
+	box-shadow: inset 0 0 0 1px var(--line-2);
+}
+.lb-kbd {
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	padding: 1px 6px;
+	background: none;
+	color: var(--dim);
+	font: 500 11px var(--sans);
+	cursor: pointer;
+}
+.lb-ask-m {
+	display: none;
+}
+.lb-add .btn {
+	width: 42px;
+	height: 42px;
+	padding: 0;
+	border-radius: 14px;
+	justify-content: center;
+}
+.lb-more {
+	left: 50%;
+	bottom: calc(100% + 10px);
+	transform: translateX(-50%);
+	width: min(520px, calc(100vw - 32px));
+	padding: 10px;
+	--origin: bottom center;
+}
+.lb-more-g {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 2px;
+}
+.lb-more-i {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 11px 12px;
+	border-radius: 12px;
+	color: var(--ink);
+	font: 500 14.5px var(--sans);
+	text-decoration: none;
+}
+.lb-more-i:hover,
+.lb-more-i.on {
+	background: var(--bg-3);
+}
+.lb-more-i svg {
+	color: var(--dim);
+}
+.lb-more .srv-wrap {
+	margin-top: 8px;
+	padding-top: 10px;
+	border-top: 1px solid var(--line);
+}
+
+.lb-shell .main {
+	padding: 8px 32px 140px;
+	max-width: none;
+}
+
+/* Administration is a tool: a list of its parts on the left, no dock. */
+.lb-admin {
+	display: grid;
+	grid-template-columns: 240px 1fr;
+	grid-template-rows: auto 1fr;
+}
+.lb-admin .lb-top {
+	grid-column: 1 / -1;
+}
+.lb-side {
+	position: sticky;
+	top: 64px;
+	align-self: start;
+	display: grid;
+	gap: 2px;
+	padding: 8px 16px 40px 24px;
+}
+.lb-side-i {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	padding: 9px 12px;
+	border-radius: 11px;
+	color: var(--dim);
+	font: 500 14.5px var(--sans);
+	text-decoration: none;
+}
+.lb-side-i:hover {
+	color: var(--ink);
+}
+.lb-side-i.on {
+	color: var(--ink);
+	background: var(--bg-2);
+}
+.lb-side-back {
+	margin-top: 14px;
+	border-top: 1px solid var(--line);
+	border-radius: 0 0 11px 11px;
+	padding-top: 16px;
+}
+.lb-admin .main {
+	padding: 8px 32px 80px 16px;
+}
+
+/* ---------- Logo ---------- */
+.logo {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--ink);
+	text-decoration: none;
+	font: 600 18px var(--sans);
+	letter-spacing: -0.02em;
+}
+.logo-mark {
+	width: 22px;
+	height: 16px;
+	border-radius: 4px;
+	background: var(--ink);
+	position: relative;
+	flex: none;
+}
+.logo-mark::before {
+	content: '';
+	position: absolute;
+	inset: 4px 6px;
+	border-radius: 1.5px;
+	background: var(--acc);
+}
+.logo-tag {
+	margin-left: 2px;
+	padding: 2px 7px;
+	border-radius: 6px;
+	background: var(--bg-3);
+	color: var(--dim);
+	font: 600 11px var(--sans);
+	letter-spacing: 0.06em;
+}
+
+/* ---------- Page headings ---------- */
+.ph {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 20px;
+	margin: 18px 0 22px;
+}
+.ph h1 {
+	margin: 0;
+	font: 400 clamp(44px, 6vw, 84px) / 0.92 var(--serif);
+	letter-spacing: -0.02em;
+}
+.ph p {
+	margin: 8px 0 0;
+	color: var(--dim);
+	font-size: 14.5px;
+}
+.lb-admin .ph h1 {
+	font-size: clamp(36px, 4vw, 52px);
+}
+
+/* ---------- Controls ---------- */
+:is(html, html[data-theme]) .btn {
+	border-radius: 12px;
+	box-shadow: none;
+	background: var(--bg-3);
+	color: var(--ink);
+	border: 0;
+	font-weight: 500;
+	transition:
+		background-color 160ms ease,
+		transform 120ms var(--ease);
+}
+:is(html, html[data-theme]) .btn:hover {
+	background: var(--line-2);
+}
+:is(html, html[data-theme]) .btn:active {
+	transform: scale(0.97);
+}
+:is(html, html[data-theme]) .btn.gold,
+:is(html, html[data-theme]) .btn.primary {
+	background: var(--acc);
+	color: var(--on-gold);
+	box-shadow: none;
+}
+:is(html, html[data-theme]) .btn.gold:hover,
+:is(html, html[data-theme]) .btn.primary:hover {
+	background: var(--acc-2);
+}
+:is(html, html[data-theme]) .btn.ghost {
+	background: none;
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+:is(html, html[data-theme]) .btn.danger {
+	background: var(--err);
+	color: var(--on-gold);
+}
+:is(html, html[data-theme]) .icon-btn {
+	border-radius: 11px;
+	background: none;
+	box-shadow: none;
+	border: 0;
+	color: var(--dim);
+}
+:is(html, html[data-theme]) .icon-btn:hover {
+	background: var(--bg-2);
+	color: var(--ink);
+}
+.in,
+input.in,
+select.in,
+textarea.in {
+	border-radius: 11px;
+	background: var(--input);
+	border: 0;
+	box-shadow: inset 0 0 0 1px var(--line);
+	color: var(--ink);
+	font-family: var(--sans);
+}
+.in:focus,
+.in:focus-visible {
+	box-shadow: inset 0 0 0 1px var(--ink);
+	outline: none;
+}
+
+/* Icon circles and avatars: plain, without the old glowing rings. */
+.ic,
+.av {
+	background: var(--bg-3);
+	box-shadow: none;
+	color: var(--ink);
+}
+.ic:after,
+.av:after,
+.ic.lg:after {
+	display: none;
+}
+.lb-dock-i svg,
+.lb-side-i svg,
+.lb-more-i svg,
+.lb-pop-i svg {
+	flex: none;
+	width: 20px;
+	height: 20px;
+}
+
+/* ---------- Surfaces ---------- */
+.card,
+.glass {
+	background: var(--bg-2);
+	box-shadow: none;
+	border: 0;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+}
+.card {
+	border-radius: 16px;
+}
+.card-h h2 {
+	font: 600 16px var(--sans);
+	letter-spacing: -0.01em;
+}
+.tbl th {
+	color: var(--dim);
+	font-weight: 500;
+}
+.tbl td,
+.tbl th {
+	border-color: var(--line);
+}
+.badge {
+	border-radius: 7px;
+	background: var(--bg-3);
+	color: var(--ink);
+	box-shadow: none;
+}
+.alert {
+	border-radius: 12px;
+	box-shadow: none;
+}
+.sky {
+	background: var(--bg);
+}
+
+/* ---------- Devices ---------- */
+@media (max-width: 1100px) {
+	.lb-ask {
+		width: 190px;
+	}
+	.lb-kbd {
+		display: none;
+	}
+	.lb-dock-i {
+		padding: 10px 12px;
+		font-size: 14px;
+	}
+}
+@media (max-width: 760px) {
+	.lb-top {
+		padding: 0 16px;
+		height: 58px;
+	}
+	.lb-shell .main {
+		padding: 4px 16px 120px;
+	}
+	.lb-dock {
+		left: 12px;
+		right: 12px;
+		bottom: max(12px, env(safe-area-inset-bottom));
+		transform: none;
+		justify-content: space-between;
+		padding: 6px;
+	}
+	.lb-dock-i {
+		padding: 12px;
+	}
+	.lb-dock-i span {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+	}
+	.lb-ask {
+		display: none;
+	}
+	.lb-ask-m {
+		display: flex;
+	}
+	.lb-more {
+		left: 0;
+		right: 0;
+		transform: none;
+		width: auto;
+	}
+	.lb-more-g {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.lb-admin {
+		display: block;
+	}
+	.lb-side {
+		position: static;
+		display: flex;
+		overflow-x: auto;
+		padding: 0 16px 8px;
+	}
+	.lb-side-i {
+		white-space: nowrap;
+	}
+	.lb-side-back {
+		margin: 0;
+		border: 0;
+		padding-top: 9px;
+		border-radius: 11px;
+	}
+	.lb-admin .main {
+		padding: 4px 16px 60px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.lb-pop {
+		animation: none;
+	}
+	.lb-dock-i,
+	.btn {
+		transition: none;
+	}
+}

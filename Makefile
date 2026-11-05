@@ -11,7 +11,7 @@ GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down deploy landing docs testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e lighthouse
+.PHONY: dev down deploy landing docs testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e e2e-design-update lighthouse
 
 dev:
 	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache .dev/models .dev/external .dev/backup .dev/ollama
@@ -111,7 +111,11 @@ e2e:
 	cp web/e2e/fixtures/gps.jpg "$(E2E_EXTERNAL)/e2e-folder/inner/external-photo.jpg"
 	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e E2E_PASSWORD=$(E2E_PASSWORD) \
 		-v "$(CURDIR)/web:/web" -w /web mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
-		node_modules/.bin/playwright test; status=$$?; rm -rf "$(E2E_EXTERNAL)/e2e-folder"; $(DEV_COMPOSE) exec -T worker sh -c 'rm -rf /backup/e2e-*'; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker e2e-librarian"; exit $$status
+		node_modules/.bin/playwright test $(E2E_ARGS); status=$$?; rm -rf "$(E2E_EXTERNAL)/e2e-folder"; $(DEV_COMPOSE) exec -T worker sh -c 'rm -rf /backup/e2e-*'; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker e2e-librarian"; exit $$status
+
+# After an intended change to the look: new screenshots of the approved design. Look at them before committing.
+e2e-design-update:
+	$(MAKE) e2e E2E_ARGS="e2e/design.test.ts --update-snapshots"
 
 # Test accounts must not stay in the demo database, where they would appear as real data.
 TEST_USERS ?= e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker e2e-librarian uploadtest

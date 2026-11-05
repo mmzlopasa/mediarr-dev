@@ -3,7 +3,8 @@
 	import { addUploads, setPreparingUpload } from '#lib/uploads.svelte.ts';
 	import Icon from './Icon.svelte';
 
-	let { albumId }: { albumId?: string } = $props();
+	// Compact is the round + in the dock; the page has the labelled one.
+	let { albumId, compact = false }: { albumId?: string; compact?: boolean } = $props();
 
 	// Listed so that iOS sends HEIC originals instead of converting them to JPEG.
 	const ACCEPT =
@@ -34,17 +35,32 @@
 
 <!-- A real label, because iOS is most reliable when a tap reaches the input directly. -->
 <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-<label
-	class="btn gold sm"
-	for="upload-input-{active}"
-	role="button"
-	tabindex="0"
-	onclick={opening}
-	onkeydown={key}
->
-	<Icon name="upload" size={14} />
-	{tr('Upload', 'Upload')}
-</label>
+{#if compact}
+	<label
+		class="btn gold sm"
+		for="upload-input-{active}"
+		role="button"
+		tabindex="0"
+		aria-label={tr('Dodaj', 'Add')}
+		title={tr('Dodaj fotke i videe', 'Add photos and videos')}
+		onclick={opening}
+		onkeydown={key}
+	>
+		<Icon name="plus" size={18} />
+	</label>
+{:else}
+	<label
+		class="btn gold sm"
+		for="upload-input-{active}"
+		role="button"
+		tabindex="0"
+		onclick={opening}
+		onkeydown={key}
+	>
+		<Icon name="upload" size={14} />
+		{tr('Upload', 'Upload')}
+	</label>
+{/if}
 {#each inputs as id (id)}
 	<input
 		id="upload-input-{id}"
