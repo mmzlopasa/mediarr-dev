@@ -42,6 +42,15 @@ func (q *Queries) DeleteAssetFaces(ctx context.Context, assetID pgtype.UUID) err
 	return err
 }
 
+const deleteFace = `-- name: DeleteFace :exec
+DELETE FROM faces WHERE id = $1
+`
+
+func (q *Queries) DeleteFace(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteFace, id)
+	return err
+}
+
 const deletePeople = `-- name: DeletePeople :exec
 DELETE FROM people WHERE id = ANY($1::uuid[]) AND user_id = $2
 `
@@ -71,6 +80,38 @@ func (q *Queries) GetAnalysisCounts(ctx context.Context) (GetAnalysisCountsRow, 
 	row := q.db.QueryRow(ctx, getAnalysisCounts)
 	var i GetAnalysisCountsRow
 	err := row.Scan(&i.Total, &i.Analyzed)
+	return i, err
+}
+
+const getFace = `-- name: GetFace :one
+SELECT id, asset_id, x1, y1, x2, y2 FROM faces WHERE id = $1 AND user_id = $2
+`
+
+type GetFaceParams struct {
+	ID     pgtype.UUID
+	UserID pgtype.UUID
+}
+
+type GetFaceRow struct {
+	ID      pgtype.UUID
+	AssetID pgtype.UUID
+	X1      float32
+	Y1      float32
+	X2      float32
+	Y2      float32
+}
+
+func (q *Queries) GetFace(ctx context.Context, arg GetFaceParams) (GetFaceRow, error) {
+	row := q.db.QueryRow(ctx, getFace, arg.ID, arg.UserID)
+	var i GetFaceRow
+	err := row.Scan(
+		&i.ID,
+		&i.AssetID,
+		&i.X1,
+		&i.Y1,
+		&i.X2,
+		&i.Y2,
+	)
 	return i, err
 }
 
@@ -185,6 +226,56 @@ func (q *Queries) ItemsByID(ctx context.Context, dollar_1 []pgtype.UUID) ([]Item
 	return items, nil
 }
 
+const listAssetFaces = `-- name: ListAssetFaces :many
+SELECT f.id, f.person_id, f.x1, f.y1, f.x2, f.y2, p.name AS person_name
+FROM faces f LEFT JOIN people p ON p.id = f.person_id
+WHERE f.asset_id = $1 AND f.user_id = $2
+ORDER BY f.x1, f.id
+`
+
+type ListAssetFacesParams struct {
+	AssetID pgtype.UUID
+	UserID  pgtype.UUID
+}
+
+type ListAssetFacesRow struct {
+	ID         pgtype.UUID
+	PersonID   pgtype.UUID
+	X1         float32
+	Y1         float32
+	X2         float32
+	Y2         float32
+	PersonName pgtype.Text
+}
+
+func (q *Queries) ListAssetFaces(ctx context.Context, arg ListAssetFacesParams) ([]ListAssetFacesRow, error) {
+	rows, err := q.db.Query(ctx, listAssetFaces, arg.AssetID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAssetFacesRow
+	for rows.Next() {
+		var i ListAssetFacesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.PersonID,
+			&i.X1,
+			&i.Y1,
+			&i.X2,
+			&i.Y2,
+			&i.PersonName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listAssetPeople = `-- name: ListAssetPeople :many
 SELECT DISTINCT p.id, p.name FROM faces f JOIN people p ON p.id = f.person_id
 WHERE f.asset_id = $1 AND p.name <> '' AND NOT p.hidden
@@ -285,12 +376,12 @@ func (q *Queries) ListDocuments(ctx context.Context, arg ListDocumentsParams) ([
 }
 
 const listPeople = `-- name: ListPeople :many
-SELECT p.id, p.name, p.hidden, count(DISTINCT a.id) AS asset_count
+SELECT p.id, p.name, p.hidden, p.birth_date, count(DISTINCT a.id) AS asset_count
 FROM people p
 JOIN faces f ON f.person_id = p.id
 JOIN assets a ON a.id = f.asset_id AND a.deleted_at IS NULL AND a.vault_at IS NULL
 WHERE p.user_id = $1
-GROUP BY p.id, p.name, p.hidden
+GROUP BY p.id, p.name, p.hidden, p.birth_date
 HAVING p.name <> '' OR count(DISTINCT a.id) >= $2::bigint
 ORDER BY p.name = '', count(DISTINCT a.id) DESC, p.id
 `
@@ -304,6 +395,7 @@ type ListPeopleRow struct {
 	ID         pgtype.UUID
 	Name       string
 	Hidden     bool
+	BirthDate  pgtype.Date
 	AssetCount int64
 }
 
@@ -321,6 +413,7 @@ func (q *Queries) ListPeople(ctx context.Context, arg ListPeopleParams) ([]ListP
 			&i.ID,
 			&i.Name,
 			&i.Hidden,
+			&i.BirthDate,
 			&i.AssetCount,
 		); err != nil {
 			return nil, err
@@ -808,6 +901,34 @@ func (q *Queries) SearchVector(ctx context.Context, arg SearchVectorParams) ([]p
 		return nil, err
 	}
 	return items, nil
+}
+
+const setFacePerson = `-- name: SetFacePerson :exec
+UPDATE faces SET person_id = $2 WHERE id = $1
+`
+
+type SetFacePersonParams struct {
+	ID       pgtype.UUID
+	PersonID pgtype.UUID
+}
+
+func (q *Queries) SetFacePerson(ctx context.Context, arg SetFacePersonParams) error {
+	_, err := q.db.Exec(ctx, setFacePerson, arg.ID, arg.PersonID)
+	return err
+}
+
+const setPersonBirthDate = `-- name: SetPersonBirthDate :exec
+UPDATE people SET birth_date = $2 WHERE id = $1
+`
+
+type SetPersonBirthDateParams struct {
+	ID        pgtype.UUID
+	BirthDate pgtype.Date
+}
+
+func (q *Queries) SetPersonBirthDate(ctx context.Context, arg SetPersonBirthDateParams) error {
+	_, err := q.db.Exec(ctx, setPersonBirthDate, arg.ID, arg.BirthDate)
+	return err
 }
 
 const updatePerson = `-- name: UpdatePerson :exec

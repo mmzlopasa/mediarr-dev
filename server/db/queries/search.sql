@@ -54,12 +54,12 @@ VALUES (sqlc.arg('asset_id'), sqlc.arg('user_id'), sqlc.arg('person_id'), sqlc.a
 
 -- name: ListPeople :many
 -- Someone seen once and without a name is usually a stranger in the background.
-SELECT p.id, p.name, p.hidden, count(DISTINCT a.id) AS asset_count
+SELECT p.id, p.name, p.hidden, p.birth_date, count(DISTINCT a.id) AS asset_count
 FROM people p
 JOIN faces f ON f.person_id = p.id
 JOIN assets a ON a.id = f.asset_id AND a.deleted_at IS NULL AND a.vault_at IS NULL
 WHERE p.user_id = sqlc.arg('user_id')
-GROUP BY p.id, p.name, p.hidden
+GROUP BY p.id, p.name, p.hidden, p.birth_date
 HAVING p.name <> '' OR count(DISTINCT a.id) >= sqlc.arg('min_faces')::bigint
 ORDER BY p.name = '', count(DISTINCT a.id) DESC, p.id;
 
@@ -192,3 +192,21 @@ SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a
        0::bigint AS stack_members
 FROM assets a
 WHERE a.id = ANY($1::uuid[]);
+
+-- name: ListAssetFaces :many
+SELECT f.id, f.person_id, f.x1, f.y1, f.x2, f.y2, p.name AS person_name
+FROM faces f LEFT JOIN people p ON p.id = f.person_id
+WHERE f.asset_id = $1 AND f.user_id = $2
+ORDER BY f.x1, f.id;
+
+-- name: GetFace :one
+SELECT id, asset_id, x1, y1, x2, y2 FROM faces WHERE id = $1 AND user_id = $2;
+
+-- name: SetFacePerson :exec
+UPDATE faces SET person_id = $2 WHERE id = $1;
+
+-- name: DeleteFace :exec
+DELETE FROM faces WHERE id = $1;
+
+-- name: SetPersonBirthDate :exec
+UPDATE people SET birth_date = $2 WHERE id = $1;

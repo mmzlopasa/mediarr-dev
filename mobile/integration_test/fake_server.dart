@@ -96,6 +96,28 @@ class FakeServer {
   }
 
   Future<void> _signedIn(HttpRequest request, String path) async {
+    if (path == '/api/assets/$photoId/faces') {
+      await _json(request, 200, {
+        'faces': [
+          {
+            'id': '00000000-0000-0000-0000-000000000010',
+            'x1': 0.1,
+            'y1': 0.1,
+            'x2': 0.4,
+            'y2': 0.4,
+            'person': {
+              'id': '00000000-0000-0000-0000-000000000011',
+              'name': 'Ana',
+            },
+          },
+        ],
+      });
+      return;
+    }
+    if (path == '/api/people') {
+      await _json(request, 200, {'enabled': true, 'people': []});
+      return;
+    }
     if (path == '/api/notifications') {
       await _json(request, 200, {
         'unread': 1,

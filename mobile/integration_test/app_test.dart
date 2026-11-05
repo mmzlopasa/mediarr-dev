@@ -196,6 +196,17 @@ void main() {
     await tester.tap(find.byTooltip('Remove').first);
   });
 
+  testWidgets('the details name the faces in a photo', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byType(AssetPicture).first);
+    await waitFor(tester, find.byTooltip('Details'));
+    await tester.tap(find.byTooltip('Details'));
+    await waitFor(tester, find.text('Ana'));
+    expect(find.byTooltip('Who this is'), findsOneWidget);
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

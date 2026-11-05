@@ -23,6 +23,8 @@ doc/AskRequest.md
 doc/Asset.md
 doc/AssetDetail.md
 doc/AssetEdits.md
+doc/AssetFace.md
+doc/AssetFaces.md
 doc/AssetIds.md
 doc/AssetList.md
 doc/AssetTagChange.md
@@ -54,6 +56,7 @@ doc/EmailSettingsUpdate.md
 doc/Error.md
 doc/ExternalLibrary.md
 doc/ExternalLibraryOwner.md
+doc/FaceAssign.md
 doc/FailedJob.md
 doc/Family.md
 doc/FamilyRule.md
@@ -161,6 +164,8 @@ lib/model/ask_request.dart
 lib/model/asset.dart
 lib/model/asset_detail.dart
 lib/model/asset_edits.dart
+lib/model/asset_face.dart
+lib/model/asset_faces.dart
 lib/model/asset_ids.dart
 lib/model/asset_list.dart
 lib/model/asset_tag_change.dart
@@ -191,6 +196,7 @@ lib/model/email_settings_update.dart
 lib/model/error.dart
 lib/model/external_library.dart
 lib/model/external_library_owner.dart
+lib/model/face_assign.dart
 lib/model/failed_job.dart
 lib/model/family.dart
 lib/model/family_rule.dart
@@ -267,5 +273,6 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/notification_list_test.dart
-test/notification_test.dart
+test/asset_face_test.dart
+test/asset_faces_test.dart
+test/face_assign_test.dart

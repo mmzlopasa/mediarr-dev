@@ -271,6 +271,10 @@ class ApiClient {
           return AssetDetail.fromJson(value);
         case 'AssetEdits':
           return AssetEdits.fromJson(value);
+        case 'AssetFace':
+          return AssetFace.fromJson(value);
+        case 'AssetFaces':
+          return AssetFaces.fromJson(value);
         case 'AssetIds':
           return AssetIds.fromJson(value);
         case 'AssetList':
@@ -331,6 +335,8 @@ class ApiClient {
           return ExternalLibrary.fromJson(value);
         case 'ExternalLibraryOwner':
           return ExternalLibraryOwner.fromJson(value);
+        case 'FaceAssign':
+          return FaceAssign.fromJson(value);
         case 'FailedJob':
           return FailedJob.fromJson(value);
         case 'Family':

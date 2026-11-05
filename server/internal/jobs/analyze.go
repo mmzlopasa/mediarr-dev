@@ -133,7 +133,7 @@ func AnalyzeAsset(ctx context.Context, pool beginner, q *db.Queries, client *ml.
 		return err
 	}
 
-	hints, width, height, err := faceHints(ctx, q, id, path)
+	hints, ignored, width, height, err := faceNotes(ctx, q, id, path)
 	if err != nil {
 		return err
 	}
@@ -151,6 +151,9 @@ func AnalyzeAsset(ctx context.Context, pool beginner, q *db.Queries, client *ml.
 			return err
 		}
 		for i := range faces {
+			if faceIgnored(&faces[i], ignored, width, height) {
+				continue
+			}
 			if err := storeFace(ctx, qtx, &asset, &faces[i], hintFor(&faces[i], hints, width, height)); err != nil {
 				return err
 			}
@@ -241,23 +244,53 @@ func overlap(a, b [4]float32) float32 {
 	return shared / ((a[2]-a[0])*(a[3]-a[1]) + (b[2]-b[0])*(b[3]-b[1]) - shared)
 }
 
-// faceHints reads who another system said is in this picture, and the preview's size to compare with.
-func faceHints(ctx context.Context, q *db.Queries, id pgtype.UUID, preview string) (hints []db.ListFaceHintsRow, width, height float32, err error) {
-	hints, err = q.ListFaceHints(ctx, id)
-	if err != nil || len(hints) == 0 {
-		return nil, 0, 0, err
+// faceNotes reads what is already known about the faces in this picture: who another system or the
+// user said they are, which boxes are not people, and the preview's size to compare with.
+func faceNotes(ctx context.Context, q *db.Queries, id pgtype.UUID, preview string) (hints []db.ListFaceHintsRow, ignored []db.ListFaceIgnoredRow, width, height float32, err error) {
+	if hints, err = q.ListFaceHints(ctx, id); err != nil {
+		return nil, nil, 0, 0, err
 	}
+	if ignored, err = q.ListFaceIgnored(ctx, id); err != nil {
+		return nil, nil, 0, 0, err
+	}
+	if len(hints) == 0 && len(ignored) == 0 {
+		return nil, nil, 0, 0, nil
+	}
+	width, height, err = PreviewSize(preview)
+	return hints, ignored, width, height, err
+}
+
+// PreviewSize is what a face's box is measured in. Without a readable size it is zero, and the boxes
+// are compared as they are.
+func PreviewSize(preview string) (width, height float32, err error) {
 	file, err := os.Open(preview) //nolint:gosec // From the database.
 	if err != nil {
-		return nil, 0, 0, fmt.Errorf("read preview: %w", err)
+		return 0, 0, fmt.Errorf("read preview: %w", err)
 	}
 	defer func() { _ = file.Close() }()
 	config, err := webp.DecodeConfig(file)
 	if err != nil {
-		// Without a size there is nothing to compare, and the faces are grouped as usual.
-		return nil, 0, 0, nil //nolint:nilerr // See above.
+		return 0, 0, nil //nolint:nilerr // See above.
 	}
-	return hints, float32(config.Width), float32(config.Height), nil
+	return float32(config.Width), float32(config.Height), nil
+}
+
+// RelativeBox gives a box in parts of the picture, as clients and notes keep it.
+func RelativeBox(x1, y1, x2, y2, width, height float32) [4]float32 {
+	return [4]float32{x1 / max(width, 1), y1 / max(height, 1), x2 / max(width, 1), y2 / max(height, 1)}
+}
+
+// BoxesMatch says whether two relative boxes are the same face.
+func BoxesMatch(a, b [4]float32) bool { return overlap(a, b) >= minHintOverlap }
+
+func faceIgnored(face *ml.Face, ignored []db.ListFaceIgnoredRow, width, height float32) bool {
+	box := RelativeBox(face.Box[0], face.Box[1], face.Box[2], face.Box[3], width, height)
+	for i := range ignored {
+		if BoxesMatch(box, [4]float32{ignored[i].X1, ignored[i].Y1, ignored[i].X2, ignored[i].Y2}) {
+			return true
+		}
+	}
+	return false
 }
 
 func hintFor(face *ml.Face, hints []db.ListFaceHintsRow, width, height float32) pgtype.UUID {

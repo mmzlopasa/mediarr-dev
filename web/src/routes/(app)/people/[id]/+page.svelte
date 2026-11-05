@@ -19,6 +19,7 @@
 	let others = $state<Person[]>([]);
 	let gone = $state(false);
 	let name = $state('');
+	let born = $state('');
 	let merging = $state(false);
 	let timeline = $state<Timeline>();
 
@@ -28,7 +29,10 @@
 			person = people.find((candidate) => candidate.id === id);
 			others = people.filter((candidate) => candidate.id !== id);
 			gone = !person;
-			if (person) name = person.name;
+			if (person) {
+				name = person.name;
+				born = person.birthDate ?? '';
+			}
 		} catch {
 			gone = true;
 		}
@@ -39,7 +43,7 @@
 	async function save(event: SubmitEvent) {
 		event.preventDefault();
 		try {
-			await api.updatePerson(id, { name });
+			await api.updatePerson(id, { name, birthDate: born });
 			showToast('ok', tr('Spremljeno.', 'Saved.'));
 			await load();
 		} catch {
@@ -88,6 +92,7 @@
 	</div>
 	<form class="map-bar" onsubmit={save}>
 		<Input label={tr('Ime', 'Name')} maxlength={100} bind:value={name} />
+		<Input label={tr('Datum rođenja', 'Date of birth')} type="date" bind:value={born} />
 		<Button type="submit" small variant="gold">{tr('Spremi', 'Save')}</Button>
 	</form>
 	<Timeline

@@ -291,6 +291,62 @@ class DefaultApi {
     return null;
   }
 
+  /// Say who this face is. Analysing the picture again keeps it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [FaceAssign] faceAssign (required):
+  Future<Response> assignFaceWithHttpInfo(
+    String id,
+    FaceAssign faceAssign,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/faces/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = faceAssign;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Say who this face is. Analysing the picture again keeps it
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [FaceAssign] faceAssign (required):
+  Future<void> assignFace(
+    String id,
+    FaceAssign faceAssign,
+  ) async {
+    final response = await assignFaceWithHttpInfo(
+      id,
+      faceAssign,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Start signing in with a passkey
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6619,6 +6675,66 @@ class DefaultApi {
     return null;
   }
 
+  /// The faces found in a picture of the signed-in user
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> listAssetFacesWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/{id}/faces'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The faces found in a picture of the signed-in user
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<AssetFaces?> listAssetFaces(
+    String id,
+  ) async {
+    final response = await listAssetFacesWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AssetFaces',
+      ) as AssetFaces;
+    }
+    return null;
+  }
+
   /// List the current user's most recent assets and their processing status
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8006,6 +8122,55 @@ class DefaultApi {
     final response = await removeAlbumMemberWithHttpInfo(
       id,
       userId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Say this is not a person. Analysing the picture again does not bring it back
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> removeFaceWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/faces/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Say this is not a person. Analysing the picture again does not bring it back
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> removeFace(
+    String id,
+  ) async {
+    final response = await removeFaceWithHttpInfo(
+      id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

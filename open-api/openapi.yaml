@@ -1366,6 +1366,45 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/faces:
+    get:
+      operationId: listAssetFaces
+      summary: The faces found in a picture of the signed-in user
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Faces
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetFaces" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/faces/{id}:
+    put:
+      operationId: assignFace
+      summary: Say who this face is. Analysing the picture again keeps it
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FaceAssign" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: removeFace
+      summary: Say this is not a person. Analysing the picture again does not bring it back
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/people/{id}/merge:
     post:
       operationId: mergePeople
@@ -2836,6 +2875,7 @@ components:
         id: { type: string, format: uuid }
         name: { type: string }
         hidden: { type: boolean }
+        birthDate: { type: string, description: "YYYY-MM-DD, when it is known" }
         assetCount: { type: integer, format: int64 }
     PeopleList:
       type: object
@@ -2849,11 +2889,34 @@ components:
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
+    AssetFace:
+      type: object
+      required: [id, x1, y1, x2, y2]
+      description: A box is given as parts of the picture's width and height, from 0 to 1.
+      properties:
+        id: { type: string, format: uuid }
+        x1: { type: number, format: float }
+        y1: { type: number, format: float }
+        x2: { type: number, format: float }
+        y2: { type: number, format: float }
+        person: { $ref: "#/components/schemas/PersonRef" }
+    AssetFaces:
+      type: object
+      required: [faces]
+      properties:
+        faces: { type: array, items: { $ref: "#/components/schemas/AssetFace" } }
+    FaceAssign:
+      type: object
+      description: Either a person who is already known, or the name of a new one.
+      properties:
+        personId: { type: string, format: uuid }
+        name: { type: string }
     PersonUpdate:
       type: object
       properties:
         name: { type: string }
         hidden: { type: boolean }
+        birthDate: { type: string, description: "YYYY-MM-DD. Empty removes it" }
     AnalysisProgress:
       type: object
       required: [enabled, total, analyzed]

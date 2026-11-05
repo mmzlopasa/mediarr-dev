@@ -16,6 +16,7 @@ class Person {
     required this.id,
     required this.name,
     required this.hidden,
+    this.birthDate,
     required this.assetCount,
   });
 
@@ -24,6 +25,15 @@ class Person {
   String name;
 
   bool hidden;
+
+  /// YYYY-MM-DD, when it is known
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? birthDate;
 
   int assetCount;
 
@@ -34,6 +44,7 @@ class Person {
           other.id == id &&
           other.name == name &&
           other.hidden == hidden &&
+          other.birthDate == birthDate &&
           other.assetCount == assetCount;
 
   @override
@@ -42,17 +53,23 @@ class Person {
       (id.hashCode) +
       (name.hashCode) +
       (hidden.hashCode) +
+      (birthDate == null ? 0 : birthDate!.hashCode) +
       (assetCount.hashCode);
 
   @override
   String toString() =>
-      'Person[id=$id, name=$name, hidden=$hidden, assetCount=$assetCount]';
+      'Person[id=$id, name=$name, hidden=$hidden, birthDate=$birthDate, assetCount=$assetCount]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'id'] = this.id;
     json[r'name'] = this.name;
     json[r'hidden'] = this.hidden;
+    if (this.birthDate != null) {
+      json[r'birthDate'] = this.birthDate;
+    } else {
+      json[r'birthDate'] = null;
+    }
     json[r'assetCount'] = this.assetCount;
     return json;
   }
@@ -81,6 +98,7 @@ class Person {
         id: mapValueOfType<String>(json, r'id')!,
         name: mapValueOfType<String>(json, r'name')!,
         hidden: mapValueOfType<bool>(json, r'hidden')!,
+        birthDate: mapValueOfType<String>(json, r'birthDate'),
         assetCount: mapValueOfType<int>(json, r'assetCount')!,
       );
     }

@@ -1290,6 +1290,21 @@ type AssetEdits struct {
 // AssetEditsFilter defines model for AssetEdits.Filter.
 type AssetEditsFilter string
 
+// AssetFace A box is given as parts of the picture's width and height, from 0 to 1.
+type AssetFace struct {
+	Id     openapi_types.UUID `json:"id"`
+	Person *PersonRef         `json:"person,omitempty"`
+	X1     float32            `json:"x1"`
+	X2     float32            `json:"x2"`
+	Y1     float32            `json:"y1"`
+	Y2     float32            `json:"y2"`
+}
+
+// AssetFaces defines model for AssetFaces.
+type AssetFaces struct {
+	Faces []AssetFace `json:"faces"`
+}
+
 // AssetIds defines model for AssetIds.
 type AssetIds struct {
 	Ids []openapi_types.UUID `json:"ids"`
@@ -1567,6 +1582,12 @@ type ExternalLibrary struct {
 // ExternalLibraryOwner defines model for ExternalLibraryOwner.
 type ExternalLibraryOwner struct {
 	OwnerId openapi_types.UUID `json:"ownerId"`
+}
+
+// FaceAssign Either a person who is already known, or the name of a new one.
+type FaceAssign struct {
+	Name     *string             `json:"name,omitempty"`
+	PersonId *openapi_types.UUID `json:"personId,omitempty"`
 }
 
 // FailedJob defines model for FailedJob.
@@ -1875,10 +1896,13 @@ type PeopleList struct {
 
 // Person defines model for Person.
 type Person struct {
-	AssetCount int64              `json:"assetCount"`
-	Hidden     bool               `json:"hidden"`
-	Id         openapi_types.UUID `json:"id"`
-	Name       string             `json:"name"`
+	AssetCount int64 `json:"assetCount"`
+
+	// BirthDate YYYY-MM-DD, when it is known
+	BirthDate *string            `json:"birthDate,omitempty"`
+	Hidden    bool               `json:"hidden"`
+	Id        openapi_types.UUID `json:"id"`
+	Name      string             `json:"name"`
 }
 
 // PersonRef defines model for PersonRef.
@@ -1889,8 +1913,10 @@ type PersonRef struct {
 
 // PersonUpdate defines model for PersonUpdate.
 type PersonUpdate struct {
-	Hidden *bool   `json:"hidden,omitempty"`
-	Name   *string `json:"name,omitempty"`
+	// BirthDate YYYY-MM-DD. Empty removes it
+	BirthDate *string `json:"birthDate,omitempty"`
+	Hidden    *bool   `json:"hidden,omitempty"`
+	Name      *string `json:"name,omitempty"`
 }
 
 // PublicLink defines model for PublicLink.
@@ -2506,6 +2532,9 @@ type SetupJSONRequestBody = SetupRequest
 // DismissDuplicatesJSONRequestBody defines body for DismissDuplicates for application/json ContentType.
 type DismissDuplicatesJSONRequestBody = AssetIds
 
+// AssignFaceJSONRequestBody defines body for AssignFace for application/json ContentType.
+type AssignFaceJSONRequestBody = FaceAssign
+
 // CreateFamilyRuleJSONRequestBody defines body for CreateFamilyRule for application/json ContentType.
 type CreateFamilyRuleJSONRequestBody = FamilyRuleCreate
 
@@ -2787,6 +2816,9 @@ type ServerInterface interface {
 	// SetAssetEdits Replace the list of edits of a photo. The original is never changed
 	// (PUT /api/assets/{id}/edits)
 	SetAssetEdits(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ListAssetFaces The faces found in a picture of the signed-in user
+	// (GET /api/assets/{id}/faces)
+	ListAssetFaces(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetAssetMotion Read the video embedded in an Android Motion Photo
 	// (GET /api/assets/{id}/motion)
 	GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -2871,6 +2903,12 @@ type ServerInterface interface {
 	// DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 	// (POST /api/duplicates/dismiss)
 	DismissDuplicates(w http.ResponseWriter, r *http.Request)
+	// RemoveFace Say this is not a person. Analysing the picture again does not bring it back
+	// (DELETE /api/faces/{id})
+	RemoveFace(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// AssignFace Say who this face is. Analysing the picture again keeps it
+	// (PUT /api/faces/{id})
+	AssignFace(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetFamily The family library, and what this user shares with it
 	// (GET /api/family)
 	GetFamily(w http.ResponseWriter, r *http.Request)
@@ -3558,6 +3596,12 @@ func (_ Unimplemented) SetAssetEdits(w http.ResponseWriter, r *http.Request, id 
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListAssetFaces The faces found in a picture of the signed-in user
+// (GET /api/assets/{id}/faces)
+func (_ Unimplemented) ListAssetFaces(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetAssetMotion Read the video embedded in an Android Motion Photo
 // (GET /api/assets/{id}/motion)
 func (_ Unimplemented) GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
@@ -3723,6 +3767,18 @@ func (_ Unimplemented) ListDuplicates(w http.ResponseWriter, r *http.Request) {
 // DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 // (POST /api/duplicates/dismiss)
 func (_ Unimplemented) DismissDuplicates(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemoveFace Say this is not a person. Analysing the picture again does not bring it back
+// (DELETE /api/faces/{id})
+func (_ Unimplemented) RemoveFace(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AssignFace Say who this face is. Analysing the picture again keeps it
+// (PUT /api/faces/{id})
+func (_ Unimplemented) AssignFace(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5829,6 +5885,32 @@ func (siw *ServerInterfaceWrapper) SetAssetEdits(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// ListAssetFaces operation middleware
+func (siw *ServerInterfaceWrapper) ListAssetFaces(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAssetFaces(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetAssetMotion operation middleware
 func (siw *ServerInterfaceWrapper) GetAssetMotion(w http.ResponseWriter, r *http.Request) {
 
@@ -6568,6 +6650,58 @@ func (siw *ServerInterfaceWrapper) DismissDuplicates(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DismissDuplicates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveFace operation middleware
+func (siw *ServerInterfaceWrapper) RemoveFace(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveFace(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AssignFace operation middleware
+func (siw *ServerInterfaceWrapper) AssignFace(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AssignFace(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8723,6 +8857,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/api/people/{id}", wrapper.UpdatePerson)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}/faces", wrapper.ListAssetFaces)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/faces/{id}", wrapper.RemoveFace)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/faces/{id}", wrapper.AssignFace)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/people/{id}/merge", wrapper.MergePeople)

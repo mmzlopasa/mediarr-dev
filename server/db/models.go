@@ -211,6 +211,14 @@ type FaceHint struct {
 	Y2       float32
 }
 
+type FaceIgnored struct {
+	AssetID pgtype.UUID
+	X1      float32
+	Y1      float32
+	X2      float32
+	Y2      float32
+}
+
 type FamilyMember struct {
 	UserID  pgtype.UUID
 	AddedAt pgtype.Timestamptz
@@ -300,6 +308,7 @@ type Person struct {
 	Name      string
 	Hidden    bool
 	CreatedAt pgtype.Timestamptz
+	BirthDate pgtype.Date
 }
 
 type Place struct {

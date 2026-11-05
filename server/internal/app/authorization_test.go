@@ -100,6 +100,8 @@ func TestAdminRoutesAreForAdmins(t *testing.T) {
 var ownOnlyRoutes = map[string]bool{
 	"DELETE /api/me/sessions/{id}":                 true,
 	"DELETE /api/notifications/{id}":               true,
+	"PUT /api/faces/{id}":                          true,
+	"DELETE /api/faces/{id}":                       true,
 	"GET /api/timeline/buckets/{month}":            true,
 	"GET /api/collections/{scope}/buckets":         true,
 	"GET /api/collections/{scope}/buckets/{month}": true,

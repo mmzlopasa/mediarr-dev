@@ -422,7 +422,7 @@ func (s *apiServer) ListPeople(w http.ResponseWriter, r *http.Request) {
 	}
 	people := make([]api.Person, len(rows))
 	for i := range rows {
-		people[i] = api.Person{Id: rows[i].ID.Bytes, Name: rows[i].Name, Hidden: rows[i].Hidden, AssetCount: rows[i].AssetCount}
+		people[i] = api.Person{BirthDate: birthDate(rows[i].BirthDate), Id: rows[i].ID.Bytes, Name: rows[i].Name, Hidden: rows[i].Hidden, AssetCount: rows[i].AssetCount}
 	}
 	writeJSON(w, http.StatusOK, api.PeopleList{Enabled: s.embeddings.Enabled(), People: people})
 }
@@ -468,6 +468,17 @@ func (s *apiServer) UpdatePerson(w http.ResponseWriter, r *http.Request, id open
 	if err := s.queries.UpdatePerson(r.Context(), params); err != nil {
 		internalError(w, r, err)
 		return
+	}
+	if body.BirthDate != nil {
+		date, valid := parseBirthDate(*body.BirthDate, time.Now())
+		if !valid {
+			writeError(w, http.StatusBadRequest, "the date of birth must be a past date, as YYYY-MM-DD")
+			return
+		}
+		if err := s.queries.SetPersonBirthDate(r.Context(), db.SetPersonBirthDateParams{ID: row.ID, BirthDate: date}); err != nil {
+			internalError(w, r, err)
+			return
+		}
 	}
 	w.WriteHeader(http.StatusNoContent)
 }

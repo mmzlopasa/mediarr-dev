@@ -55,6 +55,7 @@ export type UserSession = components['schemas']['UserSession'];
 export type EmailSettings = components['schemas']['EmailSettings'];
 export type EmailSettingsUpdate = components['schemas']['EmailSettingsUpdate'];
 export type ServerSettings = components['schemas']['ServerSettings'];
+export type AssetFace = components['schemas']['AssetFace'];
 export type IntegrityReport = components['schemas']['IntegrityReport'];
 export type Notification = components['schemas']['Notification'];
 export type NotificationList = components['schemas']['NotificationList'];
@@ -198,7 +199,12 @@ export const api = {
 	search: (query: string) =>
 		request<SearchResult>(fetch, `/api/search?q=${encodeURIComponent(query)}`),
 	people: () => request<PeopleList>(fetch, '/api/people'),
-	updatePerson: (id: string, body: { name?: string; hidden?: boolean }) =>
+	assetFaces: (id: string) =>
+		request<components['schemas']['AssetFaces']>(fetch, `/api/assets/${id}/faces`),
+	assignFace: (id: string, body: { personId?: string; name?: string }) =>
+		request<void>(fetch, `/api/faces/${id}`, body, 'PUT'),
+	removeFace: (id: string) => request<void>(fetch, `/api/faces/${id}`, undefined, 'DELETE'),
+	updatePerson: (id: string, body: { name?: string; hidden?: boolean; birthDate?: string }) =>
 		request<void>(fetch, `/api/people/${id}`, body, 'PATCH'),
 	mergePeople: (id: string, ids: string[]) =>
 		request<void>(fetch, `/api/people/${id}/merge`, { ids }),

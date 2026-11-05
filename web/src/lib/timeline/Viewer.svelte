@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FacesEditor from '#lib/organize/FacesEditor.svelte';
 	import { preferences, trashDays } from '#lib/preferences.svelte.ts';
 	import { onMount } from 'svelte';
 	import { api, formatBytes, type AssetDetail } from '#lib/api.ts';
@@ -573,12 +574,7 @@
 					<Kv label={tr('Trajanje', 'Duration')} value={formatDuration(detail.durationMs)} />
 				{/if}
 				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
-				{#if detail.people?.length}
-					<Kv
-						label={tr('Osobe', 'People')}
-						value={detail.people.map((person) => person.name).join(', ')}
-					/>
-				{/if}
+				{#if detail.people}<FacesEditor assetId={id} />{/if}
 				{#if detail.tags?.length}
 					<Kv label={tr('Oznake', 'Tags')} value={detail.tags.join(', ')} />
 				{/if}

@@ -15,6 +15,7 @@ class PersonUpdate {
   PersonUpdate({
     this.name,
     this.hidden,
+    this.birthDate,
   });
 
   ///
@@ -33,19 +34,33 @@ class PersonUpdate {
   ///
   bool? hidden;
 
+  /// YYYY-MM-DD. Empty removes it
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? birthDate;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PersonUpdate && other.name == name && other.hidden == hidden;
+      other is PersonUpdate &&
+          other.name == name &&
+          other.hidden == hidden &&
+          other.birthDate == birthDate;
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
       (name == null ? 0 : name!.hashCode) +
-      (hidden == null ? 0 : hidden!.hashCode);
+      (hidden == null ? 0 : hidden!.hashCode) +
+      (birthDate == null ? 0 : birthDate!.hashCode);
 
   @override
-  String toString() => 'PersonUpdate[name=$name, hidden=$hidden]';
+  String toString() =>
+      'PersonUpdate[name=$name, hidden=$hidden, birthDate=$birthDate]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -58,6 +73,11 @@ class PersonUpdate {
       json[r'hidden'] = this.hidden;
     } else {
       json[r'hidden'] = null;
+    }
+    if (this.birthDate != null) {
+      json[r'birthDate'] = this.birthDate;
+    } else {
+      json[r'birthDate'] = null;
     }
     return json;
   }
@@ -85,6 +105,7 @@ class PersonUpdate {
       return PersonUpdate(
         name: mapValueOfType<String>(json, r'name'),
         hidden: mapValueOfType<bool>(json, r'hidden'),
+        birthDate: mapValueOfType<String>(json, r'birthDate'),
       );
     }
     return null;

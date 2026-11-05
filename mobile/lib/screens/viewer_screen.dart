@@ -11,6 +11,7 @@ import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'asset_picture.dart';
 import 'duplicates_screen.dart';
+import 'faces_section.dart';
 import 'photo_editor_screen.dart';
 
 /// A full screen view on a clean black background: colors around a photo must not affect it.
@@ -699,6 +700,7 @@ class _InfoSheet extends StatelessWidget {
                       ],
                     ),
                   ),
+                FacesSection(session: session, assetId: id),
               ],
             ),
           );

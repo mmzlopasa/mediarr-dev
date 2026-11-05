@@ -36,3 +36,7 @@ Faces are grouped into people, and you can name, merge and hide them. Names and 
 :::note License
 The default face models are licensed for non-commercial use only. Check their terms if you use Mediarr commercially.
 :::
+
+## Correcting faces
+
+In a photo's details, each face has its own row. Choose who it is, give it a new name, or say **Not a person**. Your answer stays when the photo is analysed again. A person's page also keeps their date of birth.

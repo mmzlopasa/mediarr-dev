@@ -377,6 +377,7 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
   late final _store = TimelineStore.person(_session, widget.person.id);
   late String _name = widget.person.name;
   late bool _hidden = widget.person.hidden;
+  late String? _birthDate = widget.person.birthDate;
   final _selected = <String>{};
 
   @override
@@ -418,6 +419,29 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
         PersonUpdate(name: name),
       );
       if (mounted) setState(() => _name = name);
+    } on ApiException catch (cause) {
+      if (mounted) _tell(context, 'The action failed. ${cause.message ?? ''}');
+    }
+  }
+
+  Future<void> _setBirthDate() async {
+    final now = DateTime.now();
+    final known = DateTime.tryParse(_birthDate ?? '');
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime(1880),
+      lastDate: now,
+      initialDate: known ?? DateTime(now.year - 30),
+      helpText: 'Date of birth',
+    );
+    if (picked == null) return;
+    final date = picked.toIso8601String().substring(0, 10);
+    try {
+      await _session.api.updatePerson(
+        widget.person.id,
+        PersonUpdate(birthDate: date),
+      );
+      if (mounted) setState(() => _birthDate = date);
     } on ApiException catch (cause) {
       if (mounted) _tell(context, 'The action failed. ${cause.message ?? ''}');
     }
@@ -485,12 +509,19 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
           tooltip: 'More',
           onSelected: (choice) => switch (choice) {
             'name' => _rename(),
+            'born' => _setBirthDate(),
             'merge' => _merge(),
             'show' => _setHidden(false),
             _ => _setHidden(true),
           },
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'name', child: Text('Name')),
+            PopupMenuItem(
+              value: 'born',
+              child: Text(
+                _birthDate == null ? 'Date of birth' : 'Born $_birthDate',
+              ),
+            ),
             const PopupMenuItem(value: 'merge', child: Text('Merge with…')),
             PopupMenuItem(
               value: _hidden ? 'show' : 'hide',

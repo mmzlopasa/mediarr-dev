@@ -1463,6 +1463,41 @@ export interface paths {
         patch: operations["updatePerson"];
         trace?: never;
     };
+    "/api/assets/{id}/faces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The faces found in a picture of the signed-in user */
+        get: operations["listAssetFaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/faces/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Say who this face is. Analysing the picture again keeps it */
+        put: operations["assignFace"];
+        post?: never;
+        /** Say this is not a person. Analysing the picture again does not bring it back */
+        delete: operations["removeFace"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/people/{id}/merge": {
         parameters: {
             query?: never;
@@ -3042,6 +3077,8 @@ export interface components {
             id: string;
             name: string;
             hidden: boolean;
+            /** @description YYYY-MM-DD, when it is known */
+            birthDate?: string;
             /** Format: int64 */
             assetCount: number;
         };
@@ -3055,9 +3092,34 @@ export interface components {
             id: string;
             name: string;
         };
+        /** @description A box is given as parts of the picture's width and height, from 0 to 1. */
+        AssetFace: {
+            /** Format: uuid */
+            id: string;
+            /** Format: float */
+            x1: number;
+            /** Format: float */
+            y1: number;
+            /** Format: float */
+            x2: number;
+            /** Format: float */
+            y2: number;
+            person?: components["schemas"]["PersonRef"];
+        };
+        AssetFaces: {
+            faces: components["schemas"]["AssetFace"][];
+        };
+        /** @description Either a person who is already known, or the name of a new one. */
+        FaceAssign: {
+            /** Format: uuid */
+            personId?: string;
+            name?: string;
+        };
         PersonUpdate: {
             name?: string;
             hidden?: boolean;
+            /** @description YYYY-MM-DD. Empty removes it */
+            birthDate?: string;
         };
         AnalysisProgress: {
             enabled: boolean;
@@ -6168,6 +6230,79 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listAssetFaces: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Faces */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetFaces"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    assignFace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaceAssign"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    removeFace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };

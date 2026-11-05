@@ -134,6 +134,68 @@ test('the vault hides a photo until the PIN opens it', async ({ page }) => {
 	await expect(page.getByText('The vault is empty.')).toBeVisible();
 });
 
+test('a face is corrected from the details of a photo', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await upload(page, 'face.jpg');
+	const face = '00000000-0000-4000-8000-000000000002';
+	const person = '00000000-0000-4000-8000-000000000003';
+	await page.route('**/api/assets/*/faces', (route) =>
+		route.fulfill({
+			json: { faces: [{ id: face, x1: 0.1, y1: 0.1, x2: 0.4, y2: 0.4 }] }
+		})
+	);
+	await page.route('**/api/people', (route) =>
+		route.fulfill({
+			json: {
+				enabled: true,
+				people: [{ id: person, name: 'Ana', hidden: false, assetCount: 2 }]
+			}
+		})
+	);
+	const sent: { method: string; body: unknown }[] = [];
+	await page.route(`**/api/faces/${face}`, async (route) => {
+		sent.push({ method: route.request().method(), body: route.request().postDataJSON() });
+		await route.fulfill({ status: 204 });
+	});
+	await page.locator('.tl-tile').first().click();
+	await page.getByRole('button', { name: 'Details' }).click();
+	await page.getByLabel('Who this is').selectOption(person);
+	await expect.poll(() => sent[0]).toEqual({ method: 'PUT', body: { personId: person } });
+	await page.getByLabel('Who this is').selectOption('new');
+	await page.getByLabel('Name', { exact: true }).fill('Teta Mara');
+	await page
+		.getByRole('complementary', { name: 'Details' })
+		.getByRole('button', { name: 'Save' })
+		.click();
+	await expect.poll(() => sent[1]).toEqual({ method: 'PUT', body: { name: 'Teta Mara' } });
+	await page.getByRole('button', { name: 'Not a person' }).click();
+	await expect.poll(() => sent[2]?.method).toBe('DELETE');
+});
+
+test('a date of birth is saved with the person', async ({ page }) => {
+	await signIn(page, 'organizer');
+	const person = '00000000-0000-4000-8000-000000000001';
+	await page.route('**/api/people', (route) =>
+		route.fulfill({
+			json: {
+				enabled: true,
+				people: [{ id: person, name: 'Ana', hidden: false, assetCount: 2, birthDate: '1990-05-17' }]
+			}
+		})
+	);
+	let saved: unknown;
+	await page.route(`**/api/people/${person}`, async (route) => {
+		saved = route.request().postDataJSON();
+		await route.fulfill({ status: 204 });
+	});
+	await page.goto(`/people/${person}`);
+	const born = page.getByLabel('Date of birth');
+	await expect(born).toHaveValue('1990-05-17');
+	await born.fill('1991-06-18');
+	await page.getByRole('button', { name: 'Save' }).click();
+	await expect.poll(() => saved).toEqual({ name: 'Ana', birthDate: '1991-06-18' });
+});
+
 test('a tag groups photos', async ({ page }) => {
 	await signIn(page, 'organizer');
 	await upload(page, 'tag.jpg');

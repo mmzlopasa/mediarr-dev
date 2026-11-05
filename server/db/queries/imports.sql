@@ -64,3 +64,12 @@ UPDATE assets SET checksum_sha1 = $2 WHERE id = $1;
 
 -- name: GetAssetIDBySHA1 :one
 SELECT id FROM assets WHERE user_id = $1 AND checksum_sha1 = $2 LIMIT 1;
+
+-- name: DeleteFaceHint :exec
+DELETE FROM face_hints WHERE asset_id = $1 AND person_id = $2 AND x1 = $3 AND y1 = $4;
+
+-- name: AddFaceIgnored :exec
+INSERT INTO face_ignored (asset_id, x1, y1, x2, y2) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING;
+
+-- name: ListFaceIgnored :many
+SELECT x1, y1, x2, y2 FROM face_ignored WHERE asset_id = $1;

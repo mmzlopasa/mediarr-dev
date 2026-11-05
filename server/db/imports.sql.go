@@ -36,6 +36,29 @@ func (q *Queries) AddFaceHint(ctx context.Context, arg AddFaceHintParams) error 
 	return err
 }
 
+const addFaceIgnored = `-- name: AddFaceIgnored :exec
+INSERT INTO face_ignored (asset_id, x1, y1, x2, y2) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING
+`
+
+type AddFaceIgnoredParams struct {
+	AssetID pgtype.UUID
+	X1      float32
+	Y1      float32
+	X2      float32
+	Y2      float32
+}
+
+func (q *Queries) AddFaceIgnored(ctx context.Context, arg AddFaceIgnoredParams) error {
+	_, err := q.db.Exec(ctx, addFaceIgnored,
+		arg.AssetID,
+		arg.X1,
+		arg.Y1,
+		arg.X2,
+		arg.Y2,
+	)
+	return err
+}
+
 const addImportCounts = `-- name: AddImportCounts :exec
 UPDATE imports SET added = added + $1, skipped = skipped + $2, failed = failed + $3,
     last_error = CASE WHEN $4::text = '' THEN last_error ELSE $4::text END
@@ -101,6 +124,27 @@ func (q *Queries) CreateNamedPerson(ctx context.Context, arg CreateNamedPersonPa
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
+}
+
+const deleteFaceHint = `-- name: DeleteFaceHint :exec
+DELETE FROM face_hints WHERE asset_id = $1 AND person_id = $2 AND x1 = $3 AND y1 = $4
+`
+
+type DeleteFaceHintParams struct {
+	AssetID  pgtype.UUID
+	PersonID pgtype.UUID
+	X1       float32
+	Y1       float32
+}
+
+func (q *Queries) DeleteFaceHint(ctx context.Context, arg DeleteFaceHintParams) error {
+	_, err := q.db.Exec(ctx, deleteFaceHint,
+		arg.AssetID,
+		arg.PersonID,
+		arg.X1,
+		arg.Y1,
+	)
+	return err
 }
 
 const finishImport = `-- name: FinishImport :exec
@@ -244,6 +288,42 @@ func (q *Queries) ListFaceHints(ctx context.Context, assetID pgtype.UUID) ([]Lis
 		var i ListFaceHintsRow
 		if err := rows.Scan(
 			&i.PersonID,
+			&i.X1,
+			&i.Y1,
+			&i.X2,
+			&i.Y2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listFaceIgnored = `-- name: ListFaceIgnored :many
+SELECT x1, y1, x2, y2 FROM face_ignored WHERE asset_id = $1
+`
+
+type ListFaceIgnoredRow struct {
+	X1 float32
+	Y1 float32
+	X2 float32
+	Y2 float32
+}
+
+func (q *Queries) ListFaceIgnored(ctx context.Context, assetID pgtype.UUID) ([]ListFaceIgnoredRow, error) {
+	rows, err := q.db.Query(ctx, listFaceIgnored, assetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListFaceIgnoredRow
+	for rows.Next() {
+		var i ListFaceIgnoredRow
+		if err := rows.Scan(
 			&i.X1,
 			&i.Y1,
 			&i.X2,

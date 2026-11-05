@@ -65,6 +65,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 *DefaultApi* | [**approveDevice**](doc//DefaultApi.md#approvedevice) | **POST** /api/admin/security/devices/{id}/approve | Let this device sign in
 *DefaultApi* | [**askSearch**](doc//DefaultApi.md#asksearch) | **POST** /api/search/ask | Turn a question into words to search for, with the local model
+*DefaultApi* | [**assignFace**](doc//DefaultApi.md#assignface) | **PUT** /api/faces/{id} | Say who this face is. Analysing the picture again keeps it
 *DefaultApi* | [**beginPasskeyLogin**](doc//DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
 *DefaultApi* | [**beginPasskeyRegistration**](doc//DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey, which takes the account's password
 *DefaultApi* | [**bulkAssets**](doc//DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
@@ -177,6 +178,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listAlbumComments**](doc//DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 *DefaultApi* | [**listAlbumLinks**](doc//DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 *DefaultApi* | [**listAlbums**](doc//DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
+*DefaultApi* | [**listAssetFaces**](doc//DefaultApi.md#listassetfaces) | **GET** /api/assets/{id}/faces | The faces found in a picture of the signed-in user
 *DefaultApi* | [**listAssets**](doc//DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 *DefaultApi* | [**listAuditLog**](doc//DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
 *DefaultApi* | [**listBackupRuns**](doc//DefaultApi.md#listbackupruns) | **GET** /api/admin/backup/runs | Backups and tests of bringing one back, the newest first
@@ -204,6 +206,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 *DefaultApi* | [**removeAlbumHeart**](doc//DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 *DefaultApi* | [**removeAlbumMember**](doc//DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
+*DefaultApi* | [**removeFace**](doc//DefaultApi.md#removeface) | **DELETE** /api/faces/{id} | Say this is not a person. Analysing the picture again does not bring it back
 *DefaultApi* | [**removeFamilyMember**](doc//DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
 *DefaultApi* | [**removePartner**](doc//DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
 *DefaultApi* | [**resetPassword**](doc//DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
@@ -266,6 +269,8 @@ Class | Method | HTTP request | Description
  - [Asset](doc//Asset.md)
  - [AssetDetail](doc//AssetDetail.md)
  - [AssetEdits](doc//AssetEdits.md)
+ - [AssetFace](doc//AssetFace.md)
+ - [AssetFaces](doc//AssetFaces.md)
  - [AssetIds](doc//AssetIds.md)
  - [AssetList](doc//AssetList.md)
  - [AssetTagChange](doc//AssetTagChange.md)
@@ -296,6 +301,7 @@ Class | Method | HTTP request | Description
  - [Error](doc//Error.md)
  - [ExternalLibrary](doc//ExternalLibrary.md)
  - [ExternalLibraryOwner](doc//ExternalLibraryOwner.md)
+ - [FaceAssign](doc//FaceAssign.md)
  - [FailedJob](doc//FailedJob.md)
  - [Family](doc//Family.md)
  - [FamilyRule](doc//FamilyRule.md)
