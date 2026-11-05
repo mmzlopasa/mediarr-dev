@@ -1436,3 +1436,21 @@ video.viewer-media {
 	color: inherit;
 	text-decoration: none;
 }
+
+.stars {
+	display: flex;
+	gap: 2px;
+	margin: 8px 0;
+}
+.star {
+	padding: 2px 4px;
+	border: 0;
+	background: none;
+	color: var(--dim, rgba(255, 255, 255, 0.35));
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+}
+.star.on {
+	color: var(--gold, #e0aa3e);
+}

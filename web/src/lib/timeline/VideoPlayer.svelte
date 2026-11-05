@@ -12,8 +12,11 @@
 		onFailed
 	}: {
 		assetId: string;
-		/** Adaptive stream, if it is ready, and the direct file. */
-		sources: { hls?: string; direct: string };
+		/**
+		 * Adaptive stream, if it is ready, and the direct file. The fallback is a stream for when the
+		 * direct file is chosen first and this browser cannot play it, as Chrome cannot play HEVC.
+		 */
+		sources: { hls?: string; direct: string; fallback?: string };
 		sprite?: AssetDetail['sprite'];
 		poster?: string;
 		autoplay?: boolean;
@@ -22,6 +25,8 @@
 	} = $props();
 
 	let video = $state<HTMLVideoElement>();
+	let fellBack = $state(false);
+	const playing = $derived(fellBack ? { hls: sources.fallback, direct: sources.direct } : sources);
 	let duration = $state(0);
 	let hover = $state<number | null>(null);
 
@@ -29,7 +34,7 @@
 	$effect(() => {
 		const element = video;
 		if (!element) return;
-		const { hls, direct } = sources;
+		const { hls, direct } = playing;
 		let stopped = false;
 		let player: { destroy(): void } | undefined;
 
@@ -100,8 +105,10 @@
 		onloadedmetadata={() => (duration = video?.duration ?? 0)}
 		onerror={() => {
 			// A failed stream falls back to the direct file. Only a failed direct file is final.
-			if (video?.currentSrc === new URL(sources.direct, location.href).href) onFailed();
-			else if (video && !sources.hls) onFailed();
+			if (video?.currentSrc === new URL(sources.direct, location.href).href) {
+				if (sources.fallback && !fellBack) fellBack = true;
+				else onFailed();
+			} else if (video && !playing.hls) onFailed();
 			else if (video) video.src = sources.direct;
 		}}
 	></video>

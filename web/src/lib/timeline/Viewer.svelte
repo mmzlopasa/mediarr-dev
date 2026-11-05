@@ -1,5 +1,6 @@
 <script lang="ts">
 	import AssetFactsDialog from '#lib/organize/AssetFactsDialog.svelte';
+	import RatingStars from '#lib/organize/RatingStars.svelte';
 	import FacesEditor from '#lib/organize/FacesEditor.svelte';
 	import { preferences, trashDays } from '#lib/preferences.svelte.ts';
 	import { onMount } from 'svelte';
@@ -56,7 +57,7 @@
 	let olderId = $state<string>();
 	let videoFailed = $state(false);
 	let fullLoaded = $state(false);
-	let fullWanted = $state(preferences()?.photoFull ?? false);
+	let fullWanted = $state(preferences()?.photoFull ?? true);
 	let playingLive = $state(false);
 	let liveDetail = $state<AssetDetail>();
 	let showInfo = $state(false);
@@ -82,7 +83,7 @@
 		failed = false;
 		videoFailed = false;
 		fullLoaded = false;
-		fullWanted = preferences()?.photoFull ?? false;
+		fullWanted = preferences()?.photoFull ?? true;
 		playingLive = false;
 		liveDetail = undefined;
 		scale = 1;
@@ -414,10 +415,11 @@
 					assetId={id}
 					sources={{
 						hls:
-							detail.hlsReady && !preferences()?.videoOriginal
+							detail.hlsReady && !(preferences()?.videoOriginal ?? true)
 								? `${base}/assets/${id}/video/master.m3u8`
 								: undefined,
-						direct: `${base}/assets/${id}/original`
+						direct: `${base}/assets/${id}/original`,
+						fallback: detail.hlsReady ? `${base}/assets/${id}/video/master.m3u8` : undefined
 					}}
 					sprite={detail.sprite}
 					poster="{base}/assets/{id}/thumbnail?size=large"
@@ -578,6 +580,18 @@
 				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
 				{#if detail.people}<FacesEditor assetId={id} />{/if}
 				{#if detail.caption}<Kv label={tr('Opis', 'Description')} value={detail.caption} />{/if}
+				{#if detail.isOwner}
+					<RatingStars
+						assetId={id}
+						rating={detail.rating ?? 0}
+						onChanged={async () => {
+							detail = await load(id);
+						}}
+					/>
+					<a class="linkish" href="/api/assets/{id}/sidecar" download
+						>{tr('Preuzmi XMP', 'Download XMP')}</a
+					>
+				{/if}
 				{#if detail.people}
 					<Button small onclick={() => (editingFacts = true)}>
 						{tr('Uredi podatke', 'Edit details')}

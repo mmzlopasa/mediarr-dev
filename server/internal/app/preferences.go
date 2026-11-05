@@ -22,6 +22,8 @@ const (
 func defaultPreferences() api.UserPreferences {
 	return api.UserPreferences{
 		VideoAutoplay: true, ConfirmDelete: true, MemorySeconds: 4, MinFaces: 2,
+		// Originals first: a converted version is smaller, and only a fallback.
+		PhotoFull: true, VideoOriginal: true,
 		AlbumOrder: api.UserPreferencesAlbumOrderNewest, HiddenSections: []string{},
 	}
 }

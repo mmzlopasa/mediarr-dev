@@ -98,11 +98,11 @@ class AppSettings {
   const AppSettings({
     this.perRow = 4,
     this.groupByDay = true,
-    this.loadOriginal = false,
+    this.loadOriginal = true,
     this.tapToNavigate = false,
     this.autoPlay = true,
     this.loopVideos = false,
-    this.forceOriginalVideo = false,
+    this.forceOriginalVideo = true,
     this.haptics = true,
     this.accent = AppAccent.gold,
     this.theme = AppTheme.system,
@@ -114,11 +114,11 @@ class AppSettings {
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
     perRow: ((json['perRow'] as int?) ?? 4).clamp(minPerRow, maxPerRow),
     groupByDay: json['groupByDay'] as bool? ?? true,
-    loadOriginal: json['loadOriginal'] as bool? ?? false,
+    loadOriginal: json['loadOriginal'] as bool? ?? true,
     tapToNavigate: json['tapToNavigate'] as bool? ?? false,
     autoPlay: json['autoPlay'] as bool? ?? true,
     loopVideos: json['loopVideos'] as bool? ?? false,
-    forceOriginalVideo: json['forceOriginalVideo'] as bool? ?? false,
+    forceOriginalVideo: json['forceOriginalVideo'] as bool? ?? true,
     haptics: json['haptics'] as bool? ?? true,
     accent: AppAccent.values.firstWhere(
       (accent) => accent.name == json['accent'],

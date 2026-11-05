@@ -261,6 +261,10 @@ func (w *metadataWorker) Work(ctx context.Context, job *river.Job[MetadataArgs])
 		if err := q.UpsertExif(ctx, meta.exifParams(id)); err != nil {
 			return err
 		}
+		caption := []rune(meta.Caption)
+		if err := q.SetFileFacts(ctx, db.SetFileFactsParams{ID: id, Rating: meta.Rating, Caption: string(caption[:min(len(caption), maxCaption)])}); err != nil {
+			return err
+		}
 		if err := q.GeocodeAsset(ctx, id); err != nil {
 			return err
 		}
@@ -379,7 +383,11 @@ func (w *sidecarWorker) Work(ctx context.Context, job *river.Job[SidecarArgs]) e
 	}
 	assetID := uuidString(id)
 	path := filepath.Join(storage.SidecarDir(w.opts.LibraryPath), uuidString(asset.UserID), assetID[:2], assetID+".xmp")
-	size, err := WriteSidecar(ctx, asset.OriginalPath, path)
+	facts, err := LoadSidecarFacts(ctx, w.queries, &asset)
+	if err != nil {
+		return err
+	}
+	size, err := WriteSidecarWithFacts(ctx, asset.OriginalPath, path, facts)
 	if err != nil {
 		var bad *badFileError
 		if errors.As(err, &bad) {

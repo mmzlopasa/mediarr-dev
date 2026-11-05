@@ -218,6 +218,24 @@ test('Explore says when no photo has a place yet', async ({ page }) => {
 	await expect(page.getByText('No photos with a place yet.')).toBeVisible();
 });
 
+test('stars are given, taken away, and the sidecar can be downloaded', async ({ page }) => {
+	await signIn(page, 'organizer');
+	await upload(page, 'stars.jpg');
+	await page.locator('.tl-tile').first().click();
+	await page.getByRole('button', { name: 'Details' }).click();
+	const four = page.getByRole('button', { name: '4 of 5 stars' });
+	await four.click();
+	await expect(four).toHaveAttribute('aria-pressed', 'true');
+	await page.reload();
+	await page.getByRole('button', { name: 'Details' }).click();
+	await expect(four).toHaveAttribute('aria-pressed', 'true');
+	await four.click();
+	await expect(four).toHaveAttribute('aria-pressed', 'false');
+	const download = page.waitForEvent('download');
+	await page.getByRole('link', { name: 'Download XMP' }).click();
+	expect((await download).suggestedFilename()).toMatch(/stars.*\.xmp$/);
+});
+
 test('a date of birth is saved with the person', async ({ page }) => {
 	await signIn(page, 'organizer');
 	const person = '00000000-0000-4000-8000-000000000001';

@@ -15,6 +15,9 @@ func TestPreferencesAreKeptAndChecked(t *testing.T) {
 	resp, body := c.get("/api/me/preferences")
 	expect(t, resp, body, http.StatusOK)
 	got := decode[api.UserPreferences](t, body)
+	if !got.PhotoFull || !got.VideoOriginal {
+		t.Fatalf("originals by default: %+v", got)
+	}
 	if !got.VideoAutoplay || !got.ConfirmDelete || got.MemorySeconds != 4 || got.MinFaces != 2 {
 		t.Fatalf("defaults: %+v", got)
 	}

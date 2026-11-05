@@ -463,23 +463,36 @@ class _VideoPageState extends State<_VideoPage> {
     if (!mounted) {
       return;
     }
-    final controller = VideoPlayerController.networkUrl(
-      Uri.parse(
-        detail?.hlsReady == true && !widget.forceOriginal
-            ? widget.session.hlsUrl(widget.id)
-            : widget.session.originalUrl(widget.id),
-      ),
-      httpHeaders: widget.session.headers,
-    );
-    setState(() => _controller = controller);
-    try {
-      await controller.initialize();
-      await controller.setLooping(widget.loop);
-      await controller.play();
-      if (mounted) setState(() {});
-    } catch (_) {
-      if (mounted) setState(() => _failed = true);
+    // The original first when it is wanted, and the converted version if this phone cannot play it,
+    // as some cannot play every original.
+    final stream = detail?.hlsReady == true
+        ? widget.session.hlsUrl(widget.id)
+        : null;
+    final original = widget.session.originalUrl(widget.id);
+    final tries = [
+      if (widget.forceOriginal || stream == null) original,
+      ?stream,
+      if (!widget.forceOriginal && stream != null) original,
+    ];
+    for (final url in tries) {
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(url),
+        httpHeaders: widget.session.headers,
+      );
+      setState(() => _controller = controller);
+      try {
+        await controller.initialize();
+        await controller.setLooping(widget.loop);
+        await controller.play();
+        if (mounted) setState(() {});
+        return;
+      } catch (_) {
+        await controller.dispose();
+        if (!mounted) return;
+        setState(() => _controller = null);
+      }
     }
+    if (mounted) setState(() => _failed = true);
   }
 
   @override
@@ -725,6 +738,31 @@ class _InfoSheetState extends State<_InfoSheet> {
                   const SizedBox(height: 10),
                   Text(detail.caption!),
                 ],
+                if (detail.isOwner == true)
+                  RatingRow(
+                    rating: detail.rating ?? 0,
+                    onRate: (stars) async {
+                      try {
+                        await session.api.setAssetFacts(
+                          id,
+                          AssetFacts(rating: stars),
+                        );
+                        if (mounted) {
+                          setState(() => _detail = session.detail(id));
+                        }
+                      } on ApiException catch (cause) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Not saved. ${cause.message ?? ''}',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
                 if (detail.isOwner == true)
                   Align(
                     alignment: Alignment.centerLeft,

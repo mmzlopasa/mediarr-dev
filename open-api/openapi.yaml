@@ -2396,6 +2396,20 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/sidecar:
+    get:
+      operationId: getAssetSidecar
+      summary: An XMP sidecar with what the file says and what Mediarr knows, for other programs
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The sidecar
+          content:
+            application/rdf+xml:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/explore/places:
     get:
       operationId: listExplorePlaces
@@ -2949,6 +2963,7 @@ components:
         latitude: { type: number, format: double }
         longitude: { type: number, format: double }
         caption: { type: string }
+        rating: { type: integer, description: "0 to 5 stars; 0 is none" }
         useFile: { type: boolean, description: "Forget the date and location set by hand and read the file again" }
     Place:
       type: object
@@ -3557,6 +3572,7 @@ components:
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
         edits: { $ref: "#/components/schemas/AssetEdits" }
         caption: { type: string, description: "Written by the owner" }
+        rating: { type: integer, description: "1 to 5 stars, when it has any" }
         isEditing: { type: boolean, description: "New previews are being made after an edit" }
         description: { type: string, description: "From the local model. Only for the owner" }
         isMissing: { type: boolean, description: "The file of an external library was not found on the last scan" }

@@ -349,7 +349,7 @@ test.describe('timeline', () => {
 		await page.locator('.tl-tile').first().click();
 		await expect(page).toHaveURL(/\/photos\//);
 		const viewer = page.getByRole('dialog');
-		await expect(viewer.locator('img.viewer-media')).toBeVisible();
+		await expect(viewer.locator('img.viewer-media').first()).toBeVisible();
 		await viewer.getByRole('button', { name: 'Podaci' }).click();
 		await expect(viewer.locator('.kv', { hasText: 'Veličina' })).toBeVisible();
 		await page.keyboard.press('Escape');
@@ -368,12 +368,12 @@ test.describe('timeline', () => {
 		await page.locator('.tl-tile').first().click();
 		await expect(page).toHaveURL(/\/photos\//);
 		const first = page.url();
-		await expect(page.getByRole('dialog').locator('img.viewer-media')).toBeVisible();
+		await expect(page.getByRole('dialog').locator('img.viewer-media').first()).toBeVisible();
 		await page.keyboard.press('ArrowRight');
 		await expect(page).not.toHaveURL(first);
 		const second = page.url();
 		await page.goto(second);
-		await expect(page.getByRole('dialog').locator('img.viewer-media')).toBeVisible();
+		await expect(page.getByRole('dialog').locator('img.viewer-media').first()).toBeVisible();
 		// The keys work once the viewer knows its neighbours, which it reads after the picture appears.
 		await expect(async () => {
 			await page.keyboard.press('ArrowLeft');

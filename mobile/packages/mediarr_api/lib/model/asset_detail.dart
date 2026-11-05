@@ -17,6 +17,7 @@ class AssetDetail {
     this.downloadAllowed,
     this.edits,
     this.caption,
+    this.rating,
     this.isEditing,
     this.description,
     this.isMissing,
@@ -92,6 +93,15 @@ class AssetDetail {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   String? caption;
+
+  /// 1 to 5 stars, when it has any
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? rating;
 
   /// New previews are being made after an edit
   ///
@@ -350,6 +360,7 @@ class AssetDetail {
           other.downloadAllowed == downloadAllowed &&
           other.edits == edits &&
           other.caption == caption &&
+          other.rating == rating &&
           other.isEditing == isEditing &&
           other.description == description &&
           other.isMissing == isMissing &&
@@ -397,6 +408,7 @@ class AssetDetail {
       (downloadAllowed == null ? 0 : downloadAllowed!.hashCode) +
       (edits == null ? 0 : edits!.hashCode) +
       (caption == null ? 0 : caption!.hashCode) +
+      (rating == null ? 0 : rating!.hashCode) +
       (isEditing == null ? 0 : isEditing!.hashCode) +
       (description == null ? 0 : description!.hashCode) +
       (isMissing == null ? 0 : isMissing!.hashCode) +
@@ -439,7 +451,7 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, edits=$edits, caption=$caption, isEditing=$isEditing, description=$description, isMissing=$isMissing, tags=$tags, stack=$stack, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, edits=$edits, caption=$caption, rating=$rating, isEditing=$isEditing, description=$description, isMissing=$isMissing, tags=$tags, stack=$stack, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -462,6 +474,11 @@ class AssetDetail {
       json[r'caption'] = this.caption;
     } else {
       json[r'caption'] = null;
+    }
+    if (this.rating != null) {
+      json[r'rating'] = this.rating;
+    } else {
+      json[r'rating'] = null;
     }
     if (this.isEditing != null) {
       json[r'isEditing'] = this.isEditing;
@@ -638,6 +655,7 @@ class AssetDetail {
         downloadAllowed: mapValueOfType<bool>(json, r'downloadAllowed'),
         edits: AssetEdits.fromJson(json[r'edits']),
         caption: mapValueOfType<String>(json, r'caption'),
+        rating: mapValueOfType<int>(json, r'rating'),
         isEditing: mapValueOfType<bool>(json, r'isEditing'),
         description: mapValueOfType<String>(json, r'description'),
         isMissing: mapValueOfType<bool>(json, r'isMissing'),

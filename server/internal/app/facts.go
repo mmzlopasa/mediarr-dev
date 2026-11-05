@@ -1,7 +1,10 @@
 package app
 
 import (
+	"mime"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -71,12 +74,25 @@ func (s *apiServer) SetAssetFacts(w http.ResponseWriter, r *http.Request, id ope
 		writeError(w, http.StatusBadRequest, "a location needs a latitude from -90 to 90 and a longitude from -180 to 180")
 		return
 	}
+	if body.Rating != nil && (*body.Rating < 0 || *body.Rating > 5) {
+		writeError(w, http.StatusBadRequest, "a rating is from 0 to 5 stars")
+		return
+	}
 	if body.Caption != nil && len([]rune(*body.Caption)) > maxCaption {
 		writeError(w, http.StatusBadRequest, "the description is too long")
 		return
 	}
 	err = pgx.BeginFunc(ctx, s.Pool, func(tx pgx.Tx) error {
 		q := s.queries.WithTx(tx)
+		// The copy of what Mediarr knows, for other programs, follows each change.
+		if _, err := s.Inserter.InsertTx(ctx, tx, jobs.SidecarArgs{AssetID: uuid.UUID(asset.ID.Bytes)}, nil); err != nil {
+			return err
+		}
+		if body.Rating != nil {
+			if err := q.SetOwnerRating(ctx, db.SetOwnerRatingParams{ID: asset.ID, Rating: int16(*body.Rating)}); err != nil { //nolint:gosec // Checked above.
+				return err
+			}
+		}
 		if body.Caption != nil {
 			if err := q.SetAssetCaption(ctx, db.SetAssetCaptionParams{ID: asset.ID, Caption: strings.TrimSpace(*body.Caption)}); err != nil {
 				return err
@@ -114,6 +130,45 @@ func (s *apiServer) SetAssetFacts(w http.ResponseWriter, r *http.Request, id ope
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetAssetSidecar gives an XMP file with what the file says and what Mediarr knows, for programs
+// such as Lightroom or darktable. It is made fresh, so it holds the newest names and tags.
+func (s *apiServer) GetAssetSidecar(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	ctx := r.Context()
+	asset, err := s.queries.GetAsset(ctx, pgUUID(id))
+	if db.IsNotFound(err) || (err == nil && asset.UserID != user.ID) {
+		writeError(w, http.StatusNotFound, "no such asset")
+		return
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	facts, err := jobs.LoadSidecarFacts(ctx, s.queries, &asset)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	dir, err := os.MkdirTemp("", "mediarr-xmp-")
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	defer func() { _ = os.RemoveAll(dir) }()
+	path := filepath.Join(dir, "sidecar.xmp")
+	if _, err := jobs.WriteSidecarWithFacts(ctx, asset.OriginalPath, path, facts); err != nil {
+		internalError(w, r, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/rdf+xml")
+	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": asset.OriginalName + ".xmp"}))
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	serveFile(w, r, path)
 }
 
 // SearchPlaces finds a place by the start of its name, to set a location without knowing coordinates.

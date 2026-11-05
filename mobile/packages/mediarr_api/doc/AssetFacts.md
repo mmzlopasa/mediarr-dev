@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **latitude** | **double** |  | [optional] 
 **longitude** | **double** |  | [optional] 
 **caption** | **String** |  | [optional] 
+**rating** | **int** | 0 to 5 stars; 0 is none | [optional] 
 **useFile** | **bool** | Forget the date and location set by hand and read the file again | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

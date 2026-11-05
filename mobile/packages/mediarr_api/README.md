@@ -121,6 +121,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAsset**](doc//DefaultApi.md#getasset) | **GET** /api/assets/{id} | Read an asset's details and its neighbours on the timeline
 *DefaultApi* | [**getAssetMotion**](doc//DefaultApi.md#getassetmotion) | **GET** /api/assets/{id}/motion | Read the video embedded in an Android Motion Photo
 *DefaultApi* | [**getAssetOriginal**](doc//DefaultApi.md#getassetoriginal) | **GET** /api/assets/{id}/original | Read the unmodified original. Supports Range requests for video.
+*DefaultApi* | [**getAssetSidecar**](doc//DefaultApi.md#getassetsidecar) | **GET** /api/assets/{id}/sidecar | An XMP sidecar with what the file says and what Mediarr knows, for other programs
 *DefaultApi* | [**getAssetThumbnail**](doc//DefaultApi.md#getassetthumbnail) | **GET** /api/assets/{id}/thumbnail | Read a WebP thumbnail
 *DefaultApi* | [**getAssetVideoFile**](doc//DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
 *DefaultApi* | [**getAuthMethods**](doc//DefaultApi.md#getauthmethods) | **GET** /api/auth/methods | The ways of signing in that this address offers, besides a password

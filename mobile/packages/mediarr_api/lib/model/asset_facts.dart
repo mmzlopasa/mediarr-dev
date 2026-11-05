@@ -17,6 +17,7 @@ class AssetFacts {
     this.latitude,
     this.longitude,
     this.caption,
+    this.rating,
     this.useFile,
   });
 
@@ -53,6 +54,15 @@ class AssetFacts {
   ///
   String? caption;
 
+  /// 0 to 5 stars; 0 is none
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? rating;
+
   /// Forget the date and location set by hand and read the file again
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -70,6 +80,7 @@ class AssetFacts {
           other.latitude == latitude &&
           other.longitude == longitude &&
           other.caption == caption &&
+          other.rating == rating &&
           other.useFile == useFile;
 
   @override
@@ -79,11 +90,12 @@ class AssetFacts {
       (latitude == null ? 0 : latitude!.hashCode) +
       (longitude == null ? 0 : longitude!.hashCode) +
       (caption == null ? 0 : caption!.hashCode) +
+      (rating == null ? 0 : rating!.hashCode) +
       (useFile == null ? 0 : useFile!.hashCode);
 
   @override
   String toString() =>
-      'AssetFacts[takenAt=$takenAt, latitude=$latitude, longitude=$longitude, caption=$caption, useFile=$useFile]';
+      'AssetFacts[takenAt=$takenAt, latitude=$latitude, longitude=$longitude, caption=$caption, rating=$rating, useFile=$useFile]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -106,6 +118,11 @@ class AssetFacts {
       json[r'caption'] = this.caption;
     } else {
       json[r'caption'] = null;
+    }
+    if (this.rating != null) {
+      json[r'rating'] = this.rating;
+    } else {
+      json[r'rating'] = null;
     }
     if (this.useFile != null) {
       json[r'useFile'] = this.useFile;
@@ -140,6 +157,7 @@ class AssetFacts {
         latitude: mapValueOfType<double>(json, r'latitude'),
         longitude: mapValueOfType<double>(json, r'longitude'),
         caption: mapValueOfType<String>(json, r'caption'),
+        rating: mapValueOfType<int>(json, r'rating'),
         useFile: mapValueOfType<bool>(json, r'useFile'),
       );
     }

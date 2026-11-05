@@ -281,6 +281,7 @@ func (s *apiServer) assetDetail(ctx context.Context, row *db.Asset) (api.AssetDe
 		HasCaptureTime: optional(row.TakenAt.Valid, true),
 		CreatedAt:      row.CreatedAt.Time,
 		Caption:        optional(row.Caption, row.Caption != ""),
+		Rating:         optional(int(row.Rating), row.Rating > 0),
 	}
 	if err := s.addMediaDetails(ctx, row, &detail); err != nil {
 		return detail, err

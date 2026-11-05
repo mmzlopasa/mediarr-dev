@@ -105,6 +105,8 @@ type Metadata struct {
 	Latitude      *float64
 	Longitude     *float64
 	Raw           []byte
+	Rating        int16
+	Caption       string
 	// ContentID links the two files of an Apple Live Photo.
 	ContentID string
 	// MotionOffset counts from the end of an Android Motion Photo to its video.
@@ -122,7 +124,11 @@ func ReadMetadata(ctx context.Context, path string) (*Metadata, error) {
 	if err := json.Unmarshal(out, &rows); err != nil || len(rows) != 1 {
 		return nil, &badFileError{msg: "exiftool returned no metadata"}
 	}
-	return parseMetadata(rows[0])
+	meta, err := parseMetadata(rows[0])
+	if err != nil {
+		return nil, err
+	}
+	return meta, readSidecarBeside(ctx, path, meta)
 }
 
 func parseMetadata(row map[string]any) (*Metadata, error) {
@@ -175,6 +181,7 @@ func parseMetadata(row map[string]any) (*Metadata, error) {
 	if lat, lon, ok := gps(row); ok {
 		meta.Latitude, meta.Longitude = &lat, &lon
 	}
+	meta.Rating = clampRating(number(row, "Rating"))
 	return meta, nil
 }
 

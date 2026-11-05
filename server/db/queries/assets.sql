@@ -201,3 +201,13 @@ UPDATE assets
 SET manual_taken_at = NULL, manual_offset_minutes = NULL, manual_latitude = NULL, manual_longitude = NULL,
     updated_at = now()
 WHERE id = $1;
+
+-- name: SetOwnerRating :exec
+UPDATE assets SET rating = $2, rating_by_owner = true, updated_at = now() WHERE id = $1;
+
+-- name: SetFileFacts :exec
+-- What a file or the sidecar beside it says, under what the owner said.
+UPDATE assets
+SET rating = CASE WHEN rating_by_owner THEN rating ELSE sqlc.arg('rating') END,
+    caption = CASE WHEN caption = '' THEN sqlc.arg('caption') ELSE caption END
+WHERE id = sqlc.arg('id');

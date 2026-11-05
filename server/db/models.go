@@ -115,6 +115,8 @@ type Asset struct {
 	ManualLatitude      pgtype.Float8
 	ManualLongitude     pgtype.Float8
 	Caption             string
+	Rating              int16
+	RatingByOwner       bool
 }
 
 type AssetDescription struct {

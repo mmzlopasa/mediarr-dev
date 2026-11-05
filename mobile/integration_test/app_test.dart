@@ -205,6 +205,7 @@ void main() {
     await tester.tap(find.byTooltip('Details'));
     await waitFor(tester, find.text('Ana'));
     expect(find.byTooltip('Who this is'), findsOneWidget);
+    expect(find.byTooltip('4 of 5 stars'), findsOneWidget);
     await tester.tap(find.text('Edit details'));
     await waitFor(tester, find.text('Use what the file says'));
   });

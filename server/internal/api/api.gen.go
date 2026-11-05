@@ -1255,9 +1255,12 @@ type AssetDetail struct {
 	OriginalName  string              `json:"originalName"`
 
 	// People Only for the owner
-	People    *[]PersonRef `json:"people,omitempty"`
-	SizeBytes int64        `json:"sizeBytes"`
-	Sprite    *Sprite      `json:"sprite,omitempty"`
+	People *[]PersonRef `json:"people,omitempty"`
+
+	// Rating 1 to 5 stars, when it has any
+	Rating    *int    `json:"rating,omitempty"`
+	SizeBytes int64   `json:"sizeBytes"`
+	Sprite    *Sprite `json:"sprite,omitempty"`
 
 	// Stack All shots of its stack, the main one first. Only for the owner
 	Stack  *[]openapi_types.UUID `json:"stack,omitempty"`
@@ -1313,6 +1316,9 @@ type AssetFacts struct {
 	Caption   *string  `json:"caption,omitempty"`
 	Latitude  *float64 `json:"latitude,omitempty"`
 	Longitude *float64 `json:"longitude,omitempty"`
+
+	// Rating 0 to 5 stars; 0 is none
+	Rating *int `json:"rating,omitempty"`
 
 	// TakenAt RFC 3339 with the offset of where it was taken
 	TakenAt *string `json:"takenAt,omitempty"`
@@ -2879,6 +2885,9 @@ type ServerInterface interface {
 	// GetAssetOriginal Read the unmodified original. Supports Range requests for video.
 	// (GET /api/assets/{id}/original)
 	GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams)
+	// GetAssetSidecar An XMP sidecar with what the file says and what Mediarr knows, for other programs
+	// (GET /api/assets/{id}/sidecar)
+	GetAssetSidecar(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// DissolveStack Split a stack back into single shots. It is not put together again by itself
 	// (DELETE /api/assets/{id}/stack)
 	DissolveStack(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -3677,6 +3686,12 @@ func (_ Unimplemented) GetAssetMotion(w http.ResponseWriter, r *http.Request, id
 // GetAssetOriginal Read the unmodified original. Supports Range requests for video.
 // (GET /api/assets/{id}/original)
 func (_ Unimplemented) GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAssetSidecar An XMP sidecar with what the file says and what Mediarr knows, for other programs
+// (GET /api/assets/{id}/sidecar)
+func (_ Unimplemented) GetAssetSidecar(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6074,6 +6089,32 @@ func (siw *ServerInterfaceWrapper) GetAssetOriginal(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAssetOriginal(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAssetSidecar operation middleware
+func (siw *ServerInterfaceWrapper) GetAssetSidecar(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAssetSidecar(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -9245,6 +9286,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Patch(options.BaseURL+"/api/assets/{id}/facts", wrapper.SetAssetFacts)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}/sidecar", wrapper.GetAssetSidecar)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/explore/places", wrapper.ListExplorePlaces)

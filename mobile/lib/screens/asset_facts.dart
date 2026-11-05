@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
+import '../theme.dart';
 
 String _two(int value) => value.toString().padLeft(2, '0');
 
@@ -199,6 +200,30 @@ class _AssetFactsDialogState extends State<AssetFactsDialog> {
         child: const Text('Cancel'),
       ),
       TextButton(onPressed: _save, child: const Text('Save')),
+    ],
+  );
+}
+
+/// One to five stars. Choosing the stars it already has takes them away.
+class RatingRow extends StatelessWidget {
+  const RatingRow({super.key, required this.rating, required this.onRate});
+
+  final int rating;
+  final ValueChanged<int> onRate;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      for (var stars = 1; stars <= 5; stars++)
+        IconButton(
+          tooltip: '$stars of 5 stars',
+          isSelected: stars == rating,
+          icon: Icon(
+            stars <= rating ? Icons.star : Icons.star_border,
+            color: stars <= rating ? Palette.gold : Palette.dim,
+          ),
+          onPressed: () => onRate(stars == rating ? 0 : stars),
+        ),
     ],
   );
 }

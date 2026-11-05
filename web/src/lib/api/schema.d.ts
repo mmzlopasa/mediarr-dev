@@ -2600,6 +2600,23 @@ export interface paths {
         patch: operations["setAssetFacts"];
         trace?: never;
     };
+    "/api/assets/{id}/sidecar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An XMP sidecar with what the file says and what Mediarr knows, for other programs */
+        get: operations["getAssetSidecar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/explore/places": {
         parameters: {
             query?: never;
@@ -3162,6 +3179,8 @@ export interface components {
             /** Format: double */
             longitude?: number;
             caption?: string;
+            /** @description 0 to 5 stars; 0 is none */
+            rating?: number;
             /** @description Forget the date and location set by hand and read the file again */
             useFile?: boolean;
         };
@@ -3768,6 +3787,8 @@ export interface components {
             edits?: components["schemas"]["AssetEdits"];
             /** @description Written by the owner */
             caption?: string;
+            /** @description 1 to 5 stars, when it has any */
+            rating?: number;
             /** @description New previews are being made after an edit */
             isEditing?: boolean;
             /** @description From the local model. Only for the owner */
@@ -8234,6 +8255,30 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAssetSidecar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sidecar */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/rdf+xml": string;
+                };
+            };
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };
