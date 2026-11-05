@@ -169,7 +169,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             child: Row(
               children: [
                 if (_selected.isEmpty) ...[
-                  const Expanded(child: AppHeader()),
+                  const Expanded(child: AppHeader(title: 'Media')),
                 ] else ...[
                   IconButton(
                     tooltip: 'Clear selection',

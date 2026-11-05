@@ -41,7 +41,8 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
   String _sort = 'updated';
   String _search = '';
   _Owner _owner = _Owner.all;
-  bool _grid = false;
+  bool _grid = true;
+  bool _filtersOpen = false;
   Timer? _poll;
 
   @override
@@ -120,7 +121,7 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
         onRefresh: _load,
         child: _grid
             ? GridView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 90),
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 110),
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 200,
                   mainAxisSpacing: 14,
@@ -135,7 +136,7 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                 ),
               )
             : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 90),
+                padding: const EdgeInsets.fromLTRB(14, 4, 14, 110),
                 itemCount: albums.length,
                 itemBuilder: (context, index) => _AlbumRow(
                   album: albums[index],
@@ -169,27 +170,10 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppHeader(onAdd: () => _create(session)),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
-            child: TextField(
-              onChanged: (value) => setState(() => _search = value),
-              decoration: const InputDecoration(
-                hintText: 'Search albums',
-                prefixIcon: Icon(Icons.search),
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                chip('All', _Owner.all),
-                chip('Shared with me', _Owner.shared),
-                chip('My albums', _Owner.mine),
-              ],
-            ),
+          AppHeader(
+            title: 'Albums',
+            actionLabel: 'New',
+            onAction: () => _create(session),
           ),
           Row(
             children: [
@@ -224,12 +208,50 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                 ),
               ),
               IconButton(
+                tooltip: 'Search and filter',
+                icon: Icon(
+                  Icons.tune,
+                  color: _filtersOpen ? Palette.gold : null,
+                ),
+                onPressed: () => setState(() {
+                  _filtersOpen = !_filtersOpen;
+                  if (!_filtersOpen) {
+                    _search = '';
+                    _owner = _Owner.all;
+                  }
+                }),
+              ),
+              IconButton(
                 tooltip: _grid ? 'Show as a list' : 'Show as a grid',
                 icon: Icon(_grid ? Icons.view_list : Icons.grid_view),
                 onPressed: () => setState(() => _grid = !_grid),
               ),
             ],
           ),
+          if (_filtersOpen) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+              child: TextField(
+                onChanged: (value) => setState(() => _search = value),
+                decoration: const InputDecoration(
+                  hintText: 'Search albums',
+                  prefixIcon: Icon(Icons.search),
+                ),
+              ),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  chip('All', _Owner.all),
+                  chip('Shared with me', _Owner.shared),
+                  chip('My albums', _Owner.mine),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
           Expanded(child: body),
         ],
       ),

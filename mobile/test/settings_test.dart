@@ -148,12 +148,7 @@ void main() {
 
   testWidgets('the settings list offers every subject', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-    for (final title in [
-      'Advanced',
-      'Asset viewer',
-      'Backup',
-      'Free up space',
-    ]) {
+    for (final title in ['Asset viewer', 'Photo grid', 'Preferences']) {
       expect(find.text(title), findsOneWidget);
     }
   });

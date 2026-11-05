@@ -198,7 +198,12 @@ void main() {
     await tester.tap(find.byTooltip('Account').first);
     await waitFor(tester, find.text('Settings'));
     await tester.tap(find.text('Settings'));
-    await waitFor(tester, find.text('Advanced'));
+    await waitFor(tester, find.text('Asset viewer'));
+    await tester.scrollUntilVisible(
+      find.text('Advanced'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(find.text('Advanced'));
     await waitFor(tester, find.text('Read-only mode'));
     await tester.tap(find.text('Read-only mode'));

@@ -99,32 +99,90 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           LibraryScreen(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (value) => setState(() => _tab = value),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.photo_library_outlined),
-            selectedIcon: Icon(Icons.photo_library, color: Palette.gold),
-            label: 'Media',
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.search),
-            selectedIcon: Icon(Icons.search, color: Palette.gold),
-            label: 'Search',
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.photo_album_outlined),
-            selectedIcon: Icon(Icons.photo_album, color: Palette.gold),
-            label: 'Albums',
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard, color: Palette.gold),
-            label: 'Library',
-          ),
-        ],
+      extendBody: true,
+      bottomNavigationBar: _FloatingNav(
+        selected: _tab,
+        onSelected: (value) => setState(() => _tab = value),
       ),
     );
   }
+}
+
+class _FloatingNav extends StatelessWidget {
+  const _FloatingNav({required this.selected, required this.onSelected});
+
+  static const _items = [
+    (Icons.photo_outlined, Icons.photo, 'Media'),
+    (Icons.search, Icons.search, 'Search'),
+    (Icons.photo_album_outlined, Icons.photo_album, 'Albums'),
+    (Icons.grid_view_outlined, Icons.grid_view, 'Library'),
+  ];
+
+  final int selected;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    minimum: const EdgeInsets.only(bottom: 8),
+    child: GlassCard(
+      radius: 28,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      padding: const EdgeInsets.all(6),
+      child: Row(
+        children: [
+          for (var i = 0; i < _items.length; i++)
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: i == selected,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onSelected(i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(22),
+                      gradient: i == selected
+                          ? LinearGradient(
+                              colors: [
+                                Palette.gold.withValues(alpha: 0.22),
+                                Palette.violet.withValues(alpha: 0.14),
+                              ],
+                            )
+                          : null,
+                      border: Border.all(
+                        color: i == selected
+                            ? Palette.gold.withValues(alpha: 0.4)
+                            : Colors.transparent,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          i == selected ? _items[i].$2 : _items[i].$1,
+                          size: 21,
+                          color: i == selected ? Palette.gold : Palette.haze,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          _items[i].$3,
+                          style: TextStyle(
+                            fontFamily: 'Sora',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: i == selected ? Palette.ink : Palette.haze,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
 }

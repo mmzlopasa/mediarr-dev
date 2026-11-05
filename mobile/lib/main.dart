@@ -56,7 +56,7 @@ class MediarrApp extends ConsumerWidget {
             (_) => _redrawAll(context),
           );
         }
-        return child ?? const SizedBox.shrink();
+        return SkyBackground(child: child ?? const SizedBox.shrink());
       },
       home: session.when(
         loading: () => Scaffold(

@@ -13,13 +13,19 @@ import 'free_space_screen.dart';
 import 'organize_screens.dart';
 import 'settings_screen.dart';
 
-Future<void> showAccountSheet(BuildContext context) => showDialog<void>(
-  context: context,
-  builder: (_) => const Dialog(
-    insetPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 40),
-    child: AccountSheet(),
-  ),
-);
+Future<void> showAccountSheet(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
+      builder: (_) => const SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, 40, 10, 10),
+          child: GlassCard(radius: 28, child: AccountSheet()),
+        ),
+      ),
+    );
 
 /// Who is signed in, the server's disk and versions, and the ways further.
 class AccountSheet extends ConsumerStatefulWidget {
@@ -87,13 +93,8 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
     await notifier.signOut();
   }
 
-  Widget _section(List<Widget> children) => Container(
-    margin: const EdgeInsets.only(bottom: 6),
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: Palette.bg,
-      borderRadius: BorderRadius.circular(14),
-    ),
+  Widget _section(List<Widget> children) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: children,
@@ -135,42 +136,35 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
     final name = session.user.name.trim();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              IconButton(
-                tooltip: 'Close',
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.of(context).pop(),
+          Center(
+            child: Container(
+              width: 42,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Palette.line2,
+                borderRadius: BorderRadius.circular(2),
               ),
-              Expanded(
-                child: Text(
-                  'mediarr.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Palette.gold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 48),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
           _section([
             Row(
               children: [
                 CircleAvatar(
-                  radius: 24,
+                  radius: 26,
                   backgroundColor: Palette.bg3,
                   child: Text(
                     name.isEmpty ? '?' : name.substring(0, 1).toUpperCase(),
+                    style: TextStyle(
+                      color: Palette.ink,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -178,19 +172,23 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        session.user.name,
-                        style: text.titleMedium?.copyWith(color: Palette.gold),
-                      ),
+                      Text(session.user.name, style: text.titleLarge),
                       Text(session.user.email, style: text.bodySmall),
                     ],
                   ),
                 ),
+                IconButton(
+                  tooltip: 'Close',
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ],
             ),
           ]),
+          Divider(color: Palette.line, height: 1),
           _section([
-            Text('Server storage', style: text.titleMedium),
+            const SizedBox(height: 6),
+            Text('Storage', style: text.titleMedium),
             const SizedBox(height: 10),
             LinearProgressIndicator(
               value: total > 0 ? used / total : 0,
@@ -214,18 +212,20 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
               _row('New version', '${status?.latestVersion} is available'),
             _row('Server address', session.serverUrl),
           ]),
+          Divider(color: Palette.line, height: 1),
+          const SizedBox(height: 6),
           ListTile(
-            leading: const Icon(Icons.cleaning_services_outlined),
+            leading: const RingIcon(Icons.cleaning_services_outlined),
             title: const Text('Free up space'),
             onTap: () => _push(const FreeSpaceScreen()),
           ),
           ListTile(
-            leading: const Icon(Icons.settings_outlined),
+            leading: const RingIcon(Icons.settings_outlined),
             title: const Text('Settings'),
             onTap: () => _push(const SettingsScreen()),
           ),
           ListTile(
-            leading: const Icon(Icons.logout),
+            leading: const RingIcon(Icons.logout),
             title: const Text('Sign out'),
             onTap: () => _signOut(session),
           ),

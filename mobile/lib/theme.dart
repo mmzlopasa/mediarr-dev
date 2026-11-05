@@ -23,6 +23,10 @@ abstract final class Palette {
   /// The chosen accent, set by the app with the theme.
   static int accentDark = 0xFFFFD76A;
   static int accentLight = 0xFF5A49E6;
+  static Color get glassEdge => _pick(0x1AFFFFFF, 0x1F12141A);
+  static List<Color> get glass => light
+      ? const [Color(0xF2FFFFFF), Color(0xD9F4F5F8), Color(0xCCEDEFF3)]
+      : const [Color(0x5C5C6274), Color(0x9E262A36), Color(0xCC161820)];
   static Color get field => _pick(0x0DFFFFFF, 0xD9FFFFFF);
   static Color get ok => _pick(0xFF8EF0C8, 0xFF0B8F69);
   static Color get warn => _pick(0xFFFFC98A, 0xFFA85D00);
@@ -78,7 +82,7 @@ ThemeData _build(bool light) {
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    scaffoldBackgroundColor: Palette.bg,
+    scaffoldBackgroundColor: Colors.transparent,
     fontFamily: 'Sora',
     splashFactory: NoSplash.splashFactory,
     textTheme: TextTheme(
@@ -91,7 +95,7 @@ ThemeData _build(bool light) {
       labelLarge: _text(14.5, 600, Palette.ink),
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: Palette.bg,
+      backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       titleTextStyle: _text(20, 500, Palette.ink),
@@ -121,6 +125,119 @@ ThemeData _build(bool light) {
     snackBarTheme: SnackBarThemeData(
       backgroundColor: Palette.bg3,
       contentTextStyle: TextStyle(fontFamily: 'Sora', color: Palette.ink),
+    ),
+  );
+}
+
+/// The page behind everything: the design's dark sky, with its soft gold and violet light.
+class SkyBackground extends StatelessWidget {
+  const SkyBackground({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: Palette.bg,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(1, -1),
+          radius: 1.3,
+          colors: [Palette.violet.withValues(alpha: 0.16), Colors.transparent],
+        ),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(-1, 1),
+            radius: 1.2,
+            colors: [
+              Palette.buttonGold.withValues(alpha: 0.08),
+              Colors.transparent,
+            ],
+          ),
+        ),
+        child: child,
+      ),
+    ),
+  );
+}
+
+/// The design's glass surface.
+class GlassCard extends StatelessWidget {
+  const GlassCard({
+    super.key,
+    required this.child,
+    this.radius = 22,
+    this.padding = EdgeInsets.zero,
+    this.margin = EdgeInsets.zero,
+  });
+
+  final Widget child;
+  final double radius;
+  final EdgeInsets padding;
+  final EdgeInsets margin;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: margin,
+    padding: padding,
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: Palette.glassEdge),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: Palette.glass,
+      ),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x40000000),
+          blurRadius: 30,
+          offset: Offset(0, 14),
+        ),
+      ],
+    ),
+    child: Material(type: MaterialType.transparency, child: child),
+  );
+}
+
+/// The design's round icon. When it is on, a gold and violet ring goes part of the way around.
+class RingIcon extends StatelessWidget {
+  const RingIcon(this.icon, {super.key, this.on = false, this.size = 38});
+
+  final IconData icon;
+  final bool on;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    padding: const EdgeInsets.all(1.5),
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: on
+          ? SweepGradient(
+              colors: [
+                Palette.buttonGold,
+                Palette.violet,
+                Palette.glassEdge,
+                Palette.glassEdge,
+              ],
+              stops: const [0, 0.26, 0.26, 1],
+            )
+          : null,
+      color: on ? null : Palette.glassEdge,
+    ),
+    child: Container(
+      decoration: BoxDecoration(shape: BoxShape.circle, color: Palette.bg2),
+      child: Icon(
+        icon,
+        size: size * 0.5,
+        color: on ? Palette.gold : Palette.ink,
+      ),
     ),
   );
 }

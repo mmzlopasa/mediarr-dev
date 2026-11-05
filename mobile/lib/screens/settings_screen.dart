@@ -22,124 +22,125 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget card(
+    Widget row(
       IconData icon,
       String title,
       String subtitle,
       Widget? screen, {
       VoidCallback? onTap,
-    }) => Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: Palette.bg2,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 6,
-          ),
-          leading: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Palette.bg,
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Icon(icon, color: Palette.gold),
-          ),
-          title: Text(
-            title,
+    }) => ListTile(
+      leading: RingIcon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap:
+          onTap ??
+          () =>
+              Navigator.of(context)
+                  .push(MaterialPageRoute<void>(builder: (_) => screen!)),
+    );
+    Widget group(String title, List<Widget> rows) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
+          child: Text(
+            title.toUpperCase(),
             style: TextStyle(
-              color: Palette.gold,
-              fontWeight: FontWeight.w600,
-              fontSize: 17,
+              color: Palette.dim,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
             ),
           ),
-          subtitle: Text(subtitle),
-          onTap:
-              onTap ??
-              () =>
-                  Navigator.of(context)
-                      .push(MaterialPageRoute<void>(builder: (_) => screen!)),
         ),
-      ),
+        GlassCard(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(children: rows),
+        ),
+      ],
     );
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 30),
         children: [
-          card(
-            Icons.build_outlined,
-            'Advanced',
-            'Read-only mode and the image cache',
-            const AdvancedSettings(),
-          ),
-          card(
-            Icons.image_outlined,
-            'Asset viewer',
-            'How photos and videos open',
-            const ViewerSettings(),
-          ),
-          card(
-            Icons.cloud_upload_outlined,
-            'Backup',
-            'What this phone sends to the server',
-            const UploadPage(),
-          ),
-          card(
-            Icons.cleaning_services_outlined,
-            'Free up space',
-            'Remove what is safe on the server',
-            const FreeSpaceScreen(),
-          ),
-          card(
-            Icons.language,
-            'Language',
-            "The app's language",
-            const LanguageSettings(),
-          ),
-          card(
-            Icons.wifi,
-            'Networking',
-            'The addresses of your server',
-            const NetworkSettings(),
-          ),
-          card(
-            Icons.notifications_outlined,
-            'Notifications',
-            'What the app tells you about',
-            const NotificationSettings(),
-          ),
-          card(
-            Icons.interests_outlined,
-            'Preferences',
-            'Theme, color and feedback',
-            const PreferenceSettings(),
-          ),
-          card(
-            Icons.dashboard_outlined,
-            'Photo grid',
-            'How the timeline is laid out',
-            const GridSettings(),
-          ),
-          card(
-            Icons.sync,
-            'Sync status',
-            'What is on this phone and on the server',
-            const SyncStatusScreen(),
-          ),
-          card(
-            Icons.auto_awesome_outlined,
-            "What's new",
-            'The versions of Mediarr',
-            null,
-            onTap: () => launchUrl(
-              Uri.parse('https://github.com/mediarr-app/mediarr/tags'),
-              mode: LaunchMode.externalApplication,
+          group('Viewing', [
+            row(
+              Icons.image_outlined,
+              'Asset viewer',
+              'How photos and videos open',
+              const ViewerSettings(),
             ),
-          ),
+            row(
+              Icons.dashboard_outlined,
+              'Photo grid',
+              'How the timeline is laid out',
+              const GridSettings(),
+            ),
+            row(
+              Icons.interests_outlined,
+              'Preferences',
+              'Theme, color and feedback',
+              const PreferenceSettings(),
+            ),
+            row(
+              Icons.language,
+              'Language',
+              "The app's language",
+              const LanguageSettings(),
+            ),
+          ]),
+          group('This phone', [
+            row(
+              Icons.cloud_upload_outlined,
+              'Backup',
+              'What this phone sends to the server',
+              const UploadPage(),
+            ),
+            row(
+              Icons.cleaning_services_outlined,
+              'Free up space',
+              'Remove what is safe on the server',
+              const FreeSpaceScreen(),
+            ),
+            row(
+              Icons.sync,
+              'Sync status',
+              'What is on this phone and on the server',
+              const SyncStatusScreen(),
+            ),
+            row(
+              Icons.notifications_outlined,
+              'Notifications',
+              'What the app tells you about',
+              const NotificationSettings(),
+            ),
+          ]),
+          group('Server', [
+            row(
+              Icons.wifi,
+              'Networking',
+              'The addresses of your server',
+              const NetworkSettings(),
+            ),
+            row(
+              Icons.build_outlined,
+              'Advanced',
+              'Read-only mode and the image cache',
+              const AdvancedSettings(),
+            ),
+            row(
+              Icons.auto_awesome_outlined,
+              "What's new",
+              'The versions of Mediarr',
+              null,
+              onTap: () => launchUrl(
+                Uri.parse('https://github.com/mediarr-app/mediarr/tags'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+          ]),
         ],
       ),
     );

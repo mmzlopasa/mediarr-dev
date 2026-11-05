@@ -155,8 +155,8 @@ void main() {
       ]);
     });
     expect(find.text('Summer'), findsOneWidget);
-    expect(find.textContaining('3 items'), findsOneWidget);
-    expect(find.text('0 items • Smart • Ana'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('0 · Smart · Ana'), findsOneWidget);
     await _finish(tester);
   });
 

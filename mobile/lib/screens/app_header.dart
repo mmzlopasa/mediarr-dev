@@ -8,12 +8,20 @@ import '../theme.dart';
 import 'account_sheet.dart';
 import 'upload_screen.dart';
 
-/// The top of every main screen: the name, backup, adding something, and the account.
+/// The top of every main screen: its title, the gold action and the account, as on the web.
 class AppHeader extends ConsumerWidget {
-  const AppHeader({super.key, this.onAdd});
+  const AppHeader({
+    super.key,
+    required this.title,
+    this.actionLabel = 'Upload',
+    this.onAction,
+  });
 
-  /// What "+" does here. Without it, "+" uploads from this phone.
-  final VoidCallback? onAdd;
+  final String title;
+  final String actionLabel;
+
+  /// What the gold button does here. Without it, it opens backup and upload.
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,51 +36,96 @@ class AppHeader extends ConsumerWidget {
             .push(MaterialPageRoute<void>(builder: (_) => const UploadPage()));
     final name = session?.user.name.trim() ?? '';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 10, 4),
+      padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
       child: Row(
         children: [
-          ClipOval(
-            child: Image.asset('assets/logo.png', width: 30, height: 30),
-          ),
-          const SizedBox(width: 9),
           Expanded(
             child: Text(
-              'mediarr.',
-              style: TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 23,
-                fontWeight: FontWeight.w700,
-                color: Palette.gold,
-              ),
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
           ),
-          if (!readOnly) ...[
-            IconButton(
-              tooltip: 'Backup',
-              icon: Badge(
-                isLabelVisible: working > 0,
-                label: Text('$working'),
-                child: Icon(Icons.sync, color: Palette.gold),
+          if (!readOnly)
+            Tooltip(
+              message: 'Add',
+              child: Semantics(
+                button: true,
+                label: actionLabel,
+                child: GestureDetector(
+                  onTap: onAction ?? openUpload,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: goldGradient,
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add, size: 18, color: Palette.onGold),
+                        const SizedBox(width: 4),
+                        Text(
+                          working > 0 ? '$actionLabel · $working' : actionLabel,
+                          style: const TextStyle(
+                            fontFamily: 'Sora',
+                            color: Palette.onGold,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              onPressed: openUpload,
             ),
-            IconButton(
-              tooltip: 'Add',
-              icon: Icon(Icons.add, color: Palette.gold),
-              onPressed: onAdd ?? openUpload,
-            ),
-          ],
-          IconButton(
-            tooltip: 'Account',
-            icon: CircleAvatar(
-              radius: 17,
-              backgroundColor: Palette.bg3,
-              child: Text(
-                name.isEmpty ? '?' : name.substring(0, 1).toUpperCase(),
-                style: TextStyle(color: Palette.ink),
+          const SizedBox(width: 8),
+          Tooltip(
+            message: 'Account',
+            child: GestureDetector(
+              onTap: () => showAccountSheet(context),
+              child: Container(
+                width: 42,
+                height: 42,
+                padding: const EdgeInsets.all(1.5),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: SweepGradient(
+                    colors: [
+                      Palette.buttonGold,
+                      Palette.violet,
+                      Palette.glassEdge,
+                      Palette.glassEdge,
+                    ],
+                    stops: const [0, 0.26, 0.26, 1],
+                  ),
+                ),
+                child: Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Palette.bg2,
+                  ),
+                  child: Text(
+                    name.isEmpty
+                        ? '?'
+                        : name
+                              .substring(0, name.length < 2 ? 1 : 2)
+                              .toUpperCase(),
+                    style: TextStyle(
+                      color: Palette.ink,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
               ),
             ),
-            onPressed: () => showAccountSheet(context),
           ),
         ],
       ),
