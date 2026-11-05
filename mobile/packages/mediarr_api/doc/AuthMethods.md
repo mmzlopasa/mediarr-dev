@@ -8,6 +8,7 @@ import 'package:mediarr_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**passwordReset** | **bool** | A forgotten password can be reset by email | 
 **passwordLogin** | **bool** |  | 
 **loginMessage** | **String** |  | 
 **passkeys** | **bool** | This address can use passkeys: HTTPS and a domain name | 

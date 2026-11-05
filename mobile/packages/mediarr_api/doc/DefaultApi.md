@@ -55,6 +55,7 @@ Method | HTTP request | Description
 [**finishOIDC**](DefaultApi.md#finishoidc) | **GET** /api/auth/oidc/callback | Where the identity provider sends the browser back
 [**finishPasskeyLogin**](DefaultApi.md#finishpasskeylogin) | **POST** /api/auth/passkey/finish | Finish signing in with a passkey
 [**finishPasskeyRegistration**](DefaultApi.md#finishpasskeyregistration) | **POST** /api/me/passkeys/finish | Finish adding a passkey
+[**forgotPassword**](DefaultApi.md#forgotpassword) | **POST** /api/auth/password/forgot | Send a link for a new password. Answers the same whether or not the address has an account
 [**getAISettings**](DefaultApi.md#getaisettings) | **GET** /api/admin/ai | The local Ollama server and how far descriptions have come
 [**getAdminHealth**](DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
 [**getAdminJobs**](DefaultApi.md#getadminjobs) | **GET** /api/admin/jobs | The job queues, and the jobs that gave up
@@ -80,6 +81,7 @@ Method | HTTP request | Description
 [**getCollectionThumbnail**](DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 [**getCollectionVideoFile**](DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
 [**getDocuments**](DefaultApi.md#getdocuments) | **GET** /api/documents | Photos of documents, found by the text on them
+[**getEmailSettings**](DefaultApi.md#getemailsettings) | **GET** /api/admin/email | The mail server this server sends through
 [**getExternalLibrary**](DefaultApi.md#getexternallibrary) | **GET** /api/admin/external | The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 [**getFamily**](DefaultApi.md#getfamily) | **GET** /api/family | The family library, and what this user shares with it
 [**getFamilyBucket**](DefaultApi.md#getfamilybucket) | **GET** /api/family/buckets/{month} | Assets of one month in the family library
@@ -149,16 +151,19 @@ Method | HTTP request | Description
 [**removeAlbumMember**](DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
 [**removeFamilyMember**](DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
 [**removePartner**](DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
+[**resetPassword**](DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
 [**resumeJobQueue**](DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 [**retryJob**](DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
 [**revokeDeviceKey**](DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 [**scanExternalLibrary**](DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 [**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
+[**sendTestEmail**](DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
 [**setAISettings**](DefaultApi.md#setaisettings) | **PUT** /api/admin/ai | Name the Ollama server. Previews of photos are sent to it
 [**setAlbumHeart**](DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 [**setAssetEdits**](DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 [**setBackupSettings**](DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
+[**setEmailSettings**](DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 [**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 [**setFeature**](DefaultApi.md#setfeature) | **PUT** /api/admin/features/{name} | Turn an addition on or off
 [**setMapStyle**](DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
@@ -2043,6 +2048,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **forgotPassword**
+> forgotPassword(passwordForgot)
+
+Send a link for a new password. Answers the same whether or not the address has an account
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final passwordForgot = PasswordForgot(); // PasswordForgot | 
+
+try {
+    api_instance.forgotPassword(passwordForgot);
+} catch (e) {
+    print('Exception when calling DefaultApi->forgotPassword: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **passwordForgot** | [**PasswordForgot**](PasswordForgot.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getAISettings**
 > AISettings getAISettings()
 
@@ -3042,6 +3087,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**Documents**](Documents.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getEmailSettings**
+> EmailSettings getEmailSettings()
+
+The mail server this server sends through
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getEmailSettings();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getEmailSettings: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**EmailSettings**](EmailSettings.md)
 
 ### Authorization
 
@@ -5786,6 +5868,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **resetPassword**
+> resetPassword(passwordReset)
+
+Set a new password with a link from an email
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final passwordReset = PasswordReset(); // PasswordReset | 
+
+try {
+    api_instance.resetPassword(passwordReset);
+} catch (e) {
+    print('Exception when calling DefaultApi->resetPassword: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **passwordReset** | [**PasswordReset**](PasswordReset.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **resumeJobQueue**
 > resumeJobQueue(queue)
 
@@ -5971,6 +6093,42 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**SearchResult**](SearchResult.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **sendTestEmail**
+> sendTestEmail()
+
+Send a message to the administrator asking
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    api_instance.sendTestEmail();
+} catch (e) {
+    print('Exception when calling DefaultApi->sendTestEmail: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+void (empty response body)
 
 ### Authorization
 
@@ -6181,6 +6339,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**BackupSettings**](BackupSettings.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setEmailSettings**
+> EmailSettings setEmailSettings(emailSettingsUpdate)
+
+Change the mail server
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final emailSettingsUpdate = EmailSettingsUpdate(); // EmailSettingsUpdate | 
+
+try {
+    final result = api_instance.setEmailSettings(emailSettingsUpdate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setEmailSettings: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **emailSettingsUpdate** | [**EmailSettingsUpdate**](EmailSettingsUpdate.md)|  | 
+
+### Return type
+
+[**EmailSettings**](EmailSettings.md)
 
 ### Authorization
 

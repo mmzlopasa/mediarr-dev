@@ -49,6 +49,8 @@ doc/Documents.md
 doc/DuplicateGroup.md
 doc/DuplicateItem.md
 doc/Duplicates.md
+doc/EmailSettings.md
+doc/EmailSettingsUpdate.md
 doc/Error.md
 doc/ExternalLibrary.md
 doc/ExternalLibraryOwner.md
@@ -79,6 +81,8 @@ doc/PartnerTimeline.md
 doc/Partners.md
 doc/Passkey.md
 doc/PasswordConfirm.md
+doc/PasswordForgot.md
+doc/PasswordReset.md
 doc/PeopleList.md
 doc/Person.md
 doc/PersonRef.md
@@ -177,6 +181,8 @@ lib/model/documents.dart
 lib/model/duplicate_group.dart
 lib/model/duplicate_item.dart
 lib/model/duplicates.dart
+lib/model/email_settings.dart
+lib/model/email_settings_update.dart
 lib/model/error.dart
 lib/model/external_library.dart
 lib/model/external_library_owner.dart
@@ -207,6 +213,8 @@ lib/model/partner_timeline.dart
 lib/model/partners.dart
 lib/model/passkey.dart
 lib/model/password_confirm.dart
+lib/model/password_forgot.dart
+lib/model/password_reset.dart
 lib/model/people_list.dart
 lib/model/person.dart
 lib/model/person_ref.dart
@@ -249,4 +257,7 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/server_settings_test.dart
+test/email_settings_test.dart
+test/email_settings_update_test.dart
+test/password_forgot_test.dart
+test/password_reset_test.dart

@@ -186,6 +186,7 @@ class SecurityEventKindEnum {
   static const loginLocked = SecurityEventKindEnum._(r'login_locked');
   static const ipBlocked = SecurityEventKindEnum._(r'ip_blocked');
   static const deviceBlocked = SecurityEventKindEnum._(r'device_blocked');
+  static const passwordReset = SecurityEventKindEnum._(r'password_reset');
 
   /// List of all possible values in this [enum][SecurityEventKindEnum].
   static const values = <SecurityEventKindEnum>[
@@ -194,6 +195,7 @@ class SecurityEventKindEnum {
     loginLocked,
     ipBlocked,
     deviceBlocked,
+    passwordReset,
   ];
 
   static SecurityEventKindEnum? fromJson(dynamic value) =>
@@ -247,6 +249,8 @@ class SecurityEventKindEnumTypeTransformer {
           return SecurityEventKindEnum.ipBlocked;
         case r'device_blocked':
           return SecurityEventKindEnum.deviceBlocked;
+        case r'password_reset':
+          return SecurityEventKindEnum.passwordReset;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

@@ -370,6 +370,7 @@ class PreferenceSettings extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SegmentedButton<AppTheme>(
+              showSelectedIcon: false,
               segments: [
                 for (final theme in AppTheme.values)
                   ButtonSegment(value: theme, label: Text(theme.label)),

@@ -130,6 +130,43 @@ void main() {
     });
   });
 
+  testWidgets('a screen in a transition covers the one under it', (
+    tester,
+  ) async {
+    for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          key: ValueKey(platform),
+          theme: buildTheme().copyWith(platform: platform),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const Scaffold(body: Text('Next page')),
+                  ),
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(
+        find.ancestor(
+          of: find.text('Next page'),
+          matching: find.byType(SkyBackground),
+        ),
+        findsOneWidget,
+        reason: platform.name,
+      );
+      await tester.pumpAndSettle();
+    }
+  });
+
   testWidgets('read-only mode is set under Advanced', (tester) async {
     FlutterSecureStorage.setMockInitialValues({});
     final container = ProviderContainer();

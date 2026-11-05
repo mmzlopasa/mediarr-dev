@@ -321,6 +321,10 @@ class ApiClient {
           return DuplicateItem.fromJson(value);
         case 'Duplicates':
           return Duplicates.fromJson(value);
+        case 'EmailSettings':
+          return EmailSettings.fromJson(value);
+        case 'EmailSettingsUpdate':
+          return EmailSettingsUpdate.fromJson(value);
         case 'Error':
           return Error.fromJson(value);
         case 'ExternalLibrary':
@@ -381,6 +385,10 @@ class ApiClient {
           return Passkey.fromJson(value);
         case 'PasswordConfirm':
           return PasswordConfirm.fromJson(value);
+        case 'PasswordForgot':
+          return PasswordForgot.fromJson(value);
+        case 'PasswordReset':
+          return PasswordReset.fromJson(value);
         case 'PeopleList':
           return PeopleList.fromJson(value);
         case 'Person':

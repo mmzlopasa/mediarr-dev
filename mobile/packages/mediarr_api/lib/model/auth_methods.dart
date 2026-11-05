@@ -13,11 +13,15 @@ part of openapi.api;
 class AuthMethods {
   /// Returns a new [AuthMethods] instance.
   AuthMethods({
+    required this.passwordReset,
     required this.passwordLogin,
     required this.loginMessage,
     required this.passkeys,
     this.ssoLabel,
   });
+
+  /// A forgotten password can be reset by email
+  bool passwordReset;
 
   bool passwordLogin;
 
@@ -39,6 +43,7 @@ class AuthMethods {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is AuthMethods &&
+          other.passwordReset == passwordReset &&
           other.passwordLogin == passwordLogin &&
           other.loginMessage == loginMessage &&
           other.passkeys == passkeys &&
@@ -47,6 +52,7 @@ class AuthMethods {
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
+      (passwordReset.hashCode) +
       (passwordLogin.hashCode) +
       (loginMessage.hashCode) +
       (passkeys.hashCode) +
@@ -54,10 +60,11 @@ class AuthMethods {
 
   @override
   String toString() =>
-      'AuthMethods[passwordLogin=$passwordLogin, loginMessage=$loginMessage, passkeys=$passkeys, ssoLabel=$ssoLabel]';
+      'AuthMethods[passwordReset=$passwordReset, passwordLogin=$passwordLogin, loginMessage=$loginMessage, passkeys=$passkeys, ssoLabel=$ssoLabel]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+    json[r'passwordReset'] = this.passwordReset;
     json[r'passwordLogin'] = this.passwordLogin;
     json[r'loginMessage'] = this.loginMessage;
     json[r'passkeys'] = this.passkeys;
@@ -90,6 +97,7 @@ class AuthMethods {
       }());
 
       return AuthMethods(
+        passwordReset: mapValueOfType<bool>(json, r'passwordReset')!,
         passwordLogin: mapValueOfType<bool>(json, r'passwordLogin')!,
         loginMessage: mapValueOfType<String>(json, r'loginMessage')!,
         passkeys: mapValueOfType<bool>(json, r'passkeys')!,
@@ -150,6 +158,7 @@ class AuthMethods {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
+    'passwordReset',
     'passwordLogin',
     'loginMessage',
     'passkeys',

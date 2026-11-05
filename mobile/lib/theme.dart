@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// The colors of the Mediarr design system (web/src/lib/design/dash.css), dark theme.
@@ -83,6 +84,33 @@ ThemeData _build(bool light) {
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: Colors.transparent,
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      selectedIcon: const SizedBox.shrink(),
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Palette.gold
+              : Colors.transparent,
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Palette.onGold
+              : Palette.ink,
+        ),
+        side: WidgetStatePropertyAll(BorderSide(color: Palette.line2)),
+      ),
+    ),
+    dividerTheme: DividerThemeData(color: Palette.line, thickness: 1, space: 1),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.iOS: _SkyPageTransitions(
+          CupertinoPageTransitionsBuilder(),
+        ),
+        TargetPlatform.android: _SkyPageTransitions(
+          ZoomPageTransitionsBuilder(),
+        ),
+      },
+    ),
     fontFamily: 'Sora',
     splashFactory: NoSplash.splashFactory,
     textTheme: TextTheme(
@@ -160,6 +188,29 @@ class SkyBackground extends StatelessWidget {
         child: child,
       ),
     ),
+  );
+}
+
+/// Screens are see-through, for the sky behind them. While one slides over another, each brings its
+/// own sky, or the two would show through each other.
+class _SkyPageTransitions extends PageTransitionsBuilder {
+  const _SkyPageTransitions(this.inner);
+
+  final PageTransitionsBuilder inner;
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => inner.buildTransitions(
+    route,
+    context,
+    animation,
+    secondaryAnimation,
+    SkyBackground(child: child),
   );
 }
 

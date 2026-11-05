@@ -21,7 +21,7 @@ enum AppAccent {
 }
 
 enum AppTheme {
-  system('Automatic'),
+  system('Auto'),
   light('Light'),
   dark('Dark');
 

@@ -2517,6 +2517,55 @@ class DefaultApi {
     return null;
   }
 
+  /// Send a link for a new password. Answers the same whether or not the address has an account
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [PasswordForgot] passwordForgot (required):
+  Future<Response> forgotPasswordWithHttpInfo(
+    PasswordForgot passwordForgot,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/password/forgot';
+
+    // ignore: prefer_final_locals
+    Object? postBody = passwordForgot;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Send a link for a new password. Answers the same whether or not the address has an account
+  ///
+  /// Parameters:
+  ///
+  /// * [PasswordForgot] passwordForgot (required):
+  Future<void> forgotPassword(
+    PasswordForgot passwordForgot,
+  ) async {
+    final response = await forgotPasswordWithHttpInfo(
+      passwordForgot,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// The local Ollama server and how far descriptions have come
   ///
   /// Note: This method returns the HTTP [Response].
@@ -4001,6 +4050,52 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'Documents',
       ) as Documents;
+    }
+    return null;
+  }
+
+  /// The mail server this server sends through
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getEmailSettingsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/email';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The mail server this server sends through
+  Future<EmailSettings?> getEmailSettings() async {
+    final response = await getEmailSettingsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'EmailSettings',
+      ) as EmailSettings;
     }
     return null;
   }
@@ -7839,6 +7934,55 @@ class DefaultApi {
     }
   }
 
+  /// Set a new password with a link from an email
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [PasswordReset] passwordReset (required):
+  Future<Response> resetPasswordWithHttpInfo(
+    PasswordReset passwordReset,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/password/reset';
+
+    // ignore: prefer_final_locals
+    Object? postBody = passwordReset;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Set a new password with a link from an email
+  ///
+  /// Parameters:
+  ///
+  /// * [PasswordReset] passwordReset (required):
+  Future<void> resetPassword(
+    PasswordReset passwordReset,
+  ) async {
+    final response = await resetPasswordWithHttpInfo(
+      passwordReset,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Continue a paused queue
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8083,6 +8227,41 @@ class DefaultApi {
       ) as SearchResult;
     }
     return null;
+  }
+
+  /// Send a message to the administrator asking
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> sendTestEmailWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/email/test';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Send a message to the administrator asking
+  Future<void> sendTestEmail() async {
+    final response = await sendTestEmailWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Name the Ollama server. Previews of photos are sent to it
@@ -8380,6 +8559,66 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'BackupSettings',
       ) as BackupSettings;
+    }
+    return null;
+  }
+
+  /// Change the mail server
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [EmailSettingsUpdate] emailSettingsUpdate (required):
+  Future<Response> setEmailSettingsWithHttpInfo(
+    EmailSettingsUpdate emailSettingsUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/email';
+
+    // ignore: prefer_final_locals
+    Object? postBody = emailSettingsUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change the mail server
+  ///
+  /// Parameters:
+  ///
+  /// * [EmailSettingsUpdate] emailSettingsUpdate (required):
+  Future<EmailSettings?> setEmailSettings(
+    EmailSettingsUpdate emailSettingsUpdate,
+  ) async {
+    final response = await setEmailSettingsWithHttpInfo(
+      emailSettingsUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'EmailSettings',
+      ) as EmailSettings;
     }
     return null;
   }
