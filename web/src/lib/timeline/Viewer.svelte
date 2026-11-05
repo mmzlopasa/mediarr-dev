@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AssetFactsDialog from '#lib/organize/AssetFactsDialog.svelte';
 	import FacesEditor from '#lib/organize/FacesEditor.svelte';
 	import { preferences, trashDays } from '#lib/preferences.svelte.ts';
 	import { onMount } from 'svelte';
@@ -61,6 +62,7 @@
 	let showInfo = $state(false);
 	let showActivity = $state(false);
 	let confirmDelete = $state(false);
+	let editingFacts = $state(false);
 	let editing = $state(false);
 	let revision = $state(0);
 	let dialog = $state<HTMLDivElement>();
@@ -575,6 +577,12 @@
 				{/if}
 				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
 				{#if detail.people}<FacesEditor assetId={id} />{/if}
+				{#if detail.caption}<Kv label={tr('Opis', 'Description')} value={detail.caption} />{/if}
+				{#if detail.people}
+					<Button small onclick={() => (editingFacts = true)}>
+						{tr('Uredi podatke', 'Edit details')}
+					</Button>
+				{/if}
 				{#if detail.tags?.length}
 					<Kv label={tr('Oznake', 'Tags')} value={detail.tags.join(', ')} />
 				{/if}
@@ -599,6 +607,18 @@
 		onSaved={async () => {
 			editing = false;
 			revision += 1;
+			detail = await load(id);
+			onChanged();
+		}}
+	/>
+{/if}
+
+{#if editingFacts && detail}
+	<AssetFactsDialog
+		{detail}
+		onClose={() => (editingFacts = false)}
+		onSaved={async () => {
+			editingFacts = false;
 			detail = await load(id);
 			onChanged();
 		}}

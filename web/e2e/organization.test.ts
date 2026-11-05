@@ -172,6 +172,29 @@ test('a face is corrected from the details of a photo', async ({ page }) => {
 	await expect.poll(() => sent[2]?.method).toBe('DELETE');
 });
 
+test('a photo gets a new date, place and description, and can go back to its file', async ({
+	page
+}) => {
+	await signIn(page, 'organizer');
+	await upload(page, 'facts.jpg');
+	await page.locator('.tl-tile').first().click();
+	await page.getByRole('button', { name: 'Details' }).click();
+	await page.getByRole('button', { name: 'Edit details' }).click();
+	const dialog = page.getByRole('dialog', { name: 'Edit details' });
+	await dialog.getByLabel('Date and time').fill('2001-02-03T04:05');
+	await dialog.getByLabel('Latitude').fill('45.8');
+	await dialog.getByLabel('Longitude').fill('15.97');
+	await dialog.getByLabel('Description').fill('At the lake');
+	await dialog.getByRole('button', { name: 'Save' }).click();
+	const details = page.getByRole('complementary', { name: 'Details' });
+	await expect(details.getByText('At the lake')).toBeVisible();
+	await expect(details.getByText('2001')).toBeVisible();
+	await details.getByRole('button', { name: 'Edit details' }).click();
+	await expect(dialog.getByLabel('Latitude')).toHaveValue('45.8');
+	await dialog.getByRole('button', { name: 'Use what the file says' }).click();
+	await expect(dialog).toBeHidden();
+});
+
 test('a date of birth is saved with the person', async ({ page }) => {
 	await signIn(page, 'organizer');
 	const person = '00000000-0000-4000-8000-000000000001';

@@ -225,7 +225,7 @@ func (q *Queries) EnsureTag(ctx context.Context, arg EnsureTagParams) (pgtype.UU
 }
 
 const getCollectionAsset = `-- name: GetCollectionAsset :one
-SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1
+SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, a.manual_taken_at, a.manual_offset_minutes, a.manual_latitude, a.manual_longitude, a.caption
 FROM assets a
 JOIN assets p ON p.id = COALESCE(a.live_photo_of, a.id)
 WHERE a.id = $1 AND a.user_id = $2
@@ -294,6 +294,11 @@ func (q *Queries) GetCollectionAsset(ctx context.Context, arg GetCollectionAsset
 		&i.ImportLatitude,
 		&i.ImportLongitude,
 		&i.ChecksumSha1,
+		&i.ManualTakenAt,
+		&i.ManualOffsetMinutes,
+		&i.ManualLatitude,
+		&i.ManualLongitude,
+		&i.Caption,
 	)
 	return i, err
 }
@@ -368,59 +373,64 @@ func (q *Queries) ListExpiredTrash(ctx context.Context, before pgtype.Timestampt
 }
 
 const listPurgeFamily = `-- name: ListPurgeFamily :many
-SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, l.kind AS library_kind
+SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, a.manual_taken_at, a.manual_offset_minutes, a.manual_latitude, a.manual_longitude, a.caption, l.kind AS library_kind
 FROM assets a JOIN libraries l ON l.id = a.library_id
 WHERE a.id = ANY($1::uuid[]) OR a.live_photo_of = ANY($1::uuid[])
 `
 
 type ListPurgeFamilyRow struct {
-	ID                 pgtype.UUID
-	UserID             pgtype.UUID
-	LibraryID          pgtype.UUID
-	Checksum           []byte
-	OriginalName       string
-	OriginalPath       string
-	SizeBytes          int64
-	MimeType           pgtype.Text
-	Kind               string
-	Status             string
-	Error              pgtype.Text
-	Width              pgtype.Int4
-	Height             pgtype.Int4
-	Blurhash           pgtype.Text
-	TakenAt            pgtype.Timestamptz
-	TakenOffsetMinutes pgtype.Int4
-	CreatedAt          pgtype.Timestamptz
-	UpdatedAt          pgtype.Timestamptz
-	IsFavorite         bool
-	ArchivedAt         pgtype.Timestamptz
-	DeletedAt          pgtype.Timestamptz
-	AspectRatio        pgtype.Float4
-	LocalAt            pgtype.Timestamp
-	ContentID          pgtype.Text
-	LivePhotoOf        pgtype.UUID
-	DurationMs         pgtype.Int8
-	VideoCodec         pgtype.Text
-	SpriteColumns      pgtype.Int4
-	SpriteRows         pgtype.Int4
-	SpriteCount        pgtype.Int4
-	SpriteIntervalMs   pgtype.Int4
-	VaultAt            pgtype.Timestamptz
-	StackParent        pgtype.UUID
-	StackFree          bool
-	StackChosen        bool
-	Phash              pgtype.Int8
-	Sharpness          pgtype.Float4
-	OrganizedAt        pgtype.Timestamptz
-	MissingAt          pgtype.Timestamptz
-	Edits              []byte
-	EditRevision       int32
-	EditApplied        int32
-	ImportTakenAt      pgtype.Timestamptz
-	ImportLatitude     pgtype.Float8
-	ImportLongitude    pgtype.Float8
-	ChecksumSha1       []byte
-	LibraryKind        string
+	ID                  pgtype.UUID
+	UserID              pgtype.UUID
+	LibraryID           pgtype.UUID
+	Checksum            []byte
+	OriginalName        string
+	OriginalPath        string
+	SizeBytes           int64
+	MimeType            pgtype.Text
+	Kind                string
+	Status              string
+	Error               pgtype.Text
+	Width               pgtype.Int4
+	Height              pgtype.Int4
+	Blurhash            pgtype.Text
+	TakenAt             pgtype.Timestamptz
+	TakenOffsetMinutes  pgtype.Int4
+	CreatedAt           pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
+	IsFavorite          bool
+	ArchivedAt          pgtype.Timestamptz
+	DeletedAt           pgtype.Timestamptz
+	AspectRatio         pgtype.Float4
+	LocalAt             pgtype.Timestamp
+	ContentID           pgtype.Text
+	LivePhotoOf         pgtype.UUID
+	DurationMs          pgtype.Int8
+	VideoCodec          pgtype.Text
+	SpriteColumns       pgtype.Int4
+	SpriteRows          pgtype.Int4
+	SpriteCount         pgtype.Int4
+	SpriteIntervalMs    pgtype.Int4
+	VaultAt             pgtype.Timestamptz
+	StackParent         pgtype.UUID
+	StackFree           bool
+	StackChosen         bool
+	Phash               pgtype.Int8
+	Sharpness           pgtype.Float4
+	OrganizedAt         pgtype.Timestamptz
+	MissingAt           pgtype.Timestamptz
+	Edits               []byte
+	EditRevision        int32
+	EditApplied         int32
+	ImportTakenAt       pgtype.Timestamptz
+	ImportLatitude      pgtype.Float8
+	ImportLongitude     pgtype.Float8
+	ChecksumSha1        []byte
+	ManualTakenAt       pgtype.Timestamptz
+	ManualOffsetMinutes pgtype.Int4
+	ManualLatitude      pgtype.Float8
+	ManualLongitude     pgtype.Float8
+	Caption             string
+	LibraryKind         string
 }
 
 // The photos, with the videos of Live Photos, which would otherwise surface on the timeline.
@@ -480,6 +490,11 @@ func (q *Queries) ListPurgeFamily(ctx context.Context, dollar_1 []pgtype.UUID) (
 			&i.ImportLatitude,
 			&i.ImportLongitude,
 			&i.ChecksumSha1,
+			&i.ManualTakenAt,
+			&i.ManualOffsetMinutes,
+			&i.ManualLatitude,
+			&i.ManualLongitude,
+			&i.Caption,
 			&i.LibraryKind,
 		); err != nil {
 			return nil, err

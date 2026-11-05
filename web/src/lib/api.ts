@@ -199,6 +199,10 @@ export const api = {
 	search: (query: string) =>
 		request<SearchResult>(fetch, `/api/search?q=${encodeURIComponent(query)}`),
 	people: () => request<PeopleList>(fetch, '/api/people'),
+	setAssetFacts: (id: string, body: components['schemas']['AssetFacts']) =>
+		request<void>(fetch, `/api/assets/${id}/facts`, body, 'PATCH'),
+	searchPlaces: (q: string) =>
+		request<components['schemas']['PlaceList']>(fetch, `/api/places?q=${encodeURIComponent(q)}`),
 	assetFaces: (id: string) =>
 		request<components['schemas']['AssetFaces']>(fetch, `/api/assets/${id}/faces`),
 	assignFace: (id: string, body: { personId?: string; name?: string }) =>

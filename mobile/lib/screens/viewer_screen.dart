@@ -9,6 +9,7 @@ import '../services/timeline.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'album_sheets.dart';
+import 'asset_facts.dart';
 import 'asset_picture.dart';
 import 'duplicates_screen.dart';
 import 'faces_section.dart';
@@ -606,18 +607,37 @@ class _LivePlayerState extends State<_LivePlayer> {
   );
 }
 
-class _InfoSheet extends StatelessWidget {
+class _InfoSheet extends StatefulWidget {
   const _InfoSheet({required this.session, required this.id});
 
   final Session session;
   final String id;
 
   @override
+  State<_InfoSheet> createState() => _InfoSheetState();
+}
+
+class _InfoSheetState extends State<_InfoSheet> {
+  Session get session => widget.session;
+  String get id => widget.id;
+  late Future<AssetDetail?> _detail = session.detail(id);
+
+  Future<void> _editFacts(AssetDetail detail) async {
+    final changed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AssetFactsDialog(session: session, detail: detail),
+    );
+    if (changed == true && mounted) {
+      setState(() => _detail = session.detail(id));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return SafeArea(
       child: FutureBuilder<AssetDetail?>(
-        future: session.detail(id),
+        future: _detail,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const SizedBox(
@@ -701,6 +721,18 @@ class _InfoSheet extends StatelessWidget {
                     ),
                   ),
                 FacesSection(session: session, assetId: id),
+                if (detail.caption != null) ...[
+                  const SizedBox(height: 10),
+                  Text(detail.caption!),
+                ],
+                if (detail.isOwner == true)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () => _editFacts(detail),
+                      child: const Text('Edit details'),
+                    ),
+                  ),
               ],
             ),
           );

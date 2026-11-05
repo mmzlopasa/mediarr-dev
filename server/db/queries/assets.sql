@@ -178,3 +178,26 @@ SELECT id FROM assets WHERE status = 'failed' AND deleted_at IS NULL;
 SELECT id, original_name, original_path, checksum FROM assets
 WHERE id > $1
 ORDER BY id LIMIT $2;
+
+-- name: SetAssetCaption :exec
+UPDATE assets SET caption = $2, updated_at = now() WHERE id = $1;
+
+-- name: SetManualDate :exec
+UPDATE assets
+SET manual_taken_at = $2, manual_offset_minutes = $3, taken_at = $2, taken_offset_minutes = $3, updated_at = now()
+WHERE id = $1;
+
+-- name: SetManualLocation :exec
+UPDATE assets SET manual_latitude = $2, manual_longitude = $3, updated_at = now() WHERE id = $1;
+
+-- name: SetExifLocation :exec
+INSERT INTO exif (asset_id, latitude, longitude, raw) VALUES ($1, $2, $3, '{}')
+ON CONFLICT (asset_id) DO UPDATE
+SET latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude,
+    city = NULL, state = NULL, country = NULL, geocoded_at = NULL;
+
+-- name: ClearManualFacts :exec
+UPDATE assets
+SET manual_taken_at = NULL, manual_offset_minutes = NULL, manual_latitude = NULL, manual_longitude = NULL,
+    updated_at = now()
+WHERE id = $1;

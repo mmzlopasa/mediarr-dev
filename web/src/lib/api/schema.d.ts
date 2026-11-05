@@ -2583,6 +2583,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/{id}/facts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change the date, location or description of a photo. Its file is never changed */
+        patch: operations["setAssetFacts"];
+        trace?: never;
+    };
+    "/api/places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Find a place by the start of its name */
+        get: operations["searchPlaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assets/{id}/edits": {
         parameters: {
             query?: never;
@@ -3091,6 +3125,29 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+        };
+        AssetFacts: {
+            /** @description RFC 3339 with the offset of where it was taken */
+            takenAt?: string;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            caption?: string;
+            /** @description Forget the date and location set by hand and read the file again */
+            useFile?: boolean;
+        };
+        Place: {
+            name: string;
+            state: string;
+            country: string;
+            /** Format: float */
+            latitude: number;
+            /** Format: float */
+            longitude: number;
+        };
+        PlaceList: {
+            places: components["schemas"]["Place"][];
         };
         /** @description A box is given as parts of the picture's width and height, from 0 to 1. */
         AssetFace: {
@@ -3681,6 +3738,8 @@ export interface components {
             /** @description False on a public link that does not allow downloads */
             downloadAllowed?: boolean;
             edits?: components["schemas"]["AssetEdits"];
+            /** @description Written by the owner */
+            caption?: string;
             /** @description New previews are being made after an edit */
             isEditing?: boolean;
             /** @description From the local model. Only for the owner */
@@ -8119,6 +8178,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Folder"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    setAssetFacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetFacts"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    searchPlaces: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Places */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceList"];
                 };
             };
             401: components["responses"]["Error"];

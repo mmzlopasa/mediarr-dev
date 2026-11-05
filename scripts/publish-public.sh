@@ -51,9 +51,18 @@ if git -C "$PUBLIC_DIR" diff --cached --quiet; then
 else
   git -C "$PUBLIC_DIR" -c user.name=SCYDE -c user.email=dev@scyde.dev commit -q -m "$MESSAGE"
 fi
-git -C "$PUBLIC_DIR" push -q origin main
+# GitHub sometimes refuses a push for a moment, and the same push then goes through.
+push() {
+  local wait=2
+  until git -C "$PUBLIC_DIR" push -q origin "$1"; do
+    [ "$wait" -le 16 ] || return 1
+    sleep "$wait"
+    wait=$((wait * 2))
+  done
+}
+push main
 if [ -n "$TAG" ]; then
   git -C "$PUBLIC_DIR" -c user.name=SCYDE -c user.email=dev@scyde.dev tag -a "$TAG" -m "$TAG"
-  git -C "$PUBLIC_DIR" push -q origin "$TAG"
+  push "$TAG"
 fi
 echo "Published $(git -C "$PUBLIC_DIR" rev-parse --short HEAD) ${TAG}"

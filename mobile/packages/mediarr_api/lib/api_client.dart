@@ -275,6 +275,8 @@ class ApiClient {
           return AssetFace.fromJson(value);
         case 'AssetFaces':
           return AssetFaces.fromJson(value);
+        case 'AssetFacts':
+          return AssetFacts.fromJson(value);
         case 'AssetIds':
           return AssetIds.fromJson(value);
         case 'AssetList':
@@ -413,6 +415,10 @@ class ApiClient {
           return PersonRef.fromJson(value);
         case 'PersonUpdate':
           return PersonUpdate.fromJson(value);
+        case 'Place':
+          return Place.fromJson(value);
+        case 'PlaceList':
+          return PlaceList.fromJson(value);
         case 'PublicLink':
           return PublicLink.fromJson(value);
         case 'QuotaUpdate':

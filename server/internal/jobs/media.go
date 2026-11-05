@@ -292,6 +292,24 @@ func (m *Metadata) fillFromImport(asset *db.Asset) {
 	}
 }
 
+// fillFromManual puts what the owner said over what the file says, because reading the file again
+// must not undo it.
+func (m *Metadata) fillFromManual(asset *db.Asset) {
+	if asset.ManualTakenAt.Valid {
+		when := asset.ManualTakenAt.Time
+		m.TakenAt = &when
+		m.OffsetMinutes = nil
+		if asset.ManualOffsetMinutes.Valid {
+			offset := asset.ManualOffsetMinutes.Int32
+			m.OffsetMinutes = &offset
+		}
+	}
+	if asset.ManualLatitude.Valid && asset.ManualLongitude.Valid {
+		lat, lon := asset.ManualLatitude.Float64, asset.ManualLongitude.Float64
+		m.Latitude, m.Longitude = &lat, &lon
+	}
+}
+
 func (m *Metadata) assetParams(id pgtype.UUID) db.UpdateAssetMetadataParams {
 	params := db.UpdateAssetMetadataParams{
 		ID:        id,

@@ -251,6 +251,7 @@ func (w *metadataWorker) Work(ctx context.Context, job *river.Job[MetadataArgs])
 		return w.failOrRetry(ctx, id, job.Attempt, err)
 	}
 	meta.fillFromImport(&asset)
+	meta.fillFromManual(&asset)
 
 	return pgx.BeginFunc(ctx, w.pool, func(tx pgx.Tx) error {
 		q := w.queries.WithTx(tx)

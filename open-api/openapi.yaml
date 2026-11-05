@@ -2380,6 +2380,35 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Folder" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/facts:
+    patch:
+      operationId: setAssetFacts
+      summary: Change the date, location or description of a photo. Its file is never changed
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetFacts" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/places:
+    get:
+      operationId: searchPlaces
+      summary: Find a place by the start of its name
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Places
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlaceList" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/assets/{id}/edits:
     put:
       operationId: setAssetEdits
@@ -2889,6 +2918,28 @@ components:
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
+    AssetFacts:
+      type: object
+      properties:
+        takenAt: { type: string, description: "RFC 3339 with the offset of where it was taken" }
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        caption: { type: string }
+        useFile: { type: boolean, description: "Forget the date and location set by hand and read the file again" }
+    Place:
+      type: object
+      required: [name, state, country, latitude, longitude]
+      properties:
+        name: { type: string }
+        state: { type: string }
+        country: { type: string }
+        latitude: { type: number, format: float }
+        longitude: { type: number, format: float }
+    PlaceList:
+      type: object
+      required: [places]
+      properties:
+        places: { type: array, items: { $ref: "#/components/schemas/Place" } }
     AssetFace:
       type: object
       required: [id, x1, y1, x2, y2]
@@ -3481,6 +3532,7 @@ components:
         isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
         edits: { $ref: "#/components/schemas/AssetEdits" }
+        caption: { type: string, description: "Written by the owner" }
         isEditing: { type: boolean, description: "New previews are being made after an edit" }
         description: { type: string, description: "From the local model. Only for the owner" }
         isMissing: { type: boolean, description: "The file of an external library was not found on the last scan" }

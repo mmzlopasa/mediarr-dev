@@ -68,7 +68,7 @@ async function shootMediarr(page: Page, path: string, theme: string, selector?: 
 	await page.waitForLoadState('networkidle');
 	// The owner asked for these beside the reference design, so they are not compared with it.
 	await page.addStyleTag({
-		content: '.srv-wrap, .nav-more { visibility: hidden; } .notify { display: none; }'
+		content: '.srv-wrap, .nav-more { visibility: hidden; } .notify, .login-note { display: none; }'
 	});
 	return shoot(page, selector);
 }

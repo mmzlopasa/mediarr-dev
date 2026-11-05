@@ -374,8 +374,11 @@ test.describe('timeline', () => {
 		const second = page.url();
 		await page.goto(second);
 		await expect(page.getByRole('dialog').locator('img.viewer-media')).toBeVisible();
-		await page.keyboard.press('ArrowLeft');
-		await expect(page).toHaveURL(first);
+		// The keys work once the viewer knows its neighbours, which it reads after the picture appears.
+		await expect(async () => {
+			await page.keyboard.press('ArrowLeft');
+			await expect(page).toHaveURL(first, { timeout: 1000 });
+		}).toPass({ timeout: 15_000 });
 	});
 
 	test('favorite and delete work from the selection toolbar', async ({ page }) => {

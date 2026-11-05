@@ -205,6 +205,8 @@ void main() {
     await tester.tap(find.byTooltip('Details'));
     await waitFor(tester, find.text('Ana'));
     expect(find.byTooltip('Who this is'), findsOneWidget);
+    await tester.tap(find.text('Edit details'));
+    await waitFor(tester, find.text('Use what the file says'));
   });
 
   testWidgets('read-only mode takes away uploading and deleting', (

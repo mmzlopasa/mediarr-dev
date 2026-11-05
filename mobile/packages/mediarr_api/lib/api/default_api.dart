@@ -8619,6 +8619,68 @@ class DefaultApi {
     return null;
   }
 
+  /// Find a place by the start of its name
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] q (required):
+  Future<Response> searchPlacesWithHttpInfo(
+    String q,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/places';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    queryParams.addAll(_queryParams('', 'q', q));
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Find a place by the start of its name
+  ///
+  /// Parameters:
+  ///
+  /// * [String] q (required):
+  Future<PlaceList?> searchPlaces(
+    String q,
+  ) async {
+    final response = await searchPlacesWithHttpInfo(
+      q,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'PlaceList',
+      ) as PlaceList;
+    }
+    return null;
+  }
+
   /// Send a message to the administrator asking
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8887,6 +8949,62 @@ class DefaultApi {
     final response = await setAssetEditsWithHttpInfo(
       id,
       assetEdits,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Change the date, location or description of a photo. Its file is never changed
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetFacts] assetFacts (required):
+  Future<Response> setAssetFactsWithHttpInfo(
+    String id,
+    AssetFacts assetFacts,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/{id}/facts'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetFacts;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PATCH',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change the date, location or description of a photo. Its file is never changed
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AssetFacts] assetFacts (required):
+  Future<void> setAssetFacts(
+    String id,
+    AssetFacts assetFacts,
+  ) async {
+    final response = await setAssetFactsWithHttpInfo(
+      id,
+      assetFacts,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

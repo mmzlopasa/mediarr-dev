@@ -1201,7 +1201,10 @@ type AssetStatus string
 
 // AssetDetail defines model for AssetDetail.
 type AssetDetail struct {
-	Camera    *string   `json:"camera,omitempty"`
+	Camera *string `json:"camera,omitempty"`
+
+	// Caption Written by the owner
+	Caption   *string   `json:"caption,omitempty"`
 	City      *string   `json:"city,omitempty"`
 	Country   *string   `json:"country,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -1303,6 +1306,19 @@ type AssetFace struct {
 // AssetFaces defines model for AssetFaces.
 type AssetFaces struct {
 	Faces []AssetFace `json:"faces"`
+}
+
+// AssetFacts defines model for AssetFacts.
+type AssetFacts struct {
+	Caption   *string  `json:"caption,omitempty"`
+	Latitude  *float64 `json:"latitude,omitempty"`
+	Longitude *float64 `json:"longitude,omitempty"`
+
+	// TakenAt RFC 3339 with the offset of where it was taken
+	TakenAt *string `json:"takenAt,omitempty"`
+
+	// UseFile Forget the date and location set by hand and read the file again
+	UseFile *bool `json:"useFile,omitempty"`
 }
 
 // AssetIds defines model for AssetIds.
@@ -1919,6 +1935,20 @@ type PersonUpdate struct {
 	Name      *string `json:"name,omitempty"`
 }
 
+// Place defines model for Place.
+type Place struct {
+	Country   string  `json:"country"`
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
+	Name      string  `json:"name"`
+	State     string  `json:"state"`
+}
+
+// PlaceList defines model for PlaceList.
+type PlaceList struct {
+	Places []Place `json:"places"`
+}
+
 // PublicLink defines model for PublicLink.
 type PublicLink struct {
 	AllowDownload bool    `json:"allowDownload"`
@@ -2415,6 +2445,11 @@ type ListMemoriesParams struct {
 	Date *openapi_types.Date `form:"date,omitempty" json:"date,omitempty"`
 }
 
+// SearchPlacesParams defines parameters for SearchPlaces.
+type SearchPlacesParams struct {
+	Q string `form:"q" json:"q"`
+}
+
 // GetPublicOriginalParams defines parameters for GetPublicOriginal.
 type GetPublicOriginalParams struct {
 	Download *bool `form:"download,omitempty" json:"download,omitempty"`
@@ -2507,6 +2542,9 @@ type ChangeAssetTagsJSONRequestBody = AssetTagChange
 
 // SetAssetEditsJSONRequestBody defines body for SetAssetEdits for application/json ContentType.
 type SetAssetEditsJSONRequestBody = AssetEdits
+
+// SetAssetFactsJSONRequestBody defines body for SetAssetFacts for application/json ContentType.
+type SetAssetFactsJSONRequestBody = AssetFacts
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
@@ -2819,6 +2857,9 @@ type ServerInterface interface {
 	// ListAssetFaces The faces found in a picture of the signed-in user
 	// (GET /api/assets/{id}/faces)
 	ListAssetFaces(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// SetAssetFacts Change the date, location or description of a photo. Its file is never changed
+	// (PATCH /api/assets/{id}/facts)
+	SetAssetFacts(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetAssetMotion Read the video embedded in an Android Motion Photo
 	// (GET /api/assets/{id}/motion)
 	GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -3044,6 +3085,9 @@ type ServerInterface interface {
 	// GetPersonThumbnail A picture of this person's face
 	// (GET /api/people/{id}/thumbnail)
 	GetPersonThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// SearchPlaces Find a place by the start of its name
+	// (GET /api/places)
+	SearchPlaces(w http.ResponseWriter, r *http.Request, params SearchPlacesParams)
 	// GetPublicLink What a public link offers. Needs no account.
 	// (GET /api/public/{token})
 	GetPublicLink(w http.ResponseWriter, r *http.Request, token string)
@@ -3602,6 +3646,12 @@ func (_ Unimplemented) ListAssetFaces(w http.ResponseWriter, r *http.Request, id
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// SetAssetFacts Change the date, location or description of a photo. Its file is never changed
+// (PATCH /api/assets/{id}/facts)
+func (_ Unimplemented) SetAssetFacts(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetAssetMotion Read the video embedded in an Android Motion Photo
 // (GET /api/assets/{id}/motion)
 func (_ Unimplemented) GetAssetMotion(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
@@ -4049,6 +4099,12 @@ func (_ Unimplemented) MergePeople(w http.ResponseWriter, r *http.Request, id op
 // GetPersonThumbnail A picture of this person's face
 // (GET /api/people/{id}/thumbnail)
 func (_ Unimplemented) GetPersonThumbnail(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SearchPlaces Find a place by the start of its name
+// (GET /api/places)
+func (_ Unimplemented) SearchPlaces(w http.ResponseWriter, r *http.Request, params SearchPlacesParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5911,6 +5967,32 @@ func (siw *ServerInterfaceWrapper) ListAssetFaces(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// SetAssetFacts operation middleware
+func (siw *ServerInterfaceWrapper) SetAssetFacts(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetAssetFacts(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetAssetMotion operation middleware
 func (siw *ServerInterfaceWrapper) GetAssetMotion(w http.ResponseWriter, r *http.Request) {
 
@@ -7621,6 +7703,39 @@ func (siw *ServerInterfaceWrapper) GetPersonThumbnail(w http.ResponseWriter, r *
 	handler.ServeHTTP(w, r)
 }
 
+// SearchPlaces operation middleware
+func (siw *ServerInterfaceWrapper) SearchPlaces(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchPlacesParams
+
+	// ------------- Required query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SearchPlaces(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetPublicLink operation middleware
 func (siw *ServerInterfaceWrapper) GetPublicLink(w http.ResponseWriter, r *http.Request) {
 
@@ -9091,6 +9206,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/folders", wrapper.GetFolder)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/assets/{id}/facts", wrapper.SetAssetFacts)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/places", wrapper.SearchPlaces)
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/api/assets/{id}/edits", wrapper.ClearAssetEdits)

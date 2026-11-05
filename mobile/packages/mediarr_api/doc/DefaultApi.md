@@ -165,11 +165,13 @@ Method | HTTP request | Description
 [**runIntegrity**](DefaultApi.md#runintegrity) | **POST** /api/admin/integrity | Check the originals now. This changes no file
 [**scanExternalLibrary**](DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 [**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
+[**searchPlaces**](DefaultApi.md#searchplaces) | **GET** /api/places | Find a place by the start of its name
 [**sendTestEmail**](DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
 [**setAISettings**](DefaultApi.md#setaisettings) | **PUT** /api/admin/ai | Name the Ollama server. Previews of photos are sent to it
 [**setAlbumHeart**](DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 [**setAssetEdits**](DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
+[**setAssetFacts**](DefaultApi.md#setassetfacts) | **PATCH** /api/assets/{id}/facts | Change the date, location or description of a photo. Its file is never changed
 [**setBackupSettings**](DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
 [**setEmailSettings**](DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 [**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
@@ -6426,6 +6428,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **searchPlaces**
+> PlaceList searchPlaces(q)
+
+Find a place by the start of its name
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final q = q_example; // String | 
+
+try {
+    final result = api_instance.searchPlaces(q);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->searchPlaces: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **q** | **String**|  | 
+
+### Return type
+
+[**PlaceList**](PlaceList.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **sendTestEmail**
 > sendTestEmail()
 
@@ -6615,6 +6658,48 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **String**|  | 
  **assetEdits** | [**AssetEdits**](AssetEdits.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setAssetFacts**
+> setAssetFacts(id, assetFacts)
+
+Change the date, location or description of a photo. Its file is never changed
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final assetFacts = AssetFacts(); // AssetFacts | 
+
+try {
+    api_instance.setAssetFacts(id, assetFacts);
+} catch (e) {
+    print('Exception when calling DefaultApi->setAssetFacts: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **assetFacts** | [**AssetFacts**](AssetFacts.md)|  | 
 
 ### Return type
 

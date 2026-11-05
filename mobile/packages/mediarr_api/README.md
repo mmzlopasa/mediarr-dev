@@ -216,11 +216,13 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**runIntegrity**](doc//DefaultApi.md#runintegrity) | **POST** /api/admin/integrity | Check the originals now. This changes no file
 *DefaultApi* | [**scanExternalLibrary**](doc//DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
 *DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
+*DefaultApi* | [**searchPlaces**](doc//DefaultApi.md#searchplaces) | **GET** /api/places | Find a place by the start of its name
 *DefaultApi* | [**sendTestEmail**](doc//DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
 *DefaultApi* | [**setAISettings**](doc//DefaultApi.md#setaisettings) | **PUT** /api/admin/ai | Name the Ollama server. Previews of photos are sent to it
 *DefaultApi* | [**setAlbumHeart**](doc//DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 *DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
+*DefaultApi* | [**setAssetFacts**](doc//DefaultApi.md#setassetfacts) | **PATCH** /api/assets/{id}/facts | Change the date, location or description of a photo. Its file is never changed
 *DefaultApi* | [**setBackupSettings**](doc//DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
 *DefaultApi* | [**setEmailSettings**](doc//DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
@@ -271,6 +273,7 @@ Class | Method | HTTP request | Description
  - [AssetEdits](doc//AssetEdits.md)
  - [AssetFace](doc//AssetFace.md)
  - [AssetFaces](doc//AssetFaces.md)
+ - [AssetFacts](doc//AssetFacts.md)
  - [AssetIds](doc//AssetIds.md)
  - [AssetList](doc//AssetList.md)
  - [AssetTagChange](doc//AssetTagChange.md)
@@ -340,6 +343,8 @@ Class | Method | HTTP request | Description
  - [Person](doc//Person.md)
  - [PersonRef](doc//PersonRef.md)
  - [PersonUpdate](doc//PersonUpdate.md)
+ - [Place](doc//Place.md)
+ - [PlaceList](doc//PlaceList.md)
  - [PublicLink](doc//PublicLink.md)
  - [QuotaUpdate](doc//QuotaUpdate.md)
  - [SearchFilters](doc//SearchFilters.md)

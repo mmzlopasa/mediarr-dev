@@ -128,3 +128,36 @@ func (q *Queries) MapPoints(ctx context.Context, arg MapPointsParams) ([]MapPoin
 	}
 	return items, nil
 }
+
+const searchPlaces = `-- name: SearchPlaces :many
+SELECT name, state, country, lat, lon FROM places
+WHERE name ILIKE $1::text || '%'
+ORDER BY name, country, state
+LIMIT 8
+`
+
+func (q *Queries) SearchPlaces(ctx context.Context, prefix string) ([]Place, error) {
+	rows, err := q.db.Query(ctx, searchPlaces, prefix)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Place
+	for rows.Next() {
+		var i Place
+		if err := rows.Scan(
+			&i.Name,
+			&i.State,
+			&i.Country,
+			&i.Lat,
+			&i.Lon,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

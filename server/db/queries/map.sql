@@ -35,3 +35,9 @@ WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND 
       WHERE ps.owner_id = a.user_id AND ps.partner_id = sqlc.arg('user_id') AND ps.in_timeline
         AND (ps.since_at IS NULL OR a.local_at >= ps.since_at)))
 ORDER BY a.local_at, a.id;
+
+-- name: SearchPlaces :many
+SELECT name, state, country, lat, lon FROM places
+WHERE name ILIKE sqlc.arg('prefix')::text || '%'
+ORDER BY name, country, state
+LIMIT 8;

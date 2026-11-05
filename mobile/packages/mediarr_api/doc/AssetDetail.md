@@ -11,6 +11,7 @@ Name | Type | Description | Notes
 **isOwner** | **bool** | Only the owner can change or delete the asset | [optional] 
 **downloadAllowed** | **bool** | False on a public link that does not allow downloads | [optional] 
 **edits** | [**AssetEdits**](AssetEdits.md) |  | [optional] 
+**caption** | **String** | Written by the owner | [optional] 
 **isEditing** | **bool** | New previews are being made after an edit | [optional] 
 **description** | **String** | From the local model. Only for the owner | [optional] 
 **isMissing** | **bool** | The file of an external library was not found on the last scan | [optional] 
