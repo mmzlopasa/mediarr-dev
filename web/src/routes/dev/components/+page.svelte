@@ -125,7 +125,7 @@
 		</Card>
 	</div>
 
-	<Card title="Dodatne komponente (nema ih u referentnom dizajnu)">
+	<Card title="Dodatne komponente">
 		<div class="btn-row">
 			<Button onclick={() => (dialogOpen = true)}>Dialog</Button>
 			<Button onclick={() => (sheetOpen = true)}>Sheet</Button>

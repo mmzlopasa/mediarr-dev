@@ -32,9 +32,8 @@
 			<ThemeButton />
 			<a class="as-cta" href="https://mediarr.app">mediarr.app</a>
 		</div>
-		<div class="as-globe" aria-hidden="true"></div>
+		<div class="as-edge" aria-hidden="true"></div>
 		<div class="as-promo">
-			<span class="as-eb">Mediarr</span>
 			<h2>
 				{tr(
 					'Sve vaše fotke i videi, na vašem poslužitelju.',
