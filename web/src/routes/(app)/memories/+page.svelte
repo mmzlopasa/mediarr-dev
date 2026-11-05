@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { memoryTitle } from '#lib/organize/memories.ts';
 	import { onMount } from 'svelte';
 	import { api, type Memory } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
@@ -30,11 +31,7 @@
 		}
 	});
 
-	function titleOf(memory: Memory) {
-		if (memory.kind === 'week') return tr('Protekli tjedan', 'The last week');
-		const years = new Date().getFullYear() - (memory.year ?? 0);
-		return tr(`Na današnji dan, ${memory.year}.`, `On this day, ${years} years ago`);
-	}
+	const titleOf = (memory: Memory) => memoryTitle(memory);
 </script>
 
 <svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>

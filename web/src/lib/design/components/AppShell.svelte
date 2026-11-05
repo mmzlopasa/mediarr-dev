@@ -130,6 +130,8 @@
 							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved href -->
 							<a class="lb-pop-i" href={link.href}><Icon name={link.icon} />{link.label}</a>
 						{/each}
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a fixed route -->
+						<a class="lb-pop-i" href="/tv"><Icon name="tv" />{tr('TV način', 'TV mode')}</a>
 						<div class="lb-me-tools"><LangMenu /><ThemeButton /></div>
 						<form onsubmit={signOut}>
 							<button class="lb-pop-i" type="submit"

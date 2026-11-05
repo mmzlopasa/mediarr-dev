@@ -944,3 +944,145 @@ body.auth-split {
 :is(html, html[data-theme]) .chart-c i {
 	background: var(--acc);
 }
+
+/* ---------- TV: one big picture, rows for the remote ---------- */
+.tv {
+	position: relative;
+	min-height: 100vh;
+	padding: 48px 72px 64px;
+	overflow: hidden;
+	background: #0e0c0b;
+	color: #efe9e1;
+	color-scheme: dark;
+	--ink: #efe9e1;
+	--dim: #9a9187;
+	--acc: #e8572a;
+}
+.tv-hero {
+	position: absolute;
+	inset: 0 0 35%;
+	background-size: cover;
+	background-position: center 40%;
+}
+.tv-hero::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(0deg, #0e0c0b 4%, rgba(14, 12, 11, 0.45) 60%, rgba(14, 12, 11, 0.6)),
+		linear-gradient(90deg, rgba(14, 12, 11, 0.85), transparent 65%);
+}
+.tv-top,
+.tv-lead,
+.tv-row,
+.tv-note,
+.tv-wait {
+	position: relative;
+}
+.tv-top {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 22px;
+}
+.tv-top .logo {
+	font-size: 24px;
+}
+.tv-clock {
+	color: var(--dim);
+	font-variant-numeric: tabular-nums;
+}
+.tv-lead {
+	margin: 18vh 0 40px;
+	max-width: 1100px;
+}
+.tv-lead h1 {
+	margin: 0 0 12px;
+	font: 400 clamp(64px, 7vw, 120px) / 0.9 var(--serif);
+	letter-spacing: -0.02em;
+}
+.tv-lead p {
+	margin: 0;
+	color: #c9c1b6;
+	font-size: 22px;
+}
+.tv-row h2 {
+	margin: 26px 0 14px;
+	font: 600 24px var(--sans);
+}
+.tv-cards {
+	display: flex;
+	gap: 22px;
+	padding: 8px 4px 12px;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+.tv-card {
+	flex: none;
+	display: grid;
+	gap: 10px;
+	width: 300px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--ink);
+	text-align: left;
+	font: 500 18px var(--sans);
+	cursor: pointer;
+}
+.tv-card img {
+	width: 300px;
+	height: 190px;
+	object-fit: cover;
+	border-radius: 6px;
+	background: #171412;
+}
+.tv-card.round {
+	width: 170px;
+	justify-items: center;
+	text-align: center;
+}
+.tv-card.round img {
+	width: 150px;
+	height: 150px;
+	border-radius: 50%;
+}
+/* Focus seen from the sofa: a clear outline with room around it, no glow. */
+.tv-card:focus-visible,
+.tv-card:focus {
+	outline: none;
+}
+.tv-card:focus img {
+	outline: 4px solid var(--ink);
+	outline-offset: 6px;
+}
+.tv-card:focus span {
+	color: var(--ink);
+}
+.tv-note {
+	margin-top: 30vh;
+	font-size: 26px;
+	color: var(--dim);
+}
+.tv-show {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	display: grid;
+	place-items: center;
+	background: #0a0908;
+}
+.tv-show img {
+	max-width: 100%;
+	max-height: 100vh;
+	object-fit: contain;
+}
+.tv-show-n {
+	position: absolute;
+	right: 48px;
+	bottom: 32px;
+	margin: 0;
+	color: var(--dim);
+	font-size: 20px;
+	font-variant-numeric: tabular-nums;
+}

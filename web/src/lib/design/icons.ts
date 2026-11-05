@@ -19,6 +19,7 @@ export const icons = {
 	moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
 	menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
 	x: '<path d="M6 6l12 12M18 6L6 18"/>',
+	tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 20h8"/>',
 	bell: '<path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 8H4c0-1 2-2 2-8M10 20a2 2 0 0 0 4 0"/>',
 	out: '<path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9"/>',
 	sync: '<path d="M20 11a8 8 0 0 0-14.5-3.5M4 5v4h4M4 13a8 8 0 0 0 14.5 3.5M20 19v-4h-4"/>',
