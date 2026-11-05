@@ -415,6 +415,12 @@ func (s *apiServer) GetAuthMethods(w http.ResponseWriter, r *http.Request) {
 	out := api.AuthMethods{
 		Passkeys: passkeysAvailable(r), PasswordLogin: server.PasswordLogin, LoginMessage: server.LoginMessage,
 	}
+	mail, err := s.loadEmail(r.Context())
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out.PasswordReset = mail.Enabled && mail.PublicURL != ""
 	if settings.enabled() {
 		label := settings.label
 		if label == "" {

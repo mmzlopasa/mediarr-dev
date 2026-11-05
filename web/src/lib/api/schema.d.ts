@@ -1651,6 +1651,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The mail server this server sends through */
+        get: operations["getEmailSettings"];
+        /** Change the mail server */
+        put: operations["setEmailSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/email/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a message to the administrator asking */
+        post: operations["sendTestEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/password/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a link for a new password. Answers the same whether or not the address has an account */
+        post: operations["forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/password/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set a new password with a link from an email */
+        post: operations["resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/security": {
         parameters: {
             query?: never;
@@ -2685,6 +2754,8 @@ export interface components {
             bytes: number;
         };
         AuthMethods: {
+            /** @description A forgotten password can be reset by email */
+            passwordReset: boolean;
             passwordLogin: boolean;
             loginMessage: string;
             /** @description This address can use passkeys: HTTPS and a domain name */
@@ -3231,7 +3302,7 @@ export interface components {
             /** Format: date-time */
             at: string;
             /** @enum {string} */
-            kind: "login_ok" | "login_failed" | "login_locked" | "ip_blocked" | "device_blocked";
+            kind: "login_ok" | "login_failed" | "login_locked" | "ip_blocked" | "device_blocked" | "password_reset";
             email: string;
             ip: string;
             userAgent: string;
@@ -3285,6 +3356,37 @@ export interface components {
             videoMaxHeight: number;
             loginMessage: string;
             passwordLogin: boolean;
+        };
+        EmailSettings: {
+            enabled: boolean;
+            host: string;
+            port: number;
+            username: string;
+            from: string;
+            /** @enum {string} */
+            security: "starttls" | "tls" | "none";
+            /** @description The address of this server, for links in messages */
+            publicUrl: string;
+            hasPassword: boolean;
+        };
+        EmailSettingsUpdate: {
+            enabled: boolean;
+            host: string;
+            port: number;
+            username: string;
+            /** @description Left out keeps the one that is saved */
+            password?: string;
+            from: string;
+            /** @enum {string} */
+            security: "starttls" | "tls" | "none";
+            publicUrl: string;
+        };
+        PasswordForgot: {
+            email: string;
+        };
+        PasswordReset: {
+            token: string;
+            newPassword: string;
         };
         ServerStatus: {
             version: string;
@@ -6228,6 +6330,122 @@ export interface operations {
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
+        };
+    };
+    getEmailSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings, without the password */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailSettings"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    setEmailSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailSettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description The settings now */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailSettings"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    sendTestEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sent */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+        };
+    };
+    forgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordForgot"];
+            };
+        };
+        responses: {
+            /** @description Done */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordReset"];
+            };
+        };
+        responses: {
+            /** @description Set */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
         };
     };
     getSecurity: {

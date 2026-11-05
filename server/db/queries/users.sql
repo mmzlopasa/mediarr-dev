@@ -143,3 +143,15 @@ SELECT data FROM user_preferences WHERE user_id = $1;
 -- name: SetUserPreferences :exec
 INSERT INTO user_preferences (user_id, data) VALUES ($1, $2)
 ON CONFLICT (user_id) DO UPDATE SET data = EXCLUDED.data;
+
+-- name: CreatePasswordReset :exec
+INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES ($1, $2, $3);
+
+-- name: TakePasswordReset :one
+DELETE FROM password_resets WHERE token_hash = $1 AND expires_at > now() RETURNING user_id;
+
+-- name: DeleteUserPasswordResets :exec
+DELETE FROM password_resets WHERE user_id = $1;
+
+-- name: DeleteUserSessions :exec
+DELETE FROM sessions WHERE user_id = $1;

@@ -139,6 +139,21 @@ func (q *Queries) CreatePasskey(ctx context.Context, arg CreatePasskeyParams) (p
 	return id, err
 }
 
+const createPasswordReset = `-- name: CreatePasswordReset :exec
+INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES ($1, $2, $3)
+`
+
+type CreatePasswordResetParams struct {
+	TokenHash []byte
+	UserID    pgtype.UUID
+	ExpiresAt pgtype.Timestamptz
+}
+
+func (q *Queries) CreatePasswordReset(ctx context.Context, arg CreatePasswordResetParams) error {
+	_, err := q.db.Exec(ctx, createPasswordReset, arg.TokenHash, arg.UserID, arg.ExpiresAt)
+	return err
+}
+
 const createSession = `-- name: CreateSession :exec
 INSERT INTO sessions (user_id, token_hash, expires_at, user_agent, ip) VALUES ($1, $2, $3, $4, $5)
 `
@@ -285,6 +300,15 @@ func (q *Queries) DeleteUserPasskeys(ctx context.Context, userID pgtype.UUID) er
 	return err
 }
 
+const deleteUserPasswordResets = `-- name: DeleteUserPasswordResets :exec
+DELETE FROM password_resets WHERE user_id = $1
+`
+
+func (q *Queries) DeleteUserPasswordResets(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUserPasswordResets, userID)
+	return err
+}
+
 const deleteUserSession = `-- name: DeleteUserSession :execrows
 DELETE FROM sessions WHERE id = $1 AND user_id = $2
 `
@@ -300,6 +324,15 @@ func (q *Queries) DeleteUserSession(ctx context.Context, arg DeleteUserSessionPa
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const deleteUserSessions = `-- name: DeleteUserSessions :exec
+DELETE FROM sessions WHERE user_id = $1
+`
+
+func (q *Queries) DeleteUserSessions(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUserSessions, userID)
+	return err
 }
 
 const disableTotp = `-- name: DisableTotp :exec
@@ -735,6 +768,17 @@ func (q *Queries) SetUserQuota(ctx context.Context, arg SetUserQuotaParams) (int
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const takePasswordReset = `-- name: TakePasswordReset :one
+DELETE FROM password_resets WHERE token_hash = $1 AND expires_at > now() RETURNING user_id
+`
+
+func (q *Queries) TakePasswordReset(ctx context.Context, tokenHash []byte) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, takePasswordReset, tokenHash)
+	var user_id pgtype.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
 }
 
 const touchSession = `-- name: TouchSession :exec

@@ -371,6 +371,48 @@ func (e BulkRequestAction) Valid() bool {
 	}
 }
 
+// Defines values for EmailSettingsSecurity.
+const (
+	EmailSettingsSecurityNone     EmailSettingsSecurity = "none"
+	EmailSettingsSecurityStarttls EmailSettingsSecurity = "starttls"
+	EmailSettingsSecurityTls      EmailSettingsSecurity = "tls"
+)
+
+// Valid indicates whether the value is a known member of the EmailSettingsSecurity enum.
+func (e EmailSettingsSecurity) Valid() bool {
+	switch e {
+	case EmailSettingsSecurityNone:
+		return true
+	case EmailSettingsSecurityStarttls:
+		return true
+	case EmailSettingsSecurityTls:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for EmailSettingsUpdateSecurity.
+const (
+	EmailSettingsUpdateSecurityNone     EmailSettingsUpdateSecurity = "none"
+	EmailSettingsUpdateSecurityStarttls EmailSettingsUpdateSecurity = "starttls"
+	EmailSettingsUpdateSecurityTls      EmailSettingsUpdateSecurity = "tls"
+)
+
+// Valid indicates whether the value is a known member of the EmailSettingsUpdateSecurity enum.
+func (e EmailSettingsUpdateSecurity) Valid() bool {
+	switch e {
+	case EmailSettingsUpdateSecurityNone:
+		return true
+	case EmailSettingsUpdateSecurityStarttls:
+		return true
+	case EmailSettingsUpdateSecurityTls:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for HealthStatus.
 const (
 	Ok          HealthStatus = "ok"
@@ -496,25 +538,28 @@ func (e MemoryKind) Valid() bool {
 
 // Defines values for SecurityEventKind.
 const (
-	DeviceBlocked SecurityEventKind = "device_blocked"
-	IpBlocked     SecurityEventKind = "ip_blocked"
-	LoginFailed   SecurityEventKind = "login_failed"
-	LoginLocked   SecurityEventKind = "login_locked"
-	LoginOk       SecurityEventKind = "login_ok"
+	SecurityEventKindDeviceBlocked SecurityEventKind = "device_blocked"
+	SecurityEventKindIpBlocked     SecurityEventKind = "ip_blocked"
+	SecurityEventKindLoginFailed   SecurityEventKind = "login_failed"
+	SecurityEventKindLoginLocked   SecurityEventKind = "login_locked"
+	SecurityEventKindLoginOk       SecurityEventKind = "login_ok"
+	SecurityEventKindPasswordReset SecurityEventKind = "password_reset"
 )
 
 // Valid indicates whether the value is a known member of the SecurityEventKind enum.
 func (e SecurityEventKind) Valid() bool {
 	switch e {
-	case DeviceBlocked:
+	case SecurityEventKindDeviceBlocked:
 		return true
-	case IpBlocked:
+	case SecurityEventKindIpBlocked:
 		return true
-	case LoginFailed:
+	case SecurityEventKindLoginFailed:
 		return true
-	case LoginLocked:
+	case SecurityEventKindLoginLocked:
 		return true
-	case LoginOk:
+	case SecurityEventKindLoginOk:
+		return true
+	case SecurityEventKindPasswordReset:
 		return true
 	default:
 		return false
@@ -1240,6 +1285,9 @@ type AuthMethods struct {
 	Passkeys      bool `json:"passkeys"`
 	PasswordLogin bool `json:"passwordLogin"`
 
+	// PasswordReset A forgotten password can be reset by email
+	PasswordReset bool `json:"passwordReset"`
+
 	// SsoLabel The name of the single sign-on button, if it is turned on
 	SsoLabel *string `json:"ssoLabel,omitempty"`
 }
@@ -1415,6 +1463,40 @@ type Duplicates struct {
 	// Total All groups, of which at most the first 100 are listed
 	Total int `json:"total"`
 }
+
+// EmailSettings defines model for EmailSettings.
+type EmailSettings struct {
+	Enabled     bool   `json:"enabled"`
+	From        string `json:"from"`
+	HasPassword bool   `json:"hasPassword"`
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
+
+	// PublicUrl The address of this server, for links in messages
+	PublicUrl string                `json:"publicUrl"`
+	Security  EmailSettingsSecurity `json:"security"`
+	Username  string                `json:"username"`
+}
+
+// EmailSettingsSecurity defines model for EmailSettings.Security.
+type EmailSettingsSecurity string
+
+// EmailSettingsUpdate defines model for EmailSettingsUpdate.
+type EmailSettingsUpdate struct {
+	Enabled bool   `json:"enabled"`
+	From    string `json:"from"`
+	Host    string `json:"host"`
+
+	// Password Left out keeps the one that is saved
+	Password  *string                     `json:"password,omitempty"`
+	Port      int                         `json:"port"`
+	PublicUrl string                      `json:"publicUrl"`
+	Security  EmailSettingsUpdateSecurity `json:"security"`
+	Username  string                      `json:"username"`
+}
+
+// EmailSettingsUpdateSecurity defines model for EmailSettingsUpdate.Security.
+type EmailSettingsUpdateSecurity string
 
 // Error defines model for Error.
 type Error struct {
@@ -1677,6 +1759,17 @@ type Passkey struct {
 // PasswordConfirm defines model for PasswordConfirm.
 type PasswordConfirm struct {
 	Password string `json:"password"`
+}
+
+// PasswordForgot defines model for PasswordForgot.
+type PasswordForgot struct {
+	Email string `json:"email"`
+}
+
+// PasswordReset defines model for PasswordReset.
+type PasswordReset struct {
+	NewPassword string `json:"newPassword"`
+	Token       string `json:"token"`
 }
 
 // PeopleList defines model for PeopleList.
@@ -2211,6 +2304,9 @@ type SetBackupSettingsJSONRequestBody = BackupSettingsUpdate
 // StartBackupRunJSONRequestBody defines body for StartBackupRun for application/json ContentType.
 type StartBackupRunJSONRequestBody = BackupRunRequest
 
+// SetEmailSettingsJSONRequestBody defines body for SetEmailSettings for application/json ContentType.
+type SetEmailSettingsJSONRequestBody = EmailSettingsUpdate
+
 // SetExternalLibraryJSONRequestBody defines body for SetExternalLibrary for application/json ContentType.
 type SetExternalLibraryJSONRequestBody = ExternalLibraryOwner
 
@@ -2282,6 +2378,12 @@ type BeginPasskeyLoginJSONRequestBody BeginPasskeyLoginJSONBody
 
 // FinishPasskeyLoginJSONRequestBody defines body for FinishPasskeyLogin for application/json ContentType.
 type FinishPasskeyLoginJSONRequestBody FinishPasskeyLoginJSONBody
+
+// ForgotPasswordJSONRequestBody defines body for ForgotPassword for application/json ContentType.
+type ForgotPasswordJSONRequestBody = PasswordForgot
+
+// ResetPasswordJSONRequestBody defines body for ResetPassword for application/json ContentType.
+type ResetPasswordJSONRequestBody = PasswordReset
 
 // SetupJSONRequestBody defines body for Setup for application/json ContentType.
 type SetupJSONRequestBody = SetupRequest
@@ -2372,6 +2474,15 @@ type ServerInterface interface {
 	// StartBackupRun Back up now, or test bringing the newest backup back
 	// (POST /api/admin/backup/runs)
 	StartBackupRun(w http.ResponseWriter, r *http.Request)
+	// GetEmailSettings The mail server this server sends through
+	// (GET /api/admin/email)
+	GetEmailSettings(w http.ResponseWriter, r *http.Request)
+	// SetEmailSettings Change the mail server
+	// (PUT /api/admin/email)
+	SetEmailSettings(w http.ResponseWriter, r *http.Request)
+	// SendTestEmail Send a message to the administrator asking
+	// (POST /api/admin/email/test)
+	SendTestEmail(w http.ResponseWriter, r *http.Request)
 	// GetExternalLibrary The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 	// (GET /api/admin/external)
 	GetExternalLibrary(w http.ResponseWriter, r *http.Request)
@@ -2597,6 +2708,12 @@ type ServerInterface interface {
 	// FinishPasskeyLogin Finish signing in with a passkey
 	// (POST /api/auth/passkey/finish)
 	FinishPasskeyLogin(w http.ResponseWriter, r *http.Request)
+	// ForgotPassword Send a link for a new password. Answers the same whether or not the address has an account
+	// (POST /api/auth/password/forgot)
+	ForgotPassword(w http.ResponseWriter, r *http.Request)
+	// ResetPassword Set a new password with a link from an email
+	// (POST /api/auth/password/reset)
+	ResetPassword(w http.ResponseWriter, r *http.Request)
 	// Setup Create the first administrator. Closed once any user exists.
 	// (POST /api/auth/setup)
 	Setup(w http.ResponseWriter, r *http.Request)
@@ -2912,6 +3029,24 @@ func (_ Unimplemented) ListBackupRuns(w http.ResponseWriter, r *http.Request) {
 // StartBackupRun Back up now, or test bringing the newest backup back
 // (POST /api/admin/backup/runs)
 func (_ Unimplemented) StartBackupRun(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetEmailSettings The mail server this server sends through
+// (GET /api/admin/email)
+func (_ Unimplemented) GetEmailSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetEmailSettings Change the mail server
+// (PUT /api/admin/email)
+func (_ Unimplemented) SetEmailSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SendTestEmail Send a message to the administrator asking
+// (POST /api/admin/email/test)
+func (_ Unimplemented) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3362,6 +3497,18 @@ func (_ Unimplemented) BeginPasskeyLogin(w http.ResponseWriter, r *http.Request)
 // FinishPasskeyLogin Finish signing in with a passkey
 // (POST /api/auth/passkey/finish)
 func (_ Unimplemented) FinishPasskeyLogin(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ForgotPassword Send a link for a new password. Answers the same whether or not the address has an account
+// (POST /api/auth/password/forgot)
+func (_ Unimplemented) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ResetPassword Set a new password with a link from an email
+// (POST /api/auth/password/reset)
+func (_ Unimplemented) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4037,6 +4184,48 @@ func (siw *ServerInterfaceWrapper) StartBackupRun(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.StartBackupRun(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetEmailSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetEmailSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetEmailSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetEmailSettings operation middleware
+func (siw *ServerInterfaceWrapper) SetEmailSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetEmailSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SendTestEmail operation middleware
+func (siw *ServerInterfaceWrapper) SendTestEmail(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SendTestEmail(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5816,6 +6005,34 @@ func (siw *ServerInterfaceWrapper) FinishPasskeyLogin(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.FinishPasskeyLogin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ForgotPassword operation middleware
+func (siw *ServerInterfaceWrapper) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ForgotPassword(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ResetPassword operation middleware
+func (siw *ServerInterfaceWrapper) ResetPassword(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResetPassword(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8300,6 +8517,21 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/api/admin/server-settings", wrapper.SetServerSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/email", wrapper.GetEmailSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/email", wrapper.SetEmailSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/email/test", wrapper.SendTestEmail)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/password/forgot", wrapper.ForgotPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/password/reset", wrapper.ResetPassword)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/security", wrapper.GetSecurity)

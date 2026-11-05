@@ -32,11 +32,12 @@ const (
 	securityPage         = 200
 	deviceNotApproved    = "this device has to be approved by an administrator first"
 
-	eventLoginOK      = "login_ok"
-	eventLoginFailed  = "login_failed"
-	eventLoginLocked  = "login_locked"
-	eventIPBlocked    = "ip_blocked"
-	eventDeviceDenied = "device_blocked"
+	eventLoginOK       = "login_ok"
+	eventLoginFailed   = "login_failed"
+	eventLoginLocked   = "login_locked"
+	eventIPBlocked     = "ip_blocked"
+	eventDeviceDenied  = "device_blocked"
+	eventPasswordReset = "password_reset"
 )
 
 type securityRules struct {

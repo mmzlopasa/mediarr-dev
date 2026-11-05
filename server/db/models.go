@@ -278,6 +278,12 @@ type Passkey struct {
 	LastUsedAt   pgtype.Timestamptz
 }
 
+type PasswordReset struct {
+	TokenHash []byte
+	UserID    pgtype.UUID
+	ExpiresAt pgtype.Timestamptz
+}
+
 type Person struct {
 	ID        pgtype.UUID
 	UserID    pgtype.UUID

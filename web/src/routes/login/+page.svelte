@@ -60,6 +60,17 @@
 		return next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '/';
 	}
 
+	let forgotSent = $state(false);
+
+	async function forgot() {
+		try {
+			await api.forgotPassword(email);
+		} catch {
+			// The same answer either way, so that this does not tell who has an account.
+		}
+		forgotSent = true;
+	}
+
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		busy = true;
@@ -177,7 +188,20 @@
 				}}>{tr('Zaboravljena lozinka?', 'Forgot your password?')}</a
 			>
 		</p>
-		{#if showForgot}
+		{#if showForgot && methods?.passwordReset}
+			{#if forgotSent}
+				<p class="as-p" role="status">
+					{tr(
+						'Ako ta adresa ima račun, poslana je poveznica za novu lozinku.',
+						'If that address has an account, a link for a new password was sent.'
+					)}
+				</p>
+			{:else}
+				<button class="as-btn" type="button" disabled={!email || busy} onclick={forgot}>
+					{tr('Pošalji poveznicu na gornju adresu', 'Send a link to the address above')}
+				</button>
+			{/if}
+		{:else if showForgot}
 			<p class="as-p">
 				{tr(
 					'Administrator poslužitelja može je postaviti naredbom: mediarr user upsert',

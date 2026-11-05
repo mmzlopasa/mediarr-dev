@@ -485,6 +485,17 @@ func (s *apiServer) SetAlbumMember(w http.ResponseWriter, r *http.Request, id, u
 		writeError(w, http.StatusNotFound, "no such user")
 		return
 	}
+	members, err := s.queries.ListAlbumMembers(ctx, album.ID)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	isNew := true
+	for i := range members {
+		if members[i].UserID == pgUUID(userID) {
+			isNew = false
+		}
+	}
 	err = s.queries.SetAlbumMember(ctx, db.SetAlbumMemberParams{AlbumID: album.ID, UserID: pgUUID(userID), Role: string(body.Role)})
 	if err == nil {
 		err = s.queries.TouchAlbum(ctx, album.ID)
@@ -492,6 +503,12 @@ func (s *apiServer) SetAlbumMember(w http.ResponseWriter, r *http.Request, id, u
 	if err != nil {
 		internalError(w, r, err)
 		return
+	}
+	if isNew {
+		if person, err := s.queries.GetUserByID(ctx, pgUUID(userID)); err == nil {
+			s.sendLater(person.Email, "An album was shared with you: "+album.Title,
+				currentUser(r).Name+" shared the album \""+album.Title+"\" with you on Mediarr.")
+		}
 	}
 	w.WriteHeader(http.StatusNoContent)
 }

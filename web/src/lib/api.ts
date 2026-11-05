@@ -52,6 +52,8 @@ export type MapPoints = components['schemas']['MapPoints'];
 export type Memory = components['schemas']['Memory'];
 export type ServerStatus = components['schemas']['ServerStatus'];
 export type UserSession = components['schemas']['UserSession'];
+export type EmailSettings = components['schemas']['EmailSettings'];
+export type EmailSettingsUpdate = components['schemas']['EmailSettingsUpdate'];
 export type ServerSettings = components['schemas']['ServerSettings'];
 export type UserPreferences = components['schemas']['UserPreferences'];
 export type AccountStats = components['schemas']['AccountStats'];
@@ -247,6 +249,13 @@ export const api = {
 	serverSettings: () => request<ServerSettings>(fetch, '/api/admin/server-settings'),
 	setServerSettings: (body: ServerSettings) =>
 		request<ServerSettings>(fetch, '/api/admin/server-settings', body, 'PUT'),
+	emailSettings: () => request<EmailSettings>(fetch, '/api/admin/email'),
+	setEmailSettings: (body: EmailSettingsUpdate) =>
+		request<EmailSettings>(fetch, '/api/admin/email', body, 'PUT'),
+	sendTestEmail: () => request<void>(fetch, '/api/admin/email/test', {}),
+	forgotPassword: (email: string) => request<void>(fetch, '/api/auth/password/forgot', { email }),
+	resetPassword: (body: { token: string; newPassword: string }) =>
+		request<void>(fetch, '/api/auth/password/reset', body),
 	security: () => request<SecuritySettings>(fetch, '/api/admin/security'),
 	setSecurity: (body: SecurityUpdate) =>
 		request<SecuritySettings>(fetch, '/api/admin/security', body, 'PUT'),

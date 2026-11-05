@@ -1526,6 +1526,68 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/admin/email:
+    get:
+      operationId: getEmailSettings
+      summary: The mail server this server sends through
+      responses:
+        "200":
+          description: The settings, without the password
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailSettings" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setEmailSettings
+      summary: Change the mail server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmailSettingsUpdate" }
+      responses:
+        "200":
+          description: The settings now
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailSettings" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/email/test:
+    post:
+      operationId: sendTestEmail
+      summary: Send a message to the administrator asking
+      responses:
+        "204": { description: Sent }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+  /api/auth/password/forgot:
+    post:
+      operationId: forgotPassword
+      summary: Send a link for a new password. Answers the same whether or not the address has an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordForgot" }
+      responses:
+        "204": { description: Done }
+  /api/auth/password/reset:
+    post:
+      operationId: resetPassword
+      summary: Set a new password with a link from an email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordReset" }
+      responses:
+        "204": { description: Set }
+        "400": { $ref: "#/components/responses/Error" }
   /api/admin/security:
     get:
       operationId: getSecurity
@@ -2495,8 +2557,9 @@ components:
         bytes: { type: integer, format: int64 }
     AuthMethods:
       type: object
-      required: [passkeys, passwordLogin, loginMessage]
+      required: [passkeys, passwordLogin, loginMessage, passwordReset]
       properties:
+        passwordReset: { type: boolean, description: "A forgotten password can be reset by email" }
         passwordLogin: { type: boolean }
         loginMessage: { type: string }
         passkeys: { type: boolean, description: "This address can use passkeys: HTTPS and a domain name" }
@@ -3084,7 +3147,7 @@ components:
       properties:
         id: { type: integer, format: int64 }
         at: { type: string, format: date-time }
-        kind: { type: string, enum: [login_ok, login_failed, login_locked, ip_blocked, device_blocked] }
+        kind: { type: string, enum: [login_ok, login_failed, login_locked, ip_blocked, device_blocked, password_reset] }
         email: { type: string }
         ip: { type: string }
         userAgent: { type: string }
@@ -3134,6 +3197,41 @@ components:
         videoMaxHeight: { type: integer }
         loginMessage: { type: string }
         passwordLogin: { type: boolean }
+    EmailSettings:
+      type: object
+      required: [enabled, host, port, username, from, security, publicUrl, hasPassword]
+      properties:
+        enabled: { type: boolean }
+        host: { type: string }
+        port: { type: integer }
+        username: { type: string }
+        from: { type: string }
+        security: { type: string, enum: [starttls, tls, none] }
+        publicUrl: { type: string, description: "The address of this server, for links in messages" }
+        hasPassword: { type: boolean }
+    EmailSettingsUpdate:
+      type: object
+      required: [enabled, host, port, username, from, security, publicUrl]
+      properties:
+        enabled: { type: boolean }
+        host: { type: string }
+        port: { type: integer }
+        username: { type: string }
+        password: { type: string, description: "Left out keeps the one that is saved" }
+        from: { type: string }
+        security: { type: string, enum: [starttls, tls, none] }
+        publicUrl: { type: string }
+    PasswordForgot:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string }
+    PasswordReset:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string }
+        newPassword: { type: string }
     ServerStatus:
       type: object
       required: [version, updateAvailable, diskUsedBytes, diskTotalBytes, trashDays]

@@ -71,6 +71,7 @@ type apiServer struct {
 	Deps
 	queries           *db.Queries
 	blockedLogged     *auth.Limiter
+	resetLimiter      *auth.Limiter
 	security          atomic.Pointer[securityRules]
 	userLimiter       *auth.Limiter
 	ipLimiter         *auth.Limiter
@@ -105,6 +106,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		passkeyChallenges: newShortLived[passkeyChallenge](),
 		guestBytes:        newByteBudget(),
 		blockedLogged:     auth.NewLimiter(1, time.Minute),
+		resetLimiter:      auth.NewLimiter(5, time.Hour),
 	}
 	if deps.CheckUpdates && Version != "dev" {
 		go server.watchUpdates()

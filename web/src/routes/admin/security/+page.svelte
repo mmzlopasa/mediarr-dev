@@ -71,7 +71,8 @@
 			login_failed: tr('Prijava nije uspjela', 'Failed sign-in'),
 			login_locked: tr('Previše pokušaja', 'Too many attempts'),
 			ip_blocked: tr('Adresa odbijena', 'Address refused'),
-			device_blocked: tr('Uređaj nije odobren', 'Device not approved')
+			device_blocked: tr('Uređaj nije odobren', 'Device not approved'),
+			password_reset: tr('Nova lozinka', 'New password')
 		})[kind];
 
 	onMount(load);

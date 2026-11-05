@@ -13,7 +13,7 @@ import (
 // Reachable without an account, on purpose. Anything new has to be added here knowingly.
 var publicRoutes = []*regexp.Regexp{
 	regexp.MustCompile(`^/api/health$`),
-	regexp.MustCompile(`^/api/auth/(status|login|setup|logout|methods|oidc/.+|passkey/.+)$`),
+	regexp.MustCompile(`^/api/auth/(status|login|setup|logout|methods|oidc/.+|passkey/.+|password/.+)$`),
 	regexp.MustCompile(`^/api/public/`),
 }
 

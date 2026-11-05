@@ -241,6 +241,23 @@ test('a message from the administrator shows on the sign-in page', async ({ brow
 	await expect(page.getByText('Saved.').last()).toBeVisible();
 });
 
+test('email can be set up, and says what a link needs', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'admin');
+	await page.goto('/admin/settings');
+	await expect(page.getByRole('heading', { name: 'Email' })).toBeVisible();
+	await expect(page.getByLabel('Address of this server')).toBeVisible();
+	await expect(page.getByText('no link for a new password is sent')).toBeVisible();
+});
+
+test('a link that is not valid says so', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await page.goto('/login/reset?token=not-a-real-token');
+	await page.getByLabel('New password').fill('a-completely-new-password');
+	await page.getByRole('button', { name: 'Save' }).click();
+	await expect(page.getByRole('alert')).toContainText('expired');
+});
+
 test('signing out ends the session', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/');
