@@ -140,6 +140,9 @@ test('a public link with a password shows the album, also on a phone', async ({
 	const title = `E2E public ${Date.now()}`;
 	const album = await (await owner.request.post('/api/albums', { data: { title } })).json();
 	await owner.goto(`/albums/${album.id}`);
+	// A file chosen before the page is ready would be lost; a person cannot be that quick.
+	await expect(owner.getByRole('heading', { name: title })).toBeVisible();
+	await owner.waitForLoadState('networkidle');
 	await owner.locator('input[type=file]').last().setInputFiles(photo('public.jpg'));
 	await expect(owner.locator('.tl-tile')).toHaveCount(1, { timeout: 40000 });
 	const created = await owner.request.post(`/api/albums/${album.id}/links`, {

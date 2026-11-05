@@ -697,3 +697,121 @@ textarea.in {
 		padding-right: 34px;
 	}
 }
+
+/* ---------- Viewer: always the darkroom, whatever the theme ---------- */
+.viewer {
+	color-scheme: dark;
+	--bg: #0a0908;
+	--bg-2: #141210;
+	--bg-3: #1f1b18;
+	--ink: #efe9e1;
+	--haze: #c9c1b6;
+	--dim: #9a9187;
+	--line: #2a2522;
+	--line-2: #3a342f;
+	--acc: #e8572a;
+	--acc-2: #c8431a;
+	--on-gold: #140a05;
+	--input: #0a0908;
+	--pop: #141210;
+	background: var(--bg);
+	color: var(--ink);
+}
+.viewer .icon-btn,
+:is(html, html[data-theme]) .viewer .icon-btn {
+	background: none;
+	border: 0;
+	color: var(--dim);
+	border-radius: 12px;
+}
+.viewer .icon-btn:hover,
+:is(html, html[data-theme]) .viewer .icon-btn:hover {
+	background: var(--bg-3);
+	color: var(--ink);
+}
+.viewer .viewer-on {
+	color: var(--acc);
+}
+.viewer-top {
+	background: linear-gradient(rgba(10, 9, 8, 0.7), transparent);
+	padding: max(14px, env(safe-area-inset-top)) 18px 14px;
+}
+.viewer-acts {
+	gap: 2px;
+}
+.viewer-nav,
+:is(html, html[data-theme]) .viewer .viewer-nav {
+	background: var(--bg-2);
+	color: var(--ink);
+}
+.viewer-info {
+	width: 360px;
+	background: var(--bg-2);
+	border-left: 1px solid var(--line);
+	animation: vw-panel 240ms var(--ease-drawer);
+}
+@keyframes vw-panel {
+	from {
+		transform: translateX(24px);
+		opacity: 0;
+	}
+}
+.vw-head {
+	align-items: flex-start;
+}
+.viewer-info .vw-title {
+	margin: 0;
+	font: 400 34px/1.05 var(--serif);
+	letter-spacing: -0.01em;
+	overflow-wrap: anywhere;
+}
+.vw-when {
+	margin: 6px 0 0;
+	color: var(--dim);
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+}
+.viewer .kv {
+	border-color: var(--line);
+}
+.viewer .kv span {
+	color: var(--dim);
+}
+.kv-mono {
+	font: 400 12.5px/1.5 var(--mono);
+	letter-spacing: 0;
+}
+@media (max-width: 760px) {
+	/* On a phone the actions sit at the bottom, under the thumb. */
+	.viewer-acts {
+		position: fixed;
+		left: 12px;
+		right: 12px;
+		bottom: max(12px, env(safe-area-inset-bottom));
+		justify-content: space-around;
+		padding: 6px;
+		border-radius: 20px;
+		background: var(--bg-2);
+		box-shadow: 0 0 0 1px var(--line);
+	}
+	.viewer-info {
+		width: auto;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.viewer-info {
+		animation: none;
+	}
+}
+.viewer .kv {
+	display: grid;
+	grid-template-columns: 96px 1fr;
+	gap: 10px;
+	align-items: start;
+	text-align: left;
+}
+.viewer .kv b {
+	text-align: left;
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}

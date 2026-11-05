@@ -555,8 +555,18 @@
 
 	{#if showInfo && detail}
 		<aside class="viewer-info" aria-label={tr('Podaci', 'Details')}>
-			<div class="dlg-h">
-				<h2>{tr('Podaci', 'Details')}</h2>
+			<div class="dlg-h vw-head">
+				<div>
+					<!-- The owner's words first, then where, then when; a file name is not a title. -->
+					<h2 class="vw-title">
+						{detail.caption || place || formatDateTime(detail.localAt, locale)}
+					</h2>
+					{#if detail.caption || place}
+						<p class="vw-when">
+							{formatDateTime(detail.localAt, locale)}{detail.caption && place ? ` · ${place}` : ''}
+						</p>
+					{/if}
+				</div>
 				<button
 					type="button"
 					class="icon-btn sm"
@@ -573,24 +583,6 @@
 						)}</Alert
 					>
 				{/if}
-				<Kv label={tr('Naziv', 'Name')} value={detail.originalName} />
-				{#if detail.description}
-					<Kv label={tr('Opis', 'Description')} value={detail.description} />
-				{/if}
-				<Kv
-					label={detail.hasCaptureTime ? tr('Snimljeno', 'Taken') : tr('Dodano', 'Added')}
-					value={formatDateTime(detail.localAt, locale)}
-				/>
-				{#if detail.width && detail.height}
-					<Kv label={tr('Dimenzije', 'Dimensions')} value="{detail.width} × {detail.height}" />
-				{/if}
-				<Kv label={tr('Veličina', 'Size')} value={formatBytes(detail.sizeBytes)} />
-				{#if detail.durationMs}
-					<Kv label={tr('Trajanje', 'Duration')} value={formatDuration(detail.durationMs)} />
-				{/if}
-				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
-				{#if detail.people}<FacesEditor assetId={id} />{/if}
-				{#if detail.caption}<Kv label={tr('Opis', 'Description')} value={detail.caption} />{/if}
 				{#if detail.isOwner}
 					<RatingStars
 						assetId={id}
@@ -599,6 +591,25 @@
 							await reload();
 						}}
 					/>
+				{/if}
+				<Kv label={tr('Naziv', 'Name')} value={detail.originalName} mono />
+				{#if detail.description}
+					<Kv label={tr('Opis', 'Description')} value={detail.description} />
+				{/if}
+				<Kv
+					label={detail.hasCaptureTime ? tr('Snimljeno', 'Taken') : tr('Dodano', 'Added')}
+					value={formatDateTime(detail.localAt, locale)}
+				/>
+				{#if detail.width && detail.height}
+					<Kv label={tr('Dimenzije', 'Dimensions')} value="{detail.width} × {detail.height}" mono />
+				{/if}
+				<Kv label={tr('Veličina', 'Size')} value={formatBytes(detail.sizeBytes)} />
+				{#if detail.durationMs}
+					<Kv label={tr('Trajanje', 'Duration')} value={formatDuration(detail.durationMs)} />
+				{/if}
+				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
+				{#if detail.people}<FacesEditor assetId={id} />{/if}
+				{#if detail.isOwner}
 					<a class="linkish" href="/api/assets/{id}/sidecar" download
 						>{tr('Preuzmi XMP', 'Download XMP')}</a
 					>
@@ -611,12 +622,13 @@
 				{#if detail.tags?.length}
 					<Kv label={tr('Oznake', 'Tags')} value={detail.tags.join(', ')} />
 				{/if}
-				{#if detail.camera}<Kv label={tr('Kamera', 'Camera')} value={detail.camera} />{/if}
-				{#if detail.lens}<Kv label={tr('Objektiv', 'Lens')} value={detail.lens} />{/if}
-				{#if settings}<Kv label={tr('Postavke', 'Settings')} value={settings} />{/if}
+				{#if detail.camera}<Kv label={tr('Kamera', 'Camera')} value={detail.camera} mono />{/if}
+				{#if detail.lens}<Kv label={tr('Objektiv', 'Lens')} value={detail.lens} mono />{/if}
+				{#if settings}<Kv label={tr('Postavke', 'Settings')} value={settings} mono />{/if}
 				{#if detail.latitude !== undefined && detail.longitude !== undefined}
 					<Kv
 						label={tr('Lokacija', 'Location')}
+						mono
 						value="{detail.latitude.toFixed(5)}, {detail.longitude.toFixed(5)}"
 					/>
 				{/if}

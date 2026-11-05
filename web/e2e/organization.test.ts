@@ -188,7 +188,8 @@ test('a photo gets a new date, place and description, and can go back to its fil
 	await dialog.getByRole('button', { name: 'Save' }).click();
 	const details = page.getByRole('complementary', { name: 'Details' });
 	await expect(details.getByText('At the lake')).toBeVisible();
-	await expect(details.getByText('2001')).toBeVisible();
+	// The date is in the panel's title line and in its row.
+	await expect(details.getByText('2001').first()).toBeVisible();
 	await details.getByRole('button', { name: 'Edit details' }).click();
 	await expect(dialog.getByLabel('Latitude')).toHaveValue('45.8');
 	await dialog.getByRole('button', { name: 'Use what the file says' }).click();

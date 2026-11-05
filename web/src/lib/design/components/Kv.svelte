@@ -1,5 +1,6 @@
 <script lang="ts">
-	let { label, value }: { label: string; value: string } = $props();
+	// Mono is for data from the camera and the file, never for words.
+	let { label, value, mono = false }: { label: string; value: string; mono?: boolean } = $props();
 </script>
 
-<div class="kv"><span>{label}</span><b>{value}</b></div>
+<div class="kv"><span>{label}</span><b class:kv-mono={mono}>{value}</b></div>
