@@ -50,8 +50,9 @@ WHERE user_id = sqlc.arg('user_id') AND kind = 'person' AND local_id = ANY(sqlc.
 
 -- name: MovePersonHints :exec
 INSERT INTO face_hints (asset_id, person_id, x1, y1, x2, y2)
-SELECT asset_id, sqlc.arg('target'), x1, y1, x2, y2 FROM face_hints
-WHERE person_id = ANY(sqlc.arg('sources')::uuid[])
+SELECT h.asset_id, sqlc.arg('target'), h.x1, h.y1, h.x2, h.y2 FROM face_hints h
+JOIN people p ON p.id = h.person_id
+WHERE h.person_id = ANY(sqlc.arg('sources')::uuid[]) AND p.user_id = sqlc.arg('user_id')
 ON CONFLICT DO NOTHING;
 
 -- name: ListAssetsWithoutSHA1 :many

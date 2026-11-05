@@ -107,13 +107,23 @@ void main() {
 
   testWidgets('an empty archive and trash say so', (tester) async {
     Future<http.Response> server(http.Request request) async =>
-        _json({'buckets': <Object>[]});
+        request.url.path == '/api/server/status'
+        ? _json({
+            'version': '1',
+            'updateAvailable': false,
+            'diskUsedBytes': 1,
+            'diskTotalBytes': 2,
+            'trashDays': 7,
+          })
+        : _json({'buckets': <Object>[]});
     await _show(tester, const ArchiveScreen(), server);
     expect(find.text('The archive is empty.'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await _show(tester, const TrashScreen(), server);
     expect(find.text('The trash is empty.'), findsOneWidget);
-    expect(find.textContaining('after 30 days'), findsOneWidget);
+    // The administrator's number, not one written into the app.
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.textContaining('after 7 days'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 

@@ -224,3 +224,32 @@ func TestFullPreviewKeepsFullSize(t *testing.T) {
 		t.Errorf("width %d, want 3000", meta.Width)
 	}
 }
+
+func TestAnUprightVideoKeepsItsQuality(t *testing.T) {
+	info, err := parseProbe([]byte(`{"streams":[{"codec_type":"video","codec_name":"h264","width":1920,"height":1080,
+		"side_data_list":[{"rotation":-90}]}],"format":{"duration":"3"}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Width != 1080 || info.Height != 1920 {
+		t.Fatalf("upright size: %dx%d", info.Width, info.Height)
+	}
+	old, err := parseProbe([]byte(`{"streams":[{"codec_type":"video","codec_name":"h264","width":1920,"height":1080,
+		"tags":{"rotate":"270"}}],"format":{}}`))
+	if err != nil || old.Width != 1080 {
+		t.Fatalf("an older file with a rotate tag: %+v %v", old, err)
+	}
+
+	graph := strings.Join(transcodeArgs("in.mov", "out", info, ""), " ")
+	if !strings.Contains(graph, "[s0]scale=1080:-2") || strings.Contains(graph, "scale=-2:1080") {
+		t.Fatalf("upright levels: %s", graph)
+	}
+	// The best level comes first, where Safari and iPhones start.
+	if !strings.Contains(graph, "[s0]scale=1080:-2") || !strings.Contains(graph, "[s2]scale=360:-2") {
+		t.Fatalf("order: %s", graph)
+	}
+	wide := strings.Join(transcodeArgs("in.mov", "out", &VideoInfo{Codec: "h264", Width: 1920, Height: 1080}, ""), " ")
+	if !strings.Contains(wide, "[s0]scale=-2:1080") {
+		t.Fatalf("wide levels: %s", wide)
+	}
+}

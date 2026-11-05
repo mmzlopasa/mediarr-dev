@@ -292,3 +292,36 @@ func TestTags(t *testing.T) {
 	resp, body = c.get("/api/assets/" + photo)
 	expect(t, resp, body, http.StatusOK)
 }
+
+func TestALivePhotosClipFollowsItsPhoto(t *testing.T) {
+	s := newStack(t)
+	c := s.admin()
+	ctx := context.Background()
+	link := func() (string, string) {
+		t.Helper()
+		photo := c.newPhoto(t, "live.heic", "2024-01-01T10:00:00Z")
+		video := uploadedID(t, c.upload("live.mov", randomBytes(t, 100), nil))
+		if _, err := s.pool.Exec(ctx, `UPDATE assets SET live_photo_of = $1 WHERE id = $2`, photo, video); err != nil {
+			t.Fatal(err)
+		}
+		return photo, video
+	}
+	state := func(id string) (deleted, archived bool) {
+		t.Helper()
+		if err := s.pool.QueryRow(ctx, `SELECT deleted_at IS NOT NULL, archived_at IS NOT NULL FROM assets WHERE id = $1`, id).
+			Scan(&deleted, &archived); err != nil {
+			t.Fatal(err)
+		}
+		return deleted, archived
+	}
+	photo, video := link()
+	c.bulk(t, "archive", photo)
+	if _, archived := state(video); !archived {
+		t.Fatal("the clip stayed out of the archive")
+	}
+	other, clip := link()
+	c.bulk(t, "delete", other)
+	if deleted, _ := state(clip); !deleted {
+		t.Fatal("the clip stayed out of the trash, where a partner could still play it")
+	}
+}

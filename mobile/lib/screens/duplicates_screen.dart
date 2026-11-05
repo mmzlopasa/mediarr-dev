@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
+import '../services/trash.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'asset_picture.dart';
@@ -60,8 +61,10 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Move to the trash?'),
-        content: const Text(
-          'The selected photos stay in the trash for 30 days and can be restored.',
+        content: TrashSentence(
+          (days) => days == null
+              ? 'The selected photos move to the trash and can be restored.'
+              : 'The selected photos stay in the trash for $days days and can be restored.',
         ),
         actions: [
           TextButton(

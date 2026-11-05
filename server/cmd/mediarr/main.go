@@ -177,6 +177,9 @@ func worker(ctx context.Context, cfg config.Config) error {
 		return fmt.Errorf("create worker: %w", err)
 	}
 	slog.Info("worker ready", "concurrency", cfg.WorkerConcurrency)
+	if err := jobs.RetranscodeUprightVideos(ctx, pool, client); err != nil {
+		slog.Warn("upright videos were not queued for transcoding", "error", err)
+	}
 	if jobs.IsExternalAvailable(cfg.ExternalPath) {
 		go func() {
 			err := jobs.WatchExternal(ctx, cfg.ExternalPath, jobs.ExternalSettleTime, func() {

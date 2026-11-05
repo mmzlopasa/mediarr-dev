@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
+import '../services/trash.dart';
 import '../services/timeline.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
@@ -100,8 +101,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete ${_selected.length}?'),
-        content: const Text(
-          'They move to the trash, where they stay for 30 days and can be restored.',
+        content: TrashSentence(
+          (days) => days == null
+              ? 'They move to the trash, where they can be restored.'
+              : 'They move to the trash, where they stay for $days days and can be restored.',
         ),
         actions: [
           TextButton(

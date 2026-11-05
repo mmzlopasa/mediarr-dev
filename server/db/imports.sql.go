@@ -417,18 +417,20 @@ func (q *Queries) MarkImportedFavorite(ctx context.Context, id pgtype.UUID) erro
 
 const movePersonHints = `-- name: MovePersonHints :exec
 INSERT INTO face_hints (asset_id, person_id, x1, y1, x2, y2)
-SELECT asset_id, $1, x1, y1, x2, y2 FROM face_hints
-WHERE person_id = ANY($2::uuid[])
+SELECT h.asset_id, $1, h.x1, h.y1, h.x2, h.y2 FROM face_hints h
+JOIN people p ON p.id = h.person_id
+WHERE h.person_id = ANY($2::uuid[]) AND p.user_id = $3
 ON CONFLICT DO NOTHING
 `
 
 type MovePersonHintsParams struct {
 	Target  pgtype.UUID
 	Sources []pgtype.UUID
+	UserID  pgtype.UUID
 }
 
 func (q *Queries) MovePersonHints(ctx context.Context, arg MovePersonHintsParams) error {
-	_, err := q.db.Exec(ctx, movePersonHints, arg.Target, arg.Sources)
+	_, err := q.db.Exec(ctx, movePersonHints, arg.Target, arg.Sources, arg.UserID)
 	return err
 }
 

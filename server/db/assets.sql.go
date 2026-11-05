@@ -46,7 +46,8 @@ func (q *Queries) AdminCounts(ctx context.Context) (AdminCountsRow, error) {
 
 const archiveAssets = `-- name: ArchiveAssets :execrows
 UPDATE assets SET archived_at = now(), updated_at = now()
-WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND archived_at IS NULL AND id = ANY($2::uuid[])
+WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND archived_at IS NULL
+  AND (id = ANY($2::uuid[]) OR live_photo_of = ANY($2::uuid[]))
 `
 
 type ArchiveAssetsParams struct {
@@ -54,6 +55,7 @@ type ArchiveAssetsParams struct {
 	Column2 []pgtype.UUID
 }
 
+// A Live Photo's clip goes with its photo.
 func (q *Queries) ArchiveAssets(ctx context.Context, arg ArchiveAssetsParams) (int64, error) {
 	result, err := q.db.Exec(ctx, archiveAssets, arg.UserID, arg.Column2)
 	if err != nil {
@@ -749,6 +751,31 @@ func (q *Queries) ListReadyAssetIDs(ctx context.Context) ([]pgtype.UUID, error) 
 	return items, nil
 }
 
+const listUprightVideos = `-- name: ListUprightVideos :many
+SELECT id FROM assets
+WHERE kind = 'video' AND status = 'ready' AND deleted_at IS NULL AND height > width AND live_photo_of IS NULL
+`
+
+func (q *Queries) ListUprightVideos(ctx context.Context) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, listUprightVideos)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const markAssetFailed = `-- name: MarkAssetFailed :exec
 UPDATE assets SET status = 'failed', error = $2, updated_at = now() WHERE id = $1
 `
@@ -975,7 +1002,8 @@ func (q *Queries) SetOwnerRating(ctx context.Context, arg SetOwnerRatingParams) 
 
 const softDeleteAssets = `-- name: SoftDeleteAssets :execrows
 UPDATE assets SET deleted_at = now(), updated_at = now()
-WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND id = ANY($2::uuid[])
+WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL
+  AND (id = ANY($2::uuid[]) OR live_photo_of = ANY($2::uuid[]))
 `
 
 type SoftDeleteAssetsParams struct {
@@ -983,6 +1011,7 @@ type SoftDeleteAssetsParams struct {
 	Column2 []pgtype.UUID
 }
 
+// A Live Photo's clip goes with its photo.
 func (q *Queries) SoftDeleteAssets(ctx context.Context, arg SoftDeleteAssetsParams) (int64, error) {
 	result, err := q.db.Exec(ctx, softDeleteAssets, arg.UserID, arg.Column2)
 	if err != nil {

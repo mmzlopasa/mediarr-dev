@@ -9,6 +9,7 @@ import 'package:mediarr_api/api.dart';
 
 import '../services/account_preferences.dart';
 import '../services/session.dart';
+import '../services/trash.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
@@ -477,9 +478,13 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
     body: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Text('Items are permanently deleted after 30 days.'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: TrashSentence(
+            (days) => days == null
+                ? 'Items here are deleted permanently after a while.'
+                : 'Items are permanently deleted after $days days.',
+          ),
         ),
         Expanded(
           child: _PhotoGrid(

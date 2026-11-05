@@ -3,7 +3,7 @@
 	import RatingStars from '#lib/organize/RatingStars.svelte';
 	import FacesEditor from '#lib/organize/FacesEditor.svelte';
 	import { preferences, trashDays } from '#lib/preferences.svelte.ts';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { api, formatBytes, type AssetDetail } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
@@ -83,7 +83,8 @@
 		failed = false;
 		videoFailed = false;
 		fullLoaded = false;
-		fullWanted = preferences()?.photoFull ?? true;
+		// Read once per photo: preferences arriving later must not load the photo again.
+		fullWanted = untrack(() => preferences()?.photoFull ?? true);
 		playingLive = false;
 		liveDetail = undefined;
 		scale = 1;
@@ -225,11 +226,20 @@
 	const place = $derived([detail?.city, detail?.state, detail?.country].filter(Boolean).join(', '));
 	const hasLive = $derived(Boolean(detail?.liveVideoId || detail?.hasMotion));
 
+	// Loads the shown photo again. An answer for a photo the viewer has moved on from is dropped.
+	async function reload() {
+		const asked = id;
+		const loaded = await load(asked);
+		if (asked === id) detail = loaded;
+	}
+
 	async function toggleLive() {
 		playingLive = !playingLive;
 		if (playingLive && detail?.liveVideoId && !liveDetail) {
+			const asked = id;
 			try {
-				liveDetail = await load(detail.liveVideoId);
+				const loaded = await load(detail.liveVideoId);
+				if (asked === id) liveDetail = loaded;
 			} catch {
 				// It still plays directly.
 			}
@@ -249,9 +259,10 @@
 	async function toggleFavorite() {
 		if (!detail) return;
 		const next = !detail.isFavorite;
+		const asked = detail.id;
 		try {
-			await api.bulk([detail.id], next ? 'favorite' : 'unfavorite');
-			detail = { ...detail, isFavorite: next };
+			await api.bulk([asked], next ? 'favorite' : 'unfavorite');
+			if (detail?.id === asked) detail = { ...detail, isFavorite: next };
 			onChanged();
 		} catch {
 			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
@@ -263,7 +274,7 @@
 		const shot = detail.id;
 		try {
 			await action(shot);
-			detail = await load(shot);
+			await reload();
 			onChanged();
 		} catch {
 			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
@@ -585,7 +596,7 @@
 						assetId={id}
 						rating={detail.rating ?? 0}
 						onChanged={async () => {
-							detail = await load(id);
+							await reload();
 						}}
 					/>
 					<a class="linkish" href="/api/assets/{id}/sidecar" download
@@ -621,7 +632,7 @@
 		onSaved={async () => {
 			editing = false;
 			revision += 1;
-			detail = await load(id);
+			await reload();
 			onChanged();
 		}}
 	/>
@@ -633,7 +644,7 @@
 		onClose={() => (editingFacts = false)}
 		onSaved={async () => {
 			editingFacts = false;
-			detail = await load(id);
+			await reload();
 			onChanged();
 		}}
 	/>

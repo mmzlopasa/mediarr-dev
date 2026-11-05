@@ -111,8 +111,13 @@ func TestADateOfBirthIsSavedAndRemoved(t *testing.T) {
 		t.Fatalf("saved: %v", got)
 	}
 	future := time.Now().AddDate(1, 0, 0).Format(time.DateOnly)
-	resp, body = c.send(http.MethodPatch, "/api/people/"+person, api.PersonUpdate{BirthDate: &future})
+	renamed := "Not saved"
+	resp, body = c.send(http.MethodPatch, "/api/people/"+person, api.PersonUpdate{Name: &renamed, BirthDate: &future})
 	expect(t, resp, body, http.StatusBadRequest)
+	// A refused change changes nothing, the name included.
+	if got := peopleNamed(t, c)[0]; got.Name == renamed {
+		t.Fatalf("the name was saved with a refused date: %+v", got)
+	}
 	none := ""
 	resp, body = c.send(http.MethodPatch, "/api/people/"+person, api.PersonUpdate{BirthDate: &none})
 	expect(t, resp, body, http.StatusNoContent)

@@ -4,6 +4,7 @@ import 'package:mediarr_api/api.dart';
 import 'package:video_player/video_player.dart';
 
 import '../services/session.dart';
+import '../services/trash.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
@@ -79,8 +80,10 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete this photo?'),
-        content: const Text(
-          'It moves to the trash, where it stays for 30 days and can be restored.',
+        content: TrashSentence(
+          (days) => days == null
+              ? 'It moves to the trash, where it can be restored.'
+              : 'It moves to the trash, where it stays for $days days and can be restored.',
         ),
         actions: [
           TextButton(
@@ -421,6 +424,7 @@ class _VideoPage extends StatefulWidget {
 
 class _VideoPageState extends State<_VideoPage> {
   VideoPlayerController? _controller;
+  bool _starting = false;
   bool _failed = false;
 
   @override
@@ -454,6 +458,17 @@ class _VideoPageState extends State<_VideoPage> {
       if (mounted) setState(() {});
       return;
     }
+    // A second tap while the first is still starting would start a second player.
+    if (_starting) return;
+    _starting = true;
+    try {
+      await _open();
+    } finally {
+      _starting = false;
+    }
+  }
+
+  Future<void> _open() async {
     AssetDetail? detail;
     try {
       detail = await widget.session.detail(widget.id);
@@ -482,6 +497,10 @@ class _VideoPageState extends State<_VideoPage> {
       setState(() => _controller = controller);
       try {
         await controller.initialize();
+        if (!mounted) {
+          await controller.dispose();
+          return;
+        }
         await controller.setLooping(widget.loop);
         await controller.play();
         if (mounted) setState(() {});

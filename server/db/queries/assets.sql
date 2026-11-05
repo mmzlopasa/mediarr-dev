@@ -131,12 +131,16 @@ UPDATE assets SET is_favorite = $3, updated_at = now()
 WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND id = ANY($2::uuid[]);
 
 -- name: ArchiveAssets :execrows
+-- A Live Photo's clip goes with its photo.
 UPDATE assets SET archived_at = now(), updated_at = now()
-WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND archived_at IS NULL AND id = ANY($2::uuid[]);
+WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND archived_at IS NULL
+  AND (id = ANY($2::uuid[]) OR live_photo_of = ANY($2::uuid[]));
 
 -- name: SoftDeleteAssets :execrows
+-- A Live Photo's clip goes with its photo.
 UPDATE assets SET deleted_at = now(), updated_at = now()
-WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL AND id = ANY($2::uuid[]);
+WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL
+  AND (id = ANY($2::uuid[]) OR live_photo_of = ANY($2::uuid[]));
 
 -- name: UpdateVideoInfo :exec
 UPDATE assets SET duration_ms = $2, video_codec = $3, updated_at = now() WHERE id = $1;
@@ -211,3 +215,7 @@ UPDATE assets
 SET rating = CASE WHEN rating_by_owner THEN rating ELSE sqlc.arg('rating') END,
     caption = CASE WHEN caption = '' THEN sqlc.arg('caption') ELSE caption END
 WHERE id = sqlc.arg('id');
+
+-- name: ListUprightVideos :many
+SELECT id FROM assets
+WHERE kind = 'video' AND status = 'ready' AND deleted_at IS NULL AND height > width AND live_photo_of IS NULL;

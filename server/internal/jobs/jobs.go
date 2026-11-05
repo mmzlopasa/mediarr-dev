@@ -551,3 +551,28 @@ func GeocodePending(ctx context.Context, q *db.Queries) error {
 		}
 	}
 }
+
+// stateUprightVideos marks that videos filmed upright were transcoded again after their levels were
+// fixed. Before, their best level was 608 pixels wide.
+const stateUprightVideos = "hls_upright_v1"
+
+// RetranscodeUprightVideos queues every upright video once.
+func RetranscodeUprightVideos(ctx context.Context, pool *pgxpool.Pool, inserter *river.Client[pgx.Tx]) error {
+	q := db.New(pool)
+	if _, err := q.GetState(ctx, stateUprightVideos); err == nil {
+		return nil
+	} else if !db.IsNotFound(err) {
+		return err
+	}
+	ids, err := q.ListUprightVideos(ctx)
+	if err != nil {
+		return err
+	}
+	for _, id := range ids {
+		if _, err := inserter.Insert(ctx, TranscodeArgs{AssetID: uuid.UUID(id.Bytes)}, nil); err != nil {
+			return err
+		}
+	}
+	slog.Info("upright videos queued for transcoding", "count", len(ids))
+	return q.SetState(ctx, db.SetStateParams{Key: stateUprightVideos, Value: "done"})
+}

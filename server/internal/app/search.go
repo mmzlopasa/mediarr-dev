@@ -465,16 +465,19 @@ func (s *apiServer) UpdatePerson(w http.ResponseWriter, r *http.Request, id open
 	if body.Hidden != nil {
 		params.Hidden = *body.Hidden
 	}
+	var date pgtype.Date
+	if body.BirthDate != nil {
+		var valid bool
+		if date, valid = parseBirthDate(*body.BirthDate, time.Now()); !valid {
+			writeError(w, http.StatusBadRequest, "the date of birth must be a past date, as YYYY-MM-DD")
+			return
+		}
+	}
 	if err := s.queries.UpdatePerson(r.Context(), params); err != nil {
 		internalError(w, r, err)
 		return
 	}
 	if body.BirthDate != nil {
-		date, valid := parseBirthDate(*body.BirthDate, time.Now())
-		if !valid {
-			writeError(w, http.StatusBadRequest, "the date of birth must be a past date, as YYYY-MM-DD")
-			return
-		}
 		if err := s.queries.SetPersonBirthDate(r.Context(), db.SetPersonBirthDateParams{ID: row.ID, BirthDate: date}); err != nil {
 			internalError(w, r, err)
 			return

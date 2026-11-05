@@ -26,7 +26,9 @@
 
 	let video = $state<HTMLVideoElement>();
 	let fellBack = $state(false);
-	const playing = $derived(fellBack ? { hls: sources.fallback, direct: sources.direct } : sources);
+	// Strings, not the object: a parent that rebuilds the same sources must not restart playback.
+	const hlsSource = $derived(fellBack ? sources.fallback : sources.hls);
+	const directSource = $derived(sources.direct);
 	let duration = $state(0);
 	let hover = $state<number | null>(null);
 
@@ -34,7 +36,8 @@
 	$effect(() => {
 		const element = video;
 		if (!element) return;
-		const { hls, direct } = playing;
+		const hls = hlsSource;
+		const direct = directSource;
 		let stopped = false;
 		let player: { destroy(): void } | undefined;
 
@@ -108,7 +111,7 @@
 			if (video?.currentSrc === new URL(sources.direct, location.href).href) {
 				if (sources.fallback && !fellBack) fellBack = true;
 				else onFailed();
-			} else if (video && !playing.hls) onFailed();
+			} else if (video && !hlsSource) onFailed();
 			else if (video) video.src = sources.direct;
 		}}
 	></video>

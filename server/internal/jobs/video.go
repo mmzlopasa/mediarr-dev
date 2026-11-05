@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -40,7 +41,8 @@ type VideoInfo struct {
 // ProbeVideo reads a video's properties.
 func ProbeVideo(ctx context.Context, path string) (*VideoInfo, error) {
 	out, err := runTool(ctx, "ffmpeg-probe", "-v", "error", "-show_entries",
-		"stream=codec_type,codec_name,width,height:format=duration", "-of", "json", path)
+		"stream=codec_type,codec_name,width,height:stream_side_data=rotation:stream_tags=rotate:format=duration",
+		"-of", "json", path)
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +56,12 @@ func parseProbe(out []byte) (*VideoInfo, error) {
 			CodecName string `json:"codec_name"`
 			Width     int    `json:"width"`
 			Height    int    `json:"height"`
+			SideData  []struct {
+				Rotation float64 `json:"rotation"`
+			} `json:"side_data_list"`
+			Tags struct {
+				Rotate string `json:"rotate"`
+			} `json:"tags"`
 		} `json:"streams"`
 		Format struct {
 			Duration string `json:"duration"`
@@ -68,6 +76,17 @@ func parseProbe(out []byte) (*VideoInfo, error) {
 		case "video":
 			if info.Codec == "" {
 				info.Codec, info.Width, info.Height = stream.CodecName, stream.Width, stream.Height
+				// A phone films upright by storing the picture on its side and a rotation to show it
+				// with; ffmpeg turns it upright, so the sizes here are the ones it will scale.
+				rotation := stream.Tags.Rotate
+				for _, side := range stream.SideData {
+					if side.Rotation != 0 {
+						rotation = strconv.Itoa(int(side.Rotation))
+					}
+				}
+				if quarterTurn(rotation) {
+					info.Width, info.Height = info.Height, info.Width
+				}
 			}
 		case "audio":
 			info.HasAudio = true
@@ -80,6 +99,16 @@ func parseProbe(out []byte) (*VideoInfo, error) {
 		info.Duration = time.Duration(seconds * float64(time.Second))
 	}
 	return info, nil
+}
+
+// quarterTurn says whether a rotation of so many degrees turns the picture on its side.
+func quarterTurn(rotation string) bool {
+	degrees, err := strconv.Atoi(strings.TrimSpace(rotation))
+	if err != nil {
+		return false
+	}
+	degrees = ((degrees % 360) + 360) % 360
+	return degrees == 90 || degrees == 270
 }
 
 // hlsHeights picks the quality levels: never above the source, and always at least one.
@@ -114,7 +143,11 @@ func encoderArgs(accel string) (input, output []string, filter string) {
 }
 
 func transcodeArgs(source, dir string, info *VideoInfo, accel string) []string {
-	heights := hlsHeights(info.Height)
+	// Levels are named after the short side, so an upright 1080p video is 1080p and not 608p.
+	heights := hlsHeights(min(info.Width, info.Height))
+	// Best first: Safari and iPhones start playing the first level the playlist lists.
+	slices.Reverse(heights)
+	upright := info.Height > info.Width
 	input, output, hwFilter := encoderArgs(accel)
 
 	var graph strings.Builder
@@ -123,7 +156,11 @@ func transcodeArgs(source, dir string, info *VideoInfo, accel string) []string {
 		fmt.Fprintf(&graph, "[s%d]", i)
 	}
 	for i, height := range heights {
-		fmt.Fprintf(&graph, ";[s%d]scale=-2:%d%s[v%d]", i, height, hwFilter, i)
+		if upright {
+			fmt.Fprintf(&graph, ";[s%d]scale=%d:-2%s[v%d]", i, height, hwFilter, i)
+		} else {
+			fmt.Fprintf(&graph, ";[s%d]scale=-2:%d%s[v%d]", i, height, hwFilter, i)
+		}
 	}
 
 	args := []string{"-n", "15", "ffmpeg", "-protocol_whitelist", "file,pipe,crypto", "-nostdin", "-v", "error", "-y"}
