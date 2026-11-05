@@ -536,6 +536,30 @@ func (q *Queries) ListAssets(ctx context.Context, arg ListAssetsParams) ([]Asset
 	return items, nil
 }
 
+const listFailedAssetIDs = `-- name: ListFailedAssetIDs :many
+SELECT id FROM assets WHERE status = 'failed' AND deleted_at IS NULL
+`
+
+func (q *Queries) ListFailedAssetIDs(ctx context.Context) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, listFailedAssetIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOwnedAssets = `-- name: ListOwnedAssets :many
 SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1 FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
 `

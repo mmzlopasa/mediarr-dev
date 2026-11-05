@@ -62,7 +62,7 @@ func run(ctx context.Context, args []string) error {
 		}
 		return db.Migrate(ctx, cfg.DatabaseURL)
 	case "reprocess":
-		return reprocess(ctx, cfg)
+		return reprocess(ctx, cfg, len(args) > 1 && args[1] == "failed")
 	case "user":
 		return upsertUser(ctx, cfg, args[1:])
 	case "security":
@@ -240,8 +240,9 @@ func upsertUser(ctx context.Context, cfg config.Config, args []string) error {
 }
 
 // reprocess queues every ready asset for processing again, so files from an older version get what
-// a newer one adds. Originals are not touched.
-func reprocess(ctx context.Context, cfg config.Config) error {
+// a newer one adds. With onlyFailed, it gives files that could not be read another try. Originals are
+// not touched.
+func reprocess(ctx context.Context, cfg config.Config, onlyFailed bool) error {
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("open database: %w", err)
@@ -251,7 +252,11 @@ func reprocess(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return err
 	}
-	ids, err := db.New(pool).ListReadyAssetIDs(ctx)
+	list := db.New(pool).ListReadyAssetIDs
+	if onlyFailed {
+		list = db.New(pool).ListFailedAssetIDs
+	}
+	ids, err := list(ctx)
 	if err != nil {
 		return err
 	}

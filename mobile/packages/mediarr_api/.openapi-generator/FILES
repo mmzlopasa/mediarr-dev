@@ -241,7 +241,3 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/security_device_test.dart
-test/security_event_test.dart
-test/security_settings_test.dart
-test/security_update_test.dart

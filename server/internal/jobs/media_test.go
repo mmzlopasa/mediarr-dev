@@ -340,3 +340,38 @@ func TestWatermarkMarksACopy(t *testing.T) {
 		t.Fatalf("size changed: %d, %v", width, err)
 	}
 }
+
+func TestAVideoWithoutAReadablePictureSaysSo(t *testing.T) {
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		t.Skip("ffmpeg is not installed")
+	}
+	dir := t.TempDir()
+	whole := filepath.Join(dir, "whole.mp4")
+	if out, err := exec.CommandContext(context.Background(), "ffmpeg", "-nostdin", "-v", "error", "-y",
+		"-f", "lavfi", "-i", "testsrc=duration=1:size=320x240:rate=10",
+		"-movflags", "+faststart", whole).CombinedOutput(); err != nil {
+		t.Fatalf("%v: %s", err, out)
+	}
+	data, err := os.ReadFile(whole)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The index stays at the start and the pictures are gone, so ffmpeg finds nothing to decode.
+	index := bytes.Index(data, []byte("mdat"))
+	if index < 0 {
+		t.Fatal("no media data in the test video")
+	}
+	broken := filepath.Join(dir, "broken.mov")
+	if err := os.WriteFile(broken, data[:index+8], 0o600); err != nil {
+		t.Fatal(err)
+	}
+	frame := filepath.Join(dir, "frame.jpg")
+	err = extractFrame(context.Background(), broken, frame)
+	var bad *badFileError
+	if !errors.As(err, &bad) {
+		t.Fatalf("not reported as a bad file: %v", err)
+	}
+	if err := extractFrame(context.Background(), whole, frame); err != nil {
+		t.Fatalf("a good video: %v", err)
+	}
+}

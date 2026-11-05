@@ -164,3 +164,6 @@ UPDATE assets SET edit_applied = $2 WHERE id = $1;
 
 -- name: DeleteAssetFile :exec
 DELETE FROM asset_files WHERE asset_id = $1 AND kind = $2;
+
+-- name: ListFailedAssetIDs :many
+SELECT id FROM assets WHERE status = 'failed' AND deleted_at IS NULL;

@@ -209,7 +209,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.byTooltip('Add'), findsNothing);
-    await tester.tap(find.text('Photos'));
+    await tester.tap(find.text('Media'));
     await waitFor(tester, find.byType(AssetPicture));
     await tester.tap(find.byType(AssetPicture).first, warnIfMissed: false);
     await waitFor(tester, find.byTooltip('Details'));

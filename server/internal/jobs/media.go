@@ -382,11 +382,41 @@ func MakeThumbnails(ctx context.Context, original, kind, dir, name string, edits
 	return &ThumbResult{Small: small, Large: large, Blurhash: hash, Ratio: ratio}, nil
 }
 
+// frameAttempts are tried in turn. ffmpeg can finish without an error and without a picture, for
+// example from a file with odd or repeated index data, so what it wrote is what decides.
+var frameAttempts = [][]string{
+	nil,
+	{"-ignore_editlist", "1"},
+	{"-fflags", "+genpts+discardcorrupt", "-err_detect", "ignore_err"},
+}
+
+func extractFrame(ctx context.Context, original, frame string) error {
+	var firstErr error
+	for _, options := range frameAttempts {
+		args := append([]string{"-nostdin", "-v", "error", "-y"}, options...)
+		args = append(args, "-i", original, "-frames:v", "1", "-q:v", "2", frame)
+		_, err := runTool(ctx, "ffmpeg", args...)
+		if err != nil && ctx.Err() != nil {
+			return err
+		}
+		if err != nil && firstErr == nil {
+			firstErr = err
+		}
+		if info, statErr := os.Stat(frame); statErr == nil && info.Size() > 0 {
+			return nil
+		}
+	}
+	if firstErr != nil {
+		return firstErr
+	}
+	return &badFileError{"no picture could be read from this video; it may be incomplete"}
+}
+
 // thumbnailSource returns a file libvips can read: the original, a video frame or a RAW preview.
 func thumbnailSource(ctx context.Context, original, kind, work string) (string, error) {
 	if kind == "video" {
 		frame := filepath.Join(work, "frame.jpg")
-		if _, err := runTool(ctx, "ffmpeg", "-nostdin", "-v", "error", "-y", "-i", original, "-frames:v", "1", "-q:v", "2", frame); err != nil {
+		if err := extractFrame(ctx, original, frame); err != nil {
 			return "", err
 		}
 		return frame, nil

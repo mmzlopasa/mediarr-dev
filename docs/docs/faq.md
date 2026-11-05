@@ -31,3 +31,11 @@ The folders in `.env` must belong to the user set by `PUID` and `PGID`. Docker c
 ## `docker compose` says the file is invalid
 
 Your Docker Compose is older than 2.23.1. See [requirements](/install/requirements#software).
+
+## Some files say they could not be processed
+
+They are listed above the timeline, and the originals stay safe on the disk. After an update that may read them better, try again with:
+
+```bash
+docker compose exec server /mediarr reprocess failed
+```
