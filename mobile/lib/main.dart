@@ -24,12 +24,7 @@ class MediarrApp extends ConsumerWidget {
     final theme = settings.theme;
     final accentChanged = Palette.accentDark != settings.accent.onDark;
     Palette.accentDark = settings.accent.onDark;
-    if (settings.accent != AppAccent.gold) {
-      Palette.accentLight = settings.accent.onLight;
-    } else {
-      // Gold has no contrast on a light background, so there the default accent is violet.
-      Palette.accentLight = AppAccent.violet.onLight;
-    }
+    Palette.accentLight = settings.accent.onLight;
     return MaterialApp(
       title: 'Mediarr',
       debugShowCheckedModeBanner: false,
@@ -67,7 +62,7 @@ class MediarrApp extends ConsumerWidget {
                 Text(
                   'mediarr.',
                   style: TextStyle(
-                    fontFamily: 'Sora',
+                    fontFamily: 'Inter Tight',
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     color: Palette.gold,

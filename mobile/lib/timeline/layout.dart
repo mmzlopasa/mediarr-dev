@@ -1,8 +1,8 @@
 import 'package:mediarr_api/api.dart';
 
 const gap = 3.0;
-const monthHeaderHeight = 58.0;
-const dayHeaderHeight = 38.0;
+const monthHeaderHeight = 84.0;
+const dayHeaderHeight = 40.0;
 
 sealed class TimelineRow {
   double get height;

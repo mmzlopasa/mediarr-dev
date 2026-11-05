@@ -125,8 +125,8 @@ class _FloatingNav extends StatelessWidget {
   Widget build(BuildContext context) => SafeArea(
     minimum: const EdgeInsets.only(bottom: 8),
     child: GlassCard(
-      radius: 28,
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      radius: 20,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
       padding: const EdgeInsets.all(6),
       child: Row(
         children: [
@@ -141,21 +141,10 @@ class _FloatingNav extends StatelessWidget {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     padding: const EdgeInsets.symmetric(vertical: 8),
+                    // The place you are in is a quiet raised tile, as in the web's dock.
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
-                      gradient: i == selected
-                          ? LinearGradient(
-                              colors: [
-                                Palette.gold.withValues(alpha: 0.22),
-                                Palette.violet.withValues(alpha: 0.14),
-                              ],
-                            )
-                          : null,
-                      border: Border.all(
-                        color: i == selected
-                            ? Palette.gold.withValues(alpha: 0.4)
-                            : Colors.transparent,
-                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      color: i == selected ? Palette.bg3 : Colors.transparent,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -163,16 +152,16 @@ class _FloatingNav extends StatelessWidget {
                         Icon(
                           i == selected ? _items[i].$2 : _items[i].$1,
                           size: 21,
-                          color: i == selected ? Palette.gold : Palette.haze,
+                          color: i == selected ? Palette.ink : Palette.dim,
                         ),
                         const SizedBox(height: 3),
                         Text(
                           _items[i].$3,
                           style: TextStyle(
-                            fontFamily: 'Sora',
+                            fontFamily: 'Inter Tight',
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: i == selected ? Palette.ink : Palette.haze,
+                            color: i == selected ? Palette.ink : Palette.dim,
                           ),
                         ),
                       ],

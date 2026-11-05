@@ -8,7 +8,8 @@ const minPerRow = 2;
 const maxPerRow = 6;
 
 enum AppAccent {
-  gold('Gold', 0xFFFFD76A, 0xFF8A6500),
+  // The darkroom's safelight, the design's one accent. Stored as gold, the earlier default.
+  gold('Safelight', 0xFFE8572A, 0xFFC8431A),
   violet('Violet', 0xFF8B7CFF, 0xFF5A49E6),
   mint('Mint', 0xFF8EF0C8, 0xFF0B8F69),
   rose('Rose', 0xFFFF9AC8, 0xFFD6489C);

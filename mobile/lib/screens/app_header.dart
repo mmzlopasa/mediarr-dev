@@ -62,8 +62,8 @@ class AppHeader extends ConsumerWidget {
                       vertical: 9,
                     ),
                     decoration: BoxDecoration(
-                      gradient: goldGradient,
-                      borderRadius: BorderRadius.circular(40),
+                      color: Palette.gold,
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -73,7 +73,7 @@ class AppHeader extends ConsumerWidget {
                         Text(
                           working > 0 ? '$actionLabel · $working' : actionLabel,
                           style: const TextStyle(
-                            fontFamily: 'Sora',
+                            fontFamily: 'Inter Tight',
                             color: Palette.onGold,
                             fontWeight: FontWeight.w600,
                             fontSize: 13.5,
@@ -96,15 +96,7 @@ class AppHeader extends ConsumerWidget {
                 padding: const EdgeInsets.all(1.5),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: SweepGradient(
-                    colors: [
-                      Palette.buttonGold,
-                      Palette.violet,
-                      Palette.glassEdge,
-                      Palette.glassEdge,
-                    ],
-                    stops: const [0, 0.26, 0.26, 1],
-                  ),
+                  color: Palette.bg3,
                 ),
                 child: Container(
                   alignment: Alignment.center,

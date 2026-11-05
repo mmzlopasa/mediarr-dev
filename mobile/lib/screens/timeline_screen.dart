@@ -361,11 +361,16 @@ class _MonthSliver extends ConsumerWidget {
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  label,
-                  style: isMonth ? text.titleLarge : text.bodyMedium,
-                ),
+                padding: EdgeInsets.only(bottom: isMonth ? 12 : 8),
+                child: isMonth
+                    ? _MonthTitle(label)
+                    : Text(
+                        label,
+                        style: text.bodyMedium?.copyWith(
+                          color: Palette.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -517,6 +522,35 @@ class _TileView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The month as the library's title: its name in the serif, its year quieter beside it.
+class _MonthTitle extends StatelessWidget {
+  const _MonthTitle(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cut = label.lastIndexOf(' ');
+    final name = cut > 0 ? label.substring(0, cut) : label;
+    final year = cut > 0 ? label.substring(cut + 1) : '';
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: name),
+          if (year.isNotEmpty)
+            TextSpan(
+              text: ' $year',
+              style: TextStyle(color: Palette.dim),
+            ),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: serifTitle(50),
     );
   }
 }
