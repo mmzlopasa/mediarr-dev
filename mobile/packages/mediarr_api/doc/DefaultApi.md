@@ -40,6 +40,7 @@ Method | HTTP request | Description
 [**deleteAlbumLink**](DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 [**deleteDevice**](DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 [**deleteFamilyRule**](DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
+[**deleteNotification**](DefaultApi.md#deletenotification) | **DELETE** /api/notifications/{id} | Remove one notification
 [**deletePasskey**](DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 [**deleteTag**](DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
 [**deleteWebhook**](DefaultApi.md#deletewebhook) | **DELETE** /api/admin/webhooks/{id} | Stop telling this address
@@ -135,6 +136,7 @@ Method | HTTP request | Description
 [**listImports**](DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 [**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 [**listMySessions**](DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
+[**listNotifications**](DefaultApi.md#listnotifications) | **GET** /api/notifications | The newest notifications of the signed-in user
 [**listPartners**](DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
 [**listPasskeys**](DefaultApi.md#listpasskeys) | **GET** /api/me/passkeys | The current user's passkeys
 [**listPeople**](DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
@@ -147,6 +149,7 @@ Method | HTTP request | Description
 [**logout**](DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 [**mergePeople**](DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
 [**pauseJobQueue**](DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
+[**readNotifications**](DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
 [**removeAlbumAssets**](DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 [**removeAlbumHeart**](DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 [**removeAlbumMember**](DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
@@ -1427,6 +1430,46 @@ try {
     api_instance.deleteFamilyRule(id);
 } catch (e) {
     print('Exception when calling DefaultApi->deleteFamilyRule: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteNotification**
+> deleteNotification(id)
+
+Remove one notification
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.deleteNotification(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->deleteNotification: $e\n');
 }
 ```
 
@@ -5242,6 +5285,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listNotifications**
+> NotificationList listNotifications()
+
+The newest notifications of the signed-in user
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listNotifications();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listNotifications: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**NotificationList**](NotificationList.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listPartners**
 > Partners listPartners()
 
@@ -5684,6 +5764,42 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **queue** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **readNotifications**
+> readNotifications()
+
+Mark every notification as read
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    api_instance.readNotifications();
+} catch (e) {
+    print('Exception when calling DefaultApi->readNotifications: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
 
 ### Return type
 

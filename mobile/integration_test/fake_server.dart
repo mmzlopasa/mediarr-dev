@@ -96,6 +96,27 @@ class FakeServer {
   }
 
   Future<void> _signedIn(HttpRequest request, String path) async {
+    if (path == '/api/notifications') {
+      await _json(request, 200, {
+        'unread': 1,
+        'items': [
+          {
+            'id': '00000000-0000-0000-0000-000000000009',
+            'kind': 'import_done',
+            'subject': 'immich',
+            'ref': '',
+            'createdAt': '2026-01-01T10:00:00Z',
+            'read': false,
+          },
+        ],
+      });
+      return;
+    }
+    if (path == '/api/notifications/read') {
+      request.response.statusCode = 204;
+      await request.response.close();
+      return;
+    }
     if (path == '/api/timeline/buckets') {
       await _json(request, 200, {
         'buckets': [

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"slices"
 	"strings"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 const (
@@ -505,6 +507,11 @@ func (s *apiServer) SetAlbumMember(w http.ResponseWriter, r *http.Request, id, u
 		return
 	}
 	if isNew {
+		if err := s.queries.CreateNotification(ctx, db.CreateNotificationParams{
+			UserID: pgUUID(userID), Kind: jobs.NotifyAlbumShared, Subject: album.Title, Ref: uuid.UUID(album.ID.Bytes).String(),
+		}); err != nil {
+			slog.Warn("a notification was not saved", "error", err)
+		}
 		if person, err := s.queries.GetUserByID(ctx, pgUUID(userID)); err == nil {
 			s.sendLater(person.Email, "An album was shared with you: "+album.Title,
 				currentUser(r).Name+" shared the album \""+album.Title+"\" with you on Mediarr.")

@@ -6,6 +6,7 @@ import '../services/settings.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
 import 'account_sheet.dart';
+import 'notifications.dart';
 import 'upload_screen.dart';
 
 /// The top of every main screen: its title, the gold action and the account, as on the web.
@@ -84,7 +85,7 @@ class AppHeader extends ConsumerWidget {
                 ),
               ),
             ),
-          const SizedBox(width: 8),
+          const NotificationBell(),
           Tooltip(
             message: 'Account',
             child: GestureDetector(

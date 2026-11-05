@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import NotificationBell from '#lib/organize/NotificationBell.svelte';
 	import type { Snippet } from 'svelte';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -192,6 +193,7 @@
 				/>
 			</form>
 			<div class="top-r">
+				<NotificationBell />
 				<LangMenu />
 				<ThemeButton />
 				<div class="me">

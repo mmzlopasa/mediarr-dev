@@ -187,6 +187,15 @@ void main() {
     // nobody can answer then waits forever. On iOS this has to be confirmed on a real iPhone.
   }, skip: Platform.isIOS);
 
+  testWidgets('the bell lists what the server has to say', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Notifications').first);
+    await waitFor(tester, find.text('The import from immich finished'));
+    await tester.tap(find.byTooltip('Remove').first);
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

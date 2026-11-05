@@ -142,6 +142,7 @@ test('a tag groups photos', async ({ page }) => {
 	await page.getByRole('button', { name: 'Add a tag' }).click();
 	await page.getByLabel('New tag').fill(name);
 	await page.getByRole('button', { name: 'Create and add' }).click();
+	await expect(page.getByText(/^Tagged: 1/)).toBeVisible();
 	await page.goto('/albums');
 	await page.getByRole('link', { name: 'Tags', exact: true }).click();
 	await page.getByRole('link', { name }).click();

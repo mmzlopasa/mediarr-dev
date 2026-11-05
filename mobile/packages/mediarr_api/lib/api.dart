@@ -102,6 +102,8 @@ part 'model/map_points.dart';
 part 'model/map_style.dart';
 part 'model/member_role.dart';
 part 'model/memory.dart';
+part 'model/notification.dart';
+part 'model/notification_list.dart';
 part 'model/oidc_exchange.dart';
 part 'model/oidc_settings.dart';
 part 'model/oidc_settings_update.dart';

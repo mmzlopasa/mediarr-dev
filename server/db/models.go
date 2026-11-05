@@ -253,6 +253,16 @@ type Library struct {
 	ScanError      pgtype.Text
 }
 
+type Notification struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	Kind      string
+	Subject   string
+	Ref       string
+	CreatedAt pgtype.Timestamptz
+	ReadAt    pgtype.Timestamptz
+}
+
 type OidcIdentity struct {
 	Issuer    string
 	Subject   string

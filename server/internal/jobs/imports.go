@@ -106,15 +106,18 @@ func (w *importWorker) Work(ctx context.Context, job *river.Job[ImportArgs]) err
 	var refused *errImportRefused
 	switch {
 	case err == nil:
+		notifyImport(context.WithoutCancel(ctx), w.queries, &row, statusDone)
 		return w.finishImport(ctx, id, statusDone, "")
 	case errors.Is(err, errImportStopped):
 		return nil
 	case errors.As(err, &refused):
+		notifyImport(context.WithoutCancel(ctx), w.queries, &row, statusFailed)
 		return w.finishImport(ctx, id, statusFailed, refused.message)
 	case slice.Err() != nil && ctx.Err() == nil:
 		// A long import goes on in a new run, from the page it reached, without using up attempts.
 		return river.JobSnooze(time.Second)
 	case job.Attempt >= maxAttempts:
+		notifyImport(context.WithoutCancel(ctx), w.queries, &row, statusFailed)
 		return w.finishImport(ctx, id, statusFailed, truncate(err.Error(), maxImportError))
 	}
 	return err

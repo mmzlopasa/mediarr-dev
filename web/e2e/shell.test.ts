@@ -259,6 +259,19 @@ test('an administrator can check the originals and read the report', async ({ pa
 	}).toPass({ timeout: 90_000 });
 });
 
+test('the bell shows notifications and says when there are none', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'user');
+	await page.goto('/');
+	await page.getByRole('button', { name: 'Notifications' }).click();
+	await expect(
+		page
+			.locator('.notify-panel')
+			.getByText(/No notifications|shared with you|import|backup/i)
+			.first()
+	).toBeVisible();
+});
+
 test('email can be set up, and says what a link needs', async ({ page }) => {
 	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
 	await signIn(page, 'admin');

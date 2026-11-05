@@ -99,6 +99,7 @@ func TestAdminRoutesAreForAdmins(t *testing.T) {
 // TestStrangersReachNothingOfTheOwner still checks that what the owner has stays in place.
 var ownOnlyRoutes = map[string]bool{
 	"DELETE /api/me/sessions/{id}":                 true,
+	"DELETE /api/notifications/{id}":               true,
 	"GET /api/timeline/buckets/{month}":            true,
 	"GET /api/collections/{scope}/buckets":         true,
 	"GET /api/collections/{scope}/buckets/{month}": true,

@@ -1588,6 +1588,34 @@ paths:
       responses:
         "204": { description: Set }
         "400": { $ref: "#/components/responses/Error" }
+  /api/notifications:
+    get:
+      operationId: listNotifications
+      summary: The newest notifications of the signed-in user
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationList" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/notifications/read:
+    post:
+      operationId: readNotifications
+      summary: Mark every notification as read
+      responses:
+        "204": { description: Done }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/notifications/{id}:
+    delete:
+      operationId: deleteNotification
+      summary: Remove one notification
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/admin/integrity:
     get:
       operationId: getIntegrity
@@ -3211,6 +3239,22 @@ components:
         trashed: { type: integer, format: int64 }
         albums: { type: integer, format: int64 }
         bytes: { type: integer, format: int64 }
+    Notification:
+      type: object
+      required: [id, kind, subject, ref, createdAt, read]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [album_shared, import_done, import_failed, backup_failed] }
+        subject: { type: string, description: "What it is about: an album's name, an import's source, an error" }
+        ref: { type: string, description: "The album it opens, if any" }
+        createdAt: { type: string, format: date-time }
+        read: { type: boolean }
+    NotificationList:
+      type: object
+      required: [items, unread]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Notification" } }
+        unread: { type: integer, format: int64 }
     IntegrityRun:
       type: object
       required: [thorough]

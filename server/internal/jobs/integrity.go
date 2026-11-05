@@ -73,6 +73,9 @@ func (w *integrityWorker) Timeout(*river.Job[IntegrityArgs]) time.Duration {
 }
 
 func (w *integrityWorker) Work(ctx context.Context, job *river.Job[IntegrityArgs]) error {
+	if err := w.queries.DeleteOldNotifications(ctx); err != nil {
+		slog.Warn("old notifications were not removed", "error", err)
+	}
 	report, err := CheckIntegrity(ctx, w.queries, job.Args.Thorough)
 	if err != nil {
 		return err

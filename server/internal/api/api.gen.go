@@ -557,6 +557,30 @@ func (e MemoryKind) Valid() bool {
 	}
 }
 
+// Defines values for NotificationKind.
+const (
+	AlbumShared  NotificationKind = "album_shared"
+	BackupFailed NotificationKind = "backup_failed"
+	ImportDone   NotificationKind = "import_done"
+	ImportFailed NotificationKind = "import_failed"
+)
+
+// Valid indicates whether the value is a known member of the NotificationKind enum.
+func (e NotificationKind) Valid() bool {
+	switch e {
+	case AlbumShared:
+		return true
+	case BackupFailed:
+		return true
+	case ImportDone:
+		return true
+	case ImportFailed:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SecurityEventKind.
 const (
 	SecurityEventKindDeviceBlocked SecurityEventKind = "device_blocked"
@@ -1740,6 +1764,29 @@ type Memory struct {
 // MemoryKind defines model for Memory.Kind.
 type MemoryKind string
 
+// Notification defines model for Notification.
+type Notification struct {
+	CreatedAt time.Time          `json:"createdAt"`
+	Id        openapi_types.UUID `json:"id"`
+	Kind      NotificationKind   `json:"kind"`
+	Read      bool               `json:"read"`
+
+	// Ref The album it opens, if any
+	Ref string `json:"ref"`
+
+	// Subject What it is about: an album's name, an import's source, an error
+	Subject string `json:"subject"`
+}
+
+// NotificationKind defines model for Notification.Kind.
+type NotificationKind string
+
+// NotificationList defines model for NotificationList.
+type NotificationList struct {
+	Items  []Notification `json:"items"`
+	Unread int64          `json:"unread"`
+}
+
 // OIDCExchange defines model for OIDCExchange.
 type OIDCExchange struct {
 	Code     string `json:"code"`
@@ -2914,6 +2961,15 @@ type ServerInterface interface {
 	// ListMemories On this day in earlier years, and the last week
 	// (GET /api/memories)
 	ListMemories(w http.ResponseWriter, r *http.Request, params ListMemoriesParams)
+	// ListNotifications The newest notifications of the signed-in user
+	// (GET /api/notifications)
+	ListNotifications(w http.ResponseWriter, r *http.Request)
+	// ReadNotifications Mark every notification as read
+	// (POST /api/notifications/read)
+	ReadNotifications(w http.ResponseWriter, r *http.Request)
+	// DeleteNotification Remove one notification
+	// (DELETE /api/notifications/{id})
+	DeleteNotification(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ListPartners Who you share your library with, and who shares theirs with you
 	// (GET /api/partners)
 	ListPartners(w http.ResponseWriter, r *http.Request)
@@ -3847,6 +3903,24 @@ func (_ Unimplemented) SetupTotp(w http.ResponseWriter, r *http.Request) {
 // ListMemories On this day in earlier years, and the last week
 // (GET /api/memories)
 func (_ Unimplemented) ListMemories(w http.ResponseWriter, r *http.Request, params ListMemoriesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListNotifications The newest notifications of the signed-in user
+// (GET /api/notifications)
+func (_ Unimplemented) ListNotifications(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ReadNotifications Mark every notification as read
+// (POST /api/notifications/read)
+func (_ Unimplemented) ReadNotifications(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteNotification Remove one notification
+// (DELETE /api/notifications/{id})
+func (_ Unimplemented) DeleteNotification(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -7053,6 +7127,60 @@ func (siw *ServerInterfaceWrapper) ListMemories(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// ListNotifications operation middleware
+func (siw *ServerInterfaceWrapper) ListNotifications(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListNotifications(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ReadNotifications operation middleware
+func (siw *ServerInterfaceWrapper) ReadNotifications(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReadNotifications(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteNotification operation middleware
+func (siw *ServerInterfaceWrapper) DeleteNotification(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteNotification(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListPartners operation middleware
 func (siw *ServerInterfaceWrapper) ListPartners(w http.ResponseWriter, r *http.Request) {
 
@@ -8646,6 +8774,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/auth/password/reset", wrapper.ResetPassword)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/notifications", wrapper.ListNotifications)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/notifications/read", wrapper.ReadNotifications)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/notifications/{id}", wrapper.DeleteNotification)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/integrity", wrapper.GetIntegrity)

@@ -1720,6 +1720,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The newest notifications of the signed-in user */
+        get: operations["listNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark every notification as read */
+        post: operations["readNotifications"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove one notification */
+        delete: operations["deleteNotification"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/integrity": {
         parameters: {
             query?: never;
@@ -3365,6 +3416,24 @@ export interface components {
             albums: number;
             /** Format: int64 */
             bytes: number;
+        };
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "album_shared" | "import_done" | "import_failed" | "backup_failed";
+            /** @description What it is about: an album's name, an import's source, an error */
+            subject: string;
+            /** @description The album it opens, if any */
+            ref: string;
+            /** Format: date-time */
+            createdAt: string;
+            read: boolean;
+        };
+        NotificationList: {
+            items: components["schemas"]["Notification"][];
+            /** Format: int64 */
+            unread: number;
         };
         IntegrityRun: {
             /** @description Also read each file and compare its checksum */
@@ -6504,6 +6573,68 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["Error"];
+        };
+    };
+    listNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notifications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    readNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    deleteNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     getIntegrity: {

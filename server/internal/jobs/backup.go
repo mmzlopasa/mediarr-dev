@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 	"os/exec"
@@ -336,6 +337,11 @@ func (w *backupWorker) Work(ctx context.Context, job *river.Job[BackupArgs]) err
 		return finishErr
 	}
 	w.emitWebhook(ctx, EventBackupFinished, map[string]string{"kind": job.Args.What, "status": status})
+	if status == statusFailed {
+		if err := NotifyBackupFailed(context.WithoutCancel(ctx), w.queries, message); err != nil {
+			slog.Warn("a notification was not saved", "error", err)
+		}
+	}
 	// A failure is written down for the administrator. Trying again by itself would not fix a full
 	// disk or a wrong password, and the next scheduled run tries anyway.
 	return nil

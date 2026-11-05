@@ -1737,6 +1737,55 @@ class DefaultApi {
     }
   }
 
+  /// Remove one notification
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteNotificationWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/notifications/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Remove one notification
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteNotification(
+    String id,
+  ) async {
+    final response = await deleteNotificationWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Remove a passkey
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7116,6 +7165,52 @@ class DefaultApi {
     return null;
   }
 
+  /// The newest notifications of the signed-in user
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listNotificationsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/notifications';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The newest notifications of the signed-in user
+  Future<NotificationList?> listNotifications() async {
+    final response = await listNotificationsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'NotificationList',
+      ) as NotificationList;
+    }
+    return null;
+  }
+
   /// Who you share your library with, and who shares theirs with you
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7694,6 +7789,41 @@ class DefaultApi {
     final response = await pauseJobQueueWithHttpInfo(
       queue,
     );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Mark every notification as read
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> readNotificationsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/notifications/read';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Mark every notification as read
+  Future<void> readNotifications() async {
+    final response = await readNotificationsWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }

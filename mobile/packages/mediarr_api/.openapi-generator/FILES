@@ -75,6 +75,8 @@ doc/MapPoints.md
 doc/MapStyle.md
 doc/MemberRole.md
 doc/Memory.md
+doc/Notification.md
+doc/NotificationList.md
 doc/OIDCExchange.md
 doc/OIDCSettings.md
 doc/OIDCSettingsUpdate.md
@@ -210,6 +212,8 @@ lib/model/map_points.dart
 lib/model/map_style.dart
 lib/model/member_role.dart
 lib/model/memory.dart
+lib/model/notification.dart
+lib/model/notification_list.dart
 lib/model/oidc_exchange.dart
 lib/model/oidc_settings.dart
 lib/model/oidc_settings_update.dart
@@ -263,6 +267,5 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/integrity_problem_test.dart
-test/integrity_report_test.dart
-test/integrity_run_test.dart
+test/notification_list_test.dart
+test/notification_test.dart

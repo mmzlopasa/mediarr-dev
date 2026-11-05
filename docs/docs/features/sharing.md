@@ -10,3 +10,7 @@ title: Sharing
 - **Family library** is a shared space for chosen accounts, turned on under **Admin → Settings**.
 
 If you have edited a photo, others see only the edited version. They do not get the original, its Live Photo video or what you cropped out.
+
+## Notifications
+
+The bell at the top, on the web and in the app, tells you when an album was shared with you and how an import you started ended. Administrators are also told when a backup fails. Read notifications are removed after 90 days.

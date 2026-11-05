@@ -373,6 +373,10 @@ class ApiClient {
           return MemberRole.fromJson(value);
         case 'Memory':
           return Memory.fromJson(value);
+        case 'Notification':
+          return Notification.fromJson(value);
+        case 'NotificationList':
+          return NotificationList.fromJson(value);
         case 'OIDCExchange':
           return OIDCExchange.fromJson(value);
         case 'OIDCSettings':

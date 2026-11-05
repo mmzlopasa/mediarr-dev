@@ -91,6 +91,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 *DefaultApi* | [**deleteDevice**](doc//DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 *DefaultApi* | [**deleteFamilyRule**](doc//DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
+*DefaultApi* | [**deleteNotification**](doc//DefaultApi.md#deletenotification) | **DELETE** /api/notifications/{id} | Remove one notification
 *DefaultApi* | [**deletePasskey**](doc//DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 *DefaultApi* | [**deleteTag**](doc//DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
 *DefaultApi* | [**deleteWebhook**](doc//DefaultApi.md#deletewebhook) | **DELETE** /api/admin/webhooks/{id} | Stop telling this address
@@ -186,6 +187,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listImports**](doc//DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 *DefaultApi* | [**listMySessions**](doc//DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
+*DefaultApi* | [**listNotifications**](doc//DefaultApi.md#listnotifications) | **GET** /api/notifications | The newest notifications of the signed-in user
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
 *DefaultApi* | [**listPasskeys**](doc//DefaultApi.md#listpasskeys) | **GET** /api/me/passkeys | The current user's passkeys
 *DefaultApi* | [**listPeople**](doc//DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
@@ -198,6 +200,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 *DefaultApi* | [**mergePeople**](doc//DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
 *DefaultApi* | [**pauseJobQueue**](doc//DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
+*DefaultApi* | [**readNotifications**](doc//DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 *DefaultApi* | [**removeAlbumHeart**](doc//DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 *DefaultApi* | [**removeAlbumMember**](doc//DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
@@ -314,6 +317,8 @@ Class | Method | HTTP request | Description
  - [MapStyle](doc//MapStyle.md)
  - [MemberRole](doc//MemberRole.md)
  - [Memory](doc//Memory.md)
+ - [Notification](doc//Notification.md)
+ - [NotificationList](doc//NotificationList.md)
  - [OIDCExchange](doc//OIDCExchange.md)
  - [OIDCSettings](doc//OIDCSettings.md)
  - [OIDCSettingsUpdate](doc//OIDCSettingsUpdate.md)
