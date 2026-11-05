@@ -32,7 +32,6 @@ const (
 	maxBulkIDs      = 1000
 	maxZipIDs       = 100
 	// A day, not forever, because editing a photo changes its previews on all of the user's devices.
-	thumbCacheAge = "private, max-age=86400"
 )
 
 var bucketMonth = regexp.MustCompile(`^\d{4}-(0[1-9]|1[0-2])$`)
@@ -384,7 +383,7 @@ func (s *apiServer) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id
 		return
 	}
 	w.Header().Set("Content-Type", "image/webp")
-	w.Header().Set("Cache-Control", thumbCacheAge)
+	w.Header().Set("Cache-Control", thumbCache(r))
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	serveFile(w, r, path)
 }
@@ -412,7 +411,7 @@ func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, row
 		return
 	}
 	w.Header().Set("Content-Type", "image/webp")
-	cache := thumbCacheAge
+	cache := thumbCache(r)
 	if row.VaultAt.Valid {
 		cache = "no-store"
 	}
@@ -528,7 +527,7 @@ func (s *apiServer) GetAssetMotion(w http.ResponseWriter, r *http.Request, id op
 	}
 	w.Header().Set("Content-Type", "video/mp4")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.Header().Set("Cache-Control", thumbCacheAge)
+	w.Header().Set("Cache-Control", thumbCache(r))
 	serveFile(w, r, path)
 }
 
@@ -570,7 +569,7 @@ func (s *apiServer) serveVideoFile(w http.ResponseWriter, r *http.Request, file 
 	}
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.Header().Set("Cache-Control", thumbCacheAge)
+	w.Header().Set("Cache-Control", thumbCache(r))
 	serveFile(w, r, path)
 }
 
@@ -769,4 +768,14 @@ func addToZip(archive *zip.Writer, row *db.Asset, used map[string]int) error {
 	}
 	_, err = io.Copy(entry, f)
 	return err
+}
+
+// thumbCache keeps a preview whose address names its version for good: a new edit makes a new
+// address. Without a version the browser asks each time, and gets a cheap "not modified" until the
+// preview changes, so an edit on one device shows at once on the others.
+func thumbCache(r *http.Request) string {
+	if r.URL.Query().Get("v") != "" {
+		return "private, max-age=31536000, immutable"
+	}
+	return "private, no-cache"
 }

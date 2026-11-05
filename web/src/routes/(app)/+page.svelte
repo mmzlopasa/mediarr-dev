@@ -90,7 +90,8 @@
 
 <svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
 
-<div class="ph">
+<!-- The month is the title on screen; the page name stays for screen readers. -->
+<div class="ph lib-head">
 	<div><h1>{tr(item.hr, item.en)}</h1></div>
 	<div class="ph-a">
 		{#if processing > 0}

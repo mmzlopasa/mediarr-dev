@@ -234,6 +234,16 @@ func TestThumbnail(t *testing.T) {
 	if string(body) != "thumbnail "+id {
 		t.Errorf("body: %s", body)
 	}
+	// Without a version it is checked each time, so an edit made elsewhere shows at once; with one
+	// it is kept, because an edit gives a new version.
+	if got := resp.Header.Get("Cache-Control"); got != "private, no-cache" {
+		t.Errorf("without a version: %q", got)
+	}
+	resp, body = c.get("/api/assets/" + id + "/thumbnail?v=abc")
+	expect(t, resp, body, http.StatusOK)
+	if got := resp.Header.Get("Cache-Control"); !strings.Contains(got, "immutable") {
+		t.Errorf("with a version: %q", got)
+	}
 	resp, body = c.get("/api/assets/" + uuid.NewString() + "/thumbnail")
 	expect(t, resp, body, http.StatusNotFound)
 	resp, _ = c.get("/api/assets/not-a-uuid/thumbnail")

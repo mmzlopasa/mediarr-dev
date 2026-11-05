@@ -314,6 +314,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
                 key: ValueKey('${item.id}-$_revision'),
                 session: session,
                 id: item.id,
+                version: previewVersion(item.blurhash),
                 full: settings.loadOriginal,
                 onZoom: (zoomed) {
                   if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
@@ -332,10 +333,12 @@ class _PhotoPage extends StatefulWidget {
     super.key,
     required this.session,
     required this.id,
+    this.version,
     this.full = false,
     required this.onZoom,
   });
 
+  final String? version;
   final Session session;
   final String id;
   final bool full;
@@ -387,6 +390,7 @@ class _PhotoPageState extends State<_PhotoPage> {
         child: AssetPicture(
           session: widget.session,
           id: widget.id,
+          version: widget.version,
           large: true,
           full: widget.full,
           fit: BoxFit.contain,

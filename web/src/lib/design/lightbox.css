@@ -560,3 +560,140 @@ textarea.in {
 		transition: none;
 	}
 }
+
+/* ---------- Library ---------- */
+.tl-month {
+	position: absolute;
+	left: 0;
+	right: 0;
+	display: flex;
+	align-items: flex-end;
+	gap: 20px;
+	padding-bottom: 14px;
+}
+.tl-month h2 {
+	margin: 0;
+	font: 400 clamp(48px, 6.4vw, 96px) / 0.86 var(--serif);
+	letter-spacing: -0.025em;
+	white-space: nowrap;
+}
+.tl-year {
+	color: var(--dim);
+	opacity: 0.6;
+}
+.tl-month small {
+	color: var(--dim);
+	font-size: 14px;
+	font-variant-numeric: tabular-nums;
+	padding-bottom: 6px;
+}
+.tl-day {
+	padding-bottom: 10px;
+	font: 600 14px var(--sans);
+	color: var(--ink);
+	font-variant-numeric: tabular-nums;
+}
+.tl-tile {
+	border-radius: 2px;
+	background-color: var(--bg-2);
+}
+.tl-tile.sel {
+	outline: 3px solid var(--acc);
+	outline-offset: -3px;
+}
+
+/* The film edge: one tick a month, as long as the month is full. */
+.scrub {
+	top: 120px;
+	bottom: 120px;
+	width: 92px;
+}
+.scrub-tick {
+	position: absolute;
+	right: 22px;
+	height: 2px;
+	width: calc(6px + var(--len) * 32px);
+	translate: 0 -50%;
+	border-radius: 1px;
+	background: var(--line-2);
+	pointer-events: none;
+}
+.scrub-tick.now {
+	width: 44px;
+	height: 3px;
+	background: var(--acc);
+}
+.scrub-year {
+	right: 22px;
+	opacity: 1;
+	padding: 0 0 0 6px;
+	border-radius: 0;
+	background: var(--bg);
+	color: var(--dim);
+	font: 600 11px var(--sans);
+	font-variant-numeric: tabular-nums;
+	translate: 0 -150%;
+}
+.scrub-year.now {
+	color: var(--acc);
+}
+.scrub-label {
+	right: 76px;
+	border: 0;
+	border-radius: 10px;
+	background: var(--bg-2);
+	box-shadow: var(--float-shadow);
+	font: 600 13px var(--sans);
+}
+@media (max-width: 760px) {
+	.tl-month {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 6px;
+	}
+	.tl-month h2 {
+		font-size: 52px;
+	}
+	.tl-month small {
+		padding: 0;
+	}
+	.scrub {
+		width: 28px;
+		top: 140px;
+		bottom: 140px;
+	}
+	.scrub-tick {
+		right: 6px;
+		width: calc(3px + var(--len) * 12px);
+	}
+	.scrub-tick.now {
+		width: 18px;
+	}
+	.scrub-year {
+		display: none;
+	}
+}
+
+/* The library: the month is the title, the page keeps its name for screen readers. */
+.lib-head {
+	justify-content: flex-end;
+	margin: 0 0 4px;
+	min-height: 40px;
+}
+.lib-head h1 {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+/* Room on the right for the film edge, so it never covers a photo. */
+.lb-shell .main:has(.scrub) {
+	padding-right: 120px;
+}
+@media (max-width: 760px) {
+	.lb-shell .main:has(.scrub) {
+		padding-right: 34px;
+	}
+}

@@ -11,13 +11,15 @@
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { lang, tr } from '#lib/i18n.svelte.ts';
-	import { blurUrl } from './blur.ts';
+	import { blurUrl, thumbUrl } from './blur.ts';
 	import {
 		estimateMonthHeight,
 		formatDay,
 		formatDuration,
 		formatMonth,
 		layoutMonth,
+		itemCount,
+		monthParts,
 		rowsInRange,
 		type MonthLayout
 	} from './layout.ts';
@@ -102,6 +104,7 @@
 		placed.map(({ entry, top }) => ({
 			month: entry.month,
 			top,
+			count: entry.count,
 			label: formatMonth(entry.month, locale)
 		}))
 	);
@@ -416,7 +419,11 @@
 			{#if entry.layout}
 				{#each rowsInRange(entry.layout.rows, position - top - viewportHeight * RENDER_AHEAD, position - top + viewportHeight * (1 + RENDER_AHEAD)) as row (row.top)}
 					{#if row.type === 'month'}
-						<h2 class="tl-month" style="top:{row.top}px;height:{row.height}px">{row.label}</h2>
+						{@const parts = monthParts(entry.month, locale)}
+						<div class="tl-month" style="top:{row.top}px;height:{row.height}px">
+							<h2>{parts.name} <span class="tl-year">{parts.year}</span></h2>
+							<small>{itemCount(entry.count, lang())}</small>
+						</div>
 					{:else if row.type === 'day'}
 						<h3 class="tl-day" style="top:{row.top}px;height:{row.height}px">{row.label}</h3>
 					{:else}
@@ -442,7 +449,7 @@
 								}}
 							>
 								<img
-									src="{base}/assets/{tile.item.id}/thumbnail"
+									src={thumbUrl(base, tile.item.id, tile.item.blurhash)}
 									alt=""
 									decoding="async"
 									draggable="false"

@@ -14,6 +14,7 @@ class AssetPicture extends StatelessWidget {
     this.large = false,
     this.full = false,
     this.memCacheWidth,
+    this.version,
   });
 
   final Session session;
@@ -26,17 +27,23 @@ class AssetPicture extends StatelessWidget {
   final bool full;
   final int? memCacheWidth;
 
+  /// The picture's current look, from [previewVersion]; an edit changes it.
+  final String? version;
+
+  String get _key => version == null ? '' : '/$version';
+
   @override
   Widget build(BuildContext context) {
     if (full && session.keepOnDisk) {
       return CachedNetworkImage(
-        imageUrl: session.fullPhotoUrl(id),
+        imageUrl: session.fullPhotoUrl(id, version: version),
         httpHeaders: session.headers,
-        cacheKey: '${session.serverUrl}/$id/f',
+        cacheKey: '${session.serverUrl}/$id/f$_key',
         fit: fit,
         placeholder: (_, _) => AssetPicture(
           session: session,
           id: id,
+          version: version,
           large: true,
           fit: fit,
           error: error,
@@ -44,13 +51,14 @@ class AssetPicture extends StatelessWidget {
         errorWidget: (_, _, _) => AssetPicture(
           session: session,
           id: id,
+          version: version,
           large: true,
           fit: fit,
           error: error,
         ),
       );
     }
-    final url = session.thumbnailUrl(id, large: large);
+    final url = session.thumbnailUrl(id, large: large, version: version);
     if (!session.keepOnDisk) {
       return Image.network(
         url,
@@ -63,15 +71,15 @@ class AssetPicture extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: url,
       httpHeaders: session.headers,
-      cacheKey: '${session.serverUrl}/$id/${large ? 'l' : 's'}',
+      cacheKey: '${session.serverUrl}/$id/${large ? 'l' : 's'}$_key',
       memCacheWidth: memCacheWidth,
       fit: fit,
       fadeInDuration: const Duration(milliseconds: 120),
       placeholder: large
           ? (_, _) => CachedNetworkImage(
-              imageUrl: session.thumbnailUrl(id),
+              imageUrl: session.thumbnailUrl(id, version: version),
               httpHeaders: session.headers,
-              cacheKey: '${session.serverUrl}/$id/s',
+              cacheKey: '${session.serverUrl}/$id/s$_key',
               fit: fit,
             )
           : null,

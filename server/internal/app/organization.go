@@ -132,11 +132,11 @@ func (s *apiServer) GetCollectionAsset(w http.ResponseWriter, r *http.Request, s
 }
 
 // A vault's files must not stay in a browser's cache after it locks.
-func collectionCache(scope string) string {
+func collectionCache(r *http.Request, scope string) string {
 	if scope == collectionVault {
 		return collectionCacheRule
 	}
-	return thumbCacheAge
+	return thumbCache(r)
 }
 
 func (s *apiServer) GetCollectionThumbnail(w http.ResponseWriter, r *http.Request, scope api.GetCollectionThumbnailParamsScope, id openapi_types.UUID, params api.GetCollectionThumbnailParams) {
@@ -162,7 +162,7 @@ func (s *apiServer) GetCollectionThumbnail(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	w.Header().Set("Content-Type", "image/webp")
-	w.Header().Set("Cache-Control", collectionCache(string(scope)))
+	w.Header().Set("Cache-Control", collectionCache(r, string(scope)))
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	serveFile(w, r, path)
 }
@@ -191,7 +191,7 @@ func (s *apiServer) GetCollectionMotion(w http.ResponseWriter, r *http.Request, 
 	}
 	w.Header().Set("Content-Type", "video/mp4")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.Header().Set("Cache-Control", collectionCache(string(scope)))
+	w.Header().Set("Cache-Control", collectionCache(r, string(scope)))
 	serveFile(w, r, path)
 }
 

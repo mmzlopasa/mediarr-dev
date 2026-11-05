@@ -1,8 +1,8 @@
 import type { TimelineItem } from '#lib/api.ts';
 
-export const GAP = 4;
-export const MONTH_HEADER = 64;
-export const DAY_HEADER = 40;
+export const GAP = 3;
+export const MONTH_HEADER = 112;
+export const DAY_HEADER = 44;
 const MIN_RATIO = 0.4;
 const MAX_RATIO = 4;
 const AVERAGE_RATIO = 1.4;
@@ -144,4 +144,23 @@ export function formatDuration(ms: number) {
 	return hours > 0
 		? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}`
 		: `${minutes}:${seconds}`;
+}
+
+/** The month's name on its own, as a title says it, and its year. */
+export function monthParts(month: string, locale: string) {
+	const [year, number] = month.split('-').map(Number);
+	const name = new Intl.DateTimeFormat(locale, { month: 'long', timeZone: 'UTC' }).format(
+		new Date(Date.UTC(year, number - 1, 1))
+	);
+	return { name: name.charAt(0).toLocaleUpperCase(locale) + name.slice(1), year: String(year) };
+}
+
+/** How many photos and videos, in words: Croatian has three forms of the noun. */
+export function itemCount(count: number, lang: string) {
+	if (lang !== 'hr') return `${count} ${count === 1 ? 'item' : 'items'}`;
+	const tens = count % 100;
+	const ones = count % 10;
+	if (ones === 1 && tens !== 11) return `${count} stavka`;
+	if (ones >= 2 && ones <= 4 && (tens < 12 || tens > 14)) return `${count} stavke`;
+	return `${count} stavki`;
 }

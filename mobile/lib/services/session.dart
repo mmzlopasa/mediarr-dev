@@ -26,11 +26,11 @@ class Session {
     return DefaultApi(client);
   }
 
-  String thumbnailUrl(String id, {bool large = false}) =>
-      '$serverUrl/api/assets/$id/thumbnail${large ? '?size=large' : ''}';
+  String thumbnailUrl(String id, {bool large = false, String? version}) =>
+      '$serverUrl/api/assets/$id/thumbnail${previewQuery(large ? 'large' : null, version)}';
 
-  String fullPhotoUrl(String id) =>
-      '$serverUrl/api/assets/$id/thumbnail?size=full';
+  String fullPhotoUrl(String id, {String? version}) =>
+      '$serverUrl/api/assets/$id/thumbnail${previewQuery('full', version)}';
 
   String originalUrl(String id) => '$serverUrl/api/assets/$id/original';
 
@@ -75,11 +75,12 @@ class CollectionSession extends Session {
   }
 
   @override
-  String thumbnailUrl(String id, {bool large = false}) =>
-      '$_base/$id/thumbnail${large ? '?size=large' : ''}';
+  String thumbnailUrl(String id, {bool large = false, String? version}) =>
+      '$_base/$id/thumbnail${previewQuery(large ? 'large' : null, version)}';
 
   @override
-  String fullPhotoUrl(String id) => '$_base/$id/thumbnail?size=full';
+  String fullPhotoUrl(String id, {String? version}) =>
+      '$_base/$id/thumbnail${previewQuery('full', version)}';
 
   @override
   String originalUrl(String id) => '$_base/$id/original';
@@ -374,4 +375,23 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     await _storage.delete(key: _secondKey);
     state = const AsyncData(null);
   }
+}
+
+/// A short mark for a picture's current look. The blurhash changes when an edit makes new
+/// previews, so the address and the cache entry change, and every device shows the edit.
+String? previewVersion(String? blurhash) {
+  if (blurhash == null || blurhash.isEmpty) return null;
+  var hash = 0;
+  for (final unit in blurhash.codeUnits) {
+    hash = (hash * 31 + unit) & 0xffffffff;
+  }
+  return hash.toRadixString(36);
+}
+
+String previewQuery(String? size, String? version) {
+  final parts = [
+    ?(size == null ? null : 'size=$size'),
+    ?(version == null ? null : 'v=$version'),
+  ];
+  return parts.isEmpty ? '' : '?${parts.join('&')}';
 }

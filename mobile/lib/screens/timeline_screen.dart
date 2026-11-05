@@ -444,6 +444,7 @@ class _TileView extends StatelessWidget {
                   child: AssetPicture(
                     session: session,
                     id: item.id,
+                    version: previewVersion(item.blurhash),
                     memCacheWidth: pixels,
                     fit: BoxFit.cover,
                     error: Icon(

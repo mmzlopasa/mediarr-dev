@@ -6,10 +6,13 @@ import {
 	formatDuration,
 	formatMonth,
 	GAP,
+	itemCount,
 	justify,
 	layoutMonth,
+	monthParts,
 	rowsInRange
 } from './layout.ts';
+import { thumbUrl, thumbVersion } from './blur.ts';
 
 const item = (ratio: number, localAt = '2024-07-15T12:00:00', id = 'a'): TimelineItem => ({
 	id,
@@ -133,5 +136,35 @@ describe('formatDuration', () => {
 		expect(formatDuration(5000)).toBe('0:05');
 		expect(formatDuration(65000)).toBe('1:05');
 		expect(formatDuration(3725000)).toBe('1:02:05');
+	});
+});
+
+describe('month titles and counts', () => {
+	it('names the month on its own and keeps the year apart', () => {
+		expect(monthParts('2026-11', 'en')).toEqual({ name: 'November', year: '2026' });
+		expect(monthParts('2026-11', 'hr').name).toBe('Studeni');
+	});
+
+	it('uses the three Croatian forms', () => {
+		expect(itemCount(1, 'hr')).toBe('1 stavka');
+		expect(itemCount(3, 'hr')).toBe('3 stavke');
+		expect(itemCount(5, 'hr')).toBe('5 stavki');
+		expect(itemCount(11, 'hr')).toBe('11 stavki');
+		expect(itemCount(12, 'hr')).toBe('12 stavki');
+		expect(itemCount(21, 'hr')).toBe('21 stavka');
+		expect(itemCount(22, 'hr')).toBe('22 stavke');
+		expect(itemCount(1, 'en')).toBe('1 item');
+		expect(itemCount(2, 'en')).toBe('2 items');
+	});
+});
+
+describe('preview addresses', () => {
+	it('change when the picture changes, and carry the size', () => {
+		const a = thumbUrl('/api', 'x', 'LEHV6nWB2yk8pyo0adR*.7kCMdnj', 'large');
+		const b = thumbUrl('/api', 'x', 'L6PZfSi_.AyE_3t7t7R**0o#DgR4', 'large');
+		expect(a).toMatch(/^\/api\/assets\/x\/thumbnail\?size=large&v=[0-9a-z]+$/);
+		expect(a).not.toBe(b);
+		expect(thumbUrl('/api', 'x')).toBe('/api/assets/x/thumbnail');
+		expect(thumbVersion(undefined)).toBe('');
 	});
 });

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tr } from '#lib/i18n.svelte.ts';
 
-	type Mark = { month: string; label: string; top: number };
+	type Mark = { month: string; label: string; top: number; count: number };
 
 	let {
 		marks,
@@ -16,29 +16,41 @@
 
 	const fraction = $derived(total > 0 ? Math.min(1, Math.max(0, position / total)) : 0);
 	const shownFraction = $derived(hoverY ?? fraction);
-	const current = $derived.by(() => {
-		const y = shownFraction * total;
-		let found = marks[0];
-		for (const mark of marks) {
-			if (mark.top <= y) found = mark;
+	const indexAt = (at: number) => {
+		const y = at * total;
+		let found = 0;
+		for (let i = 0; i < marks.length; i++) {
+			if (marks[i].top <= y) found = i;
 			else break;
 		}
 		return found;
-	});
-	// One label per year, for orientation on the track.
+	};
+	const currentIndex = $derived(indexAt(fraction));
+	const shown = $derived(marks[indexAt(shownFraction)]);
+
+	// The edge of a film strip: one tick a month, as long as the month is full.
+	const most = $derived(Math.max(1, ...marks.map((mark) => mark.count)));
+	const ticks = $derived(
+		marks.map((mark) => ({
+			month: mark.month,
+			fraction: total > 0 ? mark.top / total : 0,
+			length: Math.sqrt(mark.count / most)
+		}))
+	);
+	// One label per year, kept apart on a short track.
 	const years = $derived.by(() => {
 		const seen: { year: string; fraction: number }[] = [];
 		for (const mark of marks) {
 			const year = mark.month.slice(0, 4);
 			if (seen[seen.length - 1]?.year !== year) seen.push({ year, fraction: mark.top / total });
 		}
-		// Keep labels from touching on a short track.
 		const out: typeof seen = [];
 		for (const entry of seen) {
 			if (!out.length || entry.fraction - out[out.length - 1].fraction > 0.05) out.push(entry);
 		}
 		return out;
 	});
+	const currentYear = $derived(marks[currentIndex]?.month.slice(0, 4));
 
 	function fractionAt(event: PointerEvent) {
 		const box = track?.getBoundingClientRect();
@@ -46,6 +58,7 @@
 		return Math.min(1, Math.max(0, (event.clientY - box.top) / box.height));
 	}
 
+	// Jumps are immediate: this is used often, and motion would only make it slower.
 	function down(event: PointerEvent) {
 		event.preventDefault();
 		dragging = true;
@@ -83,7 +96,7 @@
 	aria-valuemin="0"
 	aria-valuemax="100"
 	aria-valuenow={Math.round(fraction * 100)}
-	aria-valuetext={current?.label}
+	aria-valuetext={marks[currentIndex]?.label}
 	onpointerdown={down}
 	onpointermove={move}
 	onpointerup={up}
@@ -93,11 +106,21 @@
 	}}
 	onkeydown={key}
 >
-	{#each years as entry (entry.year)}
-		<span class="scrub-year" style="top:{entry.fraction * 100}%">{entry.year}</span>
+	{#each ticks as tick, index (tick.month)}
+		<i
+			class="scrub-tick"
+			class:now={index === currentIndex}
+			style="top:{tick.fraction * 100}%;--len:{tick.length}"
+		></i>
 	{/each}
-	<i class="scrub-thumb" style="top:{fraction * 100}%"></i>
-	{#if (hoverY !== null || dragging) && current}
-		<b class="scrub-label" style="top:{shownFraction * 100}%">{current.label}</b>
+	{#each years as entry (entry.year)}
+		<span
+			class="scrub-year"
+			class:now={entry.year === currentYear}
+			style="top:{entry.fraction * 100}%">{entry.year}</span
+		>
+	{/each}
+	{#if (hoverY !== null || dragging) && shown}
+		<b class="scrub-label" style="top:{shownFraction * 100}%">{shown.label}</b>
 	{/if}
 </div>

@@ -27,3 +27,22 @@ export function blurUrl(hash: string | undefined) {
 		return undefined;
 	}
 }
+
+/**
+ * A short mark for a picture's current look. The blurhash changes when an edit makes new previews,
+ * so the address changes and every device fetches them, while unchanged ones stay cached.
+ */
+export function thumbVersion(blurhash?: string | null) {
+	if (!blurhash) return '';
+	let hash = 0;
+	for (let i = 0; i < blurhash.length; i++) hash = (hash * 31 + blurhash.charCodeAt(i)) | 0;
+	return (hash >>> 0).toString(36);
+}
+
+/** The address of a preview, with its version when it is known. */
+export function thumbUrl(base: string, id: string, blurhash?: string | null, size?: string) {
+	const query = [size ? `size=${size}` : '', blurhash ? `v=${thumbVersion(blurhash)}` : ''].filter(
+		Boolean
+	);
+	return `${base}/assets/${id}/thumbnail${query.length ? `?${query.join('&')}` : ''}`;
+}
