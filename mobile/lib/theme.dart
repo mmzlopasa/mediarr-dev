@@ -18,7 +18,11 @@ abstract final class Palette {
   static Color get violet => _pick(0xFF8B7CFF, 0xFF5A49E6);
 
   /// The accent: gold on dark. Gold has no contrast on a light background, so there it is violet.
-  static Color get gold => _pick(0xFFFFD76A, 0xFF5A49E6);
+  static Color get gold => _pick(accentDark, accentLight);
+
+  /// The chosen accent, set by the app with the theme.
+  static int accentDark = 0xFFFFD76A;
+  static int accentLight = 0xFF5A49E6;
   static Color get field => _pick(0x0DFFFFFF, 0xD9FFFFFF);
   static Color get ok => _pick(0xFF8EF0C8, 0xFF0B8F69);
   static Color get warn => _pick(0xFFFFC98A, 0xFFA85D00);

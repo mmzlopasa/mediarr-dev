@@ -166,7 +166,19 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     );
   }
 
+  void _tapToNavigate(TapUpDetails details) {
+    final width = MediaQuery.sizeOf(context).width;
+    final x = details.globalPosition.dx;
+    const turn = Duration(milliseconds: 200);
+    if (x < width / 4) {
+      _pages.previousPage(duration: turn, curve: Curves.easeOut);
+    } else if (x > width * 3 / 4) {
+      _pages.nextPage(duration: turn, curve: Curves.easeOut);
+    }
+  }
+
   Widget _page(TimelineStore store, Session? session) {
+    final settings = ref.read(settingsProvider);
     final items = store.loadedItems;
     if (session == null || items.isEmpty) {
       return const Scaffold(backgroundColor: Colors.black);
@@ -258,45 +270,52 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
       body: DragToDismiss(
         enabled: !_zoomed,
         onDismiss: () => Navigator.of(context).maybePop(),
-        child: PageView.builder(
-          controller: _pages,
-          physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
-          itemCount: items.length,
-          onPageChanged: (value) {
-            setState(() {
-              _index = value;
-              _zoomed = false;
-            });
-            // Moving towards the end of what is loaded fetches the next month.
-            if (value >= items.length - 3) {
-              final months = store.months ?? const <TimelineMonth>[];
-              for (final month in months) {
-                if (month.items == null) {
-                  store.load(month);
-                  break;
+        child: GestureDetector(
+          onTapUp: settings.tapToNavigate && !_zoomed ? _tapToNavigate : null,
+          child: PageView.builder(
+            controller: _pages,
+            physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+            itemCount: items.length,
+            onPageChanged: (value) {
+              setState(() {
+                _index = value;
+                _zoomed = false;
+              });
+              // Moving towards the end of what is loaded fetches the next month.
+              if (value >= items.length - 3) {
+                final months = store.months ?? const <TimelineMonth>[];
+                for (final month in months) {
+                  if (month.items == null) {
+                    store.load(month);
+                    break;
+                  }
                 }
               }
-            }
-          },
-          itemBuilder: (context, page) {
-            final item = items[page];
-            if (item.kind == TimelineItemKindEnum.video) {
-              return _VideoPage(
-                key: ValueKey(item.id),
+            },
+            itemBuilder: (context, page) {
+              final item = items[page];
+              if (item.kind == TimelineItemKindEnum.video) {
+                return _VideoPage(
+                  key: ValueKey(item.id),
+                  session: session,
+                  id: item.id,
+                  active: page == index,
+                  autoPlay: settings.autoPlay,
+                  loop: settings.loopVideos,
+                  forceOriginal: settings.forceOriginalVideo,
+                );
+              }
+              return _PhotoPage(
+                key: ValueKey('${item.id}-$_revision'),
                 session: session,
                 id: item.id,
-                active: page == index,
+                full: settings.loadOriginal,
+                onZoom: (zoomed) {
+                  if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+                },
               );
-            }
-            return _PhotoPage(
-              key: ValueKey('${item.id}-$_revision'),
-              session: session,
-              id: item.id,
-              onZoom: (zoomed) {
-                if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
-              },
-            );
-          },
+            },
+          ),
         ),
       ),
     );
@@ -308,11 +327,13 @@ class _PhotoPage extends StatefulWidget {
     super.key,
     required this.session,
     required this.id,
+    this.full = false,
     required this.onZoom,
   });
 
   final Session session;
   final String id;
+  final bool full;
   final void Function(bool zoomed) onZoom;
 
   @override
@@ -362,6 +383,7 @@ class _PhotoPageState extends State<_PhotoPage> {
           session: widget.session,
           id: widget.id,
           large: true,
+          full: widget.full,
           fit: BoxFit.contain,
           error: const EmptyMessage(
             icon: Icons.broken_image_outlined,
@@ -379,11 +401,17 @@ class _VideoPage extends StatefulWidget {
     required this.session,
     required this.id,
     required this.active,
+    this.autoPlay = false,
+    this.loop = false,
+    this.forceOriginal = false,
   });
 
   final Session session;
   final String id;
   final bool active;
+  final bool autoPlay;
+  final bool loop;
+  final bool forceOriginal;
 
   @override
   State<_VideoPage> createState() => _VideoPageState();
@@ -394,9 +422,21 @@ class _VideoPageState extends State<_VideoPage> {
   bool _failed = false;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.active && widget.autoPlay) _start();
+  }
+
+  @override
   void didUpdateWidget(_VideoPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!widget.active) _controller?.pause();
+    if (widget.active &&
+        !oldWidget.active &&
+        widget.autoPlay &&
+        _controller == null) {
+      _start();
+    }
   }
 
   @override
@@ -423,7 +463,7 @@ class _VideoPageState extends State<_VideoPage> {
     }
     final controller = VideoPlayerController.networkUrl(
       Uri.parse(
-        detail?.hlsReady == true
+        detail?.hlsReady == true && !widget.forceOriginal
             ? widget.session.hlsUrl(widget.id)
             : widget.session.originalUrl(widget.id),
       ),
@@ -432,6 +472,7 @@ class _VideoPageState extends State<_VideoPage> {
     setState(() => _controller = controller);
     try {
       await controller.initialize();
+      await controller.setLooping(widget.loop);
       await controller.play();
       if (mounted) setState(() {});
     } catch (_) {

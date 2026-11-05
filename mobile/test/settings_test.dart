@@ -6,6 +6,7 @@ import 'package:mediarr/screens/settings_screen.dart';
 import 'package:mediarr/services/session.dart';
 import 'package:mediarr/services/settings.dart';
 import 'package:mediarr/theme.dart';
+import 'package:mediarr_api/api.dart';
 import 'package:mediarr/timeline/layout.dart';
 
 void main() {
@@ -53,20 +54,23 @@ void main() {
   });
 
   test('settings survive being saved and read back', () {
-    const settings = AppSettings(
-      gridSize: GridSize.large,
+    final settings = AppSettings(
+      perRow: 3,
+      groupByDay: false,
+      loopVideos: true,
+      accent: AppAccent.mint,
       readOnly: true,
       freeSpace: FreeSpaceRules(olderThanDays: 90, keepAlbums: ['a']),
     );
     final back = AppSettings.fromJson(settings.toJson());
-    expect(back.gridSize, GridSize.large);
+    expect(back.perRow, 3);
+    expect(back.groupByDay, isFalse);
+    expect(back.loopVideos, isTrue);
+    expect(back.accent, AppAccent.mint);
     expect(back.readOnly, isTrue);
     expect(back.freeSpace.olderThanDays, 90);
     expect(back.freeSpace.keepAlbums, ['a']);
-    expect(
-      AppSettings.fromJson(const {'gridSize': 'unknown'}).gridSize,
-      GridSize.medium,
-    );
+    expect(AppSettings.fromJson(const {'perRow': 99}).perRow, maxPerRow);
   });
 
   test('the accent has contrast in both themes, and the button stays gold', () {
@@ -86,15 +90,23 @@ void main() {
     expect(Palette.light, isFalse);
   });
 
-  test('a larger grid size makes rows taller', () {
-    expect(
-      rowHeightFor(400, GridSize.large.scale),
-      greaterThan(rowHeightFor(400)),
-    );
-    expect(
-      rowHeightFor(400, GridSize.small.scale),
-      lessThan(rowHeightFor(400)),
-    );
+  test('a fixed number to a row makes equal squares', () {
+    final items = [
+      for (var i = 0; i < 5; i++)
+        TimelineItem(
+          id: '$i',
+          kind: TimelineItemKindEnum.photo,
+          ratio: 2,
+          isFavorite: false,
+          localAt: '2026-01-01T10:00:00',
+        ),
+    ];
+    final rows = squares(items, 10, 100, 2);
+    expect(rows.length, 3);
+    expect(rows.first.tiles.length, 2);
+    expect(rows.last.tiles.length, 1);
+    expect(rows.first.tiles.first.width, rows.first.height);
+    expect(rows.last.tiles.first.index, 14);
   });
 
   group('choosing a server address', () {
@@ -118,33 +130,31 @@ void main() {
     });
   });
 
-  testWidgets('choosing a grid size and read-only mode changes the settings', (
-    tester,
-  ) async {
+  testWidgets('read-only mode is set under Advanced', (tester) async {
     FlutterSecureStorage.setMockInitialValues({});
     final container = ProviderContainer();
     addTearDown(container.dispose);
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: SettingsScreen()),
+        child: const MaterialApp(home: AdvancedSettings()),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Free up space'), findsOneWidget);
-
-    await tester.tap(find.text('Large'));
-    await tester.pumpAndSettle();
-    expect(container.read(settingsProvider).gridSize, GridSize.large);
-
-    await tester.scrollUntilVisible(
-      find.text('Read-only mode'),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
     await tester.tap(find.text('Read-only mode'));
     await tester.pumpAndSettle();
     expect(container.read(settingsProvider).readOnly, isTrue);
-    expect(find.text('Free up space'), findsNothing);
+  });
+
+  testWidgets('the settings list offers every subject', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+    for (final title in [
+      'Advanced',
+      'Asset viewer',
+      'Backup',
+      'Free up space',
+    ]) {
+      expect(find.text(title), findsOneWidget);
+    }
   });
 }

@@ -29,6 +29,9 @@ class Session {
   String thumbnailUrl(String id, {bool large = false}) =>
       '$serverUrl/api/assets/$id/thumbnail${large ? '?size=large' : ''}';
 
+  String fullPhotoUrl(String id) =>
+      '$serverUrl/api/assets/$id/thumbnail?size=full';
+
   String originalUrl(String id) => '$serverUrl/api/assets/$id/original';
 
   String hlsUrl(String id) => '$serverUrl/api/assets/$id/video/master.m3u8';
@@ -74,6 +77,9 @@ class CollectionSession extends Session {
   @override
   String thumbnailUrl(String id, {bool large = false}) =>
       '$_base/$id/thumbnail${large ? '?size=large' : ''}';
+
+  @override
+  String fullPhotoUrl(String id) => '$_base/$id/thumbnail?size=full';
 
   @override
   String originalUrl(String id) => '$_base/$id/original';

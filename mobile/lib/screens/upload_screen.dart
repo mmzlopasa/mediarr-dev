@@ -88,7 +88,6 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final tasks = ref.watch(uploadsProvider);
     final permission = _permission;
 
@@ -160,10 +159,6 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-                child: Text('Upload', style: text.headlineMedium),
-              ),
               if (widget.albumId == null) BackupCard(onStatus: _refreshBadges),
               if (tasks.isNotEmpty) _TaskList(tasks: tasks),
               Expanded(child: gallery),

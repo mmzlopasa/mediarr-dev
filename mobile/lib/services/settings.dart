@@ -4,16 +4,20 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// How large pictures are in the timeline.
-enum GridSize {
-  small('Small', 0.72),
-  medium('Medium', 1),
-  large('Large', 1.45);
+const minPerRow = 2;
+const maxPerRow = 6;
 
-  const GridSize(this.label, this.scale);
+enum AppAccent {
+  gold('Gold', 0xFFFFD76A, 0xFF8A6500),
+  violet('Violet', 0xFF8B7CFF, 0xFF5A49E6),
+  mint('Mint', 0xFF8EF0C8, 0xFF0B8F69),
+  rose('Rose', 0xFFFF9AC8, 0xFFD6489C);
+
+  const AppAccent(this.label, this.onDark, this.onLight);
 
   final String label;
-  final double scale;
+  final int onDark;
+  final int onLight;
 }
 
 enum AppTheme {
@@ -92,7 +96,15 @@ class FreeSpaceRules {
 /// Settings of this phone. Things that differ per device stay on the device.
 class AppSettings {
   const AppSettings({
-    this.gridSize = GridSize.medium,
+    this.perRow = 4,
+    this.groupByDay = true,
+    this.loadOriginal = false,
+    this.tapToNavigate = false,
+    this.autoPlay = true,
+    this.loopVideos = false,
+    this.forceOriginalVideo = false,
+    this.haptics = true,
+    this.accent = AppAccent.gold,
     this.theme = AppTheme.system,
     this.readOnly = false,
     this.mirrorAlbums = false,
@@ -100,9 +112,17 @@ class AppSettings {
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
-    gridSize: GridSize.values.firstWhere(
-      (size) => size.name == json['gridSize'],
-      orElse: () => GridSize.medium,
+    perRow: ((json['perRow'] as int?) ?? 4).clamp(minPerRow, maxPerRow),
+    groupByDay: json['groupByDay'] as bool? ?? true,
+    loadOriginal: json['loadOriginal'] as bool? ?? false,
+    tapToNavigate: json['tapToNavigate'] as bool? ?? false,
+    autoPlay: json['autoPlay'] as bool? ?? true,
+    loopVideos: json['loopVideos'] as bool? ?? false,
+    forceOriginalVideo: json['forceOriginalVideo'] as bool? ?? false,
+    haptics: json['haptics'] as bool? ?? true,
+    accent: AppAccent.values.firstWhere(
+      (accent) => accent.name == json['accent'],
+      orElse: () => AppAccent.gold,
     ),
     theme: AppTheme.values.firstWhere(
       (theme) => theme.name == json['theme'],
@@ -115,14 +135,30 @@ class AppSettings {
     ),
   );
 
-  final GridSize gridSize;
+  final int perRow;
+  final bool groupByDay;
+  final bool loadOriginal;
+  final bool tapToNavigate;
+  final bool autoPlay;
+  final bool loopVideos;
+  final bool forceOriginalVideo;
+  final bool haptics;
+  final AppAccent accent;
   final AppTheme theme;
   final bool readOnly;
   final bool mirrorAlbums;
   final FreeSpaceRules freeSpace;
 
   Map<String, dynamic> toJson() => {
-    'gridSize': gridSize.name,
+    'perRow': perRow,
+    'groupByDay': groupByDay,
+    'loadOriginal': loadOriginal,
+    'tapToNavigate': tapToNavigate,
+    'autoPlay': autoPlay,
+    'loopVideos': loopVideos,
+    'forceOriginalVideo': forceOriginalVideo,
+    'haptics': haptics,
+    'accent': accent.name,
     'theme': theme.name,
     'readOnly': readOnly,
     'mirrorAlbums': mirrorAlbums,
@@ -130,13 +166,29 @@ class AppSettings {
   };
 
   AppSettings copyWith({
-    GridSize? gridSize,
+    int? perRow,
+    bool? groupByDay,
+    bool? loadOriginal,
+    bool? tapToNavigate,
+    bool? autoPlay,
+    bool? loopVideos,
+    bool? forceOriginalVideo,
+    bool? haptics,
+    AppAccent? accent,
     AppTheme? theme,
     bool? readOnly,
     bool? mirrorAlbums,
     FreeSpaceRules? freeSpace,
   }) => AppSettings(
-    gridSize: gridSize ?? this.gridSize,
+    perRow: perRow ?? this.perRow,
+    groupByDay: groupByDay ?? this.groupByDay,
+    loadOriginal: loadOriginal ?? this.loadOriginal,
+    tapToNavigate: tapToNavigate ?? this.tapToNavigate,
+    autoPlay: autoPlay ?? this.autoPlay,
+    loopVideos: loopVideos ?? this.loopVideos,
+    forceOriginalVideo: forceOriginalVideo ?? this.forceOriginalVideo,
+    haptics: haptics ?? this.haptics,
+    accent: accent ?? this.accent,
     theme: theme ?? this.theme,
     readOnly: readOnly ?? this.readOnly,
     mirrorAlbums: mirrorAlbums ?? this.mirrorAlbums,

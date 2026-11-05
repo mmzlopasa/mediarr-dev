@@ -37,8 +37,7 @@ class TilesRow extends TimelineRow {
   final double height;
 }
 
-double rowHeightFor(double width, [double scale = 1]) =>
-    (width < 600 ? 110 : 170) * scale;
+double rowHeightFor(double width) => width < 600 ? 110 : 170;
 
 double _clamp(double ratio) =>
     ratio.isFinite && ratio > 0 ? ratio.clamp(0.4, 4.0).toDouble() : 1;
@@ -78,6 +77,23 @@ List<TilesRow> justify(
   return rows;
 }
 
+/// Equal squares, a fixed number to a row.
+List<TilesRow> squares(
+  List<TimelineItem> items,
+  int start,
+  double width,
+  int perRow,
+) {
+  final side = (width - gap * (perRow - 1)) / perRow;
+  return [
+    for (var from = 0; from < items.length; from += perRow)
+      TilesRow([
+        for (var i = from; i < from + perRow && i < items.length; i++)
+          Tile(items[i], start + i, side),
+      ], side),
+  ];
+}
+
 /// A whole month from aspect ratios alone, so nothing moves as images load.
 List<TimelineRow> layoutMonth(
   List<TimelineItem> items, {
@@ -85,10 +101,18 @@ List<TimelineRow> layoutMonth(
   required double width,
   required String monthLabel,
   required String Function(String localAt) dayLabel,
-  double scale = 1,
+  int perRow = 0,
+  bool byDay = true,
 }) {
-  final target = rowHeightFor(width, scale);
+  final target = rowHeightFor(width);
+  List<TilesRow> arrange(List<TimelineItem> part, int first) => perRow > 0
+      ? squares(part, first, width, perRow)
+      : justify(part, first, width, target);
   final rows = <TimelineRow>[HeaderRow(monthLabel, isMonth: true)];
+  if (!byDay) {
+    rows.addAll(arrange(items, start));
+    return rows;
+  }
   var from = 0;
   while (from < items.length) {
     final day = items[from].localAt.substring(0, 10);
@@ -97,17 +121,23 @@ List<TimelineRow> layoutMonth(
       to += 1;
     }
     rows.add(HeaderRow(dayLabel(items[from].localAt), isMonth: false));
-    rows.addAll(justify(items.sublist(from, to), start + from, width, target));
+    rows.addAll(arrange(items.sublist(from, to), start + from));
     from = to;
   }
   return rows;
 }
 
 /// Height of a month that has not loaded yet.
-double estimateMonthHeight(int count, double width, [double scale = 1]) {
-  final target = rowHeightFor(width, scale);
-  final perRow = (width / (1.4 * target + gap)).clamp(1.0, 100.0);
-  final rows = (count / perRow).ceil();
+double estimateMonthHeight(int count, double width, [int perRow = 0]) {
+  if (perRow > 0) {
+    final side = (width - gap * (perRow - 1)) / perRow;
+    return monthHeaderHeight +
+        (count < 12 ? count : 12) * dayHeaderHeight +
+        (count / perRow).ceil() * (side + gap);
+  }
+  final target = rowHeightFor(width);
+  final fitting = (width / (1.4 * target + gap)).clamp(1.0, 100.0);
+  final rows = (count / fitting).ceil();
   return monthHeaderHeight +
       (count < 12 ? count : 12) * dayHeaderHeight +
       rows * (target + gap);

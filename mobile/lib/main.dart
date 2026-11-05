@@ -20,7 +20,16 @@ class MediarrApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider);
-    final theme = ref.watch(settingsProvider).theme;
+    final settings = ref.watch(settingsProvider);
+    final theme = settings.theme;
+    final accentChanged = Palette.accentDark != settings.accent.onDark;
+    Palette.accentDark = settings.accent.onDark;
+    if (settings.accent != AppAccent.gold) {
+      Palette.accentLight = settings.accent.onLight;
+    } else {
+      // Gold has no contrast on a light background, so there the default accent is violet.
+      Palette.accentLight = AppAccent.violet.onLight;
+    }
     return MaterialApp(
       title: 'Mediarr',
       debugShowCheckedModeBanner: false,
@@ -33,6 +42,11 @@ class MediarrApp extends ConsumerWidget {
       },
       builder: (context, child) {
         final light = Theme.of(context).brightness == Brightness.light;
+        if (accentChanged) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _redrawAll(context),
+          );
+        }
         if (Palette.light != light) {
           Palette.light = light;
           SystemChrome.setSystemUIOverlayStyle(

@@ -46,6 +46,9 @@ dependencies:
   http: ^1.6.0
   local_auth: ^3.0.2
   maplibre_gl: ^0.28.0
+  package_info_plus: ^10.2.2
+  url_launcher: ^6.3.3
+  flutter_cache_manager: ^3.5.0
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +76,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/logo.png
   fonts:
     - family: Sora
       fonts:

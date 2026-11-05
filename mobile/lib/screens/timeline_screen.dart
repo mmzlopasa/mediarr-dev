@@ -12,11 +12,11 @@ import '../services/uploads.dart';
 import '../theme.dart';
 import '../services/settings.dart';
 import '../timeline/layout.dart';
+import 'app_header.dart';
 import 'stories_strip.dart';
 import 'album_sheets.dart';
 import 'asset_picture.dart';
 import 'organize_screens.dart';
-import 'people_screens.dart';
 import 'viewer_screen.dart';
 import 'waiting_strip.dart';
 
@@ -49,7 +49,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
   TimelineStore get _store => ref.read(timelineProvider);
 
   void _toggle(String id) {
-    if (ref.read(settingsProvider).readOnly) return;
+    final settings = ref.read(settingsProvider);
+    if (settings.readOnly) return;
+    if (settings.haptics) HapticFeedback.selectionClick();
     _toggleNow(id);
   }
 
@@ -163,20 +165,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+            padding: EdgeInsets.zero,
             child: Row(
               children: [
                 if (_selected.isEmpty) ...[
-                  Expanded(child: Text('Media', style: text.headlineMedium)),
-                  IconButton(
-                    tooltip: 'Search',
-                    icon: const Icon(Icons.search),
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SearchScreen(),
-                      ),
-                    ),
-                  ),
+                  const Expanded(child: AppHeader()),
                 ] else ...[
                   IconButton(
                     tooltip: 'Clear selection',
@@ -309,7 +302,7 @@ class _MonthSliver extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scale = ref.watch(settingsProvider).gridSize.scale;
+    final settings = ref.watch(settingsProvider);
     final items = month.items;
     if (items == null) {
       // Built only when this month comes near the screen, which is when it loads.
@@ -322,7 +315,7 @@ class _MonthSliver extends ConsumerWidget {
             );
           }
           return SizedBox(
-            height: estimateMonthHeight(month.count, width, scale),
+            height: estimateMonthHeight(month.count, width, settings.perRow),
             child: Align(
               alignment: Alignment.topLeft,
               child: Padding(
@@ -351,7 +344,8 @@ class _MonthSliver extends ConsumerWidget {
       width: width,
       monthLabel: formatMonth(month.month),
       dayLabel: formatDay,
-      scale: scale,
+      perRow: settings.perRow,
+      byDay: settings.groupByDay,
     );
     final text = Theme.of(context).textTheme;
     return SliverList.builder(

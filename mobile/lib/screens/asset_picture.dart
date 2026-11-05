@@ -12,6 +12,7 @@ class AssetPicture extends StatelessWidget {
     required this.fit,
     required this.error,
     this.large = false,
+    this.full = false,
     this.memCacheWidth,
   });
 
@@ -20,10 +21,35 @@ class AssetPicture extends StatelessWidget {
   final BoxFit fit;
   final Widget error;
   final bool large;
+
+  /// The photo at full size, over the large preview while that loads.
+  final bool full;
   final int? memCacheWidth;
 
   @override
   Widget build(BuildContext context) {
+    if (full && session.keepOnDisk) {
+      return CachedNetworkImage(
+        imageUrl: session.fullPhotoUrl(id),
+        httpHeaders: session.headers,
+        cacheKey: '${session.serverUrl}/$id/f',
+        fit: fit,
+        placeholder: (_, _) => AssetPicture(
+          session: session,
+          id: id,
+          large: true,
+          fit: fit,
+          error: error,
+        ),
+        errorWidget: (_, _, _) => AssetPicture(
+          session: session,
+          id: id,
+          large: true,
+          fit: fit,
+          error: error,
+        ),
+      );
+    }
     final url = session.thumbnailUrl(id, large: large);
     if (!session.keepOnDisk) {
       return Image.network(

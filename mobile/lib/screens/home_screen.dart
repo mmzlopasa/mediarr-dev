@@ -11,11 +11,12 @@ import '../services/settings.dart';
 import '../services/shared_files.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
-import 'account_screen.dart';
 import 'server_status.dart';
 import 'albums_screen.dart';
 import 'timeline_screen.dart';
-import 'upload_screen.dart';
+import 'app_header.dart';
+import 'library_screen.dart';
+import 'people_screens.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -41,7 +42,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     SharedFilesChannel.listen((files) {
       if (!mounted) return;
       ref.read(uploadsProvider.notifier).addShared(files);
-      setState(() => _tab = 2);
+      Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => const UploadPage()));
     });
   }
 
@@ -87,55 +89,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final working = ref
-        .watch(uploadsProvider)
-        .where((task) => !task.finished)
-        .length;
-    final readOnly = ref.watch(settingsProvider).readOnly;
-    const uploadTab = 2;
-    final shown = [
-      for (var i = 0; i < 4; i++)
-        if (!readOnly || i != uploadTab) i,
-    ];
-    final tab = shown.contains(_tab) ? _tab : 0;
     return Scaffold(
       body: IndexedStack(
-        index: tab,
+        index: _tab,
         children: const [
           TimelineScreen(),
+          SearchScreen(),
           AlbumsScreen(),
-          UploadScreen(),
-          AccountScreen(),
+          LibraryScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: shown.indexOf(tab),
-        onDestinationSelected: (value) => setState(() => _tab = shown[value]),
+        selectedIndex: _tab,
+        onDestinationSelected: (value) => setState(() => _tab = value),
         destinations: [
           NavigationDestination(
-            icon: Icon(Icons.photo_outlined),
-            selectedIcon: Icon(Icons.photo, color: Palette.gold),
-            label: 'Media',
+            icon: const Icon(Icons.photo_library_outlined),
+            selectedIcon: Icon(Icons.photo_library, color: Palette.gold),
+            label: 'Photos',
           ),
           NavigationDestination(
-            icon: Icon(Icons.photo_album_outlined),
+            icon: const Icon(Icons.search),
+            selectedIcon: Icon(Icons.search, color: Palette.gold),
+            label: 'Search',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.photo_album_outlined),
             selectedIcon: Icon(Icons.photo_album, color: Palette.gold),
             label: 'Albums',
           ),
-          if (!readOnly)
-            NavigationDestination(
-              icon: Badge(
-                isLabelVisible: working > 0,
-                label: Text('$working'),
-                child: const Icon(Icons.upload_outlined),
-              ),
-              selectedIcon: Icon(Icons.upload, color: Palette.gold),
-              label: 'Upload',
-            ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: Palette.gold),
-            label: 'Account',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard, color: Palette.gold),
+            label: 'Library',
           ),
         ],
       ),

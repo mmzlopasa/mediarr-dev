@@ -155,8 +155,8 @@ void main() {
       ]);
     });
     expect(find.text('Summer'), findsOneWidget);
-    expect(find.text('3'), findsOneWidget);
-    expect(find.text('0 · Smart · Ana'), findsOneWidget);
+    expect(find.textContaining('3 items'), findsOneWidget);
+    expect(find.text('0 items • Smart • Ana'), findsOneWidget);
     await _finish(tester);
   });
 
@@ -190,7 +190,7 @@ void main() {
       }
       return _json(<Object>[]);
     });
-    await tester.tap(find.byTooltip('New album'));
+    await tester.tap(find.byTooltip('Add'));
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Trip');
     await tester.tap(find.text('Create'));
@@ -262,5 +262,18 @@ void main() {
     );
     expect(find.text('This album is not available.'), findsOneWidget);
     await _finish(tester);
+  });
+
+  test('search and the owner filter leave the right albums', () {
+    Album album(String title, String role) =>
+        Album.fromJson(_album(title: title, role: role))!;
+    final albums = [album('Summer', 'owner'), album('Winter', 'viewer')];
+    List<String> titles(List<Album> list) => [for (final a in list) a.title];
+    expect(titles(visibleAlbums(albums, search: 'sum', mine: null)), [
+      'Summer',
+    ]);
+    expect(titles(visibleAlbums(albums, search: '', mine: true)), ['Summer']);
+    expect(titles(visibleAlbums(albums, search: '', mine: false)), ['Winter']);
+    expect(visibleAlbums(albums, search: 'x', mine: null), isEmpty);
   });
 }

@@ -1,15 +1,190 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:mediarr_api/api.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../services/backup.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
+import '../services/timeline.dart';
 import '../theme.dart';
+import 'app_header.dart';
 import 'free_space_screen.dart';
+import 'memories_screen.dart';
 
-class SettingsScreen extends ConsumerWidget {
+/// The list of settings, one card for each subject.
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget card(
+      IconData icon,
+      String title,
+      String subtitle,
+      Widget? screen, {
+      VoidCallback? onTap,
+    }) => Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Palette.bg2,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 6,
+          ),
+          leading: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Palette.bg,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, color: Palette.gold),
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: Palette.gold,
+              fontWeight: FontWeight.w600,
+              fontSize: 17,
+            ),
+          ),
+          subtitle: Text(subtitle),
+          onTap:
+              onTap ??
+              () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<void>(builder: (_) => screen!)),
+        ),
+      ),
+    );
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
+        children: [
+          card(
+            Icons.build_outlined,
+            'Advanced',
+            'Read-only mode and the image cache',
+            const AdvancedSettings(),
+          ),
+          card(
+            Icons.image_outlined,
+            'Asset viewer',
+            'How photos and videos open',
+            const ViewerSettings(),
+          ),
+          card(
+            Icons.cloud_upload_outlined,
+            'Backup',
+            'What this phone sends to the server',
+            const UploadPage(),
+          ),
+          card(
+            Icons.cleaning_services_outlined,
+            'Free up space',
+            'Remove what is safe on the server',
+            const FreeSpaceScreen(),
+          ),
+          card(
+            Icons.language,
+            'Language',
+            "The app's language",
+            const LanguageSettings(),
+          ),
+          card(
+            Icons.wifi,
+            'Networking',
+            'The addresses of your server',
+            const NetworkSettings(),
+          ),
+          card(
+            Icons.notifications_outlined,
+            'Notifications',
+            'What the app tells you about',
+            const NotificationSettings(),
+          ),
+          card(
+            Icons.interests_outlined,
+            'Preferences',
+            'Theme, color and feedback',
+            const PreferenceSettings(),
+          ),
+          card(
+            Icons.dashboard_outlined,
+            'Photo grid',
+            'How the timeline is laid out',
+            const GridSettings(),
+          ),
+          card(
+            Icons.sync,
+            'Sync status',
+            'What is on this phone and on the server',
+            const SyncStatusScreen(),
+          ),
+          card(
+            Icons.auto_awesome_outlined,
+            "What's new",
+            'The versions of Mediarr',
+            null,
+            onTap: () => launchUrl(
+              Uri.parse('https://github.com/mediarr-app/mediarr/tags'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Heading extends StatelessWidget {
+  const _Heading(this.icon, this.label);
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+    child: Row(
+      children: [
+        Icon(icon, size: 20, color: Palette.dim),
+        const SizedBox(width: 10),
+        Text(label, style: TextStyle(color: Palette.dim)),
+      ],
+    ),
+  );
+}
+
+class _Toggle extends StatelessWidget {
+  const _Toggle(this.title, this.subtitle, this.value, this.onChanged);
+
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => SwitchListTile(
+    title: Text(title),
+    subtitle: subtitle == null ? null : Text(subtitle!),
+    value: value,
+    activeThumbColor: Palette.gold,
+    onChanged: onChanged,
+  );
+}
+
+class AdvancedSettings extends ConsumerWidget {
+  const AdvancedSettings({super.key});
 
   /// Read-only is meant for a phone in someone else's hands, so leaving it asks for the phone's lock.
   Future<bool> _mayLeaveReadOnly() async {
@@ -32,18 +207,151 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
-    final text = Theme.of(context).textTheme;
-
-    Widget heading(String label) => Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 6),
-      child: Text(label, style: text.titleSmall?.copyWith(color: Palette.gold)),
-    );
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Advanced')),
       body: ListView(
         children: [
-          heading('Appearance'),
+          _Toggle(
+            'Read-only mode',
+            'Only look: no uploading, editing or deleting from this app',
+            settings.readOnly,
+            (value) async {
+              if (!value && !await _mayLeaveReadOnly()) return;
+              await notifier.change(settings.copyWith(readOnly: value));
+            },
+          ),
+          _Toggle(
+            'Copy albums to the server',
+            'Backed-up albums get an album of the same name on the server. Photos are only added, never removed',
+            settings.mirrorAlbums,
+            (value) => notifier.change(settings.copyWith(mirrorAlbums: value)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.playlist_remove),
+            title: const Text('Clear image cache'),
+            onTap: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              await DefaultCacheManager().emptyCache();
+              PaintingBinding.instance.imageCache.clear();
+              messenger.showSnackBar(
+                const SnackBar(content: Text('The image cache is empty.')),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ViewerSettings extends ConsumerWidget {
+  const ViewerSettings({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Asset viewer')),
+      body: ListView(
+        children: [
+          const _Heading(Icons.image_outlined, 'Photos'),
+          _Toggle(
+            'Load the full photo',
+            'Opens photos at full resolution. This uses more data and is slower',
+            settings.loadOriginal,
+            (value) => notifier.change(settings.copyWith(loadOriginal: value)),
+          ),
+          _Toggle(
+            'Tap to navigate',
+            'Tapping the left or right quarter of the screen goes to the previous or next photo',
+            settings.tapToNavigate,
+            (value) => notifier.change(settings.copyWith(tapToNavigate: value)),
+          ),
+          const Divider(),
+          const _Heading(Icons.videocam_outlined, 'Videos'),
+          _Toggle(
+            'Auto play videos',
+            'Videos start when they are opened',
+            settings.autoPlay,
+            (value) => notifier.change(settings.copyWith(autoPlay: value)),
+          ),
+          _Toggle(
+            'Looping',
+            'Videos start again when they end',
+            settings.loopVideos,
+            (value) => notifier.change(settings.copyWith(loopVideos: value)),
+          ),
+          _Toggle(
+            'Play the original video',
+            'Plays the original even when a converted version exists. It may have to buffer',
+            settings.forceOriginalVideo,
+            (value) =>
+                notifier.change(settings.copyWith(forceOriginalVideo: value)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GridSettings extends ConsumerWidget {
+  const GridSettings({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Photo grid')),
+      body: ListView(
+        children: [
+          const _Heading(Icons.grid_on, 'Layout'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Photos per row (${settings.perRow})'),
+          ),
+          Slider(
+            value: settings.perRow.toDouble(),
+            min: minPerRow.toDouble(),
+            max: maxPerRow.toDouble(),
+            divisions: maxPerRow - minPerRow,
+            activeColor: Palette.gold,
+            label: '${settings.perRow}',
+            onChanged: (value) =>
+                notifier.change(settings.copyWith(perRow: value.round())),
+          ),
+          const Divider(),
+          const _Heading(Icons.workspaces_outline, 'Group by'),
+          RadioGroup<bool>(
+            groupValue: settings.groupByDay,
+            onChanged: (value) =>
+                notifier.change(settings.copyWith(groupByDay: value ?? true)),
+            child: const Column(
+              children: [
+                RadioListTile<bool>(title: Text('Month + day'), value: true),
+                RadioListTile<bool>(title: Text('Month'), value: false),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PreferenceSettings extends ConsumerWidget {
+  const PreferenceSettings({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Preferences')),
+      body: ListView(
+        children: [
+          const _Heading(Icons.palette_outlined, 'Theme'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SegmentedButton<AppTheme>(
@@ -56,60 +364,262 @@ class SettingsScreen extends ConsumerWidget {
                   notifier.change(settings.copyWith(theme: chosen.first)),
             ),
           ),
-          heading('Photo grid'),
+          const _Heading(Icons.colorize_outlined, 'Primary color'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SegmentedButton<GridSize>(
-              segments: [
-                for (final size in GridSize.values)
-                  ButtonSegment(value: size, label: Text(size.label)),
+            child: Wrap(
+              spacing: 12,
+              children: [
+                for (final accent in AppAccent.values)
+                  Semantics(
+                    label: accent.label,
+                    selected: settings.accent == accent,
+                    button: true,
+                    child: GestureDetector(
+                      onTap: () =>
+                          notifier.change(settings.copyWith(accent: accent)),
+                      child: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Palette.ink,
+                        child: CircleAvatar(
+                          radius: settings.accent == accent ? 19 : 22,
+                          backgroundColor: Color(
+                            Palette.light ? accent.onLight : accent.onDark,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
-              selected: {settings.gridSize},
-              onSelectionChanged: (chosen) =>
-                  notifier.change(settings.copyWith(gridSize: chosen.first)),
             ),
           ),
-          heading('Server'),
-          const _SecondAddress(),
-          heading('This phone'),
-          if (!settings.readOnly)
+          const Divider(height: 34),
+          const _Heading(Icons.vibration, 'Haptic feedback'),
+          _Toggle(
+            'Enabled',
+            null,
+            settings.haptics,
+            (value) => notifier.change(settings.copyWith(haptics: value)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class LanguageSettings extends StatelessWidget {
+  const LanguageSettings({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Language')),
+    body: const EmptyMessage(
+      icon: Icons.language,
+      text: 'The app is in English for now. Other languages are not available yet.',
+    ),
+  );
+}
+
+class NotificationSettings extends StatelessWidget {
+  const NotificationSettings({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Notifications')),
+    body: const EmptyMessage(
+      icon: Icons.notifications_outlined,
+      text: 'Notifications are not available yet.',
+    ),
+  );
+}
+
+class NetworkSettings extends StatelessWidget {
+  const NetworkSettings({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Networking')),
+    body: ListView(
+      padding: const EdgeInsets.only(top: 16),
+      children: const [_SecondAddress()],
+    ),
+  );
+}
+
+/// Real counts, from this phone and the server. What cannot be read says so.
+class SyncStatusScreen extends ConsumerStatefulWidget {
+  const SyncStatusScreen({super.key});
+
+  @override
+  ConsumerState<SyncStatusScreen> createState() => _SyncStatusScreenState();
+}
+
+class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
+  int? _localAssets;
+  int? _localAlbums;
+  int? _remoteAssets;
+  int? _remoteAlbums;
+  int? _memories;
+  int? _verified;
+  int _failed = 0;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final session = ref.read(sessionProvider).value;
+    final backup = ref.read(backupProvider);
+    if (session == null) return;
+    setState(() => _busy = true);
+    try {
+      final state = await PhotoManager.getPermissionState(
+        requestOption: const PermissionRequestOption(),
+      );
+      if (state.hasAccess) {
+        final assets = await PhotoManager.getAssetCount();
+        final albums = await PhotoManager.getAssetPathList(hasAll: false);
+        if (mounted) {
+          setState(() {
+            _localAssets = assets;
+            _localAlbums = albums.length;
+          });
+        }
+      }
+    } on PlatformException {
+      // Stays unknown.
+    } on MissingPluginException {
+      // Stays unknown.
+    }
+    try {
+      final verified = await backup.verifiedChecksums();
+      final status = await backup.status();
+      if (mounted) {
+        setState(() {
+          _verified = verified.length;
+          _failed = status.failed;
+        });
+      }
+    } on PlatformException {
+      // Stays unknown.
+    } on MissingPluginException {
+      // Stays unknown.
+    }
+    try {
+      final store = ref.read(timelineProvider);
+      await store.refresh();
+      final albums = await session.api.listAlbums();
+      final memories = await session.api.listMemories(
+        date: localToday(DateTime.now()),
+      );
+      if (mounted) {
+        setState(() {
+          _remoteAssets = (store.months ?? const <TimelineMonth>[]).fold<int>(
+            0,
+            (sum, month) => sum + month.count,
+          );
+          _remoteAlbums = albums?.length;
+          _memories = memories?.length;
+        });
+      }
+    } on ApiException {
+      // Stays unknown.
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  Widget _tile(IconData icon, String label, int? value) => Expanded(
+    child: Container(
+      margin: const EdgeInsets.all(5),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Palette.bg2,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: Palette.gold),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(color: Palette.gold)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value?.toString() ?? '—',
+            style: const TextStyle(
+              fontSize: 22,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    Widget label(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 2),
+      child: Text(text, style: TextStyle(color: Palette.dim)),
+    );
+    final readOnly = ref.watch(settingsProvider).readOnly;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Sync status')),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        children: [
+          label('Photos and videos'),
+          Row(
+            children: [
+              _tile(Icons.smartphone, 'Phone', _localAssets),
+              _tile(Icons.cloud, 'Server', _remoteAssets),
+            ],
+          ),
+          label('Albums'),
+          Row(
+            children: [
+              _tile(Icons.smartphone, 'Phone', _localAlbums),
+              _tile(Icons.cloud, 'Server', _remoteAlbums),
+            ],
+          ),
+          label('Other'),
+          Row(
+            children: [
+              _tile(Icons.calendar_today_outlined, 'Memories', _memories),
+              _tile(Icons.verified_outlined, 'Backed up', _verified),
+            ],
+          ),
+          const Divider(height: 30),
+          ListTile(
+            leading: const Icon(Icons.refresh),
+            title: const Text('Check again'),
+            trailing: _busy
+                ? SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Palette.gold,
+                    ),
+                  )
+                : null,
+            onTap: _busy ? null : _load,
+          ),
+          if (!readOnly && _failed > 0)
             ListTile(
-              leading: const Icon(Icons.cleaning_services_outlined),
-              title: const Text('Free up space'),
-              subtitle: const Text(
-                'Remove what is already safe on your server',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const FreeSpaceScreen(),
-                ),
-              ),
+              leading: const Icon(Icons.replay),
+              title: Text('Send the $_failed that failed again'),
+              onTap: () async {
+                await ref.read(backupProvider).retryFailed();
+                await _load();
+              },
             ),
-          SwitchListTile(
-            secondary: const Icon(Icons.photo_album_outlined),
-            title: const Text('Copy albums to the server'),
-            subtitle: const Text(
-              'Backed-up albums get an album of the same name on the server. Photos are only added, never removed',
-            ),
-            value: settings.mirrorAlbums,
-            activeThumbColor: Palette.gold,
-            onChanged: (value) =>
-                notifier.change(settings.copyWith(mirrorAlbums: value)),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.visibility_outlined),
-            title: const Text('Read-only mode'),
-            subtitle: const Text(
-              'Only look: no uploading, editing or deleting from this app',
-            ),
-            value: settings.readOnly,
-            activeThumbColor: Palette.gold,
-            onChanged: (value) async {
-              if (!value && !await _mayLeaveReadOnly()) return;
-              await notifier.change(settings.copyWith(readOnly: value));
-            },
-          ),
         ],
       ),
     );
