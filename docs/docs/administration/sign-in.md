@@ -26,6 +26,10 @@ People are matched by the email address, which the provider must have verified. 
 
 Passkeys are added under **Account** on the web. Browsers allow them only over HTTPS with a domain name, or on `localhost`, so they are not available at an IP address.
 
+## Turning off passwords
+
+With single sign-on set up, **Admin → Settings → Server** can turn off signing in with a password. The same section sets a message for the sign-in page.
+
 ## Who may connect
 
 Under **Admin → Security** you can limit who reaches the server, which matters most when it is on the internet. Both are off by default.
@@ -45,4 +49,4 @@ On the server, in the folder with your `docker-compose.yml`:
 docker compose exec server /mediarr security reset
 ```
 
-This turns both rules off, and takes effect within 10 seconds.
+This turns both rules off and allows passwords again. It takes effect within 10 seconds.

@@ -294,7 +294,12 @@ class SessionNotifier extends AsyncNotifier<Session?> {
       );
     }
     if (response.statusCode == 403) {
-      throw LoginFailure(deviceNotApprovedMessage);
+      final answer = jsonDecode(response.body);
+      throw LoginFailure(
+        answer is Map && answer['message'] is String
+            ? answer['message'] as String
+            : deviceNotApprovedMessage,
+      );
     }
     if (response.statusCode == 429) {
       throw LoginFailure('Too many attempts. Try again later.');

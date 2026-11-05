@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { preferences } from '#lib/preferences.svelte.ts';
+	import { preferences, trashDays } from '#lib/preferences.svelte.ts';
 	import { onMount } from 'svelte';
 	import { api, formatBytes, type AssetDetail } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
@@ -612,8 +612,8 @@
 <Dialog title={tr('Obrisati fotku?', 'Delete this photo?')} bind:open={confirmDelete}>
 	<p>
 		{tr(
-			'Premješta se u smeće, gdje ostaje 30 dana i može se vratiti.',
-			'It moves to the trash, where it stays for 30 days and can be restored.'
+			`Premješta se u smeće, gdje ostaje ${trashDays()} dana i može se vratiti.`,
+			`It moves to the trash, where it stays for ${trashDays()} days and can be restored.`
 		)}
 	</p>
 	{#snippet footer()}

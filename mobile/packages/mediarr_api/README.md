@@ -158,6 +158,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getPublicThumbnail**](doc//DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 *DefaultApi* | [**getPublicVideoFile**](doc//DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
 *DefaultApi* | [**getSecurity**](doc//DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
+*DefaultApi* | [**getServerSettings**](doc//DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 *DefaultApi* | [**getServerStatus**](doc//DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
 *DefaultApi* | [**getStoryExport**](doc//DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
 *DefaultApi* | [**getStoryVideo**](doc//DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
@@ -217,6 +218,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
 *DefaultApi* | [**setPartnerTimeline**](doc//DefaultApi.md#setpartnertimeline) | **PUT** /api/partners/{userId}/timeline | Choose whether a partner's photos also appear in your timeline
 *DefaultApi* | [**setSecurity**](doc//DefaultApi.md#setsecurity) | **PUT** /api/admin/security | Change the rules. Refused if it would lock out the person asking
+*DefaultApi* | [**setServerSettings**](doc//DefaultApi.md#setserversettings) | **PUT** /api/admin/server-settings | Change them. Applies to files processed from now on
 *DefaultApi* | [**setStackMain**](doc//DefaultApi.md#setstackmain) | **PUT** /api/assets/{id}/stack/main | Make this shot the one the timeline shows
 *DefaultApi* | [**setUserQuota**](doc//DefaultApi.md#setuserquota) | **PUT** /api/admin/users/{id}/quota | Set how much a user may store. Without a value there is no limit
 *DefaultApi* | [**setVaultPin**](doc//DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
@@ -321,6 +323,7 @@ Class | Method | HTTP request | Description
  - [SecurityEvent](doc//SecurityEvent.md)
  - [SecuritySettings](doc//SecuritySettings.md)
  - [SecurityUpdate](doc//SecurityUpdate.md)
+ - [ServerSettings](doc//ServerSettings.md)
  - [ServerStatus](doc//ServerStatus.md)
  - [SetupRequest](doc//SetupRequest.md)
  - [ShareLink](doc//ShareLink.md)

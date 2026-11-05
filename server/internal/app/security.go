@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/auth"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 const (
@@ -347,12 +349,22 @@ func (s *apiServer) DeleteDevice(w http.ResponseWriter, r *http.Request, id open
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// ResetSecurity turns off both rules. It runs on the server itself, for someone locked out.
+// ResetSecurity turns off both rules and allows passwords again. It runs on the server itself, for
+// someone locked out.
 func ResetSecurity(ctx context.Context, q *db.Queries) error {
 	for _, key := range []string{stateIPEnabled, stateDeviceApproval} {
 		if err := q.SetState(ctx, db.SetStateParams{Key: key, Value: "0"}); err != nil {
 			return err
 		}
 	}
-	return nil
+	settings, err := jobs.LoadServerSettings(ctx, q)
+	if err != nil {
+		return err
+	}
+	settings.PasswordLogin = true
+	data, err := json.Marshal(settings)
+	if err != nil {
+		return err
+	}
+	return q.SetState(ctx, db.SetStateParams{Key: jobs.StateServerSettings, Value: string(data)})
 }

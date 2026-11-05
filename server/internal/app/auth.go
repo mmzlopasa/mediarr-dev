@@ -19,6 +19,7 @@ import (
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/auth"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 const (
@@ -257,6 +258,13 @@ func (s *apiServer) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	email := strings.ToLower(strings.TrimSpace(body.Email))
 	noteAuditEmail(r, email)
+	if server, err := jobs.LoadServerSettings(r.Context(), s.queries); err != nil {
+		internalError(w, r, err)
+		return
+	} else if !server.PasswordLogin {
+		writeError(w, http.StatusForbidden, "signing in with a password is turned off on this server")
+		return
+	}
 	ip := clientIP(r)
 	userKey := email + "|" + ip
 	if !s.userLimiter.Allowed(userKey) || !s.ipLimiter.Allowed(ip) {

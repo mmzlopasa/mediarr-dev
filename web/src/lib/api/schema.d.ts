@@ -1633,6 +1633,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/server-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How this server treats files, and sign-in */
+        get: operations["getServerSettings"];
+        /** Change them. Applies to files processed from now on */
+        put: operations["setServerSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/security": {
         parameters: {
             query?: never;
@@ -2667,6 +2685,8 @@ export interface components {
             bytes: number;
         };
         AuthMethods: {
+            passwordLogin: boolean;
+            loginMessage: string;
             /** @description This address can use passkeys: HTTPS and a domain name */
             passkeys: boolean;
             /** @description The name of the single sign-on button, if it is turned on */
@@ -3256,6 +3276,16 @@ export interface components {
             /** Format: int64 */
             bytes: number;
         };
+        ServerSettings: {
+            trashDays: number;
+            imageQuality: number;
+            previewSize: number;
+            /** @description Lower is better and larger */
+            videoQuality: number;
+            videoMaxHeight: number;
+            loginMessage: string;
+            passwordLogin: boolean;
+        };
         ServerStatus: {
             version: string;
             /** @description Known only when the update check is on and has answered */
@@ -3265,6 +3295,7 @@ export interface components {
             diskUsedBytes: number;
             /** Format: int64 */
             diskTotalBytes: number;
+            trashDays: number;
         };
         AdminOverview: {
             /** Format: int64 */
@@ -6146,6 +6177,55 @@ export interface operations {
                     "application/json": components["schemas"]["AuditEntry"][];
                 };
             };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    getServerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerSettings"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    setServerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServerSettings"];
+            };
+        };
+        responses: {
+            /** @description The settings now */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerSettings"];
+                };
+            };
+            400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
         };

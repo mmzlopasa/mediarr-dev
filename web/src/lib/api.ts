@@ -52,6 +52,7 @@ export type MapPoints = components['schemas']['MapPoints'];
 export type Memory = components['schemas']['Memory'];
 export type ServerStatus = components['schemas']['ServerStatus'];
 export type UserSession = components['schemas']['UserSession'];
+export type ServerSettings = components['schemas']['ServerSettings'];
 export type UserPreferences = components['schemas']['UserPreferences'];
 export type AccountStats = components['schemas']['AccountStats'];
 export type SecuritySettings = components['schemas']['SecuritySettings'];
@@ -243,6 +244,9 @@ export const api = {
 	trashSummary: () => request<TrashSummary>(fetch, '/api/trash/summary'),
 	authMethods: () => request<AuthMethods>(fetch, '/api/auth/methods'),
 	oidcSettings: () => request<OIDCSettings>(fetch, '/api/admin/oidc'),
+	serverSettings: () => request<ServerSettings>(fetch, '/api/admin/server-settings'),
+	setServerSettings: (body: ServerSettings) =>
+		request<ServerSettings>(fetch, '/api/admin/server-settings', body, 'PUT'),
 	security: () => request<SecuritySettings>(fetch, '/api/admin/security'),
 	setSecurity: (body: SecurityUpdate) =>
 		request<SecuritySettings>(fetch, '/api/admin/security', body, 'PUT'),

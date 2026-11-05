@@ -85,8 +85,9 @@ func parseProbe(out []byte) (*VideoInfo, error) {
 // hlsHeights picks the quality levels: never above the source, and always at least one.
 func hlsHeights(source int) []int {
 	var out []int
-	for _, height := range []int{360, 720, 1080} {
-		if height <= source {
+	limit := currentMedia().VideoMaxHeight
+	for _, height := range []int{360, 720, 1080, 1440, 2160} {
+		if height <= source && height <= limit {
 			out = append(out, height)
 		}
 	}
@@ -99,15 +100,16 @@ func hlsHeights(source int) []int {
 
 // encoderArgs chooses the H.264 encoder. Anything unknown falls back to software.
 func encoderArgs(accel string) (input, output []string, filter string) {
+	quality := strconv.Itoa(currentMedia().VideoQuality)
 	switch accel {
 	case "nvenc":
-		return nil, []string{"-c:v", "h264_nvenc", "-preset", "p4", "-cq", "26"}, ""
+		return nil, []string{"-c:v", "h264_nvenc", "-preset", "p4", "-cq", quality}, ""
 	case "qsv":
-		return nil, []string{"-c:v", "h264_qsv", "-global_quality", "26"}, ""
+		return nil, []string{"-c:v", "h264_qsv", "-global_quality", quality}, ""
 	case "vaapi":
-		return []string{"-vaapi_device", "/dev/dri/renderD128"}, []string{"-c:v", "h264_vaapi", "-qp", "26"}, ",format=nv12,hwupload"
+		return []string{"-vaapi_device", "/dev/dri/renderD128"}, []string{"-c:v", "h264_vaapi", "-qp", quality}, ",format=nv12,hwupload"
 	default:
-		return nil, []string{"-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-pix_fmt", "yuv420p"}, ""
+		return nil, []string{"-c:v", "libx264", "-preset", "veryfast", "-crf", quality, "-pix_fmt", "yuv420p"}, ""
 	}
 }
 

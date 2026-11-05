@@ -14,13 +14,18 @@ import (
 	"github.com/mediarr-app/mediarr/server/db"
 )
 
-// TrashLifetime is how long a deleted photo can still be restored.
+// TrashLifetime is how long a deleted photo can still be restored, unless the administrator chose otherwise.
 const TrashLifetime = 30 * 24 * time.Hour
 
 // PurgeExpiredTrash permanently removes what has been in the trash for longer than TrashLifetime.
 func PurgeExpiredTrash(ctx context.Context, q *db.Queries, cachePath string, now time.Time) error {
+	settings, err := LoadServerSettings(ctx, q)
+	if err != nil {
+		return err
+	}
+	keep := time.Duration(settings.TrashDays) * 24 * time.Hour
 	for {
-		ids, err := q.ListExpiredTrash(ctx, pgtype.Timestamptz{Time: now.Add(-TrashLifetime), Valid: true})
+		ids, err := q.ListExpiredTrash(ctx, pgtype.Timestamptz{Time: now.Add(-keep), Valid: true})
 		if err != nil {
 			return err
 		}

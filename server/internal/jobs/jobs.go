@@ -301,6 +301,7 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 	if err != nil {
 		return w.failOrRetry(ctx, id, job.Attempt, err)
 	}
+	refreshMedia(ctx, w.queries)
 	result, err := MakeThumbnails(ctx, asset.OriginalPath, asset.Kind, dir, assetID, edits)
 	if err != nil {
 		return w.failOrRetry(ctx, id, job.Attempt, err)

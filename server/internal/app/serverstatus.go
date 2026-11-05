@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/mediarr-app/mediarr/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 const (
@@ -38,7 +39,14 @@ func (s *apiServer) GetServerStatus(w http.ResponseWriter, r *http.Request) {
 	size := int64(disk.Bsize)          //nolint:unconvert // Bsize differs by platform.
 	total := int64(disk.Blocks) * size //nolint:gosec // Disks are far below the limit.
 	free := int64(disk.Bfree) * size   //nolint:gosec // Disks are far below the limit.
-	out := api.ServerStatus{Version: Version, DiskTotalBytes: total, DiskUsedBytes: total - free}
+	settings, err := jobs.LoadServerSettings(r.Context(), s.queries)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out := api.ServerStatus{
+		Version: Version, DiskTotalBytes: total, DiskUsedBytes: total - free, TrashDays: settings.TrashDays,
+	}
 	if latest := latestVersion.Load(); latest != nil {
 		out.LatestVersion = latest
 		out.UpdateAvailable = isNewerVersion(*latest, Version)

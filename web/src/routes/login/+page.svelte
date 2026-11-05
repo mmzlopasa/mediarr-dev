@@ -120,41 +120,42 @@
 	{:else}
 		<h1 class="as-h">{tr('Dobrodošli', 'Welcome')}</h1>
 		<p class="as-p">{tr('Prijavite se svojim računom.', 'Sign in with your account.')}</p>
-		<form class="as-f" autocomplete="on" onsubmit={submit}>
-			<label class="as-fl">
-				<span>{tr('E-adresa', 'Email')}</span>
-				<input
-					class="as-in"
-					type="email"
-					name="email"
-					required
-					autocomplete="username"
-					inputmode="email"
-					bind:value={email}
-				/>
-			</label>
-			<label class="as-fl">
-				<span>{tr('Lozinka', 'Password')}</span>
-				<span class="as-pw">
+		{#if methods?.loginMessage}<p class="as-p login-note">{methods.loginMessage}</p>{/if}
+		{#if methods?.passwordLogin !== false}<form class="as-f" autocomplete="on" onsubmit={submit}>
+				<label class="as-fl">
+					<span>{tr('E-adresa', 'Email')}</span>
 					<input
 						class="as-in"
-						type={visible ? 'text' : 'password'}
-						name="password"
+						type="email"
+						name="email"
 						required
-						autocomplete="current-password"
-						bind:value={password}
+						autocomplete="username"
+						inputmode="email"
+						bind:value={email}
 					/>
-					<button
-						type="button"
-						class="as-eye"
-						aria-label={tr('Prikaži lozinku', 'Show password')}
-						aria-pressed={visible}
-						onclick={() => (visible = !visible)}><Icon name="eye" /></button
-					>
-				</span>
-			</label>
-			<button class="as-btn" type="submit" disabled={busy}>{tr('Prijavi se', 'Sign in')}</button>
-		</form>
+				</label>
+				<label class="as-fl">
+					<span>{tr('Lozinka', 'Password')}</span>
+					<span class="as-pw">
+						<input
+							class="as-in"
+							type={visible ? 'text' : 'password'}
+							name="password"
+							required
+							autocomplete="current-password"
+							bind:value={password}
+						/>
+						<button
+							type="button"
+							class="as-eye"
+							aria-label={tr('Prikaži lozinku', 'Show password')}
+							aria-pressed={visible}
+							onclick={() => (visible = !visible)}><Icon name="eye" /></button
+						>
+					</span>
+				</label>
+				<button class="as-btn" type="submit" disabled={busy}>{tr('Prijavi se', 'Sign in')}</button>
+			</form>{/if}
 		{#if methods?.ssoLabel}
 			<a
 				class="as-btn"

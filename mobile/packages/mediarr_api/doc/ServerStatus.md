@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **updateAvailable** | **bool** |  | 
 **diskUsedBytes** | **int** |  | 
 **diskTotalBytes** | **int** |  | 
+**trashDays** | **int** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

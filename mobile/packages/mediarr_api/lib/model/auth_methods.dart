@@ -13,9 +13,15 @@ part of openapi.api;
 class AuthMethods {
   /// Returns a new [AuthMethods] instance.
   AuthMethods({
+    required this.passwordLogin,
+    required this.loginMessage,
     required this.passkeys,
     this.ssoLabel,
   });
+
+  bool passwordLogin;
+
+  String loginMessage;
 
   /// This address can use passkeys: HTTPS and a domain name
   bool passkeys;
@@ -33,19 +39,27 @@ class AuthMethods {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is AuthMethods &&
+          other.passwordLogin == passwordLogin &&
+          other.loginMessage == loginMessage &&
           other.passkeys == passkeys &&
           other.ssoLabel == ssoLabel;
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (passkeys.hashCode) + (ssoLabel == null ? 0 : ssoLabel!.hashCode);
+      (passwordLogin.hashCode) +
+      (loginMessage.hashCode) +
+      (passkeys.hashCode) +
+      (ssoLabel == null ? 0 : ssoLabel!.hashCode);
 
   @override
-  String toString() => 'AuthMethods[passkeys=$passkeys, ssoLabel=$ssoLabel]';
+  String toString() =>
+      'AuthMethods[passwordLogin=$passwordLogin, loginMessage=$loginMessage, passkeys=$passkeys, ssoLabel=$ssoLabel]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+    json[r'passwordLogin'] = this.passwordLogin;
+    json[r'loginMessage'] = this.loginMessage;
     json[r'passkeys'] = this.passkeys;
     if (this.ssoLabel != null) {
       json[r'ssoLabel'] = this.ssoLabel;
@@ -76,6 +90,8 @@ class AuthMethods {
       }());
 
       return AuthMethods(
+        passwordLogin: mapValueOfType<bool>(json, r'passwordLogin')!,
+        loginMessage: mapValueOfType<String>(json, r'loginMessage')!,
         passkeys: mapValueOfType<bool>(json, r'passkeys')!,
         ssoLabel: mapValueOfType<String>(json, r'ssoLabel'),
       );
@@ -134,6 +150,8 @@ class AuthMethods {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
+    'passwordLogin',
+    'loginMessage',
     'passkeys',
   };
 }

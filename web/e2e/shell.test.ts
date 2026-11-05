@@ -221,6 +221,26 @@ test('a section can be taken off the menu and put back', async ({ page }) => {
 	await expect(side.getByRole('link', { name: 'Map' })).toBeVisible();
 });
 
+test('a message from the administrator shows on the sign-in page', async ({ browser, page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'admin');
+	await page.goto('/admin/settings');
+	const field = page.getByLabel('Message on the sign-in page');
+	await field.fill('Welcome to this server');
+	await field.locator('xpath=ancestor::form').getByRole('button', { name: 'Save' }).click();
+	await expect(page.getByText('Saved.')).toBeVisible();
+
+	const stranger = await browser.newPage();
+	await stranger.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await stranger.goto('/login');
+	await expect(stranger.getByText('Welcome to this server')).toBeVisible();
+	await stranger.close();
+
+	await field.fill('');
+	await field.locator('xpath=ancestor::form').getByRole('button', { name: 'Save' }).click();
+	await expect(page.getByText('Saved.').last()).toBeVisible();
+});
+
 test('signing out ends the session', async ({ page }) => {
 	await signIn(page, 'user');
 	await page.goto('/');

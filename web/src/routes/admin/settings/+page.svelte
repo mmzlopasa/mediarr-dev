@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ServerSettingsCard from '#lib/organize/ServerSettingsCard.svelte';
 	import { onMount } from 'svelte';
 	import {
 		api,
@@ -654,6 +655,8 @@
 			</form>
 		</Card>
 	{/if}
+	<ServerSettingsCard />
+
 	<Card title={tr('Karta', 'Map')}>
 		<form class="form" onsubmit={save}>
 			<p class="alb-meta">

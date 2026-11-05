@@ -21,6 +21,7 @@ import (
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/auth"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 const (
@@ -406,7 +407,14 @@ func (s *apiServer) GetAuthMethods(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
-	out := api.AuthMethods{Passkeys: passkeysAvailable(r)}
+	server, err := jobs.LoadServerSettings(r.Context(), s.queries)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out := api.AuthMethods{
+		Passkeys: passkeysAvailable(r), PasswordLogin: server.PasswordLogin, LoginMessage: server.LoginMessage,
+	}
 	if settings.enabled() {
 		label := settings.label
 		if label == "" {

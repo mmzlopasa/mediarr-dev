@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trashDays } from '#lib/preferences.svelte.ts';
 	import { onMount, untrack, type Snippet } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
@@ -588,8 +589,8 @@
 <Dialog title={tr('Obrisati odabrano?', 'Delete the selection?')} bind:open={confirmDelete}>
 	<p>
 		{tr(
-			`Odabrano: ${selected.size}. Premještaju se u smeće, gdje ostaju 30 dana i mogu se vratiti.`,
-			`Selected: ${selected.size}. They move to the trash, where they stay for 30 days and can be restored.`
+			`Odabrano: ${selected.size}. Premještaju se u smeće, gdje ostaju ${trashDays()} dana i mogu se vratiti.`,
+			`Selected: ${selected.size}. They move to the trash, where they stay for ${trashDays()} days and can be restored.`
 		)}
 	</p>
 	{#snippet footer()}

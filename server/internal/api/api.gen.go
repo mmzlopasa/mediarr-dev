@@ -1234,8 +1234,11 @@ type AuditEntry struct {
 
 // AuthMethods defines model for AuthMethods.
 type AuthMethods struct {
+	LoginMessage string `json:"loginMessage"`
+
 	// Passkeys This address can use passkeys: HTTPS and a domain name
-	Passkeys bool `json:"passkeys"`
+	Passkeys      bool `json:"passkeys"`
+	PasswordLogin bool `json:"passwordLogin"`
 
 	// SsoLabel The name of the single sign-on button, if it is turned on
 	SsoLabel *string `json:"ssoLabel,omitempty"`
@@ -1785,6 +1788,19 @@ type SecurityUpdate struct {
 	IpAllowlistEnabled    bool     `json:"ipAllowlistEnabled"`
 }
 
+// ServerSettings defines model for ServerSettings.
+type ServerSettings struct {
+	ImageQuality   int    `json:"imageQuality"`
+	LoginMessage   string `json:"loginMessage"`
+	PasswordLogin  bool   `json:"passwordLogin"`
+	PreviewSize    int    `json:"previewSize"`
+	TrashDays      int    `json:"trashDays"`
+	VideoMaxHeight int    `json:"videoMaxHeight"`
+
+	// VideoQuality Lower is better and larger
+	VideoQuality int `json:"videoQuality"`
+}
+
 // ServerStatus defines model for ServerStatus.
 type ServerStatus struct {
 	DiskTotalBytes int64 `json:"diskTotalBytes"`
@@ -1792,6 +1808,7 @@ type ServerStatus struct {
 
 	// LatestVersion Known only when the update check is on and has answered
 	LatestVersion   *string `json:"latestVersion,omitempty"`
+	TrashDays       int     `json:"trashDays"`
 	UpdateAvailable bool    `json:"updateAvailable"`
 	Version         string  `json:"version"`
 }
@@ -2209,6 +2226,9 @@ type SetOIDCSettingsJSONRequestBody = OIDCSettingsUpdate
 // SetSecurityJSONRequestBody defines body for SetSecurity for application/json ContentType.
 type SetSecurityJSONRequestBody = SecurityUpdate
 
+// SetServerSettingsJSONRequestBody defines body for SetServerSettings for application/json ContentType.
+type SetServerSettingsJSONRequestBody = ServerSettings
+
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
 
@@ -2421,6 +2441,12 @@ type ServerInterface interface {
 	// ListSecurityEvents Attempts to get in, newest first
 	// (GET /api/admin/security/events)
 	ListSecurityEvents(w http.ResponseWriter, r *http.Request, params ListSecurityEventsParams)
+	// GetServerSettings How this server treats files, and sign-in
+	// (GET /api/admin/server-settings)
+	GetServerSettings(w http.ResponseWriter, r *http.Request)
+	// SetServerSettings Change them. Applies to files processed from now on
+	// (PUT /api/admin/server-settings)
+	SetServerSettings(w http.ResponseWriter, r *http.Request)
 	// GetAdminStorage How much each user stores
 	// (GET /api/admin/storage)
 	GetAdminStorage(w http.ResponseWriter, r *http.Request)
@@ -3024,6 +3050,18 @@ func (_ Unimplemented) ApproveDevice(w http.ResponseWriter, r *http.Request, id 
 // ListSecurityEvents Attempts to get in, newest first
 // (GET /api/admin/security/events)
 func (_ Unimplemented) ListSecurityEvents(w http.ResponseWriter, r *http.Request, params ListSecurityEventsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetServerSettings How this server treats files, and sign-in
+// (GET /api/admin/server-settings)
+func (_ Unimplemented) GetServerSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetServerSettings Change them. Applies to files processed from now on
+// (PUT /api/admin/server-settings)
+func (_ Unimplemented) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4448,6 +4486,34 @@ func (siw *ServerInterfaceWrapper) ListSecurityEvents(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListSecurityEvents(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetServerSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetServerSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetServerSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetServerSettings operation middleware
+func (siw *ServerInterfaceWrapper) SetServerSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetServerSettings(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8228,6 +8294,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/audit", wrapper.ListAuditLog)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/server-settings", wrapper.GetServerSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/server-settings", wrapper.SetServerSettings)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/security", wrapper.GetSecurity)

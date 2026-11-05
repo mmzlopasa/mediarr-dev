@@ -18,6 +18,7 @@ class ServerStatus {
     required this.updateAvailable,
     required this.diskUsedBytes,
     required this.diskTotalBytes,
+    required this.trashDays,
   });
 
   String version;
@@ -37,6 +38,8 @@ class ServerStatus {
 
   int diskTotalBytes;
 
+  int trashDays;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -45,7 +48,8 @@ class ServerStatus {
           other.latestVersion == latestVersion &&
           other.updateAvailable == updateAvailable &&
           other.diskUsedBytes == diskUsedBytes &&
-          other.diskTotalBytes == diskTotalBytes;
+          other.diskTotalBytes == diskTotalBytes &&
+          other.trashDays == trashDays;
 
   @override
   int get hashCode =>
@@ -54,11 +58,12 @@ class ServerStatus {
       (latestVersion == null ? 0 : latestVersion!.hashCode) +
       (updateAvailable.hashCode) +
       (diskUsedBytes.hashCode) +
-      (diskTotalBytes.hashCode);
+      (diskTotalBytes.hashCode) +
+      (trashDays.hashCode);
 
   @override
   String toString() =>
-      'ServerStatus[version=$version, latestVersion=$latestVersion, updateAvailable=$updateAvailable, diskUsedBytes=$diskUsedBytes, diskTotalBytes=$diskTotalBytes]';
+      'ServerStatus[version=$version, latestVersion=$latestVersion, updateAvailable=$updateAvailable, diskUsedBytes=$diskUsedBytes, diskTotalBytes=$diskTotalBytes, trashDays=$trashDays]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -71,6 +76,7 @@ class ServerStatus {
     json[r'updateAvailable'] = this.updateAvailable;
     json[r'diskUsedBytes'] = this.diskUsedBytes;
     json[r'diskTotalBytes'] = this.diskTotalBytes;
+    json[r'trashDays'] = this.trashDays;
     return json;
   }
 
@@ -100,6 +106,7 @@ class ServerStatus {
         updateAvailable: mapValueOfType<bool>(json, r'updateAvailable')!,
         diskUsedBytes: mapValueOfType<int>(json, r'diskUsedBytes')!,
         diskTotalBytes: mapValueOfType<int>(json, r'diskTotalBytes')!,
+        trashDays: mapValueOfType<int>(json, r'trashDays')!,
       );
     }
     return null;
@@ -160,5 +167,6 @@ class ServerStatus {
     'updateAvailable',
     'diskUsedBytes',
     'diskTotalBytes',
+    'trashDays',
   };
 }

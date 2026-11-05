@@ -405,6 +405,8 @@ class ApiClient {
           return SecuritySettings.fromJson(value);
         case 'SecurityUpdate':
           return SecurityUpdate.fromJson(value);
+        case 'ServerSettings':
+          return ServerSettings.fromJson(value);
         case 'ServerStatus':
           return ServerStatus.fromJson(value);
         case 'SetupRequest':

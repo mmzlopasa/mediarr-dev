@@ -118,6 +118,7 @@ part 'model/security_device.dart';
 part 'model/security_event.dart';
 part 'model/security_settings.dart';
 part 'model/security_update.dart';
+part 'model/server_settings.dart';
 part 'model/server_status.dart';
 part 'model/setup_request.dart';
 part 'model/share_link.dart';

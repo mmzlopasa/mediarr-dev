@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trashDays } from '#lib/preferences.svelte.ts';
 	import { api, formatBytes, type DuplicateGroup, type Duplicates } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
@@ -88,8 +89,8 @@
 	{:else}
 		<p class="dup-note">
 			{tr(
-				'Ovo su samo prijedlozi. Ništa se ne briše bez vaše potvrde, a obrisano ostaje 30 dana u smeću.',
-				'These are only proposals. Nothing is removed without your confirmation, and what is removed stays in the trash for 30 days.'
+				`Ovo su samo prijedlozi. Ništa se ne briše bez vaše potvrde, a obrisano ostaje ${trashDays()} dana u smeću.`,
+				`These are only proposals. Nothing is removed without your confirmation, and what is removed stays in the trash for ${trashDays()} days.`
 			)}
 			{#if data.total > data.groups.length}
 				{tr(
@@ -149,8 +150,8 @@
 >
 	<p>
 		{tr(
-			'Odabrane fotke ostaju u smeću 30 dana i mogu se vratiti.',
-			'The selected photos stay in the trash for 30 days and can be restored.'
+			`Odabrane fotke ostaju u smeću ${trashDays()} dana i mogu se vratiti.`,
+			`The selected photos stay in the trash for ${trashDays()} days and can be restored.`
 		)}
 	</p>
 	{#snippet footer()}

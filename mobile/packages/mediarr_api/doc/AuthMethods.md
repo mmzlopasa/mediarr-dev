@@ -8,6 +8,8 @@ import 'package:mediarr_api/api.dart';
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**passwordLogin** | **bool** |  | 
+**loginMessage** | **String** |  | 
 **passkeys** | **bool** | This address can use passkeys: HTTPS and a domain name | 
 **ssoLabel** | **String** | The name of the single sign-on button, if it is turned on | [optional] 
 

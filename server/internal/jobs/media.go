@@ -367,7 +367,7 @@ func MakeThumbnails(ctx context.Context, original, kind, dir, name string, edits
 	if err != nil {
 		return nil, err
 	}
-	large, err := makeThumb(ctx, source, work, dir, name, thumbLarge)
+	large, err := makeThumb(ctx, source, work, dir, name, currentMedia().PreviewSize)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +463,7 @@ func makeThumb(ctx context.Context, source, work, dir, name string, size int) (T
 	tmp := filepath.Join(work, file)
 	// "down" never enlarges, and "truncated" reports damaged files as errors instead of half-empty
 	// thumbnails. libvips also applies EXIF rotation and picks the first page or frame.
-	if _, err := runTool(ctx, "vips", "thumbnail", source, tmp+"[Q=82,strip]", strconv.Itoa(size),
+	if _, err := runTool(ctx, "vips", "thumbnail", source, fmt.Sprintf("%s[Q=%d,strip]", tmp, currentMedia().ImageQuality), strconv.Itoa(size),
 		"--height", strconv.Itoa(size), "--size", "down", "--fail-on", "truncated"); err != nil {
 		return ThumbFile{}, err
 	}

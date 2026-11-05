@@ -1497,6 +1497,35 @@ paths:
               schema: { type: array, items: { $ref: "#/components/schemas/AuditEntry" } }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/admin/server-settings:
+    get:
+      operationId: getServerSettings
+      summary: How this server treats files, and sign-in
+      responses:
+        "200":
+          description: The settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerSettings" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setServerSettings
+      summary: Change them. Applies to files processed from now on
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ServerSettings" }
+      responses:
+        "200":
+          description: The settings now
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerSettings" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/admin/security:
     get:
       operationId: getSecurity
@@ -2466,8 +2495,10 @@ components:
         bytes: { type: integer, format: int64 }
     AuthMethods:
       type: object
-      required: [passkeys]
+      required: [passkeys, passwordLogin, loginMessage]
       properties:
+        passwordLogin: { type: boolean }
+        loginMessage: { type: string }
         passkeys: { type: boolean, description: "This address can use passkeys: HTTPS and a domain name" }
         ssoLabel: { type: string, description: "The name of the single sign-on button, if it is turned on" }
     OIDCExchange:
@@ -3092,15 +3123,27 @@ components:
         trashed: { type: integer, format: int64 }
         albums: { type: integer, format: int64 }
         bytes: { type: integer, format: int64 }
+    ServerSettings:
+      type: object
+      required: [trashDays, imageQuality, previewSize, videoQuality, videoMaxHeight, loginMessage, passwordLogin]
+      properties:
+        trashDays: { type: integer }
+        imageQuality: { type: integer }
+        previewSize: { type: integer }
+        videoQuality: { type: integer, description: "Lower is better and larger" }
+        videoMaxHeight: { type: integer }
+        loginMessage: { type: string }
+        passwordLogin: { type: boolean }
     ServerStatus:
       type: object
-      required: [version, updateAvailable, diskUsedBytes, diskTotalBytes]
+      required: [version, updateAvailable, diskUsedBytes, diskTotalBytes, trashDays]
       properties:
         version: { type: string }
         latestVersion: { type: string, description: "Known only when the update check is on and has answered" }
         updateAvailable: { type: boolean }
         diskUsedBytes: { type: integer, format: int64 }
         diskTotalBytes: { type: integer, format: int64 }
+        trashDays: { type: integer }
     AdminOverview:
       type: object
       required: [users, photos, videos, processing, failed, libraryBytes, diskTotalBytes, diskFreeBytes, jobs, version, databaseVersion]

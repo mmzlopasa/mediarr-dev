@@ -5595,6 +5595,52 @@ class DefaultApi {
     return null;
   }
 
+  /// How this server treats files, and sign-in
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getServerSettingsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/server-settings';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// How this server treats files, and sign-in
+  Future<ServerSettings?> getServerSettings() async {
+    final response = await getServerSettingsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'ServerSettings',
+      ) as ServerSettings;
+    }
+    return null;
+  }
+
   /// The version of this server, whether a newer one exists, and its disk
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8803,6 +8849,66 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'SecuritySettings',
       ) as SecuritySettings;
+    }
+    return null;
+  }
+
+  /// Change them. Applies to files processed from now on
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [ServerSettings] serverSettings (required):
+  Future<Response> setServerSettingsWithHttpInfo(
+    ServerSettings serverSettings,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/server-settings';
+
+    // ignore: prefer_final_locals
+    Object? postBody = serverSettings;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change them. Applies to files processed from now on
+  ///
+  /// Parameters:
+  ///
+  /// * [ServerSettings] serverSettings (required):
+  Future<ServerSettings?> setServerSettings(
+    ServerSettings serverSettings,
+  ) async {
+    final response = await setServerSettingsWithHttpInfo(
+      serverSettings,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'ServerSettings',
+      ) as ServerSettings;
     }
     return null;
   }

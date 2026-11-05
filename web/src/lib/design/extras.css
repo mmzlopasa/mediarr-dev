@@ -1326,3 +1326,7 @@ video.viewer-media {
 .acct-stats small {
 	color: var(--haze);
 }
+
+.login-note {
+	white-space: pre-line;
+}
