@@ -82,9 +82,10 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**createDeviceKey**](doc//DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
 *DefaultApi* | [**createFamilyRule**](doc//DefaultApi.md#createfamilyrule) | **POST** /api/family/rules | Share what matches a rule with the family. Photos are not copied
 *DefaultApi* | [**createImport**](doc//DefaultApi.md#createimport) | **POST** /api/admin/imports | Bring a library in from Immich, Google Takeout or an iCloud export
+*DefaultApi* | [**createMyImport**](doc//DefaultApi.md#createmyimport) | **POST** /api/imports | Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
 *DefaultApi* | [**createPublicUpload**](doc//DefaultApi.md#createpublicupload) | **POST** /api/public/{token}/uploads | Send one whole file to a public album (tus 1.0 creation with upload)
 *DefaultApi* | [**createStoryExport**](doc//DefaultApi.md#createstoryexport) | **POST** /api/stories | Make a video of the chosen photos. Runs in the background.
-*DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
+*DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
 *DefaultApi* | [**createUser**](doc//DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
 *DefaultApi* | [**createWebhook**](doc//DefaultApi.md#createwebhook) | **POST** /api/admin/webhooks | Add an address. Its signing secret is shown only once
 *DefaultApi* | [**deleteAlbum**](doc//DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
@@ -92,6 +93,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 *DefaultApi* | [**deleteDevice**](doc//DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 *DefaultApi* | [**deleteFamilyRule**](doc//DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
+*DefaultApi* | [**deleteImport**](doc//DefaultApi.md#deleteimport) | **DELETE** /api/imports/{id} | Remove an import and its ZIP files. What it brought in stays
 *DefaultApi* | [**deleteNotification**](doc//DefaultApi.md#deletenotification) | **DELETE** /api/notifications/{id} | Remove one notification
 *DefaultApi* | [**deletePasskey**](doc//DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 *DefaultApi* | [**deleteTag**](doc//DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
@@ -143,6 +145,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getFeatures**](doc//DefaultApi.md#getfeatures) | **GET** /api/features | Which additions the administrator has turned on
 *DefaultApi* | [**getFolder**](doc//DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
 *DefaultApi* | [**getHealth**](doc//DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
+*DefaultApi* | [**getImport**](doc//DefaultApi.md#getimport) | **GET** /api/imports/{id} | An import with its files and its report. Its owner or an administrator
 *DefaultApi* | [**getIntegrity**](doc//DefaultApi.md#getintegrity) | **GET** /api/admin/integrity | How the originals looked when they were last checked
 *DefaultApi* | [**getMapPoints**](doc//DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 *DefaultApi* | [**getMapStyle**](doc//DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
@@ -190,6 +193,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listFamilyMembersAdmin**](doc//DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 *DefaultApi* | [**listImports**](doc//DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
+*DefaultApi* | [**listMyImports**](doc//DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 *DefaultApi* | [**listMySessions**](doc//DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
 *DefaultApi* | [**listNotifications**](doc//DefaultApi.md#listnotifications) | **GET** /api/notifications | The newest notifications of the signed-in user
 *DefaultApi* | [**listPartners**](doc//DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
@@ -242,7 +246,9 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setup**](doc//DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 *DefaultApi* | [**setupTotp**](doc//DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
 *DefaultApi* | [**startBackupRun**](doc//DefaultApi.md#startbackuprun) | **POST** /api/admin/backup/runs | Back up now, or test bringing the newest backup back
+*DefaultApi* | [**startImport**](doc//DefaultApi.md#startimport) | **POST** /api/imports/{id}/start | Bring in the uploaded files, or go on with an import that was stopped
 *DefaultApi* | [**startOIDC**](doc//DefaultApi.md#startoidc) | **GET** /api/auth/oidc/start | Go to the identity provider
+*DefaultApi* | [**stopImport**](doc//DefaultApi.md#stopimport) | **POST** /api/imports/{id}/stop | Stop an import. What it has brought in stays, and it can go on later
 *DefaultApi* | [**testWebhook**](doc//DefaultApi.md#testwebhook) | **POST** /api/admin/webhooks/{id}/test | Send a test event now
 *DefaultApi* | [**unlockPublicLink**](doc//DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 *DefaultApi* | [**unlockVault**](doc//DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
@@ -318,7 +324,10 @@ Class | Method | HTTP request | Description
  - [FolderEntry](doc//FolderEntry.md)
  - [Health](doc//Health.md)
  - [ImportCreate](doc//ImportCreate.md)
+ - [ImportDetail](doc//ImportDetail.md)
  - [ImportEntry](doc//ImportEntry.md)
+ - [ImportPart](doc//ImportPart.md)
+ - [ImportProblem](doc//ImportProblem.md)
  - [IntegrityProblem](doc//IntegrityProblem.md)
  - [IntegrityReport](doc//IntegrityReport.md)
  - [IntegrityRun](doc//IntegrityRun.md)
@@ -375,6 +384,8 @@ Class | Method | HTTP request | Description
  - [TrashSummary](doc//TrashSummary.md)
  - [Trip](doc//Trip.md)
  - [User](doc//User.md)
+ - [UserImport](doc//UserImport.md)
+ - [UserImportCreate](doc//UserImportCreate.md)
  - [UserPreferences](doc//UserPreferences.md)
  - [UserRef](doc//UserRef.md)
  - [UserSession](doc//UserSession.md)

@@ -12,6 +12,7 @@ import '../services/settings.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'free_space_screen.dart';
+import 'imports_screen.dart';
 import 'organize_screens.dart';
 import 'settings_screen.dart';
 
@@ -300,6 +301,11 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             leading: Icon(Icons.cleaning_services_outlined, color: Palette.dim),
             title: const Text('Free up space'),
             onTap: () => _push(const FreeSpaceScreen()),
+          ),
+          ListTile(
+            leading: Icon(Icons.download_outlined, color: Palette.dim),
+            title: const Text('Import'),
+            onTap: () => _push(const ImportsScreen()),
           ),
           ListTile(
             leading: Icon(Icons.settings_outlined, color: Palette.dim),

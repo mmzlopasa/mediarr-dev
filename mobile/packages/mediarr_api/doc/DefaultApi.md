@@ -31,9 +31,10 @@ Method | HTTP request | Description
 [**createDeviceKey**](DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
 [**createFamilyRule**](DefaultApi.md#createfamilyrule) | **POST** /api/family/rules | Share what matches a rule with the family. Photos are not copied
 [**createImport**](DefaultApi.md#createimport) | **POST** /api/admin/imports | Bring a library in from Immich, Google Takeout or an iCloud export
+[**createMyImport**](DefaultApi.md#createmyimport) | **POST** /api/imports | Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
 [**createPublicUpload**](DefaultApi.md#createpublicupload) | **POST** /api/public/{token}/uploads | Send one whole file to a public album (tus 1.0 creation with upload)
 [**createStoryExport**](DefaultApi.md#createstoryexport) | **POST** /api/stories | Make a video of the chosen photos. Runs in the background.
-[**createUpload**](DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
+[**createUpload**](DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
 [**createUser**](DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
 [**createWebhook**](DefaultApi.md#createwebhook) | **POST** /api/admin/webhooks | Add an address. Its signing secret is shown only once
 [**deleteAlbum**](DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
@@ -41,6 +42,7 @@ Method | HTTP request | Description
 [**deleteAlbumLink**](DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 [**deleteDevice**](DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 [**deleteFamilyRule**](DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
+[**deleteImport**](DefaultApi.md#deleteimport) | **DELETE** /api/imports/{id} | Remove an import and its ZIP files. What it brought in stays
 [**deleteNotification**](DefaultApi.md#deletenotification) | **DELETE** /api/notifications/{id} | Remove one notification
 [**deletePasskey**](DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 [**deleteTag**](DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
@@ -92,6 +94,7 @@ Method | HTTP request | Description
 [**getFeatures**](DefaultApi.md#getfeatures) | **GET** /api/features | Which additions the administrator has turned on
 [**getFolder**](DefaultApi.md#getfolder) | **GET** /api/folders | One folder of the external library, for the user who owns it
 [**getHealth**](DefaultApi.md#gethealth) | **GET** /health | Report whether the server can reach its database
+[**getImport**](DefaultApi.md#getimport) | **GET** /api/imports/{id} | An import with its files and its report. Its owner or an administrator
 [**getIntegrity**](DefaultApi.md#getintegrity) | **GET** /api/admin/integrity | How the originals looked when they were last checked
 [**getMapPoints**](DefaultApi.md#getmappoints) | **GET** /api/map/points | Photos with a location that this user may see, oldest first
 [**getMapStyle**](DefaultApi.md#getmapstyle) | **GET** /api/map/style | Where the map's background comes from
@@ -139,6 +142,7 @@ Method | HTTP request | Description
 [**listFamilyMembersAdmin**](DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 [**listImports**](DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 [**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
+[**listMyImports**](DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 [**listMySessions**](DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
 [**listNotifications**](DefaultApi.md#listnotifications) | **GET** /api/notifications | The newest notifications of the signed-in user
 [**listPartners**](DefaultApi.md#listpartners) | **GET** /api/partners | Who you share your library with, and who shares theirs with you
@@ -191,7 +195,9 @@ Method | HTTP request | Description
 [**setup**](DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
 [**setupTotp**](DefaultApi.md#setuptotp) | **POST** /api/me/totp/setup | Generate a TOTP secret. It takes effect only after confirmation.
 [**startBackupRun**](DefaultApi.md#startbackuprun) | **POST** /api/admin/backup/runs | Back up now, or test bringing the newest backup back
+[**startImport**](DefaultApi.md#startimport) | **POST** /api/imports/{id}/start | Bring in the uploaded files, or go on with an import that was stopped
 [**startOIDC**](DefaultApi.md#startoidc) | **GET** /api/auth/oidc/start | Go to the identity provider
+[**stopImport**](DefaultApi.md#stopimport) | **POST** /api/imports/{id}/stop | Stop an import. What it has brought in stays, and it can go on later
 [**testWebhook**](DefaultApi.md#testwebhook) | **POST** /api/admin/webhooks/{id}/test | Send a test event now
 [**unlockPublicLink**](DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 [**unlockVault**](DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
@@ -1100,6 +1106,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **createMyImport**
+> UserImport createMyImport(userImportCreate)
+
+Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final userImportCreate = UserImportCreate(); // UserImportCreate | 
+
+try {
+    final result = api_instance.createMyImport(userImportCreate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->createMyImport: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **userImportCreate** | [**UserImportCreate**](UserImportCreate.md)|  | 
+
+### Return type
+
+[**UserImport**](UserImport.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **createPublicUpload**
 > createPublicUpload(token)
 
@@ -1184,7 +1231,7 @@ No authorization required
 # **createUpload**
 > createUpload()
 
-Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
+Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
 
 ### Example
 ```dart
@@ -1479,6 +1526,46 @@ try {
     api_instance.deleteFamilyRule(id);
 } catch (e) {
     print('Exception when calling DefaultApi->deleteFamilyRule: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteImport**
+> deleteImport(id)
+
+Remove an import and its ZIP files. What it brought in stays
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.deleteImport(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->deleteImport: $e\n');
 }
 ```
 
@@ -3538,6 +3625,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getImport**
+> ImportDetail getImport(id)
+
+An import with its files and its report. Its owner or an administrator
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getImport(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getImport: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**ImportDetail**](ImportDetail.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getIntegrity**
 > IntegrityReport getIntegrity()
 
@@ -5404,6 +5532,43 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**List<Memory>**](Memory.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listMyImports**
+> List<UserImport> listMyImports()
+
+My imports, the newest first
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listMyImports();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listMyImports: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<UserImport>**](UserImport.md)
 
 ### Authorization
 
@@ -7490,6 +7655,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **startImport**
+> startImport(id)
+
+Bring in the uploaded files, or go on with an import that was stopped
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.startImport(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->startImport: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **startOIDC**
 > startOIDC(next, appChallenge)
 
@@ -7516,6 +7721,46 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **next** | **String**|  | [optional] 
  **appChallenge** | **String**| SHA-256 of a secret the app keeps, base64url | [optional] 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **stopImport**
+> stopImport(id)
+
+Stop an import. What it has brought in stays, and it can go on later
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.stopImport(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->stopImport: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
 
 ### Return type
 

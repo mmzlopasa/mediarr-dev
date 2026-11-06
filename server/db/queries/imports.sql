@@ -33,7 +33,9 @@ INSERT INTO face_hints (asset_id, person_id, x1, y1, x2, y2) VALUES ($1, $2, $3,
 SELECT person_id, x1, y1, x2, y2 FROM face_hints WHERE asset_id = $1;
 
 -- name: SetImportFacts :exec
-UPDATE assets SET import_taken_at = $2, import_latitude = $3, import_longitude = $4 WHERE id = $1;
+UPDATE assets SET import_taken_at = $2, import_latitude = $3, import_longitude = $4, import_offset_minutes = $5,
+    caption = CASE WHEN caption = '' THEN sqlc.arg('caption')::text ELSE caption END
+WHERE id = $1;
 
 -- name: MarkImportedFavorite :exec
 UPDATE assets SET is_favorite = true WHERE id = $1;
@@ -74,3 +76,50 @@ INSERT INTO face_ignored (asset_id, x1, y1, x2, y2) VALUES ($1, $2, $3, $4, $5) 
 
 -- name: ListFaceIgnored :many
 SELECT x1, y1, x2, y2 FROM face_ignored WHERE asset_id = $1;
+
+-- name: CreateZipImport :one
+INSERT INTO imports (user_id, source, status, from_zip) VALUES ($1, $2, 'uploading', true) RETURNING id;
+
+-- name: ListUserImports :many
+SELECT * FROM imports WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50;
+
+-- name: AddImportPart :one
+INSERT INTO import_parts (import_id, name, size_bytes, path) VALUES ($1, $2, $3, $4) RETURNING id;
+
+-- name: ListImportParts :many
+SELECT * FROM import_parts WHERE import_id = $1 ORDER BY created_at, name;
+
+-- name: DeleteImportParts :exec
+DELETE FROM import_parts WHERE import_id = $1;
+
+-- name: TouchImport :exec
+UPDATE imports SET active_at = now() WHERE id = $1;
+
+-- name: SetImportTotal :exec
+UPDATE imports SET total = $2 WHERE id = $1;
+
+-- name: StartImport :execrows
+-- Starts an import that waits for its files, or goes on with one that was stopped or failed.
+UPDATE imports SET status = 'running', active_at = now(), finished_at = NULL
+WHERE id = $1 AND (status IN ('uploading', 'cancelled') OR (status = 'failed' AND from_zip));
+
+-- name: StopImport :execrows
+UPDATE imports SET status = 'cancelled', active_at = now(), finished_at = now() WHERE id = $1 AND status IN ('uploading', 'running');
+
+-- name: DeleteImport :exec
+DELETE FROM imports WHERE id = $1;
+
+-- name: AddImportProblem :exec
+-- The report keeps the first 500 problems; the count of failures has all of them.
+INSERT INTO import_problems (import_id, name, reason)
+SELECT sqlc.arg('import_id'), sqlc.arg('name'), sqlc.arg('reason')
+WHERE (SELECT count(*) FROM import_problems WHERE import_id = sqlc.arg('import_id')) < 500;
+
+-- name: ListImportProblems :many
+SELECT name, reason FROM import_problems WHERE import_id = $1 ORDER BY created_at LIMIT 500;
+
+-- name: ListStaleZipImports :many
+-- ZIP files nobody came back for in a week are removed. A finished import has none left.
+SELECT i.id FROM imports i
+WHERE i.from_zip AND i.status IN ('uploading', 'cancelled', 'failed') AND i.active_at < now() - interval '7 days'
+    AND EXISTS (SELECT 1 FROM import_parts p WHERE p.import_id = i.id);

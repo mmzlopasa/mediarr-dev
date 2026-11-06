@@ -69,7 +69,10 @@ doc/Folder.md
 doc/FolderEntry.md
 doc/Health.md
 doc/ImportCreate.md
+doc/ImportDetail.md
 doc/ImportEntry.md
+doc/ImportPart.md
+doc/ImportProblem.md
 doc/IntegrityProblem.md
 doc/IntegrityReport.md
 doc/IntegrityRun.md
@@ -126,6 +129,8 @@ doc/TotpSetup.md
 doc/TrashSummary.md
 doc/Trip.md
 doc/User.md
+doc/UserImport.md
+doc/UserImportCreate.md
 doc/UserPreferences.md
 doc/UserRef.md
 doc/UserSession.md
@@ -214,7 +219,10 @@ lib/model/folder.dart
 lib/model/folder_entry.dart
 lib/model/health.dart
 lib/model/import_create.dart
+lib/model/import_detail.dart
 lib/model/import_entry.dart
+lib/model/import_part.dart
+lib/model/import_problem.dart
 lib/model/integrity_problem.dart
 lib/model/integrity_report.dart
 lib/model/integrity_run.dart
@@ -271,6 +279,8 @@ lib/model/totp_setup.dart
 lib/model/trash_summary.dart
 lib/model/trip.dart
 lib/model/user.dart
+lib/model/user_import.dart
+lib/model/user_import_create.dart
 lib/model/user_preferences.dart
 lib/model/user_ref.dart
 lib/model/user_session.dart
@@ -283,3 +293,8 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
+test/import_detail_test.dart
+test/import_part_test.dart
+test/import_problem_test.dart
+test/user_import_create_test.dart
+test/user_import_test.dart

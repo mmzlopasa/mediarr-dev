@@ -361,8 +361,14 @@ class ApiClient {
           return Health.fromJson(value);
         case 'ImportCreate':
           return ImportCreate.fromJson(value);
+        case 'ImportDetail':
+          return ImportDetail.fromJson(value);
         case 'ImportEntry':
           return ImportEntry.fromJson(value);
+        case 'ImportPart':
+          return ImportPart.fromJson(value);
+        case 'ImportProblem':
+          return ImportProblem.fromJson(value);
         case 'IntegrityProblem':
           return IntegrityProblem.fromJson(value);
         case 'IntegrityReport':
@@ -475,6 +481,10 @@ class ApiClient {
           return Trip.fromJson(value);
         case 'User':
           return User.fromJson(value);
+        case 'UserImport':
+          return UserImport.fromJson(value);
+        case 'UserImportCreate':
+          return UserImportCreate.fromJson(value);
         case 'UserPreferences':
           return UserPreferences.fromJson(value);
         case 'UserRef':

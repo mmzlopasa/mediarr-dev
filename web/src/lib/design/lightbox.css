@@ -2713,3 +2713,146 @@ html[data-theme='light'] .set-chip.ok {
 		transition: none;
 	}
 }
+
+/* ---------- Import: a Google Takeout or iCloud export, from its ZIP files ---------- */
+.imp-source {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 10px;
+	margin: 0 0 14px;
+	padding: 0;
+	border: 0;
+}
+.imp-option {
+	position: relative;
+	display: grid;
+	gap: 4px;
+	padding: 14px 16px;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	background: var(--bg-2);
+	cursor: pointer;
+	transition:
+		border-color 160ms ease,
+		background-color 160ms ease;
+}
+.imp-option input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.imp-option.on {
+	border-color: var(--acc);
+	background: color-mix(in srgb, var(--acc-fill) 18%, var(--bg-2));
+}
+.imp-option:has(input:focus-visible) {
+	outline: 2px solid var(--acc);
+	outline-offset: 2px;
+}
+.imp-option b {
+	font-weight: 620;
+}
+.imp-option small {
+	color: var(--dim);
+	line-height: 1.45;
+}
+.imp-source:disabled .imp-option {
+	cursor: default;
+	opacity: 0.6;
+}
+.imp-drop {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 20px;
+	border: 1.5px dashed var(--line-2);
+	border-radius: 12px;
+	color: var(--dim);
+	cursor: pointer;
+	transition:
+		border-color 160ms ease,
+		color 160ms ease;
+}
+.imp-drop:hover,
+.imp-drop:focus-within {
+	border-color: var(--acc);
+	color: var(--ink);
+}
+.imp-drop input {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+.imp-drop span {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+}
+.imp-drop b {
+	color: var(--ink);
+	font-weight: 620;
+}
+.imp-parts {
+	margin-top: 12px;
+}
+.imp-parts .set-list-t b.mono {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.imp-foot {
+	align-items: center;
+	justify-content: space-between;
+}
+.imp-sum {
+	color: var(--dim);
+	font-variant-numeric: tabular-nums;
+}
+.imp-acts {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 6px;
+}
+.imp-report {
+	margin-top: 8px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: var(--bg-3);
+	font-size: 0.86rem;
+}
+.imp-report ul {
+	display: grid;
+	gap: 4px;
+	max-height: 240px;
+	margin: 0;
+	padding: 0;
+	overflow: auto;
+	list-style: none;
+}
+.imp-report b.mono {
+	margin-right: 6px;
+	font-family: var(--mono);
+	font-weight: 500;
+}
+@media (max-width: 560px) {
+	.set-list > li:has(.imp-acts) {
+		flex-wrap: wrap;
+	}
+	.imp-acts {
+		justify-content: flex-start;
+	}
+}
+.lb-shell .main > .imp {
+	display: grid;
+	gap: 20px;
+	max-width: 760px;
+}
+.imp-drop > svg {
+	flex: none;
+	width: 26px;
+	height: 26px;
+	color: var(--acc);
+}

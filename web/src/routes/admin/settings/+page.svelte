@@ -10,6 +10,7 @@
 		type User,
 		type ImportCreate,
 		type ImportEntry,
+		type ImportDetail,
 		type BackupRun,
 		type BackupSettings,
 		type Features,
@@ -85,6 +86,17 @@
 	}
 
 	let imports = $state<ImportEntry[]>([]);
+	// The report of an import, with each file that did not come in, opened on request.
+	let importReports = $state<Record<string, ImportDetail>>({});
+	async function toggleImportReport(id: string) {
+		if (importReports[id]) {
+			importReports = Object.fromEntries(
+				Object.entries(importReports).filter(([key]) => key !== id)
+			);
+			return;
+		}
+		importReports = { ...importReports, [id]: await api.importDetail(id) };
+	}
 	let importSource = $state<ImportCreate['source']>('immich');
 	let importOwner = $state('');
 	let importAddress = $state('');
@@ -314,6 +326,7 @@
 
 	const STATUS: Record<string, { hr: string; en: string; tone: string }> = {
 		running: { hr: 'U tijeku', en: 'Running', tone: 'run' },
+		uploading: { hr: 'Čeka datoteke', en: 'Waiting for files', tone: '' },
 		queued: { hr: 'Na čekanju', en: 'Waiting', tone: '' },
 		done: { hr: 'Gotovo', en: 'Done', tone: 'ok' },
 		failed: { hr: 'Neuspjelo', en: 'Failed', tone: 'err' },
@@ -516,7 +529,7 @@
 					{#each imports as entry (entry.id)}
 						<li data-import={entry.source}>
 							<span class="set-list-t">
-								<b>{entry.source} → {entry.userEmail}</b>
+								<b>{entry.source}{entry.fromZip ? ' · ZIP' : ''} → {entry.userEmail}</b>
 								<small>
 									<em class="set-chip {status(entry.status).tone}"
 										>{tr(status(entry.status).hr, status(entry.status).en)}</em
@@ -524,8 +537,22 @@
 									{tr('dodano', 'added')}
 									{entry.added} · {tr('preskočeno', 'skipped')}
 									{entry.skipped} · {tr('neuspjelo', 'failed')}
-									{entry.failed}
+									{entry.failed}{#if entry.total}
+										· {entry.added + entry.skipped + entry.failed} / {entry.total}{/if}
 								</small>
+								{#if importReports[entry.id]}
+									<div class="imp-report">
+										{#if importReports[entry.id].problems.length === 0}
+											<p>{tr('Nema neuspjelih datoteka.', 'No files failed.')}</p>
+										{:else}
+											<ul>
+												{#each importReports[entry.id].problems as problem, n (n)}
+													<li><b class="mono">{problem.name}</b> {problem.reason}</li>
+												{/each}
+											</ul>
+										{/if}
+									</div>
+								{/if}
 								{#if entry.lastError}
 									<button
 										type="button"
@@ -536,15 +563,34 @@
 									>
 								{/if}
 							</span>
-							{#if entry.status === 'running'}
-								<Button
-									small
-									onclick={async () => {
-										await api.cancelImport(entry.id);
-										await loadImports();
-									}}>{tr('Zaustavi', 'Stop')}</Button
-								>
-							{/if}
+							<span class="imp-acts">
+								{#if entry.status === 'running' || entry.status === 'uploading'}
+									<Button
+										small
+										onclick={async () => {
+											await api.cancelImport(entry.id);
+											await loadImports();
+										}}>{tr('Zaustavi', 'Stop')}</Button
+									>
+								{/if}
+								{#if entry.failed > 0}
+									<Button small onclick={() => toggleImportReport(entry.id)}
+										>{importReports[entry.id]
+											? tr('Sakrij', 'Hide')
+											: tr('Izvještaj', 'Report')}</Button
+									>
+								{/if}
+								{#if entry.status !== 'running'}
+									<Button
+										small
+										variant="danger"
+										onclick={async () => {
+											await api.removeImport(entry.id);
+											await loadImports();
+										}}>{tr('Ukloni', 'Remove')}</Button
+									>
+								{/if}
+							</span>
 						</li>
 					{/each}
 				</ul>

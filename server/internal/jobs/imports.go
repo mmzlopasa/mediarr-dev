@@ -11,9 +11,11 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -25,6 +27,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/ringsaturn/tzf"
 	"github.com/riverqueue/river"
 
 	"github.com/mediarr-app/mediarr/server/db"
@@ -96,10 +99,8 @@ func (w *importWorker) Work(ctx context.Context, job *river.Job[ImportArgs]) err
 	switch row.Source {
 	case sourceImmich:
 		err = run.immich(slice)
-	case sourceTakeout:
-		err = run.takeout(slice)
-	case sourceICloud:
-		err = run.icloud(slice)
+	case sourceTakeout, sourceICloud:
+		err = run.export(slice)
 	default:
 		err = &errImportRefused{"unknown source"}
 	}
@@ -107,6 +108,10 @@ func (w *importWorker) Work(ctx context.Context, job *river.Job[ImportArgs]) err
 	switch {
 	case err == nil:
 		notifyImport(context.WithoutCancel(ctx), w.queries, &row, statusDone)
+		if row.FromZip {
+			// Everything is in, so the ZIP files are no longer needed.
+			removeImportParts(context.WithoutCancel(ctx), w.queries, w.opts.LibraryPath, id)
+		}
 		return w.finishImport(ctx, id, statusDone, "")
 	case errors.Is(err, errImportStopped):
 		return nil
@@ -123,6 +128,51 @@ func (w *importWorker) Work(ctx context.Context, job *river.Job[ImportArgs]) err
 	return err
 }
 
+// export reads a Takeout or iCloud export, from a folder or from the user's ZIP files.
+func (i *importRun) export(ctx context.Context) error {
+	tree, err := i.tree(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tree.close() }()
+	if i.row.Source == sourceICloud {
+		return i.icloud(ctx, tree)
+	}
+	return i.takeout(ctx, tree)
+}
+
+// ImportPartsDir is where the ZIP files of an import wait, on the same disk as the library.
+func ImportPartsDir(library string, id pgtype.UUID) string {
+	return filepath.Join(library, ".imports", uuidString(id))
+}
+
+// removeImportParts deletes an import's ZIP files and their records.
+func removeImportParts(ctx context.Context, q *db.Queries, library string, id pgtype.UUID) {
+	if err := os.RemoveAll(ImportPartsDir(library, id)); err != nil {
+		slog.Warn("the ZIP files of an import could not be removed", "import", uuidString(id), "error", err)
+		return
+	}
+	if err := q.DeleteImportParts(ctx, id); err != nil {
+		slog.Warn("the ZIP files of an import could not be forgotten", "import", uuidString(id), "error", err)
+	}
+}
+
+// RemoveStaleImports deletes the ZIP files of imports nobody came back to in a week. One that was
+// still waiting for its files is then stopped.
+func RemoveStaleImports(ctx context.Context, q *db.Queries, library string) error {
+	stale, err := q.ListStaleZipImports(ctx)
+	if err != nil {
+		return err
+	}
+	for _, id := range stale {
+		removeImportParts(ctx, q, library, id)
+		if _, err := q.StopImport(ctx, id); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (w *importWorker) finishImport(ctx context.Context, id pgtype.UUID, status, message string) error {
 	return w.queries.FinishImport(context.WithoutCancel(ctx), db.FinishImportParams{ID: id, Status: status, Column3: message})
 }
@@ -131,6 +181,9 @@ type importRun struct {
 	*deps
 	row    *db.Import
 	origin string
+	// zones finds a time zone from a place, loaded the first time a photo needs it.
+	zones       tzf.F
+	zonesFailed bool
 }
 
 // importItem is one file, with what the place it came from knows about it.
@@ -142,6 +195,9 @@ type importItem struct {
 	favorite  bool
 	archived  bool
 	albums    []pgtype.UUID
+	caption   string
+	// offset is the time zone in minutes, when the source or the place says it.
+	offset *int32
 }
 
 func (i *importRun) count(ctx context.Context, added, skipped, failed int32, problem string) error {
@@ -209,13 +265,12 @@ func (i *importRun) store(ctx context.Context, tmp string, item *importItem) (pg
 			facts.ImportLatitude = pgtype.Float8{Float64: *item.latitude, Valid: true}
 			facts.ImportLongitude = pgtype.Float8{Float64: *item.longitude, Valid: true}
 		}
+		if item.offset != nil {
+			facts.ImportOffsetMinutes = pgtype.Int4{Int32: *item.offset, Valid: true}
+		}
+		facts.Caption = item.caption
 		if err := q.SetImportFacts(ctx, facts); err != nil {
 			return err
-		}
-		if item.archived {
-			if err := q.MarkImportedArchived(ctx, id); err != nil {
-				return err
-			}
 		}
 		if _, err := i.client().InsertTx(ctx, tx, MetadataArgs{AssetID: id.Bytes}, nil); err != nil {
 			return err
@@ -227,6 +282,13 @@ func (i *importRun) store(ctx context.Context, tmp string, item *importItem) (pg
 	}
 	if !isNew {
 		_ = os.Remove(tmp)
+	}
+	// A photo that was already here still gets what the export says about where it belongs. Its date,
+	// place and description stay as they are.
+	if item.archived {
+		if err := i.queries.MarkImportedArchived(ctx, id); err != nil {
+			return id, isNew, err
+		}
 	}
 	if item.favorite {
 		if err := i.queries.MarkImportedFavorite(ctx, id); err != nil {
@@ -688,27 +750,40 @@ func (i *importRun) immich(ctx context.Context) error {
 	return &errImportRefused{"the Immich server does not stop listing photos"}
 }
 
-// --- Folders given through the read-only mount ---
+// --- Exports: an unpacked folder through the read-only mount, or the user's own ZIP files ---
 
-func (i *importRun) folder() (string, error) {
-	root := filepath.Join(i.opts.ExternalPath, filepath.Clean("/"+i.row.Folder))
-	info, err := os.Stat(root)
-	if err != nil || !info.IsDir() {
-		return "", &errImportRefused{"this folder was not found in the external library's mount"}
+// tree opens what this import reads from.
+func (i *importRun) tree(ctx context.Context) (exportTree, error) {
+	if !i.row.FromZip {
+		root := filepath.Join(i.opts.ExternalPath, filepath.Clean("/"+i.row.Folder))
+		info, err := os.Stat(root)
+		if err != nil || !info.IsDir() {
+			return nil, &errImportRefused{"this folder was not found in the external library's mount"}
+		}
+		return newFolderTree(root)
 	}
-	return root, nil
+	parts, err := i.queries.ListImportParts(ctx, i.row.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(parts) == 0 {
+		return nil, &errImportRefused{"there are no ZIP files to bring in"}
+	}
+	paths := make([]string, len(parts))
+	for n := range parts {
+		paths[n] = parts[n].Path
+	}
+	return newZipTree(paths)
 }
 
-func (i *importRun) copyIn(ctx context.Context, path string, item *importItem) error {
-	source, err := os.Open(path) //nolint:gosec // Found by walking the chosen folder.
+func (i *importRun) copyIn(ctx context.Context, tree exportTree, name string, item *importItem) error {
+	source, size, modified, err := tree.open(name)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = source.Close() }()
-	if info, err := source.Stat(); err == nil {
-		if err := i.roomFor(info.Size()); err != nil {
-			return err
-		}
+	if err := i.roomFor(size); err != nil {
+		return err
 	}
 	file, err := i.tempFile()
 	if err != nil {
@@ -719,10 +794,10 @@ func (i *importRun) copyIn(ctx context.Context, path string, item *importItem) e
 		_ = os.Remove(file.Name())
 		return err
 	}
-	if info, err := source.Stat(); err == nil && item.takenAt == nil {
-		when := info.ModTime()
-		item.takenAt = &when
+	if item.takenAt == nil && !modified.IsZero() {
+		item.takenAt = &modified
 	}
+	i.placeInTime(item)
 	_, isNew, err := i.store(ctx, file.Name(), item)
 	if err != nil {
 		_ = os.Remove(file.Name())
@@ -734,31 +809,86 @@ func (i *importRun) copyIn(ctx context.Context, path string, item *importItem) e
 	return i.count(ctx, 0, 1, 0, "")
 }
 
-func (i *importRun) copyOrCount(ctx context.Context, path string, item *importItem) error {
-	err := i.copyIn(ctx, path, item)
+func (i *importRun) copyOrCount(ctx context.Context, tree exportTree, name string, item *importItem) error {
+	err := i.copyIn(ctx, tree, name, item)
 	if err == nil || ctx.Err() != nil {
 		return err
 	}
+	var refused *errImportRefused
+	if errors.As(err, &refused) {
+		return err
+	}
 	slog.Warn("a file could not be imported", "name", item.name, "error", err)
-	return i.count(ctx, 0, 0, 1, item.name+": "+err.Error())
+	reason := truncate(err.Error(), maxImportError)
+	if problem := i.queries.AddImportProblem(ctx, db.AddImportProblemParams{ImportID: i.row.ID, Name: name, Reason: reason}); problem != nil {
+		return problem
+	}
+	return i.count(ctx, 0, 0, 1, item.name+": "+reason)
 }
 
-// sortedMedia is stable from run to run, which keeps a resumed import from looking random.
-func sortedMedia(root string) ([]string, error) {
-	found, _, err := walkExternal(root)
+// begin counts what there is to bring in, so progress can be shown as a share of it.
+func (i *importRun) begin(ctx context.Context, files []string) error {
+	return i.queries.SetImportTotal(ctx, db.SetImportTotalParams{ID: i.row.ID, Total: int32(min(len(files), math.MaxInt32))}) //nolint:gosec // Bounded.
+}
+
+// sidecarXMP finds an XMP file left beside a photo by another program, as photo.jpg.xmp or photo.xmp.
+func sidecarXMP(name string, names []string) string {
+	base := path.Base(name)
+	stem := strings.TrimSuffix(base, path.Ext(base))
+	for _, candidate := range []string{base + ".xmp", base + ".XMP", stem + ".xmp", stem + ".XMP"} {
+		if slices.Contains(names, candidate) {
+			return candidate
+		}
+	}
+	return ""
+}
+
+// readXMP puts what an XMP file beside a photo says into what the import knows about it. A damaged
+// one is passed over: the photo still comes in.
+func (i *importRun) readXMP(ctx context.Context, tree exportTree, name string, item *importItem) {
+	dir := path.Dir(name)
+	found := sidecarXMP(name, tree.names(dir))
+	if found == "" {
+		return
+	}
+	raw, err := tree.small(path.Join(dir, found))
 	if err != nil {
-		return nil, err
+		return
 	}
-	out := make([]string, 0, len(found))
-	for path := range found {
-		out = append(out, path)
+	file, err := i.tempFile()
+	if err != nil {
+		return
 	}
-	slices.Sort(out)
-	return out, nil
+	defer func() { _ = os.Remove(file.Name()) }()
+	_, err = file.Write(raw)
+	_ = file.Close()
+	if err != nil {
+		return
+	}
+	out, err := runTool(ctx, "exiftool", "-json", "-n", file.Name())
+	if err != nil {
+		return
+	}
+	var rows []map[string]any
+	if json.Unmarshal(out, &rows) != nil || len(rows) != 1 {
+		return
+	}
+	var meta Metadata
+	meta.overlaySidecar(rows[0])
+	if meta.TakenAt != nil {
+		item.takenAt, item.offset = meta.TakenAt, meta.OffsetMinutes
+	}
+	if meta.Latitude != nil && meta.Longitude != nil {
+		item.latitude, item.longitude = meta.Latitude, meta.Longitude
+	}
+	if meta.Caption != "" {
+		item.caption = meta.Caption
+	}
 }
 
 // takeoutSidecar is the part of Google's JSON that matters here.
 type takeoutSidecar struct {
+	Description    string `json:"description"`
 	PhotoTakenTime struct {
 		Timestamp string `json:"timestamp"`
 	} `json:"photoTakenTime"`
@@ -816,7 +946,7 @@ func parseTakeoutSidecar(raw []byte) (*importItem, bool, error) {
 	if err := json.Unmarshal(raw, &sidecar); err != nil {
 		return nil, false, err
 	}
-	item := &importItem{favorite: sidecar.Favorited, archived: sidecar.Archived}
+	item := &importItem{favorite: sidecar.Favorited, archived: sidecar.Archived, caption: strings.TrimSpace(sidecar.Description)}
 	if seconds, err := strconv.ParseInt(sidecar.PhotoTakenTime.Timestamp, 10, 64); err == nil && seconds > 0 {
 		when := time.Unix(seconds, 0).UTC()
 		item.takenAt = &when
@@ -837,62 +967,40 @@ func readSmallFile(path string) ([]byte, error) {
 		return nil, err
 	}
 	if !info.Mode().IsRegular() || info.Size() > maxSidecarBytes {
-		return nil, errors.New("not a sidecar")
+		return nil, errNotSmall
 	}
 	return os.ReadFile(path) //nolint:gosec // Within the chosen folder.
 }
 
-// takeoutAlbum names a folder's album from its metadata.json, which year folders do not have.
-func takeoutAlbum(dir string) string {
-	raw, err := readSmallFile(filepath.Join(dir, "metadata.json"))
-	if err != nil {
-		return ""
-	}
+// TakeoutAlbum names a folder's album, with its description, from its metadata.json, which year
+// folders do not have.
+func TakeoutAlbum(raw []byte) (title, description string) {
 	var album struct {
-		Title string `json:"title"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
 	}
 	if json.Unmarshal(raw, &album) != nil {
-		return ""
+		return "", ""
 	}
-	return strings.TrimSpace(album.Title)
+	return strings.TrimSpace(album.Title), strings.TrimSpace(album.Description)
 }
 
-func (i *importRun) takeout(ctx context.Context) error {
-	root, err := i.folder()
-	if err != nil {
+func (i *importRun) takeout(ctx context.Context, tree exportTree) error {
+	files := tree.media()
+	if err := i.begin(ctx, files); err != nil {
 		return err
 	}
-	files, err := sortedMedia(root)
-	if err != nil {
-		return err
-	}
-	listing := map[string][]string{}
-	for _, path := range files {
-		dir := filepath.Dir(path)
-		if _, known := listing[dir]; known {
-			continue
-		}
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			return err
-		}
-		names := make([]string, 0, len(entries))
-		for _, entry := range entries {
-			names = append(names, entry.Name())
-		}
-		listing[dir] = names
-	}
-	for _, path := range files {
+	albums := map[string]pgtype.UUID{}
+	for _, name := range files {
 		if err := i.stillRunning(ctx); err != nil {
 			return err
 		}
-		dir, name := filepath.Dir(path), filepath.Base(path)
+		dir, base := path.Dir(name), path.Base(name)
+		names := tree.names(dir)
 		item := &importItem{}
-		if sidecar := FindTakeoutSidecar(name, listing[dir]); sidecar != "" {
-			raw, err := readSmallFile(filepath.Join(dir, sidecar))
-			if err == nil {
-				parsed, trashed, err := parseTakeoutSidecar(raw)
-				if err == nil {
+		if sidecar := FindTakeoutSidecar(base, names); sidecar != "" {
+			if raw, err := tree.small(path.Join(dir, sidecar)); err == nil {
+				if parsed, trashed, err := parseTakeoutSidecar(raw); err == nil {
 					if trashed {
 						if err := i.count(ctx, 0, 1, 0, ""); err != nil {
 							return err
@@ -903,15 +1011,26 @@ func (i *importRun) takeout(ctx context.Context) error {
 				}
 			}
 		}
-		item.name = name
-		if title := takeoutAlbum(dir); title != "" {
-			album, err := i.albumFor(ctx, dir, title, "")
-			if err != nil {
-				return err
+		item.name = base
+		i.readXMP(ctx, tree, name, item)
+		album, known := albums[dir]
+		if !known && slices.Contains(names, "metadata.json") {
+			if raw, err := tree.small(path.Join(dir, "metadata.json")); err == nil {
+				if title, description := TakeoutAlbum(raw); title != "" {
+					// The folder names the album, as Google cuts names short and two albums can share one.
+					local, err := i.albumFor(ctx, path.Base(dir), title, description)
+					if err != nil {
+						return err
+					}
+					album = local
+				}
 			}
+			albums[dir] = album
+		}
+		if album.Valid {
 			item.albums = []pgtype.UUID{album}
 		}
-		if err := i.copyOrCount(ctx, path, item); err != nil {
+		if err := i.copyOrCount(ctx, tree, name, item); err != nil {
 			return err
 		}
 	}
@@ -976,76 +1095,94 @@ func ReadICloudDetails(source io.Reader) (map[string]ICloudRow, error) {
 	}
 }
 
-func (i *importRun) icloud(ctx context.Context) error {
-	root, err := i.folder()
-	if err != nil {
-		return err
+// ICloudDetails finds a photo's row: from the list in its own folder first, and by its name alone
+// only where no other list has the same name, so two photos of the same name do not mix.
+type ICloudDetails struct {
+	byFolder map[string]ICloudRow
+	byName   map[string][]ICloudRow
+}
+
+// Add takes the rows of the list found in dir.
+func (d *ICloudDetails) Add(dir string, rows map[string]ICloudRow) {
+	if d.byFolder == nil {
+		d.byFolder, d.byName = map[string]ICloudRow{}, map[string][]ICloudRow{}
 	}
-	details := map[string]ICloudRow{}
+	for name, row := range rows {
+		d.byFolder[dir+"/"+name] = row
+		d.byName[name] = append(d.byName[name], row)
+	}
+}
+
+// Find gives the row for the photo at name.
+func (d *ICloudDetails) Find(name string) ICloudRow {
+	key := strings.ToLower(path.Base(name))
+	if row, ok := d.byFolder[path.Dir(name)+"/"+key]; ok {
+		return row
+	}
+	if rows := d.byName[key]; len(rows) == 1 {
+		return rows[0]
+	}
+	return ICloudRow{}
+}
+
+func (i *importRun) icloud(ctx context.Context, tree exportTree) error {
+	var details ICloudDetails
 	albums := map[string][]pgtype.UUID{}
-	err = filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
-		if walkErr != nil || entry.IsDir() || !strings.EqualFold(filepath.Ext(path), ".csv") {
-			return nil //nolint:nilerr // What cannot be read is reported where the files are copied.
+	for _, name := range tree.all() {
+		if !strings.EqualFold(path.Ext(name), ".csv") {
+			continue
 		}
-		file, err := os.Open(path) //nolint:gosec // Within the chosen folder.
+		source, _, _, err := tree.open(name)
 		if err != nil {
-			return nil //nolint:nilerr // As above.
+			continue
 		}
-		defer func() { _ = file.Close() }()
-		if strings.HasPrefix(filepath.Base(path), "Photo Details") {
-			rows, err := ReadICloudDetails(file)
+		base := path.Base(name)
+		switch {
+		case strings.HasPrefix(base, "Photo Details"):
+			if rows, err := ReadICloudDetails(source); err == nil {
+				details.Add(path.Dir(name), rows)
+			}
+		case path.Base(path.Dir(name)) == "Albums":
+			title := strings.TrimSuffix(base, path.Ext(base))
+			album, err := i.albumFor(ctx, name, title, "")
 			if err != nil {
-				return nil //nolint:nilerr // As above.
+				_ = source.Close()
+				return err
 			}
-			for name, row := range rows {
-				details[name] = row
-			}
-			return nil
-		}
-		if filepath.Base(filepath.Dir(path)) != "Albums" {
-			return nil
-		}
-		title := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-		album, err := i.albumFor(ctx, path, title, "")
-		if err != nil {
-			return err
-		}
-		reader := csv.NewReader(file)
-		reader.FieldsPerRecord = -1
-		for first := true; ; first = false {
-			row, err := reader.Read()
-			if err != nil {
-				break
-			}
-			if !first && len(row) > 0 {
-				name := strings.ToLower(strings.TrimSpace(row[0]))
-				albums[name] = append(albums[name], album)
+			reader := csv.NewReader(source)
+			reader.FieldsPerRecord = -1
+			for first := true; ; first = false {
+				row, err := reader.Read()
+				if err != nil {
+					break
+				}
+				if !first && len(row) > 0 {
+					key := strings.ToLower(strings.TrimSpace(row[0]))
+					albums[key] = append(albums[key], album)
+				}
 			}
 		}
-		return nil
-	})
-	if err != nil {
+		_ = source.Close()
+	}
+	files := tree.media()
+	if err := i.begin(ctx, files); err != nil {
 		return err
 	}
-	files, err := sortedMedia(root)
-	if err != nil {
-		return err
-	}
-	for _, path := range files {
+	for _, name := range files {
 		if err := i.stillRunning(ctx); err != nil {
 			return err
 		}
-		name := filepath.Base(path)
-		key := strings.ToLower(name)
-		row := details[key]
+		row := details.Find(name)
 		if row.Deleted {
 			if err := i.count(ctx, 0, 1, 0, ""); err != nil {
 				return err
 			}
 			continue
 		}
-		item := &importItem{name: name, takenAt: row.TakenAt, favorite: row.Favorite, archived: row.Hidden, albums: albums[key]}
-		if err := i.copyOrCount(ctx, path, item); err != nil {
+		base := path.Base(name)
+		item := &importItem{name: base, takenAt: row.TakenAt, favorite: row.Favorite, archived: row.Hidden, albums: albums[strings.ToLower(base)]}
+		i.readXMP(ctx, tree, name, item)
+		if err := i.copyOrCount(ctx, tree, name, item); err != nil {
 			return err
 		}
 	}

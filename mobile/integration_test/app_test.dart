@@ -220,6 +220,23 @@ void main() {
     await waitFor(tester, find.text('Hvar'));
   });
 
+  testWidgets('an import from Google Takeout is followed from the account', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Import'));
+    await tester.ensureVisible(find.text('Import'));
+    await tester.tap(find.text('Import'));
+    await waitFor(tester, find.textContaining('Google Takeout'));
+    expect(find.textContaining('10 / 40'), findsOneWidget);
+    expect(find.text('Stop'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

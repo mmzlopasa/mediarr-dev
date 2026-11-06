@@ -84,6 +84,47 @@ func (q *Queries) AddImportCounts(ctx context.Context, arg AddImportCountsParams
 	return err
 }
 
+const addImportPart = `-- name: AddImportPart :one
+INSERT INTO import_parts (import_id, name, size_bytes, path) VALUES ($1, $2, $3, $4) RETURNING id
+`
+
+type AddImportPartParams struct {
+	ImportID  pgtype.UUID
+	Name      string
+	SizeBytes int64
+	Path      string
+}
+
+func (q *Queries) AddImportPart(ctx context.Context, arg AddImportPartParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, addImportPart,
+		arg.ImportID,
+		arg.Name,
+		arg.SizeBytes,
+		arg.Path,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const addImportProblem = `-- name: AddImportProblem :exec
+INSERT INTO import_problems (import_id, name, reason)
+SELECT $1, $2, $3
+WHERE (SELECT count(*) FROM import_problems WHERE import_id = $1) < 500
+`
+
+type AddImportProblemParams struct {
+	ImportID pgtype.UUID
+	Name     string
+	Reason   string
+}
+
+// The report keeps the first 500 problems; the count of failures has all of them.
+func (q *Queries) AddImportProblem(ctx context.Context, arg AddImportProblemParams) error {
+	_, err := q.db.Exec(ctx, addImportProblem, arg.ImportID, arg.Name, arg.Reason)
+	return err
+}
+
 const createImport = `-- name: CreateImport :one
 INSERT INTO imports (user_id, source, address, secret, folder) VALUES ($1, $2, $3, $4, $5) RETURNING id
 `
@@ -126,6 +167,22 @@ func (q *Queries) CreateNamedPerson(ctx context.Context, arg CreateNamedPersonPa
 	return id, err
 }
 
+const createZipImport = `-- name: CreateZipImport :one
+INSERT INTO imports (user_id, source, status, from_zip) VALUES ($1, $2, 'uploading', true) RETURNING id
+`
+
+type CreateZipImportParams struct {
+	UserID pgtype.UUID
+	Source string
+}
+
+func (q *Queries) CreateZipImport(ctx context.Context, arg CreateZipImportParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createZipImport, arg.UserID, arg.Source)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const deleteFaceHint = `-- name: DeleteFaceHint :exec
 DELETE FROM face_hints WHERE asset_id = $1 AND person_id = $2 AND x1 = $3 AND y1 = $4
 `
@@ -144,6 +201,24 @@ func (q *Queries) DeleteFaceHint(ctx context.Context, arg DeleteFaceHintParams) 
 		arg.X1,
 		arg.Y1,
 	)
+	return err
+}
+
+const deleteImport = `-- name: DeleteImport :exec
+DELETE FROM imports WHERE id = $1
+`
+
+func (q *Queries) DeleteImport(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteImport, id)
+	return err
+}
+
+const deleteImportParts = `-- name: DeleteImportParts :exec
+DELETE FROM import_parts WHERE import_id = $1
+`
+
+func (q *Queries) DeleteImportParts(ctx context.Context, importID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteImportParts, importID)
 	return err
 }
 
@@ -180,7 +255,7 @@ func (q *Queries) GetAssetIDBySHA1(ctx context.Context, arg GetAssetIDBySHA1Para
 }
 
 const getImport = `-- name: GetImport :one
-SELECT id, user_id, source, status, address, secret, folder, page, added, skipped, failed, last_error, created_at, finished_at FROM imports WHERE id = $1
+SELECT id, user_id, source, status, address, secret, folder, page, added, skipped, failed, last_error, created_at, finished_at, from_zip, total, active_at FROM imports WHERE id = $1
 `
 
 func (q *Queries) GetImport(ctx context.Context, id pgtype.UUID) (Import, error) {
@@ -201,6 +276,9 @@ func (q *Queries) GetImport(ctx context.Context, id pgtype.UUID) (Import, error)
 		&i.LastError,
 		&i.CreatedAt,
 		&i.FinishedAt,
+		&i.FromZip,
+		&i.Total,
+		&i.ActiveAt,
 	)
 	return i, err
 }
@@ -339,8 +417,68 @@ func (q *Queries) ListFaceIgnored(ctx context.Context, assetID pgtype.UUID) ([]L
 	return items, nil
 }
 
+const listImportParts = `-- name: ListImportParts :many
+SELECT id, import_id, name, size_bytes, path, created_at FROM import_parts WHERE import_id = $1 ORDER BY created_at, name
+`
+
+func (q *Queries) ListImportParts(ctx context.Context, importID pgtype.UUID) ([]ImportPart, error) {
+	rows, err := q.db.Query(ctx, listImportParts, importID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ImportPart
+	for rows.Next() {
+		var i ImportPart
+		if err := rows.Scan(
+			&i.ID,
+			&i.ImportID,
+			&i.Name,
+			&i.SizeBytes,
+			&i.Path,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listImportProblems = `-- name: ListImportProblems :many
+SELECT name, reason FROM import_problems WHERE import_id = $1 ORDER BY created_at LIMIT 500
+`
+
+type ListImportProblemsRow struct {
+	Name   string
+	Reason string
+}
+
+func (q *Queries) ListImportProblems(ctx context.Context, importID pgtype.UUID) ([]ListImportProblemsRow, error) {
+	rows, err := q.db.Query(ctx, listImportProblems, importID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListImportProblemsRow
+	for rows.Next() {
+		var i ListImportProblemsRow
+		if err := rows.Scan(&i.Name, &i.Reason); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listImports = `-- name: ListImports :many
-SELECT i.id, i.user_id, i.source, i.status, i.address, i.secret, i.folder, i.page, i.added, i.skipped, i.failed, i.last_error, i.created_at, i.finished_at, u.email AS user_email FROM imports i JOIN users u ON u.id = i.user_id ORDER BY i.created_at DESC LIMIT 50
+SELECT i.id, i.user_id, i.source, i.status, i.address, i.secret, i.folder, i.page, i.added, i.skipped, i.failed, i.last_error, i.created_at, i.finished_at, i.from_zip, i.total, i.active_at, u.email AS user_email FROM imports i JOIN users u ON u.id = i.user_id ORDER BY i.created_at DESC LIMIT 50
 `
 
 type ListImportsRow struct {
@@ -358,6 +496,9 @@ type ListImportsRow struct {
 	LastError  string
 	CreatedAt  pgtype.Timestamptz
 	FinishedAt pgtype.Timestamptz
+	FromZip    bool
+	Total      int32
+	ActiveAt   pgtype.Timestamptz
 	UserEmail  string
 }
 
@@ -385,7 +526,79 @@ func (q *Queries) ListImports(ctx context.Context) ([]ListImportsRow, error) {
 			&i.LastError,
 			&i.CreatedAt,
 			&i.FinishedAt,
+			&i.FromZip,
+			&i.Total,
+			&i.ActiveAt,
 			&i.UserEmail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listStaleZipImports = `-- name: ListStaleZipImports :many
+SELECT i.id FROM imports i
+WHERE i.from_zip AND i.status IN ('uploading', 'cancelled', 'failed') AND i.active_at < now() - interval '7 days'
+    AND EXISTS (SELECT 1 FROM import_parts p WHERE p.import_id = i.id)
+`
+
+// ZIP files nobody came back for in a week are removed. A finished import has none left.
+func (q *Queries) ListStaleZipImports(ctx context.Context) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, listStaleZipImports)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserImports = `-- name: ListUserImports :many
+SELECT id, user_id, source, status, address, secret, folder, page, added, skipped, failed, last_error, created_at, finished_at, from_zip, total, active_at FROM imports WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50
+`
+
+func (q *Queries) ListUserImports(ctx context.Context, userID pgtype.UUID) ([]Import, error) {
+	rows, err := q.db.Query(ctx, listUserImports, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Import
+	for rows.Next() {
+		var i Import
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Source,
+			&i.Status,
+			&i.Address,
+			&i.Secret,
+			&i.Folder,
+			&i.Page,
+			&i.Added,
+			&i.Skipped,
+			&i.Failed,
+			&i.LastError,
+			&i.CreatedAt,
+			&i.FinishedAt,
+			&i.FromZip,
+			&i.Total,
+			&i.ActiveAt,
 		); err != nil {
 			return nil, err
 		}
@@ -465,14 +678,18 @@ func (q *Queries) SetAssetSHA1(ctx context.Context, arg SetAssetSHA1Params) erro
 }
 
 const setImportFacts = `-- name: SetImportFacts :exec
-UPDATE assets SET import_taken_at = $2, import_latitude = $3, import_longitude = $4 WHERE id = $1
+UPDATE assets SET import_taken_at = $2, import_latitude = $3, import_longitude = $4, import_offset_minutes = $5,
+    caption = CASE WHEN caption = '' THEN $6::text ELSE caption END
+WHERE id = $1
 `
 
 type SetImportFactsParams struct {
-	ID              pgtype.UUID
-	ImportTakenAt   pgtype.Timestamptz
-	ImportLatitude  pgtype.Float8
-	ImportLongitude pgtype.Float8
+	ID                  pgtype.UUID
+	ImportTakenAt       pgtype.Timestamptz
+	ImportLatitude      pgtype.Float8
+	ImportLongitude     pgtype.Float8
+	ImportOffsetMinutes pgtype.Int4
+	Caption             string
 }
 
 func (q *Queries) SetImportFacts(ctx context.Context, arg SetImportFactsParams) error {
@@ -481,6 +698,8 @@ func (q *Queries) SetImportFacts(ctx context.Context, arg SetImportFactsParams) 
 		arg.ImportTakenAt,
 		arg.ImportLatitude,
 		arg.ImportLongitude,
+		arg.ImportOffsetMinutes,
+		arg.Caption,
 	)
 	return err
 }
@@ -520,5 +739,54 @@ type SetImportPageParams struct {
 
 func (q *Queries) SetImportPage(ctx context.Context, arg SetImportPageParams) error {
 	_, err := q.db.Exec(ctx, setImportPage, arg.ID, arg.Page)
+	return err
+}
+
+const setImportTotal = `-- name: SetImportTotal :exec
+UPDATE imports SET total = $2 WHERE id = $1
+`
+
+type SetImportTotalParams struct {
+	ID    pgtype.UUID
+	Total int32
+}
+
+func (q *Queries) SetImportTotal(ctx context.Context, arg SetImportTotalParams) error {
+	_, err := q.db.Exec(ctx, setImportTotal, arg.ID, arg.Total)
+	return err
+}
+
+const startImport = `-- name: StartImport :execrows
+UPDATE imports SET status = 'running', active_at = now(), finished_at = NULL
+WHERE id = $1 AND (status IN ('uploading', 'cancelled') OR (status = 'failed' AND from_zip))
+`
+
+// Starts an import that waits for its files, or goes on with one that was stopped or failed.
+func (q *Queries) StartImport(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, startImport, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const stopImport = `-- name: StopImport :execrows
+UPDATE imports SET status = 'cancelled', active_at = now(), finished_at = now() WHERE id = $1 AND status IN ('uploading', 'running')
+`
+
+func (q *Queries) StopImport(ctx context.Context, id pgtype.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, stopImport, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const touchImport = `-- name: TouchImport :exec
+UPDATE imports SET active_at = now() WHERE id = $1
+`
+
+func (q *Queries) TouchImport(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, touchImport, id)
 	return err
 }

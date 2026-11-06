@@ -117,6 +117,7 @@ type Asset struct {
 	Caption             string
 	Rating              int16
 	RatingByOwner       bool
+	ImportOffsetMinutes pgtype.Int4
 }
 
 type AssetDescription struct {
@@ -246,6 +247,9 @@ type Import struct {
 	LastError  string
 	CreatedAt  pgtype.Timestamptz
 	FinishedAt pgtype.Timestamptz
+	FromZip    bool
+	Total      int32
+	ActiveAt   pgtype.Timestamptz
 }
 
 type ImportMap struct {
@@ -254,6 +258,22 @@ type ImportMap struct {
 	Kind     string
 	RemoteID string
 	LocalID  pgtype.UUID
+}
+
+type ImportPart struct {
+	ID        pgtype.UUID
+	ImportID  pgtype.UUID
+	Name      string
+	SizeBytes int64
+	Path      string
+	CreatedAt pgtype.Timestamptz
+}
+
+type ImportProblem struct {
+	ImportID  pgtype.UUID
+	Name      string
+	Reason    string
+	CreatedAt pgtype.Timestamptz
 }
 
 type Library struct {

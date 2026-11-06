@@ -12,6 +12,8 @@ Name | Type | Description | Notes
 **userEmail** | **String** |  | 
 **source_** | **String** |  | 
 **status** | **String** |  | 
+**fromZip** | **bool** | Uploaded as ZIP files by the user, not from a folder | 
+**total** | **int** |  | 
 **added** | **int** |  | 
 **skipped** | **int** | Already there, or deleted at the source | 
 **failed** | **int** |  | 

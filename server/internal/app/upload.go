@@ -1,6 +1,7 @@
 package app
 
 import (
+	"archive/zip"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -10,9 +11,11 @@ import (
 	stdslog "log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,6 +41,7 @@ const (
 	metaModified    = "lastModified"
 	metaAlbum       = "albumId"
 	metaGuest       = "guest"
+	metaImport      = "importId"
 	maxAssetListLen = 200
 	defaultListLen  = 50
 )
@@ -82,6 +86,9 @@ func (s *apiServer) beforeUpload(hook tusd.HookEvent) (tusd.HTTPResponse, tusd.F
 	}
 	if hook.Upload.IsFinal || hook.Upload.IsPartial {
 		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError("ERR_NO_CONCAT", "uploads cannot be put together", http.StatusBadRequest)
+	}
+	if wanted := hook.Upload.MetaData[metaImport]; wanted != "" {
+		return s.beforeImportPart(hook, user, wanted)
 	}
 	if err := s.checkDiskRoom(hook.Upload.Size); err != nil {
 		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, err
@@ -151,6 +158,9 @@ func (s *apiServer) finishUpload(hook tusd.HookEvent) (tusd.HTTPResponse, error)
 	infoFile := hook.Upload.Storage["InfoPath"]
 	if tmp == "" {
 		return tusd.HTTPResponse{}, errors.New("upload has no stored file")
+	}
+	if hook.Upload.MetaData[metaImport] != "" {
+		return s.finishImportPart(hook, tmp, infoFile)
 	}
 
 	sum, err := hashFile(tmp)
@@ -397,4 +407,89 @@ func (s *apiServer) CheckAssets(w http.ResponseWriter, r *http.Request) {
 		ids[existing[i]] = openapi_types.UUID(row.ID.Bytes)
 	}
 	writeJSON(w, http.StatusOK, api.ChecksumCheckResponse{Existing: existing, Ids: ids})
+}
+
+// beforeImportPart takes a ZIP file of the user's own import that is still waiting for its files.
+// It is not a photo, so the limit on the size of one photo does not apply, but it must fit twice on
+// the disk, once as the ZIP file and once as what comes out of it.
+func (s *apiServer) beforeImportPart(hook tusd.HookEvent, user *db.User, wanted string) (tusd.HTTPResponse, tusd.FileInfoChanges, error) {
+	refuse := func(code, message string, status int) (tusd.HTTPResponse, tusd.FileInfoChanges, error) {
+		return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, tusd.NewError(code, message, status)
+	}
+	id, err := uuid.Parse(wanted)
+	if err != nil {
+		return refuse("ERR_NO_IMPORT", "no such import", http.StatusNotFound)
+	}
+	row, err := s.queries.GetImport(hook.Context, pgtype.UUID{Bytes: id, Valid: true})
+	if err != nil || row.UserID != user.ID || !row.FromZip {
+		return refuse("ERR_NO_IMPORT", "no such import", http.StatusNotFound)
+	}
+	if row.Status != "uploading" {
+		return refuse("ERR_IMPORT_STARTED", "this import has already started", http.StatusConflict)
+	}
+	name := storage.SafeName(hook.Upload.MetaData[metaFilename])
+	if !strings.HasSuffix(strings.ToLower(name), ".zip") {
+		return refuse("ERR_NOT_ZIP", "choose the ZIP files of the export", http.StatusBadRequest)
+	}
+	var disk syscall.Statfs_t
+	if err := syscall.Statfs(s.LibraryPath, &disk); err == nil {
+		free := int64(disk.Bavail) * disk.Bsize //nolint:gosec // Disk sizes fit.
+		if free-2*hook.Upload.Size < minFreeDiskBytes {
+			return refuse("ERR_DISK_FULL", fmt.Sprintf("the server needs about %d GB free for this file, twice its size", 2*hook.Upload.Size>>30+1), http.StatusInsufficientStorage)
+		}
+	}
+	if user.QuotaBytes.Valid {
+		stored, err := s.queries.UserStoredBytes(hook.Context, user.ID)
+		if err != nil {
+			return tusd.HTTPResponse{}, tusd.FileInfoChanges{}, err
+		}
+		if stored+hook.Upload.Size > user.QuotaBytes.Int64 {
+			return refuse("ERR_QUOTA", "this export does not fit in this account's storage limit", http.StatusRequestEntityTooLarge)
+		}
+	}
+	return tusd.HTTPResponse{}, tusd.FileInfoChanges{MetaData: tusd.MetaData{
+		metaUserID:   uuid.UUID(user.ID.Bytes).String(),
+		metaFilename: name,
+		metaImport:   id.String(),
+	}}, nil
+}
+
+// finishImportPart keeps a finished ZIP file with its import, once it is sure it can be read as one.
+func (s *apiServer) finishImportPart(hook tusd.HookEvent, tmp, infoFile string) (tusd.HTTPResponse, error) {
+	ctx := hook.Context
+	meta := hook.Upload.MetaData
+	importID, err := uuid.Parse(meta[metaImport])
+	if err != nil {
+		return tusd.HTTPResponse{}, fmt.Errorf("upload has no import: %w", err)
+	}
+	reader, err := zip.OpenReader(tmp)
+	if err != nil {
+		removeUpload(tmp, infoFile)
+		return tusd.HTTPResponse{}, tusd.NewError("ERR_NOT_ZIP", "this file is not a ZIP file that can be read", http.StatusUnprocessableEntity)
+	}
+	_ = reader.Close()
+	id := pgtype.UUID{Bytes: importID, Valid: true}
+	row, err := s.queries.GetImport(ctx, id)
+	if err != nil || row.Status != "uploading" || uuid.UUID(row.UserID.Bytes).String() != meta[metaUserID] {
+		removeUpload(tmp, infoFile)
+		return tusd.HTTPResponse{}, tusd.NewError("ERR_IMPORT_STARTED", "this import is no longer waiting for files", http.StatusConflict)
+	}
+	dir := jobs.ImportPartsDir(s.LibraryPath, id)
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		return tusd.HTTPResponse{}, err
+	}
+	dest := filepath.Join(dir, uuid.NewString()+".zip")
+	if err := os.Rename(tmp, dest); err != nil {
+		return tusd.HTTPResponse{}, err
+	}
+	part, err := s.queries.AddImportPart(ctx, db.AddImportPartParams{ImportID: id, Name: meta[metaFilename], SizeBytes: hook.Upload.Size, Path: dest})
+	if err != nil {
+		_ = os.Remove(dest)
+		return tusd.HTTPResponse{}, err
+	}
+	if err := s.queries.TouchImport(ctx, id); err != nil {
+		return tusd.HTTPResponse{}, err
+	}
+	removeUpload(infoFile)
+	return tusd.HTTPResponse{Header: tusd.HTTPHeader{"X-Import-Part": uuid.UUID(part.Bytes).String()}}, nil
 }

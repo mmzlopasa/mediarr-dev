@@ -527,7 +527,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create a resumable upload (tus 1.0). A body uploads the whole file in this request. */
+        /** Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo. */
         post: operations["createUpload"];
         delete?: never;
         options?: never;
@@ -2217,6 +2217,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My imports, the newest first */
+        get: operations["listMyImports"];
+        put?: never;
+        /** Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in */
+        post: operations["createMyImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An import with its files and its report. Its owner or an administrator */
+        get: operations["getImport"];
+        put?: never;
+        post?: never;
+        /** Remove an import and its ZIP files. What it brought in stays */
+        delete: operations["deleteImport"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bring in the uploaded files, or go on with an import that was stopped */
+        post: operations["startImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop an import. What it has brought in stays, and it can go on later */
+        post: operations["stopImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/imports": {
         parameters: {
             query?: never;
@@ -2983,6 +3053,46 @@ export interface components {
             /** @description Takeout and iCloud: an unpacked folder inside the external library's mount */
             folder?: string;
         };
+        UserImportCreate: {
+            /** @enum {string} */
+            source: "takeout" | "icloud";
+        };
+        ImportPart: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int64 */
+            size: number;
+        };
+        UserImport: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            source: "immich" | "takeout" | "icloud";
+            /** @enum {string} */
+            status: "uploading" | "running" | "done" | "failed" | "cancelled";
+            fromZip: boolean;
+            parts: components["schemas"]["ImportPart"][];
+            /** @description Files found, known once the import has read its ZIP files */
+            total: number;
+            added: number;
+            /** @description Already there, or deleted at the source */
+            skipped: number;
+            failed: number;
+            lastError: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            finishedAt?: string;
+        };
+        ImportProblem: {
+            name: string;
+            reason: string;
+        };
+        ImportDetail: components["schemas"]["UserImport"] & {
+            userEmail: string;
+            problems: components["schemas"]["ImportProblem"][];
+        };
         ImportEntry: {
             /** Format: uuid */
             id: string;
@@ -2990,7 +3100,10 @@ export interface components {
             /** @enum {string} */
             source: "immich" | "takeout" | "icloud";
             /** @enum {string} */
-            status: "running" | "done" | "failed" | "cancelled";
+            status: "uploading" | "running" | "done" | "failed" | "cancelled";
+            /** @description Uploaded as ZIP files by the user, not from a folder */
+            fromZip: boolean;
+            total: number;
             added: number;
             /** @description Already there, or deleted at the source */
             skipped: number;
@@ -7562,6 +7675,145 @@ export interface operations {
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    listMyImports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The imports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserImport"][];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    createMyImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserImportCreate"];
+            };
+        };
+        responses: {
+            /** @description Waiting for its files */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserImport"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    getImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The import */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDetail"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    deleteImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    startImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Started */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    stopImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stopped */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     listImports: {

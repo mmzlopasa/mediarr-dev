@@ -452,6 +452,54 @@ func (e ImportCreateSource) Valid() bool {
 	}
 }
 
+// Defines values for ImportDetailSource.
+const (
+	ImportDetailSourceIcloud  ImportDetailSource = "icloud"
+	ImportDetailSourceImmich  ImportDetailSource = "immich"
+	ImportDetailSourceTakeout ImportDetailSource = "takeout"
+)
+
+// Valid indicates whether the value is a known member of the ImportDetailSource enum.
+func (e ImportDetailSource) Valid() bool {
+	switch e {
+	case ImportDetailSourceIcloud:
+		return true
+	case ImportDetailSourceImmich:
+		return true
+	case ImportDetailSourceTakeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ImportDetailStatus.
+const (
+	ImportDetailStatusCancelled ImportDetailStatus = "cancelled"
+	ImportDetailStatusDone      ImportDetailStatus = "done"
+	ImportDetailStatusFailed    ImportDetailStatus = "failed"
+	ImportDetailStatusRunning   ImportDetailStatus = "running"
+	ImportDetailStatusUploading ImportDetailStatus = "uploading"
+)
+
+// Valid indicates whether the value is a known member of the ImportDetailStatus enum.
+func (e ImportDetailStatus) Valid() bool {
+	switch e {
+	case ImportDetailStatusCancelled:
+		return true
+	case ImportDetailStatusDone:
+		return true
+	case ImportDetailStatusFailed:
+		return true
+	case ImportDetailStatusRunning:
+		return true
+	case ImportDetailStatusUploading:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ImportEntrySource.
 const (
 	ImportEntrySourceIcloud  ImportEntrySource = "icloud"
@@ -479,6 +527,7 @@ const (
 	ImportEntryStatusDone      ImportEntryStatus = "done"
 	ImportEntryStatusFailed    ImportEntryStatus = "failed"
 	ImportEntryStatusRunning   ImportEntryStatus = "running"
+	ImportEntryStatusUploading ImportEntryStatus = "uploading"
 )
 
 // Valid indicates whether the value is a known member of the ImportEntryStatus enum.
@@ -491,6 +540,8 @@ func (e ImportEntryStatus) Valid() bool {
 	case ImportEntryStatusFailed:
 		return true
 	case ImportEntryStatusRunning:
+		return true
+	case ImportEntryStatusUploading:
 		return true
 	default:
 		return false
@@ -647,6 +698,72 @@ func (e TimelineItemKind) Valid() bool {
 	case TimelineItemKindUnknown:
 		return true
 	case TimelineItemKindVideo:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserImportSource.
+const (
+	UserImportSourceIcloud  UserImportSource = "icloud"
+	UserImportSourceImmich  UserImportSource = "immich"
+	UserImportSourceTakeout UserImportSource = "takeout"
+)
+
+// Valid indicates whether the value is a known member of the UserImportSource enum.
+func (e UserImportSource) Valid() bool {
+	switch e {
+	case UserImportSourceIcloud:
+		return true
+	case UserImportSourceImmich:
+		return true
+	case UserImportSourceTakeout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserImportStatus.
+const (
+	UserImportStatusCancelled UserImportStatus = "cancelled"
+	UserImportStatusDone      UserImportStatus = "done"
+	UserImportStatusFailed    UserImportStatus = "failed"
+	UserImportStatusRunning   UserImportStatus = "running"
+	UserImportStatusUploading UserImportStatus = "uploading"
+)
+
+// Valid indicates whether the value is a known member of the UserImportStatus enum.
+func (e UserImportStatus) Valid() bool {
+	switch e {
+	case UserImportStatusCancelled:
+		return true
+	case UserImportStatusDone:
+		return true
+	case UserImportStatusFailed:
+		return true
+	case UserImportStatusRunning:
+		return true
+	case UserImportStatusUploading:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserImportCreateSource.
+const (
+	UserImportCreateSourceIcloud  UserImportCreateSource = "icloud"
+	UserImportCreateSourceTakeout UserImportCreateSource = "takeout"
+)
+
+// Valid indicates whether the value is a known member of the UserImportCreateSource enum.
+func (e UserImportCreateSource) Valid() bool {
+	switch e {
+	case UserImportCreateSourceIcloud:
+		return true
+	case UserImportCreateSourceTakeout:
 		return true
 	default:
 		return false
@@ -1710,19 +1827,51 @@ type ImportCreate struct {
 // ImportCreateSource defines model for ImportCreate.Source.
 type ImportCreateSource string
 
-// ImportEntry defines model for ImportEntry.
-type ImportEntry struct {
+// ImportDetail defines model for ImportDetail.
+type ImportDetail struct {
 	Added      int                `json:"added"`
 	CreatedAt  time.Time          `json:"createdAt"`
 	Failed     int                `json:"failed"`
 	FinishedAt *time.Time         `json:"finishedAt,omitempty"`
+	FromZip    bool               `json:"fromZip"`
 	Id         openapi_types.UUID `json:"id"`
 	LastError  string             `json:"lastError"`
+	Parts      []ImportPart       `json:"parts"`
+	Problems   []ImportProblem    `json:"problems"`
+
+	// Skipped Already there, or deleted at the source
+	Skipped int                `json:"skipped"`
+	Source  ImportDetailSource `json:"source"`
+	Status  ImportDetailStatus `json:"status"`
+
+	// Total Files found, known once the import has read its ZIP files
+	Total     int    `json:"total"`
+	UserEmail string `json:"userEmail"`
+}
+
+// ImportDetailSource defines model for ImportDetail.Source.
+type ImportDetailSource string
+
+// ImportDetailStatus defines model for ImportDetail.Status.
+type ImportDetailStatus string
+
+// ImportEntry defines model for ImportEntry.
+type ImportEntry struct {
+	Added      int        `json:"added"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	Failed     int        `json:"failed"`
+	FinishedAt *time.Time `json:"finishedAt,omitempty"`
+
+	// FromZip Uploaded as ZIP files by the user, not from a folder
+	FromZip   bool               `json:"fromZip"`
+	Id        openapi_types.UUID `json:"id"`
+	LastError string             `json:"lastError"`
 
 	// Skipped Already there, or deleted at the source
 	Skipped   int               `json:"skipped"`
 	Source    ImportEntrySource `json:"source"`
 	Status    ImportEntryStatus `json:"status"`
+	Total     int               `json:"total"`
 	UserEmail string            `json:"userEmail"`
 }
 
@@ -1731,6 +1880,19 @@ type ImportEntrySource string
 
 // ImportEntryStatus defines model for ImportEntry.Status.
 type ImportEntryStatus string
+
+// ImportPart defines model for ImportPart.
+type ImportPart struct {
+	Id   openapi_types.UUID `json:"id"`
+	Name string             `json:"name"`
+	Size int64              `json:"size"`
+}
+
+// ImportProblem defines model for ImportProblem.
+type ImportProblem struct {
+	Name   string `json:"name"`
+	Reason string `json:"reason"`
+}
 
 // IntegrityProblem defines model for IntegrityProblem.
 type IntegrityProblem struct {
@@ -2242,6 +2404,40 @@ type User struct {
 	TotpEnabled bool               `json:"totpEnabled"`
 }
 
+// UserImport defines model for UserImport.
+type UserImport struct {
+	Added      int                `json:"added"`
+	CreatedAt  time.Time          `json:"createdAt"`
+	Failed     int                `json:"failed"`
+	FinishedAt *time.Time         `json:"finishedAt,omitempty"`
+	FromZip    bool               `json:"fromZip"`
+	Id         openapi_types.UUID `json:"id"`
+	LastError  string             `json:"lastError"`
+	Parts      []ImportPart       `json:"parts"`
+
+	// Skipped Already there, or deleted at the source
+	Skipped int              `json:"skipped"`
+	Source  UserImportSource `json:"source"`
+	Status  UserImportStatus `json:"status"`
+
+	// Total Files found, known once the import has read its ZIP files
+	Total int `json:"total"`
+}
+
+// UserImportSource defines model for UserImport.Source.
+type UserImportSource string
+
+// UserImportStatus defines model for UserImport.Status.
+type UserImportStatus string
+
+// UserImportCreate defines model for UserImportCreate.
+type UserImportCreate struct {
+	Source UserImportCreateSource `json:"source"`
+}
+
+// UserImportCreateSource defines model for UserImportCreate.Source.
+type UserImportCreateSource string
+
 // UserPreferences defines model for UserPreferences.
 type UserPreferences struct {
 	AlbumOrder     UserPreferencesAlbumOrder `json:"albumOrder"`
@@ -2597,6 +2793,9 @@ type AssignFaceJSONRequestBody = FaceAssign
 
 // CreateFamilyRuleJSONRequestBody defines body for CreateFamilyRule for application/json ContentType.
 type CreateFamilyRuleJSONRequestBody = FamilyRuleCreate
+
+// CreateMyImportJSONRequestBody defines body for CreateMyImport for application/json ContentType.
+type CreateMyImportJSONRequestBody = UserImportCreate
 
 // SetMapStyleJSONRequestBody defines body for SetMapStyle for application/json ContentType.
 type SetMapStyleJSONRequestBody = MapStyle
@@ -2999,6 +3198,24 @@ type ServerInterface interface {
 	// GetFolder One folder of the external library, for the user who owns it
 	// (GET /api/folders)
 	GetFolder(w http.ResponseWriter, r *http.Request, params GetFolderParams)
+	// ListMyImports My imports, the newest first
+	// (GET /api/imports)
+	ListMyImports(w http.ResponseWriter, r *http.Request)
+	// CreateMyImport Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
+	// (POST /api/imports)
+	CreateMyImport(w http.ResponseWriter, r *http.Request)
+	// DeleteImport Remove an import and its ZIP files. What it brought in stays
+	// (DELETE /api/imports/{id})
+	DeleteImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetImport An import with its files and its report. Its owner or an administrator
+	// (GET /api/imports/{id})
+	GetImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// StartImport Bring in the uploaded files, or go on with an import that was stopped
+	// (POST /api/imports/{id}/start)
+	StartImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// StopImport Stop an import. What it has brought in stays, and it can go on later
+	// (POST /api/imports/{id}/stop)
+	StopImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetMapPoints Photos with a location that this user may see, oldest first
 	// (GET /api/map/points)
 	GetMapPoints(w http.ResponseWriter, r *http.Request, params GetMapPointsParams)
@@ -3188,7 +3405,7 @@ type ServerInterface interface {
 	// GetTrashSummary What emptying the trash would remove
 	// (GET /api/trash/summary)
 	GetTrashSummary(w http.ResponseWriter, r *http.Request)
-	// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
+	// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
 	// (POST /api/uploads)
 	CreateUpload(w http.ResponseWriter, r *http.Request)
 	// CancelUpload Cancel an upload (tus 1.0)
@@ -3914,6 +4131,42 @@ func (_ Unimplemented) GetFolder(w http.ResponseWriter, r *http.Request, params 
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListMyImports My imports, the newest first
+// (GET /api/imports)
+func (_ Unimplemented) ListMyImports(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateMyImport Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
+// (POST /api/imports)
+func (_ Unimplemented) CreateMyImport(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteImport Remove an import and its ZIP files. What it brought in stays
+// (DELETE /api/imports/{id})
+func (_ Unimplemented) DeleteImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetImport An import with its files and its report. Its owner or an administrator
+// (GET /api/imports/{id})
+func (_ Unimplemented) GetImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// StartImport Bring in the uploaded files, or go on with an import that was stopped
+// (POST /api/imports/{id}/start)
+func (_ Unimplemented) StartImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// StopImport Stop an import. What it has brought in stays, and it can go on later
+// (POST /api/imports/{id}/stop)
+func (_ Unimplemented) StopImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetMapPoints Photos with a location that this user may see, oldest first
 // (GET /api/map/points)
 func (_ Unimplemented) GetMapPoints(w http.ResponseWriter, r *http.Request, params GetMapPointsParams) {
@@ -4292,7 +4545,7 @@ func (_ Unimplemented) GetTrashSummary(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
+// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
 // (POST /api/uploads)
 func (_ Unimplemented) CreateUpload(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -7014,6 +7267,138 @@ func (siw *ServerInterfaceWrapper) GetFolder(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// ListMyImports operation middleware
+func (siw *ServerInterfaceWrapper) ListMyImports(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMyImports(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateMyImport operation middleware
+func (siw *ServerInterfaceWrapper) CreateMyImport(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateMyImport(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteImport operation middleware
+func (siw *ServerInterfaceWrapper) DeleteImport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteImport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetImport operation middleware
+func (siw *ServerInterfaceWrapper) GetImport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetImport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StartImport operation middleware
+func (siw *ServerInterfaceWrapper) StartImport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartImport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StopImport operation middleware
+func (siw *ServerInterfaceWrapper) StopImport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StopImport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetMapPoints operation middleware
 func (siw *ServerInterfaceWrapper) GetMapPoints(w http.ResponseWriter, r *http.Request) {
 
@@ -9202,6 +9587,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/auth/passkey/finish", wrapper.FinishPasskeyLogin)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/imports", wrapper.ListMyImports)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/imports", wrapper.CreateMyImport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/imports/{id}", wrapper.DeleteImport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/imports/{id}", wrapper.GetImport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/imports/{id}/start", wrapper.StartImport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/imports/{id}/stop", wrapper.StopImport)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/imports", wrapper.ListImports)

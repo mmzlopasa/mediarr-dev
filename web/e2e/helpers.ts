@@ -9,7 +9,8 @@ export const users = {
 	member: 'e2e-member@example.com',
 	organizer: 'e2e-organizer@example.com',
 	stacker: 'e2e-stacker@example.com',
-	librarian: 'e2e-librarian@example.com'
+	librarian: 'e2e-librarian@example.com',
+	importer: 'e2e-importer@example.com'
 };
 
 export async function signIn(page: Page, who: keyof typeof users) {

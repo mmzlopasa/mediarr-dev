@@ -292,6 +292,10 @@ func (m *Metadata) fillFromImport(asset *db.Asset) {
 	if m.TakenAt == nil && asset.ImportTakenAt.Valid {
 		when := asset.ImportTakenAt.Time
 		m.TakenAt = &when
+		if asset.ImportOffsetMinutes.Valid {
+			offset := asset.ImportOffsetMinutes.Int32
+			m.OffsetMinutes = &offset
+		}
 	}
 	if m.Latitude == nil && asset.ImportLatitude.Valid && asset.ImportLongitude.Valid {
 		lat, lon := asset.ImportLatitude.Float64, asset.ImportLongitude.Float64

@@ -1266,6 +1266,66 @@ class DefaultApi {
     return null;
   }
 
+  /// Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [UserImportCreate] userImportCreate (required):
+  Future<Response> createMyImportWithHttpInfo(
+    UserImportCreate userImportCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/imports';
+
+    // ignore: prefer_final_locals
+    Object? postBody = userImportCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
+  ///
+  /// Parameters:
+  ///
+  /// * [UserImportCreate] userImportCreate (required):
+  Future<UserImport?> createMyImport(
+    UserImportCreate userImportCreate,
+  ) async {
+    final response = await createMyImportWithHttpInfo(
+      userImportCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'UserImport',
+      ) as UserImport;
+    }
+    return null;
+  }
+
   /// Send one whole file to a public album (tus 1.0 creation with upload)
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1375,7 +1435,7 @@ class DefaultApi {
     return null;
   }
 
-  /// Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
+  /// Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
   ///
   /// Note: This method returns the HTTP [Response].
   Future<Response> createUploadWithHttpInfo() async {
@@ -1402,7 +1462,7 @@ class DefaultApi {
     );
   }
 
-  /// Create a resumable upload (tus 1.0). A body uploads the whole file in this request.
+  /// Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
   Future<void> createUpload() async {
     final response = await createUploadWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -1786,6 +1846,55 @@ class DefaultApi {
     String id,
   ) async {
     final response = await deleteFamilyRuleWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Remove an import and its ZIP files. What it brought in stays
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteImportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/imports/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Remove an import and its ZIP files. What it brought in stays
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteImport(
+    String id,
+  ) async {
+    final response = await deleteImportWithHttpInfo(
       id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -4621,6 +4730,66 @@ class DefaultApi {
     return null;
   }
 
+  /// An import with its files and its report. Its owner or an administrator
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getImportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/imports/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// An import with its files and its report. Its owner or an administrator
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<ImportDetail?> getImport(
+    String id,
+  ) async {
+    final response = await getImportWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'ImportDetail',
+      ) as ImportDetail;
+    }
+    return null;
+  }
+
   /// How the originals looked when they were last checked
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7339,6 +7508,53 @@ class DefaultApi {
       return (await apiClient.deserializeAsync(responseBody, 'List<Memory>')
               as List)
           .cast<Memory>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// My imports, the newest first
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listMyImportsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/imports';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// My imports, the newest first
+  Future<List<UserImport>?> listMyImports() async {
+    final response = await listMyImportsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<UserImport>')
+              as List)
+          .cast<UserImport>()
           .toList(growable: false);
     }
     return null;
@@ -10079,6 +10295,55 @@ class DefaultApi {
     }
   }
 
+  /// Bring in the uploaded files, or go on with an import that was stopped
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> startImportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/imports/{id}/start'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Bring in the uploaded files, or go on with an import that was stopped
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> startImport(
+    String id,
+  ) async {
+    final response = await startImportWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Go to the identity provider
   ///
   /// Note: This method returns the HTTP [Response].
@@ -10138,6 +10403,55 @@ class DefaultApi {
     final response = await startOIDCWithHttpInfo(
       next: next,
       appChallenge: appChallenge,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Stop an import. What it has brought in stays, and it can go on later
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> stopImportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/imports/{id}/stop'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop an import. What it has brought in stays, and it can go on later
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> stopImport(
+    String id,
+  ) async {
+    final response = await stopImportWithHttpInfo(
+      id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

@@ -158,6 +158,7 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 		"/api/albums/" + album + "/links":    {},
 		"/api/me/device-keys":                {"name": "phone"},
 		"/api/stories":                       {"title": "Mine", "ids": []string{photo}},
+		"/api/imports":                       {"source": "takeout"},
 	} {
 		resp, body := owner.post(path, payload)
 		if resp.StatusCode >= http.StatusBadRequest {
@@ -191,6 +192,7 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 		"linkId":         "SELECT id::text FROM share_links LIMIT 1",
 		"device-keys/id": "SELECT id::text FROM api_keys LIMIT 1",
 		"stories/id":     "SELECT id::text FROM story_exports LIMIT 1",
+		"imports/id":     "SELECT id::text FROM imports LIMIT 1",
 	} {
 		var id string
 		if err := s.pool.QueryRow(ctx, query).Scan(&id); err != nil {

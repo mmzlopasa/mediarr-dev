@@ -135,6 +135,24 @@ class FakeServer {
       await _json(request, 200, []);
       return;
     }
+    if (path == '/api/imports') {
+      await _json(request, 200, [
+        {
+          'id': '00000000-0000-0000-0000-00000000000a',
+          'source': 'takeout',
+          'status': 'running',
+          'fromZip': true,
+          'parts': [],
+          'total': 40,
+          'added': 10,
+          'skipped': 0,
+          'failed': 0,
+          'lastError': '',
+          'createdAt': '2026-11-06T10:00:00Z',
+        },
+      ]);
+      return;
+    }
     if (path == '/api/notifications') {
       await _json(request, 200, {
         'unread': 1,

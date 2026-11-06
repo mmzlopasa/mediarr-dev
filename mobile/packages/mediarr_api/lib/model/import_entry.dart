@@ -17,6 +17,8 @@ class ImportEntry {
     required this.userEmail,
     required this.source_,
     required this.status,
+    required this.fromZip,
+    required this.total,
     required this.added,
     required this.skipped,
     required this.failed,
@@ -32,6 +34,11 @@ class ImportEntry {
   ImportEntrySource_Enum source_;
 
   ImportEntryStatusEnum status;
+
+  /// Uploaded as ZIP files by the user, not from a folder
+  bool fromZip;
+
+  int total;
 
   int added;
 
@@ -60,6 +67,8 @@ class ImportEntry {
           other.userEmail == userEmail &&
           other.source_ == source_ &&
           other.status == status &&
+          other.fromZip == fromZip &&
+          other.total == total &&
           other.added == added &&
           other.skipped == skipped &&
           other.failed == failed &&
@@ -74,6 +83,8 @@ class ImportEntry {
       (userEmail.hashCode) +
       (source_.hashCode) +
       (status.hashCode) +
+      (fromZip.hashCode) +
+      (total.hashCode) +
       (added.hashCode) +
       (skipped.hashCode) +
       (failed.hashCode) +
@@ -83,7 +94,7 @@ class ImportEntry {
 
   @override
   String toString() =>
-      'ImportEntry[id=$id, userEmail=$userEmail, source_=$source_, status=$status, added=$added, skipped=$skipped, failed=$failed, lastError=$lastError, createdAt=$createdAt, finishedAt=$finishedAt]';
+      'ImportEntry[id=$id, userEmail=$userEmail, source_=$source_, status=$status, fromZip=$fromZip, total=$total, added=$added, skipped=$skipped, failed=$failed, lastError=$lastError, createdAt=$createdAt, finishedAt=$finishedAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -91,6 +102,8 @@ class ImportEntry {
     json[r'userEmail'] = this.userEmail;
     json[r'source'] = this.source_;
     json[r'status'] = this.status;
+    json[r'fromZip'] = this.fromZip;
+    json[r'total'] = this.total;
     json[r'added'] = this.added;
     json[r'skipped'] = this.skipped;
     json[r'failed'] = this.failed;
@@ -129,6 +142,8 @@ class ImportEntry {
         userEmail: mapValueOfType<String>(json, r'userEmail')!,
         source_: ImportEntrySource_Enum.fromJson(json[r'source'])!,
         status: ImportEntryStatusEnum.fromJson(json[r'status'])!,
+        fromZip: mapValueOfType<bool>(json, r'fromZip')!,
+        total: mapValueOfType<int>(json, r'total')!,
         added: mapValueOfType<int>(json, r'added')!,
         skipped: mapValueOfType<int>(json, r'skipped')!,
         failed: mapValueOfType<int>(json, r'failed')!,
@@ -195,6 +210,8 @@ class ImportEntry {
     'userEmail',
     'source',
     'status',
+    'fromZip',
+    'total',
     'added',
     'skipped',
     'failed',
@@ -298,6 +315,7 @@ class ImportEntryStatusEnum {
 
   String toJson() => value;
 
+  static const uploading = ImportEntryStatusEnum._(r'uploading');
   static const running = ImportEntryStatusEnum._(r'running');
   static const done = ImportEntryStatusEnum._(r'done');
   static const failed = ImportEntryStatusEnum._(r'failed');
@@ -305,6 +323,7 @@ class ImportEntryStatusEnum {
 
   /// List of all possible values in this [enum][ImportEntryStatusEnum].
   static const values = <ImportEntryStatusEnum>[
+    uploading,
     running,
     done,
     failed,
@@ -352,6 +371,8 @@ class ImportEntryStatusEnumTypeTransformer {
   ImportEntryStatusEnum? decode(dynamic data, {bool allowNull = true}) {
     if (data != null) {
       switch (data) {
+        case r'uploading':
+          return ImportEntryStatusEnum.uploading;
         case r'running':
           return ImportEntryStatusEnum.running;
         case r'done':

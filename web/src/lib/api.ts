@@ -33,6 +33,8 @@ export type BackupSettingsUpdate = components['schemas']['BackupSettingsUpdate']
 export type BackupRun = components['schemas']['BackupRun'];
 export type ImportEntry = components['schemas']['ImportEntry'];
 export type ImportCreate = components['schemas']['ImportCreate'];
+export type UserImport = components['schemas']['UserImport'];
+export type ImportDetail = components['schemas']['ImportDetail'];
 export type AuthMethods = components['schemas']['AuthMethods'];
 export type OIDCSettings = components['schemas']['OIDCSettings'];
 export type OIDCSettingsUpdate = components['schemas']['OIDCSettingsUpdate'];
@@ -296,6 +298,13 @@ export const api = {
 	imports: () => request<ImportEntry[]>(fetch, '/api/admin/imports'),
 	startImport: (body: ImportCreate) => request<{ id: string }>(fetch, '/api/admin/imports', body),
 	cancelImport: (id: string) => request<void>(fetch, `/api/admin/imports/${id}/cancel`, {}),
+	myImports: () => request<UserImport[]>(fetch, '/api/imports'),
+	createMyImport: (source: 'takeout' | 'icloud') =>
+		request<UserImport>(fetch, '/api/imports', { source }),
+	importDetail: (id: string) => request<ImportDetail>(fetch, `/api/imports/${id}`),
+	runImport: (id: string) => request<void>(fetch, `/api/imports/${id}/start`, {}),
+	stopImport: (id: string) => request<void>(fetch, `/api/imports/${id}/stop`, {}),
+	removeImport: (id: string) => request<void>(fetch, `/api/imports/${id}`, undefined, 'DELETE'),
 	features: () => request<Features>(fetch, '/api/features'),
 	setFeature: (name: string, enabled: boolean) =>
 		request<void>(fetch, `/api/admin/features/${name}`, { enabled }, 'PUT'),

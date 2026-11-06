@@ -1,8 +1,11 @@
 package app
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 
@@ -18,6 +21,7 @@ import (
 func importToAPI(row *db.ListImportsRow) api.ImportEntry {
 	return api.ImportEntry{
 		Id: row.ID.Bytes, UserEmail: row.UserEmail, Source: api.ImportEntrySource(row.Source), Status: api.ImportEntryStatus(row.Status),
+		FromZip: row.FromZip, Total: int(row.Total),
 		Added: int(row.Added), Skipped: int(row.Skipped), Failed: int(row.Failed), LastError: row.LastError,
 		CreatedAt: row.CreatedAt.Time, FinishedAt: optional(row.FinishedAt.Time, row.FinishedAt.Valid),
 	}
@@ -103,7 +107,204 @@ func (s *apiServer) CancelImport(w http.ResponseWriter, r *http.Request, id open
 	if requireAdmin(w, r) == nil {
 		return
 	}
-	if err := s.queries.FinishImport(r.Context(), db.FinishImportParams{ID: pgUUID(id), Status: "cancelled", Column3: ""}); err != nil {
+	if _, err := s.queries.StopImport(r.Context(), pgUUID(id)); err != nil {
+		internalError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// --- Anyone's own imports, from the ZIP files of a Google Takeout or iCloud export ---
+
+func (s *apiServer) userImport(ctx context.Context, row *db.Import) (api.UserImport, error) {
+	parts, err := s.queries.ListImportParts(ctx, row.ID)
+	if err != nil {
+		return api.UserImport{}, err
+	}
+	out := api.UserImport{
+		Id: row.ID.Bytes, Source: api.UserImportSource(row.Source), Status: api.UserImportStatus(row.Status), FromZip: row.FromZip,
+		Parts: make([]api.ImportPart, len(parts)), Total: int(row.Total),
+		Added: int(row.Added), Skipped: int(row.Skipped), Failed: int(row.Failed), LastError: row.LastError,
+		CreatedAt: row.CreatedAt.Time, FinishedAt: optional(row.FinishedAt.Time, row.FinishedAt.Valid),
+	}
+	for n := range parts {
+		out.Parts[n] = api.ImportPart{Id: parts[n].ID.Bytes, Name: parts[n].Name, Size: parts[n].SizeBytes}
+	}
+	return out, nil
+}
+
+// ownImport finds an import its owner, or an administrator, may see. Anyone else gets a 404, as if
+// it did not exist.
+func (s *apiServer) ownImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) (*db.Import, *db.User) {
+	user := requireUser(w, r)
+	if user == nil {
+		return nil, nil
+	}
+	row, err := s.queries.GetImport(r.Context(), pgUUID(id))
+	if db.IsNotFound(err) || (err == nil && row.UserID != user.ID && !user.IsAdmin) {
+		writeError(w, http.StatusNotFound, "no such import")
+		return nil, nil
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return nil, nil
+	}
+	return &row, user
+}
+
+func (s *apiServer) ListMyImports(w http.ResponseWriter, r *http.Request) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	rows, err := s.queries.ListUserImports(r.Context(), user.ID)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out := make([]api.UserImport, 0, len(rows))
+	for n := range rows {
+		entry, err := s.userImport(r.Context(), &rows[n])
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		out = append(out, entry)
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *apiServer) CreateMyImport(w http.ResponseWriter, r *http.Request) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	var body api.UserImportCreate
+	if !readJSON(w, r, &body) {
+		return
+	}
+	if !body.Source.Valid() {
+		writeError(w, http.StatusBadRequest, "choose Google Takeout or iCloud")
+		return
+	}
+	id, err := s.queries.CreateZipImport(r.Context(), db.CreateZipImportParams{UserID: user.ID, Source: string(body.Source)})
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	row, err := s.queries.GetImport(r.Context(), id)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out, err := s.userImport(r.Context(), &row)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, out)
+}
+
+func (s *apiServer) GetImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	row, _ := s.ownImport(w, r, id)
+	if row == nil {
+		return
+	}
+	ctx := r.Context()
+	entry, err := s.userImport(ctx, row)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	owner, err := s.queries.GetUserByID(ctx, row.UserID)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	problems, err := s.queries.ListImportProblems(ctx, row.ID)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out := api.ImportDetail{
+		Id: entry.Id, Source: api.ImportDetailSource(entry.Source), Status: api.ImportDetailStatus(entry.Status), FromZip: entry.FromZip,
+		Parts: entry.Parts, Total: entry.Total, Added: entry.Added, Skipped: entry.Skipped, Failed: entry.Failed,
+		LastError: entry.LastError, CreatedAt: entry.CreatedAt, FinishedAt: entry.FinishedAt,
+		UserEmail: owner.Email, Problems: make([]api.ImportProblem, len(problems)),
+	}
+	for n := range problems {
+		out.Problems[n] = api.ImportProblem{Name: problems[n].Name, Reason: problems[n].Reason}
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *apiServer) StartImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	row, _ := s.ownImport(w, r, id)
+	if row == nil {
+		return
+	}
+	ctx := r.Context()
+	if row.FromZip {
+		parts, err := s.queries.ListImportParts(ctx, row.ID)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		if len(parts) == 0 {
+			writeError(w, http.StatusConflict, "upload the ZIP files first")
+			return
+		}
+	}
+	err := pgx.BeginFunc(ctx, s.Pool, func(tx pgx.Tx) error {
+		started, err := s.queries.WithTx(tx).StartImport(ctx, row.ID)
+		if err != nil {
+			return err
+		}
+		if started == 0 {
+			return errImportNotStartable
+		}
+		_, err = s.Inserter.InsertTx(ctx, tx, jobs.ImportArgs{ImportID: row.ID.Bytes}, nil)
+		return err
+	})
+	if errors.Is(err, errImportNotStartable) {
+		writeError(w, http.StatusConflict, "this import is running or finished")
+		return
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+var errImportNotStartable = errors.New("not startable")
+
+func (s *apiServer) StopImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	row, _ := s.ownImport(w, r, id)
+	if row == nil {
+		return
+	}
+	if _, err := s.queries.StopImport(r.Context(), row.ID); err != nil {
+		internalError(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *apiServer) DeleteImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	row, _ := s.ownImport(w, r, id)
+	if row == nil {
+		return
+	}
+	if row.Status == "running" {
+		writeError(w, http.StatusConflict, "stop the import first")
+		return
+	}
+	if err := os.RemoveAll(jobs.ImportPartsDir(s.LibraryPath, row.ID)); err != nil {
+		internalError(w, r, err)
+		return
+	}
+	if err := s.queries.DeleteImport(r.Context(), row.ID); err != nil {
 		internalError(w, r, err)
 		return
 	}
