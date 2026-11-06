@@ -732,73 +732,76 @@ class _InfoSheetState extends State<_InfoSheet> {
                 '${detail.latitude!.toStringAsFixed(5)}, ${detail.longitude!.toStringAsFixed(5)}',
               ),
           ];
+          // Data from the camera and the file is set in mono; words are not.
+          const data = {'Name', 'Dimensions', 'Settings', 'Location'};
+          Future<void> rate(int stars) async {
+            try {
+              await session.api.setAssetFacts(id, AssetFacts(rating: stars));
+              if (mounted) setState(() => _detail = session.detail(id));
+            } on ApiException catch (cause) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Not saved. ${cause.message ?? ''}')),
+                );
+              }
+            }
+          }
+
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Details', style: text.titleLarge),
-                const SizedBox(height: 10),
+                // Titled as on the web: the caption, or else when it was taken.
+                Text(
+                  detail.caption?.trim().isNotEmpty == true
+                      ? detail.caption!
+                      : formatDateTime(detail.localAt),
+                  style: serifTitle(26),
+                ),
+                if (detail.isOwner == true) ...[
+                  const SizedBox(height: 8),
+                  RatingRow(rating: detail.rating ?? 0, onRate: rate),
+                ],
+                const SizedBox(height: 8),
                 for (final (label, value) in rows)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: Palette.line)),
+                    ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
                       children: [
-                        Text(
-                          label,
-                          style: text.bodyMedium?.copyWith(color: Palette.dim),
+                        SizedBox(
+                          width: 104,
+                          child: Text(
+                            label,
+                            style: text.bodySmall?.copyWith(color: Palette.dim),
+                          ),
                         ),
-                        const SizedBox(width: 16),
                         Expanded(
                           child: Text(
                             value,
-                            textAlign: TextAlign.right,
-                            style: text.bodyLarge,
+                            style: data.contains(label)
+                                ? monoData(13)
+                                : text.bodyMedium?.copyWith(color: Palette.ink),
                           ),
                         ),
                       ],
                     ),
                   ),
                 FacesSection(session: session, assetId: id),
-                if (detail.caption != null) ...[
-                  const SizedBox(height: 10),
-                  Text(detail.caption!),
+                if (detail.isOwner == true) ...[
+                  const SizedBox(height: 14),
+                  OutlinedButton.icon(
+                    onPressed: () => _editFacts(detail),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: const Text('Edit details'),
+                  ),
                 ],
-                if (detail.isOwner == true)
-                  RatingRow(
-                    rating: detail.rating ?? 0,
-                    onRate: (stars) async {
-                      try {
-                        await session.api.setAssetFacts(
-                          id,
-                          AssetFacts(rating: stars),
-                        );
-                        if (mounted) {
-                          setState(() => _detail = session.detail(id));
-                        }
-                      } on ApiException catch (cause) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Not saved. ${cause.message ?? ''}',
-                              ),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  ),
-                if (detail.isOwner == true)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      onPressed: () => _editFacts(detail),
-                      child: const Text('Edit details'),
-                    ),
-                  ),
               ],
             ),
           );

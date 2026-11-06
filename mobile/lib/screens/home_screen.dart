@@ -108,70 +108,119 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 }
 
-class _FloatingNav extends StatelessWidget {
+/// The dock, as on the web: the places you go every day, the one you are in on midnight blue, and
+/// the gold + that adds photos and videos (with how many are still going).
+class _FloatingNav extends ConsumerWidget {
   const _FloatingNav({required this.selected, required this.onSelected});
 
   static const _items = [
-    (Icons.photo_outlined, Icons.photo, 'Media'),
-    (Icons.search, Icons.search, 'Search'),
-    (Icons.photo_album_outlined, Icons.photo_album, 'Albums'),
-    (Icons.grid_view_outlined, Icons.grid_view, 'Library'),
+    (Icons.photo_outlined, 'Media'),
+    (Icons.search, 'Search'),
+    (Icons.photo_album_outlined, 'Albums'),
+    (Icons.grid_view_outlined, 'Library'),
   ];
 
   final int selected;
   final ValueChanged<int> onSelected;
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    minimum: const EdgeInsets.only(bottom: 8),
-    child: GlassCard(
-      radius: 20,
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-      padding: const EdgeInsets.all(6),
-      child: Row(
-        children: [
-          for (var i = 0; i < _items.length; i++)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: i == selected,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onSelected(i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    // The place you are in is a quiet raised tile, as in the web's dock.
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      color: i == selected ? Palette.bg3 : Colors.transparent,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          i == selected ? _items[i].$2 : _items[i].$1,
-                          size: 21,
-                          color: i == selected ? Palette.ink : Palette.dim,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          _items[i].$3,
-                          style: TextStyle(
-                            fontFamily: 'Inter Tight',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: i == selected ? Palette.ink : Palette.dim,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final readOnly = ref.watch(settingsProvider).readOnly;
+    final working = ref
+        .watch(uploadsProvider)
+        .where((task) => !task.finished)
+        .length;
+    return SafeArea(
+      minimum: const EdgeInsets.only(bottom: 8),
+      child: GlassCard(
+        radius: 20,
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          children: [
+            for (var i = 0; i < _items.length; i++)
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  selected: i == selected,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onSelected(i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      height: 52,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: i == selected
+                            ? Palette.fill
+                            : Colors.transparent,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _items[i].$1,
+                            size: 21,
+                            color: i == selected ? Palette.onFill : Palette.dim,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 3),
+                          Text(
+                            _items[i].$2,
+                            style: TextStyle(
+                              fontFamily: 'Inter Tight',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: i == selected
+                                  ? Palette.onFill
+                                  : Palette.dim,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+            if (!readOnly) ...[
+              const SizedBox(width: 6),
+              Tooltip(
+                message: 'Add',
+                child: Semantics(
+                  button: true,
+                  label: working > 0 ? 'Add, $working uploading' : 'Add',
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const UploadPage(),
+                      ),
+                    ),
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Palette.buttonGold,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: working > 0
+                          ? Text(
+                              '$working',
+                              style: const TextStyle(
+                                fontFamily: 'Inter Tight',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Palette.onGold,
+                              ),
+                            )
+                          : const Icon(Icons.add, color: Palette.onGold),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

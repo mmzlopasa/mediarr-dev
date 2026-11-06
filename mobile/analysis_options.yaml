@@ -15,6 +15,8 @@ analyzer:
     - android/**
     - ios/**
     - packages/mediarr_api/**
+    # Pictures of the screens for design review, run by hand against the demo.
+    - tool/shots/**
 
 linter:
   # The lint rules applied to this project can be customized in the

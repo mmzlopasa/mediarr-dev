@@ -381,7 +381,7 @@ class _AlbumTile extends StatelessWidget {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(4),
               child: Container(
                 color: Palette.bg3,
                 width: double.infinity,

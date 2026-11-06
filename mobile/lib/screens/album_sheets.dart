@@ -1,3 +1,4 @@
+import '../services/days.dart';
 import '../motion.dart';
 
 import 'dart:async';
@@ -755,8 +756,8 @@ class _RulesEditorState extends State<RulesEditor> {
     setState(() {});
     widget.onChanged(
       AlbumRules(
-        from: _from,
-        to: _to,
+        from: _from == null ? null : dayOnly(_from!),
+        to: _to == null ? null : dayOnly(_to!),
         kind: _kind,
         camera: _camera,
         person: _person,

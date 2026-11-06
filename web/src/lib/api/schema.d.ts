@@ -6180,7 +6180,9 @@ export interface operations {
     getMapPoints: {
         parameters: {
             query?: {
+                /** @description A day as YYYY-MM-DD */
                 from?: string;
+                /** @description A day as YYYY-MM-DD */
                 to?: string;
             };
             header?: never;
@@ -8402,7 +8404,7 @@ export interface operations {
     listMemories: {
         parameters: {
             query?: {
-                /** @description The user's own date, which decides what today is */
+                /** @description The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone */
                 date?: string;
             };
             header?: never;

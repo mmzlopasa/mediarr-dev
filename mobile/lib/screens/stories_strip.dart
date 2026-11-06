@@ -86,58 +86,13 @@ class _StoriesStripState extends ConsumerState<StoriesStrip> {
                   ),
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: SizedBox(
-                  width: 112,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      AssetPicture(
-                        session: widget.session,
-                        id: memory.items.first.id,
-                        fit: BoxFit.cover,
-                        error: const SizedBox.shrink(),
-                      ),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment(0, 0.1),
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Color(0xB8000000)],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 10,
-                        right: 10,
-                        bottom: 9,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              storyLabel(memory, thisYear),
-                              maxLines: 2,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                height: 1.2,
-                              ),
-                            ),
-                            Text(
-                              count == 1 ? '1 item' : '$count items',
-                              style: const TextStyle(
-                                color: Color(0xD1FFFFFF),
-                                fontSize: 11.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+              child: SizedBox(
+                width: 112,
+                child: StoryTile(
+                  session: widget.session,
+                  memory: memory,
+                  title: storyLabel(memory, thisYear),
+                  subtitle: count == 1 ? '1 item' : '$count items',
                 ),
               ),
             ),
@@ -146,4 +101,75 @@ class _StoriesStripState extends ConsumerState<StoriesStrip> {
       ),
     );
   }
+}
+
+/// A memory as a tall card: its first picture, a shade at the foot and the words on it.
+class StoryTile extends StatelessWidget {
+  const StoryTile({
+    super.key,
+    required this.session,
+    required this.memory,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final Session session;
+  final Memory memory;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(14),
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        AssetPicture(
+          session: session,
+          id: memory.items.first.id,
+          fit: BoxFit.cover,
+          error: const SizedBox.shrink(),
+        ),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment(0, 0.1),
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Color(0xB8000000)],
+            ),
+          ),
+        ),
+        Positioned(
+          left: 10,
+          right: 10,
+          bottom: 9,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                maxLines: 2,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                ),
+              ),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xD1FFFFFF),
+                  fontSize: 11.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }

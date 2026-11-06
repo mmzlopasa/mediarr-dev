@@ -93,8 +93,13 @@ func (s *apiServer) ListMemories(w http.ResponseWriter, r *http.Request, params 
 		return
 	}
 	today := time.Now()
-	if params.Date != nil {
-		today = params.Date.Time
+	day, err := parseDay(params.Date)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if day != nil {
+		today = *day
 	}
 	memories, err := s.memoriesFor(r.Context(), user.ID, today)
 	if err != nil {

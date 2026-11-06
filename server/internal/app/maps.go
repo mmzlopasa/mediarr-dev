@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	"net/url"
@@ -30,15 +31,28 @@ const (
 	earthRadiusKm  = 6371.0
 )
 
-func dateParam(date *openapi_types.Date, next bool) pgtype.Timestamp {
-	if date == nil {
+// parseDay reads a day given as YYYY-MM-DD. Nothing given is no day; anything else is an error.
+func parseDay(value *string) (*time.Time, error) {
+	if value == nil || *value == "" {
+		return nil, nil
+	}
+	day, err := time.Parse(time.DateOnly, *value)
+	if err != nil {
+		return nil, fmt.Errorf("a day must be written as YYYY-MM-DD, not %q", *value)
+	}
+	return &day, nil
+}
+
+// dateParam turns a day into the start of that day, or of the next one for an end that includes it.
+func dateParam(day *time.Time, next bool) pgtype.Timestamp {
+	if day == nil {
 		return pgtype.Timestamp{}
 	}
-	day := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+	start := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
 	if next {
-		day = day.AddDate(0, 0, 1)
+		start = start.AddDate(0, 0, 1)
 	}
-	return pgtype.Timestamp{Time: day, Valid: true}
+	return pgtype.Timestamp{Time: start, Valid: true}
 }
 
 func (s *apiServer) GetMapPoints(w http.ResponseWriter, r *http.Request, params api.GetMapPointsParams) {
@@ -46,8 +60,18 @@ func (s *apiServer) GetMapPoints(w http.ResponseWriter, r *http.Request, params 
 	if user == nil {
 		return
 	}
+	from, err := parseDay(params.From)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	to, err := parseDay(params.To)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	rows, err := s.queries.MapPoints(r.Context(), db.MapPointsParams{
-		FromAt: dateParam(params.From, false), ToAt: dateParam(params.To, true), UserID: user.ID,
+		FromAt: dateParam(from, false), ToAt: dateParam(to, true), UserID: user.ID,
 	})
 	if err != nil {
 		internalError(w, r, err)

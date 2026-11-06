@@ -2451,8 +2451,11 @@ type GetFolderParams struct {
 
 // GetMapPointsParams defines parameters for GetMapPoints.
 type GetMapPointsParams struct {
-	From *openapi_types.Date `form:"from,omitempty" json:"from,omitempty"`
-	To   *openapi_types.Date `form:"to,omitempty" json:"to,omitempty"`
+	// From A day as YYYY-MM-DD
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To A day as YYYY-MM-DD
+	To *string `form:"to,omitempty" json:"to,omitempty"`
 }
 
 // FinishPasskeyRegistrationJSONBody defines parameters for FinishPasskeyRegistration.
@@ -2460,8 +2463,8 @@ type FinishPasskeyRegistrationJSONBody map[string]interface{}
 
 // ListMemoriesParams defines parameters for ListMemories.
 type ListMemoriesParams struct {
-	// Date The user's own date, which decides what today is
-	Date *openapi_types.Date `form:"date,omitempty" json:"date,omitempty"`
+	// Date The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone
+	Date *string `form:"date,omitempty" json:"date,omitempty"`
 }
 
 // SearchPlacesParams defines parameters for SearchPlaces.
@@ -7022,7 +7025,7 @@ func (siw *ServerInterfaceWrapper) GetMapPoints(w http.ResponseWriter, r *http.R
 
 	// ------------- Optional query parameter "from" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: "date"})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
 		var requiredError *runtime.RequiredParameterError
 		if errors.As(err, &requiredError) {
@@ -7035,7 +7038,7 @@ func (siw *ServerInterfaceWrapper) GetMapPoints(w http.ResponseWriter, r *http.R
 
 	// ------------- Optional query parameter "to" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: "date"})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
 		var requiredError *runtime.RequiredParameterError
 		if errors.As(err, &requiredError) {
@@ -7398,7 +7401,7 @@ func (siw *ServerInterfaceWrapper) ListMemories(w http.ResponseWriter, r *http.R
 
 	// ------------- Optional query parameter "date" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, false, "date", r.URL.Query(), &params.Date, runtime.BindQueryParameterOptions{Type: "string", Format: "date"})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "date", r.URL.Query(), &params.Date, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
 		var requiredError *runtime.RequiredParameterError
 		if errors.As(err, &requiredError) {

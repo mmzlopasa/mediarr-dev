@@ -4673,12 +4673,14 @@ class DefaultApi {
   ///
   /// Parameters:
   ///
-  /// * [DateTime] from:
+  /// * [String] from:
+  ///   A day as YYYY-MM-DD
   ///
-  /// * [DateTime] to:
+  /// * [String] to:
+  ///   A day as YYYY-MM-DD
   Future<Response> getMapPointsWithHttpInfo({
-    DateTime? from,
-    DateTime? to,
+    String? from,
+    String? to,
   }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/map/points';
@@ -4714,12 +4716,14 @@ class DefaultApi {
   ///
   /// Parameters:
   ///
-  /// * [DateTime] from:
+  /// * [String] from:
+  ///   A day as YYYY-MM-DD
   ///
-  /// * [DateTime] to:
+  /// * [String] to:
+  ///   A day as YYYY-MM-DD
   Future<MapPoints?> getMapPoints({
-    DateTime? from,
-    DateTime? to,
+    String? from,
+    String? to,
   }) async {
     final response = await getMapPointsWithHttpInfo(
       from: from,
@@ -7279,10 +7283,10 @@ class DefaultApi {
   ///
   /// Parameters:
   ///
-  /// * [DateTime] date:
-  ///   The user's own date, which decides what today is
+  /// * [String] date:
+  ///   The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone
   Future<Response> listMemoriesWithHttpInfo({
-    DateTime? date,
+    String? date,
   }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/memories';
@@ -7315,10 +7319,10 @@ class DefaultApi {
   ///
   /// Parameters:
   ///
-  /// * [DateTime] date:
-  ///   The user's own date, which decides what today is
+  /// * [String] date:
+  ///   The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone
   Future<List<Memory>?> listMemories({
-    DateTime? date,
+    String? date,
   }) async {
     final response = await listMemoriesWithHttpInfo(
       date: date,

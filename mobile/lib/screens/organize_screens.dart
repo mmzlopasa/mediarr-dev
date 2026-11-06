@@ -1,3 +1,5 @@
+import '../services/days.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -39,8 +41,13 @@ Future<void> forgetVaultPin() async {
   }
 }
 
+/// The places in the library, as tiles in two columns, like the web's More. Sections the person
+/// took off the menu stay off here too.
 class OrganizeLinks extends ConsumerWidget {
-  const OrganizeLinks({super.key});
+  const OrganizeLinks({super.key, this.leading = const []});
+
+  /// Places shown before the organising ones (Explore, Shared).
+  final List<(IconData, String, Widget)> leading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,114 +55,76 @@ class OrganizeLinks extends ConsumerWidget {
     final hidden =
         ref.watch(accountPreferencesProvider).value?.hiddenSections ??
         const <String>[];
-    void open(Widget screen) =>
-        Navigator.of(context)
-            .push(MaterialPageRoute<void>(builder: (_) => screen));
-    return Column(
-      children: [
-        if (!hidden.contains('/favorites'))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.star_outline),
-            title: const Text('Favorites'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const FavoritesScreen()),
+    final places = <(IconData, String, Widget)>[
+      ...leading,
+      if (!hidden.contains('/favorites'))
+        (Icons.star_outline, 'Favorites', const FavoritesScreen()),
+      if (!hidden.contains('/memories'))
+        (Icons.auto_awesome_outlined, 'Memories', const MemoriesScreen()),
+      if (!hidden.contains('/people'))
+        (Icons.people_outline, 'People', const PeopleScreen()),
+      if (!hidden.contains('/map'))
+        (Icons.map_outlined, 'Map', const MapScreen()),
+      if (!hidden.contains('/folders'))
+        (Icons.folder_outlined, 'Folders', const FoldersScreen()),
+      if (!hidden.contains('/family'))
+        (Icons.family_restroom, 'Family', const FamilyScreen()),
+      if (!hidden.contains('/documents'))
+        (Icons.description_outlined, 'Documents', const DocumentsScreen()),
+      if (!readOnly && !hidden.contains('/duplicates'))
+        (Icons.copy_all_outlined, 'Duplicates', const DuplicatesScreen()),
+      if (!readOnly) (Icons.archive_outlined, 'Archive', const ArchiveScreen()),
+      if (!readOnly) (Icons.delete_outline, 'Trash', const TrashScreen()),
+      if (!readOnly) (Icons.lock_outline, 'Vault', const VaultScreen()),
+      (Icons.key_outlined, 'API keys', const ApiKeysScreen()),
+      (Icons.sell_outlined, 'Tags', const TagsScreen()),
+    ];
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        mainAxisExtent: 60,
+      ),
+      itemCount: places.length,
+      itemBuilder: (context, index) {
+        final (icon, label, screen) = places[index];
+        return Material(
+          color: Palette.bg2,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () =>
+                Navigator.of(context)
+                    .push(MaterialPageRoute<void>(builder: (_) => screen)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                children: [
+                  Icon(icon, size: 20, color: Palette.dim),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Inter Tight',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Palette.ink,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        if (!hidden.contains('/memories'))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.auto_awesome_outlined),
-            title: const Text('Memories'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const MemoriesScreen()),
-          ),
-        if (!hidden.contains('/people'))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.people_outline),
-            title: const Text('People'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const PeopleScreen()),
-          ),
-        if (!hidden.contains('/map'))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.map_outlined),
-            title: const Text('Map'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const MapScreen()),
-          ),
-        if (!hidden.contains('/folders'))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.folder_outlined),
-            title: const Text('Folders'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const FoldersScreen()),
-          ),
-        if (!hidden.contains('/family'))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.family_restroom),
-            title: const Text('Family'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const FamilyScreen()),
-          ),
-        if (!hidden.contains('/documents'))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.description_outlined),
-            title: const Text('Documents'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const DocumentsScreen()),
-          ),
-        if (!readOnly && !hidden.contains('/duplicates'))
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.copy_all_outlined),
-            title: const Text('Duplicates'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const DuplicatesScreen()),
-          ),
-        if (!readOnly)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.archive_outlined),
-            title: const Text('Archive'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const ArchiveScreen()),
-          ),
-        if (!readOnly)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.delete_outline),
-            title: const Text('Trash'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const TrashScreen()),
-          ),
-        if (!readOnly)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const RingIcon(Icons.lock_outline),
-            title: const Text('Vault'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => open(const VaultScreen()),
-          ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.key_outlined),
-          title: const Text('API keys'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const ApiKeysScreen()),
-        ),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const RingIcon(Icons.sell_outlined),
-          title: const Text('Tags'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => open(const TagsScreen()),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -1158,7 +1127,10 @@ class _FamilyRulesScreenState extends ConsumerState<_FamilyRulesScreen> {
       await _session.api.createFamilyRule(
         FamilyRuleCreate(
           title: name,
-          rules: AlbumRules(from: since, place: where.isEmpty ? null : where),
+          rules: AlbumRules(
+            from: since == null ? null : dayOnly(since),
+            place: where.isEmpty ? null : where,
+          ),
         ),
       );
       await _reload();

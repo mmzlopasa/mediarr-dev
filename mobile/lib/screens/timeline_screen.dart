@@ -436,7 +436,7 @@ class _TileView extends StatelessWidget {
         width: tile.width,
         height: height,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(5),
+          borderRadius: BorderRadius.circular(3),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -445,7 +445,7 @@ class _TileView extends StatelessWidget {
                 duration: const Duration(milliseconds: 120),
                 padding: EdgeInsets.all(isSelected ? 8 : 0),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(isSelected ? 5 : 0),
+                  borderRadius: BorderRadius.circular(isSelected ? 3 : 0),
                   child: AssetPicture(
                     session: session,
                     id: item.id,

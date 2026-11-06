@@ -21,6 +21,10 @@ abstract final class Palette {
   /// The second colour, for avatars and quiet highlights.
   static Color get violet => _pick(0xFF3A55C9, 0xFF23358F);
 
+  /// Midnight blue as a fill, for the place you are in and what is chosen; [onFill] on it.
+  static Color get fill => _pick(0xFF1F2F7A, 0xFF23358F);
+  static const onFill = Color(0xFFF3F5F7);
+
   /// The accent for what is on or chosen: midnight blue unless the person chose another.
   static Color get gold => _pick(accentDark, accentLight);
 
@@ -238,11 +242,14 @@ class GlassCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(color: Palette.line),
       color: Palette.bg2,
-      boxShadow: const [
+      // A soft shadow under what floats; lighter on the light ground, where black reads as a smudge.
+      boxShadow: [
         BoxShadow(
-          color: Color(0x33000000),
-          blurRadius: 32,
-          offset: Offset(0, 14),
+          color: Palette.light
+              ? const Color(0x1412141A)
+              : const Color(0x33000000),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
         ),
       ],
     ),

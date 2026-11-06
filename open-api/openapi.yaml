@@ -1277,8 +1277,8 @@ paths:
       operationId: getMapPoints
       summary: Photos with a location that this user may see, oldest first
       parameters:
-        - { name: from, in: query, schema: { type: string, format: date } }
-        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: from, in: query, description: "A day as YYYY-MM-DD", schema: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$', example: '2026-11-06' } }
+        - { name: to, in: query, description: "A day as YYYY-MM-DD", schema: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$', example: '2026-11-06' } }
       responses:
         "200":
           description: Parallel lists, which stay small for a large library
@@ -2477,7 +2477,7 @@ paths:
       operationId: listMemories
       summary: On this day in earlier years, and the last week
       parameters:
-        - { name: date, in: query, description: "The user's own date, which decides what today is", schema: { type: string, format: date } }
+        - { name: date, in: query, description: "The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone", schema: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$', example: '2026-11-06' } }
       responses:
         "200":
           description: Memories, newest first

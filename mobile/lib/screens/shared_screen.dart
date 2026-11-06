@@ -1,3 +1,5 @@
+import '../services/days.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -210,7 +212,9 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
                 _run(() async {
                   await session.api.setPartner(
                     user,
-                    PartnerShare(since: _since),
+                    PartnerShare(
+                      since: _since == null ? null : dayOnly(_since!),
+                    ),
                   );
                   _userId = null;
                   _since = null;

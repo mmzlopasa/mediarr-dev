@@ -61,6 +61,13 @@ func TestMemories(t *testing.T) {
 	if len(decode[[]api.Memory](t, body)) != 0 {
 		t.Fatalf("nothing on that day: %s", body)
 	}
+	// A day is plain YYYY-MM-DD; a time with a zone would move it to another day, so it is refused.
+	resp, body = c.get("/api/memories?date=2024-06-14T22:00:00Z")
+	expect(t, resp, body, http.StatusBadRequest)
+	resp, body = c.get("/api/map/points?from=2024-06&to=2024-06-30")
+	expect(t, resp, body, http.StatusBadRequest)
+	resp, body = c.get("/api/map/points?from=2024-06-01&to=2024-06-30")
+	expect(t, resp, body, http.StatusOK)
 }
 
 func TestStoryRequests(t *testing.T) {

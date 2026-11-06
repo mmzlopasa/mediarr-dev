@@ -3585,8 +3585,8 @@ Photos with a location that this user may see, oldest first
 import 'package:mediarr_api/api.dart';
 
 final api_instance = DefaultApi();
-final from = 2013-10-20; // DateTime | 
-final to = 2013-10-20; // DateTime | 
+final from = 2026-11-06; // String | A day as YYYY-MM-DD
+final to = 2026-11-06; // String | A day as YYYY-MM-DD
 
 try {
     final result = api_instance.getMapPoints(from, to);
@@ -3600,8 +3600,8 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **from** | **DateTime**|  | [optional] 
- **to** | **DateTime**|  | [optional] 
+ **from** | **String**| A day as YYYY-MM-DD | [optional] 
+ **to** | **String**| A day as YYYY-MM-DD | [optional] 
 
 ### Return type
 
@@ -5385,7 +5385,7 @@ On this day in earlier years, and the last week
 import 'package:mediarr_api/api.dart';
 
 final api_instance = DefaultApi();
-final date = 2013-10-20; // DateTime | The user's own date, which decides what today is
+final date = 2026-11-06; // String | The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone
 
 try {
     final result = api_instance.listMemories(date);
@@ -5399,7 +5399,7 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **date** | **DateTime**| The user's own date, which decides what today is | [optional] 
+ **date** | **String**| The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone | [optional] 
 
 ### Return type
 

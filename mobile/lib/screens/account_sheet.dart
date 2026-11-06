@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/backup.dart';
 import '../services/session.dart';
+import '../services/settings.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'free_space_screen.dart';
@@ -37,6 +38,7 @@ class AccountSheet extends ConsumerStatefulWidget {
 
 class _AccountSheetState extends ConsumerState<AccountSheet> {
   ServerStatus? _status;
+  AccountStats? _stats;
   String? _appVersion;
   bool _online = true;
 
@@ -59,6 +61,12 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
     }
     final session = ref.read(sessionProvider).value;
     if (session == null) return;
+    try {
+      final stats = await session.api.getMyStats();
+      if (mounted) setState(() => _stats = stats);
+    } on ApiException {
+      // The line about the library waits; the rest still shows.
+    }
     try {
       final status = await session.api.getServerStatus();
       if (mounted) {
@@ -155,14 +163,23 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
           _section([
             Row(
               children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: Palette.bg3,
+                Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Palette.fill,
+                  ),
                   child: Text(
-                    name.isEmpty ? '?' : name.substring(0, 1).toUpperCase(),
-                    style: TextStyle(
-                      color: Palette.ink,
-                      fontSize: 20,
+                    name.isEmpty
+                        ? '?'
+                        : name
+                              .substring(0, name.length < 2 ? 1 : 2)
+                              .toUpperCase(),
+                    style: const TextStyle(
+                      color: Palette.onFill,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -172,8 +189,18 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(session.user.name, style: text.titleLarge),
-                      Text(session.user.email, style: text.bodySmall),
+                      Text(
+                        session.user.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: serifTitle(26),
+                      ),
+                      Text(
+                        session.user.email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodySmall?.copyWith(color: Palette.dim),
+                      ),
                     ],
                   ),
                 ),
@@ -185,10 +212,64 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
               ],
             ),
           ]),
+          // The library in one line, as on the web.
+          Container(
+            color: Palette.bg,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: _stats == null
+                ? Text('…', style: text.bodySmall)
+                : Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${_stats!.photos + _stats!.videos} photos and videos',
+                          style: text.bodySmall?.copyWith(color: Palette.ink),
+                        ),
+                      ),
+                      Text(
+                        '${formatBytes(_stats!.bytes)} used',
+                        style: text.bodySmall?.copyWith(color: Palette.ink),
+                      ),
+                    ],
+                  ),
+          ),
+          _section([
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text('Appearance', style: text.bodySmall),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: SegmentedButton<AppTheme>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(value: AppTheme.dark, label: Text('Dark')),
+                      ButtonSegment(
+                        value: AppTheme.light,
+                        label: Text('Light'),
+                      ),
+                      ButtonSegment(
+                        value: AppTheme.system,
+                        label: Text('System'),
+                      ),
+                    ],
+                    selected: {ref.watch(settingsProvider).theme},
+                    onSelectionChanged: (choice) => ref
+                        .read(settingsProvider.notifier)
+                        .change(
+                          ref
+                              .read(settingsProvider)
+                              .copyWith(theme: choice.first),
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ]),
           Divider(color: Palette.line, height: 1),
           _section([
             const SizedBox(height: 6),
-            Text('Storage', style: text.titleMedium),
+            Text('Server disk', style: text.titleMedium),
             const SizedBox(height: 10),
             LinearProgressIndicator(
               value: total > 0 ? used / total : 0,
@@ -215,17 +296,17 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
           Divider(color: Palette.line, height: 1),
           const SizedBox(height: 6),
           ListTile(
-            leading: const RingIcon(Icons.cleaning_services_outlined),
+            leading: Icon(Icons.cleaning_services_outlined, color: Palette.dim),
             title: const Text('Free up space'),
             onTap: () => _push(const FreeSpaceScreen()),
           ),
           ListTile(
-            leading: const RingIcon(Icons.settings_outlined),
+            leading: Icon(Icons.settings_outlined, color: Palette.dim),
             title: const Text('Settings'),
             onTap: () => _push(const SettingsScreen()),
           ),
           ListTile(
-            leading: const RingIcon(Icons.logout),
+            leading: Icon(Icons.logout, color: Palette.dim),
             title: const Text('Sign out'),
             onTap: () => _signOut(session),
           ),

@@ -1,3 +1,5 @@
+import '../services/days.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -76,7 +78,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   Future<void> _loadPoints() async {
     try {
-      final points = await _session.api.getMapPoints(from: _from, to: _to);
+      final points = await _session.api.getMapPoints(
+        from: _from == null ? null : dayString(_from!),
+        to: _to == null ? null : dayString(_to!),
+      );
       if (mounted) {
         setState(() {
           _points = points;

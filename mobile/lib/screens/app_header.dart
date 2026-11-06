@@ -5,38 +5,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/session.dart';
 import '../services/settings.dart';
-import '../services/uploads.dart';
 import '../theme.dart';
 import 'account_sheet.dart';
 import 'notifications.dart';
 import 'upload_screen.dart';
 
-/// The top of every main screen: its title, the gold action and the account, as on the web.
+/// The top of every main screen: its title, its own gold action when it has one, notifications
+/// and the account, as on the web. Uploading lives in the dock's +.
 class AppHeader extends ConsumerWidget {
   const AppHeader({
     super.key,
     required this.title,
-    this.actionLabel = 'Upload',
+    this.actionLabel = 'New',
     this.onAction,
   });
 
   final String title;
   final String actionLabel;
 
-  /// What the gold button does here. Without it, it opens backup and upload.
+  /// What the gold button does here; without it there is no button.
   final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider).value;
     final readOnly = ref.watch(settingsProvider).readOnly;
-    final working = ref
-        .watch(uploadsProvider)
-        .where((task) => !task.finished)
-        .length;
-    void openUpload() =>
-        Navigator.of(context)
-            .push(MaterialPageRoute<void>(builder: (_) => const UploadPage()));
     final name = session?.user.name.trim() ?? '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
@@ -53,14 +46,14 @@ class AppHeader extends ConsumerWidget {
               ),
             ),
           ),
-          if (!readOnly)
+          if (!readOnly && onAction != null)
             Tooltip(
               message: 'Add',
               child: Semantics(
                 button: true,
                 label: actionLabel,
                 child: GestureDetector(
-                  onTap: onAction ?? openUpload,
+                  onTap: onAction,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -76,7 +69,7 @@ class AppHeader extends ConsumerWidget {
                         const Icon(Icons.add, size: 18, color: Palette.onGold),
                         const SizedBox(width: 4),
                         Text(
-                          working > 0 ? '$actionLabel · $working' : actionLabel,
+                          actionLabel,
                           style: const TextStyle(
                             fontFamily: 'Inter Tight',
                             color: Palette.onGold,
@@ -101,13 +94,13 @@ class AppHeader extends ConsumerWidget {
                 padding: const EdgeInsets.all(1.5),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Palette.bg3,
+                  color: Palette.bg2,
                 ),
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Palette.bg2,
+                    color: Palette.fill,
                   ),
                   child: Text(
                     name.isEmpty
@@ -115,8 +108,8 @@ class AppHeader extends ConsumerWidget {
                         : name
                               .substring(0, name.length < 2 ? 1 : 2)
                               .toUpperCase(),
-                    style: TextStyle(
-                      color: Palette.ink,
+                    style: const TextStyle(
+                      color: Palette.onFill,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),

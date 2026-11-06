@@ -1,3 +1,5 @@
+import '../services/days.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -11,9 +13,11 @@ import '../services/account_preferences.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'asset_picture.dart';
+import 'stories_strip.dart';
 
 /// The person's own date decides what today is, not the server's.
-DateTime localToday(DateTime now) => DateTime(now.year, now.month, now.day);
+/// Today as the person's phone sees it, which decides what a memory is.
+String localToday(DateTime now) => dayString(now);
 
 String memoryTitle(Memory memory, DateTime now) =>
     memory.kind == MemoryKindEnum.week
@@ -57,7 +61,6 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
   @override
   Widget build(BuildContext context) {
     final memories = _memories;
-    final text = Theme.of(context).textTheme;
     final now = DateTime.now();
     Widget body;
     if (memories == null) {
@@ -80,7 +83,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
           maxCrossAxisExtent: 200,
           mainAxisSpacing: 14,
           crossAxisSpacing: 12,
-          childAspectRatio: 0.78,
+          childAspectRatio: 0.7,
         ),
         itemCount: memories.length,
         itemBuilder: (context, index) {
@@ -101,39 +104,11 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
                 ),
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: SizedBox.expand(
-                      child: AssetPicture(
-                        session: _session,
-                        id: memory.items.first.id,
-                        fit: BoxFit.cover,
-                        error: Icon(
-                          Icons.broken_image_outlined,
-                          color: Palette.dim,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  memoryTitle(memory, now),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodyLarge,
-                ),
-                Text(
-                  '${memory.title} · ${memory.items.length}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodySmall?.copyWith(color: Palette.dim),
-                ),
-              ],
+            child: StoryTile(
+              session: _session,
+              memory: memory,
+              title: memoryTitle(memory, now),
+              subtitle: '${memory.items.length} items',
             ),
           );
         },
