@@ -31,10 +31,12 @@
 	// The edge of a film strip: one tick a month, as long as the month is full.
 	const most = $derived(Math.max(1, ...marks.map((mark) => mark.count)));
 	const ticks = $derived(
-		marks.map((mark) => ({
+		marks.map((mark, index) => ({
 			month: mark.month,
 			fraction: total > 0 ? mark.top / total : 0,
-			length: Math.sqrt(mark.count / most)
+			length: Math.sqrt(mark.count / most),
+			// The first month of each year is marked a little longer, so a year label has its tick.
+			first: index === 0 || marks[index - 1].month.slice(0, 4) !== mark.month.slice(0, 4)
 		}))
 	);
 	// One label per year, kept apart on a short track.
@@ -109,6 +111,7 @@
 	{#each ticks as tick, index (tick.month)}
 		<i
 			class="scrub-tick"
+			class:first={tick.first}
 			class:now={index === currentIndex}
 			style="top:{tick.fraction * 100}%;--len:{tick.length}"
 		></i>

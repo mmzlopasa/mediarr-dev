@@ -97,7 +97,6 @@
 		{#if processing > 0}
 			<Badge kind="warn">{tr(`Obrađuje se: ${processing}`, `Processing: ${processing}`)}</Badge>
 		{/if}
-		<UploadButton />
 	</div>
 </div>
 
@@ -163,7 +162,9 @@
 {#if total === 0 && uploads().length === 0 && processing === 0}
 	<section class="card glass">
 		<div class="card-b">
-			<EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} />
+			<EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)}>
+				{#snippet cta()}<UploadButton />{/snippet}
+			</EmptyState>
 		</div>
 	</section>
 {/if}

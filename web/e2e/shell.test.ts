@@ -72,8 +72,12 @@ test('theme toggle persists across reloads', async ({ page }) => {
 	});
 	await page.goto('/');
 	await page.getByRole('button', { name: 'Račun' }).click();
-	await page.getByRole('button', { name: 'Promijeni temu' }).click();
+	await page.getByRole('radio', { name: 'Svijetlo' }).click();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+	await expect(page.getByRole('radio', { name: 'Svijetlo' })).toHaveAttribute(
+		'aria-checked',
+		'true'
+	);
 	await page.reload();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 });
@@ -82,8 +86,7 @@ test('language menu switches the interface', async ({ page }) => {
 	await signIn(page, 'admin');
 	await page.goto('/');
 	await page.getByRole('button', { name: 'Račun' }).click();
-	await page.locator('.langdd summary').click();
-	await page.getByRole('menuitem', { name: /English/ }).click();
+	await page.getByLabel('Jezik').selectOption('en');
 	await expect(page.getByRole('link', { name: 'Media', exact: true })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
@@ -411,7 +414,7 @@ test.describe('timeline', () => {
 		]) {
 			const [chooser] = await Promise.all([
 				page.waitForEvent('filechooser'),
-				page.getByRole('button', { name: 'Upload' }).click()
+				page.getByRole('button', { name: 'Dodaj' }).click()
 			]);
 			expect(chooser.isMultiple()).toBe(true);
 			await chooser.setFiles(batch.map((n) => photo(`image-${n}.jpg`)));

@@ -8,8 +8,8 @@ body {
 	background: var(--bg);
 }
 ::selection {
-	background: var(--acc);
-	color: var(--on-gold);
+	background: var(--acc-fill);
+	color: var(--on-acc);
 }
 :focus-visible {
 	outline: 2px solid var(--acc);
@@ -160,8 +160,8 @@ body {
 	transform: scale(0.97);
 }
 .lb-dock-i.on {
-	color: var(--ink);
-	background: var(--bg-3);
+	color: var(--on-acc);
+	background: var(--acc-fill);
 }
 .lb-ask {
 	display: flex;
@@ -233,9 +233,12 @@ body {
 	font: 500 14.5px var(--sans);
 	text-decoration: none;
 }
-.lb-more-i:hover,
-.lb-more-i.on {
+.lb-more-i:hover {
 	background: var(--bg-3);
+}
+.lb-more-i.on {
+	background: var(--acc-fill);
+	color: var(--on-acc);
 }
 .lb-more-i svg {
 	color: var(--dim);
@@ -282,8 +285,8 @@ body {
 	color: var(--ink);
 }
 .lb-side-i.on {
-	color: var(--ink);
-	background: var(--bg-2);
+	color: var(--on-acc);
+	background: var(--acc-fill);
 }
 .lb-side-back {
 	margin-top: 14px;
@@ -603,7 +606,8 @@ textarea.in {
 	outline-offset: -3px;
 }
 
-/* The film edge: one tick a month, as long as the month is full. */
+/* The film edge: one tick a month, in one length, brighter as the month is fuller. The first month
+   of a year is longer and carries the year beside it. */
 .scrub {
 	top: 120px;
 	bottom: 120px;
@@ -612,28 +616,33 @@ textarea.in {
 .scrub-tick {
 	position: absolute;
 	right: 22px;
+	width: 10px;
 	height: 2px;
-	width: calc(6px + var(--len) * 32px);
 	translate: 0 -50%;
 	border-radius: 1px;
-	background: var(--line-2);
+	background: var(--ink);
+	opacity: calc(0.18 + var(--len) * 0.5);
 	pointer-events: none;
 }
+.scrub-tick.first {
+	width: 16px;
+}
 .scrub-tick.now {
-	width: 44px;
+	width: 24px;
 	height: 3px;
 	background: var(--acc);
+	opacity: 1;
 }
 .scrub-year {
-	right: 22px;
+	right: 46px;
 	opacity: 1;
-	padding: 0 0 0 6px;
+	padding: 0;
 	border-radius: 0;
-	background: var(--bg);
+	background: none;
 	color: var(--dim);
 	font: 600 11px var(--sans);
 	font-variant-numeric: tabular-nums;
-	translate: 0 -150%;
+	translate: 0 -50%;
 }
 .scrub-year.now {
 	color: var(--acc);
@@ -660,7 +669,10 @@ textarea.in {
 	}
 	.scrub-tick {
 		right: 6px;
-		width: calc(3px + var(--len) * 12px);
+		width: 8px;
+	}
+	.scrub-tick.first {
+		width: 12px;
 	}
 	.scrub-tick.now {
 		width: 18px;
@@ -705,8 +717,10 @@ textarea.in {
 	--dim: #8a91a0;
 	--line: #232733;
 	--line-2: #323846;
-	--acc: #c4bbff;
-	--acc-2: #8b7cff;
+	--acc: #8fb0ff;
+	--acc-2: #3a55c9;
+	--acc-fill: #1f2f7a;
+	--on-acc: #f3f5f7;
 	--gold: #ffd76a;
 	--gold-2: #ffe28f;
 	--on-gold: #1b1530;
@@ -804,14 +818,34 @@ textarea.in {
 .viewer .kv {
 	display: grid;
 	grid-template-columns: 96px 1fr;
-	gap: 10px;
-	align-items: start;
+	gap: 12px;
+	align-items: baseline;
+	padding: 10px 0;
 	text-align: left;
+}
+.viewer .kv span {
+	font-size: 13.5px;
+	line-height: 20px;
 }
 .viewer .kv b {
 	text-align: left;
 	font-weight: 500;
-	overflow-wrap: anywhere;
+	font-size: 14px;
+	line-height: 20px;
+	overflow-wrap: break-word;
+	word-break: normal;
+}
+/* Data from the file: it breaks only where the name does (at _, - and .), never mid-word. */
+.viewer .kv b.kv-mono {
+	font: 400 13px / 20px var(--mono);
+	overflow-wrap: break-word;
+	hyphens: none;
+}
+.vw-acts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 16px;
 }
 
 /* ---------- Sign-in ---------- */
@@ -954,7 +988,8 @@ body.auth-split {
 	color-scheme: dark;
 	--ink: #f3f5f7;
 	--dim: #8a91a0;
-	--acc: #c4bbff;
+	--acc: #8fb0ff;
+	--acc-fill: #1f2f7a;
 	--gold: #ffd76a;
 }
 .tv-hero {
@@ -1202,13 +1237,13 @@ html[data-theme='light'] .btn.primary {
 .lb-dock-i.on svg,
 .lb-side-i.on svg,
 .lb-more-i.on svg {
-	color: var(--acc);
+	color: inherit;
 }
 
 /* ---------- Settings pages: a list of parts, then rows of label and control ---------- */
 .set {
 	display: grid;
-	grid-template-columns: 188px minmax(0, 860px);
+	grid-template-columns: 188px minmax(0, 1fr);
 	gap: 40px;
 	align-items: start;
 }
@@ -1229,9 +1264,8 @@ html[data-theme='light'] .btn.primary {
 	color: var(--ink);
 }
 .set-nav a.on {
-	color: var(--ink);
-	background: var(--bg-2);
-	box-shadow: inset 2px 0 0 var(--acc);
+	color: var(--on-acc);
+	background: var(--acc-fill);
 }
 .set-body {
 	display: grid;
@@ -1291,11 +1325,10 @@ html[data-theme='light'] .btn.primary {
 }
 .set-group h3,
 .set-sub {
-	margin: 0 0 4px;
-	color: var(--dim);
-	font: 600 12.5px var(--sans);
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
+	margin: 0 0 6px;
+	color: var(--ink);
+	font: 600 15px var(--sans);
+	letter-spacing: -0.005em;
 }
 .set-sub {
 	margin-top: 22px;
@@ -1438,14 +1471,14 @@ input.switch::before {
 .set .form > label > input[type='checkbox']:checked,
 .set .card-b > label > input[type='checkbox']:checked,
 input.switch:checked {
-	background: var(--acc);
-	box-shadow: none;
+	background: var(--acc-fill);
+	box-shadow: inset 0 0 0 1px var(--acc);
 }
 .set .form > label > input[type='checkbox']:checked::before,
 .set .card-b > label > input[type='checkbox']:checked::before,
 input.switch:checked::before {
 	transform: translateX(16px);
-	background: var(--on-gold);
+	background: #fff;
 }
 html[data-theme='light'] input.switch:checked::before,
 html[data-theme='light'] .set label > input[type='checkbox']:checked::before {
@@ -2013,5 +2046,497 @@ html.lenis body {
 @media (prefers-reduced-motion: reduce) {
 	.empty > * {
 		animation: none;
+	}
+}
+
+/* ---------- Account card (the menu under the avatar) ---------- */
+.lb-me-m {
+	width: 320px;
+	padding: 0;
+	overflow: hidden;
+	border-radius: 18px;
+}
+/* The film edge would show beside the open card; it steps aside while the card is open. */
+.lb-shell:has(.lb-me-m) .scrub {
+	visibility: hidden;
+}
+.me {
+	--me-x: 16px;
+	display: grid;
+}
+.me-who {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 12px;
+	padding: 18px var(--me-x) 14px;
+}
+.me-av {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: var(--acc-fill);
+	color: var(--on-acc);
+	font: 600 15px var(--sans);
+	letter-spacing: 0.02em;
+}
+.me-id {
+	display: grid;
+	min-width: 0;
+}
+.me-id b {
+	overflow: hidden;
+	font: 400 22px / 1.1 var(--serif);
+	letter-spacing: -0.01em;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.me-id small {
+	overflow: hidden;
+	color: var(--dim);
+	font-size: 13px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.me-role {
+	align-self: start;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: var(--bg-3);
+	color: var(--haze);
+	font: 600 11px / 18px var(--sans);
+}
+.me-lib {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 44px;
+	margin: 0;
+	padding: 12px var(--me-x);
+	border-top: 1px solid var(--line);
+	border-bottom: 1px solid var(--line);
+	background: var(--bg);
+	color: var(--dim);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+}
+.me-lib b {
+	color: var(--ink);
+	font-weight: 600;
+}
+.me-wait {
+	width: 60%;
+	height: 12px;
+	margin-top: 3px;
+	border-radius: 6px;
+	background: var(--bg-3);
+}
+.me-go {
+	display: grid;
+	padding: 6px 6px;
+}
+.me-go a,
+.me-out {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	min-height: 40px;
+	padding: 0 calc(var(--me-x) - 6px);
+	border: 0;
+	border-radius: 10px;
+	background: none;
+	color: var(--ink);
+	font: 500 14.5px var(--sans);
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+}
+.me-go a:hover,
+.me-out:hover {
+	background: var(--bg-3);
+}
+.me-go svg,
+.me-out svg {
+	flex: none;
+	color: var(--dim);
+}
+.me-alert {
+	margin-left: auto;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--err) 16%, transparent);
+	color: var(--err);
+	font: 600 11.5px / 18px var(--sans);
+	font-style: normal;
+}
+.me-set {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: center;
+	gap: 10px 12px;
+	padding: 12px var(--me-x) 14px;
+	border-top: 1px solid var(--line);
+}
+.me-l {
+	color: var(--dim);
+	font-size: 13px;
+}
+.me-seg {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 2px;
+	padding: 2px;
+	border-radius: 10px;
+	background: var(--bg);
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+.me-seg button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	height: 30px;
+	border: 0;
+	border-radius: 8px;
+	background: none;
+	color: var(--dim);
+	font: 500 12.5px var(--sans);
+	cursor: pointer;
+}
+.me-seg button:hover {
+	color: var(--ink);
+}
+.me-seg button.on {
+	background: var(--acc-fill);
+	color: var(--on-acc);
+}
+.me-sel {
+	height: 34px;
+	padding: 0 32px 0 10px;
+	border: 0;
+	border-radius: 10px;
+	background: var(--bg)
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='1.6' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E")
+		no-repeat right 10px center;
+	box-shadow: inset 0 0 0 1px var(--line);
+	color: var(--ink);
+	font: 500 13.5px var(--sans);
+	appearance: none;
+	cursor: pointer;
+}
+.me > form {
+	padding: 6px;
+	border-top: 1px solid var(--line);
+}
+@media (max-width: 760px) {
+	.lb-me-m {
+		position: fixed;
+		top: 62px;
+		left: 12px;
+		right: 12px;
+		width: auto;
+	}
+}
+
+/* ---------- Library opening ---------- */
+.lib-head:not(:has(.badge)) {
+	min-height: 0;
+	margin: 0;
+}
+.day-strip {
+	gap: 8px;
+	margin: 4px 0 8px;
+}
+.day-card,
+:is(html, html[data-theme]) .day-card {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: auto;
+	aspect-ratio: auto;
+	padding: 6px 14px 6px 6px;
+	border-radius: 14px;
+	background: var(--bg-2);
+	color: var(--ink);
+}
+.day-card:hover {
+	background: var(--bg-3);
+}
+.day-card img {
+	width: 52px;
+	height: 52px;
+	border-radius: 9px;
+	object-fit: cover;
+}
+.day-card-t {
+	display: grid;
+	gap: 1px;
+}
+.day-card .day-card-t {
+	position: static;
+	padding: 0;
+	background: none;
+	height: auto;
+}
+.day-card-t b {
+	font: 600 14.5px var(--sans);
+}
+.day-card-t small {
+	color: var(--dim);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+}
+.day-card > svg {
+	color: var(--dim);
+}
+
+/* Inline fields in a toolbar: a date with its label inside, a switch with its name. */
+.sel-inline input.in,
+:is(html, html[data-theme]) .sel-inline input.in {
+	min-height: 0;
+	height: 100%;
+	width: auto;
+	padding: 0 10px 0 8px;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	color: var(--ink);
+	font: 500 14px var(--sans);
+	font-variant-numeric: tabular-nums;
+	color-scheme: inherit;
+}
+.tb-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	height: 38px;
+	padding: 0 8px 0 14px;
+	border-radius: 12px;
+	background: var(--bg-2);
+	box-shadow: inset 0 0 0 1px var(--line);
+	color: var(--dim);
+	font: 500 14px var(--sans);
+	cursor: pointer;
+}
+.tb-switch input.switch {
+	order: 0;
+}
+/* The map's credits stay clear of the dock. */
+.map-box .maplibregl-ctrl-bottom-right {
+	top: 0;
+	bottom: auto;
+	left: 0;
+	right: auto;
+}
+/* A fade under the dock, so what scrolls beneath it never reads as a collision. */
+.lb-shell:not(.lb-admin)::after {
+	content: '';
+	position: fixed;
+	inset: auto 0 0;
+	z-index: 29;
+	height: 120px;
+	background: linear-gradient(to top, var(--bg) 35%, transparent);
+	pointer-events: none;
+}
+
+/* ---------- Search: one field and its actions, one height ---------- */
+.search-bar {
+	display: flex;
+	align-items: stretch;
+	gap: 8px;
+	max-width: 760px;
+	margin: 0 0 22px;
+}
+.search-bar .f {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+}
+.search-bar .f > span:first-child {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+:is(html, html[data-theme]) .search-bar .in {
+	height: 48px;
+	min-height: 48px;
+	padding: 0 16px;
+	border-radius: 14px;
+	font-size: 16px;
+}
+:is(html, html[data-theme]) .search-bar .btn {
+	height: 48px;
+	min-height: 48px;
+	padding: 0 20px;
+	border-radius: 14px;
+}
+
+/* ---------- Photos keep one shape everywhere: nearly square corners, 3 px apart ---------- */
+.map-grid {
+	gap: 3px;
+}
+.map-grid button {
+	border-radius: 3px;
+}
+.alb-cover,
+:is(html, html[data-theme]) .alb-cover {
+	border: 0;
+	border-radius: 4px;
+}
+.alb-card {
+	border-radius: 4px;
+}
+
+/* ---------- Stats: one inset, the label in plain words, the number large ---------- */
+:is(html, html[data-theme]) .stat {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-height: 112px;
+	padding: 18px 20px;
+	border-radius: 16px;
+	background: var(--bg-2);
+	box-shadow: none;
+}
+:is(html, html[data-theme]) .stat-l {
+	padding: 0;
+	color: var(--dim);
+	font: 500 13.5px var(--sans);
+	letter-spacing: 0;
+	text-transform: none;
+}
+:is(html, html[data-theme]) .stat-v {
+	padding: 0;
+	font: 600 28px / 1.1 var(--sans);
+	letter-spacing: -0.02em;
+}
+.stat .bar {
+	margin-top: auto;
+}
+.stats {
+	align-items: stretch;
+}
+a.kv-bad {
+	color: var(--err);
+	text-decoration: none;
+}
+a.kv-bad span,
+a.kv-bad b {
+	color: var(--err);
+}
+a.kv-bad:hover b {
+	text-decoration: underline;
+}
+
+/* ---------- Tables line up with their card; a checkbox in a form row sits as tall as a field ---------- */
+.card-b > .tbl-w > .tbl th:first-child,
+.card-b > .tbl-w > .tbl td:first-child {
+	padding-left: 0;
+}
+.card-b > .tbl-w > .tbl th:last-child,
+.card-b > .tbl-w > .tbl td:last-child {
+	padding-right: 0;
+}
+:is(html, html[data-theme]) .tbl th {
+	font: 500 13px var(--sans);
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--dim);
+}
+.form .f > .chk {
+	min-height: 48px;
+}
+
+/* ---------- Contrast the detector measured ---------- */
+html[data-theme='light'] .tl-year {
+	opacity: 1;
+}
+html[data-theme='light'] .set-chip.ok {
+	color: #06623f;
+}
+
+/* ---------- Phone: titles above their tools, two albums a row, one row of parts ---------- */
+@media (max-width: 760px) {
+	.ph {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 14px;
+	}
+	.ph-a {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	/* Inside the app the toolbar may run to the screen's edges, which the page padding is known for. */
+	.lb-shell .ph-a {
+		margin: 0 -16px;
+		padding: 0 16px;
+	}
+	.ph-a > * {
+		flex: none;
+	}
+	.alb-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 12px;
+	}
+	.lb-admin .set-nav {
+		display: none;
+	}
+	.set-nav,
+	.lb-side {
+		-webkit-mask: linear-gradient(90deg, #000 85%, transparent);
+		mask: linear-gradient(90deg, #000 85%, transparent);
+	}
+}
+.me-seg svg {
+	flex: none;
+}
+.me-seg button {
+	min-width: 0;
+	padding: 0 6px;
+}
+
+:is(html, html[data-theme]) .stat-v {
+	margin: 0;
+}
+:is(html, html[data-theme]) .stats > .stat:first-child .stat-l {
+	color: var(--dim);
+}
+
+/* A page heading may shrink with the phone; its toolbar scrolls inside it instead. */
+.ph,
+.ph > *,
+.ph-a {
+	min-width: 0;
+}
+.lb-shell .main > * {
+	min-width: 0;
+	max-width: 100%;
+}
+@media (max-width: 760px) {
+	/* The dock shares the width evenly, so seven places fit on the smallest phone. */
+	.lb-dock {
+		gap: 2px;
+	}
+	.lb-dock-i {
+		flex: 1 1 0;
+		min-width: 0;
+		justify-content: center;
+		padding: 12px 0;
+	}
+	.lb-add {
+		flex: none;
+	}
+}
+@media (max-width: 760px) {
+	/* A wrapping column sizes each line to its widest item; one line keeps the phone's width. */
+	.ph {
+		flex-wrap: nowrap;
 	}
 }

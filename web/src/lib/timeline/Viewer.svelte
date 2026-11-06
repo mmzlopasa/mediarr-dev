@@ -129,6 +129,9 @@
 		};
 	});
 
+	// A long file name may wrap after _, - and . but never inside a word.
+	const breakable = (name: string) => name.replace(/([_\-.])/g, '$1\u200b');
+
 	const go = (target: string | undefined) => {
 		if (target) onNavigate(target);
 	};
@@ -625,7 +628,7 @@
 						}}
 					/>
 				{/if}
-				<Kv label={tr('Naziv', 'Name')} value={detail.originalName} mono />
+				<Kv label={tr('Naziv', 'Name')} value={breakable(detail.originalName)} mono />
 				{#if detail.description}
 					<Kv label={tr('Opis', 'Description')} value={detail.description} />
 				{/if}
@@ -642,15 +645,19 @@
 				{/if}
 				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
 				{#if detail.people}<FacesEditor assetId={id} />{/if}
-				{#if detail.isOwner}
-					<a class="linkish" href="/api/assets/{id}/sidecar" download
-						>{tr('Preuzmi XMP', 'Download XMP')}</a
-					>
-				{/if}
-				{#if detail.people}
-					<Button small onclick={() => (editingFacts = true)}>
-						{tr('Uredi podatke', 'Edit details')}
-					</Button>
+				{#if detail.isOwner || detail.people}
+					<div class="vw-acts">
+						{#if detail.people}
+							<Button small onclick={() => (editingFacts = true)}>
+								{tr('Uredi podatke', 'Edit details')}
+							</Button>
+						{/if}
+						{#if detail.isOwner}
+							<a class="btn sm ghost" href="/api/assets/{id}/sidecar" download
+								><Icon name="download" size={14} />{tr('Preuzmi XMP', 'Download XMP')}</a
+							>
+						{/if}
+					</div>
 				{/if}
 				{#if detail.tags?.length}
 					<Kv label={tr('Oznake', 'Tags')} value={detail.tags.join(', ')} />

@@ -8,8 +8,8 @@ const minPerRow = 2;
 const maxPerRow = 6;
 
 enum AppAccent {
-  // Light blue, the default; buttons stay gold whatever is chosen here.
-  blue('Light blue', 0xFFC4BBFF, 0xFF5A49E6),
+  // Midnight blue, the default; buttons stay gold whatever is chosen here.
+  blue('Midnight blue', 0xFF8FB0FF, 0xFF23358F),
   gold('Gold', 0xFFFFD76A, 0xFF8A6500),
   violet('Violet', 0xFF8B7CFF, 0xFF5A49E6),
   mint('Mint', 0xFF8EF0C8, 0xFF0B8F69),

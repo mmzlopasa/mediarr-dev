@@ -91,7 +91,7 @@
 
 <div class="ph"><div><h1>{tr(item.hr, item.en)}</h1></div></div>
 
-<form class="map-bar" onsubmit={submit}>
+<form class="search-bar" onsubmit={submit}>
 	<Input
 		label={tr('Što tražite?', 'What are you looking for?')}
 		placeholder={tr('pas na plaži, Hvar 2024, račun…', 'dog on a beach, Hvar 2024, receipt…')}

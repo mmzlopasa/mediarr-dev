@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// The colours of the Lightbox design (web/src/lib/design/dash.css tokens): grey grounds, light
+/// The colours of the Lightbox design (web/src/lib/design/dash.css tokens): grey grounds, midnight
 /// blue for what is on or chosen, gold for the button that acts.
 abstract final class Palette {
   /// Set by the app when the theme changes, before anything is drawn with these.
@@ -19,14 +19,14 @@ abstract final class Palette {
   static Color get line2 => _pick(0xFF323846, 0xFFC0C5CF);
 
   /// The second colour, for avatars and quiet highlights.
-  static Color get violet => _pick(0xFF8B7CFF, 0xFF5A49E6);
+  static Color get violet => _pick(0xFF3A55C9, 0xFF23358F);
 
-  /// The accent for what is on or chosen: light blue unless the person chose another.
+  /// The accent for what is on or chosen: midnight blue unless the person chose another.
   static Color get gold => _pick(accentDark, accentLight);
 
   /// The chosen accent, set by the app with the theme.
-  static int accentDark = 0xFFC4BBFF;
-  static int accentLight = 0xFF5A49E6;
+  static int accentDark = 0xFF8FB0FF;
+  static int accentLight = 0xFF23358F;
   static Color get glassEdge => line;
 
   /// Surfaces are solid: glass reads poorly over photos and costs too much on older phones.
@@ -42,7 +42,7 @@ abstract final class Palette {
   static const gold3 = Color(0xFFE9B84A);
   static const onGold = Color(0xFF1B1530);
 
-  /// Text on the accent: dark on light blue, white on the deeper blue of the light theme.
+  /// Text on the accent: dark on the light tint of the dark theme, white on midnight blue.
   static Color get onAccent => _pick(0xFF1B1530, 0xFFFFFFFF);
 }
 

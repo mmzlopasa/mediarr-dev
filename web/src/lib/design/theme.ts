@@ -44,3 +44,21 @@ export function watchTheme() {
 		removeEventListener('storage', onStorage);
 	};
 }
+
+export type ThemeChoice = 'dark' | 'light' | 'system';
+
+/** What the person chose: a fixed theme, or whatever the system shows. */
+export function themeChoice(): ThemeChoice {
+	const stored = storedTheme();
+	return stored === 'light' || stored === 'dark' ? stored : 'system';
+}
+
+export function setTheme(choice: ThemeChoice) {
+	try {
+		if (choice === 'system') localStorage.removeItem(KEY);
+		else localStorage.setItem(KEY, choice);
+	} catch {
+		// Storage can be blocked; the theme still applies to this page.
+	}
+	apply(choice === 'system' ? null : choice);
+}

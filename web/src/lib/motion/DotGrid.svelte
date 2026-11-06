@@ -21,7 +21,7 @@
 				dotSize: size,
 				gap,
 				baseColor: read('--line-2', '#323846'),
-				activeColor: read('--acc', '#c4bbff'),
+				activeColor: read('--acc', '#8fb0ff'),
 				proximity: 130,
 				strength: 0.8,
 				glow: 0.35,

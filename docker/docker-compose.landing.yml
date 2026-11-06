@@ -9,8 +9,8 @@ services:
     volumes:
       - ../landing:/usr/share/nginx/html:ro
       # Outside the read-only html mount, because Docker cannot create mount points inside it.
-      - ../web/src/lib/design/dash.css:/srv/design/dash.css:ro
-      - ../web/src/lib/design/fonts:/srv/design/fonts:ro
+      # The whole folder, not single files: a file mount keeps the old copy after an edit.
+      - ../web/src/lib/design:/srv/design:ro
       - ../web/static/favicon.svg:/srv/favicon.svg:ro
     configs:
       - source: nginx

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/design/components/Icon.svelte';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { api, type Memory } from '#lib/api.ts';
@@ -30,7 +31,16 @@
 		{#each memories as memory (memory.kind + memory.title)}
 			<a class="day-card" href={resolve('/(app)/memories')}>
 				<img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" />
-				<span>{label(memory)}</span>
+				<span class="day-card-t">
+					<b>{label(memory)}</b>
+					<small
+						>{tr(
+							`${memory.items.length} stavki`,
+							memory.items.length === 1 ? '1 item' : `${memory.items.length} items`
+						)}</small
+					>
+				</span>
+				<Icon name="forward" size={16} />
 			</a>
 		{/each}
 	</div>

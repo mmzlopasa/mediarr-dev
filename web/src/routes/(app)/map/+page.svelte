@@ -6,10 +6,8 @@
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Card from '#lib/design/components/Card.svelte';
-	import Checkbox from '#lib/design/components/Checkbox.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
-	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import PhotoMap from '#lib/map/PhotoMap.svelte';
@@ -75,26 +73,41 @@
 
 <svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr(item.hr, item.en)}</h1></div></div>
+<div class="ph">
+	<div>
+		<h1>{tr(item.hr, item.en)}</h1>
+		{#if points}
+			<p>{tr(`S lokacijom: ${points.ids.length}`, `With a location: ${points.ids.length}`)}</p>
+		{/if}
+	</div>
+	<div class="ph-a">
+		<label class="sel-inline">
+			<span>{tr('Od datuma', 'From date')}</span>
+			<input class="in" type="date" bind:value={from} />
+		</label>
+		<label class="sel-inline">
+			<span>{tr('Do datuma', 'To date')}</span>
+			<input class="in" type="date" bind:value={to} />
+		</label>
+		<label class="tb-switch">
+			<span>{tr('Toplinska karta', 'Heatmap')}</span>
+			<input type="checkbox" class="switch" bind:checked={heatmap} />
+		</label>
+		{#if from || to}
+			<Button
+				small
+				onclick={() => {
+					from = '';
+					to = '';
+				}}>{tr('Očisti', 'Clear')}</Button
+			>
+		{/if}
+	</div>
+</div>
 
 {#if failed}
 	<Alert kind="err">{tr('Karta se nije učitala.', 'The map could not be loaded.')}</Alert>
 {/if}
-
-<div class="map-bar">
-	<Input label={tr('Od datuma', 'From date')} type="date" bind:value={from} />
-	<Input label={tr('Do datuma', 'To date')} type="date" bind:value={to} />
-	<Checkbox label={tr('Toplinska karta', 'Heatmap')} bind:checked={heatmap} />
-	{#if from || to}
-		<Button
-			small
-			onclick={() => {
-				from = '';
-				to = '';
-			}}>{tr('Očisti', 'Clear')}</Button
-		>
-	{/if}
-</div>
 
 {#if !points || !style}
 	{#if !failed}<Skeleton height="420px" />{/if}
@@ -103,9 +116,6 @@
 		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
 	</section>
 {:else}
-	<p class="alb-meta">
-		{tr(`S lokacijom: ${points.ids.length}`, `With a location: ${points.ids.length}`)}
-	</p>
 	<PhotoMap
 		{points}
 		styleUrl={document.documentElement.dataset.theme === 'light' ? style.light : style.dark}

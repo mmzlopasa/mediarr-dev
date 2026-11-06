@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { formatBytes } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Card from '#lib/design/components/Card.svelte';
@@ -58,7 +59,13 @@
 				<Kv label={tr('U redu', 'Queued')} value={String(data.jobs.queued)} />
 				<Kv label={tr('U obradi', 'Running')} value={String(data.jobs.running)} />
 				<Kv label={tr('Dovršeno', 'Completed')} value={String(data.jobs.completed)} />
-				<Kv label={tr('Neuspjelo', 'Failed')} value={String(data.jobs.failed)} />
+				{#if data.jobs.failed > 0}
+					<a class="kv kv-bad" href={resolve('/admin/jobs')}
+						><span>{tr('Neuspjelo', 'Failed')}</span><b>{data.jobs.failed} ›</b></a
+					>
+				{:else}
+					<Kv label={tr('Neuspjelo', 'Failed')} value="0" />
+				{/if}
 			{/if}
 		</Card>
 		<Card title={tr('Sustav', 'System')}>

@@ -9,12 +9,11 @@
 	import type { IconName } from '../icons.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import type { NavItem } from '#lib/nav.ts';
+	import AccountCard from './AccountCard.svelte';
 	import Avatar from './Avatar.svelte';
 	import CommandPalette from './CommandPalette.svelte';
 	import Icon from './Icon.svelte';
-	import LangMenu from './LangMenu.svelte';
 	import Logo from './Logo.svelte';
-	import ThemeButton from './ThemeButton.svelte';
 	import UploadButton from './UploadButton.svelte';
 	import { directMotion } from '#lib/motion/director.ts';
 	import { startSmoothScroll } from '#lib/motion/motion.ts';
@@ -140,20 +139,8 @@
 					<Avatar initials={initialsOf(user.name)} />
 				</button>
 				{#if meOpen}
-					<div class="lb-pop lb-me-m">
-						<div class="lb-me-h"><b>{user.name}</b><small>{roleLabel}</small></div>
-						{#each footLinks as link (link.href)}
-							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved href -->
-							<a class="lb-pop-i" href={link.href}><Icon name={link.icon} />{link.label}</a>
-						{/each}
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a fixed route -->
-						<a class="lb-pop-i" href="/tv"><Icon name="tv" />{tr('TV način', 'TV mode')}</a>
-						<div class="lb-me-tools"><LangMenu /><ThemeButton /></div>
-						<form onsubmit={signOut}>
-							<button class="lb-pop-i" type="submit"
-								><Icon name="out" />{tr('Odjava', 'Sign out')}</button
-							>
-						</form>
+					<div class="lb-pop lb-me-m" data-lenis-prevent>
+						<AccountCard {user} {roleLabel} links={footLinks} onSignOut={signOut} />
 					</div>
 				{/if}
 			</div>
