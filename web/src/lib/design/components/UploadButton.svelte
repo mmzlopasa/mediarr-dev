@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { magnet } from '#lib/motion/actions.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import { addUploads, setPreparingUpload } from '#lib/uploads.svelte.ts';
 	import Icon from './Icon.svelte';
@@ -41,6 +42,7 @@
 		for="upload-input-{active}"
 		role="button"
 		tabindex="0"
+		use:magnet
 		aria-label={tr('Dodaj', 'Add')}
 		title={tr('Dodaj fotke i videe', 'Add photos and videos')}
 		onclick={opening}

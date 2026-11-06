@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { kenBurns } from '#lib/motion/actions.ts';
 	import { preferences } from '#lib/preferences.svelte.ts';
 	import { onMount } from 'svelte';
 	import { api, type Memory, type StoryExport } from '#lib/api.ts';
@@ -96,7 +97,13 @@
 		{/if}
 	</div>
 	<div class="story-stage">
-		<img src="/api/assets/{items[index].id}/thumbnail?size=large" alt="" />
+		{#key items[index].id}
+			<img
+				src="/api/assets/{items[index].id}/thumbnail?size=large"
+				alt=""
+				use:kenBurns={{ seconds: pictureMs / 1000, turn: index }}
+			/>
+		{/key}
 		<button
 			type="button"
 			class="icon-btn viewer-nav viewer-prev"

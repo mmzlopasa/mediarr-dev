@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { magnet } from '#lib/motion/actions.ts';
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 
@@ -25,7 +26,9 @@
 
 {#if href}
 	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- the caller supplies a resolved href -->
-	<a class={cls} {href}>{@render children()}</a>
+	<a class={cls} {href} use:magnet={{ off: variant !== 'gold' || block }}>{@render children()}</a>
 {:else}
-	<button class={cls} {type} {...rest}>{@render children()}</button>
+	<button class={cls} {type} {...rest} use:magnet={{ off: variant !== 'gold' || block }}
+		>{@render children()}</button
+	>
 {/if}

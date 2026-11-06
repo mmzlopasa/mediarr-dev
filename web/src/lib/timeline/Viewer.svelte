@@ -5,6 +5,8 @@
 	import FacesEditor from '#lib/organize/FacesEditor.svelte';
 	import { preferences, trashDays } from '#lib/preferences.svelte.ts';
 	import { onMount, untrack } from 'svelte';
+	import { holdScroll } from '#lib/motion/motion.ts';
+	import { pulse } from '#lib/motion/actions.ts';
 	import { api, formatBytes, type AssetDetail } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
@@ -118,9 +120,11 @@
 	onMount(() => {
 		const previous = document.activeElement as HTMLElement | null;
 		document.body.classList.add('viewer-open');
+		holdScroll(true);
 		dialog?.focus();
 		return () => {
 			document.body.classList.remove('viewer-open');
+			holdScroll(false);
 			previous?.focus?.();
 		};
 	});
@@ -260,7 +264,8 @@
 		};
 	});
 
-	async function toggleFavorite() {
+	async function toggleFavorite(event?: MouseEvent) {
+		pulse((event?.currentTarget as HTMLElement | undefined)?.querySelector('svg'));
 		if (!detail) return;
 		const next = !detail.isFavorite;
 		const asked = detail.id;
@@ -324,6 +329,7 @@
 <div
 	bind:this={dialog}
 	class="viewer"
+	data-lenis-prevent
 	role="dialog"
 	aria-modal="true"
 	aria-label={detail?.originalName ?? tr('Fotka', 'Photo')}

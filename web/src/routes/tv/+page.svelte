@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { kenBurns } from '#lib/motion/actions.ts';
 	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -228,7 +229,13 @@
 
 	{#if show}
 		<div class="tv-show" role="dialog" aria-label={tr('Prikaz fotki', 'Slideshow')}>
-			<img src={thumbUrl('/api', show.ids[show.index], null, 'large')} alt="" />
+			{#key show.ids[show.index]}
+				<img
+					src={thumbUrl('/api', show.ids[show.index], null, 'large')}
+					alt=""
+					use:kenBurns={{ seconds: SHOW_MS / 1000, turn: show.index }}
+				/>
+			{/key}
 			<p class="tv-show-n">
 				{show.index + 1} / {show.ids.length}{show.playing
 					? ''

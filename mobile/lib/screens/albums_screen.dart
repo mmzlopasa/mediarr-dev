@@ -1,3 +1,5 @@
+import '../motion.dart';
+
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -129,10 +131,14 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                   childAspectRatio: 0.8,
                 ),
                 itemCount: albums.length,
-                itemBuilder: (context, index) => _AlbumTile(
-                  album: albums[index],
-                  session: session,
-                  onReturn: _load,
+                itemBuilder: (context, index) => Rise(
+                  id: 'album ${albums[index].id}',
+                  index: index,
+                  child: _AlbumTile(
+                    album: albums[index],
+                    session: session,
+                    onReturn: _load,
+                  ),
                 ),
               )
             : ListView.builder(

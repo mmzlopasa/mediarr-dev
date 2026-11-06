@@ -1,3 +1,5 @@
+import '../motion.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -320,36 +322,40 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
         itemCount: shown.length,
         itemBuilder: (context, index) {
           final person = shown[index];
-          return GestureDetector(
-            onTap: () => Navigator.of(context)
-                .push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => _PersonScreen(person: person),
-                  ),
-                )
-                .then((_) => _load()),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: SizedBox.expand(
-                      child: _PersonPicture(session: _session, id: person.id),
+          return Rise(
+            id: 'person ${person.id}',
+            index: index,
+            child: GestureDetector(
+              onTap: () => Navigator.of(context)
+                  .push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => _PersonScreen(person: person),
+                    ),
+                  )
+                  .then((_) => _load()),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox.expand(
+                        child: _PersonPicture(session: _session, id: person.id),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  person.name.isEmpty ? _noName : person.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  '${person.assetCount}',
-                  style: text.bodySmall?.copyWith(color: Palette.dim),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    person.name.isEmpty ? _noName : person.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '${person.assetCount}',
+                    style: text.bodySmall?.copyWith(color: Palette.dim),
+                  ),
+                ],
+              ),
             ),
           );
         },

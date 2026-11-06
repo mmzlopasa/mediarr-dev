@@ -26,6 +26,7 @@
 
 <dialog
 	bind:this={dialog}
+	data-lenis-prevent
 	class={['glass', sheet ? 'sheet' : 'dlg']}
 	aria-label={title}
 	onclose={() => (open = false)}

@@ -16,6 +16,8 @@
 	import Logo from './Logo.svelte';
 	import ThemeButton from './ThemeButton.svelte';
 	import UploadButton from './UploadButton.svelte';
+	import { directMotion } from '#lib/motion/director.ts';
+	import { startSmoothScroll } from '#lib/motion/motion.ts';
 
 	let {
 		nav,
@@ -66,10 +68,24 @@
 
 	afterNavigate(closeAll);
 
+	let main = $state<HTMLElement>();
+
 	onMount(() => {
 		const onMaintenance = () => (maintained = true);
 		window.addEventListener('mediarr:maintenance', onMaintenance);
-		return () => window.removeEventListener('mediarr:maintenance', onMaintenance);
+		let stopScroll: (() => void) | undefined;
+		let stopped = false;
+		void startSmoothScroll().then((stop) => {
+			if (stopped) stop();
+			else stopScroll = stop;
+		});
+		const stopMotion = main ? directMotion(main) : undefined;
+		return () => {
+			stopped = true;
+			stopScroll?.();
+			stopMotion?.();
+			window.removeEventListener('mediarr:maintenance', onMaintenance);
+		};
 	});
 
 	$effect.pre(() => {
@@ -206,7 +222,7 @@
 			>
 			<span class="lb-add"><UploadButton compact /></span>
 			{#if moreOpen}
-				<div class="lb-pop lb-more">
+				<div class="lb-pop lb-more" data-lenis-prevent>
 					<div class="lb-more-g">
 						{#each more as item (item.path)}
 							<!-- eslint-disable svelte/no-navigation-without-resolve -- paths come from the static nav list -->
@@ -227,7 +243,7 @@
 		</nav>
 	{/if}
 
-	<main id="main" class="main" tabindex="-1">
+	<main id="main" class="main" tabindex="-1" bind:this={main}>
 		{#if maintained}
 			<p class="maintenance" role="status">
 				{tr(

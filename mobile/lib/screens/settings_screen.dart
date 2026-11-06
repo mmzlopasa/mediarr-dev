@@ -1,3 +1,5 @@
+import '../motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -886,23 +888,28 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else {
-      Widget row(String label, String value) => ListTile(
-        title: Text(label),
-        trailing: Text(value, style: Theme.of(context).textTheme.titleMedium),
-      );
+      Widget row(String label, num value, [String Function(num)? format]) =>
+          ListTile(
+            title: Text(label),
+            trailing: CountUp(
+              value: value,
+              format: format,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          );
       body = ListView(
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 30),
         children: [
           GlassCard(
             child: Column(
               children: [
-                row('Photos', '${stats.photos}'),
-                row('Videos', '${stats.videos}'),
-                row('Albums', '${stats.albums}'),
-                row('Favorites', '${stats.favorites}'),
-                row('Archive', '${stats.archived}'),
-                row('Trash', '${stats.trashed}'),
-                row('Used', formatBytes(stats.bytes)),
+                row('Photos', stats.photos),
+                row('Videos', stats.videos),
+                row('Albums', stats.albums),
+                row('Favorites', stats.favorites),
+                row('Archive', stats.archived),
+                row('Trash', stats.trashed),
+                row('Used', stats.bytes, (v) => formatBytes(v.round())),
               ],
             ),
           ),

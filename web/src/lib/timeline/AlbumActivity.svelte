@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pulse } from '#lib/motion/actions.ts';
 	import { api, type Activity } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
@@ -62,8 +63,9 @@
 		}
 	}
 
-	async function heart() {
+	async function heart(event: MouseEvent) {
 		if (!assetId || !activity) return;
+		pulse((event.currentTarget as HTMLElement).querySelector('svg'));
 		try {
 			await api.setHeart(albumId, assetId, !activity.hearted);
 			await load();

@@ -8,6 +8,7 @@
 	import Alert from '#lib/design/components/Alert.svelte';
 	import AuthLayout from '#lib/design/components/AuthLayout.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
+	import { magnet, revealTitle } from '#lib/motion/actions.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 
 	const CODE_PATTERN = '[0-9 ]{6,7}';
@@ -129,7 +130,7 @@
 			<a href={resolve('/login')} onclick={() => (needsCode = false)}>{tr('← Natrag', '← Back')}</a>
 		</p>
 	{:else}
-		<h1 class="as-h">{tr('Dobrodošli', 'Welcome')}</h1>
+		<h1 class="as-h" use:revealTitle>{tr('Dobrodošli', 'Welcome')}</h1>
 		<p class="as-p">{tr('Prijavite se svojim računom.', 'Sign in with your account.')}</p>
 		{#if methods?.maintenance}<p class="as-p login-note">
 				{tr(
@@ -171,7 +172,9 @@
 						>
 					</span>
 				</label>
-				<button class="as-btn" type="submit" disabled={busy}>{tr('Prijavi se', 'Sign in')}</button>
+				<button class="as-btn" type="submit" disabled={busy} use:magnet={{ most: 5 }}
+					>{tr('Prijavi se', 'Sign in')}</button
+				>
 			</form>{/if}
 		{#if methods?.ssoLabel}
 			<a

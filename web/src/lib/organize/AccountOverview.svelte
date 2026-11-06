@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { api, formatBytes, type AccountStats } from '#lib/api.ts';
 	import Card from '#lib/design/components/Card.svelte';
+	import { countUp } from '#lib/motion/actions.ts';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { tr } from '#lib/i18n.svelte.ts';
 
@@ -22,31 +23,33 @@
 		<dl class="acct-stats">
 			<div>
 				<dt>{tr('Fotke', 'Photos')}</dt>
-				<dd>{stats.photos}</dd>
+				<dd use:countUp={{ value: stats.photos }}></dd>
 			</div>
 			<div>
 				<dt>{tr('Videi', 'Videos')}</dt>
-				<dd>{stats.videos}</dd>
+				<dd use:countUp={{ value: stats.videos }}></dd>
 			</div>
 			<div>
 				<dt>{tr('Albumi', 'Albums')}</dt>
-				<dd>{stats.albums}</dd>
+				<dd use:countUp={{ value: stats.albums }}></dd>
 			</div>
 			<div>
 				<dt>{tr('Favoriti', 'Favorites')}</dt>
-				<dd>{stats.favorites}</dd>
+				<dd use:countUp={{ value: stats.favorites }}></dd>
 			</div>
 			<div>
 				<dt>{tr('Arhiva', 'Archive')}</dt>
-				<dd>{stats.archived}</dd>
+				<dd use:countUp={{ value: stats.archived }}></dd>
 			</div>
 			<div>
 				<dt>{tr('Smeće', 'Trash')}</dt>
-				<dd>{stats.trashed}</dd>
+				<dd use:countUp={{ value: stats.trashed }}></dd>
 			</div>
 			<div>
 				<dt>{tr('Zauzeto', 'Used')}</dt>
-				<dd>{formatBytes(stats.bytes)}</dd>
+				<dd
+					use:countUp={{ value: stats.bytes, format: (value) => formatBytes(Math.round(value)) }}
+				></dd>
 			</div>
 		</dl>
 	{:else if failed}

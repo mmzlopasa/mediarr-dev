@@ -24,6 +24,7 @@
 		type MonthLayout
 	} from './layout.ts';
 	import Scrubber from './Scrubber.svelte';
+	import { scrollPageTo, shiftPage } from '#lib/motion/motion.ts';
 
 	const LOAD_AHEAD = 1.5;
 	const RENDER_AHEAD = 0.75;
@@ -140,7 +141,7 @@
 			loading: false,
 			failed: false
 		}));
-		if (above && layout.height !== height) window.scrollBy(0, layout.height - height);
+		if (above && layout.height !== height) shiftPage(layout.height - height);
 	}
 
 	async function loadMonth(month: string) {
@@ -529,7 +530,7 @@
 		{marks}
 		total={totalHeight}
 		{position}
-		onSeek={(y) => window.scrollTo(0, containerTop + Math.max(0, y))}
+		onSeek={(y) => scrollPageTo(containerTop + Math.max(0, y))}
 	/>
 {/if}
 

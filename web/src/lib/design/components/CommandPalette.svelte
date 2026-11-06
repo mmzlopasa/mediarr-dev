@@ -51,7 +51,12 @@
 
 <svelte:window onkeydown={onGlobalKey} />
 
-<dialog bind:this={dialog} class="cmd glass" aria-label={tr('Brze naredbe', 'Command palette')}>
+<dialog
+	bind:this={dialog}
+	data-lenis-prevent
+	class="cmd glass"
+	aria-label={tr('Brze naredbe', 'Command palette')}
+>
 	<div class="cmd-in">
 		<input
 			class="in"

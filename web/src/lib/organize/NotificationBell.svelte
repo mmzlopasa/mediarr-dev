@@ -138,7 +138,7 @@
 	</button>
 	{#if unread > 0}<span class="notify-count">{unread > 99 ? '99+' : unread}</span>{/if}
 	{#if open}
-		<div class="notify-panel lb-pop">
+		<div class="notify-panel lb-pop" data-lenis-prevent>
 			<header class="notify-h">
 				<b>{tr('Obavijesti', 'Notifications')}</b>
 				{#if items?.length}

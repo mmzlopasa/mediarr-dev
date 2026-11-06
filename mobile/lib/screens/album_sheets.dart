@@ -1,3 +1,5 @@
+import '../motion.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -162,9 +164,12 @@ class _ActivitySheetState extends State<ActivitySheet> {
               children: [
                 IconButton(
                   tooltip: 'Heart',
-                  icon: Icon(
-                    activity.hearted ? Icons.favorite : Icons.favorite_border,
-                    color: activity.hearted ? Palette.gold : null,
+                  icon: Pulse(
+                    on: activity.hearted,
+                    child: Icon(
+                      activity.hearted ? Icons.favorite : Icons.favorite_border,
+                      color: activity.hearted ? Palette.gold : null,
+                    ),
                   ),
                   onPressed: () => _run(
                     () => activity.hearted

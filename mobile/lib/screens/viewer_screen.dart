@@ -1,3 +1,5 @@
+import '../motion.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
@@ -237,9 +239,12 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
           if (mine)
             IconButton(
               tooltip: 'Favorite',
-              icon: Icon(
-                current.isFavorite ? Icons.star : Icons.star_border,
-                color: current.isFavorite ? Palette.gold : Colors.white,
+              icon: Pulse(
+                on: current.isFavorite,
+                child: Icon(
+                  current.isFavorite ? Icons.star : Icons.star_border,
+                  color: current.isFavorite ? Palette.gold : Colors.white,
+                ),
               ),
               onPressed: () => _favorite(current),
             ),

@@ -39,3 +39,7 @@ They are listed above the timeline, and the originals stay safe on the disk. Aft
 ```bash
 docker compose exec server /mediarr reprocess failed
 ```
+
+## Can I turn the animations off?
+
+Yes. Mediarr follows your device's setting for less motion: "Reduce motion" on iPhone, iPad and Mac, "Remove animations" on Android, "Show animations" off on Windows. With it on, titles, cards and numbers appear at once, the mouse wheel scrolls without smoothing, and the app does the same. The timeline and the photo viewer never animate as you scroll or swipe.

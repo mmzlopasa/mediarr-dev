@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { parallax } from '#lib/motion/actions.ts';
 	import { onMount } from 'svelte';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -172,6 +173,16 @@
 		<Skeleton height="44px" width="40%" /><Skeleton height="220px" />
 	</div>
 {:else}
+	{#if album.coverAssetId}
+		<div class="alb-hero">
+			<img
+				use:parallax
+				src="/api/assets/{album.coverAssetId}/thumbnail?size=large"
+				alt=""
+				decoding="async"
+			/>
+		</div>
+	{/if}
 	<div class="ph">
 		<div>
 			<h1>{album.title}</h1>

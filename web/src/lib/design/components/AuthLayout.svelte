@@ -4,8 +4,14 @@
 	import LangMenu from './LangMenu.svelte';
 	import Logo from './Logo.svelte';
 	import ThemeButton from './ThemeButton.svelte';
+	import DotGrid from '#lib/motion/DotGrid.svelte';
+	import { revealTitle } from '#lib/motion/actions.ts';
+	import { motionKit, reduced } from '#lib/motion/motion.ts';
 
 	let { children }: { children: Snippet } = $props();
+
+	// Fetch the motion code at once, so the first title can still rise.
+	if (typeof window !== 'undefined' && !reduced()) void motionKit();
 
 	$effect.pre(() => {
 		document.body.className = 'auth-page auth-split';
@@ -27,6 +33,7 @@
 		</div>
 	</section>
 	<aside class="as-r" aria-label="Mediarr">
+		<DotGrid />
 		<div class="as-rtop">
 			<LangMenu />
 			<ThemeButton />
@@ -34,7 +41,7 @@
 		</div>
 		<div class="as-edge" aria-hidden="true"></div>
 		<div class="as-promo">
-			<h2>
+			<h2 use:revealTitle>
 				{tr(
 					'Sve vaše fotke i videi, na vašem poslužitelju.',
 					'All your photos and videos, on your own server.'
