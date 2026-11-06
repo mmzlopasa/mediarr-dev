@@ -1,7 +1,7 @@
 import type { TimelineItem } from '#lib/api.ts';
 
 export const GAP = 3;
-export const MONTH_HEADER = 112;
+export const MONTH_HEADER = 76;
 export const DAY_HEADER = 44;
 const MIN_RATIO = 0.4;
 const MAX_RATIO = 4;

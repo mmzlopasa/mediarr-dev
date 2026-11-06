@@ -134,7 +134,7 @@ ThemeData _build(bool light) {
     fontFamily: 'Inter Tight',
     splashFactory: NoSplash.splashFactory,
     textTheme: TextTheme(
-      headlineMedium: serifTitle(38),
+      headlineMedium: serifTitle(30),
       titleLarge: _text(20, 500, Palette.ink),
       titleMedium: _text(16, 600, Palette.ink),
       bodyLarge: _text(15, 400, Palette.ink),

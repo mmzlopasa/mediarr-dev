@@ -550,7 +550,7 @@ class _MonthTitle extends StatelessWidget {
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: serifTitle(50),
+      style: serifTitle(32),
     );
   }
 }
