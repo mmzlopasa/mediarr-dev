@@ -261,6 +261,26 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('a person changes their name in the app', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Profile'));
+    await tester.ensureVisible(find.text('Profile'));
+    await tester.tap(find.text('Profile'));
+    await waitFor(tester, find.text('Add a picture'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Name'),
+      'Ana Horvat',
+    );
+    await tester.tap(find.text('Save'));
+    await waitFor(tester, find.text('Saved.'));
+    expect(server.name, 'Ana Horvat');
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

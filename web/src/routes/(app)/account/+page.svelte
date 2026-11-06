@@ -13,6 +13,7 @@
 	import { registerPasskey } from '#lib/passkeys.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import AccountOverview from '#lib/organize/AccountOverview.svelte';
+	import ProfileCard from '#lib/organize/ProfileCard.svelte';
 	import PreferencesCard from '#lib/organize/PreferencesCard.svelte';
 	import SessionsCard from '#lib/organize/SessionsCard.svelte';
 	import SectionNav from '#lib/design/components/SectionNav.svelte';
@@ -189,6 +190,7 @@
 <div class="set">
 	<SectionNav
 		items={[
+			{ id: 'profile', label: tr('Profil', 'Profile') },
 			{ id: 'library', label: tr('Biblioteka', 'Library') },
 			{ id: 'preferences', label: tr('Postavke', 'Preferences') },
 			{ id: 'security', label: tr('Lozinka i prijava', 'Password and sign-in') },
@@ -197,6 +199,8 @@
 		]}
 	/>
 	<div class="set-body">
+		<ProfileCard user={data.user} />
+
 		<AccountOverview />
 
 		<PreferencesCard />

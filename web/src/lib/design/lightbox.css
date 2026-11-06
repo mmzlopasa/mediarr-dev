@@ -2928,3 +2928,54 @@ html[data-theme='light'] .set-chip.ok {
 		max-width: 220px;
 	}
 }
+
+/* ---------- Profile: one's own picture, name and email ---------- */
+.prof {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 28px;
+	align-items: start;
+}
+.prof-pic {
+	display: grid;
+	justify-items: center;
+	gap: 12px;
+}
+.prof-av {
+	display: grid;
+	place-items: center;
+	width: 112px;
+	height: 112px;
+	overflow: hidden;
+	border-radius: 50%;
+	background: var(--acc-fill);
+	color: var(--on-acc);
+	font: 620 34px var(--display);
+	letter-spacing: -0.02em;
+}
+.prof-av img,
+.me-av img,
+.av.pic img {
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
+	object-fit: cover;
+}
+.me-av,
+.av.pic {
+	overflow: hidden;
+}
+.av.pic {
+	padding: 0;
+}
+.prof-pic-acts {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 6px;
+}
+@media (max-width: 560px) {
+	.prof {
+		grid-template-columns: 1fr;
+	}
+}

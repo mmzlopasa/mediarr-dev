@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api, formatBytes, initialsOf, type AccountStats, type User } from '#lib/api.ts';
+	import {
+		api,
+		avatarOf,
+		formatBytes,
+		initialsOf,
+		type AccountStats,
+		type User
+	} from '#lib/api.ts';
 	import { lang, languages, setLang, tr, type Lang } from '#lib/i18n.svelte.ts';
 	import type { IconName } from '../icons.ts';
 	import { setTheme, themeChoice, type ThemeChoice } from '../theme.ts';
@@ -53,7 +60,11 @@
 
 <div class="me">
 	<div class="me-who">
-		<span class="me-av" aria-hidden="true">{initialsOf(user.name)}</span>
+		<span class="me-av" aria-hidden="true"
+			>{#if avatarOf(user)}<img src={avatarOf(user)} alt="" />{:else}{initialsOf(
+					user.name
+				)}{/if}</span
+		>
 		<div class="me-id">
 			<b>{user.name}</b>
 			<small>{user.email}</small>

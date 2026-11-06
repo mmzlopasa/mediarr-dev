@@ -7,7 +7,7 @@ export default {
     },
     {
       type: 'category', label: 'Features', collapsed: false,
-      items: ['features/mobile-app', 'features/smart-search', 'features/external-library', 'features/import', 'features/sharing', 'features/editing', 'features/ai-descriptions', 'features/additions'],
+      items: ['features/mobile-app', 'features/smart-search', 'features/external-library', 'features/import', 'features/sharing', 'features/editing', 'features/ai-descriptions', 'features/additions', 'features/profile'],
     },
     {
       type: 'category', label: 'Administration', collapsed: false,

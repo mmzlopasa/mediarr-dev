@@ -301,6 +301,10 @@ export const api = {
 	imports: () => request<ImportEntry[]>(fetch, '/api/admin/imports'),
 	startImport: (body: ImportCreate) => request<{ id: string }>(fetch, '/api/admin/imports', body),
 	cancelImport: (id: string) => request<void>(fetch, `/api/admin/imports/${id}/cancel`, {}),
+	updateProfile: (body: { name?: string; email?: string; currentPassword?: string }) =>
+		request<User>(fetch, '/api/me', body, 'PATCH'),
+	setAvatar: (file: Blob) => sendAvatar(file),
+	removeAvatar: () => request<User>(fetch, '/api/me/avatar', undefined, 'DELETE'),
 	myImports: () => request<UserImport[]>(fetch, '/api/imports'),
 	createMyImport: (source: 'takeout' | 'icloud') =>
 		request<UserImport>(fetch, '/api/imports', { source }),
@@ -404,6 +408,24 @@ export const collectionBase = (scope: 'favorites' | 'archive' | 'trash' | 'vault
 	`/api/collections/${scope}`;
 export const collectionSource = (scope: 'favorites' | 'archive' | 'trash' | 'vault') =>
 	sourceAt(collectionBase(scope));
+
+/** The address of a person's picture, which changes with each new one; none when they have none. */
+export function avatarOf(user: { id: string; avatarVersion?: number }) {
+	return user.avatarVersion ? `/api/users/${user.id}/avatar?v=${user.avatarVersion}` : undefined;
+}
+
+/** Sends a picture of oneself, as it is: the server cuts a square of it. */
+async function sendAvatar(file: Blob): Promise<User> {
+	const response = await fetch('/api/me/avatar', {
+		method: 'PUT',
+		headers: { 'Content-Type': file.type.startsWith('image/') ? file.type : 'image/jpeg' },
+		body: file
+	});
+	const data = await response.json().catch(() => ({}));
+	if (!response.ok)
+		throw new ApiError(response.status, data.message ?? 'Something went wrong', false);
+	return data as User;
+}
 
 export function initialsOf(name: string) {
 	const parts = name.trim().split(/\s+/);

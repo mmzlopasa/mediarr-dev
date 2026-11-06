@@ -447,6 +447,8 @@ class ApiClient {
           return Place.fromJson(value);
         case 'PlaceList':
           return PlaceList.fromJson(value);
+        case 'ProfileUpdate':
+          return ProfileUpdate.fromJson(value);
         case 'PublicLink':
           return PublicLink.fromJson(value);
         case 'QuotaUpdate':

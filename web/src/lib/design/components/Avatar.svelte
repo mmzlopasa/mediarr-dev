@@ -1,5 +1,8 @@
 <script lang="ts">
-	let { initials }: { initials: string } = $props();
+	// A person: their picture when they have one, otherwise their initials.
+	let { initials, src }: { initials: string; src?: string } = $props();
 </script>
 
-<span class="av" aria-hidden="true">{initials}</span>
+<span class="av" class:pic={Boolean(src)} aria-hidden="true"
+	>{#if src}<img {src} alt="" loading="lazy" decoding="async" />{:else}{initials}{/if}</span
+>

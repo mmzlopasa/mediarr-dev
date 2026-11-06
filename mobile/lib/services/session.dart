@@ -361,6 +361,15 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     state = AsyncData(Session(serverUrl: url, cookie: cookie, user: user));
   }
 
+  /// After the person changes their name, email address or picture.
+  void updateUser(User user) {
+    final session = state.value;
+    if (session == null) return;
+    state = AsyncData(
+      Session(serverUrl: session.serverUrl, cookie: session.cookie, user: user),
+    );
+  }
+
   Future<void> signOut() async {
     final session = state.value;
     if (session != null) {

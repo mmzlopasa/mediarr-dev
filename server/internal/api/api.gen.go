@@ -2261,6 +2261,14 @@ type PlaceList struct {
 	Places []Place `json:"places"`
 }
 
+// ProfileUpdate defines model for ProfileUpdate.
+type ProfileUpdate struct {
+	// CurrentPassword Needed to change the email address
+	CurrentPassword *string `json:"currentPassword,omitempty"`
+	Email           *string `json:"email,omitempty"`
+	Name            *string `json:"name,omitempty"`
+}
+
 // PublicLink defines model for PublicLink.
 type PublicLink struct {
 	AllowDownload bool    `json:"allowDownload"`
@@ -2528,11 +2536,13 @@ type Trip struct {
 
 // User defines model for User.
 type User struct {
-	Email       string             `json:"email"`
-	Id          openapi_types.UUID `json:"id"`
-	IsAdmin     bool               `json:"isAdmin"`
-	Name        string             `json:"name"`
-	TotpEnabled bool               `json:"totpEnabled"`
+	// AvatarVersion Changes with each new picture of the person; 0 or missing when there is none
+	AvatarVersion *int               `json:"avatarVersion,omitempty"`
+	Email         string             `json:"email"`
+	Id            openapi_types.UUID `json:"id"`
+	IsAdmin       bool               `json:"isAdmin"`
+	Name          string             `json:"name"`
+	TotpEnabled   bool               `json:"totpEnabled"`
 }
 
 // UserImport defines model for UserImport.
@@ -2947,6 +2957,9 @@ type PairKeepGuestJSONRequestBody = KeepPairRequest
 
 // SetMapStyleJSONRequestBody defines body for SetMapStyle for application/json ContentType.
 type SetMapStyleJSONRequestBody = MapStyle
+
+// UpdateProfileJSONRequestBody defines body for UpdateProfile for application/json ContentType.
+type UpdateProfileJSONRequestBody = ProfileUpdate
 
 // CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
 type CreateAPIKeyJSONRequestBody = ApiKeyCreate
@@ -3406,12 +3419,21 @@ type ServerInterface interface {
 	// GetMapTrips Journeys found from the time and distance between photos
 	// (GET /api/map/trips)
 	GetMapTrips(w http.ResponseWriter, r *http.Request)
+	// UpdateProfile Change one's own name, or email address with the current password
+	// (PATCH /api/me)
+	UpdateProfile(w http.ResponseWriter, r *http.Request)
 	// ListAPIKeys The current user's keys, without the keys themselves
 	// (GET /api/me/api-keys)
 	ListAPIKeys(w http.ResponseWriter, r *http.Request)
 	// CreateAPIKey Create a key with chosen rights. It is shown only once
 	// (POST /api/me/api-keys)
 	CreateAPIKey(w http.ResponseWriter, r *http.Request)
+	// RemoveAvatar Remove one's picture
+	// (DELETE /api/me/avatar)
+	RemoveAvatar(w http.ResponseWriter, r *http.Request)
+	// SetAvatar A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
+	// (PUT /api/me/avatar)
+	SetAvatar(w http.ResponseWriter, r *http.Request)
 	// CreateDeviceKey Create a long-lived key for this device, used by background backup
 	// (POST /api/me/device-keys)
 	CreateDeviceKey(w http.ResponseWriter, r *http.Request)
@@ -3598,6 +3620,9 @@ type ServerInterface interface {
 	// ListDirectory The other users of this server, for choosing who to share with
 	// (GET /api/users/directory)
 	ListDirectory(w http.ResponseWriter, r *http.Request)
+	// GetAvatar The picture of a person with an account here, for anyone signed in
+	// (GET /api/users/{id}/avatar)
+	GetAvatar(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// LockVault Lock the vault again
 	// (POST /api/vault/lock)
 	LockVault(w http.ResponseWriter, r *http.Request)
@@ -4429,6 +4454,12 @@ func (_ Unimplemented) GetMapTrips(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// UpdateProfile Change one's own name, or email address with the current password
+// (PATCH /api/me)
+func (_ Unimplemented) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ListAPIKeys The current user's keys, without the keys themselves
 // (GET /api/me/api-keys)
 func (_ Unimplemented) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
@@ -4438,6 +4469,18 @@ func (_ Unimplemented) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
 // CreateAPIKey Create a key with chosen rights. It is shown only once
 // (POST /api/me/api-keys)
 func (_ Unimplemented) CreateAPIKey(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemoveAvatar Remove one's picture
+// (DELETE /api/me/avatar)
+func (_ Unimplemented) RemoveAvatar(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetAvatar A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
+// (PUT /api/me/avatar)
+func (_ Unimplemented) SetAvatar(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4810,6 +4853,12 @@ func (_ Unimplemented) AppendUpload(w http.ResponseWriter, r *http.Request, id s
 // ListDirectory The other users of this server, for choosing who to share with
 // (GET /api/users/directory)
 func (_ Unimplemented) ListDirectory(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAvatar The picture of a person with an account here, for anyone signed in
+// (GET /api/users/{id}/avatar)
+func (_ Unimplemented) GetAvatar(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -7941,6 +7990,20 @@ func (siw *ServerInterfaceWrapper) GetMapTrips(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// UpdateProfile operation middleware
+func (siw *ServerInterfaceWrapper) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateProfile(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListAPIKeys operation middleware
 func (siw *ServerInterfaceWrapper) ListAPIKeys(w http.ResponseWriter, r *http.Request) {
 
@@ -7960,6 +8023,34 @@ func (siw *ServerInterfaceWrapper) CreateAPIKey(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateAPIKey(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveAvatar operation middleware
+func (siw *ServerInterfaceWrapper) RemoveAvatar(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveAvatar(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetAvatar operation middleware
+func (siw *ServerInterfaceWrapper) SetAvatar(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetAvatar(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -9412,6 +9503,32 @@ func (siw *ServerInterfaceWrapper) ListDirectory(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// GetAvatar operation middleware
+func (siw *ServerInterfaceWrapper) GetAvatar(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAvatar(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // LockVault operation middleware
 func (siw *ServerInterfaceWrapper) LockVault(w http.ResponseWriter, r *http.Request) {
 
@@ -9609,6 +9726,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/auth/logout", wrapper.Logout)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/me", wrapper.UpdateProfile)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/me/avatar", wrapper.RemoveAvatar)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/me/avatar", wrapper.SetAvatar)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/users/{id}/avatar", wrapper.GetAvatar)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/me/password", wrapper.ChangePassword)

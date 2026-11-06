@@ -113,6 +113,8 @@ var ownOnlyRoutes = map[string]bool{
 	"DELETE /api/me/device-keys/{id}":              true,
 	"DELETE /api/me/passkeys/{id}":                 true,
 	"GET /api/family/buckets/{month}":              true,
+	// A person's picture is for everyone signed in, like their name beside a shared album.
+	"GET /api/users/{id}/avatar": true,
 	// Tus uploads are checked by their own tests, and an id belongs to the upload in progress.
 	"DELETE /api/uploads/{id}": true,
 	"HEAD /api/uploads/{id}":   true,

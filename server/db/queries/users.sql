@@ -155,3 +155,11 @@ DELETE FROM password_resets WHERE user_id = $1;
 
 -- name: DeleteUserSessions :exec
 DELETE FROM sessions WHERE user_id = $1;
+
+-- name: SetUserProfile :one
+UPDATE users SET name = $2, email = $3, updated_at = now() WHERE id = $1 RETURNING *;
+
+-- name: SetUserAvatar :one
+-- A new picture, or none when the version is 0.
+UPDATE users SET avatar_version = CASE WHEN sqlc.arg('present')::boolean THEN avatar_version + 1 ELSE 0 END, updated_at = now()
+WHERE id = sqlc.arg('id') RETURNING *;

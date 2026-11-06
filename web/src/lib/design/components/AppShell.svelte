@@ -4,7 +4,7 @@
 	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { api, initialsOf, type User } from '#lib/api.ts';
+	import { api, avatarOf, initialsOf, type User } from '#lib/api.ts';
 	import NotificationBell from '#lib/organize/NotificationBell.svelte';
 	import type { IconName } from '../icons.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
@@ -136,7 +136,7 @@
 					aria-label={tr('Račun', 'Account')}
 					onclick={() => (meOpen = !meOpen)}
 				>
-					<Avatar initials={initialsOf(user.name)} />
+					<Avatar initials={initialsOf(user.name)} src={avatarOf(user)} />
 				</button>
 				{#if meOpen}
 					<div class="lb-pop lb-me-m" data-lenis-prevent>

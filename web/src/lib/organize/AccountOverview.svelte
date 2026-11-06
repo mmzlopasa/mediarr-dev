@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api, formatBytes, type AccountStats } from '#lib/api.ts';
+	import { api, formatBytes, type AccountStats, type AssetList } from '#lib/api.ts';
 	import Card from '#lib/design/components/Card.svelte';
 	import { countUp } from '#lib/motion/actions.ts';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
@@ -8,8 +8,15 @@
 
 	let stats = $state<AccountStats>();
 	let failed = $state(false);
+	// Files the server could not read, kept here rather than over the photos.
+	let problems = $state<AssetList>();
+	let showProblems = $state(false);
 
 	onMount(async () => {
+		api
+			.listProblems()
+			.then((list) => (problems = list))
+			.catch(() => undefined);
 		try {
 			stats = await api.myStats();
 		} catch {
@@ -52,6 +59,29 @@
 				></dd>
 			</div>
 		</dl>
+		{#if problems && problems.failed > 0}
+			<p class="set-line acct-problems">
+				<em class="set-chip err">{problems.failed}</em>
+				{tr('datoteka se nije moglo obraditi.', 'files could not be processed.')}
+				<button type="button" class="linkish" onclick={() => (showProblems = !showProblems)}>
+					{showProblems ? tr('Sakrij', 'Hide') : tr('Prikaži', 'Show')}
+				</button>
+			</p>
+			{#if showProblems}
+				<div class="tbl-w">
+					<table class="tbl">
+						<tbody>
+							{#each problems.items as asset (asset.id)}
+								<tr>
+									<td data-l={tr('Naziv', 'Name')}><b>{asset.originalName}</b></td>
+									<td data-l={tr('Greška', 'Error')}>{asset.error ?? ''}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
+		{/if}
 	{:else if failed}
 		<p class="alb-meta">{tr('Podaci se ne mogu učitati.', 'This could not be loaded.')}</p>
 	{:else}

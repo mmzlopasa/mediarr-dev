@@ -496,7 +496,7 @@ func (q *Queries) GetPartnerShare(ctx context.Context, arg GetPartnerShareParams
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes FROM users WHERE id = $1
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes, avatar_version FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -515,6 +515,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 		&i.UpdatedAt,
 		&i.VaultPinHash,
 		&i.QuotaBytes,
+		&i.AvatarVersion,
 	)
 	return i, err
 }

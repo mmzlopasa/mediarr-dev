@@ -139,6 +139,7 @@ part 'model/person_ref.dart';
 part 'model/person_update.dart';
 part 'model/place.dart';
 part 'model/place_list.dart';
+part 'model/profile_update.dart';
 part 'model/public_link.dart';
 part 'model/quota_update.dart';
 part 'model/search_filters.dart';

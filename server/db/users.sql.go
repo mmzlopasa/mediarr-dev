@@ -178,7 +178,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes
+INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes, avatar_version
 `
 
 type CreateUserParams struct {
@@ -209,6 +209,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.VaultPinHash,
 		&i.QuotaBytes,
+		&i.AvatarVersion,
 	)
 	return i, err
 }
@@ -359,7 +360,7 @@ func (q *Queries) EnableTotp(ctx context.Context, arg EnableTotpParams) error {
 }
 
 const getOIDCIdentity = `-- name: GetOIDCIdentity :one
-SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes FROM oidc_identities i JOIN users u ON u.id = i.user_id WHERE i.issuer = $1 AND i.subject = $2
+SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes, u.avatar_version FROM oidc_identities i JOIN users u ON u.id = i.user_id WHERE i.issuer = $1 AND i.subject = $2
 `
 
 type GetOIDCIdentityParams struct {
@@ -383,12 +384,13 @@ func (q *Queries) GetOIDCIdentity(ctx context.Context, arg GetOIDCIdentityParams
 		&i.UpdatedAt,
 		&i.VaultPinHash,
 		&i.QuotaBytes,
+		&i.AvatarVersion,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes FROM users WHERE id = $1
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes, avatar_version FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -407,6 +409,7 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 		&i.UpdatedAt,
 		&i.VaultPinHash,
 		&i.QuotaBytes,
+		&i.AvatarVersion,
 	)
 	return i, err
 }
@@ -414,7 +417,7 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 const getUserByAPIKey = `-- name: GetUserByAPIKey :one
 UPDATE api_keys k SET last_used_at = now() FROM users u
 WHERE k.key_hash = $1 AND u.id = k.user_id AND (k.expires_at IS NULL OR k.expires_at > now())
-RETURNING u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes, k.scopes
+RETURNING u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes, u.avatar_version, k.scopes
 `
 
 type GetUserByAPIKeyRow struct {
@@ -438,13 +441,14 @@ func (q *Queries) GetUserByAPIKey(ctx context.Context, keyHash []byte) (GetUserB
 		&i.User.UpdatedAt,
 		&i.User.VaultPinHash,
 		&i.User.QuotaBytes,
+		&i.User.AvatarVersion,
 		&i.Scopes,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes FROM users WHERE email = $1
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes, avatar_version FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -463,12 +467,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.UpdatedAt,
 		&i.VaultPinHash,
 		&i.QuotaBytes,
+		&i.AvatarVersion,
 	)
 	return i, err
 }
 
 const getUserBySessionToken = `-- name: GetUserBySessionToken :one
-SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes FROM sessions s JOIN users u ON u.id = s.user_id
+SELECT u.id, u.email, u.name, u.password_hash, u.is_admin, u.totp_secret, u.totp_enabled, u.totp_last_step, u.created_at, u.updated_at, u.vault_pin_hash, u.quota_bytes, u.avatar_version FROM sessions s JOIN users u ON u.id = s.user_id
 WHERE s.token_hash = $1 AND s.expires_at > now()
 `
 
@@ -488,6 +493,7 @@ func (q *Queries) GetUserBySessionToken(ctx context.Context, tokenHash []byte) (
 		&i.UpdatedAt,
 		&i.VaultPinHash,
 		&i.QuotaBytes,
+		&i.AvatarVersion,
 	)
 	return i, err
 }
@@ -665,7 +671,7 @@ func (q *Queries) ListUserStorage(ctx context.Context) ([]ListUserStorageRow, er
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes FROM users ORDER BY created_at
+SELECT id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes, avatar_version FROM users ORDER BY created_at
 `
 
 func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
@@ -690,6 +696,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.UpdatedAt,
 			&i.VaultPinHash,
 			&i.QuotaBytes,
+			&i.AvatarVersion,
 		); err != nil {
 			return nil, err
 		}
@@ -738,6 +745,38 @@ func (q *Queries) SetTotpSecret(ctx context.Context, arg SetTotpSecretParams) er
 	return err
 }
 
+const setUserAvatar = `-- name: SetUserAvatar :one
+UPDATE users SET avatar_version = CASE WHEN $1::boolean THEN avatar_version + 1 ELSE 0 END, updated_at = now()
+WHERE id = $2 RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes, avatar_version
+`
+
+type SetUserAvatarParams struct {
+	Present bool
+	ID      pgtype.UUID
+}
+
+// A new picture, or none when the version is 0.
+func (q *Queries) SetUserAvatar(ctx context.Context, arg SetUserAvatarParams) (User, error) {
+	row := q.db.QueryRow(ctx, setUserAvatar, arg.Present, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Name,
+		&i.PasswordHash,
+		&i.IsAdmin,
+		&i.TotpSecret,
+		&i.TotpEnabled,
+		&i.TotpLastStep,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.VaultPinHash,
+		&i.QuotaBytes,
+		&i.AvatarVersion,
+	)
+	return i, err
+}
+
 const setUserPreferences = `-- name: SetUserPreferences :exec
 INSERT INTO user_preferences (user_id, data) VALUES ($1, $2)
 ON CONFLICT (user_id) DO UPDATE SET data = EXCLUDED.data
@@ -751,6 +790,37 @@ type SetUserPreferencesParams struct {
 func (q *Queries) SetUserPreferences(ctx context.Context, arg SetUserPreferencesParams) error {
 	_, err := q.db.Exec(ctx, setUserPreferences, arg.UserID, arg.Data)
 	return err
+}
+
+const setUserProfile = `-- name: SetUserProfile :one
+UPDATE users SET name = $2, email = $3, updated_at = now() WHERE id = $1 RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes, avatar_version
+`
+
+type SetUserProfileParams struct {
+	ID    pgtype.UUID
+	Name  string
+	Email string
+}
+
+func (q *Queries) SetUserProfile(ctx context.Context, arg SetUserProfileParams) (User, error) {
+	row := q.db.QueryRow(ctx, setUserProfile, arg.ID, arg.Name, arg.Email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Name,
+		&i.PasswordHash,
+		&i.IsAdmin,
+		&i.TotpSecret,
+		&i.TotpEnabled,
+		&i.TotpLastStep,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.VaultPinHash,
+		&i.QuotaBytes,
+		&i.AvatarVersion,
+	)
+	return i, err
 }
 
 const setUserQuota = `-- name: SetUserQuota :execrows
@@ -815,7 +885,7 @@ INSERT INTO users (email, name, password_hash, is_admin) VALUES ($1, $2, $3, $4)
 ON CONFLICT (email) DO UPDATE
 SET name = EXCLUDED.name, password_hash = EXCLUDED.password_hash, is_admin = EXCLUDED.is_admin,
     totp_enabled = false, totp_secret = NULL, updated_at = now()
-RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes
+RETURNING id, email, name, password_hash, is_admin, totp_secret, totp_enabled, totp_last_step, created_at, updated_at, vault_pin_hash, quota_bytes, avatar_version
 `
 
 type UpsertUserParams struct {
@@ -846,6 +916,7 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, e
 		&i.UpdatedAt,
 		&i.VaultPinHash,
 		&i.QuotaBytes,
+		&i.AvatarVersion,
 	)
 	return i, err
 }

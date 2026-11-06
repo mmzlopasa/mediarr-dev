@@ -78,6 +78,7 @@ Method | HTTP request | Description
 [**getAssetVideoFile**](DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
 [**getAuthMethods**](DefaultApi.md#getauthmethods) | **GET** /api/auth/methods | The ways of signing in that this address offers, besides a password
 [**getAuthStatus**](DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
+[**getAvatar**](DefaultApi.md#getavatar) | **GET** /api/users/{id}/avatar | The picture of a person with an account here, for anyone signed in
 [**getBackupSettings**](DefaultApi.md#getbackupsettings) | **GET** /api/admin/backup | Where backups go, without any secret
 [**getCollectionAsset**](DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 [**getCollectionBucket**](DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
@@ -167,6 +168,7 @@ Method | HTTP request | Description
 [**removeAlbumAssets**](DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 [**removeAlbumHeart**](DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 [**removeAlbumMember**](DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
+[**removeAvatar**](DefaultApi.md#removeavatar) | **DELETE** /api/me/avatar | Remove one's picture
 [**removeBackupDestination**](DefaultApi.md#removebackupdestination) | **DELETE** /api/admin/backup/destinations/{id} | Stop sending a copy there. What it keeps stays with it
 [**removeFace**](DefaultApi.md#removeface) | **DELETE** /api/faces/{id} | Say this is not a person. Analysing the picture again does not bring it back
 [**removeFamilyMember**](DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
@@ -187,6 +189,7 @@ Method | HTTP request | Description
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 [**setAssetEdits**](DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 [**setAssetFacts**](DefaultApi.md#setassetfacts) | **PATCH** /api/assets/{id}/facts | Change the date, location or description of a photo. Its file is never changed
+[**setAvatar**](DefaultApi.md#setavatar) | **PUT** /api/me/avatar | A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
 [**setBackupSettings**](DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
 [**setEmailSettings**](DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 [**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
@@ -213,6 +216,7 @@ Method | HTTP request | Description
 [**updateAlbum**](DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
 [**updateKeepGuest**](DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 [**updatePerson**](DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
+[**updateProfile**](DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, or email address with the current password
 
 
 # **addAlbumAssets**
@@ -2990,6 +2994,47 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getAvatar**
+> MultipartFile getAvatar(id)
+
+The picture of a person with an account here, for anyone signed in
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getAvatar(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getAvatar: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: image/webp, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -6524,6 +6569,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **removeAvatar**
+> User removeAvatar()
+
+Remove one's picture
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.removeAvatar();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->removeAvatar: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**User**](User.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **removeBackupDestination**
 > removeBackupDestination(id)
 
@@ -7328,6 +7410,47 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setAvatar**
+> User setAvatar(body)
+
+A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final body = MultipartFile(); // MultipartFile | 
+
+try {
+    final result = api_instance.setAvatar(body);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setAvatar: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **body** | **MultipartFile**|  | 
+
+### Return type
+
+[**User**](User.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: image/*
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -8387,6 +8510,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateProfile**
+> User updateProfile(profileUpdate)
+
+Change one's own name, or email address with the current password
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final profileUpdate = ProfileUpdate(); // ProfileUpdate | 
+
+try {
+    final result = api_instance.updateProfile(profileUpdate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->updateProfile: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **profileUpdate** | [**ProfileUpdate**](ProfileUpdate.md)|  | 
+
+### Return type
+
+[**User**](User.md)
 
 ### Authorization
 

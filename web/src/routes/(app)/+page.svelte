@@ -33,7 +33,6 @@
 	let timeline = $state<Timeline>();
 	let total = $state<number | undefined>();
 	let problems = $state<AssetList>();
-	let showProblems = $state(false);
 
 	const processing = $derived(problems?.processing ?? 0);
 	const uploading = $derived(
@@ -129,34 +128,6 @@
 			{#if upload.error}<Alert kind="err">{upload.error}</Alert>{/if}
 		{/each}
 	</Card>
-{/if}
-
-{#if problems && problems.failed > 0}
-	<Alert kind="warn">
-		{tr(
-			`Datoteke koje se nisu mogle obraditi: ${problems.failed}.`,
-			`Files that could not be processed: ${problems.failed}.`
-		)}
-		<button type="button" class="linkish" onclick={() => (showProblems = !showProblems)}>
-			{showProblems ? tr('Sakrij', 'Hide') : tr('Prikaži', 'Show')}
-		</button>
-	</Alert>
-	{#if showProblems}
-		<Card title={tr('Neobrađene datoteke', 'Unprocessed files')}>
-			<div class="tbl-w">
-				<table class="tbl">
-					<tbody>
-						{#each problems.items as asset (asset.id)}
-							<tr>
-								<td data-l={tr('Naziv', 'Name')}><b>{asset.originalName}</b></td>
-								<td data-l={tr('Greška', 'Error')}>{asset.error ?? ''}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		</Card>
-	{/if}
 {/if}
 
 {#if total === 0 && uploads().length === 0 && processing === 0}

@@ -113,6 +113,13 @@ func toAPIUser(user *db.User) api.User {
 		Name:        user.Name,
 		IsAdmin:     user.IsAdmin,
 		TotpEnabled: user.TotpEnabled,
+		AvatarVersion: func() *int {
+			if user.AvatarVersion == 0 {
+				return nil
+			}
+			version := int(user.AvatarVersion)
+			return &version
+		}(),
 	}
 }
 

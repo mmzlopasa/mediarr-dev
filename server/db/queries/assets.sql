@@ -31,10 +31,16 @@ ORDER BY assets.created_at DESC, assets.id DESC
 LIMIT sqlc.arg('row_limit');
 
 -- name: CountAssetStatus :one
+-- Failures are counted as ListAssets lists them: the moving part of a Live Photo whose photo is there
+-- is not one.
 SELECT count(*) AS total,
-       count(*) FILTER (WHERE status = 'processing') AS processing,
-       count(*) FILTER (WHERE status = 'failed') AS failed
-FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL;
+       count(*) FILTER (WHERE a.status = 'processing') AS processing,
+       count(*) FILTER (WHERE a.status = 'failed' AND NOT (lower(a.original_name) LIKE '%.mov' AND EXISTS (
+         SELECT 1 FROM assets photo
+         WHERE photo.user_id = a.user_id AND photo.kind = 'photo' AND photo.status = 'ready'
+           AND split_part(photo.original_name, '.', 1) = split_part(a.original_name, '.', 1)
+       ))) AS failed
+FROM assets a WHERE a.user_id = $1 AND a.deleted_at IS NULL AND a.vault_at IS NULL;
 
 -- name: FindExistingChecksums :many
 SELECT checksum, id FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND checksum = ANY($2::bytea[]);

@@ -14,6 +14,7 @@ import '../timeline/layout.dart';
 import 'backup_screen.dart';
 import 'free_space_screen.dart';
 import 'imports_screen.dart';
+import 'profile_screen.dart';
 import 'organize_screens.dart';
 import 'settings_screen.dart';
 
@@ -42,6 +43,7 @@ class AccountSheet extends ConsumerStatefulWidget {
 class _AccountSheetState extends ConsumerState<AccountSheet> {
   ServerStatus? _status;
   AccountStats? _stats;
+  AssetList? _problems;
   String? _appVersion;
   bool _online = true;
 
@@ -69,6 +71,16 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
       if (mounted) setState(() => _stats = stats);
     } on ApiException {
       // The line about the library waits; the rest still shows.
+    }
+    try {
+      // Files the server could not read, told here rather than over the photos.
+      final problems = await session.api.listAssets(
+        limit: 200,
+        status: 'failed',
+      );
+      if (mounted) setState(() => _problems = problems);
+    } on ApiException {
+      // Nothing to tell.
     }
     try {
       final status = await session.api.getServerStatus();
@@ -144,7 +156,6 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
     final status = _status;
     final total = status?.diskTotalBytes ?? 0;
     final used = status?.diskUsedBytes ?? 0;
-    final name = session.user.name.trim();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -166,24 +177,15 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
           _section([
             Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Palette.fill,
-                  ),
-                  child: Text(
-                    name.isEmpty
-                        ? '?'
-                        : name
-                              .substring(0, name.length < 2 ? 1 : 2)
-                              .toUpperCase(),
-                    style: const TextStyle(
-                      color: Palette.onFill,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                GestureDetector(
+                  onTap: () => _push(const ProfileScreen()),
+                  child: Semantics(
+                    button: true,
+                    label: 'Edit profile',
+                    child: PersonAvatar(
+                      session: session,
+                      user: session.user,
+                      size: 48,
                     ),
                   ),
                 ),
@@ -236,6 +238,30 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                     ],
                   ),
           ),
+          if ((_problems?.failed ?? 0) > 0)
+            ListTile(
+              leading: Icon(Icons.error_outline, color: Palette.err),
+              title: Text(
+                '${_problems!.failed} ${_problems!.failed == 1 ? 'file' : 'files'} could not be processed',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => showModalBottomSheet<void>(
+                context: context,
+                showDragHandle: true,
+                builder: (context) => SafeArea(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final asset in _problems!.items)
+                        ListTile(
+                          title: Text(asset.originalName, style: monoData(13)),
+                          subtitle: Text(asset.error ?? ''),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           _section([
             const SizedBox(height: 6),
             Row(
@@ -302,6 +328,11 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             leading: Icon(Icons.cleaning_services_outlined, color: Palette.dim),
             title: const Text('Free up space'),
             onTap: () => _push(const FreeSpaceScreen()),
+          ),
+          ListTile(
+            leading: Icon(Icons.person_outline, color: Palette.dim),
+            title: const Text('Profile'),
+            onTap: () => _push(const ProfileScreen()),
           ),
           ListTile(
             leading: Icon(Icons.download_outlined, color: Palette.dim),

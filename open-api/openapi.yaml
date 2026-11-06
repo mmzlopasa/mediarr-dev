@@ -72,6 +72,66 @@ paths:
       summary: End the current session
       responses:
         "204": { description: Signed out }
+  /api/me:
+    patch:
+      operationId: updateProfile
+      summary: Change one's own name, or email address with the current password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileUpdate" }
+      responses:
+        "200":
+          description: Changed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/me/avatar:
+    put:
+      operationId: setAvatar
+      summary: A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
+      requestBody:
+        required: true
+        content:
+          image/*:
+            schema: { type: string, format: binary }
+      responses:
+        "200":
+          description: Set
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "413": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: removeAvatar
+      summary: Remove one's picture
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/users/{id}/avatar:
+    get:
+      operationId: getAvatar
+      summary: The picture of a person with an account here, for anyone signed in
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The picture
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/me/password:
     post:
       operationId: changePassword
@@ -3609,6 +3669,13 @@ components:
         name: { type: string }
         isAdmin: { type: boolean }
         totpEnabled: { type: boolean }
+        avatarVersion: { type: integer, description: "Changes with each new picture of the person; 0 or missing when there is none" }
+    ProfileUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        currentPassword: { type: string, description: "Needed to change the email address" }
     SetupRequest:
       type: object
       required: [email, name, password]

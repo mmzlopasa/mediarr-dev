@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
 import '../theme.dart';
+import 'profile_screen.dart';
 import 'account_sheet.dart';
 import 'notifications.dart';
 import 'upload_screen.dart';
@@ -30,7 +31,6 @@ class AppHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider).value;
     final readOnly = ref.watch(settingsProvider).readOnly;
-    final name = session?.user.name.trim() ?? '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
       child: Row(
@@ -96,25 +96,13 @@ class AppHeader extends ConsumerWidget {
                   shape: BoxShape.circle,
                   color: Palette.bg2,
                 ),
-                child: Container(
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Palette.fill,
-                  ),
-                  child: Text(
-                    name.isEmpty
-                        ? '?'
-                        : name
-                              .substring(0, name.length < 2 ? 1 : 2)
-                              .toUpperCase(),
-                    style: const TextStyle(
-                      color: Palette.onFill,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
+                child: session == null
+                    ? const SizedBox()
+                    : PersonAvatar(
+                        session: session,
+                        user: session.user,
+                        size: 39,
+                      ),
               ),
             ),
           ),

@@ -129,6 +129,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAssetVideoFile**](doc//DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
 *DefaultApi* | [**getAuthMethods**](doc//DefaultApi.md#getauthmethods) | **GET** /api/auth/methods | The ways of signing in that this address offers, besides a password
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
+*DefaultApi* | [**getAvatar**](doc//DefaultApi.md#getavatar) | **GET** /api/users/{id}/avatar | The picture of a person with an account here, for anyone signed in
 *DefaultApi* | [**getBackupSettings**](doc//DefaultApi.md#getbackupsettings) | **GET** /api/admin/backup | Where backups go, without any secret
 *DefaultApi* | [**getCollectionAsset**](doc//DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 *DefaultApi* | [**getCollectionBucket**](doc//DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
@@ -218,6 +219,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 *DefaultApi* | [**removeAlbumHeart**](doc//DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 *DefaultApi* | [**removeAlbumMember**](doc//DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
+*DefaultApi* | [**removeAvatar**](doc//DefaultApi.md#removeavatar) | **DELETE** /api/me/avatar | Remove one's picture
 *DefaultApi* | [**removeBackupDestination**](doc//DefaultApi.md#removebackupdestination) | **DELETE** /api/admin/backup/destinations/{id} | Stop sending a copy there. What it keeps stays with it
 *DefaultApi* | [**removeFace**](doc//DefaultApi.md#removeface) | **DELETE** /api/faces/{id} | Say this is not a person. Analysing the picture again does not bring it back
 *DefaultApi* | [**removeFamilyMember**](doc//DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
@@ -238,6 +240,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 *DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 *DefaultApi* | [**setAssetFacts**](doc//DefaultApi.md#setassetfacts) | **PATCH** /api/assets/{id}/facts | Change the date, location or description of a photo. Its file is never changed
+*DefaultApi* | [**setAvatar**](doc//DefaultApi.md#setavatar) | **PUT** /api/me/avatar | A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
 *DefaultApi* | [**setBackupSettings**](doc//DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
 *DefaultApi* | [**setEmailSettings**](doc//DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
@@ -264,6 +267,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**updateAlbum**](doc//DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
 *DefaultApi* | [**updateKeepGuest**](doc//DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 *DefaultApi* | [**updatePerson**](doc//DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
+*DefaultApi* | [**updateProfile**](doc//DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, or email address with the current password
 
 
 ## Documentation For Models
@@ -377,6 +381,7 @@ Class | Method | HTTP request | Description
  - [PersonUpdate](doc//PersonUpdate.md)
  - [Place](doc//Place.md)
  - [PlaceList](doc//PlaceList.md)
+ - [ProfileUpdate](doc//ProfileUpdate.md)
  - [PublicLink](doc//PublicLink.md)
  - [QuotaUpdate](doc//QuotaUpdate.md)
  - [SearchFilters](doc//SearchFilters.md)

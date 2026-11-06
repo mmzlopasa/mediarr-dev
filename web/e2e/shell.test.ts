@@ -518,10 +518,20 @@ test.describe('timeline', () => {
 				mimeType: 'image/jpeg',
 				buffer: Buffer.from(`not an image ${Date.now()}`)
 			});
-		await expect(page.getByText('Datoteke koje se nisu mogle obraditi')).toBeVisible({
-			timeout: 45000
-		});
-		await page.getByRole('button', { name: 'Prikaži' }).click();
+		// The page stays put while it uploads; then the failure is reported in the account, not over
+		// the photos.
+		await expect
+			.poll(
+				async () =>
+					(await (await page.request.get('/api/assets?limit=200&status=failed')).json()).items
+						.map((asset: { originalName: string }) => asset.originalName)
+						.includes(name),
+				{ timeout: 60_000 }
+			)
+			.toBe(true);
+		await page.goto('/account');
+		await expect(page.getByText('datoteka se nije moglo obraditi')).toBeVisible();
+		await page.getByRole('button', { name: 'Prikaži', exact: true }).click();
 		await expect(page.getByRole('cell', { name })).toBeVisible();
 	});
 

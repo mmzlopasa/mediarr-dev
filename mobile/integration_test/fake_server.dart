@@ -44,10 +44,13 @@ class FakeServer {
     await request.response.close();
   }
 
+  /// The person's name, which they can change.
+  String name = 'Owner';
+
   Map<String, Object> get _user => {
     'id': userId,
     'email': email,
-    'name': 'Owner',
+    'name': name,
     'isAdmin': true,
     'totpEnabled': false,
   };
@@ -133,6 +136,14 @@ class FakeServer {
     }
     if (path == '/api/memories') {
       await _json(request, 200, []);
+      return;
+    }
+    if (path == '/api/me' && request.method == 'PATCH') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      name = (body['name'] as String?) ?? name;
+      await _json(request, 200, _user);
       return;
     }
     if (path == '/api/features') {

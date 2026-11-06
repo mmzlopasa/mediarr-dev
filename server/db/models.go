@@ -461,18 +461,19 @@ type TrustedDevice struct {
 }
 
 type User struct {
-	ID           pgtype.UUID
-	Email        string
-	Name         string
-	PasswordHash string
-	IsAdmin      bool
-	TotpSecret   pgtype.Text
-	TotpEnabled  bool
-	TotpLastStep int64
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
-	VaultPinHash pgtype.Text
-	QuotaBytes   pgtype.Int8
+	ID            pgtype.UUID
+	Email         string
+	Name          string
+	PasswordHash  string
+	IsAdmin       bool
+	TotpSecret    pgtype.Text
+	TotpEnabled   bool
+	TotpLastStep  int64
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+	VaultPinHash  pgtype.Text
+	QuotaBytes    pgtype.Int8
+	AvatarVersion int32
 }
 
 type UserPreference struct {
