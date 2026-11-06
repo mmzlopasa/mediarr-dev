@@ -399,7 +399,7 @@ test('a key is created with chosen rights, shown once, and revoked', async ({ pa
 	await expect(page.getByText('e2e script')).toBeVisible();
 	await expect(page.getByText(key as string)).toHaveCount(0);
 	await page
-		.locator('.alb-list', { hasText: 'e2e script' })
+		.locator('.set-list li', { hasText: 'e2e script' })
 		.getByRole('button', { name: 'Revoke' })
 		.click();
 	await expect(page.getByText('e2e script')).toHaveCount(0);

@@ -29,7 +29,7 @@ test('a passkey is added, signs in, and is removed, with a software authenticato
 	await page.getByLabel('Passkey name').fill('Laptop');
 	await page.getByLabel('Your password').fill(process.env.E2E_PASSWORD as string);
 	await page.getByRole('button', { name: 'Add a passkey' }).click();
-	await expect(page.locator('.alb-list', { hasText: 'Laptop' })).toBeVisible();
+	await expect(page.locator('.set-list li', { hasText: 'Laptop' })).toBeVisible();
 
 	// Signed out, the passkey alone is enough.
 	await context.clearCookies();
@@ -41,10 +41,10 @@ test('a passkey is added, signs in, and is removed, with a software authenticato
 
 	await page.goto(`${ORIGIN}/account`);
 	await page
-		.locator('.alb-list', { hasText: 'Laptop' })
+		.locator('.set-list li', { hasText: 'Laptop' })
 		.getByRole('button', { name: 'Remove' })
 		.click();
-	await expect(page.locator('.alb-list', { hasText: 'Laptop' })).toHaveCount(0);
+	await expect(page.locator('.set-list li', { hasText: 'Laptop' })).toHaveCount(0);
 });
 
 test('on an IP address passkeys are not offered, and signing in still works', async ({ page }) => {

@@ -5,6 +5,8 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { tr } from '#lib/i18n.svelte.ts';
+	import type { IconName } from '#lib/design/icons.ts';
+	import { since } from './agent.ts';
 
 	const REFRESH = 60_000;
 
@@ -44,12 +46,45 @@
 		}
 	}
 
-	async function remove(id: string) {
+	// The same message again and again (a backup failing every night) is one row with a count.
+	type Group = { first: Notification; ids: string[]; unread: boolean };
+	const groups = $derived.by(() => {
+		const out: Group[] = [];
+		const byText: Record<string, Group> = {};
+		for (const item of items ?? []) {
+			const key = `${item.kind}\u0000${item.subject}\u0000${item.ref ?? ''}`;
+			const group = byText[key];
+			if (group) {
+				group.ids.push(item.id);
+				group.unread ||= !item.read;
+			} else {
+				byText[key] = { first: item, ids: [item.id], unread: !item.read };
+				out.push(byText[key]);
+			}
+		}
+		return out;
+	});
+
+	async function remove(ids: string[]) {
 		try {
-			await api.deleteNotification(id);
-			items = items?.filter((item) => item.id !== id);
+			await Promise.all(ids.map((id) => api.deleteNotification(id)));
+			items = items?.filter((item) => !ids.includes(item.id));
 		} catch {
 			failed = true;
+		}
+	}
+
+	const failure = (item: Notification) =>
+		item.kind === 'import_failed' || item.kind === 'backup_failed';
+
+	function icon(item: Notification): IconName {
+		switch (item.kind) {
+			case 'album_shared':
+				return 'album';
+			case 'import_done':
+				return 'download';
+			default:
+				return 'warn';
 		}
 	}
 
@@ -71,13 +106,24 @@
 					`The import from ${item.subject} failed`
 				);
 			case 'backup_failed':
-				return tr(
-					`Sigurnosna kopija nije uspjela: ${item.subject}`,
-					`A backup failed: ${item.subject}`
-				);
+				return tr('Sigurnosna kopija nije uspjela', 'A backup failed');
 		}
 	}
+
+	// What went wrong, when the message carries it.
+	function detail(item: Notification): string {
+		return item.kind === 'backup_failed' ? item.subject : '';
+	}
 </script>
+
+<svelte:window
+	onpointerdown={(event) => {
+		if (open && !(event.target as HTMLElement).closest('.notify')) open = false;
+	}}
+	onkeydown={(event) => {
+		if (event.key === 'Escape') open = false;
+	}}
+/>
 
 <div class="notify">
 	<button
@@ -92,37 +138,67 @@
 	</button>
 	{#if unread > 0}<span class="notify-count">{unread > 99 ? '99+' : unread}</span>{/if}
 	{#if open}
-		<div class="notify-panel">
+		<div class="notify-panel lb-pop">
+			<header class="notify-h">
+				<b>{tr('Obavijesti', 'Notifications')}</b>
+				{#if items?.length}
+					<button
+						type="button"
+						class="notify-clear"
+						onclick={() => remove((items ?? []).map((item) => item.id))}
+						>{tr('Očisti sve', 'Clear all')}</button
+					>
+				{/if}
+			</header>
 			{#if failed}
-				<p class="alb-meta">{tr('Podaci se ne mogu učitati.', 'This could not be loaded.')}</p>
+				<p class="notify-empty">{tr('Podaci se ne mogu učitati.', 'This could not be loaded.')}</p>
 			{:else if !items}
-				<Skeleton height="60px" />
-			{:else if items.length === 0}
-				<p class="alb-meta">{tr('Nema obavijesti.', 'No notifications.')}</p>
+				<div class="notify-list"><Skeleton height="56px" /><Skeleton height="56px" /></div>
+			{:else if groups.length === 0}
+				<p class="notify-empty">{tr('Nema obavijesti.', 'No notifications.')}</p>
 			{:else}
-				{#each items as item (item.id)}
-					<div class="notify-row" class:unread={!item.read}>
-						{#if item.kind === 'album_shared' && item.ref}
-							<a
-								href={resolve('/(app)/albums/[id]', { id: item.ref })}
-								onclick={() => (open = false)}
+				<ul class="notify-list">
+					{#each groups as group (group.first.id)}
+						{@const item = group.first}
+						<li class="notify-row" class:unread={group.unread} class:bad={failure(item)}>
+							<span class="notify-ic"><Icon name={icon(item)} size={16} /></span>
+							<div class="notify-t">
+								{#if item.kind === 'album_shared' && item.ref}
+									<a
+										href={resolve('/(app)/albums/[id]', { id: item.ref })}
+										onclick={() => (open = false)}>{sentence(item)}</a
+									>
+								{:else}
+									<b>{sentence(item)}</b>
+								{/if}
+								{#if detail(item)}
+									<button
+										type="button"
+										class="notify-detail"
+										title={detail(item)}
+										onclick={(event) => event.currentTarget.classList.toggle('open')}
+										>{detail(item)}</button
+									>
+								{/if}
+								<small>
+									<time datetime={item.createdAt} title={new Date(item.createdAt).toLocaleString()}
+										>{since(new Date(item.createdAt))}</time
+									>
+									{#if group.ids.length > 1}
+										· {tr(`${group.ids.length} puta`, `${group.ids.length} times`)}{/if}
+								</small>
+							</div>
+							<button
+								type="button"
+								class="icon-btn sm notify-x"
+								aria-label={tr('Ukloni', 'Remove')}
+								onclick={() => remove(group.ids)}
 							>
-								{sentence(item)}<small>{new Date(item.createdAt).toLocaleString()}</small>
-							</a>
-						{:else}
-							<span>{sentence(item)}<small>{new Date(item.createdAt).toLocaleString()}</small></span
-							>
-						{/if}
-						<button
-							type="button"
-							class="icon-btn sm"
-							aria-label={tr('Ukloni', 'Remove')}
-							onclick={() => remove(item.id)}
-						>
-							<Icon name="x" size={14} />
-						</button>
-					</div>
-				{/each}
+								<Icon name="x" size={14} />
+							</button>
+						</li>
+					{/each}
+				</ul>
 			{/if}
 		</div>
 	{/if}

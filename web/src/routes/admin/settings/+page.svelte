@@ -23,6 +23,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
+	import SectionNav from '#lib/design/components/SectionNav.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 
@@ -134,6 +135,9 @@
 	let features = $state<Features>({});
 	let backup = $state<BackupSettings>();
 	let backupRuns = $state<BackupRun[]>([]);
+	// The latest runs say how backup is doing; older ones are one click away.
+	const FIRST_RUNS = 6;
+	let allRuns = $state(false);
 	let backupPassword = $state('');
 	let backupKey = $state('');
 	let backupSecret = $state('');
@@ -291,6 +295,32 @@
 		}
 	}
 
+	const sections = $derived(
+		[
+			{ id: 'analysis', label: tr('Pretraga i lica', 'Search and faces') },
+			{ id: 'external', label: tr('Vanjska biblioteka', 'External library') },
+			oidc && { id: 'sso', label: tr('Jedinstvena prijava', 'Single sign-on') },
+			{ id: 'import', label: tr('Uvoz', 'Import') },
+			{ id: 'additions', label: tr('Dodaci', 'Additions') },
+			backup && { id: 'backup', label: 'Backup' },
+			features.family && { id: 'family', label: tr('Obitelj', 'Family') },
+			features.descriptions && ai && { id: 'ai', label: tr('AI opisi', 'AI descriptions') },
+			features.webhooks && { id: 'webhooks', label: 'Webhooks' },
+			{ id: 'server', label: 'Server' },
+			{ id: 'email', label: tr('E-pošta', 'Email') },
+			{ id: 'map', label: tr('Karta', 'Map') }
+		].filter((item): item is { id: string; label: string } => Boolean(item))
+	);
+
+	const STATUS: Record<string, { hr: string; en: string; tone: string }> = {
+		running: { hr: 'U tijeku', en: 'Running', tone: 'run' },
+		queued: { hr: 'Na čekanju', en: 'Waiting', tone: '' },
+		done: { hr: 'Gotovo', en: 'Done', tone: 'ok' },
+		failed: { hr: 'Neuspjelo', en: 'Failed', tone: 'err' },
+		cancelled: { hr: 'Zaustavljeno', en: 'Stopped', tone: '' }
+	};
+	const status = (value: string) => STATUS[value] ?? { hr: value, en: value, tone: '' };
+
 	async function save(event: SubmitEvent) {
 		event.preventDefault();
 		try {
@@ -316,361 +346,452 @@
 {:else if !loaded}
 	<Skeleton height="200px" />
 {:else}
-	<Card title={tr('Pametna pretraga i lica', 'Smart search and faces')}>
-		{#if analysis?.enabled}
-			<Kv label={tr('Obrađeno', 'Analysed')} value="{analysis.analyzed} / {analysis.total}" />
-			<Bar
-				pct={analysis.total ? Math.round((analysis.analyzed / analysis.total) * 100) : 0}
-				label={tr('Obrada slika', 'Picture analysis')}
-			/>
-		{:else}
-			<p class="alb-meta">
-				{tr(
-					'Nije uključeno. U .env postavite COMPOSE_PROFILES=ml i ML_URL=http://ml:8000.',
-					'Not turned on. In .env, set COMPOSE_PROFILES=ml and ML_URL=http://ml:8000.'
-				)}
-			</p>
-		{/if}
-	</Card>
-	<Card title={tr('Vanjska biblioteka', 'External library')}>
-		{#if !external?.available}
-			<p class="alb-meta">
-				{tr(
-					'Nije uključeno. U .env postavite EXTERNAL_LIBRARY_PATH na mapu s fotkama. Mediarr je samo čita.',
-					'Not turned on. In .env, set EXTERNAL_LIBRARY_PATH to a folder of photos. Mediarr only reads it.'
-				)}
-			</p>
-		{:else}
-			<p class="alb-meta">
-				{tr(
-					'Mediarr ovu mapu samo čita. Promjene vidi odmah na lokalnom disku, a na mrežnom shareu (SMB) tek pri pregledu svakih 6 sati ili kad ga pokrenete ručno.',
-					'Mediarr only reads this folder. It sees changes at once on a local disk, but on a network share (SMB) only at the scan every 6 hours, or when you start one.'
-				)}
-			</p>
-			<label class="form">
-				<span>{tr('Čije su ovo fotke', 'Whose photos these are')}</span>
-				<select bind:value={owner} disabled={(external?.assets ?? 0) > 0}>
-					<option value="" disabled>{tr('Odaberite korisnika', 'Choose a user')}</option>
-					{#each users as user (user.id)}
-						<option value={user.id}>{user.name} ({user.email})</option>
-					{/each}
-				</select>
-			</label>
-			{#if external.ownerId}
-				<Kv label={tr('Fotke i videi', 'Photos and videos')} value={String(external.assets)} />
-				<Kv label={tr('Nedostupno', 'Unavailable')} value={String(external.missing)} />
-				<Kv
-					label={tr('Stanje', 'State')}
-					value={external.scanning
-						? tr('Pregled u tijeku', 'Scanning')
-						: external.scanFinishedAt
-							? tr('Pregledano ', 'Scanned ') + new Date(external.scanFinishedAt).toLocaleString()
-							: tr('Još nije pregledano', 'Not scanned yet')}
-				/>
-				{#if external.scanError}<Alert kind="err">{external.scanError}</Alert>{/if}
-			{/if}
-			{#if !external.ownerId}
-				<Button
-					variant="gold"
-					small
-					disabled={!owner}
-					onclick={() => externalAction(() => api.setExternalOwner(owner))}
-					>{tr('Spremi i pregledaj', 'Save and scan')}</Button
-				>
-			{:else}
-				<Button small onclick={() => externalAction(api.scanExternal)}
-					>{tr('Pregledaj sada', 'Scan now')}</Button
-				>
-			{/if}
-		{/if}
-	</Card>
-	{#if oidc}
-		<Card title={tr('Jedinstvena prijava (OIDC)', 'Single sign-on (OIDC)')}>
-			<form class="form" onsubmit={saveOIDC}>
-				<p class="alb-meta">
-					{tr(
-						'Po želji. Prazan izdavatelj je isključuje, a lozinka uvijek ostaje dostupna. Adresa povratka kod pružatelja:',
-						'Optional. An empty issuer turns it off, and passwords always keep working. The redirect address at the provider:'
-					)}
-					<code>{location.origin}/api/auth/oidc/callback</code>
-				</p>
-				<Input label={tr('Izdavatelj', 'Issuer')} bind:value={oidc.issuer} />
-				<Input label="Client ID" bind:value={oidc.clientId} />
-				<Input
-					label={oidc.hasSecret
-						? tr(
-								'Client secret (spremljen, upišite za promjenu)',
-								'Client secret (saved, type to change)'
-							)
-						: 'Client secret'}
-					bind:value={oidcSecret}
-				/>
-				<Input label={tr('Natpis na gumbu', 'Button label')} bind:value={oidc.label} />
-				<label>
-					<input type="checkbox" bind:checked={oidc.autoCreate} />
-					{tr(
-						'Stvori račun onome tko ga još nema (običan korisnik)',
-						'Create an account for someone who has none (a plain user)'
-					)}
-				</label>
-				<label>
-					<input type="checkbox" bind:checked={oidc.linkAdmins} />
-					{tr(
-						'Poveži i administratore po e-adresi (manje sigurno)',
-						'Also link administrators by email (less safe)'
-					)}
-				</label>
-				<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
-			</form>
-		</Card>
-	{/if}
-	<Card title={tr('Uvoz', 'Import')}>
-		<form class="form" onsubmit={startImport}>
-			<p class="alb-meta">
-				{tr(
-					'Datoteka koja već postoji ne uvozi se ponovno, pa se uvoz smije ponoviti. Ništa se ne mijenja na izvoru.',
-					'A file that is already here is not brought in again, so an import can be repeated. Nothing changes at the source.'
-				)}
-			</p>
-			<label class="form">
-				<span>{tr('Odakle', 'From')}</span>
-				<select bind:value={importSource} data-testid="import-source">
-					<option value="immich">Immich</option>
-					<option value="takeout">Google Takeout</option>
-					<option value="icloud">iCloud</option>
-				</select>
-			</label>
-			<label class="form">
-				<span>{tr('U čiju biblioteku', 'Into whose library')}</span>
-				<select bind:value={importOwner} required data-testid="import-owner">
-					<option value="" disabled>{tr('Odaberite korisnika', 'Choose a user')}</option>
-					{#each users as user (user.id)}
-						<option value={user.id}>{user.name} ({user.email})</option>
-					{/each}
-				</select>
-			</label>
-			{#if importSource === 'immich'}
-				<Input label={tr('Adresa Immicha', 'Immich address')} bind:value={importAddress} />
-				<Input label={tr('Immich API ključ', 'Immich API key')} bind:value={importKey} />
-				<p class="alb-meta">
-					{tr(
-						'Ključ se briše kad uvoz završi. Lica se prepoznaju iznova ako je uključena analiza slika, a imena se preuzimaju.',
-						'The key is erased when the import ends. Faces are recognised again if picture analysis is on, and their names are kept.'
-					)}
-				</p>
-			{:else}
-				<Input
-					label={tr('Mapa unutar vanjske biblioteke', 'Folder inside the external library')}
-					bind:value={importFolder}
-				/>
-				<p class="alb-meta">
-					{tr(
-						'Raspakirajte izvoz u mapu iz EXTERNAL_LIBRARY_PATH. Datoteke se kopiraju, a izvoz ostaje netaknut.',
-						'Unpack the export into the folder of EXTERNAL_LIBRARY_PATH. The files are copied, and the export stays untouched.'
-					)}
-				</p>
-			{/if}
-			<Button type="submit" variant="gold" small>{tr('Pokreni uvoz', 'Start the import')}</Button>
-		</form>
-		{#each imports as entry (entry.id)}
-			<div class="alb-list" data-import={entry.source}>
-				<b>{entry.source} → {entry.userEmail}</b>
-				<span class="alb-meta">
-					{entry.status} · {tr('dodano', 'added')}
-					{entry.added} · {tr('preskočeno', 'skipped')}
-					{entry.skipped} · {tr('neuspjelo', 'failed')}
-					{entry.failed}
-					{#if entry.lastError}· {entry.lastError}{/if}
-				</span>
-				{#if entry.status === 'running'}
-					<Button
-						small
-						onclick={async () => {
-							await api.cancelImport(entry.id);
-							await loadImports();
-						}}>{tr('Zaustavi', 'Stop')}</Button
-					>
-				{/if}
-			</div>
-		{/each}
-	</Card>
-	<Card title={tr('Dodaci', 'Additions')}>
-		<p class="alb-meta">
-			{tr(
-				'Svaki je isključen dok ga ne uključite, i tada ne mijenja ništa.',
-				'Each is off until you turn it on, and changes nothing until then.'
-			)}
-		</p>
-		{#each Object.keys(FEATURE_LABELS) as name (name)}
-			<label class="alb-list">
-				<input
-					type="checkbox"
-					data-feature={name}
-					checked={features[name] ?? false}
-					onchange={(event) => toggleFeature(name, event.currentTarget.checked)}
-				/>
-				{tr(FEATURE_LABELS[name].hr, FEATURE_LABELS[name].en)}
-			</label>
-		{/each}
-	</Card>
-	{#if backup}
-		<Card title="Backup">
-			<form class="form" onsubmit={saveBackup}>
-				<p class="alb-meta">
-					{tr(
-						`Originali i baza, šifrirano. Odredište je mapa unutar ${backup.localFolder}, ili s3: ili b2: adresa. Sličice se ne spremaju jer se mogu ponovno napraviti.`,
-						`Originals and the database, encrypted. The destination is a folder inside ${backup.localFolder}, or an s3: or b2: address. Previews are left out, as they can be made again.`
-					)}
-				</p>
-				<Alert kind="warn"
-					>{tr(
-						'Zapišite lozinku negdje izvan ovog servera. Bez nje se backup nikako ne može vratiti.',
-						'Write the password down somewhere other than this server. Without it, a backup can never be brought back.'
-					)}</Alert
-				>
-				<Input label={tr('Odredište', 'Destination')} bind:value={backup.repository} />
-				<Input
-					label={backup.hasPassword
-						? tr('Lozinka (spremljena, upišite za promjenu)', 'Password (saved, type to change)')
-						: tr('Lozinka backupa', 'Backup password')}
-					bind:value={backupPassword}
-				/>
-				<Input
-					label={backup.hasS3Key
-						? tr('Pristupni ključ (spremljen)', 'Access key (saved)')
-						: tr('Pristupni ključ (S3, B2)', 'Access key (S3, B2)')}
-					bind:value={backupKey}
-				/>
-				<Input
-					label={tr('Tajni ključ (S3, B2)', 'Secret key (S3, B2)')}
-					bind:value={backupSecret}
-				/>
-				<Input label={tr('Sat u danu (0-23)', 'Hour of the day (0-23)')} bind:value={backupHour} />
-				<Button data-testid="backup-save" type="submit" variant="gold" small
-					>{tr('Spremi', 'Save')}</Button
-				>
-			</form>
-			<div class="dup-actions">
-				<Button small onclick={() => runBackup('backup')}>{tr('Backup sada', 'Back up now')}</Button
-				>
-				<Button small onclick={() => runBackup('restore_test')}
-					>{tr('Testiraj vraćanje', 'Test bringing it back')}</Button
-				>
-			</div>
-			{#each backupRuns as run (run.id)}
-				<div class="alb-list" data-backup-run={run.kind}>
-					<b>{run.kind === 'backup' ? 'Backup' : tr('Test vraćanja', 'Restore test')}</b>
-					<span class="alb-meta">
-						{run.status} · {new Date(run.startedAt).toLocaleString()} · {tr('datoteka', 'files')}
-						{run.files}
-						{#if run.message}· {run.message}{/if}
-					</span>
-				</div>
-			{/each}
-		</Card>
-	{/if}
-	{#if features.family}
-		<Card title={tr('Obiteljska biblioteka', 'Family library')}>
-			<p class="alb-meta">
-				{tr(
-					'Članovi dijele fotke po pravilima koja sami postave. Uklonjeni član prestaje dijeliti i vidjeti, a njegove fotke ostaju njegove.',
-					'Members share photos by rules they set themselves. A member who is removed stops sharing and seeing, and their photos stay theirs.'
-				)}
-			</p>
-			{#each users as user (user.id)}
-				<label class="alb-list">
-					<input
-						type="checkbox"
-						data-family={user.email}
-						checked={familyIds.includes(user.id)}
-						onchange={(event) => toggleFamily(user.id, event.currentTarget.checked)}
+	<div class="set">
+		<SectionNav items={sections} />
+		<div class="set-body">
+			<Card id="analysis" title={tr('Pametna pretraga i lica', 'Smart search and faces')}>
+				{#if analysis?.enabled}
+					<Kv label={tr('Obrađeno', 'Analysed')} value="{analysis.analyzed} / {analysis.total}" />
+					<Bar
+						pct={analysis.total ? Math.round((analysis.analyzed / analysis.total) * 100) : 0}
+						label={tr('Obrada slika', 'Picture analysis')}
+						progress
 					/>
-					{user.name} ({user.email})
-				</label>
-			{/each}
-		</Card>
-	{/if}
-	{#if features.descriptions && ai}
-		<Card title={tr('AI opisi i pitanja', 'AI descriptions and questions')}>
-			<form class="form" onsubmit={saveAI}>
+				{:else}
+					<p class="alb-meta">
+						{tr(
+							'Nije uključeno. U .env postavite COMPOSE_PROFILES=ml i ML_URL=http://ml:8000.',
+							'Not turned on. In .env, set COMPOSE_PROFILES=ml and ML_URL=http://ml:8000.'
+						)}
+					</p>
+				{/if}
+			</Card>
+			<Card id="external" title={tr('Vanjska biblioteka', 'External library')}>
+				{#if !external?.available}
+					<p class="alb-meta">
+						{tr(
+							'Nije uključeno. U .env postavite EXTERNAL_LIBRARY_PATH na mapu s fotkama. Mediarr je samo čita.',
+							'Not turned on. In .env, set EXTERNAL_LIBRARY_PATH to a folder of photos. Mediarr only reads it.'
+						)}
+					</p>
+				{:else}
+					<p class="alb-meta">
+						{tr(
+							'Mediarr ovu mapu samo čita. Promjene vidi odmah na lokalnom disku, a na mrežnom shareu (SMB) tek pri pregledu svakih 6 sati ili kad ga pokrenete ručno.',
+							'Mediarr only reads this folder. It sees changes at once on a local disk, but on a network share (SMB) only at the scan every 6 hours, or when you start one.'
+						)}
+					</p>
+					<label class="f set-solo">
+						<span>{tr('Čije su ovo fotke', 'Whose photos these are')}</span>
+						<select class="in" bind:value={owner} disabled={(external?.assets ?? 0) > 0}>
+							<option value="" disabled>{tr('Odaberite korisnika', 'Choose a user')}</option>
+							{#each users as user (user.id)}
+								<option value={user.id}>{user.name} ({user.email})</option>
+							{/each}
+						</select>
+					</label>
+					{#if external.ownerId}
+						<Kv label={tr('Fotke i videi', 'Photos and videos')} value={String(external.assets)} />
+						<Kv label={tr('Nedostupno', 'Unavailable')} value={String(external.missing)} />
+						<Kv
+							label={tr('Stanje', 'State')}
+							value={external.scanning
+								? tr('Pregled u tijeku', 'Scanning')
+								: external.scanFinishedAt
+									? tr('Pregledano ', 'Scanned ') +
+										new Date(external.scanFinishedAt).toLocaleString()
+									: tr('Još nije pregledano', 'Not scanned yet')}
+						/>
+						{#if external.scanError}<Alert kind="err">{external.scanError}</Alert>{/if}
+					{/if}
+					{#if !external.ownerId}
+						<Button
+							variant="gold"
+							small
+							disabled={!owner}
+							onclick={() => externalAction(() => api.setExternalOwner(owner))}
+							>{tr('Spremi i pregledaj', 'Save and scan')}</Button
+						>
+					{:else}
+						<Button small onclick={() => externalAction(api.scanExternal)}
+							>{tr('Pregledaj sada', 'Scan now')}</Button
+						>
+					{/if}
+				{/if}
+			</Card>
+			{#if oidc}
+				<Card id="sso" title={tr('Jedinstvena prijava (OIDC)', 'Single sign-on (OIDC)')}>
+					<form class="form" onsubmit={saveOIDC}>
+						<p class="alb-meta">
+							{tr(
+								'Po želji. Prazan izdavatelj je isključuje, a lozinka uvijek ostaje dostupna. Adresa povratka kod pružatelja:',
+								'Optional. An empty issuer turns it off, and passwords always keep working. The redirect address at the provider:'
+							)}
+							<code>{location.origin}/api/auth/oidc/callback</code>
+						</p>
+						<Input label={tr('Izdavatelj', 'Issuer')} bind:value={oidc.issuer} />
+						<Input label="Client ID" bind:value={oidc.clientId} />
+						<Input
+							label={oidc.hasSecret
+								? tr(
+										'Client secret (spremljen, upišite za promjenu)',
+										'Client secret (saved, type to change)'
+									)
+								: 'Client secret'}
+							bind:value={oidcSecret}
+						/>
+						<Input label={tr('Natpis na gumbu', 'Button label')} bind:value={oidc.label} />
+						<label>
+							<input type="checkbox" bind:checked={oidc.autoCreate} />
+							{tr(
+								'Stvori račun onome tko ga još nema (običan korisnik)',
+								'Create an account for someone who has none (a plain user)'
+							)}
+						</label>
+						<label>
+							<input type="checkbox" bind:checked={oidc.linkAdmins} />
+							{tr(
+								'Poveži i administratore po e-adresi (manje sigurno)',
+								'Also link administrators by email (less safe)'
+							)}
+						</label>
+						<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
+					</form>
+				</Card>
+			{/if}
+			<Card id="import" title={tr('Uvoz', 'Import')}>
+				<form class="form" onsubmit={startImport}>
+					<p class="alb-meta">
+						{tr(
+							'Datoteka koja već postoji ne uvozi se ponovno, pa se uvoz smije ponoviti. Ništa se ne mijenja na izvoru.',
+							'A file that is already here is not brought in again, so an import can be repeated. Nothing changes at the source.'
+						)}
+					</p>
+					<label class="f">
+						<span>{tr('Odakle', 'From')}</span>
+						<select class="in" bind:value={importSource} data-testid="import-source">
+							<option value="immich">Immich</option>
+							<option value="takeout">Google Takeout</option>
+							<option value="icloud">iCloud</option>
+						</select>
+					</label>
+					<label class="f">
+						<span>{tr('U čiju biblioteku', 'Into whose library')}</span>
+						<select class="in" bind:value={importOwner} required data-testid="import-owner">
+							<option value="" disabled>{tr('Odaberite korisnika', 'Choose a user')}</option>
+							{#each users as user (user.id)}
+								<option value={user.id}>{user.name} ({user.email})</option>
+							{/each}
+						</select>
+					</label>
+					{#if importSource === 'immich'}
+						<Input label={tr('Adresa Immicha', 'Immich address')} bind:value={importAddress} />
+						<Input label={tr('Immich API ključ', 'Immich API key')} bind:value={importKey} />
+						<p class="alb-meta">
+							{tr(
+								'Ključ se briše kad uvoz završi. Lica se prepoznaju iznova ako je uključena analiza slika, a imena se preuzimaju.',
+								'The key is erased when the import ends. Faces are recognised again if picture analysis is on, and their names are kept.'
+							)}
+						</p>
+					{:else}
+						<Input
+							label={tr('Mapa unutar vanjske biblioteke', 'Folder inside the external library')}
+							bind:value={importFolder}
+						/>
+						<p class="alb-meta">
+							{tr(
+								'Raspakirajte izvoz u mapu iz EXTERNAL_LIBRARY_PATH. Datoteke se kopiraju, a izvoz ostaje netaknut.',
+								'Unpack the export into the folder of EXTERNAL_LIBRARY_PATH. The files are copied, and the export stays untouched.'
+							)}
+						</p>
+					{/if}
+					<Button type="submit" variant="gold" small
+						>{tr('Pokreni uvoz', 'Start the import')}</Button
+					>
+				</form>
+				{#if imports.length}
+					<h3 class="set-sub">{tr('Uvozi', 'Imports')}</h3>
+				{/if}
+				<ul class="set-list">
+					{#each imports as entry (entry.id)}
+						<li data-import={entry.source}>
+							<span class="set-list-t">
+								<b>{entry.source} → {entry.userEmail}</b>
+								<small>
+									<em class="set-chip {status(entry.status).tone}"
+										>{tr(status(entry.status).hr, status(entry.status).en)}</em
+									>
+									{tr('dodano', 'added')}
+									{entry.added} · {tr('preskočeno', 'skipped')}
+									{entry.skipped} · {tr('neuspjelo', 'failed')}
+									{entry.failed}
+								</small>
+								{#if entry.lastError}
+									<button
+										type="button"
+										class="set-clamp"
+										title={entry.lastError}
+										onclick={(event) => event.currentTarget.classList.toggle('open')}
+										>{entry.lastError}</button
+									>
+								{/if}
+							</span>
+							{#if entry.status === 'running'}
+								<Button
+									small
+									onclick={async () => {
+										await api.cancelImport(entry.id);
+										await loadImports();
+									}}>{tr('Zaustavi', 'Stop')}</Button
+								>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			</Card>
+			<Card id="additions" title={tr('Dodaci', 'Additions')}>
 				<p class="alb-meta">
 					{tr(
-						'Lokalni Ollama server dobiva pregled svake fotke. Upišite samo server kojem vjerujete, jer fotke tamo odlaze. Modeli se sami preuzmu.',
-						'A local Ollama server receives a preview of each photo. Name only a server you trust, because the photos go there. The models download by themselves.'
+						'Svaki je isključen dok ga ne uključite, i tada ne mijenja ništa.',
+						'Each is off until you turn it on, and changes nothing until then.'
 					)}
 				</p>
-				<Input label={tr('Adresa Ollame', 'Ollama address')} bind:value={ai.address} />
-				<Input label={tr('Model za slike', 'Model for pictures')} bind:value={ai.visionModel} />
-				<Input label={tr('Model za pitanja', 'Model for questions')} bind:value={ai.textModel} />
-				<Kv
-					label={tr('Stanje', 'State')}
-					value={!ai.address
-						? tr('Nije postavljeno', 'Not set')
-						: !ai.reachable
-							? tr('Ollama ne odgovara', 'Ollama is not answering')
-							: ai.modelsReady
-								? tr('Radi', 'Running')
-								: tr('Modeli se preuzimaju', 'The models are downloading')}
-				/>
-				<Kv label={tr('Opisano', 'Described')} value="{ai.described} / {ai.total}" />
-				<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
-			</form>
-		</Card>
-	{/if}
-	{#if features.webhooks}
-		<Card title="Webhooks">
-			<p class="alb-meta">
-				{tr(
-					'Javlja drugim programima što se dogodilo, samo po ID-u, potpisano zaglavljem X-Mediarr-Signature. Adrese na lokalnoj mreži su dopuštene, a sam ovaj server i metadata servisi nisu.',
-					'Tells other programs what happened, by id only, signed in the X-Mediarr-Signature header. Addresses on the local network are allowed, but not this server itself or metadata services.'
-				)}
-			</p>
-			{#if hookSecret}
-				<Alert kind="ok"
-					>{tr('Tajna za potpis, prikazuje se samo sada:', 'The signing secret, shown only now:')}
-					<code data-testid="hook-secret">{hookSecret}</code></Alert
-				>
-			{/if}
-			{#each webhooks as hook (hook.id)}
-				<div class="alb-list" data-hook={hook.url}>
-					<b>{hook.url}</b>
-					<span class="alb-meta">
-						{hook.events.join(', ')}
-						{#if hook.lastStatus}· {hook.lastStatus}{/if}
-						{#if hook.lastError}· {hook.lastError}{/if}
-					</span>
-					<Button small onclick={() => hookAction(() => api.testWebhook(hook.id))}
-						>{tr('Testiraj', 'Test')}</Button
-					>
-					<Button small onclick={() => hookAction(() => api.deleteWebhook(hook.id))}
-						>{tr('Ukloni', 'Remove')}</Button
-					>
-				</div>
-			{/each}
-			<form class="form" onsubmit={addHook}>
-				<Input label={tr('Adresa webhooka', 'Webhook address')} bind:value={hookUrl} />
-				{#each ['asset.ready', 'person.created', 'backup.finished'] as const as name (name)}
-					<label><input type="checkbox" bind:group={hookEvents} value={name} /> {name}</label>
+				{#each Object.keys(FEATURE_LABELS) as name (name)}
+					<label class="set-row">
+						<span>{tr(FEATURE_LABELS[name].hr, FEATURE_LABELS[name].en)}</span>
+						<input
+							type="checkbox"
+							class="switch"
+							data-feature={name}
+							checked={features[name] ?? false}
+							onchange={(event) => toggleFeature(name, event.currentTarget.checked)}
+						/>
+					</label>
 				{/each}
-				<Button type="submit" variant="gold" small>{tr('Dodaj webhook', 'Add a webhook')}</Button>
-			</form>
-		</Card>
-	{/if}
-	<ServerSettingsCard />
+			</Card>
+			{#if backup}
+				<Card id="backup" title="Backup">
+					{#snippet actions()}
+						<Button small onclick={() => runBackup('backup')}
+							>{tr('Backup sada', 'Back up now')}</Button
+						>
+						<Button small onclick={() => runBackup('restore_test')}
+							>{tr('Testiraj vraćanje', 'Test bringing it back')}</Button
+						>
+					{/snippet}
+					<form class="form" onsubmit={saveBackup}>
+						<p class="alb-meta">
+							{tr(
+								`Originali i baza, šifrirano. Odredište je mapa unutar ${backup.localFolder}, ili s3: ili b2: adresa. Sličice se ne spremaju jer se mogu ponovno napraviti.`,
+								`Originals and the database, encrypted. The destination is a folder inside ${backup.localFolder}, or an s3: or b2: address. Previews are left out, as they can be made again.`
+							)}
+						</p>
+						<Alert kind="warn"
+							>{tr(
+								'Zapišite lozinku negdje izvan ovog servera. Bez nje se backup nikako ne može vratiti.',
+								'Write the password down somewhere other than this server. Without it, a backup can never be brought back.'
+							)}</Alert
+						>
+						<Input label={tr('Odredište', 'Destination')} bind:value={backup.repository} />
+						<Input
+							label={backup.hasPassword
+								? tr(
+										'Lozinka (spremljena, upišite za promjenu)',
+										'Password (saved, type to change)'
+									)
+								: tr('Lozinka backupa', 'Backup password')}
+							bind:value={backupPassword}
+						/>
+						<Input
+							label={backup.hasS3Key
+								? tr('Pristupni ključ (spremljen)', 'Access key (saved)')
+								: tr('Pristupni ključ (S3, B2)', 'Access key (S3, B2)')}
+							bind:value={backupKey}
+						/>
+						<Input
+							label={tr('Tajni ključ (S3, B2)', 'Secret key (S3, B2)')}
+							bind:value={backupSecret}
+						/>
+						<Input
+							label={tr('Sat u danu (0-23)', 'Hour of the day (0-23)')}
+							bind:value={backupHour}
+						/>
+						<Button data-testid="backup-save" type="submit" variant="gold" small
+							>{tr('Spremi', 'Save')}</Button
+						>
+					</form>
+					{#if backupRuns.length}
+						<h3 class="set-sub">{tr('Povijest', 'History')}</h3>
+						<ul class="set-list">
+							{#each allRuns ? backupRuns : backupRuns.slice(0, FIRST_RUNS) as run (run.id)}
+								<li data-backup-run={run.kind}>
+									<span class="set-list-t">
+										<b>{run.kind === 'backup' ? 'Backup' : tr('Test vraćanja', 'Restore test')}</b>
+										<small>
+											<em class="set-chip {status(run.status).tone}"
+												>{tr(status(run.status).hr, status(run.status).en)}</em
+											>
+											<time datetime={run.startedAt}
+												>{new Date(run.startedAt).toLocaleString()}</time
+											>
+											· {tr('datoteka', 'files')}
+											{run.files}
+										</small>
+										{#if run.message}
+											<button
+												type="button"
+												class="set-clamp"
+												title={run.message}
+												onclick={(event) => event.currentTarget.classList.toggle('open')}
+												>{run.message}</button
+											>
+										{/if}
+									</span>
+								</li>
+							{/each}
+						</ul>
+						{#if backupRuns.length > FIRST_RUNS}
+							<button type="button" class="set-more" onclick={() => (allRuns = !allRuns)}>
+								{allRuns
+									? tr('Prikaži manje', 'Show fewer')
+									: tr(`Prikaži sve (${backupRuns.length})`, `Show all ${backupRuns.length}`)}
+							</button>
+						{/if}
+					{/if}
+				</Card>
+			{/if}
+			{#if features.family}
+				<Card id="family" title={tr('Obiteljska biblioteka', 'Family library')}>
+					<p class="alb-meta">
+						{tr(
+							'Članovi dijele fotke po pravilima koja sami postave. Uklonjeni član prestaje dijeliti i vidjeti, a njegove fotke ostaju njegove.',
+							'Members share photos by rules they set themselves. A member who is removed stops sharing and seeing, and their photos stay theirs.'
+						)}
+					</p>
+					{#each users as user (user.id)}
+						<label class="set-row">
+							<span>{user.name} <small>{user.email}</small></span>
+							<input
+								type="checkbox"
+								class="switch"
+								data-family={user.email}
+								checked={familyIds.includes(user.id)}
+								onchange={(event) => toggleFamily(user.id, event.currentTarget.checked)}
+							/>
+						</label>
+					{/each}
+				</Card>
+			{/if}
+			{#if features.descriptions && ai}
+				<Card id="ai" title={tr('AI opisi i pitanja', 'AI descriptions and questions')}>
+					<form class="form" onsubmit={saveAI}>
+						<p class="alb-meta">
+							{tr(
+								'Lokalni Ollama server dobiva pregled svake fotke. Upišite samo server kojem vjerujete, jer fotke tamo odlaze. Modeli se sami preuzmu.',
+								'A local Ollama server receives a preview of each photo. Name only a server you trust, because the photos go there. The models download by themselves.'
+							)}
+						</p>
+						<Input label={tr('Adresa Ollame', 'Ollama address')} bind:value={ai.address} />
+						<Input label={tr('Model za slike', 'Model for pictures')} bind:value={ai.visionModel} />
+						<Input
+							label={tr('Model za pitanja', 'Model for questions')}
+							bind:value={ai.textModel}
+						/>
+						<Kv
+							label={tr('Stanje', 'State')}
+							value={!ai.address
+								? tr('Nije postavljeno', 'Not set')
+								: !ai.reachable
+									? tr('Ollama ne odgovara', 'Ollama is not answering')
+									: ai.modelsReady
+										? tr('Radi', 'Running')
+										: tr('Modeli se preuzimaju', 'The models are downloading')}
+						/>
+						<Kv label={tr('Opisano', 'Described')} value="{ai.described} / {ai.total}" />
+						<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
+					</form>
+				</Card>
+			{/if}
+			{#if features.webhooks}
+				<Card id="webhooks" title="Webhooks">
+					<p class="alb-meta">
+						{tr(
+							'Javlja drugim programima što se dogodilo, samo po ID-u, potpisano zaglavljem X-Mediarr-Signature. Adrese na lokalnoj mreži su dopuštene, a sam ovaj server i metadata servisi nisu.',
+							'Tells other programs what happened, by id only, signed in the X-Mediarr-Signature header. Addresses on the local network are allowed, but not this server itself or metadata services.'
+						)}
+					</p>
+					{#if hookSecret}
+						<Alert kind="ok"
+							>{tr(
+								'Tajna za potpis, prikazuje se samo sada:',
+								'The signing secret, shown only now:'
+							)}
+							<code data-testid="hook-secret">{hookSecret}</code></Alert
+						>
+					{/if}
+					<ul class="set-list">
+						{#each webhooks as hook (hook.id)}
+							<li data-hook={hook.url}>
+								<span class="set-list-t">
+									<b class="mono">{hook.url}</b>
+									<small>
+										{hook.events.join(', ')}
+										{#if hook.lastStatus}· {hook.lastStatus}{/if}
+									</small>
+									{#if hook.lastError}
+										<button
+											type="button"
+											class="set-clamp"
+											title={hook.lastError}
+											onclick={(event) => event.currentTarget.classList.toggle('open')}
+											>{hook.lastError}</button
+										>
+									{/if}
+								</span>
+								<Button small onclick={() => hookAction(() => api.testWebhook(hook.id))}
+									>{tr('Testiraj', 'Test')}</Button
+								>
+								<Button small onclick={() => hookAction(() => api.deleteWebhook(hook.id))}
+									>{tr('Ukloni', 'Remove')}</Button
+								>
+							</li>
+						{/each}
+					</ul>
+					<form class="form" onsubmit={addHook}>
+						<Input label={tr('Adresa webhooka', 'Webhook address')} bind:value={hookUrl} />
+						<fieldset class="set-row set-field">
+							<legend>{tr('Događaji', 'Events')}</legend>
+							<div class="set-checks">
+								{#each ['asset.ready', 'person.created', 'backup.finished'] as const as name (name)}
+									<label class="set-check"
+										><input type="checkbox" bind:group={hookEvents} value={name} /> {name}</label
+									>
+								{/each}
+							</div>
+						</fieldset>
+						<Button type="submit" variant="gold" small
+							>{tr('Dodaj webhook', 'Add a webhook')}</Button
+						>
+					</form>
+				</Card>
+			{/if}
+			<ServerSettingsCard />
 
-	<EmailSettingsCard />
+			<EmailSettingsCard />
 
-	<Card title={tr('Karta', 'Map')}>
-		<form class="form" onsubmit={save}>
-			<p class="alb-meta">
-				{tr(
-					'Adrese MapLibre stila za podlogu karte. Prazno vraća zadanu podlogu.',
-					'Addresses of a MapLibre style for the map background. Empty goes back to the default.'
-				)}
-			</p>
-			<Input label={tr('Svijetli stil', 'Light style')} bind:value={light} />
-			<Input label={tr('Tamni stil', 'Dark style')} bind:value={dark} />
-			<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
-		</form>
-	</Card>
+			<Card id="map" title={tr('Karta', 'Map')}>
+				<form class="form" onsubmit={save}>
+					<p class="alb-meta">
+						{tr(
+							'Adrese MapLibre stila za podlogu karte. Prazno vraća zadanu podlogu.',
+							'Addresses of a MapLibre style for the map background. Empty goes back to the default.'
+						)}
+					</p>
+					<Input label={tr('Svijetli stil', 'Light style')} bind:value={light} />
+					<Input label={tr('Tamni stil', 'Dark style')} bind:value={dark} />
+					<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
+				</form>
+			</Card>
+		</div>
+	</div>
 {/if}

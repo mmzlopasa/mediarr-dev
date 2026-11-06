@@ -1,5 +1,10 @@
 <script lang="ts">
-	let { pct, label = `${pct} %` }: { pct: number; label?: string } = $props();
+	// A meter warns as it fills (disk space); progress (work done) never does.
+	let {
+		pct,
+		label = `${pct} %`,
+		progress = false
+	}: { pct: number; label?: string; progress?: boolean } = $props();
 </script>
 
 <div
@@ -10,5 +15,5 @@
 	aria-valuemin="0"
 	aria-valuemax="100"
 >
-	<i class={pct > 90 ? 'bad' : pct > 75 ? 'warn' : ''} style="width:{pct}%"></i>
+	<i class={progress ? '' : pct > 90 ? 'bad' : pct > 75 ? 'warn' : ''} style="width:{pct}%"></i>
 </div>

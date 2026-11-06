@@ -8,8 +8,9 @@ const minPerRow = 2;
 const maxPerRow = 6;
 
 enum AppAccent {
-  // The darkroom's safelight, the design's one accent. Stored as gold, the earlier default.
-  gold('Safelight', 0xFFE8572A, 0xFFC8431A),
+  // Light blue, the default; buttons stay gold whatever is chosen here.
+  blue('Light blue', 0xFFC4BBFF, 0xFF5A49E6),
+  gold('Gold', 0xFFFFD76A, 0xFF8A6500),
   violet('Violet', 0xFF8B7CFF, 0xFF5A49E6),
   mint('Mint', 0xFF8EF0C8, 0xFF0B8F69),
   rose('Rose', 0xFFFF9AC8, 0xFFD6489C);
@@ -105,7 +106,7 @@ class AppSettings {
     this.loopVideos = false,
     this.forceOriginalVideo = true,
     this.haptics = true,
-    this.accent = AppAccent.gold,
+    this.accent = AppAccent.blue,
     this.theme = AppTheme.system,
     this.readOnly = false,
     this.mirrorAlbums = false,
@@ -123,7 +124,7 @@ class AppSettings {
     haptics: json['haptics'] as bool? ?? true,
     accent: AppAccent.values.firstWhere(
       (accent) => accent.name == json['accent'],
-      orElse: () => AppAccent.gold,
+      orElse: () => AppAccent.blue,
     ),
     theme: AppTheme.values.firstWhere(
       (theme) => theme.name == json['theme'],

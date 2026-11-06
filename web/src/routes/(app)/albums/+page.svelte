@@ -77,6 +77,7 @@
 	<div><h1>{tr(item.hr, item.en)}</h1></div>
 	<div class="ph-a">
 		<Select
+			inline
 			label={tr('Poredak', 'Sort')}
 			bind:value={sort}
 			options={[
@@ -85,9 +86,11 @@
 				{ value: 'date', label: tr('Datum fotki', 'Photo date') }
 			]}
 		/>
-		<Button small href={resolve('/(app)/tags')}>{tr('Oznake', 'Tags')}</Button>
+		<Button small href={resolve('/(app)/tags')}
+			><Icon name="tag" size={15} />{tr('Oznake', 'Tags')}</Button
+		>
 		<Button small variant="gold" onclick={() => (creating = true)}>
-			<Icon name="plus" size={14} />
+			<Icon name="plus" size={15} />
 			{tr('Novi album', 'New album')}
 		</Button>
 	</div>

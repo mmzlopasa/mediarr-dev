@@ -628,10 +628,10 @@ test('a backup is set up, runs, and its test of coming back passes', async ({ pa
 
 	await page.getByRole('button', { name: /Backup sada|Back up now/ }).click();
 	const backup = page.locator('[data-backup-run="backup"]').first();
-	await expect(backup).toContainText('done', { timeout: 90000 });
+	await expect(backup).toContainText(/Gotovo|Done/i, { timeout: 90000 });
 	await page.getByRole('button', { name: /Testiraj vraćanje|Test bringing it back/ }).click();
 	const test_ = page.locator('[data-backup-run="restore_test"]').first();
-	await expect(test_).toContainText('done', { timeout: 90000 });
+	await expect(test_).toContainText(/Gotovo|Done/i, { timeout: 90000 });
 
 	await page.locator('[data-feature="kiosk"]').check();
 	await page.reload();
@@ -640,4 +640,17 @@ test('a backup is set up, runs, and its test of coming back passes', async ({ pa
 
 	// The test leaves the demo as it found it.
 	await page.request.put('/api/admin/backup', { data: { repository: '', hour: 3 } });
+});
+
+test('a settings page lists its parts and jumps to one', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'user');
+	await page.goto('/account');
+	const parts = page.getByRole('navigation', { name: 'Sections' });
+	await parts.getByRole('link', { name: 'API keys' }).click();
+	await expect(page.getByRole('heading', { name: 'API keys' })).toBeInViewport();
+	await expect(parts.getByRole('link', { name: 'API keys' })).toHaveAttribute(
+		'aria-current',
+		'location'
+	);
 });

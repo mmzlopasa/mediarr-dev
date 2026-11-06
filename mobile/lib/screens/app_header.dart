@@ -62,7 +62,7 @@ class AppHeader extends ConsumerWidget {
                       vertical: 9,
                     ),
                     decoration: BoxDecoration(
-                      color: Palette.gold,
+                      color: Palette.buttonGold,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(

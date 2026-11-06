@@ -41,24 +41,29 @@
 	}
 </script>
 
-<Card title={tr('Postavke', 'Preferences')}>
+<Card id="preferences" title={tr('Postavke', 'Preferences')}>
 	{#if preferences()}
 		{@const now = preferences()!}
-		<div class="form">
+		<div class="set-group">
+			<h3>{tr('Gledanje', 'Viewing')}</h3>
 			{#each toggles as toggle (toggle.key)}
-				<label>
+				<label class="set-row">
+					<span>{tr(toggle.hr, toggle.en)}</span>
 					<input
 						type="checkbox"
+						class="switch"
 						checked={Boolean(now[toggle.key])}
 						onchange={(event) => change({ [toggle.key]: event.currentTarget.checked })}
 					/>
-					{tr(toggle.hr, toggle.en)}
 				</label>
 			{/each}
-			<label>
-				{tr('Sekundi po slici u uspomenama', 'Seconds for each picture in memories')}
+		</div>
+		<div class="set-group">
+			<h3>{tr('Uspomene, osobe i albumi', 'Memories, people and albums')}</h3>
+			<label class="set-row">
+				<span>{tr('Sekundi po slici u uspomenama', 'Seconds for each picture in memories')}</span>
 				<input
-					class="in"
+					class="in num"
 					type="number"
 					min="1"
 					max="60"
@@ -66,10 +71,15 @@
 					onchange={(event) => change({ memorySeconds: Number(event.currentTarget.value) })}
 				/>
 			</label>
-			<label>
-				{tr('Najmanje fotki da se osoba prikaže', 'Fewest photos for a person to be listed')}
+			<label class="set-row">
+				<span
+					>{tr(
+						'Najmanje fotki da se osoba prikaže',
+						'Fewest photos for a person to be listed'
+					)}</span
+				>
 				<input
-					class="in"
+					class="in num"
 					type="number"
 					min="1"
 					max="100"
@@ -77,8 +87,8 @@
 					onchange={(event) => change({ minFaces: Number(event.currentTarget.value) })}
 				/>
 			</label>
-			<label>
-				{tr('Poredak u novom albumu', 'Order in a new album')}
+			<label class="set-row">
+				<span>{tr('Poredak u novom albumu', 'Order in a new album')}</span>
 				<select
 					class="in"
 					value={now.albumOrder}
@@ -89,17 +99,22 @@
 					<option value="oldest">{tr('Najstarije prvo', 'Oldest first')}</option>
 				</select>
 			</label>
-			<b>{tr('Prikaži u izborniku', 'Show in the menu')}</b>
-			{#each sections as section (section.path)}
-				<label>
-					<input
-						type="checkbox"
-						checked={!now.hiddenSections.includes(section.path)}
-						onchange={(event) => toggleSection(section.path, event.currentTarget.checked)}
-					/>
-					{tr(section.hr, section.en)}
-				</label>
-			{/each}
+		</div>
+		<div class="set-group">
+			<h3>{tr('Prikaži u izborniku', 'Show in the menu')}</h3>
+			<div class="set-tiles">
+				{#each sections as section (section.path)}
+					<label class="set-tile">
+						<span>{tr(section.hr, section.en)}</span>
+						<input
+							type="checkbox"
+							class="switch"
+							checked={!now.hiddenSections.includes(section.path)}
+							onchange={(event) => toggleSection(section.path, event.currentTarget.checked)}
+						/>
+					</label>
+				{/each}
+			</div>
 		</div>
 	{:else}
 		<Skeleton height="120px" />

@@ -12,7 +12,7 @@ body {
 	color: var(--on-gold);
 }
 :focus-visible {
-	outline: 2px solid var(--ink);
+	outline: 2px solid var(--acc);
 	outline-offset: 2px;
 }
 * {
@@ -318,9 +318,10 @@ body {
 	position: absolute;
 	inset: 4px 6px;
 	border-radius: 1.5px;
-	background: var(--acc);
+	background: var(--gold);
 }
 .logo-tag {
+	box-shadow: none;
 	margin-left: 2px;
 	padding: 2px 7px;
 	border-radius: 6px;
@@ -372,13 +373,13 @@ body {
 }
 :is(html, html[data-theme]) .btn.gold,
 :is(html, html[data-theme]) .btn.primary {
-	background: var(--acc);
+	background: var(--gold);
 	color: var(--on-gold);
 	box-shadow: none;
 }
 :is(html, html[data-theme]) .btn.gold:hover,
 :is(html, html[data-theme]) .btn.primary:hover {
-	background: var(--acc-2);
+	background: var(--gold-2);
 }
 :is(html, html[data-theme]) .btn.ghost {
 	background: none;
@@ -701,19 +702,21 @@ textarea.in {
 /* ---------- Viewer: always the darkroom, whatever the theme ---------- */
 .viewer {
 	color-scheme: dark;
-	--bg: #0a0908;
-	--bg-2: #141210;
-	--bg-3: #1f1b18;
-	--ink: #efe9e1;
-	--haze: #c9c1b6;
-	--dim: #9a9187;
-	--line: #2a2522;
-	--line-2: #3a342f;
-	--acc: #e8572a;
-	--acc-2: #c8431a;
-	--on-gold: #140a05;
-	--input: #0a0908;
-	--pop: #141210;
+	--bg: #090b0f;
+	--bg-2: #13161d;
+	--bg-3: #1d212b;
+	--ink: #f3f5f7;
+	--haze: #aeb4c0;
+	--dim: #8a91a0;
+	--line: #232733;
+	--line-2: #323846;
+	--acc: #c4bbff;
+	--acc-2: #8b7cff;
+	--gold: #ffd76a;
+	--gold-2: #ffe28f;
+	--on-gold: #1b1530;
+	--input: #090b0f;
+	--pop: #13161d;
 	background: var(--bg);
 	color: var(--ink);
 }
@@ -733,7 +736,7 @@ textarea.in {
 	color: var(--acc);
 }
 .viewer-top {
-	background: linear-gradient(rgba(10, 9, 8, 0.7), transparent);
+	background: linear-gradient(rgba(9, 11, 15, 0.7), transparent);
 	padding: max(14px, env(safe-area-inset-top)) 18px 14px;
 }
 .viewer-acts {
@@ -849,12 +852,12 @@ body.auth-split {
 :is(html, html[data-theme]) .as-btn {
 	border: 0;
 	border-radius: 12px;
-	background: var(--acc);
+	background: var(--gold);
 	color: var(--on-gold);
 	box-shadow: none;
 }
 :is(html, html[data-theme]) .as-btn:hover {
-	background: var(--acc-2);
+	background: var(--gold-2);
 }
 :is(html, html[data-theme]) .as-alt {
 	border-radius: 12px;
@@ -951,12 +954,13 @@ body.auth-split {
 	min-height: 100vh;
 	padding: 48px 72px 64px;
 	overflow: hidden;
-	background: #0e0c0b;
-	color: #efe9e1;
+	background: #0d0f14;
+	color: #f3f5f7;
 	color-scheme: dark;
-	--ink: #efe9e1;
-	--dim: #9a9187;
-	--acc: #e8572a;
+	--ink: #f3f5f7;
+	--dim: #8a91a0;
+	--acc: #c4bbff;
+	--gold: #ffd76a;
 }
 .tv-hero {
 	position: absolute;
@@ -969,8 +973,8 @@ body.auth-split {
 	position: absolute;
 	inset: 0;
 	background:
-		linear-gradient(0deg, #0e0c0b 4%, rgba(14, 12, 11, 0.45) 60%, rgba(14, 12, 11, 0.6)),
-		linear-gradient(90deg, rgba(14, 12, 11, 0.85), transparent 65%);
+		linear-gradient(0deg, #0d0f14 4%, rgba(13, 15, 20, 0.45) 60%, rgba(13, 15, 20, 0.6)),
+		linear-gradient(90deg, rgba(13, 15, 20, 0.85), transparent 65%);
 }
 .tv-top,
 .tv-lead,
@@ -1003,7 +1007,7 @@ body.auth-split {
 }
 .tv-lead p {
 	margin: 0;
-	color: #c9c1b6;
+	color: #aeb4c0;
 	font-size: 22px;
 }
 .tv-row h2 {
@@ -1035,7 +1039,7 @@ body.auth-split {
 	height: 190px;
 	object-fit: cover;
 	border-radius: 6px;
-	background: #171412;
+	background: #161922;
 }
 .tv-card.round {
 	width: 170px;
@@ -1070,7 +1074,7 @@ body.auth-split {
 	z-index: 50;
 	display: grid;
 	place-items: center;
-	background: #0a0908;
+	background: #090b0f;
 }
 .tv-show img {
 	max-width: 100%;
@@ -1098,7 +1102,7 @@ body.auth-split {
 	gap: 3px;
 	padding: 4px;
 	border-radius: 10px;
-	background: rgba(10, 9, 8, 0.6);
+	background: rgba(9, 11, 15, 0.6);
 }
 .viewer-strip button {
 	padding: 0;
@@ -1131,5 +1135,799 @@ body.auth-split {
 	}
 	.viewer-strip img {
 		height: 34px;
+	}
+}
+
+/* ---------- Toolbars: one height, one row ---------- */
+.ph-a {
+	gap: 8px;
+	align-items: center;
+}
+:is(html, html[data-theme]) .ph-a .btn {
+	min-height: 38px;
+	padding: 0 14px;
+	font-size: 14px;
+}
+.sel-inline {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	height: 38px;
+	border-radius: 12px;
+	background: var(--bg-2);
+	box-shadow: inset 0 0 0 1px var(--line);
+	color: var(--dim);
+	font: 500 14px var(--sans);
+}
+.sel-inline > span {
+	padding-left: 14px;
+	pointer-events: none;
+}
+.sel-inline select.in,
+:is(html, html[data-theme]) .sel-inline select.in {
+	min-height: 0;
+	height: 100%;
+	width: auto;
+	padding: 0 34px 0 8px;
+	border: 0;
+	border-radius: 12px;
+	background-color: transparent;
+	box-shadow: none;
+	color: var(--ink);
+	font: 500 14px var(--sans);
+	cursor: pointer;
+}
+.sel-inline:focus-within {
+	box-shadow: inset 0 0 0 1px var(--acc);
+}
+
+/* ---------- Gold buttons: the one that acts ---------- */
+:is(html, html[data-theme]) .btn.gold,
+:is(html, html[data-theme]) .btn.primary {
+	background: var(--gold);
+	color: var(--on-gold);
+	font-weight: 600;
+}
+:is(html, html[data-theme]) .btn.gold:hover,
+:is(html, html[data-theme]) .btn.primary:hover {
+	background: var(--gold-2);
+}
+html[data-theme='light'] .btn.gold,
+html[data-theme='light'] .btn.primary {
+	box-shadow: inset 0 0 0 1px var(--gold-3);
+}
+:is(html, html[data-theme]) .btn.danger {
+	background: none;
+	color: var(--err);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--err) 55%, transparent);
+}
+:is(html, html[data-theme]) .btn.danger:hover {
+	background: color-mix(in srgb, var(--err) 14%, transparent);
+}
+.lb-dock-i.on svg,
+.lb-side-i.on svg,
+.lb-more-i.on svg {
+	color: var(--acc);
+}
+
+/* ---------- Settings pages: a list of parts, then rows of label and control ---------- */
+.set {
+	display: grid;
+	grid-template-columns: 188px minmax(0, 860px);
+	gap: 40px;
+	align-items: start;
+}
+.set-nav {
+	position: sticky;
+	top: 80px;
+	display: grid;
+	gap: 2px;
+}
+.set-nav a {
+	padding: 8px 12px;
+	border-radius: 10px;
+	color: var(--dim);
+	font: 500 14px var(--sans);
+	text-decoration: none;
+}
+.set-nav a:hover {
+	color: var(--ink);
+}
+.set-nav a.on {
+	color: var(--ink);
+	background: var(--bg-2);
+	box-shadow: inset 2px 0 0 var(--acc);
+}
+.set-body {
+	display: grid;
+	gap: 16px;
+	min-width: 0;
+}
+.set .card {
+	margin: 0;
+	scroll-margin-top: 80px;
+	border-radius: 16px;
+}
+.set .card-h {
+	align-items: flex-start;
+	padding: 22px 24px 6px;
+	border: 0;
+}
+.set .card-h h2 {
+	margin: 0;
+	font: 600 17px / 1.3 var(--sans);
+	letter-spacing: -0.01em;
+}
+.card-t {
+	min-width: 0;
+}
+.card-note {
+	margin: 4px 0 0;
+	color: var(--dim);
+	font-size: 14px;
+	line-height: 1.5;
+	max-width: 64ch;
+}
+.set .card-b {
+	padding: 12px 24px 22px;
+}
+.set .card-b > .alb-meta,
+.set .form > .alb-meta,
+.set-line {
+	margin: 0 0 10px;
+	color: var(--dim);
+	font-size: 14px;
+	line-height: 1.55;
+	max-width: 66ch;
+}
+.set .alb-meta code,
+.set-line code {
+	font: 12.5px var(--mono);
+	color: var(--haze);
+	overflow-wrap: anywhere;
+}
+.set .alert {
+	margin: 4px 0 12px;
+}
+.set-group + .set-group {
+	margin-top: 22px;
+	padding-top: 18px;
+	border-top: 1px solid var(--line);
+}
+.set-group h3,
+.set-sub {
+	margin: 0 0 4px;
+	color: var(--dim);
+	font: 600 12.5px var(--sans);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.set-sub {
+	margin-top: 22px;
+}
+
+/* A row: what it is on the left, the control on the right. Plain labels from older cards
+   (text, then a field or a checkbox) take the same shape. */
+.set .form {
+	display: grid;
+	gap: 0;
+}
+.set-row,
+.set .form > label,
+.set .card-b > label.f,
+.set .card-b > label:has(> input[type='checkbox']) {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+	align-items: center;
+	column-gap: 24px;
+	row-gap: 4px;
+	min-height: 52px;
+	padding: 8px 0;
+	margin: 0;
+	border-top: 1px solid var(--line);
+	color: var(--ink);
+	font: 450 14.5px / 1.45 var(--sans);
+}
+.set .form > label:has(> input[type='checkbox']),
+.set .card-b > label:has(> input[type='checkbox']),
+.set-row:has(> input.switch),
+.set-row:has(> .btn) {
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+.set-group h3 + .set-row,
+.set-group h3 + .form > :first-child,
+.set .form > .alb-meta + label,
+.set .form > .alert + label,
+.set .card-b > .alb-meta + .set-row,
+.set .card-b > .alb-meta + .form > label:first-child,
+.set .form > :first-child {
+	border-top: 0;
+}
+.set .form > label > span:first-child {
+	color: var(--ink);
+	font-weight: 450;
+	font-size: 14.5px;
+}
+.set .form > label.f > .hint {
+	grid-column: 1;
+	grid-row: 2;
+	color: var(--dim);
+	font-size: 13px;
+}
+.set :is(.form, .card-b) > label.f > .in {
+	grid-column: 2;
+	grid-row: 1;
+}
+.set :is(.form, .card-b) > label.f:has(> .hint) > .in {
+	grid-row: 1 / span 2;
+}
+.set :is(.form, .card-b) > label.f:has(> .hint) > span:first-child {
+	align-self: end;
+}
+.set :is(.form, .card-b) > label.f > .hint {
+	align-self: start;
+}
+.set .card-b > label.f > span:first-child {
+	color: var(--ink);
+	font-weight: 450;
+	font-size: 14.5px;
+}
+.set-row > .btn {
+	justify-self: end;
+}
+.set-row > span small,
+.set-row small {
+	display: block;
+	color: var(--dim);
+	font-size: 13px;
+}
+.set .in {
+	min-height: 40px;
+	height: 40px;
+	padding: 0 12px;
+	border-radius: 10px;
+	font-size: 14.5px;
+}
+.set select.in {
+	padding-right: 34px;
+	background-position: right 12px center;
+	text-overflow: ellipsis;
+}
+.set textarea.in {
+	height: auto;
+	min-height: 84px;
+	padding: 10px 12px;
+}
+.set .form > label:has(> textarea) {
+	grid-template-columns: minmax(0, 1fr);
+}
+.set .in.num,
+.set input.in[type='number'] {
+	width: 120px;
+	justify-self: end;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Switches for on and off: the knob is the state. */
+.set .form > label > input[type='checkbox'],
+.set .card-b > label > input[type='checkbox'],
+input.switch {
+	order: 2;
+	justify-self: end;
+	appearance: none;
+	-webkit-appearance: none;
+	position: relative;
+	flex: none;
+	width: 40px;
+	height: 24px;
+	margin: 0;
+	border-radius: 12px;
+	background: var(--bg-3);
+	box-shadow: inset 0 0 0 1px var(--line-2);
+	cursor: pointer;
+	transition: background-color 160ms ease;
+}
+.set .form > label > input[type='checkbox']::before,
+.set .card-b > label > input[type='checkbox']::before,
+input.switch::before {
+	content: '';
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: var(--dim);
+	transition: transform 160ms var(--ease);
+}
+.set .form > label > input[type='checkbox']:checked,
+.set .card-b > label > input[type='checkbox']:checked,
+input.switch:checked {
+	background: var(--acc);
+	box-shadow: none;
+}
+.set .form > label > input[type='checkbox']:checked::before,
+.set .card-b > label > input[type='checkbox']:checked::before,
+input.switch:checked::before {
+	transform: translateX(16px);
+	background: var(--on-gold);
+}
+html[data-theme='light'] input.switch:checked::before,
+html[data-theme='light'] .set label > input[type='checkbox']:checked::before {
+	background: #fff;
+}
+.set-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 8px;
+	margin-top: 10px;
+}
+.set-tile {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 12px 10px 14px;
+	border-radius: 12px;
+	background: var(--bg);
+	box-shadow: inset 0 0 0 1px var(--line);
+	font-size: 14.5px;
+	cursor: pointer;
+}
+
+/* Several choices at once: small checks in a row. */
+.set-field {
+	border: 0;
+	min-width: 0;
+	margin: 0;
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+.set-field legend {
+	float: left;
+	padding: 0;
+	color: var(--ink);
+	font-size: 14.5px;
+}
+.set-checks {
+	display: flex;
+	flex-wrap: nowrap;
+	justify-content: flex-end;
+	gap: 6px;
+}
+.set-check {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 12px;
+	border-radius: 10px;
+	box-shadow: inset 0 0 0 1px var(--line);
+	font-size: 14px;
+	cursor: pointer;
+}
+.set-check:has(input:checked) {
+	box-shadow: inset 0 0 0 1px var(--acc);
+	background: color-mix(in srgb, var(--acc) 10%, transparent);
+}
+.set-check input {
+	width: 16px;
+	height: 16px;
+	margin: 0;
+	accent-color: var(--acc);
+}
+
+/* Actions sit at the end of their form, at their own size. */
+.set-foot,
+.set .form > .btn-row,
+.set .form > div:has(> .btn:only-child) {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 8px;
+	padding-top: 14px;
+	border-top: 1px solid var(--line);
+}
+.set .form > .btn {
+	justify-self: end;
+	margin-top: 14px;
+}
+.set .card-b > label.f + .btn {
+	margin-top: 12px;
+}
+:is(html, html[data-theme]) .btn.gold:disabled,
+:is(html, html[data-theme]) .btn.primary:disabled {
+	background: var(--bg-3);
+	color: var(--dim);
+	box-shadow: none;
+	opacity: 1;
+	cursor: not-allowed;
+}
+.set .card-b > .set-foot {
+	border-top: 0;
+	justify-content: flex-start;
+}
+.set .kv {
+	border-bottom: 1px solid var(--line);
+	min-height: 44px;
+}
+.set .form > .kv:first-of-type {
+	border-top: 1px solid var(--line);
+}
+
+/* Lists: a title, one quiet line under it, the action at the end. */
+.set-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.set-list > li {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 14px;
+	padding: 12px 0;
+	border-top: 1px solid var(--line);
+}
+.set-list > li:first-child {
+	border-top: 0;
+}
+.set-list > li:not(:has(.set-list-ic)) {
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+.set-list-ic {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: var(--bg-3);
+	color: var(--haze);
+}
+.set-list-ic svg {
+	width: 18px;
+	height: 18px;
+}
+.set-list-t {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+}
+.set-list-t b {
+	overflow: hidden;
+	font-weight: 550;
+	font-size: 14.5px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.set-list-t b.mono {
+	font: 500 13px var(--mono);
+}
+.set-list-t small {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 6px;
+	color: var(--dim);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+}
+.set-list .mono {
+	font: 12.5px var(--mono);
+}
+.set-chip {
+	display: inline-flex;
+	align-items: center;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--bg-3);
+	color: var(--haze);
+	font: 600 11.5px / 18px var(--sans);
+	font-style: normal;
+	letter-spacing: 0.01em;
+}
+.set-chip.ok {
+	background: color-mix(in srgb, var(--ok) 16%, transparent);
+	color: var(--ok);
+}
+.set-chip.err {
+	background: color-mix(in srgb, var(--err) 16%, transparent);
+	color: var(--err);
+}
+.set-chip.run {
+	background: color-mix(in srgb, var(--acc) 16%, transparent);
+	color: var(--acc);
+}
+/* A long error stays two lines until it is opened. */
+.set-clamp,
+.notify-detail {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+	margin: 2px 0 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--haze);
+	font: 12.5px / 1.5 var(--mono);
+	text-align: left;
+	overflow-wrap: anywhere;
+	white-space: pre-line;
+	cursor: pointer;
+}
+.set-clamp.open,
+.notify-detail.open {
+	display: block;
+}
+.set-more {
+	margin-top: 6px;
+	padding: 8px 0;
+	border: 0;
+	background: none;
+	color: var(--acc);
+	font: 500 14px var(--sans);
+	cursor: pointer;
+}
+
+/* Account: the library in numbers. */
+.acct-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+	gap: 0;
+	margin: 6px 0 0;
+}
+.acct-stats > div {
+	display: grid;
+	gap: 2px;
+	padding: 4px 16px 4px 0;
+	background: none;
+}
+.acct-stats > div + div {
+	padding-left: 16px;
+	border-left: 1px solid var(--line);
+}
+.acct-stats dt {
+	color: var(--dim);
+	font-size: 13px;
+}
+.acct-stats dd {
+	margin: 0;
+	white-space: nowrap;
+	font: 600 22px / 1.2 var(--sans);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+.set code.block {
+	display: block;
+	margin: 6px 0 4px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: var(--bg);
+	font: 13px var(--mono);
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 1280px) {
+	.lb-admin .set {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 16px;
+	}
+	.lb-admin .set-nav {
+		display: none;
+	}
+}
+@media (max-width: 1000px) {
+	.set {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 16px;
+	}
+	.set-nav {
+		position: static;
+		display: flex;
+		gap: 6px;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.lb-admin .set-nav {
+		display: flex;
+	}
+	.set-nav a {
+		flex: none;
+		background: var(--bg-2);
+		white-space: nowrap;
+	}
+	.set-nav a.on {
+		box-shadow: inset 0 0 0 1px var(--acc);
+	}
+}
+@media (max-width: 640px) {
+	.set-row,
+	.set .form > label,
+	.set .card-b > label.f,
+	.set .card-b > label:has(> input[type='checkbox']) {
+		grid-template-columns: minmax(0, 1fr);
+		padding: 12px 0;
+	}
+	.set :is(.form, .card-b) > label.f > .in,
+	.set :is(.form, .card-b) > label.f:has(> .hint) > .in,
+	.set :is(.form, .card-b) > label.f > .hint {
+		grid-column: 1;
+		grid-row: auto;
+	}
+	.set .form > label:has(> input[type='checkbox']),
+	.set .card-b > label:has(> input[type='checkbox']),
+	.set-row:has(> input.switch) {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+	.set .in {
+		font-size: 16px;
+	}
+	.set .in.num,
+	.set input.in[type='number'] {
+		justify-self: stretch;
+		width: 100%;
+	}
+	.set-field legend {
+		float: none;
+		margin-bottom: 8px;
+	}
+	.set-checks {
+		justify-content: flex-start;
+		flex-wrap: wrap;
+	}
+	.set .card-h {
+		padding: 18px 16px 4px;
+		flex-wrap: wrap;
+	}
+	.set .card-b {
+		padding: 6px 16px 18px;
+	}
+	.acct-stats {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		row-gap: 14px;
+	}
+	.acct-stats > div:nth-child(3n + 1) {
+		padding-left: 0;
+		border-left: 0;
+	}
+	.set-list > li {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+	.set-list > li > .btn {
+		grid-column: 2;
+		justify-self: start;
+	}
+}
+
+/* ---------- Notifications ---------- */
+.notify-count {
+	background: var(--gold);
+	color: var(--on-gold);
+}
+.notify-panel,
+:is(html, html[data-theme]) .notify-panel {
+	position: absolute;
+	top: calc(100% + 10px);
+	right: 0;
+	width: min(400px, calc(100vw - 24px));
+	max-height: min(70vh, 560px);
+	overflow-y: auto;
+	padding: 6px;
+	border: 0;
+	border-radius: 16px;
+	background: var(--bg-2);
+	backdrop-filter: none;
+	box-shadow: var(--float-shadow);
+	--origin: top right;
+}
+.notify-h {
+	position: sticky;
+	top: -6px;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin: -6px -6px 4px;
+	padding: 14px 16px 10px;
+	background: var(--bg-2);
+	border-bottom: 1px solid var(--line);
+}
+.notify-h b {
+	font: 600 15px var(--sans);
+}
+.notify-clear {
+	border: 0;
+	background: none;
+	color: var(--acc);
+	font: 500 13.5px var(--sans);
+	cursor: pointer;
+}
+.notify-empty {
+	margin: 0;
+	padding: 28px 16px;
+	color: var(--dim);
+	text-align: center;
+	font-size: 14px;
+}
+.notify-list {
+	display: grid;
+	gap: 2px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.notify-row,
+:is(html, html[data-theme]) .notify-row {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: start;
+	gap: 12px;
+	padding: 10px 8px 10px 10px;
+	border-radius: 12px;
+	background: none;
+}
+.notify-row:hover {
+	background: var(--bg-3);
+}
+.notify-row.unread .notify-t > :is(a, b)::after {
+	content: '';
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	margin-left: 8px;
+	border-radius: 50%;
+	background: var(--acc);
+	vertical-align: 2px;
+}
+.notify-ic {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 10px;
+	background: var(--bg-3);
+	color: var(--haze);
+}
+.notify-row.bad .notify-ic {
+	background: color-mix(in srgb, var(--err) 14%, transparent);
+	color: var(--err);
+}
+.notify-t {
+	display: grid;
+	gap: 2px;
+	min-width: 0;
+}
+.notify-t > a,
+.notify-t > b {
+	color: var(--ink);
+	font: 500 14.5px / 1.4 var(--sans);
+	text-decoration: none;
+}
+.notify-t small {
+	color: var(--dim);
+	font-size: 12.5px;
+	font-variant-numeric: tabular-nums;
+}
+.notify-x {
+	opacity: 0;
+}
+.notify-row:hover .notify-x,
+.notify-x:focus-visible {
+	opacity: 1;
+}
+@media (hover: none) {
+	.notify-x {
+		opacity: 1;
+	}
+}
+@media (max-width: 760px) {
+	.notify-panel,
+	:is(html, html[data-theme]) .notify-panel {
+		position: fixed;
+		top: 62px;
+		left: 12px;
+		right: 12px;
+		width: auto;
 	}
 }

@@ -70,7 +70,7 @@
 	function addLayers(view: MapView) {
 		// The design's one accent, read from the page so both themes agree.
 		const gold =
-			getComputedStyle(document.documentElement).getPropertyValue('--acc').trim() || '#e8572a';
+			getComputedStyle(document.documentElement).getPropertyValue('--acc').trim() || '#c4bbff';
 		view.addSource('photos', {
 			type: 'geojson',
 			data: geojson(points),

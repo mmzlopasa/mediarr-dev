@@ -52,7 +52,7 @@
 	}
 </script>
 
-<Card title={tr('E-pošta', 'Email')}>
+<Card id="email" title={tr('E-pošta', 'Email')}>
 	{#if settings}
 		<form class="form" onsubmit={save}>
 			<p class="alb-meta">

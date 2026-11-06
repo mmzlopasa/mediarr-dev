@@ -73,11 +73,13 @@ void main() {
     expect(AppSettings.fromJson(const {'perRow': 99}).perRow, maxPerRow);
   });
 
-  test('the accent has contrast in both themes, and the button stays gold', () {
+  test('the accent is light blue with contrast in both themes, and the button stays gold', () {
     Palette.light = false;
-    expect(Palette.gold, Palette.buttonGold);
+    expect(Palette.gold, const Color(0xFFC4BBFF));
+    expect(Palette.buttonGold, const Color(0xFFFFD76A));
     Palette.light = true;
     expect(Palette.gold, isNot(Palette.buttonGold));
+    expect(Palette.gold.computeLuminance(), lessThan(0.2));
     expect(Palette.bg.computeLuminance(), greaterThan(0.5));
     Palette.light = false;
     expect(Palette.bg.computeLuminance(), lessThan(0.1));

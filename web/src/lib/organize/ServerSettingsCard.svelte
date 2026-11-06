@@ -32,7 +32,7 @@
 	}
 </script>
 
-<Card title={tr('Server', 'Server')}>
+<Card id="server" title={tr('Server', 'Server')}>
 	{#if settings}
 		<form class="form" onsubmit={save}>
 			<p class="alb-meta">

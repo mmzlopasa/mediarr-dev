@@ -1,46 +1,49 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// The colours of the Lightbox design (web/src/lib/design/dash.css tokens): a darkroom, with one
-/// warm accent for what is on.
+/// The colours of the Lightbox design (web/src/lib/design/dash.css tokens): grey grounds, light
+/// blue for what is on or chosen, gold for the button that acts.
 abstract final class Palette {
   /// Set by the app when the theme changes, before anything is drawn with these.
   static bool light = false;
 
   static Color _pick(int dark, int bright) => Color(light ? bright : dark);
 
-  static Color get bg => _pick(0xFF0E0C0B, 0xFFF3F1EE);
-  static Color get bg2 => _pick(0xFF171412, 0xFFE9E6E1);
-  static Color get bg3 => _pick(0xFF211D1A, 0xFFDFDBD5);
-  static Color get ink => _pick(0xFFEFE9E1, 0xFF161311);
-  static Color get haze => _pick(0xFFC9C1B6, 0xFF3D3833);
-  static Color get dim => _pick(0xFF9A9187, 0xFF6B645C);
-  static Color get line => _pick(0xFF2A2522, 0xFFD9D4CE);
-  static Color get line2 => _pick(0xFF3A342F, 0xFFC7C1BA);
+  static Color get bg => _pick(0xFF0D0F14, 0xFFEEF0F3);
+  static Color get bg2 => _pick(0xFF161922, 0xFFE4E7EC);
+  static Color get bg3 => _pick(0xFF20242F, 0xFFD8DCE3);
+  static Color get ink => _pick(0xFFF3F5F7, 0xFF12141A);
+  static Color get haze => _pick(0xFFAEB4C0, 0xFF3F4550);
+  static Color get dim => _pick(0xFF8A91A0, 0xFF5C6370);
+  static Color get line => _pick(0xFF232733, 0xFFD3D7DE);
+  static Color get line2 => _pick(0xFF323846, 0xFFC0C5CF);
 
-  /// Kept for screens that ask for a second colour: it is the accent too, as there is only one.
-  static Color get violet => gold;
+  /// The second colour, for avatars and quiet highlights.
+  static Color get violet => _pick(0xFF8B7CFF, 0xFF5A49E6);
 
-  /// The accent, the darkroom's safelight unless the person chose another.
+  /// The accent for what is on or chosen: light blue unless the person chose another.
   static Color get gold => _pick(accentDark, accentLight);
 
   /// The chosen accent, set by the app with the theme.
-  static int accentDark = 0xFFE8572A;
-  static int accentLight = 0xFFC8431A;
+  static int accentDark = 0xFFC4BBFF;
+  static int accentLight = 0xFF5A49E6;
   static Color get glassEdge => line;
 
   /// Surfaces are solid: glass reads poorly over photos and costs too much on older phones.
   static List<Color> get glass => [bg2, bg2];
-  static Color get field => _pick(0xFF0E0C0B, 0xFFFFFFFF);
-  static Color get ok => _pick(0xFF8FC9A4, 0xFF2F7A52);
-  static Color get warn => _pick(0xFFE8B45A, 0xFF9A5B00);
-  static Color get err => _pick(0xFFF08A7A, 0xFFB42A1A);
+  static Color get field => _pick(0xFF0F1218, 0xFFFFFFFF);
+  static Color get ok => _pick(0xFF8EF0C8, 0xFF0B8F69);
+  static Color get warn => _pick(0xFFFFC98A, 0xFFA85D00);
+  static Color get err => _pick(0xFFFF9AA8, 0xFFC62A47);
 
-  /// The accent button, which looks the same in both themes.
-  static const buttonGold = Color(0xFFE8572A);
-  static const gold2 = Color(0xFFE8572A);
-  static const gold3 = Color(0xFFE8572A);
-  static const onGold = Color(0xFF140A05);
+  /// The gold button, which looks the same in both themes.
+  static const buttonGold = Color(0xFFFFD76A);
+  static const gold2 = Color(0xFFFFE28F);
+  static const gold3 = Color(0xFFE9B84A);
+  static const onGold = Color(0xFF1B1530);
+
+  /// Text on the accent: dark on light blue, white on the deeper blue of the light theme.
+  static Color get onAccent => _pick(0xFF1B1530, 0xFFFFFFFF);
 }
 
 /// Kept as a gradient for the screens that ask for one; it is a single colour.
@@ -87,7 +90,7 @@ ThemeData _build(bool light) {
   final scheme = (light ? ColorScheme.light : ColorScheme.dark)(
     surface: Palette.bg,
     primary: Palette.gold,
-    onPrimary: Palette.onGold,
+    onPrimary: Palette.onAccent,
     secondary: Palette.violet,
     error: Palette.err,
     onSurface: Palette.ink,
@@ -111,7 +114,7 @@ ThemeData _build(bool light) {
         ),
         foregroundColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? Palette.onGold
+              ? Palette.onAccent
               : Palette.ink,
         ),
         side: WidgetStatePropertyAll(BorderSide(color: Palette.line2)),
@@ -293,7 +296,7 @@ class GoldButton extends StatelessWidget {
       opacity: enabled ? 1 : 0.55,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Palette.gold,
+          color: Palette.buttonGold,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Material(

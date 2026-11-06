@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/account_preferences.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
+import '../services/agent.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
@@ -797,13 +798,23 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
                 for (final item in sessions)
                   ListTile(
                     leading: RingIcon(
-                      Icons.smartphone_outlined,
+                      describeAgent(item.userAgent).phone
+                          ? Icons.smartphone_outlined
+                          : Icons.desktop_windows_outlined,
                       on: item.current,
                     ),
-                    title: Text(item.current ? 'This device' : item.ip),
+                    title: Text(
+                      describeAgent(item.userAgent).title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     subtitle: Text(
-                      '${item.userAgent}\n${item.lastSeenAt.toLocal()}',
-                      maxLines: 3,
+                      [
+                        if (item.current) 'This device',
+                        if (item.ip.isNotEmpty) item.ip,
+                        since(item.lastSeenAt.toLocal()),
+                      ].join(' · '),
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     trailing: item.current

@@ -124,6 +124,7 @@
 				<Bar
 					pct={upload.total ? Math.round((upload.loaded / upload.total) * 100) : 0}
 					label={upload.name}
+					progress
 				/>
 			{/if}
 			{#if upload.error}<Alert kind="err">{upload.error}</Alert>{/if}
