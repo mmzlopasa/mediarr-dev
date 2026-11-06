@@ -49,14 +49,14 @@
 		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
 	</section>
 {:else}
-	<div class="alb-grid">
+	<div class="stories stories-page">
 		{#each memories as memory (memory.kind + memory.title)}
-			<button type="button" class="alb-card story-card" onclick={() => (open = memory)}>
-				<span class="alb-cover">
-					<img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" />
+			<button type="button" class="story-tile" onclick={() => (open = memory)}>
+				<img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" />
+				<span class="story-tile-t">
+					<b>{titleOf(memory)}</b>
+					<small>{memory.title} · {memory.items.length}</small>
 				</span>
-				<span class="alb-name">{titleOf(memory)}</span>
-				<span class="alb-meta">{memory.title} · {memory.items.length}</span>
 			</button>
 		{/each}
 	</div>

@@ -2540,3 +2540,97 @@ html[data-theme='light'] .set-chip.ok {
 		flex-wrap: nowrap;
 	}
 }
+
+/* ---------- Memories as stories: tall cards in a row, each plays where it is ---------- */
+.stories {
+	display: flex;
+	gap: 10px;
+	margin: 4px 0 18px;
+	padding-bottom: 4px;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+.story-tile {
+	position: relative;
+	flex: none;
+	width: 128px;
+	aspect-ratio: 3 / 4.3;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
+	border-radius: 14px;
+	background: var(--bg-2);
+	color: #fff;
+	text-align: left;
+	cursor: pointer;
+	transition: transform 160ms var(--ease);
+}
+.story-tile:hover {
+	transform: translateY(-2px);
+}
+.story-tile:active {
+	transform: scale(0.97);
+}
+.story-tile img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 600ms var(--ease);
+}
+.story-tile:hover img {
+	transform: scale(1.04);
+}
+/* A shade at the foot keeps the white words readable on any photo. */
+.story-tile::after {
+	content: '';
+	position: absolute;
+	inset: 40% 0 0;
+	background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+}
+.story-tile-t {
+	position: absolute;
+	inset: auto 10px 10px;
+	z-index: 1;
+	display: grid;
+	gap: 1px;
+}
+.story-tile-t b {
+	font: 600 14px / 1.2 var(--sans);
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.story-tile-t small {
+	color: rgba(255, 255, 255, 0.82);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+}
+.story-tile:focus-visible {
+	outline: 2px solid var(--acc);
+	outline-offset: 3px;
+}
+.stories-page {
+	flex-wrap: wrap;
+	gap: 14px;
+}
+.stories-page .story-tile {
+	width: 180px;
+}
+@media (max-width: 760px) {
+	.lb-shell .stories {
+		margin-inline: -16px;
+		padding-inline: 16px;
+	}
+	.story-tile {
+		width: 108px;
+	}
+	.stories-page .story-tile {
+		width: calc(50% - 7px);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.story-tile,
+	.story-tile img {
+		transition: none;
+	}
+}

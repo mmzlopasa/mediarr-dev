@@ -1,12 +1,13 @@
 <script lang="ts">
-	import Icon from '#lib/design/components/Icon.svelte';
-	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { memoryTitle } from '#lib/organize/memories.ts';
+	import Story from '#lib/organize/Story.svelte';
 	import { api, type Memory } from '#lib/api.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import { yearsAgo } from '#lib/organize/stories.ts';
 
 	let memories = $state<Memory[]>([]);
+	let open = $state<Memory>();
 
 	onMount(async () => {
 		const now = new Date();
@@ -27,11 +28,12 @@
 </script>
 
 {#if memories.length > 0}
-	<div class="day-strip">
+	<!-- Memories as stories: a row of tall cards, each plays as a story where it is. -->
+	<div class="stories" aria-label={tr('Uspomene', 'Memories')} role="group">
 		{#each memories as memory (memory.kind + memory.title)}
-			<a class="day-card" href={resolve('/(app)/memories')}>
+			<button type="button" class="story-tile" onclick={() => (open = memory)}>
 				<img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" />
-				<span class="day-card-t">
+				<span class="story-tile-t">
 					<b>{label(memory)}</b>
 					<small
 						>{tr(
@@ -40,8 +42,11 @@
 						)}</small
 					>
 				</span>
-				<Icon name="forward" size={16} />
-			</a>
+			</button>
 		{/each}
 	</div>
+{/if}
+
+{#if open}
+	<Story memory={open} title={memoryTitle(open)} onClose={() => (open = undefined)} />
 {/if}
