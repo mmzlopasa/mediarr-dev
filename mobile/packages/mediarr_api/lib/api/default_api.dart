@@ -3497,6 +3497,79 @@ class DefaultApi {
     return null;
   }
 
+  /// A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] small:
+  ///   A JPEG of at most 2048 px, for messages
+  Future<Response> getAssetShareWithHttpInfo(
+    String id, {
+    bool? small,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/{id}/share'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (small != null) {
+      queryParams.addAll(_queryParams('', 'small', small));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original.
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] small:
+  ///   A JPEG of at most 2048 px, for messages
+  Future<MultipartFile?> getAssetShare(
+    String id, {
+    bool? small,
+  }) async {
+    final response = await getAssetShareWithHttpInfo(
+      id,
+      small: small,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
   /// An XMP sidecar with what the file says and what Mediarr knows, for other programs
   ///
   /// Note: This method returns the HTTP [Response].

@@ -364,7 +364,7 @@ test.describe('timeline', () => {
 		await page.locator('.tl-tile').first().click();
 		await expect(page).toHaveURL(/\/photos\//);
 		const viewer = page.getByRole('dialog');
-		await expect(viewer.locator('img.viewer-media').first()).toBeVisible();
+		await expect(viewer.locator('img.viewer-media:not(.under)').first()).toBeVisible();
 		await viewer.getByRole('button', { name: 'Podaci' }).click();
 		await expect(viewer.locator('.kv', { hasText: 'Veličina' })).toBeVisible();
 		await page.keyboard.press('Escape');
@@ -387,12 +387,16 @@ test.describe('timeline', () => {
 		const strip = page.getByRole('navigation', { name: 'Susjedne fotke' });
 		await expect(strip.getByRole('button', { name: 'Otvori fotku' }).first()).toBeVisible();
 		await expect(strip.locator('[aria-current="true"]')).toHaveCount(1);
-		await expect(page.getByRole('dialog').locator('img.viewer-media').first()).toBeVisible();
+		await expect(
+			page.getByRole('dialog').locator('img.viewer-media:not(.under)').first()
+		).toBeVisible();
 		await page.keyboard.press('ArrowRight');
 		await expect(page).not.toHaveURL(first);
 		const second = page.url();
 		await page.goto(second);
-		await expect(page.getByRole('dialog').locator('img.viewer-media').first()).toBeVisible();
+		await expect(
+			page.getByRole('dialog').locator('img.viewer-media:not(.under)').first()
+		).toBeVisible();
 		// The keys work once the viewer knows its neighbours, which it reads after the picture appears.
 		await expect(async () => {
 			await page.keyboard.press('ArrowLeft');
@@ -497,7 +501,7 @@ test.describe('timeline', () => {
 		const tile = page.locator('.tl-tile:not(:has(.tl-video))').first();
 		await tile.waitFor({ timeout: 45000 });
 		await tile.click();
-		const image = page.locator('img.viewer-media').first();
+		const image = page.locator('img.viewer-media:not(.under)').first();
 		await image.waitFor();
 		const full = page.waitForResponse((response) => response.url().includes('size=full'));
 		await image.hover();

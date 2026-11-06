@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ShareButton from '#lib/design/components/ShareButton.svelte';
 	import { thumbUrl } from './blur.ts';
 	import AssetFactsDialog from '#lib/organize/AssetFactsDialog.svelte';
 	import RatingStars from '#lib/organize/RatingStars.svelte';
@@ -380,6 +381,7 @@
 							title={tr('Favorit', 'Favorite')}
 							onclick={toggleFavorite}><Icon name="star" /></button
 						>{/if}
+					{#if detail.downloadAllowed !== false}<ShareButton ids={[detail.id]} />{/if}
 					{#if detail.downloadAllowed !== false}<a
 							class="icon-btn"
 							href="{base}/assets/{detail.id}/original?download=true"
@@ -470,6 +472,7 @@
 			{:else if detail}
 				{#key revision}<img
 						class="viewer-media"
+						class:under={fullWanted && fullLoaded}
 						src="{base}/assets/{id}/thumbnail?size=large"
 						alt={detail.originalName}
 						draggable="false"

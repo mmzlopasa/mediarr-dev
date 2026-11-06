@@ -15,6 +15,7 @@ import '../services/trash.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
+import 'share_sheet.dart';
 import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'api_keys_screen.dart';
@@ -208,6 +209,18 @@ class _PhotoGridState extends State<_PhotoGrid> {
                 ),
                 Text('${_selected.length}'),
                 const Spacer(),
+                Consumer(
+                  builder: (context, ref, _) => IconButton(
+                    tooltip: 'Share',
+                    icon: const Icon(Icons.share_outlined),
+                    onPressed: () => shareAssets(
+                      context,
+                      ref,
+                      widget.session,
+                      _selected.toList(),
+                    ),
+                  ),
+                ),
                 ...widget.actions(_selected, () => setState(_selected.clear)),
               ],
             ),

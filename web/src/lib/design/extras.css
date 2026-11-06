@@ -620,17 +620,22 @@ video.viewer-media {
 	background-repeat: no-repeat;
 	pointer-events: none;
 }
+/* The full resolution lies exactly over the large preview: the same box, fitted the same way, so a
+   photo never shows twice at two sizes. Once it is in, the preview under it is hidden. */
 .viewer-full {
 	position: absolute;
 	inset: 0;
-	margin: auto;
-	width: auto;
-	height: auto;
+	width: 100%;
+	height: 100%;
+	max-height: none;
 	opacity: 0;
 	pointer-events: none;
 }
 .viewer-full.on {
 	opacity: 1;
+}
+.viewer-media.under {
+	visibility: hidden;
 }
 .viewer-live {
 	position: absolute;

@@ -30,7 +30,7 @@ test('an external folder is read and browsed, without copying', async ({ page })
 	await page.locator('.folder-tile', { hasText: 'inner' }).click();
 	await expect(page).toHaveURL(/path=e2e-folder%2Finner/);
 	await page.locator('.folder-photo').click();
-	await expect(page.locator('.viewer-media').first()).toBeVisible();
+	await expect(page.locator('.viewer-media:not(.under)').first()).toBeVisible();
 	await page.goBack();
 	await page.getByRole('button', { name: /Vrh|Top/ }).click();
 	await expect(page.locator('.folder-tile', { hasText: 'e2e-folder' })).toBeVisible();

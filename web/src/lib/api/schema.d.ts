@@ -485,6 +485,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/{id}/share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original. */
+        get: operations["getAssetShare"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assets/{id}/motion": {
         parameters: {
             query?: never;
@@ -5084,6 +5101,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAssetShare: {
+        parameters: {
+            query?: {
+                /** @description A JPEG of at most 2048 px, for messages */
+                small?: boolean;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file, with its name in Content-Disposition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
             };
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];

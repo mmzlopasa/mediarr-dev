@@ -161,7 +161,7 @@ test('a public link with a password shows the album, also on a phone', async ({
 	await expect(guest.getByRole('heading', { name: title })).toBeVisible();
 	await expect(guest.locator('.tl-tile')).toHaveCount(1);
 	await guest.locator('.tl-tile').first().click();
-	await expect(guest.locator('.viewer-media').first()).toBeVisible();
+	await expect(guest.locator('.viewer-media:not(.under)').first()).toBeVisible();
 	await expect(guest.getByRole('button', { name: 'Delete' })).toHaveCount(0);
 	await expect(guest.getByRole('button', { name: 'Favorite' })).toHaveCount(0);
 	await expect(guest.getByRole('link', { name: 'Download the original' })).toBeVisible();

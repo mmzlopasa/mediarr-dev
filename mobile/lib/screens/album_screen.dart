@@ -8,6 +8,7 @@ import '../services/session.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
+import 'share_sheet.dart';
 import 'album_sheets.dart';
 import 'timeline_screen.dart';
 import 'upload_screen.dart';
@@ -235,6 +236,12 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         ),
         actions: [
           if (selecting) ...[
+            IconButton(
+              tooltip: 'Share',
+              icon: const Icon(Icons.share_outlined),
+              onPressed: () =>
+                  shareAssets(context, ref, _session, _selected.toList()),
+            ),
             if (rights?.canEdit == true && _selected.length == 1)
               IconButton(
                 tooltip: 'Set as cover',

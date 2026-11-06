@@ -455,6 +455,24 @@ paths:
         "206": { description: Part of the original file }
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/share:
+    get:
+      operationId: getAssetShare
+      summary: >-
+        A file to send to other apps or save on a phone. A photo comes as its original, or, when it has
+        edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes
+        as its original.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: small, in: query, schema: { type: boolean, default: false }, description: "A JPEG of at most 2048 px, for messages" }
+      responses:
+        "200":
+          description: The file, with its name in Content-Disposition
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/assets/{id}/motion:
     get:
       operationId: getAssetMotion

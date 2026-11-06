@@ -2979,3 +2979,41 @@ html[data-theme='light'] .set-chip.ok {
 		grid-template-columns: 1fr;
 	}
 }
+
+/* ---------- Sharing to other apps ---------- */
+.share-wrap {
+	position: relative;
+	display: inline-flex;
+}
+.share-menu {
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 40;
+	display: grid;
+	min-width: 220px;
+	padding: 6px;
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	background: var(--bg-2);
+	box-shadow: var(--float-shadow);
+}
+.share-menu button {
+	display: grid;
+	gap: 2px;
+	padding: 10px 12px;
+	border: 0;
+	border-radius: 10px;
+	background: none;
+	color: var(--ink);
+	text-align: left;
+	cursor: pointer;
+}
+.share-menu button:hover,
+.share-menu button:focus-visible,
+.share-menu button.on {
+	background: var(--bg-3);
+}
+.share-menu small {
+	color: var(--dim);
+}

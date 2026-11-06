@@ -127,7 +127,7 @@ test('the vault hides a photo until the PIN opens it', async ({ page }) => {
 	await page.getByRole('button', { name: 'Unlock' }).click();
 	await expect(page.locator('.tl-tile')).toHaveCount(1);
 	await page.locator('.tl-tile').first().click();
-	await expect(page.locator('.viewer-media').first()).toBeVisible();
+	await expect(page.locator('.viewer-media:not(.under)').first()).toBeVisible();
 	await page.goBack();
 	await select(page);
 	await page.getByRole('button', { name: 'Back to Media' }).click();
@@ -334,7 +334,7 @@ test('search answers, shows its filters and says when something is not found', a
 	await expect(page.getByRole('button', { name: 'Open' })).toHaveCount(1);
 	await expect(page.getByText('2024-01-01 – 2024-12-31')).toBeVisible();
 	await page.getByRole('button', { name: 'Open' }).click();
-	await expect(page.locator('.viewer-media').first()).toBeVisible();
+	await expect(page.locator('.viewer-media:not(.under)').first()).toBeVisible();
 	await page.goBack();
 	await page.goto('/search?q=2001');
 	await expect(page.getByText('Nothing was found.')).toBeVisible();

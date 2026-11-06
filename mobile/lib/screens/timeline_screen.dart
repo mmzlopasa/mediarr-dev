@@ -11,6 +11,7 @@ import '../services/trash.dart';
 import '../services/timeline.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
+import 'share_sheet.dart';
 import '../services/settings.dart';
 import '../timeline/layout.dart';
 import 'app_header.dart';
@@ -192,6 +193,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                       );
                       if (added && mounted) setState(_selected.clear);
                     },
+                  ),
+                  IconButton(
+                    tooltip: 'Share',
+                    icon: const Icon(Icons.share_outlined),
+                    onPressed: () =>
+                        shareAssets(context, ref, session, _selected.toList()),
                   ),
                   IconButton(
                     tooltip: 'Add to favorites',

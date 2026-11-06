@@ -73,6 +73,7 @@ Method | HTTP request | Description
 [**getAsset**](DefaultApi.md#getasset) | **GET** /api/assets/{id} | Read an asset's details and its neighbours on the timeline
 [**getAssetMotion**](DefaultApi.md#getassetmotion) | **GET** /api/assets/{id}/motion | Read the video embedded in an Android Motion Photo
 [**getAssetOriginal**](DefaultApi.md#getassetoriginal) | **GET** /api/assets/{id}/original | Read the unmodified original. Supports Range requests for video.
+[**getAssetShare**](DefaultApi.md#getassetshare) | **GET** /api/assets/{id}/share | A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original.
 [**getAssetSidecar**](DefaultApi.md#getassetsidecar) | **GET** /api/assets/{id}/sidecar | An XMP sidecar with what the file says and what Mediarr knows, for other programs
 [**getAssetThumbnail**](DefaultApi.md#getassetthumbnail) | **GET** /api/assets/{id}/thumbnail | Read a WebP thumbnail
 [**getAssetVideoFile**](DefaultApi.md#getassetvideofile) | **GET** /api/assets/{id}/video/{file} | Read an HLS playlist or segment, or the scrub strip (sprite.jpg)
@@ -2780,6 +2781,49 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **String**|  | 
  **download** | **bool**|  | [optional] [default to false]
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getAssetShare**
+> MultipartFile getAssetShare(id, small)
+
+A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final small = true; // bool | A JPEG of at most 2048 px, for messages
+
+try {
+    final result = api_instance.getAssetShare(id, small);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getAssetShare: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **small** | **bool**| A JPEG of at most 2048 px, for messages | [optional] [default to false]
 
 ### Return type
 

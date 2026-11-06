@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ShareButton from '#lib/design/components/ShareButton.svelte';
 	import { onMount } from 'svelte';
 	import { pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -144,6 +145,7 @@
 
 <Timeline bind:this={timeline} onOpen={open} onCount={(count) => (total = count)}>
 	{#snippet selectionActions(ids, clear)}
+		<ShareButton {ids} onDone={clear} />
 		<AddToAlbum {ids} onDone={clear} />
 		<TagButton {ids} onDone={clear} />
 		<MoveToVault

@@ -281,6 +281,24 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('a photo is offered for sending or saving on the phone', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byType(AssetPicture).first);
+    await waitFor(tester, find.byTooltip('Share'));
+    await tester.tap(find.byTooltip('Share'));
+    await waitFor(tester, find.text('Smaller, for messages'));
+    expect(find.text('Original'), findsOneWidget);
+    expect(find.text('Save to this phone'), findsOneWidget);
+    await tester.tapAt(const Offset(20, 40));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../motion.dart';
 
 import 'package:flutter/material.dart';
@@ -10,6 +12,7 @@ import '../services/trash.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
+import 'share_sheet.dart';
 import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'asset_facts.dart';
@@ -264,6 +267,11 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
                 if (mounted) setState(() => _revision++);
               },
             ),
+          IconButton(
+            tooltip: 'Share',
+            icon: Icon(Platform.isIOS ? Icons.ios_share : Icons.share_outlined),
+            onPressed: () => shareAssets(context, ref, session, [current.id]),
+          ),
           IconButton(
             tooltip: 'Details',
             icon: const Icon(Icons.info_outline),

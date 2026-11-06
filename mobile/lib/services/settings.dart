@@ -111,6 +111,7 @@ class AppSettings {
     this.readOnly = false,
     this.mirrorAlbums = false,
     this.freeSpace = const FreeSpaceRules(),
+    this.shareSmall = false,
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
@@ -132,6 +133,7 @@ class AppSettings {
     ),
     readOnly: json['readOnly'] as bool? ?? false,
     mirrorAlbums: json['mirrorAlbums'] as bool? ?? false,
+    shareSmall: json['shareSmall'] as bool? ?? false,
     freeSpace: FreeSpaceRules.fromJson(
       json['freeSpace'] as Map<String, dynamic>? ?? const {},
     ),
@@ -151,6 +153,9 @@ class AppSettings {
   final bool mirrorAlbums;
   final FreeSpaceRules freeSpace;
 
+  /// Whether photos are sent smaller, for messages, instead of as their originals.
+  final bool shareSmall;
+
   Map<String, dynamic> toJson() => {
     'perRow': perRow,
     'groupByDay': groupByDay,
@@ -165,6 +170,7 @@ class AppSettings {
     'readOnly': readOnly,
     'mirrorAlbums': mirrorAlbums,
     'freeSpace': freeSpace.toJson(),
+    'shareSmall': shareSmall,
   };
 
   AppSettings copyWith({
@@ -181,6 +187,7 @@ class AppSettings {
     bool? readOnly,
     bool? mirrorAlbums,
     FreeSpaceRules? freeSpace,
+    bool? shareSmall,
   }) => AppSettings(
     perRow: perRow ?? this.perRow,
     groupByDay: groupByDay ?? this.groupByDay,
@@ -195,6 +202,7 @@ class AppSettings {
     readOnly: readOnly ?? this.readOnly,
     mirrorAlbums: mirrorAlbums ?? this.mirrorAlbums,
     freeSpace: freeSpace ?? this.freeSpace,
+    shareSmall: shareSmall ?? this.shareSmall,
   );
 }
 

@@ -2722,6 +2722,12 @@ type GetAssetOriginalParams struct {
 	Download *bool `form:"download,omitempty" json:"download,omitempty"`
 }
 
+// GetAssetShareParams defines parameters for GetAssetShare.
+type GetAssetShareParams struct {
+	// Small A JPEG of at most 2048 px, for messages
+	Small *bool `form:"small,omitempty" json:"small,omitempty"`
+}
+
 // GetAssetThumbnailParams defines parameters for GetAssetThumbnail.
 type GetAssetThumbnailParams struct {
 	// Size source is the unedited picture, for its owner
@@ -3275,6 +3281,9 @@ type ServerInterface interface {
 	// GetAssetOriginal Read the unmodified original. Supports Range requests for video.
 	// (GET /api/assets/{id}/original)
 	GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams)
+	// GetAssetShare A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original.
+	// (GET /api/assets/{id}/share)
+	GetAssetShare(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetShareParams)
 	// GetAssetSidecar An XMP sidecar with what the file says and what Mediarr knows, for other programs
 	// (GET /api/assets/{id}/sidecar)
 	GetAssetSidecar(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -4163,6 +4172,12 @@ func (_ Unimplemented) GetAssetMotion(w http.ResponseWriter, r *http.Request, id
 // GetAssetOriginal Read the unmodified original. Supports Range requests for video.
 // (GET /api/assets/{id}/original)
 func (_ Unimplemented) GetAssetOriginal(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetOriginalParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAssetShare A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original.
+// (GET /api/assets/{id}/share)
+func (_ Unimplemented) GetAssetShare(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetShareParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6834,6 +6849,48 @@ func (siw *ServerInterfaceWrapper) GetAssetOriginal(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAssetOriginal(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAssetShare operation middleware
+func (siw *ServerInterfaceWrapper) GetAssetShare(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAssetShareParams
+
+	// ------------- Optional query parameter "small" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "small", r.URL.Query(), &params.Small, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "small"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "small", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAssetShare(w, r, id, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -9810,6 +9867,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/assets/{id}/original", wrapper.GetAssetOriginal)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}/share", wrapper.GetAssetShare)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/assets/{id}/motion", wrapper.GetAssetMotion)
