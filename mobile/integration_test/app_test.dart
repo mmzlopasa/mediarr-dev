@@ -271,6 +271,9 @@ void main() {
 
     await tester.tap(find.byTooltip('Account').first);
     await waitFor(tester, find.text('Settings'));
+    // The account sheet has grown, so on a small screen Settings is below its fold.
+    await tester.ensureVisible(find.text('Settings'));
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('Settings'));
     await waitFor(tester, find.text('Asset viewer'));
     await tester.scrollUntilVisible(
