@@ -15,6 +15,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Maven Central sometimes answers 429 to a runner. Gradle then waits and tries again, longer than
+  # by default, instead of failing the build.
+  GRADLE_OPTS: -Dorg.gradle.internal.repository.max.retries=8 -Dorg.gradle.internal.repository.initial.backoff=2000
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -27,6 +32,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+          # Downloads kept between runs, so fewer of them reach Maven Central at all.
+          cache: gradle
+          cache-dependency-path: mobile/android/**/*.gradle*
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.47.9
@@ -63,6 +71,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+          # Downloads kept between runs, so fewer of them reach Maven Central at all.
+          cache: gradle
+          cache-dependency-path: mobile/android/**/*.gradle*
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.47.9
