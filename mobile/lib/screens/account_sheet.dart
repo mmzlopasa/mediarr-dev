@@ -194,7 +194,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                         session.user.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: serifTitle(26),
+                        style: displayTitle(26),
                       ),
                       Text(
                         session.user.email,

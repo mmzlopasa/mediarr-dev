@@ -526,7 +526,7 @@ class _TileView extends StatelessWidget {
   }
 }
 
-/// The month as the library's title: its name in the serif, its year quieter beside it.
+/// The month as the library's title: its name as a title, its year quieter beside it.
 class _MonthTitle extends StatelessWidget {
   const _MonthTitle(this.label);
 
@@ -550,7 +550,7 @@ class _MonthTitle extends StatelessWidget {
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: serifTitle(32),
+      style: displayTitle(32),
     );
   }
 }

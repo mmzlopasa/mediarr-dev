@@ -82,9 +82,6 @@ flutter:
     - family: Inter Tight
       fonts:
         - asset: assets/fonts/InterTight.ttf
-    - family: Instrument Serif
-      fonts:
-        - asset: assets/fonts/InstrumentSerif-Regular.ttf
     - family: JetBrains Mono
       fonts:
         - asset: assets/fonts/JetBrainsMono.ttf

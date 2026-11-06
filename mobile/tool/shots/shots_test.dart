@@ -89,9 +89,6 @@ void main() {
     HttpOverrides.global = null;
     await tester.runAsync(() async {
       await _font('Inter Tight', ['assets/fonts/InterTight.ttf']);
-      await _font('Instrument Serif', [
-        'assets/fonts/InstrumentSerif-Regular.ttf',
-      ]);
       await _font('JetBrains Mono', ['assets/fonts/JetBrainsMono.ttf']);
       await _font('MaterialIcons', ['$_sdkFonts/MaterialIcons-Regular.otf']);
       await _font('Roboto', ['$_sdkFonts/Roboto-Regular.ttf']);

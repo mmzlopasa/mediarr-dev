@@ -758,7 +758,7 @@ class _InfoSheetState extends State<_InfoSheet> {
                   detail.caption?.trim().isNotEmpty == true
                       ? detail.caption!
                       : formatDateTime(detail.localAt),
-                  style: serifTitle(26),
+                  style: displayTitle(26),
                 ),
                 if (detail.isOwner == true) ...[
                   const SizedBox(height: 8),

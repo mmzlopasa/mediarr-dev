@@ -43,4 +43,75 @@ void main() {
     );
     expect(find.byType(BrandMark), findsNothing);
   });
+
+  testWidgets('the fan opens out of one photo, then the edge keeps waving', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: Center(child: BrandLogo(size: 30))),
+      ),
+    );
+    FanPainter fan() =>
+        tester
+                .widget<CustomPaint>(
+                  find.byWidgetPredicate(
+                    (w) => w is CustomPaint && w.painter is FanPainter,
+                  ),
+                )
+                .painter!
+            as FanPainter;
+    EdgePainter edge() =>
+        tester
+                .widget<CustomPaint>(
+                  find.byWidgetPredicate(
+                    (w) => w is CustomPaint && w.painter is EdgePainter,
+                  ),
+                )
+                .painter!
+            as EdgePainter;
+    expect(fan().open, 0);
+    await tester.pump(brandOpen);
+    expect(fan().open, 1);
+    final before = edge().phase;
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(edge().phase, isNot(before));
+    expect(EdgePainter.swell(3, 0.2), isNot(EdgePainter.swell(9, 0.2)));
+  });
+
+  testWidgets(
+    'with less motion the logo is open at once and the edge is still',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: true),
+            child: Scaffold(body: Center(child: BrandLogo(size: 30))),
+          ),
+        ),
+      );
+      await tester.pump();
+      final fan =
+          tester
+                  .widget<CustomPaint>(
+                    find.byWidgetPredicate(
+                      (w) => w is CustomPaint && w.painter is FanPainter,
+                    ),
+                  )
+                  .painter!
+              as FanPainter;
+      final edge =
+          tester
+                  .widget<CustomPaint>(
+                    find.byWidgetPredicate(
+                      (w) => w is CustomPaint && w.painter is EdgePainter,
+                    ),
+                  )
+                  .painter!
+              as EdgePainter;
+      expect(fan.open, 1);
+      expect(edge.phase, isNull);
+      expect(EdgePainter.swell(4, null), 1);
+    },
+  );
 }

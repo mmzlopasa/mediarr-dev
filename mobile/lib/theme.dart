@@ -55,14 +55,20 @@ const goldGradient = LinearGradient(
   colors: [Palette.buttonGold, Palette.buttonGold],
 );
 
-/// Titles: months, people, albums. Upright, never italic.
-TextStyle serifTitle(double size, {Color? color}) => TextStyle(
-  fontFamily: 'Instrument Serif',
-  fontSize: size,
-  height: 0.95,
-  letterSpacing: -0.4,
-  color: color ?? Palette.ink,
-);
+/// Titles: months, people, albums. The face the logo is set in, heavier and tighter than the
+/// text. [size] is on the old serif's scale, which ran smaller, so it is scaled down to match.
+TextStyle displayTitle(double size, {Color? color}) {
+  final px = size * 0.82;
+  return TextStyle(
+    fontFamily: 'Inter Tight',
+    fontSize: px,
+    height: 1.05,
+    fontWeight: FontWeight.w600,
+    fontVariations: const [FontVariation('wght', 620)],
+    letterSpacing: -0.035 * px,
+    color: color ?? Palette.ink,
+  );
+}
 
 /// Data from the camera and the file, never words.
 TextStyle monoData(double size, {Color? color}) => TextStyle(
@@ -138,7 +144,7 @@ ThemeData _build(bool light) {
     fontFamily: 'Inter Tight',
     splashFactory: NoSplash.splashFactory,
     textTheme: TextTheme(
-      headlineMedium: serifTitle(30),
+      headlineMedium: displayTitle(30),
       titleLarge: _text(20, 500, Palette.ink),
       titleMedium: _text(16, 600, Palette.ink),
       bodyLarge: _text(15, 400, Palette.ink),

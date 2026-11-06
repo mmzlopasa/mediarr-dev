@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Mediarr's mark and name: six photos fanned out, and a gold sun as the dot of the i.
-	// Decorative: whatever contains it carries the accessible name.
+	// Decorative: whatever contains it carries the accessible name. When the page loads, the fan
+	// opens out of one photo and the name follows; the film edge then swells like a wave.
 	const colors = ['#ffc83d', '#ff9f43', '#ff5e57', '#ff7eb6', '#3a55c9', '#2ec4a6'];
 	// Under the name runs a film edge, one tick per month; the gold one sits under the i.
 	const ticks = [10, 16, 7, 22, 12, 18, 9, 14, 20, 8, 15, 11, 17, 6, 13, 19, 9];
@@ -19,7 +20,7 @@
 				rx="4"
 				fill={color}
 				opacity=".92"
-				transform="rotate({i * 60} 32 32)"
+				style="--r: {i * 60}deg"
 			/>
 		{/each}
 	</svg>
@@ -35,6 +36,7 @@
 						height={length * 1.196}
 						rx="3"
 						class:gold={i === gold}
+						style="--i: {i}"
 					/>
 				{/each}
 			</svg>
