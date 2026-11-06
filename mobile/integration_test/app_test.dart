@@ -237,6 +237,29 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('an administrator sees the copies of the backup in the app', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Backup'));
+    await tester.ensureVisible(find.text('Backup'));
+    await tester.tap(find.text('Backup'));
+    await waitFor(tester, find.text('Scheduled backup'));
+    for (final name in ['Mum and dad', 'Ana']) {
+      await tester.scrollUntilVisible(
+        find.text(name),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text(name), findsOneWidget);
+    }
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

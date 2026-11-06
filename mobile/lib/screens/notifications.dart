@@ -29,6 +29,14 @@ String notificationSentence(Notification item) {
   if (kind == NotificationKindEnum.importFailed) {
     return 'The import from ${item.subject} failed';
   }
+  if (kind == NotificationKindEnum.backupLate) {
+    // "to:<name>" is our copy at another Mediarr; "from:<name>" is one kept here.
+    final at = item.subject.indexOf(':');
+    final name = item.subject.substring(at + 1);
+    return item.subject.startsWith('to:')
+        ? 'The copy for $name has not gone out for three days'
+        : 'The copy from $name has not come in for three days';
+  }
   return 'A backup failed: ${item.subject}';
 }
 

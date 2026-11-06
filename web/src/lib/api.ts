@@ -34,6 +34,9 @@ export type BackupRun = components['schemas']['BackupRun'];
 export type ImportEntry = components['schemas']['ImportEntry'];
 export type ImportCreate = components['schemas']['ImportCreate'];
 export type UserImport = components['schemas']['UserImport'];
+export type BackupDestination = components['schemas']['BackupDestination'];
+export type KeepGuest = components['schemas']['KeepGuest'];
+export type KeepInvite = components['schemas']['KeepInvite'];
 export type ImportDetail = components['schemas']['ImportDetail'];
 export type AuthMethods = components['schemas']['AuthMethods'];
 export type OIDCSettings = components['schemas']['OIDCSettings'];
@@ -312,8 +315,32 @@ export const api = {
 	setBackupSettings: (body: BackupSettingsUpdate) =>
 		request<BackupSettings>(fetch, '/api/admin/backup', body, 'PUT'),
 	backupRuns: () => request<BackupRun[]>(fetch, '/api/admin/backup/runs'),
-	startBackupRun: (kind: BackupRun['kind']) =>
-		request<void>(fetch, '/api/admin/backup/runs', { kind }),
+	startBackupRun: (kind: BackupRun['kind'], destinationId?: string) =>
+		request<void>(fetch, '/api/admin/backup/runs', {
+			kind,
+			...(destinationId ? { destinationId } : {})
+		}),
+	backupDestinations: () => request<BackupDestination[]>(fetch, '/api/admin/backup/destinations'),
+	addBackupDestination: (code: string) =>
+		request<BackupDestination>(fetch, '/api/admin/backup/destinations', { code }),
+	removeBackupDestination: (id: string) =>
+		request<void>(fetch, `/api/admin/backup/destinations/${id}`, undefined, 'DELETE'),
+	keepGuests: () => request<KeepGuest[]>(fetch, '/api/admin/keep/guests'),
+	inviteKeepGuest: (body: { name: string; quotaBytes: number; address: string }) =>
+		request<KeepInvite>(fetch, '/api/admin/keep/guests', body),
+	reinviteKeepGuest: (id: string) =>
+		request<KeepInvite>(fetch, `/api/admin/keep/guests/${id}/invite`, {}),
+	updateKeepGuest: (id: string, body: { quotaBytes: number; status: 'active' | 'stopped' }) =>
+		request<KeepGuest>(fetch, `/api/admin/keep/guests/${id}`, body, 'PATCH'),
+	removeKeepGuest: (id: string, name: string) =>
+		request<void>(
+			fetch,
+			`/api/admin/keep/guests/${id}?name=${encodeURIComponent(name)}`,
+			undefined,
+			'DELETE'
+		),
+	restoreKeepDeleted: (id: string) =>
+		request<{ restored: number }>(fetch, `/api/admin/keep/guests/${id}/restore-deleted`, {}),
 	documents: () => request<Documents>(fetch, '/api/documents'),
 	webhooks: () => request<Webhook[]>(fetch, '/api/admin/webhooks'),
 	createWebhook: (url: string, events: Webhook['events']) =>

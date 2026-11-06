@@ -20,6 +20,8 @@ class BackupRun {
     required this.files,
     required this.startedAt,
     this.finishedAt,
+    this.destinationId,
+    this.destinationName,
   });
 
   String id;
@@ -42,6 +44,23 @@ class BackupRun {
   ///
   DateTime? finishedAt;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? destinationId;
+
+  /// The other Mediarr it went to; none for the backup in the settings
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? destinationName;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -52,7 +71,9 @@ class BackupRun {
           other.message == message &&
           other.files == files &&
           other.startedAt == startedAt &&
-          other.finishedAt == finishedAt;
+          other.finishedAt == finishedAt &&
+          other.destinationId == destinationId &&
+          other.destinationName == destinationName;
 
   @override
   int get hashCode =>
@@ -63,11 +84,13 @@ class BackupRun {
       (message.hashCode) +
       (files.hashCode) +
       (startedAt.hashCode) +
-      (finishedAt == null ? 0 : finishedAt!.hashCode);
+      (finishedAt == null ? 0 : finishedAt!.hashCode) +
+      (destinationId == null ? 0 : destinationId!.hashCode) +
+      (destinationName == null ? 0 : destinationName!.hashCode);
 
   @override
   String toString() =>
-      'BackupRun[id=$id, kind=$kind, status=$status, message=$message, files=$files, startedAt=$startedAt, finishedAt=$finishedAt]';
+      'BackupRun[id=$id, kind=$kind, status=$status, message=$message, files=$files, startedAt=$startedAt, finishedAt=$finishedAt, destinationId=$destinationId, destinationName=$destinationName]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -81,6 +104,16 @@ class BackupRun {
       json[r'finishedAt'] = this.finishedAt!.toUtc().toIso8601String();
     } else {
       json[r'finishedAt'] = null;
+    }
+    if (this.destinationId != null) {
+      json[r'destinationId'] = this.destinationId;
+    } else {
+      json[r'destinationId'] = null;
+    }
+    if (this.destinationName != null) {
+      json[r'destinationName'] = this.destinationName;
+    } else {
+      json[r'destinationName'] = null;
     }
     return json;
   }
@@ -113,6 +146,8 @@ class BackupRun {
         files: mapValueOfType<int>(json, r'files')!,
         startedAt: mapDateTime(json, r'startedAt', r'')!,
         finishedAt: mapDateTime(json, r'finishedAt', r''),
+        destinationId: mapValueOfType<String>(json, r'destinationId'),
+        destinationName: mapValueOfType<String>(json, r'destinationName'),
       );
     }
     return null;

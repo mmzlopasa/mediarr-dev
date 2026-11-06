@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ServerSettingsCard from '#lib/organize/ServerSettingsCard.svelte';
 	import EmailSettingsCard from '#lib/organize/EmailSettingsCard.svelte';
+	import KeepCard from '#lib/organize/KeepCard.svelte';
 	import { onMount } from 'svelte';
 	import {
 		api,
@@ -315,6 +316,7 @@
 			{ id: 'import', label: tr('Uvoz', 'Import') },
 			{ id: 'additions', label: tr('Dodaci', 'Additions') },
 			backup && { id: 'backup', label: 'Backup' },
+			{ id: 'keep', label: tr('Kopija kod rođaka', 'A copy at a relative’s') },
 			features.family && { id: 'family', label: tr('Obitelj', 'Family') },
 			features.descriptions && ai && { id: 'ai', label: tr('AI opisi', 'AI descriptions') },
 			features.webhooks && { id: 'webhooks', label: 'Webhooks' },
@@ -672,7 +674,13 @@
 							{#each allRuns ? backupRuns : backupRuns.slice(0, FIRST_RUNS) as run (run.id)}
 								<li data-backup-run={run.kind}>
 									<span class="set-list-t">
-										<b>{run.kind === 'backup' ? 'Backup' : tr('Test vraćanja', 'Restore test')}</b>
+										<b
+											>{run.kind === 'backup'
+												? 'Backup'
+												: tr('Test vraćanja', 'Restore test')}{run.destinationName
+												? ` → ${run.destinationName}`
+												: ''}</b
+										>
 										<small>
 											<em class="set-chip {status(run.status).tone}"
 												>{tr(status(run.status).hr, status(run.status).en)}</em
@@ -706,6 +714,7 @@
 					{/if}
 				</Card>
 			{/if}
+			<KeepCard onChange={loadBackup} />
 			{#if features.family}
 				<Card id="family" title={tr('Obiteljska biblioteka', 'Family library')}>
 					<p class="alb-meta">

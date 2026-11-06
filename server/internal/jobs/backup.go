@@ -18,6 +18,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 
@@ -49,6 +50,8 @@ const (
 // BackupSettings says where a backup goes.
 type BackupSettings struct {
 	Repository, Password, S3Key, S3Secret string
+	// RestUser and RestPassword sign in to another Mediarr that keeps a copy.
+	RestUser, RestPassword string
 }
 
 // ValidRepository allows what needs nothing but restic. Other kinds, such as sftp, can run a command
@@ -77,6 +80,7 @@ func restic(ctx context.Context, settings *BackupSettings, args ...string) ([]by
 		"RESTIC_REPOSITORY="+settings.Repository, "RESTIC_PASSWORD="+settings.Password,
 		"AWS_ACCESS_KEY_ID="+settings.S3Key, "AWS_SECRET_ACCESS_KEY="+settings.S3Secret,
 		"B2_ACCOUNT_ID="+settings.S3Key, "B2_ACCOUNT_KEY="+settings.S3Secret,
+		"RESTIC_REST_USERNAME="+settings.RestUser, "RESTIC_REST_PASSWORD="+settings.RestPassword,
 		"RESTIC_CACHE_DIR="+filepath.Join(os.TempDir(), "restic-cache"))
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
@@ -117,7 +121,11 @@ func RunBackup(ctx context.Context, settings *BackupSettings, databaseURL, libra
 	if err := dumpDatabase(ctx, databaseURL, dump); err != nil {
 		return 0, err
 	}
-	out, err := restic(ctx, settings, "backup", "--json", "--tag", "mediarr", "--exclude", filepath.Join(libraryPath, ".tmp"), libraryPath, dump)
+	// Uploads in progress, the ZIP files of imports and the backups kept for other servers are not
+	// part of this library.
+	out, err := restic(ctx, settings, "backup", "--json", "--tag", "mediarr",
+		"--exclude", filepath.Join(libraryPath, ".tmp"), "--exclude", filepath.Join(libraryPath, ".imports"),
+		"--exclude", filepath.Join(libraryPath, ".keep"), libraryPath, dump)
 	if err != nil {
 		return 0, err
 	}
@@ -282,6 +290,8 @@ func RestoreBackup(ctx context.Context, settings *BackupSettings, databaseURL, c
 type BackupArgs struct {
 	What string    `json:"what"`
 	Run  uuid.UUID `json:"run"`
+	// Destination is another Mediarr that keeps a copy; none means the backup in the settings.
+	Destination uuid.UUID `json:"destination,omitzero"`
 }
 
 // Kind identifies the job in the queue.
@@ -319,6 +329,18 @@ func (w *backupWorker) Work(ctx context.Context, job *river.Job[BackupArgs]) err
 	if err != nil {
 		return err
 	}
+	var destination *db.BackupDestination
+	if job.Args.Destination != uuid.Nil {
+		found, err := w.queries.GetBackupDestination(ctx, toPG(job.Args.Destination))
+		if db.IsNotFound(err) {
+			return river.JobCancel(err)
+		}
+		if err != nil {
+			return err
+		}
+		destination = &found
+		settings = DestinationSettings(destination, settings.Password)
+	}
 	var files int64
 	switch {
 	case settings.Repository == "" || settings.Password == "":
@@ -331,6 +353,15 @@ func (w *backupWorker) Work(ctx context.Context, job *river.Job[BackupArgs]) err
 	status, message := statusDone, ""
 	if err != nil {
 		status, message = statusFailed, truncate(err.Error(), maxToolMessage)
+		if destination != nil {
+			message = destination.Name + ": " + message
+		}
+	}
+	if destination != nil && job.Args.What != backupKindTest {
+		finish := db.FinishDestinationBackupParams{ID: destination.ID, Ok: err == nil, LastError: message}
+		if err := w.queries.FinishDestinationBackup(context.WithoutCancel(ctx), finish); err != nil {
+			return err
+		}
 	}
 	finishErr := w.queries.FinishBackupRun(context.WithoutCancel(ctx), db.FinishBackupRunParams{ID: id, Status: status, Message: message, Files: files})
 	if finishErr != nil {
@@ -383,7 +414,11 @@ func (w *backupTickWorker) Work(ctx context.Context, _ *river.Job[BackupTickArgs
 	if err != nil {
 		return err
 	}
-	if settings.Repository == "" || settings.Password == "" {
+	destinations, err := w.queries.ListBackupDestinations(ctx)
+	if err != nil {
+		return err
+	}
+	if settings.Password == "" || (settings.Repository == "" && len(destinations) == 0) {
 		return nil
 	}
 	hour := 3
@@ -400,11 +435,34 @@ func (w *backupTickWorker) Work(ctx context.Context, _ *river.Job[BackupTickArgs
 		return nil
 	}
 	return pgx.BeginFunc(ctx, w.pool, func(tx pgx.Tx) error {
-		run, err := w.queries.WithTx(tx).CreateBackupRun(ctx, backupKindRun)
+		return QueueBackups(ctx, w.queries.WithTx(tx), w.client(), tx, settings.Repository != "", destinations)
+	})
+}
+
+// QueueBackups starts a backup to the destination in the settings, when there is one, and to each
+// other Mediarr that keeps a copy. They run one after another in the queue of long jobs.
+func QueueBackups(ctx context.Context, q *db.Queries, client *river.Client[pgx.Tx], tx pgx.Tx, primary bool, destinations []db.BackupDestination) error {
+	queue := func(destination pgtype.UUID) error {
+		run, err := q.CreateBackupRun(ctx, db.CreateBackupRunParams{Kind: backupKindRun, DestinationID: destination})
 		if err != nil {
 			return err
 		}
-		_, err = w.client().InsertTx(ctx, tx, BackupArgs{What: backupKindRun, Run: uuid.UUID(run.Bytes)}, nil)
+		args := BackupArgs{What: backupKindRun, Run: uuid.UUID(run.Bytes)}
+		if destination.Valid {
+			args.Destination = destination.Bytes
+		}
+		_, err = client.InsertTx(ctx, tx, args, nil)
 		return err
-	})
+	}
+	if primary {
+		if err := queue(pgtype.UUID{}); err != nil {
+			return err
+		}
+	}
+	for i := range destinations {
+		if err := queue(destinations[i].ID); err != nil {
+			return err
+		}
+	}
+	return nil
 }

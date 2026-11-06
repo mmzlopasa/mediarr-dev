@@ -10,6 +10,7 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**addAlbumAssets**](DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
+[**addBackupDestination**](DefaultApi.md#addbackupdestination) | **POST** /api/admin/backup/destinations | Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
 [**addFamilyMember**](DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
 [**appendUpload**](DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 [**approveDevice**](DefaultApi.md#approvedevice) | **POST** /api/admin/security/devices/{id}/approve | Let this device sign in
@@ -127,6 +128,7 @@ Method | HTTP request | Description
 [**getTrashSummary**](DefaultApi.md#gettrashsummary) | **GET** /api/trash/summary | What emptying the trash would remove
 [**getUploadOffset**](DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 [**getVaultStatus**](DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
+[**inviteKeepGuest**](DefaultApi.md#invitekeepguest) | **POST** /api/admin/keep/guests | Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
 [**listAPIKeys**](DefaultApi.md#listapikeys) | **GET** /api/me/api-keys | The current user's keys, without the keys themselves
 [**listAlbumComments**](DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 [**listAlbumLinks**](DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
@@ -134,6 +136,7 @@ Method | HTTP request | Description
 [**listAssetFaces**](DefaultApi.md#listassetfaces) | **GET** /api/assets/{id}/faces | The faces found in a picture of the signed-in user
 [**listAssets**](DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 [**listAuditLog**](DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
+[**listBackupDestinations**](DefaultApi.md#listbackupdestinations) | **GET** /api/admin/backup/destinations | Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
 [**listBackupRuns**](DefaultApi.md#listbackupruns) | **GET** /api/admin/backup/runs | Backups and tests of bringing one back, the newest first
 [**listCameras**](DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 [**listDirectory**](DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
@@ -141,6 +144,7 @@ Method | HTTP request | Description
 [**listExplorePlaces**](DefaultApi.md#listexploreplaces) | **GET** /api/explore/places | The places in the user's own photos, those with the most first
 [**listFamilyMembersAdmin**](DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 [**listImports**](DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
+[**listKeepGuests**](DefaultApi.md#listkeepguests) | **GET** /api/admin/keep/guests | Other Mediarr servers whose encrypted backup this one keeps
 [**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 [**listMyImports**](DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 [**listMySessions**](DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
@@ -156,15 +160,20 @@ Method | HTTP request | Description
 [**login**](DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 [**logout**](DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 [**mergePeople**](DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
+[**pairKeepGuest**](DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 [**pauseJobQueue**](DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 [**readNotifications**](DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
+[**reinviteKeepGuest**](DefaultApi.md#reinvitekeepguest) | **POST** /api/admin/keep/guests/{id}/invite | A new code for a guest that has not paired yet
 [**removeAlbumAssets**](DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 [**removeAlbumHeart**](DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 [**removeAlbumMember**](DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
+[**removeBackupDestination**](DefaultApi.md#removebackupdestination) | **DELETE** /api/admin/backup/destinations/{id} | Stop sending a copy there. What it keeps stays with it
 [**removeFace**](DefaultApi.md#removeface) | **DELETE** /api/faces/{id} | Say this is not a person. Analysing the picture again does not bring it back
 [**removeFamilyMember**](DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
+[**removeKeepGuest**](DefaultApi.md#removekeepguest) | **DELETE** /api/admin/keep/guests/{id} | Delete a guest and everything kept for it. The name must be given again, as a confirmation
 [**removePartner**](DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
 [**resetPassword**](DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
+[**restoreKeepGuestDeleted**](DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
 [**resumeJobQueue**](DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 [**retryJob**](DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
 [**revokeDeviceKey**](DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
@@ -202,6 +211,7 @@ Method | HTTP request | Description
 [**unlockPublicLink**](DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 [**unlockVault**](DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 [**updateAlbum**](DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
+[**updateKeepGuest**](DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 [**updatePerson**](DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 
 
@@ -236,6 +246,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**BulkResponse**](BulkResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **addBackupDestination**
+> BackupDestination addBackupDestination(backupDestinationCreate)
+
+Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final backupDestinationCreate = BackupDestinationCreate(); // BackupDestinationCreate | 
+
+try {
+    final result = api_instance.addBackupDestination(backupDestinationCreate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->addBackupDestination: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **backupDestinationCreate** | [**BackupDestinationCreate**](BackupDestinationCreate.md)|  | 
+
+### Return type
+
+[**BackupDestination**](BackupDestination.md)
 
 ### Authorization
 
@@ -4955,6 +5006,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **inviteKeepGuest**
+> KeepInvite inviteKeepGuest(keepGuestCreate)
+
+Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final keepGuestCreate = KeepGuestCreate(); // KeepGuestCreate | 
+
+try {
+    final result = api_instance.inviteKeepGuest(keepGuestCreate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->inviteKeepGuest: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **keepGuestCreate** | [**KeepGuestCreate**](KeepGuestCreate.md)|  | 
+
+### Return type
+
+[**KeepInvite**](KeepInvite.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listAPIKeys**
 > List<ApiKey> listAPIKeys()
 
@@ -5244,6 +5336,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listBackupDestinations**
+> List<BackupDestination> listBackupDestinations()
+
+Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listBackupDestinations();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listBackupDestinations: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<BackupDestination>**](BackupDestination.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listBackupRuns**
 > List<BackupRun> listBackupRuns()
 
@@ -5491,6 +5620,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**List<ImportEntry>**](ImportEntry.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listKeepGuests**
+> List<KeepGuest> listKeepGuests()
+
+Other Mediarr servers whose encrypted backup this one keeps
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listKeepGuests();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listKeepGuests: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<KeepGuest>**](KeepGuest.md)
 
 ### Authorization
 
@@ -6073,6 +6239,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **pairKeepGuest**
+> KeepPairing pairKeepGuest(keepPairRequest)
+
+Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final keepPairRequest = KeepPairRequest(); // KeepPairRequest | 
+
+try {
+    final result = api_instance.pairKeepGuest(keepPairRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->pairKeepGuest: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **keepPairRequest** | [**KeepPairRequest**](KeepPairRequest.md)|  | 
+
+### Return type
+
+[**KeepPairing**](KeepPairing.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **pauseJobQueue**
 > pauseJobQueue(queue)
 
@@ -6137,6 +6344,47 @@ This endpoint does not need any parameter.
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **reinviteKeepGuest**
+> KeepInvite reinviteKeepGuest(id)
+
+A new code for a guest that has not paired yet
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.reinviteKeepGuest(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->reinviteKeepGuest: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**KeepInvite**](KeepInvite.md)
 
 ### Authorization
 
@@ -6276,6 +6524,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **removeBackupDestination**
+> removeBackupDestination(id)
+
+Stop sending a copy there. What it keeps stays with it
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.removeBackupDestination(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->removeBackupDestination: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **removeFace**
 > removeFace(id)
 
@@ -6340,6 +6628,48 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **userId** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **removeKeepGuest**
+> removeKeepGuest(id, name)
+
+Delete a guest and everything kept for it. The name must be given again, as a confirmation
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final name = name_example; // String | 
+
+try {
+    api_instance.removeKeepGuest(id, name);
+} catch (e) {
+    print('Exception when calling DefaultApi->removeKeepGuest: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **name** | **String**|  | [optional] 
 
 ### Return type
 
@@ -6432,6 +6762,47 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **restoreKeepGuestDeleted**
+> KeepRestored restoreKeepGuestDeleted(id)
+
+Put back what the guest deleted in the last 90 days, after an attack or a mistake
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.restoreKeepGuestDeleted(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->restoreKeepGuestDeleted: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**KeepRestored**](KeepRestored.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -7931,6 +8302,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Album**](Album.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateKeepGuest**
+> KeepGuest updateKeepGuest(id, keepGuestUpdate)
+
+Change how much a guest may keep here, or stop and start taking its backup
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final keepGuestUpdate = KeepGuestUpdate(); // KeepGuestUpdate | 
+
+try {
+    final result = api_instance.updateKeepGuest(id, keepGuestUpdate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->updateKeepGuest: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **keepGuestUpdate** | [**KeepGuestUpdate**](KeepGuestUpdate.md)|  | 
+
+### Return type
+
+[**KeepGuest**](KeepGuest.md)
 
 ### Authorization
 

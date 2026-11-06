@@ -32,6 +32,8 @@ doc/AssetTagChange.md
 doc/AuditEntry.md
 doc/AuthMethods.md
 doc/AuthStatus.md
+doc/BackupDestination.md
+doc/BackupDestinationCreate.md
 doc/BackupRun.md
 doc/BackupRunRequest.md
 doc/BackupSettings.md
@@ -77,6 +79,13 @@ doc/IntegrityProblem.md
 doc/IntegrityReport.md
 doc/IntegrityRun.md
 doc/JobQueue.md
+doc/KeepGuest.md
+doc/KeepGuestCreate.md
+doc/KeepGuestUpdate.md
+doc/KeepInvite.md
+doc/KeepPairRequest.md
+doc/KeepPairing.md
+doc/KeepRestored.md
 doc/LinkPassword.md
 doc/LoginError.md
 doc/LoginRequest.md
@@ -183,6 +192,8 @@ lib/model/asset_tag_change.dart
 lib/model/audit_entry.dart
 lib/model/auth_methods.dart
 lib/model/auth_status.dart
+lib/model/backup_destination.dart
+lib/model/backup_destination_create.dart
 lib/model/backup_run.dart
 lib/model/backup_run_request.dart
 lib/model/backup_settings.dart
@@ -227,6 +238,13 @@ lib/model/integrity_problem.dart
 lib/model/integrity_report.dart
 lib/model/integrity_run.dart
 lib/model/job_queue.dart
+lib/model/keep_guest.dart
+lib/model/keep_guest_create.dart
+lib/model/keep_guest_update.dart
+lib/model/keep_invite.dart
+lib/model/keep_pair_request.dart
+lib/model/keep_pairing.dart
+lib/model/keep_restored.dart
 lib/model/link_password.dart
 lib/model/login_error.dart
 lib/model/login_request.dart
@@ -293,8 +311,3 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/import_detail_test.dart
-test/import_part_test.dart
-test/import_problem_test.dart
-test/user_import_create_test.dart
-test/user_import_test.dart

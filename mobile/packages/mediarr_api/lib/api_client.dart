@@ -289,6 +289,10 @@ class ApiClient {
           return AuthMethods.fromJson(value);
         case 'AuthStatus':
           return AuthStatus.fromJson(value);
+        case 'BackupDestination':
+          return BackupDestination.fromJson(value);
+        case 'BackupDestinationCreate':
+          return BackupDestinationCreate.fromJson(value);
         case 'BackupRun':
           return BackupRun.fromJson(value);
         case 'BackupRunRequest':
@@ -377,6 +381,20 @@ class ApiClient {
           return IntegrityRun.fromJson(value);
         case 'JobQueue':
           return JobQueue.fromJson(value);
+        case 'KeepGuest':
+          return KeepGuest.fromJson(value);
+        case 'KeepGuestCreate':
+          return KeepGuestCreate.fromJson(value);
+        case 'KeepGuestUpdate':
+          return KeepGuestUpdate.fromJson(value);
+        case 'KeepInvite':
+          return KeepInvite.fromJson(value);
+        case 'KeepPairRequest':
+          return KeepPairRequest.fromJson(value);
+        case 'KeepPairing':
+          return KeepPairing.fromJson(value);
+        case 'KeepRestored':
+          return KeepRestored.fromJson(value);
         case 'LinkPassword':
           return LinkPassword.fromJson(value);
         case 'LoginError':

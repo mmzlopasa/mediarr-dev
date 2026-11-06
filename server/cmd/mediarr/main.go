@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/mediarr-app/mediarr/server/db"
@@ -346,9 +347,23 @@ func restoreBackup(ctx context.Context, cfg config.Config) error {
 	settings := &jobs.BackupSettings{
 		Repository: os.Getenv("RESTIC_REPOSITORY"), Password: os.Getenv("RESTIC_PASSWORD"),
 		S3Key: os.Getenv("AWS_ACCESS_KEY_ID"), S3Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		RestUser: os.Getenv("RESTIC_REST_USERNAME"), RestPassword: os.Getenv("RESTIC_REST_PASSWORD"),
+	}
+	// A copy kept by another Mediarr: its administrator gives a new code, which works once.
+	if text := os.Getenv("MEDIARR_KEEP_CODE"); text != "" {
+		code, err := jobs.ParseKeepCode(text)
+		if err != nil {
+			return err
+		}
+		pairing, err := jobs.PairWithHost(ctx, code)
+		if err != nil {
+			return err
+		}
+		destination := &db.BackupDestination{Address: code.Address, GuestID: pgtype.UUID{Bytes: pairing.GuestID, Valid: true}, Secret: pairing.Secret}
+		settings = jobs.DestinationSettings(destination, settings.Password)
 	}
 	if settings.Repository == "" || settings.Password == "" {
-		return errors.New("set RESTIC_REPOSITORY and RESTIC_PASSWORD")
+		return errors.New("set RESTIC_PASSWORD, and RESTIC_REPOSITORY or MEDIARR_KEEP_CODE")
 	}
 	return jobs.RestoreBackup(ctx, settings, cfg.DatabaseURL, cfg.CachePath)
 }

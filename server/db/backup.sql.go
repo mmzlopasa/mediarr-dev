@@ -12,11 +12,16 @@ import (
 )
 
 const createBackupRun = `-- name: CreateBackupRun :one
-INSERT INTO backup_runs (kind) VALUES ($1) RETURNING id
+INSERT INTO backup_runs (kind, destination_id) VALUES ($1, $2) RETURNING id
 `
 
-func (q *Queries) CreateBackupRun(ctx context.Context, kind string) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createBackupRun, kind)
+type CreateBackupRunParams struct {
+	Kind          string
+	DestinationID pgtype.UUID
+}
+
+func (q *Queries) CreateBackupRun(ctx context.Context, arg CreateBackupRunParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, createBackupRun, arg.Kind, arg.DestinationID)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -43,6 +48,26 @@ func (q *Queries) FinishBackupRun(ctx context.Context, arg FinishBackupRunParams
 	return err
 }
 
+const getBackupRun = `-- name: GetBackupRun :one
+SELECT id, kind, status, message, files, started_at, finished_at, destination_id FROM backup_runs WHERE id = $1
+`
+
+func (q *Queries) GetBackupRun(ctx context.Context, id pgtype.UUID) (BackupRun, error) {
+	row := q.db.QueryRow(ctx, getBackupRun, id)
+	var i BackupRun
+	err := row.Scan(
+		&i.ID,
+		&i.Kind,
+		&i.Status,
+		&i.Message,
+		&i.Files,
+		&i.StartedAt,
+		&i.FinishedAt,
+		&i.DestinationID,
+	)
+	return i, err
+}
+
 const lastSuccessfulBackup = `-- name: LastSuccessfulBackup :one
 SELECT coalesce(max(finished_at), '1970-01-01'::timestamptz)::timestamptz FROM backup_runs WHERE kind = 'backup' AND status = 'done'
 `
@@ -55,18 +80,31 @@ func (q *Queries) LastSuccessfulBackup(ctx context.Context) (pgtype.Timestamptz,
 }
 
 const listBackupRuns = `-- name: ListBackupRuns :many
-SELECT id, kind, status, message, files, started_at, finished_at FROM backup_runs ORDER BY started_at DESC LIMIT 30
+SELECT r.id, r.kind, r.status, r.message, r.files, r.started_at, r.finished_at, r.destination_id, d.name AS destination_name FROM backup_runs r LEFT JOIN backup_destinations d ON d.id = r.destination_id
+ORDER BY r.started_at DESC LIMIT 30
 `
 
-func (q *Queries) ListBackupRuns(ctx context.Context) ([]BackupRun, error) {
+type ListBackupRunsRow struct {
+	ID              pgtype.UUID
+	Kind            string
+	Status          string
+	Message         string
+	Files           int64
+	StartedAt       pgtype.Timestamptz
+	FinishedAt      pgtype.Timestamptz
+	DestinationID   pgtype.UUID
+	DestinationName pgtype.Text
+}
+
+func (q *Queries) ListBackupRuns(ctx context.Context) ([]ListBackupRunsRow, error) {
 	rows, err := q.db.Query(ctx, listBackupRuns)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BackupRun
+	var items []ListBackupRunsRow
 	for rows.Next() {
-		var i BackupRun
+		var i ListBackupRunsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Kind,
@@ -75,6 +113,8 @@ func (q *Queries) ListBackupRuns(ctx context.Context) ([]BackupRun, error) {
 			&i.Files,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.DestinationID,
+			&i.DestinationName,
 		); err != nil {
 			return nil, err
 		}

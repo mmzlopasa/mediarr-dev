@@ -61,6 +61,7 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultApi* | [**addAlbumAssets**](doc//DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
+*DefaultApi* | [**addBackupDestination**](doc//DefaultApi.md#addbackupdestination) | **POST** /api/admin/backup/destinations | Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
 *DefaultApi* | [**addFamilyMember**](doc//DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 *DefaultApi* | [**approveDevice**](doc//DefaultApi.md#approvedevice) | **POST** /api/admin/security/devices/{id}/approve | Let this device sign in
@@ -178,6 +179,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getTrashSummary**](doc//DefaultApi.md#gettrashsummary) | **GET** /api/trash/summary | What emptying the trash would remove
 *DefaultApi* | [**getUploadOffset**](doc//DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 *DefaultApi* | [**getVaultStatus**](doc//DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
+*DefaultApi* | [**inviteKeepGuest**](doc//DefaultApi.md#invitekeepguest) | **POST** /api/admin/keep/guests | Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
 *DefaultApi* | [**listAPIKeys**](doc//DefaultApi.md#listapikeys) | **GET** /api/me/api-keys | The current user's keys, without the keys themselves
 *DefaultApi* | [**listAlbumComments**](doc//DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 *DefaultApi* | [**listAlbumLinks**](doc//DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
@@ -185,6 +187,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listAssetFaces**](doc//DefaultApi.md#listassetfaces) | **GET** /api/assets/{id}/faces | The faces found in a picture of the signed-in user
 *DefaultApi* | [**listAssets**](doc//DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 *DefaultApi* | [**listAuditLog**](doc//DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
+*DefaultApi* | [**listBackupDestinations**](doc//DefaultApi.md#listbackupdestinations) | **GET** /api/admin/backup/destinations | Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
 *DefaultApi* | [**listBackupRuns**](doc//DefaultApi.md#listbackupruns) | **GET** /api/admin/backup/runs | Backups and tests of bringing one back, the newest first
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
@@ -192,6 +195,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listExplorePlaces**](doc//DefaultApi.md#listexploreplaces) | **GET** /api/explore/places | The places in the user's own photos, those with the most first
 *DefaultApi* | [**listFamilyMembersAdmin**](doc//DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 *DefaultApi* | [**listImports**](doc//DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
+*DefaultApi* | [**listKeepGuests**](doc//DefaultApi.md#listkeepguests) | **GET** /api/admin/keep/guests | Other Mediarr servers whose encrypted backup this one keeps
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 *DefaultApi* | [**listMyImports**](doc//DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 *DefaultApi* | [**listMySessions**](doc//DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
@@ -207,15 +211,20 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**login**](doc//DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 *DefaultApi* | [**mergePeople**](doc//DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
+*DefaultApi* | [**pairKeepGuest**](doc//DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 *DefaultApi* | [**pauseJobQueue**](doc//DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 *DefaultApi* | [**readNotifications**](doc//DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
+*DefaultApi* | [**reinviteKeepGuest**](doc//DefaultApi.md#reinvitekeepguest) | **POST** /api/admin/keep/guests/{id}/invite | A new code for a guest that has not paired yet
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 *DefaultApi* | [**removeAlbumHeart**](doc//DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
 *DefaultApi* | [**removeAlbumMember**](doc//DefaultApi.md#removealbummember) | **DELETE** /api/albums/{id}/members/{userId} | End a user's access. The owner can remove anyone, and a member can leave.
+*DefaultApi* | [**removeBackupDestination**](doc//DefaultApi.md#removebackupdestination) | **DELETE** /api/admin/backup/destinations/{id} | Stop sending a copy there. What it keeps stays with it
 *DefaultApi* | [**removeFace**](doc//DefaultApi.md#removeface) | **DELETE** /api/faces/{id} | Say this is not a person. Analysing the picture again does not bring it back
 *DefaultApi* | [**removeFamilyMember**](doc//DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
+*DefaultApi* | [**removeKeepGuest**](doc//DefaultApi.md#removekeepguest) | **DELETE** /api/admin/keep/guests/{id} | Delete a guest and everything kept for it. The name must be given again, as a confirmation
 *DefaultApi* | [**removePartner**](doc//DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
 *DefaultApi* | [**resetPassword**](doc//DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
+*DefaultApi* | [**restoreKeepGuestDeleted**](doc//DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
 *DefaultApi* | [**resumeJobQueue**](doc//DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 *DefaultApi* | [**retryJob**](doc//DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
 *DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
@@ -253,6 +262,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**unlockPublicLink**](doc//DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 *DefaultApi* | [**unlockVault**](doc//DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 *DefaultApi* | [**updateAlbum**](doc//DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
+*DefaultApi* | [**updateKeepGuest**](doc//DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 *DefaultApi* | [**updatePerson**](doc//DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 
 
@@ -288,6 +298,8 @@ Class | Method | HTTP request | Description
  - [AuditEntry](doc//AuditEntry.md)
  - [AuthMethods](doc//AuthMethods.md)
  - [AuthStatus](doc//AuthStatus.md)
+ - [BackupDestination](doc//BackupDestination.md)
+ - [BackupDestinationCreate](doc//BackupDestinationCreate.md)
  - [BackupRun](doc//BackupRun.md)
  - [BackupRunRequest](doc//BackupRunRequest.md)
  - [BackupSettings](doc//BackupSettings.md)
@@ -332,6 +344,13 @@ Class | Method | HTTP request | Description
  - [IntegrityReport](doc//IntegrityReport.md)
  - [IntegrityRun](doc//IntegrityRun.md)
  - [JobQueue](doc//JobQueue.md)
+ - [KeepGuest](doc//KeepGuest.md)
+ - [KeepGuestCreate](doc//KeepGuestCreate.md)
+ - [KeepGuestUpdate](doc//KeepGuestUpdate.md)
+ - [KeepInvite](doc//KeepInvite.md)
+ - [KeepPairRequest](doc//KeepPairRequest.md)
+ - [KeepPairing](doc//KeepPairing.md)
+ - [KeepRestored](doc//KeepRestored.md)
  - [LinkPassword](doc//LinkPassword.md)
  - [LoginError](doc//LoginError.md)
  - [LoginRequest](doc//LoginRequest.md)

@@ -11,6 +11,7 @@ import '../services/session.dart';
 import '../services/settings.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
+import 'backup_screen.dart';
 import 'free_space_screen.dart';
 import 'imports_screen.dart';
 import 'organize_screens.dart';
@@ -307,6 +308,12 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             title: const Text('Import'),
             onTap: () => _push(const ImportsScreen()),
           ),
+          if (session.user.isAdmin)
+            ListTile(
+              leading: Icon(Icons.backup_outlined, color: Palette.dim),
+              title: const Text('Backup'),
+              onTap: () => _push(const BackupScreen()),
+            ),
           ListTile(
             leading: Icon(Icons.settings_outlined, color: Palette.dim),
             title: const Text('Settings'),

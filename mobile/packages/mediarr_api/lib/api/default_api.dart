@@ -83,6 +83,66 @@ class DefaultApi {
     return null;
   }
 
+  /// Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [BackupDestinationCreate] backupDestinationCreate (required):
+  Future<Response> addBackupDestinationWithHttpInfo(
+    BackupDestinationCreate backupDestinationCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/backup/destinations';
+
+    // ignore: prefer_final_locals
+    Object? postBody = backupDestinationCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
+  ///
+  /// Parameters:
+  ///
+  /// * [BackupDestinationCreate] backupDestinationCreate (required):
+  Future<BackupDestination?> addBackupDestination(
+    BackupDestinationCreate backupDestinationCreate,
+  ) async {
+    final response = await addBackupDestinationWithHttpInfo(
+      backupDestinationCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BackupDestination',
+      ) as BackupDestination;
+    }
+    return null;
+  }
+
   /// Add someone to the family library
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6664,6 +6724,66 @@ class DefaultApi {
     return null;
   }
 
+  /// Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [KeepGuestCreate] keepGuestCreate (required):
+  Future<Response> inviteKeepGuestWithHttpInfo(
+    KeepGuestCreate keepGuestCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/keep/guests';
+
+    // ignore: prefer_final_locals
+    Object? postBody = keepGuestCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
+  ///
+  /// Parameters:
+  ///
+  /// * [KeepGuestCreate] keepGuestCreate (required):
+  Future<KeepInvite?> inviteKeepGuest(
+    KeepGuestCreate keepGuestCreate,
+  ) async {
+    final response = await inviteKeepGuestWithHttpInfo(
+      keepGuestCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'KeepInvite',
+      ) as KeepInvite;
+    }
+    return null;
+  }
+
   /// The current user's keys, without the keys themselves
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7119,6 +7239,53 @@ class DefaultApi {
     return null;
   }
 
+  /// Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listBackupDestinationsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/backup/destinations';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
+  Future<List<BackupDestination>?> listBackupDestinations() async {
+    final response = await listBackupDestinationsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<BackupDestination>') as List)
+          .cast<BackupDestination>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// Backups and tests of bringing one back, the newest first
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7441,6 +7608,53 @@ class DefaultApi {
       return (await apiClient.deserializeAsync(
               responseBody, 'List<ImportEntry>') as List)
           .cast<ImportEntry>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// Other Mediarr servers whose encrypted backup this one keeps
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listKeepGuestsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/keep/guests';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Other Mediarr servers whose encrypted backup this one keeps
+  Future<List<KeepGuest>?> listKeepGuests() async {
+    final response = await listKeepGuestsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<KeepGuest>')
+              as List)
+          .cast<KeepGuest>()
           .toList(growable: false);
     }
     return null;
@@ -8186,6 +8400,66 @@ class DefaultApi {
     }
   }
 
+  /// Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [KeepPairRequest] keepPairRequest (required):
+  Future<Response> pairKeepGuestWithHttpInfo(
+    KeepPairRequest keepPairRequest,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/keep/pair';
+
+    // ignore: prefer_final_locals
+    Object? postBody = keepPairRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
+  ///
+  /// Parameters:
+  ///
+  /// * [KeepPairRequest] keepPairRequest (required):
+  Future<KeepPairing?> pairKeepGuest(
+    KeepPairRequest keepPairRequest,
+  ) async {
+    final response = await pairKeepGuestWithHttpInfo(
+      keepPairRequest,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'KeepPairing',
+      ) as KeepPairing;
+    }
+    return null;
+  }
+
   /// Stop starting jobs from this queue
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8269,6 +8543,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// A new code for a guest that has not paired yet
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> reinviteKeepGuestWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/keep/guests/{id}/invite'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// A new code for a guest that has not paired yet
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<KeepInvite?> reinviteKeepGuest(
+    String id,
+  ) async {
+    final response = await reinviteKeepGuestWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'KeepInvite',
+      ) as KeepInvite;
+    }
+    return null;
   }
 
   /// Remove assets from an album. A contributor can remove only what they added.
@@ -8454,6 +8788,55 @@ class DefaultApi {
     }
   }
 
+  /// Stop sending a copy there. What it keeps stays with it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> removeBackupDestinationWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/backup/destinations/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop sending a copy there. What it keeps stays with it
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> removeBackupDestination(
+    String id,
+  ) async {
+    final response = await removeBackupDestinationWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Say this is not a person. Analysing the picture again does not bring it back
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8546,6 +8929,66 @@ class DefaultApi {
   ) async {
     final response = await removeFamilyMemberWithHttpInfo(
       userId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Delete a guest and everything kept for it. The name must be given again, as a confirmation
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] name:
+  Future<Response> removeKeepGuestWithHttpInfo(
+    String id, {
+    String? name,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/keep/guests/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (name != null) {
+      queryParams.addAll(_queryParams('', 'name', name));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Delete a guest and everything kept for it. The name must be given again, as a confirmation
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] name:
+  Future<void> removeKeepGuest(
+    String id, {
+    String? name,
+  }) async {
+    final response = await removeKeepGuestWithHttpInfo(
+      id,
+      name: name,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -8648,6 +9091,67 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Put back what the guest deleted in the last 90 days, after an attack or a mistake
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> restoreKeepGuestDeletedWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/admin/keep/guests/{id}/restore-deleted'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Put back what the guest deleted in the last 90 days, after an attack or a mistake
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<KeepRestored?> restoreKeepGuestDeleted(
+    String id,
+  ) async {
+    final response = await restoreKeepGuestDeletedWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'KeepRestored',
+      ) as KeepRestored;
+    }
+    return null;
   }
 
   /// Continue a paused queue
@@ -10686,6 +11190,73 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'Album',
       ) as Album;
+    }
+    return null;
+  }
+
+  /// Change how much a guest may keep here, or stop and start taking its backup
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [KeepGuestUpdate] keepGuestUpdate (required):
+  Future<Response> updateKeepGuestWithHttpInfo(
+    String id,
+    KeepGuestUpdate keepGuestUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/keep/guests/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = keepGuestUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PATCH',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Change how much a guest may keep here, or stop and start taking its backup
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [KeepGuestUpdate] keepGuestUpdate (required):
+  Future<KeepGuest?> updateKeepGuest(
+    String id,
+    KeepGuestUpdate keepGuestUpdate,
+  ) async {
+    final response = await updateKeepGuestWithHttpInfo(
+      id,
+      keepGuestUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'KeepGuest',
+      ) as KeepGuest;
     }
     return null;
   }

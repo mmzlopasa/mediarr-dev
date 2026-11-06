@@ -15,6 +15,8 @@ var publicRoutes = []*regexp.Regexp{
 	regexp.MustCompile(`^/api/health$`),
 	regexp.MustCompile(`^/api/auth/(status|login|setup|logout|methods|oidc/.+|passkey/.+|password/.+)$`),
 	regexp.MustCompile(`^/api/public/`),
+	// Another Mediarr pairs with the token of its invitation, which is the proof.
+	regexp.MustCompile(`^/api/keep/pair$`),
 }
 
 var routeParam = regexp.MustCompile(`\{[^}]+\}`)

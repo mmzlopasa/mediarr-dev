@@ -75,7 +75,7 @@
 	}
 
 	const failure = (item: Notification) =>
-		item.kind === 'import_failed' || item.kind === 'backup_failed';
+		item.kind === 'import_failed' || item.kind === 'backup_failed' || item.kind === 'backup_late';
 
 	function icon(item: Notification): IconName {
 		switch (item.kind) {
@@ -107,6 +107,22 @@
 				);
 			case 'backup_failed':
 				return tr('Sigurnosna kopija nije uspjela', 'A backup failed');
+			case 'backup_late': {
+				// "to:<name>" is our copy at another Mediarr; "from:<name>" is one kept here.
+				const [way, name] = [
+					item.subject.split(':')[0],
+					item.subject.slice(item.subject.indexOf(':') + 1)
+				];
+				return way === 'to'
+					? tr(
+							`Kopija za ${name} nije poslana već tri dana`,
+							`The copy for ${name} has not gone out for three days`
+						)
+					: tr(
+							`Kopija od ${name} nije stigla već tri dana`,
+							`The copy from ${name} has not come in for three days`
+						);
+			}
 		}
 	}
 

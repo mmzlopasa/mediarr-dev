@@ -162,14 +162,28 @@ type AuditLog struct {
 	Ip        string
 }
 
+type BackupDestination struct {
+	ID            pgtype.UUID
+	Name          string
+	Address       string
+	GuestID       pgtype.UUID
+	Secret        string
+	QuotaBytes    int64
+	LastSuccessAt pgtype.Timestamptz
+	LastError     string
+	WarnedAt      pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+}
+
 type BackupRun struct {
-	ID         pgtype.UUID
-	Kind       string
-	Status     string
-	Message    string
-	Files      int64
-	StartedAt  pgtype.Timestamptz
-	FinishedAt pgtype.Timestamptz
+	ID            pgtype.UUID
+	Kind          string
+	Status        string
+	Message       string
+	Files         int64
+	StartedAt     pgtype.Timestamptz
+	FinishedAt    pgtype.Timestamptz
+	DestinationID pgtype.UUID
 }
 
 type Exif struct {
@@ -274,6 +288,21 @@ type ImportProblem struct {
 	Name      string
 	Reason    string
 	CreatedAt pgtype.Timestamptz
+}
+
+type KeepGuest struct {
+	ID              pgtype.UUID
+	Name            string
+	Status          string
+	QuotaBytes      int64
+	Address         string
+	InviteHash      []byte
+	InviteExpiresAt pgtype.Timestamptz
+	SecretHash      []byte
+	LastSeenAt      pgtype.Timestamptz
+	LastBackupAt    pgtype.Timestamptz
+	WarnedAt        pgtype.Timestamptz
+	CreatedAt       pgtype.Timestamptz
 }
 
 type Library struct {

@@ -2392,6 +2392,128 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/backup/destinations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings */
+        get: operations["listBackupDestinations"];
+        put?: never;
+        /** Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup */
+        post: operations["addBackupDestination"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/backup/destinations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Stop sending a copy there. What it keeps stays with it */
+        delete: operations["removeBackupDestination"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/keep/guests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Other Mediarr servers whose encrypted backup this one keeps */
+        get: operations["listKeepGuests"];
+        put?: never;
+        /** Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days */
+        post: operations["inviteKeepGuest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/keep/guests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a guest and everything kept for it. The name must be given again, as a confirmation */
+        delete: operations["removeKeepGuest"];
+        options?: never;
+        head?: never;
+        /** Change how much a guest may keep here, or stop and start taking its backup */
+        patch: operations["updateKeepGuest"];
+        trace?: never;
+    };
+    "/api/admin/keep/guests/{id}/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A new code for a guest that has not paired yet */
+        post: operations["reinviteKeepGuest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/keep/guests/{id}/restore-deleted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Put back what the guest deleted in the last 90 days, after an attack or a mistake */
+        post: operations["restoreKeepGuestDeleted"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/keep/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here. */
+        post: operations["pairKeepGuest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/webhooks": {
         parameters: {
             query?: never;
@@ -3136,9 +3258,94 @@ export interface components {
             s3Key?: string;
             s3Secret?: string;
         };
+        KeepGuest: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            status: "invited" | "active" | "stopped";
+            /** Format: int64 */
+            quotaBytes: number;
+            /**
+             * Format: int64
+             * @description Everything kept, what it deleted included
+             */
+            usedBytes: number;
+            /**
+             * Format: int64
+             * @description What it deleted, kept for 90 days
+             */
+            deletedBytes: number;
+            /** @description The address of this server the guest was told */
+            address: string;
+            /** Format: date-time */
+            inviteExpiresAt?: string;
+            /** Format: date-time */
+            lastBackupAt?: string;
+            /** Format: date-time */
+            lastSeenAt?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        KeepGuestCreate: {
+            name: string;
+            /** Format: int64 */
+            quotaBytes: number;
+            /** @description Where the guest reaches this server, as http(s)://host[:port] */
+            address: string;
+        };
+        KeepGuestUpdate: {
+            /** Format: int64 */
+            quotaBytes: number;
+            /** @enum {string} */
+            status: "active" | "stopped";
+        };
+        KeepInvite: {
+            guest: components["schemas"]["KeepGuest"];
+            /** @description Given to the guest's administrator. Shown once */
+            code: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        KeepRestored: {
+            restored: number;
+        };
+        KeepPairRequest: {
+            token: string;
+        };
+        KeepPairing: {
+            /** Format: uuid */
+            guestId: string;
+            secret: string;
+            name: string;
+            /** Format: int64 */
+            quotaBytes: number;
+        };
+        BackupDestination: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            address: string;
+            /** Format: int64 */
+            quotaBytes: number;
+            /** Format: date-time */
+            lastSuccessAt?: string;
+            lastError: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        BackupDestinationCreate: {
+            /** @description The code from the other server's administrator */
+            code: string;
+        };
         BackupRunRequest: {
             /** @enum {string} */
             kind: "backup" | "restore_test";
+            /**
+             * Format: uuid
+             * @description Only this copy at another Mediarr. Without it, a backup goes everywhere and a test uses the backup in the settings
+             */
+            destinationId?: string;
         };
         BackupRun: {
             /** Format: uuid */
@@ -3154,6 +3361,10 @@ export interface components {
             startedAt: string;
             /** Format: date-time */
             finishedAt?: string;
+            /** Format: uuid */
+            destinationId?: string;
+            /** @description The other Mediarr it went to; none for the backup in the settings */
+            destinationName?: string;
         };
         Documents: {
             /** @description The administrator has turned this on */
@@ -3700,7 +3911,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "album_shared" | "import_done" | "import_failed" | "backup_failed";
+            kind: "album_shared" | "import_done" | "import_failed" | "backup_failed" | "backup_late";
             /** @description What it is about: an album's name, an import's source, an error */
             subject: string;
             /** @description The album it opens, if any */
@@ -8033,6 +8244,262 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    listBackupDestinations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The destinations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupDestination"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    addBackupDestination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BackupDestinationCreate"];
+            };
+        };
+        responses: {
+            /** @description Paired */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupDestination"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            502: components["responses"]["Error"];
+        };
+    };
+    removeBackupDestination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listKeepGuests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The guests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeepGuest"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    inviteKeepGuest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeepGuestCreate"];
+            };
+        };
+        responses: {
+            /** @description Invited */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeepInvite"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    removeKeepGuest: {
+        parameters: {
+            query?: {
+                name?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    updateKeepGuest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeepGuestUpdate"];
+            };
+        };
+        responses: {
+            /** @description Changed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeepGuest"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    reinviteKeepGuest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The new code */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeepInvite"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    restoreKeepGuestDeleted: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description How many files came back */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeepRestored"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    pairKeepGuest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeepPairRequest"];
+            };
+        };
+        responses: {
+            /** @description Paired */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KeepPairing"];
+                };
+            };
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     listWebhooks: {

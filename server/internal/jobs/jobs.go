@@ -505,6 +505,7 @@ func (w *cleanupWorker) Work(ctx context.Context, _ *river.Job[CleanupArgs]) err
 	if err := RemoveStaleImports(ctx, w.queries, w.opts.LibraryPath); err != nil {
 		return err
 	}
+	keepHousekeeping(ctx, w.queries, w.opts.LibraryPath)
 	return removeStaleUploads(storage.TmpDir(w.opts.LibraryPath), time.Now().Add(-staleUploadAge))
 }
 

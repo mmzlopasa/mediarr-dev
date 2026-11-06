@@ -2838,8 +2838,9 @@ html[data-theme='light'] .set-chip.ok {
 	font-weight: 500;
 }
 @media (max-width: 560px) {
-	.set-list > li:has(.imp-acts) {
-		flex-wrap: wrap;
+	/* On a phone the buttons go under the text, which then keeps the whole width. */
+	.set-list > li:not(:has(.set-list-ic)):has(.imp-acts) {
+		grid-template-columns: minmax(0, 1fr);
 	}
 	.imp-acts {
 		justify-content: flex-start;
@@ -2855,4 +2856,75 @@ html[data-theme='light'] .set-chip.ok {
 	width: 26px;
 	height: 26px;
 	color: var(--acc);
+}
+
+/* ---------- A copy at a relative's: pairing two Mediarr servers ---------- */
+.keep-code {
+	display: grid;
+	gap: 6px;
+	font-size: 0.86rem;
+	color: var(--dim);
+}
+.keep-code textarea {
+	min-height: 72px;
+	resize: vertical;
+	font: 400 0.82rem/1.45 var(--mono);
+	word-break: break-all;
+}
+.keep-err {
+	color: var(--err);
+}
+.keep-inline {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	margin-top: 8px;
+}
+.keep-inline > :first-child {
+	flex: 1;
+	min-width: 0;
+}
+.keep-invite {
+	display: grid;
+	grid-template-columns: 168px 1fr;
+	gap: 18px;
+	align-items: start;
+	margin: 12px 0;
+	padding: 16px;
+	border: 1px solid var(--acc);
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--acc-fill) 14%, var(--bg-2));
+}
+.keep-qr {
+	padding: 8px;
+	border-radius: 10px;
+	background: #fff;
+	line-height: 0;
+}
+.keep-qr :global(svg),
+.keep-qr svg {
+	width: 100%;
+	height: auto;
+}
+.keep-invite-t {
+	display: grid;
+	gap: 8px;
+	min-width: 0;
+}
+.keep-codebox {
+	display: block;
+	padding: 10px 12px;
+	border-radius: 8px;
+	background: var(--bg-3);
+	font: 400 0.78rem/1.45 var(--mono);
+	word-break: break-all;
+	user-select: all;
+}
+@media (max-width: 560px) {
+	.keep-invite {
+		grid-template-columns: 1fr;
+	}
+	.keep-qr {
+		max-width: 220px;
+	}
 }

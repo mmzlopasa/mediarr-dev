@@ -48,7 +48,7 @@ class FakeServer {
     'id': userId,
     'email': email,
     'name': 'Owner',
-    'isAdmin': false,
+    'isAdmin': true,
     'totpEnabled': false,
   };
 
@@ -133,6 +133,53 @@ class FakeServer {
     }
     if (path == '/api/memories') {
       await _json(request, 200, []);
+      return;
+    }
+    if (path == '/api/features') {
+      await _json(request, 200, {'backup': true});
+      return;
+    }
+    if (path == '/api/admin/backup') {
+      await _json(request, 200, {
+        'repository': '',
+        'hour': 3,
+        'hasPassword': true,
+        'hasS3Key': false,
+        'localFolder': '/backup',
+      });
+      return;
+    }
+    if (path == '/api/admin/backup/runs') {
+      await _json(request, 200, []);
+      return;
+    }
+    if (path == '/api/admin/backup/destinations') {
+      await _json(request, 200, [
+        {
+          'id': '00000000-0000-0000-0000-00000000000b',
+          'name': 'Mum and dad',
+          'address': 'https://keep.example.com',
+          'quotaBytes': 107374182400,
+          'lastError': '',
+          'lastSuccessAt': '2026-11-06T03:10:00Z',
+          'createdAt': '2026-11-01T10:00:00Z',
+        },
+      ]);
+      return;
+    }
+    if (path == '/api/admin/keep/guests') {
+      await _json(request, 200, [
+        {
+          'id': '00000000-0000-0000-0000-00000000000c',
+          'name': 'Ana',
+          'status': 'active',
+          'quotaBytes': 53687091200,
+          'usedBytes': 1073741824,
+          'deletedBytes': 0,
+          'address': 'https://photos.example.com',
+          'createdAt': '2026-11-01T10:00:00Z',
+        },
+      ]);
       return;
     }
     if (path == '/api/imports') {

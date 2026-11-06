@@ -14,25 +14,44 @@ class BackupRunRequest {
   /// Returns a new [BackupRunRequest] instance.
   BackupRunRequest({
     required this.kind,
+    this.destinationId,
   });
 
   BackupRunRequestKindEnum kind;
 
+  /// Only this copy at another Mediarr. Without it, a backup goes everywhere and a test uses the backup in the settings
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? destinationId;
+
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is BackupRunRequest && other.kind == kind;
+      identical(this, other) ||
+      other is BackupRunRequest &&
+          other.kind == kind &&
+          other.destinationId == destinationId;
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (kind.hashCode);
+      (kind.hashCode) + (destinationId == null ? 0 : destinationId!.hashCode);
 
   @override
-  String toString() => 'BackupRunRequest[kind=$kind]';
+  String toString() =>
+      'BackupRunRequest[kind=$kind, destinationId=$destinationId]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'kind'] = this.kind;
+    if (this.destinationId != null) {
+      json[r'destinationId'] = this.destinationId;
+    } else {
+      json[r'destinationId'] = null;
+    }
     return json;
   }
 
@@ -58,6 +77,7 @@ class BackupRunRequest {
 
       return BackupRunRequest(
         kind: BackupRunRequestKindEnum.fromJson(json[r'kind'])!,
+        destinationId: mapValueOfType<String>(json, r'destinationId'),
       );
     }
     return null;

@@ -86,6 +86,8 @@
 	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Mediarr uses Face ID to open your vault.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Mediarr uses the camera only to scan the QR code of another Mediarr that keeps a copy of your backup.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mediarr shows your photos and videos here so you can choose which ones to upload to your own server.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

@@ -72,6 +72,9 @@ type apiServer struct {
 	queries           *db.Queries
 	blockedLogged     *auth.Limiter
 	resetLimiter      *auth.Limiter
+	keepFailures      *auth.Limiter
+	keepPairs         *auth.Limiter
+	keep              *keepState
 	security          atomic.Pointer[securityRules]
 	userLimiter       *auth.Limiter
 	ipLimiter         *auth.Limiter
@@ -107,6 +110,9 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		guestBytes:        newByteBudget(),
 		blockedLogged:     auth.NewLimiter(1, time.Minute),
 		resetLimiter:      auth.NewLimiter(5, time.Hour),
+		keepFailures:      auth.NewLimiter(keepAuthFailures, loginWindow),
+		keepPairs:         auth.NewLimiter(keepPairFailures, time.Hour),
+		keep:              newKeepState(),
 	}
 	if deps.CheckUpdates && Version != "dev" {
 		go server.watchUpdates()
@@ -141,7 +147,28 @@ func NewHandler(deps Deps) (http.Handler, error) {
 	r.NotFound(notFound)
 	r.Get("/metrics", server.serveMetrics)
 	api.HandlerFromMux(server, r)
-	return r, nil
+	if server.queries == nil {
+		return r, nil
+	}
+	// Other servers' backups come in apart from the API: restic sends files, not JSON, many times a
+	// minute, and must not reach anything but its own repository.
+	keep := trustProxies(deps.ProxyHops)(server.enforceIPAllowlist(http.HandlerFunc(server.serveKeep)))
+	return &keepFront{Mux: r, keep: keep}, nil
+}
+
+// keepFront sends restic to the backups kept here and everything else to the API, whose routes it
+// still lists.
+type keepFront struct {
+	*chi.Mux
+	keep http.Handler
+}
+
+func (f *keepFront) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if isKeepRepo(r.URL.Path) {
+		f.keep.ServeHTTP(w, r)
+		return
+	}
+	f.Mux.ServeHTTP(w, r)
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {

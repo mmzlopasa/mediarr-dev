@@ -15,6 +15,7 @@ Without it, a backup cannot be opened by anyone. If you lose the server, you nee
 - **A folder or disk.** Add `BACKUP_PATH=/path/to/backups` to `.env` and run `docker compose up -d`. The user set by `PUID` must be allowed to write there.
 - **S3 or S3-compatible storage.**
 - **Backblaze B2.**
+- **Another Mediarr**, a relative's or a friend's, as a copy besides the destination above. See [A copy at a relative's](/administration/keep).
 
 Old backups are thinned out by themselves. **Test bringing it back** really restores the newest backup into a temporary place and checks it, so it needs free disk space about the size of your library.
 

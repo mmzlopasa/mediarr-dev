@@ -2207,6 +2207,162 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/admin/backup/destinations:
+    get:
+      operationId: listBackupDestinations
+      summary: Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
+      responses:
+        "200":
+          description: The destinations
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/BackupDestination" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: addBackupDestination
+      summary: Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BackupDestinationCreate" }
+      responses:
+        "201":
+          description: Paired
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupDestination" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+  /api/admin/backup/destinations/{id}:
+    delete:
+      operationId: removeBackupDestination
+      summary: Stop sending a copy there. What it keeps stays with it
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/keep/guests:
+    get:
+      operationId: listKeepGuests
+      summary: Other Mediarr servers whose encrypted backup this one keeps
+      responses:
+        "200":
+          description: The guests
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/KeepGuest" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: inviteKeepGuest
+      summary: Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/KeepGuestCreate" }
+      responses:
+        "201":
+          description: Invited
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KeepInvite" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/keep/guests/{id}:
+    patch:
+      operationId: updateKeepGuest
+      summary: Change how much a guest may keep here, or stop and start taking its backup
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/KeepGuestUpdate" }
+      responses:
+        "200":
+          description: Changed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KeepGuest" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: removeKeepGuest
+      summary: Delete a guest and everything kept for it. The name must be given again, as a confirmation
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: name, in: query, required: false, schema: { type: string } }
+      responses:
+        "204": { description: Removed }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/keep/guests/{id}/invite:
+    post:
+      operationId: reinviteKeepGuest
+      summary: A new code for a guest that has not paired yet
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The new code
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KeepInvite" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/admin/keep/guests/{id}/restore-deleted:
+    post:
+      operationId: restoreKeepGuestDeleted
+      summary: Put back what the guest deleted in the last 90 days, after an attack or a mistake
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: How many files came back
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KeepRestored" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/keep/pair:
+    post:
+      operationId: pairKeepGuest
+      summary: >-
+        Another Mediarr server pairs with the token of its invitation and gets its credentials, once.
+        After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/,
+        with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/KeepPairRequest" }
+      responses:
+        "200":
+          description: Paired
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KeepPairing" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/admin/webhooks:
     get:
       operationId: listWebhooks
@@ -2909,11 +3065,81 @@ components:
         password: { type: string }
         s3Key: { type: string }
         s3Secret: { type: string }
+    KeepGuest:
+      type: object
+      required: [id, name, status, quotaBytes, usedBytes, deletedBytes, address, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        status: { type: string, enum: [invited, active, stopped] }
+        quotaBytes: { type: integer, format: int64 }
+        usedBytes: { type: integer, format: int64, description: "Everything kept, what it deleted included" }
+        deletedBytes: { type: integer, format: int64, description: "What it deleted, kept for 90 days" }
+        address: { type: string, description: "The address of this server the guest was told" }
+        inviteExpiresAt: { type: string, format: date-time }
+        lastBackupAt: { type: string, format: date-time }
+        lastSeenAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    KeepGuestCreate:
+      type: object
+      required: [name, quotaBytes, address]
+      properties:
+        name: { type: string }
+        quotaBytes: { type: integer, format: int64 }
+        address: { type: string, description: "Where the guest reaches this server, as http(s)://host[:port]" }
+    KeepGuestUpdate:
+      type: object
+      required: [quotaBytes, status]
+      properties:
+        quotaBytes: { type: integer, format: int64 }
+        status: { type: string, enum: [active, stopped] }
+    KeepInvite:
+      type: object
+      required: [guest, code, expiresAt]
+      properties:
+        guest: { $ref: "#/components/schemas/KeepGuest" }
+        code: { type: string, description: "Given to the guest's administrator. Shown once" }
+        expiresAt: { type: string, format: date-time }
+    KeepRestored:
+      type: object
+      required: [restored]
+      properties:
+        restored: { type: integer }
+    KeepPairRequest:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    KeepPairing:
+      type: object
+      required: [guestId, secret, name, quotaBytes]
+      properties:
+        guestId: { type: string, format: uuid }
+        secret: { type: string }
+        name: { type: string }
+        quotaBytes: { type: integer, format: int64 }
+    BackupDestination:
+      type: object
+      required: [id, name, address, quotaBytes, lastError, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        address: { type: string }
+        quotaBytes: { type: integer, format: int64 }
+        lastSuccessAt: { type: string, format: date-time }
+        lastError: { type: string }
+        createdAt: { type: string, format: date-time }
+    BackupDestinationCreate:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string, description: "The code from the other server's administrator" }
     BackupRunRequest:
       type: object
       required: [kind]
       properties:
         kind: { type: string, enum: [backup, restore_test] }
+        destinationId: { type: string, format: uuid, description: "Only this copy at another Mediarr. Without it, a backup goes everywhere and a test uses the backup in the settings" }
     BackupRun:
       type: object
       required: [id, kind, status, message, files, startedAt]
@@ -2925,6 +3151,8 @@ components:
         files: { type: integer, format: int64 }
         startedAt: { type: string, format: date-time }
         finishedAt: { type: string, format: date-time }
+        destinationId: { type: string, format: uuid }
+        destinationName: { type: string, description: "The other Mediarr it went to; none for the backup in the settings" }
     Documents:
       type: object
       required: [enabled, analysisOn, items]
@@ -3513,7 +3741,7 @@ components:
       required: [id, kind, subject, ref, createdAt, read]
       properties:
         id: { type: string, format: uuid }
-        kind: { type: string, enum: [album_shared, import_done, import_failed, backup_failed] }
+        kind: { type: string, enum: [album_shared, import_done, import_failed, backup_failed, backup_late] }
         subject: { type: string, description: "What it is about: an album's name, an import's source, an error" }
         ref: { type: string, description: "The album it opens, if any" }
         createdAt: { type: string, format: date-time }

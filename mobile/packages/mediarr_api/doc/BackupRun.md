@@ -15,6 +15,8 @@ Name | Type | Description | Notes
 **files** | **int** |  | 
 **startedAt** | [**DateTime**](DateTime.md) |  | 
 **finishedAt** | [**DateTime**](DateTime.md) |  | [optional] 
+**destinationId** | **String** |  | [optional] 
+**destinationName** | **String** | The other Mediarr it went to; none for the backup in the settings | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

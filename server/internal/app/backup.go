@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
@@ -146,10 +147,19 @@ func (s *apiServer) SetBackupSettings(w http.ResponseWriter, r *http.Request) {
 		values[jobs.StateBackupS3Secret] = *body.S3Secret
 	}
 	// Without a destination the secrets have no use, and should not stay behind.
-	if repository == "" {
-		values[jobs.StateBackupPassword], values[jobs.StateBackupS3Key], values[jobs.StateBackupS3Secret] = "", "", ""
-	}
 	ctx := r.Context()
+	if repository == "" {
+		values[jobs.StateBackupS3Key], values[jobs.StateBackupS3Secret] = "", ""
+		// The password stays while another Mediarr keeps a copy, which is encrypted with it.
+		destinations, err := s.queries.ListBackupDestinations(ctx)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		if len(destinations) == 0 && body.Password == nil {
+			values[jobs.StateBackupPassword] = ""
+		}
+	}
 	for key, value := range values {
 		if err := s.queries.SetState(ctx, db.SetStateParams{Key: key, Value: value}); err != nil {
 			internalError(w, r, err)
@@ -178,17 +188,50 @@ func (s *apiServer) StartBackupRun(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
-	if settings.Repository == "" || settings.Password == "" {
+	destinations, err := s.queries.ListBackupDestinations(ctx)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	if body.DestinationId != nil {
+		// One copy at another Mediarr only.
+		found := slices.IndexFunc(destinations, func(d db.BackupDestination) bool { return d.ID.Bytes == *body.DestinationId })
+		if found < 0 {
+			writeError(w, http.StatusBadRequest, "no such destination")
+			return
+		}
+		destinations = destinations[found : found+1]
+	}
+	primary := settings.Repository != "" && body.DestinationId == nil
+	switch {
+	case settings.Password == "":
+		writeError(w, http.StatusConflict, "set the backup's password first")
+		return
+	case body.Kind == api.BackupRunRequestKindRestoreTest && !primary && body.DestinationId == nil:
+		writeError(w, http.StatusConflict, "set where the backup goes first, or choose a copy to test")
+		return
+	case !primary && len(destinations) == 0:
 		writeError(w, http.StatusConflict, "set where the backup goes and its password first")
 		return
 	}
-	var run pgtype.UUID
 	err = pgx.BeginFunc(ctx, s.Pool, func(tx pgx.Tx) error {
-		var err error
-		if run, err = s.queries.WithTx(tx).CreateBackupRun(ctx, string(body.Kind)); err != nil {
+		q := s.queries.WithTx(tx)
+		if body.Kind == api.BackupRunRequestKindBackup {
+			return jobs.QueueBackups(ctx, q, s.Inserter, tx, primary, destinations)
+		}
+		// A test brings back one backup: the one in the settings, or the chosen copy.
+		var destination pgtype.UUID
+		args := jobs.BackupArgs{What: string(body.Kind)}
+		if body.DestinationId != nil {
+			destination = destinations[0].ID
+			args.Destination = destination.Bytes
+		}
+		run, err := q.CreateBackupRun(ctx, db.CreateBackupRunParams{Kind: string(body.Kind), DestinationID: destination})
+		if err != nil {
 			return err
 		}
-		_, err = s.Inserter.InsertTx(ctx, tx, jobs.BackupArgs{What: string(body.Kind), Run: run.Bytes}, nil)
+		args.Run = run.Bytes
+		_, err = s.Inserter.InsertTx(ctx, tx, args, nil)
 		return err
 	})
 	if err != nil {
@@ -213,6 +256,11 @@ func (s *apiServer) ListBackupRuns(w http.ResponseWriter, r *http.Request) {
 		out[i] = api.BackupRun{
 			Id: row.ID.Bytes, Kind: api.BackupRunKind(row.Kind), Status: api.BackupRunStatus(row.Status), Message: row.Message,
 			Files: row.Files, StartedAt: row.StartedAt.Time, FinishedAt: optional(row.FinishedAt.Time, row.FinishedAt.Valid),
+		}
+		if row.DestinationID.Valid {
+			id := openapi_types.UUID(row.DestinationID.Bytes)
+			out[i].DestinationId = &id
+			out[i].DestinationName = &row.DestinationName.String
 		}
 	}
 	writeJSON(w, http.StatusOK, out)

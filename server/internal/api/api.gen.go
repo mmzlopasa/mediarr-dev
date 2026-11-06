@@ -569,6 +569,45 @@ func (e IntegrityProblemProblem) Valid() bool {
 	}
 }
 
+// Defines values for KeepGuestStatus.
+const (
+	KeepGuestStatusActive  KeepGuestStatus = "active"
+	KeepGuestStatusInvited KeepGuestStatus = "invited"
+	KeepGuestStatusStopped KeepGuestStatus = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the KeepGuestStatus enum.
+func (e KeepGuestStatus) Valid() bool {
+	switch e {
+	case KeepGuestStatusActive:
+		return true
+	case KeepGuestStatusInvited:
+		return true
+	case KeepGuestStatusStopped:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for KeepGuestUpdateStatus.
+const (
+	KeepGuestUpdateStatusActive  KeepGuestUpdateStatus = "active"
+	KeepGuestUpdateStatusStopped KeepGuestUpdateStatus = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the KeepGuestUpdateStatus enum.
+func (e KeepGuestUpdateStatus) Valid() bool {
+	switch e {
+	case KeepGuestUpdateStatusActive:
+		return true
+	case KeepGuestUpdateStatusStopped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MemberRoleRole.
 const (
 	MemberRoleRoleContributor MemberRoleRole = "contributor"
@@ -612,6 +651,7 @@ func (e MemoryKind) Valid() bool {
 const (
 	AlbumShared  NotificationKind = "album_shared"
 	BackupFailed NotificationKind = "backup_failed"
+	BackupLate   NotificationKind = "backup_late"
 	ImportDone   NotificationKind = "import_done"
 	ImportFailed NotificationKind = "import_failed"
 )
@@ -622,6 +662,8 @@ func (e NotificationKind) Valid() bool {
 	case AlbumShared:
 		return true
 	case BackupFailed:
+		return true
+	case BackupLate:
 		return true
 	case ImportDone:
 		return true
@@ -1498,15 +1540,36 @@ type AuthStatus struct {
 	User          *User `json:"user,omitempty"`
 }
 
+// BackupDestination defines model for BackupDestination.
+type BackupDestination struct {
+	Address       string             `json:"address"`
+	CreatedAt     time.Time          `json:"createdAt"`
+	Id            openapi_types.UUID `json:"id"`
+	LastError     string             `json:"lastError"`
+	LastSuccessAt *time.Time         `json:"lastSuccessAt,omitempty"`
+	Name          string             `json:"name"`
+	QuotaBytes    int64              `json:"quotaBytes"`
+}
+
+// BackupDestinationCreate defines model for BackupDestinationCreate.
+type BackupDestinationCreate struct {
+	// Code The code from the other server's administrator
+	Code string `json:"code"`
+}
+
 // BackupRun defines model for BackupRun.
 type BackupRun struct {
-	Files      int64              `json:"files"`
-	FinishedAt *time.Time         `json:"finishedAt,omitempty"`
-	Id         openapi_types.UUID `json:"id"`
-	Kind       BackupRunKind      `json:"kind"`
-	Message    string             `json:"message"`
-	StartedAt  time.Time          `json:"startedAt"`
-	Status     BackupRunStatus    `json:"status"`
+	DestinationId *openapi_types.UUID `json:"destinationId,omitempty"`
+
+	// DestinationName The other Mediarr it went to; none for the backup in the settings
+	DestinationName *string            `json:"destinationName,omitempty"`
+	Files           int64              `json:"files"`
+	FinishedAt      *time.Time         `json:"finishedAt,omitempty"`
+	Id              openapi_types.UUID `json:"id"`
+	Kind            BackupRunKind      `json:"kind"`
+	Message         string             `json:"message"`
+	StartedAt       time.Time          `json:"startedAt"`
+	Status          BackupRunStatus    `json:"status"`
 }
 
 // BackupRunKind defines model for BackupRun.Kind.
@@ -1517,7 +1580,9 @@ type BackupRunStatus string
 
 // BackupRunRequest defines model for BackupRunRequest.
 type BackupRunRequest struct {
-	Kind BackupRunRequestKind `json:"kind"`
+	// DestinationId Only this copy at another Mediarr. Without it, a backup goes everywhere and a test uses the backup in the settings
+	DestinationId *openapi_types.UUID  `json:"destinationId,omitempty"`
+	Kind          BackupRunRequestKind `json:"kind"`
 }
 
 // BackupRunRequestKind defines model for BackupRunRequest.Kind.
@@ -1925,6 +1990,72 @@ type JobQueue struct {
 	Paused  bool   `json:"paused"`
 	Queued  int64  `json:"queued"`
 	Running int64  `json:"running"`
+}
+
+// KeepGuest defines model for KeepGuest.
+type KeepGuest struct {
+	// Address The address of this server the guest was told
+	Address   string    `json:"address"`
+	CreatedAt time.Time `json:"createdAt"`
+
+	// DeletedBytes What it deleted, kept for 90 days
+	DeletedBytes    int64              `json:"deletedBytes"`
+	Id              openapi_types.UUID `json:"id"`
+	InviteExpiresAt *time.Time         `json:"inviteExpiresAt,omitempty"`
+	LastBackupAt    *time.Time         `json:"lastBackupAt,omitempty"`
+	LastSeenAt      *time.Time         `json:"lastSeenAt,omitempty"`
+	Name            string             `json:"name"`
+	QuotaBytes      int64              `json:"quotaBytes"`
+	Status          KeepGuestStatus    `json:"status"`
+
+	// UsedBytes Everything kept, what it deleted included
+	UsedBytes int64 `json:"usedBytes"`
+}
+
+// KeepGuestStatus defines model for KeepGuest.Status.
+type KeepGuestStatus string
+
+// KeepGuestCreate defines model for KeepGuestCreate.
+type KeepGuestCreate struct {
+	// Address Where the guest reaches this server, as http(s)://host[:port]
+	Address    string `json:"address"`
+	Name       string `json:"name"`
+	QuotaBytes int64  `json:"quotaBytes"`
+}
+
+// KeepGuestUpdate defines model for KeepGuestUpdate.
+type KeepGuestUpdate struct {
+	QuotaBytes int64                 `json:"quotaBytes"`
+	Status     KeepGuestUpdateStatus `json:"status"`
+}
+
+// KeepGuestUpdateStatus defines model for KeepGuestUpdate.Status.
+type KeepGuestUpdateStatus string
+
+// KeepInvite defines model for KeepInvite.
+type KeepInvite struct {
+	// Code Given to the guest's administrator. Shown once
+	Code      string    `json:"code"`
+	ExpiresAt time.Time `json:"expiresAt"`
+	Guest     KeepGuest `json:"guest"`
+}
+
+// KeepPairRequest defines model for KeepPairRequest.
+type KeepPairRequest struct {
+	Token string `json:"token"`
+}
+
+// KeepPairing defines model for KeepPairing.
+type KeepPairing struct {
+	GuestId    openapi_types.UUID `json:"guestId"`
+	Name       string             `json:"name"`
+	QuotaBytes int64              `json:"quotaBytes"`
+	Secret     string             `json:"secret"`
+}
+
+// KeepRestored defines model for KeepRestored.
+type KeepRestored struct {
+	Restored int `json:"restored"`
 }
 
 // LinkPassword defines model for LinkPassword.
@@ -2537,6 +2668,11 @@ type ListAuditLogParams struct {
 	Limit  *int   `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// RemoveKeepGuestParams defines parameters for RemoveKeepGuest.
+type RemoveKeepGuestParams struct {
+	Name *string `form:"name,omitempty" json:"name,omitempty"`
+}
+
 // ListSecurityEventsParams defines parameters for ListSecurityEvents.
 type ListSecurityEventsParams struct {
 	// Before Entries older than this one
@@ -2692,6 +2828,9 @@ type SetAISettingsJSONRequestBody = AISettingsUpdate
 // SetBackupSettingsJSONRequestBody defines body for SetBackupSettings for application/json ContentType.
 type SetBackupSettingsJSONRequestBody = BackupSettingsUpdate
 
+// AddBackupDestinationJSONRequestBody defines body for AddBackupDestination for application/json ContentType.
+type AddBackupDestinationJSONRequestBody = BackupDestinationCreate
+
 // StartBackupRunJSONRequestBody defines body for StartBackupRun for application/json ContentType.
 type StartBackupRunJSONRequestBody = BackupRunRequest
 
@@ -2709,6 +2848,12 @@ type CreateImportJSONRequestBody = ImportCreate
 
 // RunIntegrityJSONRequestBody defines body for RunIntegrity for application/json ContentType.
 type RunIntegrityJSONRequestBody = IntegrityRun
+
+// InviteKeepGuestJSONRequestBody defines body for InviteKeepGuest for application/json ContentType.
+type InviteKeepGuestJSONRequestBody = KeepGuestCreate
+
+// UpdateKeepGuestJSONRequestBody defines body for UpdateKeepGuest for application/json ContentType.
+type UpdateKeepGuestJSONRequestBody = KeepGuestUpdate
 
 // SetOIDCSettingsJSONRequestBody defines body for SetOIDCSettings for application/json ContentType.
 type SetOIDCSettingsJSONRequestBody = OIDCSettingsUpdate
@@ -2797,6 +2942,9 @@ type CreateFamilyRuleJSONRequestBody = FamilyRuleCreate
 // CreateMyImportJSONRequestBody defines body for CreateMyImport for application/json ContentType.
 type CreateMyImportJSONRequestBody = UserImportCreate
 
+// PairKeepGuestJSONRequestBody defines body for PairKeepGuest for application/json ContentType.
+type PairKeepGuestJSONRequestBody = KeepPairRequest
+
 // SetMapStyleJSONRequestBody defines body for SetMapStyle for application/json ContentType.
 type SetMapStyleJSONRequestBody = MapStyle
 
@@ -2871,6 +3019,15 @@ type ServerInterface interface {
 	// SetBackupSettings Change where backups go. A secret left out stays as it was
 	// (PUT /api/admin/backup)
 	SetBackupSettings(w http.ResponseWriter, r *http.Request)
+	// ListBackupDestinations Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
+	// (GET /api/admin/backup/destinations)
+	ListBackupDestinations(w http.ResponseWriter, r *http.Request)
+	// AddBackupDestination Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
+	// (POST /api/admin/backup/destinations)
+	AddBackupDestination(w http.ResponseWriter, r *http.Request)
+	// RemoveBackupDestination Stop sending a copy there. What it keeps stays with it
+	// (DELETE /api/admin/backup/destinations/{id})
+	RemoveBackupDestination(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ListBackupRuns Backups and tests of bringing one back, the newest first
 	// (GET /api/admin/backup/runs)
 	ListBackupRuns(w http.ResponseWriter, r *http.Request)
@@ -2937,6 +3094,24 @@ type ServerInterface interface {
 	// RetryJob Try a failed job again
 	// (POST /api/admin/jobs/{id}/retry)
 	RetryJob(w http.ResponseWriter, r *http.Request, id int64)
+	// ListKeepGuests Other Mediarr servers whose encrypted backup this one keeps
+	// (GET /api/admin/keep/guests)
+	ListKeepGuests(w http.ResponseWriter, r *http.Request)
+	// InviteKeepGuest Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
+	// (POST /api/admin/keep/guests)
+	InviteKeepGuest(w http.ResponseWriter, r *http.Request)
+	// RemoveKeepGuest Delete a guest and everything kept for it. The name must be given again, as a confirmation
+	// (DELETE /api/admin/keep/guests/{id})
+	RemoveKeepGuest(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params RemoveKeepGuestParams)
+	// UpdateKeepGuest Change how much a guest may keep here, or stop and start taking its backup
+	// (PATCH /api/admin/keep/guests/{id})
+	UpdateKeepGuest(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ReinviteKeepGuest A new code for a guest that has not paired yet
+	// (POST /api/admin/keep/guests/{id}/invite)
+	ReinviteKeepGuest(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// RestoreKeepGuestDeleted Put back what the guest deleted in the last 90 days, after an attack or a mistake
+	// (POST /api/admin/keep/guests/{id}/restore-deleted)
+	RestoreKeepGuestDeleted(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetOIDCSettings Single sign-on settings, without the secret
 	// (GET /api/admin/oidc)
 	GetOIDCSettings(w http.ResponseWriter, r *http.Request)
@@ -3216,6 +3391,9 @@ type ServerInterface interface {
 	// StopImport Stop an import. What it has brought in stays, and it can go on later
 	// (POST /api/imports/{id}/stop)
 	StopImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// PairKeepGuest Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
+	// (POST /api/keep/pair)
+	PairKeepGuest(w http.ResponseWriter, r *http.Request)
 	// GetMapPoints Photos with a location that this user may see, oldest first
 	// (GET /api/map/points)
 	GetMapPoints(w http.ResponseWriter, r *http.Request, params GetMapPointsParams)
@@ -3477,6 +3655,24 @@ func (_ Unimplemented) SetBackupSettings(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListBackupDestinations Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
+// (GET /api/admin/backup/destinations)
+func (_ Unimplemented) ListBackupDestinations(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AddBackupDestination Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
+// (POST /api/admin/backup/destinations)
+func (_ Unimplemented) AddBackupDestination(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemoveBackupDestination Stop sending a copy there. What it keeps stays with it
+// (DELETE /api/admin/backup/destinations/{id})
+func (_ Unimplemented) RemoveBackupDestination(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // ListBackupRuns Backups and tests of bringing one back, the newest first
 // (GET /api/admin/backup/runs)
 func (_ Unimplemented) ListBackupRuns(w http.ResponseWriter, r *http.Request) {
@@ -3606,6 +3802,42 @@ func (_ Unimplemented) ResumeJobQueue(w http.ResponseWriter, r *http.Request, qu
 // RetryJob Try a failed job again
 // (POST /api/admin/jobs/{id}/retry)
 func (_ Unimplemented) RetryJob(w http.ResponseWriter, r *http.Request, id int64) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListKeepGuests Other Mediarr servers whose encrypted backup this one keeps
+// (GET /api/admin/keep/guests)
+func (_ Unimplemented) ListKeepGuests(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// InviteKeepGuest Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
+// (POST /api/admin/keep/guests)
+func (_ Unimplemented) InviteKeepGuest(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RemoveKeepGuest Delete a guest and everything kept for it. The name must be given again, as a confirmation
+// (DELETE /api/admin/keep/guests/{id})
+func (_ Unimplemented) RemoveKeepGuest(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params RemoveKeepGuestParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// UpdateKeepGuest Change how much a guest may keep here, or stop and start taking its backup
+// (PATCH /api/admin/keep/guests/{id})
+func (_ Unimplemented) UpdateKeepGuest(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ReinviteKeepGuest A new code for a guest that has not paired yet
+// (POST /api/admin/keep/guests/{id}/invite)
+func (_ Unimplemented) ReinviteKeepGuest(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RestoreKeepGuestDeleted Put back what the guest deleted in the last 90 days, after an attack or a mistake
+// (POST /api/admin/keep/guests/{id}/restore-deleted)
+func (_ Unimplemented) RestoreKeepGuestDeleted(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4164,6 +4396,12 @@ func (_ Unimplemented) StartImport(w http.ResponseWriter, r *http.Request, id op
 // StopImport Stop an import. What it has brought in stays, and it can go on later
 // (POST /api/imports/{id}/stop)
 func (_ Unimplemented) StopImport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// PairKeepGuest Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
+// (POST /api/keep/pair)
+func (_ Unimplemented) PairKeepGuest(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4730,6 +4968,60 @@ func (siw *ServerInterfaceWrapper) SetBackupSettings(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
+// ListBackupDestinations operation middleware
+func (siw *ServerInterfaceWrapper) ListBackupDestinations(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBackupDestinations(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AddBackupDestination operation middleware
+func (siw *ServerInterfaceWrapper) AddBackupDestination(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AddBackupDestination(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveBackupDestination operation middleware
+func (siw *ServerInterfaceWrapper) RemoveBackupDestination(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveBackupDestination(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListBackupRuns operation middleware
 func (siw *ServerInterfaceWrapper) ListBackupRuns(w http.ResponseWriter, r *http.Request) {
 
@@ -5113,6 +5405,154 @@ func (siw *ServerInterfaceWrapper) RetryJob(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RetryJob(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListKeepGuests operation middleware
+func (siw *ServerInterfaceWrapper) ListKeepGuests(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListKeepGuests(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// InviteKeepGuest operation middleware
+func (siw *ServerInterfaceWrapper) InviteKeepGuest(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.InviteKeepGuest(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RemoveKeepGuest operation middleware
+func (siw *ServerInterfaceWrapper) RemoveKeepGuest(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RemoveKeepGuestParams
+
+	// ------------- Optional query parameter "name" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "name", r.URL.Query(), &params.Name, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "name"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveKeepGuest(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateKeepGuest operation middleware
+func (siw *ServerInterfaceWrapper) UpdateKeepGuest(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateKeepGuest(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ReinviteKeepGuest operation middleware
+func (siw *ServerInterfaceWrapper) ReinviteKeepGuest(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReinviteKeepGuest(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RestoreKeepGuestDeleted operation middleware
+func (siw *ServerInterfaceWrapper) RestoreKeepGuestDeleted(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RestoreKeepGuestDeleted(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -7399,6 +7839,20 @@ func (siw *ServerInterfaceWrapper) StopImport(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// PairKeepGuest operation middleware
+func (siw *ServerInterfaceWrapper) PairKeepGuest(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PairKeepGuest(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetMapPoints operation middleware
 func (siw *ServerInterfaceWrapper) GetMapPoints(w http.ResponseWriter, r *http.Request) {
 
@@ -9632,6 +10086,36 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/admin/backup/runs", wrapper.StartBackupRun)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/backup/destinations", wrapper.ListBackupDestinations)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/backup/destinations", wrapper.AddBackupDestination)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/admin/backup/destinations/{id}", wrapper.RemoveBackupDestination)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/keep/guests", wrapper.ListKeepGuests)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/keep/guests", wrapper.InviteKeepGuest)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/admin/keep/guests/{id}", wrapper.RemoveKeepGuest)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/admin/keep/guests/{id}", wrapper.UpdateKeepGuest)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/keep/guests/{id}/invite", wrapper.ReinviteKeepGuest)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/keep/guests/{id}/restore-deleted", wrapper.RestoreKeepGuestDeleted)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/keep/pair", wrapper.PairKeepGuest)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/webhooks", wrapper.ListWebhooks)
