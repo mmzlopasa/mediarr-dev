@@ -248,11 +248,12 @@ void main() {
     await tester.ensureVisible(find.text('Backup'));
     await tester.tap(find.text('Backup'));
     await waitFor(tester, find.text('Scheduled backup'));
+    // The screen's own list: a text field with several lines is a Scrollable too.
     for (final name in ['Mum and dad', 'Ana']) {
-      await tester.scrollUntilVisible(
+      await tester.dragUntilVisible(
         find.text(name),
-        300,
-        scrollable: find.byType(Scrollable).last,
+        find.byType(ListView).last,
+        const Offset(0, -300),
       );
       expect(find.text(name), findsOneWidget);
     }
