@@ -1,0 +1,4 @@
+Photos used in this concept (all CC0). Screenshots of Mediarr are from the demo.
+file	original	original size	licence	source
+img/lake-sunset.jpg	A_lake_at_sunset_with_silhouette.jpg	2592x1936	CC0	https://upload.wikimedia.org/wikipedia/commons/b/b7/A_lake_at_sunset_with_silhouette.jpg
+img/family-group.jpg	-Family_Group-_MET_DT237387.jpg	3811x2800	CC0	https://upload.wikimedia.org/wikipedia/commons/d/d3/-Family_Group-_MET_DT237387.jpg
