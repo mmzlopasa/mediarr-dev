@@ -17,6 +17,22 @@ test('the interface defaults to English', async ({ page }) => {
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
 
+test('the logo is the fan of six photos and the name, on the web and in the tab', async ({
+	page,
+	request
+}) => {
+	await signIn(page, 'admin');
+	await page.goto('/');
+	const logo = page.getByRole('link', { name: 'Mediarr' }).first();
+	await expect(logo).toBeVisible();
+	await expect(logo.locator('.brand-mark rect')).toHaveCount(6);
+	await expect(logo.locator('.brand-word')).toHaveText('medıarr');
+	const icon = await request.get('/favicon.svg');
+	expect(icon.ok()).toBe(true);
+	expect((await icon.text()).match(/<rect /g)).toHaveLength(6);
+	expect((await request.get('/brand/logo.svg')).ok()).toBe(true);
+});
+
 test('the dock and More hold the planned sections and navigate', async ({ page }) => {
 	await signIn(page, 'admin');
 	await page.goto('/');

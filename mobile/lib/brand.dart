@@ -1,0 +1,196 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+
+import 'theme.dart';
+
+/// The colours of the six photos in the mark, in the order they fan out.
+const brandColors = [
+  Color(0xFFFFC83D),
+  Color(0xFFFF9F43),
+  Color(0xFFFF5E57),
+  Color(0xFFFF7EB6),
+  Color(0xFF3A55C9),
+  Color(0xFF2EC4A6),
+];
+
+/// The gold of the sun that dots the i.
+const brandSun = Color(0xFFFFC83D);
+
+/// The film edge under the name: one tick per month, in hundredths of the letter size.
+const brandTicks = [
+  10,
+  16,
+  7,
+  22,
+  12,
+  18,
+  9,
+  14,
+  20,
+  8,
+  15,
+  11,
+  17,
+  6,
+  13,
+  19,
+  9,
+];
+
+/// The tick under the i, drawn in gold.
+const brandGoldTick = 10;
+
+class EdgePainter extends CustomPainter {
+  const EdgePainter({required this.ink});
+
+  final Color ink;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // The same drawing as the web: a 326 by 28 box, ticks 6 wide every 20.
+    canvas.scale(size.width / 326, size.height / 28);
+    for (var i = 0; i < brandTicks.length; i++) {
+      final h = brandTicks[i] * 1.196;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(i * 20.0, 28 - h, 6, h),
+          const Radius.circular(3),
+        ),
+        Paint()
+          ..color = i == brandGoldTick ? brandSun : ink.withValues(alpha: .55),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(EdgePainter oldDelegate) => oldDelegate.ink != ink;
+}
+
+/// Mediarr's mark: six photos fanned out. Where they overlap, their light adds up on a dark ground
+/// and their colours mix like ink on a light one, the same as on the web.
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key, this.size = 24});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CustomPaint(painter: FanPainter(light: Palette.light)),
+  );
+}
+
+class FanPainter extends CustomPainter {
+  const FanPainter({required this.light});
+
+  final bool light;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // The same drawing as the SVG: a 64-unit box, shown from 5 to 59.
+    final scale = size.shortestSide / 54;
+    canvas.saveLayer(Offset.zero & size, Paint());
+    canvas.scale(scale);
+    canvas.translate(-5, -5);
+    final petal = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(27, 7, 13, 24),
+      const Radius.circular(4),
+    );
+    for (var i = 0; i < brandColors.length; i++) {
+      canvas
+        ..save()
+        ..translate(32, 32)
+        ..rotate(i * math.pi / 3)
+        ..translate(-32, -32)
+        ..drawRRect(
+          petal,
+          Paint()
+            ..color = brandColors[i].withValues(alpha: .92)
+            ..blendMode = light ? BlendMode.multiply : BlendMode.screen,
+        )
+        ..restore();
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(FanPainter oldDelegate) => oldDelegate.light != light;
+}
+
+/// The mark and the name, with a gold sun as the dot of the i and a film edge under it. [size] is the size of the letters.
+class BrandLogo extends StatelessWidget {
+  const BrandLogo({super.key, this.size = 20, this.mark = true});
+
+  final double size;
+  final bool mark;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      fontFamily: 'Inter Tight',
+      fontSize: size,
+      fontWeight: FontWeight.w600,
+      fontVariations: const [FontVariation('wght', 620)],
+      letterSpacing: -0.035 * size,
+      color: Palette.ink,
+    );
+    return Semantics(
+      label: 'Mediarr',
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (mark) ...[
+            BrandMark(size: size * 1.3),
+            SizedBox(width: size * 0.42),
+          ],
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text.rich(
+                TextSpan(
+                  style: style,
+                  children: [
+                    const TextSpan(text: 'med'),
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.baseline,
+                      baseline: TextBaseline.alphabetic,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Text('ı', style: style),
+                          Positioned(
+                            top: size * 0.08,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: Container(
+                                width: size * 0.2,
+                                height: size * 0.2,
+                                decoration: const BoxDecoration(
+                                  color: brandSun,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const TextSpan(text: 'arr'),
+                  ],
+                ),
+              ),
+              CustomPaint(
+                size: Size(size * 3.26, size * 0.28),
+                painter: EdgePainter(ink: Palette.ink),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

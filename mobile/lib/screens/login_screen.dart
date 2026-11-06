@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../brand.dart';
 import '../services/session.dart';
 import '../theme.dart';
 
@@ -93,17 +94,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Center(
-                      child: Text.rich(
-                        TextSpan(
-                          style: text.headlineMedium?.copyWith(
-                            color: Palette.gold,
-                          ),
-                          children: const [TextSpan(text: 'mediarr.')],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    const Center(child: BrandLogo(size: 30)),
+                    const SizedBox(height: 12),
                     Text(
                       _needsCode
                           ? 'Enter the 6-digit code from your authenticator app.'

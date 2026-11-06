@@ -12,6 +12,7 @@
 		type Person,
 		type TimelineSource
 	} from '#lib/api.ts';
+	import Brand from '#lib/design/components/Brand.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { memoryTitle } from '#lib/organize/memories.ts';
 	import { lang, tr } from '#lib/i18n.svelte.ts';
@@ -183,7 +184,7 @@
 		<div class="tv-hero" style="background-image:url({focused.cover})" aria-hidden="true"></div>
 	{/if}
 	<header class="tv-top">
-		<span class="logo"><span class="logo-mark" aria-hidden="true"></span>mediarr</span>
+		<span class="logo" role="img" aria-label="Mediarr"><Brand /></span>
 		<span class="tv-clock"
 			>{now.toLocaleTimeString(lang(), { hour: '2-digit', minute: '2-digit' })}</span
 		>

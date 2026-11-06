@@ -308,20 +308,60 @@ body {
 	font: 600 18px var(--sans);
 	letter-spacing: -0.02em;
 }
-.logo-mark {
-	width: 22px;
-	height: 16px;
-	border-radius: 4px;
-	background: var(--ink);
-	position: relative;
-	flex: none;
+/* The brand: a fan of six photos, then the name with a gold sun as the dot of the i. */
+.brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.42em;
 }
-.logo-mark::before {
-	content: '';
+.brand-mark {
+	flex: none;
+	width: 1.3em;
+	height: 1.3em;
+	isolation: isolate;
+}
+/* Where photos overlap their light adds up on dark, and their colours mix like ink on light. */
+.brand-mark rect {
+	mix-blend-mode: screen;
+}
+html[data-theme='light'] .brand-mark rect {
+	mix-blend-mode: multiply;
+}
+.brand-name {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 0.1em;
+}
+.brand-edge {
+	display: block;
+	width: 3.26em;
+	height: 0.28em;
+}
+.brand-edge rect {
+	fill: currentColor;
+	opacity: 0.55;
+}
+.brand-edge rect.gold {
+	fill: #ffc83d;
+	opacity: 1;
+}
+.brand-word {
+	line-height: 1;
+	font-weight: 620;
+	letter-spacing: -0.035em;
+}
+.brand-i {
+	position: relative;
+}
+.brand-i i {
 	position: absolute;
-	inset: 4px 6px;
-	border-radius: 1.5px;
-	background: var(--gold);
+	top: 0.08em;
+	left: 50%;
+	width: 0.2em;
+	height: 0.2em;
+	margin-left: -0.1em;
+	border-radius: 50%;
+	background: #ffc83d;
 }
 .logo-tag {
 	box-shadow: none;

@@ -5,6 +5,7 @@ import 'package:mediarr_api/api.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../brand.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
@@ -310,6 +311,8 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             title: const Text('Sign out'),
             onTap: () => _signOut(session),
           ),
+          const SizedBox(height: 12),
+          const Center(child: BrandLogo(size: 16)),
           Wrap(
             alignment: WrapAlignment.center,
             children: [
@@ -319,6 +322,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                 onPressed: () => showLicensePage(
                   context: context,
                   applicationName: 'Mediarr',
+                  applicationIcon: const BrandMark(size: 40),
                 ),
                 child: Text('Licenses', style: TextStyle(color: Palette.haze)),
               ),

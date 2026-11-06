@@ -162,23 +162,45 @@ code,
 	display: inline-flex;
 	align-items: center;
 	gap: 10px;
-	font: 650 19px/1 var(--sans);
-	letter-spacing: -0.02em;
+	font: 620 19px/1 var(--sans);
+	letter-spacing: -0.035em;
 	text-decoration: none;
+}
+/* The brand: six photos fanned out, and a gold sun as the dot of the i. */
+.mark-fan {
+	flex: none;
+	width: 1.3em;
+	height: 1.3em;
+	isolation: isolate;
+}
+.mark-fan rect {
+	mix-blend-mode: screen;
+}
+.mark-name {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 0.1em;
+}
+.mark-name > span {
+	line-height: 1;
+}
+.mark-edge {
+	display: block;
+	width: 3.26em;
+	height: 0.28em;
 }
 .mark-i {
 	position: relative;
-	width: 22px;
-	height: 16px;
-	border-radius: 4px;
-	background: var(--ink);
 }
-.mark-i::before {
-	content: '';
+.mark-i i {
 	position: absolute;
-	inset: 4px 6px;
-	border-radius: 1.5px;
-	background: var(--gold);
+	top: 0.08em;
+	left: 50%;
+	width: 0.2em;
+	height: 0.2em;
+	margin-left: -0.1em;
+	border-radius: 50%;
+	background: #ffc83d;
 }
 .top {
 	position: fixed;

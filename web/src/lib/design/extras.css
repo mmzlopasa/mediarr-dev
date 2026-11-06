@@ -7,21 +7,6 @@
 .logo {
 	text-decoration: none;
 }
-.logo-svg {
-	flex: none;
-}
-.logo-word {
-	fill: var(--gold);
-}
-.logo-dot {
-	fill: var(--gold);
-}
-html[data-theme='light'] .logo-word {
-	fill: var(--ink);
-}
-html[data-theme='light'] .logo-dot {
-	fill: var(--gold-3);
-}
 
 /* Single photo view: clean background, so colours around a photo do not affect it. */
 .plain-view .sky {

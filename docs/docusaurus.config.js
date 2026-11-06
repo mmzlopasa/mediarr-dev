@@ -27,8 +27,7 @@ const config = {
   themeConfig: {
     colorMode: { defaultMode: 'dark', respectPrefersColorScheme: true },
     navbar: {
-      title: 'Mediarr',
-      logo: { alt: 'Mediarr', src: 'img/logo.svg' },
+      logo: { alt: 'Mediarr', src: 'img/logo-full.svg', srcDark: 'img/logo-full-dark.svg', height: 26 },
       items: [
         { to: '/install/docker-compose', label: 'Install', position: 'left' },
         { to: '/features/mobile-app', label: 'Features', position: 'left' },
