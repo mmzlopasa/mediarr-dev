@@ -308,8 +308,19 @@ void main() {
     await tester.tap(find.text('Search').last);
     await waitFor(tester, find.byTooltip('Filters'));
     await tester.tap(find.byTooltip('Filters'));
-    await waitFor(tester, find.text('Favourites only'));
-    await tester.ensureVisible(find.text('Favourites only'));
+    await waitFor(tester, find.text('Apply'));
+    // On a small screen the last filters are below the fold of the sheet, not built yet.
+    await tester.scrollUntilVisible(
+      find.text('Favourites only'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(DraggableScrollableSheet),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('Favourites only'));
     await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('Apply'));
