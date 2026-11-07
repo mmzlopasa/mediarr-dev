@@ -10,6 +10,7 @@ on:
     branches: [main]
     paths:
       - mobile/**
+      - scripts/android-integration.sh
       - .github/workflows/android.yml
 
 permissions:

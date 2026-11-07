@@ -20,4 +20,20 @@ flutter test integration_test -d emulator-5554 --suppress-analytics --reporter e
 status=$?
 echo '--- last warnings from the emulator ---'
 grep -iE 'mediarr|backup|AndroidRuntime|WM-' /tmp/emulator.log | tail -60
+
+# The tests run a debug build; people install the release one. It must at least start.
+echo '--- the release build starts ---'
+adb uninstall app.mediarr.mediarr >/dev/null 2>&1
+flutter build apk --release --suppress-analytics >/tmp/release-build.log 2>&1 || { tail -30 /tmp/release-build.log; exit 1; }
+adb install -r build/app/outputs/flutter-apk/app-release.apk >/dev/null || exit 1
+adb logcat -c
+adb shell monkey -p app.mediarr.mediarr -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+sleep 15
+if adb shell pidof app.mediarr.mediarr >/dev/null; then
+	echo 'the release build is running'
+else
+	echo 'THE RELEASE BUILD STOPPED ON START:'
+	adb logcat -d | grep -E -A60 'FATAL EXCEPTION|AndroidRuntime|F flutter|E flutter|libc  .*Fatal' | head -120
+	status=1
+fi
 exit "$status"
