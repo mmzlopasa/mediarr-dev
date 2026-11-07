@@ -32,6 +32,8 @@ android {
         release {
             // Left unsigned: scripts/pull-apk.sh signs it on the server, with a key that stays there.
             signingConfig = null
+            // Flutter's rules, and ours for what is made by name at runtime.
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
@@ -47,7 +49,7 @@ flutter {
 }
 
 dependencies {
-    implementation("androidx.work:work-runtime-ktx:2.10.5")
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
 }
