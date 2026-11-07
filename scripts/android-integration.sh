@@ -39,7 +39,11 @@ if adb shell pidof app.mediarr.mediarr >/dev/null; then
 	echo 'the release build is running'
 else
 	echo 'THE RELEASE BUILD STOPPED ON START:'
-	adb logcat -d | grep -E -A60 'FATAL EXCEPTION|AndroidRuntime|F flutter|E flutter|libc  .*Fatal' | head -120
+	adb logcat -d >/tmp/release-start.log
+	echo '--- errors ---'
+	grep -E ' [EF] ' /tmp/release-start.log | grep -vE 'audit|BtGatt|Dck |ActivityManager: sync' | tail -120
+	echo '--- the app and the crash ---'
+	grep -iE 'mediarr|flutter|DEBUG|FATAL|crash_dump|tombstone|SIGABRT|SIGSEGV' /tmp/release-start.log | tail -150
 	status=1
 fi
 exit "$status"
