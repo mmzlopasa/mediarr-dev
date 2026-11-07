@@ -1484,3 +1484,13 @@ video.viewer-media {
 	font-size: 0.8125rem;
 	color: var(--err);
 }
+
+/* The command that brings the database back to a snapshot. */
+.snap-cmd {
+	margin: 0;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: var(--soft);
+	font-size: 0.8125rem;
+	overflow-x: auto;
+}

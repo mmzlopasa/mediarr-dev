@@ -417,6 +417,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/upgrade-snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Snapshots of the database made before upgrades, newest first */
+        get: operations["listUpgradeSnapshots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/upgrade-snapshots/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete one snapshot. Going back to it is then no longer possible */
+        delete: operations["deleteUpgradeSnapshot"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/users": {
         parameters: {
             query?: never;
@@ -4099,6 +4133,20 @@ export interface components {
             failures: components["schemas"]["BackupDeviceFailure"][];
             gone: components["schemas"]["BackupDeviceGone"][];
         };
+        UpgradeSnapshot: {
+            name: string;
+            /** @description Empty when the version before is not known */
+            fromVersion: string;
+            toVersion: string;
+            /** Format: int64 */
+            fromSchema: number;
+            /** Format: int64 */
+            toSchema: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            sizeBytes: number;
+        };
         DeviceKey: {
             /** Format: uuid */
             id: string;
@@ -5199,6 +5247,51 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
+        };
+    };
+    listUpgradeSnapshots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The snapshots */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpgradeSnapshot"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    deleteUpgradeSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     listUsers: {

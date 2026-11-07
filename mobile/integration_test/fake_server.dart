@@ -245,6 +245,20 @@ class FakeServer {
       ]);
       return;
     }
+    if (path == '/api/admin/upgrade-snapshots') {
+      await _json(request, 200, [
+        {
+          'name': 'schema-36-to-37-20261107T120000Z',
+          'fromVersion': 'v0.2.19',
+          'toVersion': 'v0.2.20',
+          'fromSchema': 36,
+          'toSchema': 37,
+          'createdAt': '2026-11-07T12:00:00Z',
+          'sizeBytes': 52428800,
+        },
+      ]);
+      return;
+    }
     if (path == '/api/admin/keep/guests') {
       await _json(request, 200, [
         {

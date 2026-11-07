@@ -73,6 +73,28 @@ func Migrate(ctx context.Context, databaseURL string) error {
 	return nil
 }
 
+// SchemaVersions says which migration the database is at and which is the newest this build has.
+// A database that was never migrated is at 0.
+func SchemaVersions(ctx context.Context, databaseURL string) (current, latest int64, err error) {
+	conn, err := sql.Open("pgx", databaseURL)
+	if err != nil {
+		return 0, 0, fmt.Errorf("open database: %w", err)
+	}
+	defer func() { _ = conn.Close() }()
+	p, err := provider(conn)
+	if err != nil {
+		return 0, 0, err
+	}
+	current, err = p.GetDBVersion(ctx)
+	if err != nil {
+		return 0, 0, fmt.Errorf("read schema version: %w", err)
+	}
+	for _, source := range p.ListSources() {
+		latest = max(latest, source.Version)
+	}
+	return current, latest, nil
+}
+
 // MigrateDown reverts the newest schema migration.
 func MigrateDown(ctx context.Context, databaseURL string) error {
 	conn, err := sql.Open("pgx", databaseURL)

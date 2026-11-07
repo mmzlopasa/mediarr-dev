@@ -27,10 +27,11 @@ import (
 	"github.com/mediarr-app/mediarr/server/internal/config"
 	"github.com/mediarr-app/mediarr/server/internal/jobs"
 	"github.com/mediarr-app/mediarr/server/internal/storage"
+	"github.com/mediarr-app/mediarr/server/internal/upgrade"
 )
 
 const (
-	usage             = "usage: mediarr <serve|worker|healthcheck|migrate [down]|user upsert <email> <name> [--admin]|user reset-vault <email>|security reset>"
+	usage             = "usage: mediarr <serve|worker|healthcheck|migrate [down]|rollback [list|<name>] [--yes]|user upsert <email> <name> [--admin]|user reset-vault <email>|security reset>"
 	stateStorageReady = "storage_initialized"
 )
 
@@ -61,7 +62,10 @@ func run(ctx context.Context, args []string) error {
 		if len(args) > 1 && args[1] == "down" {
 			return db.MigrateDown(ctx, cfg.DatabaseURL)
 		}
-		return db.Migrate(ctx, cfg.DatabaseURL)
+		// Asked for by a person, so it also tries a version the database was brought back from.
+		return migrate(ctx, cfg, true)
+	case "rollback":
+		return rollback(ctx, cfg, args[1:])
 	case "reprocess":
 		return reprocess(ctx, cfg, len(args) > 1 && args[1] == "failed")
 	case "user":
@@ -94,8 +98,56 @@ func prepareStorage(ctx context.Context, cfg config.Config, queries *db.Queries)
 	return queries.SetState(ctx, db.SetStateParams{Key: stateStorageReady, Value: "true"})
 }
 
-func serve(ctx context.Context, cfg config.Config) error {
+// migrate keeps a snapshot of the database before changing it, so an upgrade can be undone.
+func migrate(ctx context.Context, cfg config.Config, force bool) error {
+	if err := upgrade.Prepare(ctx, cfg.DatabaseURL, cfg.LibraryPath, app.Version, force); err != nil {
+		return err
+	}
 	if err := db.Migrate(ctx, cfg.DatabaseURL); err != nil {
+		return err
+	}
+	return upgrade.Done(ctx, cfg.DatabaseURL, app.Version)
+}
+
+// rollback lists the snapshots, or brings the database back to one.
+func rollback(ctx context.Context, cfg config.Config, args []string) error {
+	yes := false
+	name := ""
+	for _, arg := range args {
+		switch arg {
+		case "--yes":
+			yes = true
+		case "list":
+			return listSnapshots(cfg)
+		default:
+			name = arg
+		}
+	}
+	return upgrade.Rollback(ctx, cfg.DatabaseURL, cfg.LibraryPath, name, yes, os.Stdin, os.Stdout)
+}
+
+func listSnapshots(cfg config.Config) error {
+	all, err := upgrade.List(cfg.LibraryPath)
+	if err != nil {
+		return err
+	}
+	if len(all) == 0 {
+		fmt.Println("No snapshots yet. One is made before each upgrade that changes the database.")
+		return nil
+	}
+	for _, snap := range all {
+		from := snap.FromVersion
+		if from == "" {
+			from = "?"
+		}
+		fmt.Printf("%s  %s → %s  %s  %d MB\n", snap.Name, from, snap.ToVersion,
+			snap.CreatedAt.Local().Format("2006-01-02 15:04"), snap.SizeBytes>>20)
+	}
+	return nil
+}
+
+func serve(ctx context.Context, cfg config.Config) error {
+	if err := migrate(ctx, cfg, false); err != nil {
 		return err
 	}
 

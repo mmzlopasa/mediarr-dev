@@ -7,6 +7,7 @@
 	import Kv from '#lib/design/components/Kv.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import Button from '#lib/design/components/Button.svelte';
+	import SnapshotsCard from '#lib/organize/SnapshotsCard.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import { liveOverview } from '#lib/overview.svelte.ts';
@@ -122,3 +123,5 @@
 		<Button small onclick={() => runIntegrity(true)}>{tr('Temeljito', 'Thoroughly')}</Button>
 	</div>
 </Card>
+
+<SnapshotsCard />

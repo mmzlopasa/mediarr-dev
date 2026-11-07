@@ -64,6 +64,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   List<BackupRun> _runs = const [];
   List<BackupDestination>? _destinations;
   List<KeepGuest>? _guests;
+  List<UpgradeSnapshot> _snapshots = const [];
   bool _failed = false;
   bool _pairing = false;
 
@@ -97,6 +98,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         api.listBackupRuns(),
         api.listBackupDestinations(),
         api.listKeepGuests(),
+        api.listUpgradeSnapshots(),
       ]);
       if (!mounted) return;
       final settings = results[1] as BackupSettings?;
@@ -110,6 +112,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         _runs = (results[2] as List<BackupRun>?) ?? const [];
         _destinations = (results[3] as List<BackupDestination>?) ?? const [];
         _guests = (results[4] as List<KeepGuest>?) ?? const [];
+        _snapshots = (results[5] as List<UpgradeSnapshot>?) ?? const [];
         _failed = false;
       });
     } on ApiException {
@@ -515,6 +518,80 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     ];
   }
 
+  /// Snapshots of the database made before upgrades. Going back is a command, with the server off.
+  List<Widget> _snapshotSection() {
+    final text = Theme.of(context).textTheme;
+    return [
+      _heading('Snapshots before upgrades'),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: Text(
+          'Before each upgrade that changes the database, Mediarr keeps a snapshot of it. '
+          'The last three are kept.',
+          style: text.bodySmall,
+        ),
+      ),
+      if (_snapshots.isEmpty)
+        const ListTile(
+          title: Text(
+            'No snapshots yet. The first is made at the next upgrade that changes the database.',
+          ),
+        ),
+      for (final snap in _snapshots)
+        ListTile(
+          title: Text(
+            '${snap.fromVersion.isEmpty ? 'Earlier version' : snap.fromVersion} → ${snap.toVersion}',
+          ),
+          subtitle: Text(
+            '${MaterialLocalizations.of(context).formatMediumDate(snap.createdAt.toLocal())} · '
+            '${formatBytes(snap.sizeBytes)}',
+          ),
+          trailing: IconButton(
+            tooltip: 'Delete snapshot',
+            icon: Icon(Icons.delete_outline, color: Palette.err),
+            onPressed: () => _deleteSnapshot(snap),
+          ),
+        ),
+      if (_snapshots.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: SelectableText(
+            'To go back to the newest one, in the folder with docker-compose.yml:\n'
+            'docker compose stop server worker\n'
+            'docker compose run --rm server rollback',
+            style: text.bodySmall,
+          ),
+        ),
+    ];
+  }
+
+  Future<void> _deleteSnapshot(UpgradeSnapshot snap) async {
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this snapshot?'),
+        content: const Text('It will no longer be possible to go back to it.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (sure != true) return;
+    try {
+      await _session.api.deleteUpgradeSnapshot(snap.name);
+      await _load();
+    } on ApiException catch (cause) {
+      _tell(cause.message ?? 'Not deleted.');
+    }
+  }
+
   List<Widget> _guestSection() {
     final guests = _guests ?? const [];
     return [
@@ -628,6 +705,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                   ..._backupSection(),
                   ..._destinationSection(),
                   ..._guestSection(),
+                  ..._snapshotSection(),
                 ],
               ),
             ),

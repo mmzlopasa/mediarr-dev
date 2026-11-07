@@ -2,6 +2,7 @@ import type { components } from './api/schema';
 
 export type User = components['schemas']['User'];
 export type BackupDevice = components['schemas']['BackupDevice'];
+export type UpgradeSnapshot = components['schemas']['UpgradeSnapshot'];
 export type BackupDeviceList = components['schemas']['BackupDeviceList'];
 export type BackupDeviceMissing = components['schemas']['BackupDeviceMissing'];
 export type Asset = components['schemas']['Asset'];
@@ -313,6 +314,14 @@ export const api = {
 	removeAvatar: () => request<User>(fetch, '/api/me/avatar', undefined, 'DELETE'),
 	myImports: () => request<UserImport[]>(fetch, '/api/imports'),
 	backupDevices: () => request<BackupDeviceList>(fetch, '/api/me/backup-devices'),
+	upgradeSnapshots: () => request<UpgradeSnapshot[]>(fetch, '/api/admin/upgrade-snapshots'),
+	deleteUpgradeSnapshot: (name: string) =>
+		request<void>(
+			fetch,
+			`/api/admin/upgrade-snapshots/${encodeURIComponent(name)}`,
+			undefined,
+			'DELETE'
+		),
 	allBackupDevices: () => request<BackupDeviceList>(fetch, '/api/admin/backup-devices'),
 	backupDeviceMissing: (id: string) =>
 		request<BackupDeviceMissing>(fetch, `/api/me/backup-devices/${id}/missing`),

@@ -125,7 +125,8 @@ func RunBackup(ctx context.Context, settings *BackupSettings, databaseURL, libra
 	// part of this library.
 	out, err := restic(ctx, settings, "backup", "--json", "--tag", "mediarr",
 		"--exclude", filepath.Join(libraryPath, ".tmp"), "--exclude", filepath.Join(libraryPath, ".imports"),
-		"--exclude", filepath.Join(libraryPath, ".keep"), libraryPath, dump)
+		"--exclude", filepath.Join(libraryPath, ".keep"), "--exclude", filepath.Join(libraryPath, ".mediarr-snapshots"),
+		libraryPath, dump)
 	if err != nil {
 		return 0, err
 	}

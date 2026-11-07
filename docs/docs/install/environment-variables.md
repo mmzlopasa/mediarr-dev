@@ -36,4 +36,5 @@ Mediarr reads these from `.env`. After changing them, apply them with `docker co
 | `VIDEO_ACCEL` | Video encoding hardware: `none`, `qsv`, `nvenc` or `vaapi` |
 | `METRICS_TOKEN` | Turns on `/metrics` for Prometheus, using this as a bearer token |
 | `UPDATE_CHECK` | `off` stops the check for a new version |
+| `MEDIARR_UPGRADE_SNAPSHOT` | `false` upgrades without a snapshot of the database first. See [Upgrading](/install/upgrading) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Sends traces to an OpenTelemetry collector |

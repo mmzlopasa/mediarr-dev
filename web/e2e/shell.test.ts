@@ -556,7 +556,8 @@ test.describe('timeline', () => {
 		const client = await context.newCDPSession(page);
 		const point = { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 };
 		await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
-		await page.waitForTimeout(600);
+		// Well past the 450 ms of a long press: under load the page's timer can fire late.
+		await page.waitForTimeout(1200);
 		await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 		await expect(page.getByRole('toolbar').locator('.selbar-n')).toHaveText('1');
 		await expect(page).not.toHaveURL(/\/photos\//);

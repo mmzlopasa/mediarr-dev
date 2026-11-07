@@ -99,6 +99,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteNotification**](doc//DefaultApi.md#deletenotification) | **DELETE** /api/notifications/{id} | Remove one notification
 *DefaultApi* | [**deletePasskey**](doc//DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 *DefaultApi* | [**deleteTag**](doc//DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
+*DefaultApi* | [**deleteUpgradeSnapshot**](doc//DefaultApi.md#deleteupgradesnapshot) | **DELETE** /api/admin/upgrade-snapshots/{name} | Delete one snapshot. Going back to it is then no longer possible
 *DefaultApi* | [**deleteWebhook**](doc//DefaultApi.md#deletewebhook) | **DELETE** /api/admin/webhooks/{id} | Stop telling this address
 *DefaultApi* | [**disableTotp**](doc//DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 *DefaultApi* | [**dismissDuplicates**](doc//DefaultApi.md#dismissduplicates) | **POST** /api/duplicates/dismiss | These photos are not duplicates of each other, and are not proposed again
@@ -212,6 +213,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listPeople**](doc//DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 *DefaultApi* | [**listSecurityEvents**](doc//DefaultApi.md#listsecurityevents) | **GET** /api/admin/security/events | Attempts to get in, newest first
 *DefaultApi* | [**listTags**](doc//DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
+*DefaultApi* | [**listUpgradeSnapshots**](doc//DefaultApi.md#listupgradesnapshots) | **GET** /api/admin/upgrade-snapshots | Snapshots of the database made before upgrades, newest first
 *DefaultApi* | [**listUsers**](doc//DefaultApi.md#listusers) | **GET** /api/admin/users | List users
 *DefaultApi* | [**listWebhooks**](doc//DefaultApi.md#listwebhooks) | **GET** /api/admin/webhooks | Addresses told about events, without their secrets
 *DefaultApi* | [**lockVault**](doc//DefaultApi.md#lockvault) | **POST** /api/vault/lock | Lock the vault again
@@ -424,6 +426,7 @@ Class | Method | HTTP request | Description
  - [TotpSetup](doc//TotpSetup.md)
  - [TrashSummary](doc//TrashSummary.md)
  - [Trip](doc//Trip.md)
+ - [UpgradeSnapshot](doc//UpgradeSnapshot.md)
  - [User](doc//User.md)
  - [UserImport](doc//UserImport.md)
  - [UserImportCreate](doc//UserImportCreate.md)

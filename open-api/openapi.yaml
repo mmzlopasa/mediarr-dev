@@ -380,6 +380,31 @@ paths:
               schema: { $ref: "#/components/schemas/BackupDeviceList" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/admin/upgrade-snapshots:
+    get:
+      operationId: listUpgradeSnapshots
+      summary: Snapshots of the database made before upgrades, newest first
+      responses:
+        "200":
+          description: The snapshots
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UpgradeSnapshot" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/upgrade-snapshots/{name}:
+    delete:
+      operationId: deleteUpgradeSnapshot
+      summary: Delete one snapshot. Going back to it is then no longer possible
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/admin/users:
     get:
       operationId: listUsers
@@ -3933,6 +3958,17 @@ components:
       properties:
         failures: { type: array, items: { $ref: "#/components/schemas/BackupDeviceFailure" } }
         gone: { type: array, items: { $ref: "#/components/schemas/BackupDeviceGone" } }
+    UpgradeSnapshot:
+      type: object
+      required: [name, fromVersion, toVersion, fromSchema, toSchema, createdAt, sizeBytes]
+      properties:
+        name: { type: string }
+        fromVersion: { type: string, description: "Empty when the version before is not known" }
+        toVersion: { type: string }
+        fromSchema: { type: integer, format: int64 }
+        toSchema: { type: integer, format: int64 }
+        createdAt: { type: string, format: date-time }
+        sizeBytes: { type: integer, format: int64 }
     DeviceKey:
       type: object
       required: [id, key]

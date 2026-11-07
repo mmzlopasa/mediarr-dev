@@ -2158,6 +2158,56 @@ class DefaultApi {
     }
   }
 
+  /// Delete one snapshot. Going back to it is then no longer possible
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] name (required):
+  Future<Response> deleteUpgradeSnapshotWithHttpInfo(
+    String name,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path =
+        r'/api/admin/upgrade-snapshots/{name}'.replaceAll('{name}', name);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Delete one snapshot. Going back to it is then no longer possible
+  ///
+  /// Parameters:
+  ///
+  /// * [String] name (required):
+  Future<void> deleteUpgradeSnapshot(
+    String name,
+  ) async {
+    final response = await deleteUpgradeSnapshotWithHttpInfo(
+      name,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Stop telling this address
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8495,6 +8545,53 @@ class DefaultApi {
       return (await apiClient.deserializeAsync(responseBody, 'List<Tag>')
               as List)
           .cast<Tag>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// Snapshots of the database made before upgrades, newest first
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listUpgradeSnapshotsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/upgrade-snapshots';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Snapshots of the database made before upgrades, newest first
+  Future<List<UpgradeSnapshot>?> listUpgradeSnapshots() async {
+    final response = await listUpgradeSnapshotsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<UpgradeSnapshot>') as List)
+          .cast<UpgradeSnapshot>()
           .toList(growable: false);
     }
     return null;

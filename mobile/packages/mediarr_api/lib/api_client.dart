@@ -517,6 +517,8 @@ class ApiClient {
           return TrashSummary.fromJson(value);
         case 'Trip':
           return Trip.fromJson(value);
+        case 'UpgradeSnapshot':
+          return UpgradeSnapshot.fromJson(value);
         case 'User':
           return User.fromJson(value);
         case 'UserImport':

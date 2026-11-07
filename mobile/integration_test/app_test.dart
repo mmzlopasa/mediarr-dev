@@ -249,7 +249,7 @@ void main() {
     await tester.tap(find.text('Backup'));
     await waitFor(tester, find.text('Scheduled backup'));
     // The screen's own list: a text field with several lines is a Scrollable too.
-    for (final name in ['Mum and dad', 'Ana']) {
+    for (final name in ['Mum and dad', 'Ana', 'v0.2.19 → v0.2.20']) {
       await tester.dragUntilVisible(
         find.text(name),
         find.byType(ListView).last,

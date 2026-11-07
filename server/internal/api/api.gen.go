@@ -2731,6 +2731,19 @@ type Trip struct {
 	To string `json:"to"`
 }
 
+// UpgradeSnapshot defines model for UpgradeSnapshot.
+type UpgradeSnapshot struct {
+	CreatedAt  time.Time `json:"createdAt"`
+	FromSchema int64     `json:"fromSchema"`
+
+	// FromVersion Empty when the version before is not known
+	FromVersion string `json:"fromVersion"`
+	Name        string `json:"name"`
+	SizeBytes   int64  `json:"sizeBytes"`
+	ToSchema    int64  `json:"toSchema"`
+	ToVersion   string `json:"toVersion"`
+}
+
 // User defines model for User.
 type User struct {
 	// AvatarVersion Changes with each new picture of the person; 0 or missing when there is none
@@ -3400,6 +3413,12 @@ type ServerInterface interface {
 	// GetAdminStorage How much each user stores
 	// (GET /api/admin/storage)
 	GetAdminStorage(w http.ResponseWriter, r *http.Request)
+	// ListUpgradeSnapshots Snapshots of the database made before upgrades, newest first
+	// (GET /api/admin/upgrade-snapshots)
+	ListUpgradeSnapshots(w http.ResponseWriter, r *http.Request)
+	// DeleteUpgradeSnapshot Delete one snapshot. Going back to it is then no longer possible
+	// (DELETE /api/admin/upgrade-snapshots/{name})
+	DeleteUpgradeSnapshot(w http.ResponseWriter, r *http.Request, name string)
 	// ListUsers List users
 	// (GET /api/admin/users)
 	ListUsers(w http.ResponseWriter, r *http.Request)
@@ -4198,6 +4217,18 @@ func (_ Unimplemented) SetServerSettings(w http.ResponseWriter, r *http.Request)
 // GetAdminStorage How much each user stores
 // (GET /api/admin/storage)
 func (_ Unimplemented) GetAdminStorage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListUpgradeSnapshots Snapshots of the database made before upgrades, newest first
+// (GET /api/admin/upgrade-snapshots)
+func (_ Unimplemented) ListUpgradeSnapshots(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteUpgradeSnapshot Delete one snapshot. Going back to it is then no longer possible
+// (DELETE /api/admin/upgrade-snapshots/{name})
+func (_ Unimplemented) DeleteUpgradeSnapshot(w http.ResponseWriter, r *http.Request, name string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6124,6 +6155,46 @@ func (siw *ServerInterfaceWrapper) GetAdminStorage(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAdminStorage(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListUpgradeSnapshots operation middleware
+func (siw *ServerInterfaceWrapper) ListUpgradeSnapshots(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListUpgradeSnapshots(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteUpgradeSnapshot operation middleware
+func (siw *ServerInterfaceWrapper) DeleteUpgradeSnapshot(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", chi.URLParam(r, "name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteUpgradeSnapshot(w, r, name)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10467,6 +10538,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/backup-devices", wrapper.ListAllBackupDevices)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/upgrade-snapshots", wrapper.ListUpgradeSnapshots)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/admin/upgrade-snapshots/{name}", wrapper.DeleteUpgradeSnapshot)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/users", wrapper.ListUsers)

@@ -174,6 +174,7 @@ part 'model/totp_code.dart';
 part 'model/totp_setup.dart';
 part 'model/trash_summary.dart';
 part 'model/trip.dart';
+part 'model/upgrade_snapshot.dart';
 part 'model/user.dart';
 part 'model/user_import.dart';
 part 'model/user_import_create.dart';

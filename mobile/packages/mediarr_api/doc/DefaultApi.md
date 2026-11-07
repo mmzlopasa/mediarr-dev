@@ -48,6 +48,7 @@ Method | HTTP request | Description
 [**deleteNotification**](DefaultApi.md#deletenotification) | **DELETE** /api/notifications/{id} | Remove one notification
 [**deletePasskey**](DefaultApi.md#deletepasskey) | **DELETE** /api/me/passkeys/{id} | Remove a passkey
 [**deleteTag**](DefaultApi.md#deletetag) | **DELETE** /api/tags/{id} | Delete a tag. The photos stay.
+[**deleteUpgradeSnapshot**](DefaultApi.md#deleteupgradesnapshot) | **DELETE** /api/admin/upgrade-snapshots/{name} | Delete one snapshot. Going back to it is then no longer possible
 [**deleteWebhook**](DefaultApi.md#deletewebhook) | **DELETE** /api/admin/webhooks/{id} | Stop telling this address
 [**disableTotp**](DefaultApi.md#disabletotp) | **POST** /api/me/totp/disable | Turn off TOTP
 [**dismissDuplicates**](DefaultApi.md#dismissduplicates) | **POST** /api/duplicates/dismiss | These photos are not duplicates of each other, and are not proposed again
@@ -161,6 +162,7 @@ Method | HTTP request | Description
 [**listPeople**](DefaultApi.md#listpeople) | **GET** /api/people | People recognised in the current user's library
 [**listSecurityEvents**](DefaultApi.md#listsecurityevents) | **GET** /api/admin/security/events | Attempts to get in, newest first
 [**listTags**](DefaultApi.md#listtags) | **GET** /api/tags | The current user's tags
+[**listUpgradeSnapshots**](DefaultApi.md#listupgradesnapshots) | **GET** /api/admin/upgrade-snapshots | Snapshots of the database made before upgrades, newest first
 [**listUsers**](DefaultApi.md#listusers) | **GET** /api/admin/users | List users
 [**listWebhooks**](DefaultApi.md#listwebhooks) | **GET** /api/admin/webhooks | Addresses told about events, without their secrets
 [**lockVault**](DefaultApi.md#lockvault) | **POST** /api/vault/lock | Lock the vault again
@@ -1797,6 +1799,46 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteUpgradeSnapshot**
+> deleteUpgradeSnapshot(name)
+
+Delete one snapshot. Going back to it is then no longer possible
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final name = name_example; // String | 
+
+try {
+    api_instance.deleteUpgradeSnapshot(name);
+} catch (e) {
+    print('Exception when calling DefaultApi->deleteUpgradeSnapshot: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **name** | **String**|  | 
 
 ### Return type
 
@@ -6286,6 +6328,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**List<Tag>**](Tag.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listUpgradeSnapshots**
+> List<UpgradeSnapshot> listUpgradeSnapshots()
+
+Snapshots of the database made before upgrades, newest first
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listUpgradeSnapshots();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listUpgradeSnapshots: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<UpgradeSnapshot>**](UpgradeSnapshot.md)
 
 ### Authorization
 
