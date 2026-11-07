@@ -274,6 +274,13 @@ void main() {
       find.widgetWithText(TextField, 'Name'),
       'Ana Horvat',
     );
+    // With the keyboard up, Save can be below the fold of the list, not built yet.
+    await tester.scrollUntilVisible(
+      find.text('Save'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('Save'));
     await waitFor(tester, find.text('Saved.'));
     expect(server.name, 'Ana Horvat');
