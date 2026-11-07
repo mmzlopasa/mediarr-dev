@@ -1507,3 +1507,28 @@ video.viewer-media {
 	flex: 1 1 220px;
 	font-size: 1.25rem;
 }
+
+/* A 360° panorama: a pill on its tile, and the turning view in the viewer. */
+.tl-pano {
+	right: 6px;
+	width: auto;
+	padding: 0 7px;
+	border-radius: 999px;
+	font-size: 0.66rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	font-variant-numeric: tabular-nums;
+}
+.viewer-pano {
+	position: absolute;
+	inset: 0;
+	touch-action: none;
+}
+.viewer-pano-msg {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	margin: 0;
+	color: var(--dim);
+}

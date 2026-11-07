@@ -1518,6 +1518,9 @@ type AssetDetail struct {
 	// People Only for the owner
 	People *[]PersonRef `json:"people,omitempty"`
 
+	// Projection equirectangular for a 360° panorama
+	Projection *string `json:"projection,omitempty"`
+
 	// Rating 1 to 5 stars, when it has any
 	Rating    *int    `json:"rating,omitempty"`
 	SizeBytes int64   `json:"sizeBytes"`
@@ -2709,6 +2712,9 @@ type TimelineItem struct {
 	Id         openapi_types.UUID `json:"id"`
 	IsFavorite bool               `json:"isFavorite"`
 	IsLive     *bool              `json:"isLive,omitempty"`
+
+	// IsPanorama A 360° panorama
+	IsPanorama *bool `json:"isPanorama,omitempty"`
 
 	// IsShared Belongs to someone else, shared with this user
 	IsShared *bool            `json:"isShared,omitempty"`

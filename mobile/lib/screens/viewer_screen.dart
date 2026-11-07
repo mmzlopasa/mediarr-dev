@@ -19,6 +19,7 @@ import 'asset_facts.dart';
 import 'asset_picture.dart';
 import 'duplicates_screen.dart';
 import 'faces_section.dart';
+import 'panorama_view.dart';
 import 'photo_editor_screen.dart';
 
 /// A full screen view on a clean black background: colors around a photo must not affect it.
@@ -57,6 +58,9 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
   );
   late int _index = widget.initialIndex;
   bool _zoomed = false;
+
+  /// A 360° panorama opens as one; the button shows it flat.
+  bool _flat = false;
 
   @override
   void dispose() {
@@ -200,6 +204,8 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
         !widget.readOnly &&
         !ref.read(settingsProvider).readOnly &&
         current.isShared != true;
+    // Turning a panorama uses the same drags as moving to the next photo and closing.
+    final turning = current.isPanorama == true && !_flat;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -218,6 +224,13 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
                 current.id,
                 () => store.refresh(reloadLoaded: true),
               ),
+            ),
+          if (current.isPanorama == true)
+            IconButton(
+              tooltip: _flat ? '360° view' : 'Flat view',
+              isSelected: !_flat,
+              icon: const Icon(Icons.threesixty),
+              onPressed: () => setState(() => _flat = !_flat),
             ),
           if (current.isLive == true)
             IconButton(
@@ -286,18 +299,23 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
         ],
       ),
       body: DragToDismiss(
-        enabled: !_zoomed,
+        enabled: !_zoomed && !turning,
         onDismiss: () => Navigator.of(context).maybePop(),
         child: GestureDetector(
-          onTapUp: settings.tapToNavigate && !_zoomed ? _tapToNavigate : null,
+          onTapUp: settings.tapToNavigate && !_zoomed && !turning
+              ? _tapToNavigate
+              : null,
           child: PageView.builder(
             controller: _pages,
-            physics: _zoomed ? const NeverScrollableScrollPhysics() : null,
+            physics: _zoomed || turning
+                ? const NeverScrollableScrollPhysics()
+                : null,
             itemCount: items.length,
             onPageChanged: (value) {
               setState(() {
                 _index = value;
                 _zoomed = false;
+                _flat = false;
               });
               // Moving towards the end of what is loaded fetches the next month.
               if (value >= items.length - 3) {
@@ -321,6 +339,13 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
                   autoPlay: settings.autoPlay,
                   loop: settings.loopVideos,
                   forceOriginal: settings.forceOriginalVideo,
+                );
+              }
+              if (item.isPanorama == true && !_flat && page == index) {
+                return PanoramaView(
+                  key: ValueKey('pano-${item.id}'),
+                  url: session.fullPhotoUrl(item.id),
+                  headers: session.headers,
                 );
               }
               return _PhotoPage(

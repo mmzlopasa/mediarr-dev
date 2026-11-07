@@ -118,6 +118,7 @@ type Asset struct {
 	Rating              int16
 	RatingByOwner       bool
 	ImportOffsetMinutes pgtype.Int4
+	Projection          pgtype.Text
 }
 
 type AssetDescription struct {

@@ -478,6 +478,9 @@
 										<Icon name="copy" size={14} />
 									</span>
 								{/if}
+								{#if tile.item.isPanorama}
+									<span class="tl-badge tl-pano" title="360°">360°</span>
+								{/if}
 								{#if tile.item.isLive}
 									<span class="tl-badge tl-live" title="Live"><Icon name="live" size={14} /></span>
 								{/if}

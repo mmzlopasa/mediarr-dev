@@ -17,6 +17,7 @@
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { lang, tr } from '#lib/i18n.svelte.ts';
 	import { formatDateTime, formatDuration } from './layout.ts';
+	import PanoramaView from './PanoramaView.svelte';
 	import VideoPlayer from './VideoPlayer.svelte';
 	import AlbumActivity from './AlbumActivity.svelte';
 	import PhotoEditor from '#lib/edit/PhotoEditor.svelte';
@@ -66,6 +67,9 @@
 	let fullLoaded = $state(false);
 	let fullWanted = $state(preferences()?.photoFull ?? true);
 	let playingLive = $state(false);
+	// A 360° panorama opens as one; the button shows it flat.
+	let flat = $state(false);
+	const isPanorama = $derived(detail?.projection === 'equirectangular');
 	let liveDetail = $state<AssetDetail>();
 	let showInfo = $state(false);
 	let showActivity = $state(false);
@@ -93,6 +97,7 @@
 		// Read once per photo: preferences arriving later must not load the photo again.
 		fullWanted = untrack(() => preferences()?.photoFull ?? true);
 		playingLive = false;
+		flat = false;
 		liveDetail = undefined;
 		scale = 1;
 		x = 0;
@@ -346,6 +351,17 @@
 			>
 			<div class="viewer-acts">
 				{#if detail}
+					{#if isPanorama}
+						<button
+							type="button"
+							class="icon-btn"
+							class:viewer-on={!flat}
+							aria-pressed={!flat}
+							aria-label={tr('Prikaz 360°', '360° view')}
+							title={tr('Prikaz 360°', '360° view')}
+							onclick={() => (flat = !flat)}><Icon name="globe" /></button
+						>
+					{/if}
 					{#if hasLive}
 						<button
 							type="button"
@@ -469,6 +485,8 @@
 							><Icon name="download" size={14} /> {tr('Preuzmi', 'Download')}</a
 						>{/if}
 				</div>
+			{:else if detail && isPanorama && !flat && !previewOnly}
+				<PanoramaView src="{base}/assets/{id}/thumbnail?size=full" alt={detail.originalName} />
 			{:else if detail}
 				{#key revision}<img
 						class="viewer-media"

@@ -9,7 +9,7 @@
 
 	// Listed so that iOS sends HEIC originals instead of converting them to JPEG.
 	const ACCEPT =
-		'image/*,video/*,image/heic,image/heif,.heic,.heif,.dng,.cr2,.cr3,.nef,.arw,.raf,.rw2,.orf,.pef';
+		'image/*,video/*,image/heic,image/heif,image/jxl,.heic,.heif,.jxl,.dng,.cr2,.cr3,.nef,.arw,.raf,.rw2,.orf,.pef';
 
 	// Each selection gets a new input, and old ones stay on the page. Clearing an input can make
 	// iOS delete the temporary copies of the photos it picked, while they are still uploading.

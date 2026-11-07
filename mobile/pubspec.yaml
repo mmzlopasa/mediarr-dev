@@ -84,6 +84,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
+  shaders:
+    - shaders/panorama.frag
   fonts:
     - family: Inter Tight
       fonts:

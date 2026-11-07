@@ -372,6 +372,7 @@ class FakeServer {
             'ratio': 1.0,
             'isFavorite': false,
             'localAt': '2026-11-07T09:00:00',
+            'isPanorama': true,
           },
         ],
       });

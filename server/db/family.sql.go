@@ -66,7 +66,8 @@ func (q *Queries) DeleteOwnFamilyAlbums(ctx context.Context, ownerID pgtype.UUID
 const familyBucket = `-- name: FamilyBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.local_at >= $1 AND a.local_at < $2
   AND a.id IN (SELECT album_item_ids(al.id) FROM albums al WHERE al.is_family)
@@ -91,6 +92,7 @@ type FamilyBucketRow struct {
 	DurationMs   pgtype.Int8
 	IsLive       bool
 	StackMembers int64
+	IsPanorama   bool
 }
 
 func (q *Queries) FamilyBucket(ctx context.Context, arg FamilyBucketParams) ([]FamilyBucketRow, error) {
@@ -115,6 +117,7 @@ func (q *Queries) FamilyBucket(ctx context.Context, arg FamilyBucketParams) ([]F
 			&i.DurationMs,
 			&i.IsLive,
 			&i.StackMembers,
+			&i.IsPanorama,
 		); err != nil {
 			return nil, err
 		}

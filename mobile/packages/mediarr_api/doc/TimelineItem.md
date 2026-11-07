@@ -14,6 +14,7 @@ Name | Type | Description | Notes
 **blurhash** | **String** |  | [optional] 
 **isFavorite** | **bool** |  | 
 **isLive** | **bool** |  | [optional] 
+**isPanorama** | **bool** | A 360° panorama | [optional] 
 **stackSize** | **int** | Shots in this stack, when it is one. Only the main shot shows on the timeline | [optional] 
 **isShared** | **bool** | Belongs to someone else, shared with this user | [optional] 
 **durationMs** | **int** |  | [optional] 

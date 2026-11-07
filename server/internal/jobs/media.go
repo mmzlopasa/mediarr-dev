@@ -112,6 +112,8 @@ type Metadata struct {
 	// MotionOffset counts from the end of an Android Motion Photo to its video.
 	MotionOffset int64
 	IsMotion     bool
+	// Projection is "equirectangular" for a 360° panorama.
+	Projection string
 }
 
 // ReadMetadata runs exiftool on a file.
@@ -175,6 +177,9 @@ func parseMetadata(row map[string]any) (*Metadata, error) {
 	}
 	meta.TakenAt, meta.OffsetMinutes = takenAt(row, meta.Kind)
 	meta.ContentID = firstText(row, "ContentIdentifier", "MediaGroupUUID")
+	if projection := strings.ToLower(text(row, "ProjectionType")); projection == "equirectangular" {
+		meta.Projection = projection
+	}
 	meta.MotionOffset = int64(number(row, "MicroVideoOffset"))
 	meta.IsMotion = meta.Kind == "photo" && (number(row, "MotionPhoto") == 1 || number(row, "MicroVideo") == 1)
 
@@ -323,12 +328,13 @@ func (m *Metadata) fillFromManual(asset *db.Asset) {
 
 func (m *Metadata) assetParams(id pgtype.UUID) db.UpdateAssetMetadataParams {
 	params := db.UpdateAssetMetadataParams{
-		ID:        id,
-		MimeType:  pgText(m.MIMEType),
-		Kind:      m.Kind,
-		Width:     pgtype.Int4{Int32: m.Width, Valid: m.Width > 0},
-		Height:    pgtype.Int4{Int32: m.Height, Valid: m.Height > 0},
-		ContentID: pgText(m.ContentID),
+		ID:         id,
+		MimeType:   pgText(m.MIMEType),
+		Kind:       m.Kind,
+		Width:      pgtype.Int4{Int32: m.Width, Valid: m.Width > 0},
+		Height:     pgtype.Int4{Int32: m.Height, Valid: m.Height > 0},
+		ContentID:  pgText(m.ContentID),
+		Projection: pgText(m.Projection),
 	}
 	if m.TakenAt != nil {
 		params.TakenAt = pgtype.Timestamptz{Time: *m.TakenAt, Valid: true}

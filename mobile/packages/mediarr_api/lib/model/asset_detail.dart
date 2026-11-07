@@ -14,6 +14,7 @@ class AssetDetail {
   /// Returns a new [AssetDetail] instance.
   AssetDetail({
     this.isOwner,
+    this.projection,
     this.downloadAllowed,
     this.edits,
     this.caption,
@@ -67,6 +68,15 @@ class AssetDetail {
   /// Consider adding a "default:" property in the specification file to hide this note.
   ///
   bool? isOwner;
+
+  /// equirectangular for a 360° panorama
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? projection;
 
   /// False on a public link that does not allow downloads
   ///
@@ -357,6 +367,7 @@ class AssetDetail {
       identical(this, other) ||
       other is AssetDetail &&
           other.isOwner == isOwner &&
+          other.projection == projection &&
           other.downloadAllowed == downloadAllowed &&
           other.edits == edits &&
           other.caption == caption &&
@@ -405,6 +416,7 @@ class AssetDetail {
   int get hashCode =>
       // ignore: unnecessary_parenthesis
       (isOwner == null ? 0 : isOwner!.hashCode) +
+      (projection == null ? 0 : projection!.hashCode) +
       (downloadAllowed == null ? 0 : downloadAllowed!.hashCode) +
       (edits == null ? 0 : edits!.hashCode) +
       (caption == null ? 0 : caption!.hashCode) +
@@ -451,7 +463,7 @@ class AssetDetail {
 
   @override
   String toString() =>
-      'AssetDetail[isOwner=$isOwner, downloadAllowed=$downloadAllowed, edits=$edits, caption=$caption, rating=$rating, isEditing=$isEditing, description=$description, isMissing=$isMissing, tags=$tags, stack=$stack, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
+      'AssetDetail[isOwner=$isOwner, projection=$projection, downloadAllowed=$downloadAllowed, edits=$edits, caption=$caption, rating=$rating, isEditing=$isEditing, description=$description, isMissing=$isMissing, tags=$tags, stack=$stack, people=$people, city=$city, state=$state, country=$country, id=$id, originalName=$originalName, kind=$kind, status=$status, mimeType=$mimeType, sizeBytes=$sizeBytes, width=$width, height=$height, isFavorite=$isFavorite, isArchived=$isArchived, localAt=$localAt, offsetMinutes=$offsetMinutes, hasCaptureTime=$hasCaptureTime, createdAt=$createdAt, newerId=$newerId, olderId=$olderId, durationMs=$durationMs, videoCodec=$videoCodec, hlsReady=$hlsReady, liveVideoId=$liveVideoId, hasMotion=$hasMotion, sprite=$sprite, camera=$camera, lens=$lens, iso=$iso, fNumber=$fNumber, exposureTime=$exposureTime, focalLength=$focalLength, latitude=$latitude, longitude=$longitude]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -459,6 +471,11 @@ class AssetDetail {
       json[r'isOwner'] = this.isOwner;
     } else {
       json[r'isOwner'] = null;
+    }
+    if (this.projection != null) {
+      json[r'projection'] = this.projection;
+    } else {
+      json[r'projection'] = null;
     }
     if (this.downloadAllowed != null) {
       json[r'downloadAllowed'] = this.downloadAllowed;
@@ -652,6 +669,7 @@ class AssetDetail {
 
       return AssetDetail(
         isOwner: mapValueOfType<bool>(json, r'isOwner'),
+        projection: mapValueOfType<String>(json, r'projection'),
         downloadAllowed: mapValueOfType<bool>(json, r'downloadAllowed'),
         edits: AssetEdits.fromJson(json[r'edits']),
         caption: mapValueOfType<String>(json, r'caption'),

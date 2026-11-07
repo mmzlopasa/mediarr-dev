@@ -20,7 +20,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath \
     -ldflags="-s -w -X github.com/mediarr-app/mediarr/server/internal/app.Version=$MEDIARR_VERSION" -o /mediarr ./cmd/mediarr
 
 FROM alpine:3
-RUN apk add --no-cache vips-tools vips-heif exiftool ffmpeg libraw-tools font-dejavu restic postgresql17-client && adduser -D -u 10001 mediarr
+RUN apk add --no-cache vips-tools vips-heif vips-jxl exiftool ffmpeg libraw-tools font-dejavu restic postgresql17-client && adduser -D -u 10001 mediarr
 COPY --from=server /mediarr /mediarr
 USER 10001
 EXPOSE 8080

@@ -33,7 +33,7 @@ const (
 
 var externalMedia = map[string]bool{
 	".jpg": true, ".jpeg": true, ".png": true, ".heic": true, ".heif": true, ".webp": true, ".gif": true,
-	".tif": true, ".tiff": true, ".avif": true, ".mp4": true, ".mov": true, ".m4v": true, ".mkv": true,
+	".tif": true, ".tiff": true, ".avif": true, ".jxl": true, ".mp4": true, ".mov": true, ".m4v": true, ".mkv": true,
 	".avi": true, ".webm": true, ".3gp": true, ".mts": true, ".m2ts": true,
 }
 

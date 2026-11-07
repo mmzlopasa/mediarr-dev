@@ -499,6 +499,29 @@ class _TileView extends StatelessWidget {
                     ],
                   ),
                 ),
+              if (item.isPanorama == true)
+                Positioned(
+                  right: 5,
+                  top: 5,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text(
+                      '360°',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               if (item.isLive == true)
                 const Positioned(
                   right: 5,

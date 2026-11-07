@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mediarr/main.dart';
 import 'package:mediarr/screens/asset_picture.dart';
+import 'package:mediarr/screens/panorama_view.dart';
 import 'package:mediarr/services/backup.dart';
 import 'package:mediarr/services/session.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -229,6 +230,16 @@ void main() {
     await tester.tap(find.text('Recently added'));
     await waitFor(tester, find.text('Recently added').last);
     await waitFor(tester, find.byType(AssetPicture));
+    // It is a 360° panorama: marked on its tile, and turning in the viewer.
+    expect(find.text('360°'), findsOneWidget);
+    await tester.tap(find.byType(AssetPicture).first);
+    await waitFor(tester, find.byType(PanoramaView));
+    await tester.tap(find.byTooltip('Flat view'));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(PanoramaView), findsNothing);
+    expect(find.byTooltip('360° view'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
     await tester.pageBack();
     await tester.pump(const Duration(seconds: 1));
     await tester.tap(find.text('Media').last);

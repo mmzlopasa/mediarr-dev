@@ -14,7 +14,8 @@ import (
 const collectionBucket = `-- name: CollectionBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
   AND a.local_at >= $2 AND a.local_at < $3
@@ -47,6 +48,7 @@ type CollectionBucketRow struct {
 	DurationMs   pgtype.Int8
 	IsLive       bool
 	StackMembers int64
+	IsPanorama   bool
 }
 
 func (q *Queries) CollectionBucket(ctx context.Context, arg CollectionBucketParams) ([]CollectionBucketRow, error) {
@@ -76,6 +78,7 @@ func (q *Queries) CollectionBucket(ctx context.Context, arg CollectionBucketPara
 			&i.DurationMs,
 			&i.IsLive,
 			&i.StackMembers,
+			&i.IsPanorama,
 		); err != nil {
 			return nil, err
 		}
@@ -246,7 +249,7 @@ func (q *Queries) FindTagByName(ctx context.Context, arg FindTagByNameParams) (F
 }
 
 const getCollectionAsset = `-- name: GetCollectionAsset :one
-SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, a.manual_taken_at, a.manual_offset_minutes, a.manual_latitude, a.manual_longitude, a.caption, a.rating, a.rating_by_owner, a.import_offset_minutes
+SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, a.manual_taken_at, a.manual_offset_minutes, a.manual_latitude, a.manual_longitude, a.caption, a.rating, a.rating_by_owner, a.import_offset_minutes, a.projection
 FROM assets a
 JOIN assets p ON p.id = COALESCE(a.live_photo_of, a.id)
 WHERE a.id = $1 AND a.user_id = $2
@@ -324,6 +327,7 @@ func (q *Queries) GetCollectionAsset(ctx context.Context, arg GetCollectionAsset
 		&i.Rating,
 		&i.RatingByOwner,
 		&i.ImportOffsetMinutes,
+		&i.Projection,
 	)
 	return i, err
 }
@@ -398,7 +402,7 @@ func (q *Queries) ListExpiredTrash(ctx context.Context, before pgtype.Timestampt
 }
 
 const listPurgeFamily = `-- name: ListPurgeFamily :many
-SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, a.manual_taken_at, a.manual_offset_minutes, a.manual_latitude, a.manual_longitude, a.caption, a.rating, a.rating_by_owner, a.import_offset_minutes, l.kind AS library_kind
+SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, a.manual_taken_at, a.manual_offset_minutes, a.manual_latitude, a.manual_longitude, a.caption, a.rating, a.rating_by_owner, a.import_offset_minutes, a.projection, l.kind AS library_kind
 FROM assets a JOIN libraries l ON l.id = a.library_id
 WHERE a.id = ANY($1::uuid[]) OR a.live_photo_of = ANY($1::uuid[])
 `
@@ -458,6 +462,7 @@ type ListPurgeFamilyRow struct {
 	Rating              int16
 	RatingByOwner       bool
 	ImportOffsetMinutes pgtype.Int4
+	Projection          pgtype.Text
 	LibraryKind         string
 }
 
@@ -526,6 +531,7 @@ func (q *Queries) ListPurgeFamily(ctx context.Context, dollar_1 []pgtype.UUID) (
 			&i.Rating,
 			&i.RatingByOwner,
 			&i.ImportOffsetMinutes,
+			&i.Projection,
 			&i.LibraryKind,
 		); err != nil {
 			return nil, err
@@ -689,7 +695,8 @@ const recentBucket = `-- name: RecentBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite,
        (a.created_at AT TIME ZONE 'UTC')::timestamp AS local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
   AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
@@ -717,6 +724,7 @@ type RecentBucketRow struct {
 	DurationMs   pgtype.Int8
 	IsLive       bool
 	StackMembers int64
+	IsPanorama   bool
 }
 
 // local_at carries the time it was added, so the days in the grid are the days things came in.
@@ -742,6 +750,7 @@ func (q *Queries) RecentBucket(ctx context.Context, arg RecentBucketParams) ([]R
 			&i.DurationMs,
 			&i.IsLive,
 			&i.StackMembers,
+			&i.IsPanorama,
 		); err != nil {
 			return nil, err
 		}
@@ -859,7 +868,8 @@ func (q *Queries) TagAssets(ctx context.Context, arg TagAssetsParams) (int64, er
 const tagBucket = `-- name: TagBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a JOIN asset_tags x ON x.asset_id = a.id
 WHERE x.tag_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
   AND a.local_at >= $2 AND a.local_at < $3
@@ -885,6 +895,7 @@ type TagBucketRow struct {
 	DurationMs   pgtype.Int8
 	IsLive       bool
 	StackMembers int64
+	IsPanorama   bool
 }
 
 func (q *Queries) TagBucket(ctx context.Context, arg TagBucketParams) ([]TagBucketRow, error) {
@@ -909,6 +920,7 @@ func (q *Queries) TagBucket(ctx context.Context, arg TagBucketParams) ([]TagBuck
 			&i.DurationMs,
 			&i.IsLive,
 			&i.StackMembers,
+			&i.IsPanorama,
 		); err != nil {
 			return nil, err
 		}

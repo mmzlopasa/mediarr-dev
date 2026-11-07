@@ -162,6 +162,7 @@ func timelineItems(rows []db.TimelineBucketRow, viewer pgtype.UUID) []api.Timeli
 			Ratio:      ratioOf(row.AspectRatio, row.Width, row.Height),
 			IsFavorite: row.IsFavorite && mine,
 			IsLive:     optional(row.IsLive, row.IsLive),
+			IsPanorama: optional(row.IsPanorama, row.IsPanorama),
 			StackSize:  optional(int(row.StackMembers)+1, mine && row.StackMembers > 0),
 			IsShared:   optional(true, !mine),
 			DurationMs: optional(row.DurationMs.Int64, row.DurationMs.Valid),
@@ -281,6 +282,7 @@ func (s *apiServer) assetDetail(ctx context.Context, row *db.Asset) (api.AssetDe
 		CreatedAt:      row.CreatedAt.Time,
 		Caption:        optional(row.Caption, row.Caption != ""),
 		Rating:         optional(int(row.Rating), row.Rating > 0),
+		Projection:     optional(row.Projection.String, row.Projection.Valid),
 	}
 	if err := s.addMediaDetails(ctx, row, &detail); err != nil {
 		return detail, err

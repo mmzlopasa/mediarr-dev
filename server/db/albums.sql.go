@@ -36,7 +36,8 @@ func (q *Queries) AddAlbumAssets(ctx context.Context, arg AddAlbumAssetsParams) 
 const albumBucket = `-- name: AlbumBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.id IN (SELECT album_item_ids($1))
   AND a.local_at >= $2 AND a.local_at < $3
@@ -62,6 +63,7 @@ type AlbumBucketRow struct {
 	DurationMs   pgtype.Int8
 	IsLive       bool
 	StackMembers int64
+	IsPanorama   bool
 }
 
 func (q *Queries) AlbumBucket(ctx context.Context, arg AlbumBucketParams) ([]AlbumBucketRow, error) {
@@ -86,6 +88,7 @@ func (q *Queries) AlbumBucket(ctx context.Context, arg AlbumBucketParams) ([]Alb
 			&i.DurationMs,
 			&i.IsLive,
 			&i.StackMembers,
+			&i.IsPanorama,
 		); err != nil {
 			return nil, err
 		}
@@ -522,7 +525,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 }
 
 const getVisibleAsset = `-- name: GetVisibleAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
 `
 
 type GetVisibleAssetParams struct {
@@ -588,6 +591,7 @@ func (q *Queries) GetVisibleAsset(ctx context.Context, arg GetVisibleAssetParams
 		&i.Rating,
 		&i.RatingByOwner,
 		&i.ImportOffsetMinutes,
+		&i.Projection,
 	)
 	return i, err
 }
@@ -943,7 +947,7 @@ func (q *Queries) ListPartnersReceived(ctx context.Context, partnerID pgtype.UUI
 }
 
 const listVisibleAssets = `-- name: ListVisibleAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
 `
 
 type ListVisibleAssetsParams struct {
@@ -1015,6 +1019,7 @@ func (q *Queries) ListVisibleAssets(ctx context.Context, arg ListVisibleAssetsPa
 			&i.Rating,
 			&i.RatingByOwner,
 			&i.ImportOffsetMinutes,
+			&i.Projection,
 		); err != nil {
 			return nil, err
 		}
@@ -1029,7 +1034,8 @@ func (q *Queries) ListVisibleAssets(ctx context.Context, arg ListVisibleAssetsPa
 const partnerBucket = `-- name: PartnerBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND ($2::timestamp IS NULL OR a.local_at >= $2)
@@ -1057,6 +1063,7 @@ type PartnerBucketRow struct {
 	DurationMs   pgtype.Int8
 	IsLive       bool
 	StackMembers int64
+	IsPanorama   bool
 }
 
 func (q *Queries) PartnerBucket(ctx context.Context, arg PartnerBucketParams) ([]PartnerBucketRow, error) {
@@ -1086,6 +1093,7 @@ func (q *Queries) PartnerBucket(ctx context.Context, arg PartnerBucketParams) ([
 			&i.DurationMs,
 			&i.IsLive,
 			&i.StackMembers,
+			&i.IsPanorama,
 		); err != nil {
 			return nil, err
 		}
@@ -1302,7 +1310,8 @@ func (q *Queries) SetPartnerTimeline(ctx context.Context, arg SetPartnerTimeline
 const timelineBucketWithPartners = `-- name: TimelineBucketWithPartners :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       (SELECT count(*) FROM assets m WHERE m.stack_parent = a.id)::bigint AS stack_members
+       (SELECT count(*) FROM assets m WHERE m.stack_parent = a.id)::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND a.local_at >= $1 AND a.local_at < $2
@@ -1332,6 +1341,7 @@ type TimelineBucketWithPartnersRow struct {
 	DurationMs   pgtype.Int8
 	IsLive       bool
 	StackMembers int64
+	IsPanorama   bool
 }
 
 func (q *Queries) TimelineBucketWithPartners(ctx context.Context, arg TimelineBucketWithPartnersParams) ([]TimelineBucketWithPartnersRow, error) {
@@ -1356,6 +1366,7 @@ func (q *Queries) TimelineBucketWithPartners(ctx context.Context, arg TimelineBu
 			&i.DurationMs,
 			&i.IsLive,
 			&i.StackMembers,
+			&i.IsPanorama,
 		); err != nil {
 			return nil, err
 		}

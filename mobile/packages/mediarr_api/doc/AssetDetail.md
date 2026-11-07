@@ -9,6 +9,7 @@ import 'package:mediarr_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **isOwner** | **bool** | Only the owner can change or delete the asset | [optional] 
+**projection** | **String** | equirectangular for a 360° panorama | [optional] 
 **downloadAllowed** | **bool** | False on a public link that does not allow downloads | [optional] 
 **edits** | [**AssetEdits**](AssetEdits.md) |  | [optional] 
 **caption** | **String** | Written by the owner | [optional] 

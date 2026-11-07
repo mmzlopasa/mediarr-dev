@@ -4249,6 +4249,7 @@ components:
         blurhash: { type: string }
         isFavorite: { type: boolean }
         isLive: { type: boolean }
+        isPanorama: { type: boolean, description: "A 360° panorama" }
         stackSize: { type: integer, description: "Shots in this stack, when it is one. Only the main shot shows on the timeline" }
         isShared: { type: boolean, description: "Belongs to someone else, shared with this user" }
         durationMs: { type: integer, format: int64 }
@@ -4266,6 +4267,7 @@ components:
       required: [id, originalName, kind, status, sizeBytes, isFavorite, isArchived, localAt, createdAt]
       properties:
         isOwner: { type: boolean, description: "Only the owner can change or delete the asset" }
+        projection: { type: string, description: "equirectangular for a 360° panorama" }
         downloadAllowed: { type: boolean, description: "False on a public link that does not allow downloads" }
         edits: { $ref: "#/components/schemas/AssetEdits" }
         caption: { type: string, description: "Written by the owner" }

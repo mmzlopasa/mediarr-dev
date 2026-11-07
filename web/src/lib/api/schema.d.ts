@@ -4427,6 +4427,8 @@ export interface components {
             blurhash?: string;
             isFavorite: boolean;
             isLive?: boolean;
+            /** @description A 360° panorama */
+            isPanorama?: boolean;
             /** @description Shots in this stack, when it is one. Only the main shot shows on the timeline */
             stackSize?: number;
             /** @description Belongs to someone else, shared with this user */
@@ -4443,6 +4445,8 @@ export interface components {
         AssetDetail: {
             /** @description Only the owner can change or delete the asset */
             isOwner?: boolean;
+            /** @description equirectangular for a 360° panorama */
+            projection?: string;
             /** @description False on a public link that does not allow downloads */
             downloadAllowed?: boolean;
             edits?: components["schemas"]["AssetEdits"];

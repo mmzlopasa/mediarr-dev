@@ -70,7 +70,8 @@ ORDER BY 1;
 -- name: ListFolderItems :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.library_id = sqlc.arg('library_id') AND a.user_id = sqlc.arg('user_id')
   AND starts_with(a.original_path, sqlc.arg('prefix')::text)

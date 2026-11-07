@@ -48,7 +48,7 @@ SELECT checksum, id FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND ch
 -- name: UpdateAssetMetadata :exec
 UPDATE assets
 SET mime_type = $2, kind = $3, width = $4, height = $5, taken_at = $6, taken_offset_minutes = $7,
-    content_id = $8, updated_at = now()
+    content_id = $8, projection = sqlc.narg('projection'), updated_at = now()
 WHERE id = $1;
 
 -- name: UpsertExif :exec
@@ -101,7 +101,8 @@ ORDER BY 1 DESC;
 -- name: TimelineBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       (SELECT count(*) FROM assets m WHERE m.stack_parent = a.id)::bigint AS stack_members
+       (SELECT count(*) FROM assets m WHERE m.stack_parent = a.id)::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')

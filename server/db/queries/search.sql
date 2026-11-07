@@ -99,7 +99,8 @@ ORDER BY 1 DESC;
 -- name: PersonBucket :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.id IN (SELECT f.asset_id FROM faces f WHERE f.person_id = sqlc.arg('person_id'))
   AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
@@ -110,7 +111,8 @@ ORDER BY a.local_at DESC, a.id DESC;
 -- What has real text on it: a receipt or a letter, not a sign in the background.
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        false::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 JOIN asset_search s ON s.asset_id = a.id
 WHERE a.user_id = sqlc.arg('user_id') AND a.kind = 'photo' AND a.status = 'ready' AND a.deleted_at IS NULL
@@ -228,7 +230,8 @@ LIMIT sqlc.arg('row_limit');
 -- name: ItemsByID :many
 SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.duration_ms,
        EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id AND v.deleted_at IS NULL)::boolean AS is_live,
-       0::bigint AS stack_members
+       0::bigint AS stack_members,
+       (a.projection IS NOT NULL)::boolean AS is_panorama
 FROM assets a
 WHERE a.id = ANY($1::uuid[]);
 
