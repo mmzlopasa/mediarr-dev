@@ -41,6 +41,9 @@ final uploadsProvider = NotifierProvider<UploadsNotifier, List<UploadTask>>(
 class UploadsNotifier extends Notifier<List<UploadTask>> {
   static const _maxParallel = 2;
 
+  /// A sent file stays a moment with its tick, then goes; one that failed stays, with its error.
+  static const doneLinger = Duration(milliseconds: 1500);
+
   @override
   List<UploadTask> build() => [];
 
@@ -64,6 +67,7 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
     _pump();
   }
 
+  /// Takes away the ones that failed; the sent ones go by themselves.
   void clearFinished() {
     state = state.where((task) => !task.finished).toList();
   }
@@ -111,6 +115,11 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
       );
       task.state = result.duplicate ? UploadState.duplicate : UploadState.done;
       await _removeShared(task);
+      Future<void>.delayed(doneLinger, () {
+        if (state.contains(task)) {
+          state = state.where((other) => other != task).toList();
+        }
+      });
     } catch (cause) {
       task.state = UploadState.failed;
       task.error = cause.toString();

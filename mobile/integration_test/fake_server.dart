@@ -356,7 +356,27 @@ class FakeServer {
           },
         ],
       });
-    } else if (path == '/api/assets/$photoId/thumbnail') {
+    } else if (path == '/api/collections/recent/buckets') {
+      await _json(request, 200, {
+        'buckets': [
+          {'month': '2026-11', 'count': 1},
+        ],
+      });
+    } else if (path == '/api/collections/recent/buckets/2026-11') {
+      await _json(request, 200, {
+        'month': '2026-11',
+        'items': [
+          {
+            'id': photoId,
+            'kind': 'photo',
+            'ratio': 1.0,
+            'isFavorite': false,
+            'localAt': '2026-11-07T09:00:00',
+          },
+        ],
+      });
+    } else if (path == '/api/collections/recent/assets/$photoId/thumbnail' ||
+        path == '/api/assets/$photoId/thumbnail') {
       request.response.headers.contentType = ContentType('image', 'jpeg');
       request.response.add(base64Decode(tinyJpeg));
       await request.response.close();

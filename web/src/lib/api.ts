@@ -429,9 +429,9 @@ export const publicSource = (token: string) => sourceAt(`/api/public/${token}`);
 export const familySource = () => sourceAt('/api/family');
 export const tagSource = (id: string) => sourceAt(`/api/tags/${id}`);
 export const personSource = (id: string) => sourceAt(`/api/people/${id}`);
-export const collectionBase = (scope: 'favorites' | 'archive' | 'trash' | 'vault') =>
+export const collectionBase = (scope: 'favorites' | 'archive' | 'trash' | 'vault' | 'recent') =>
 	`/api/collections/${scope}`;
-export const collectionSource = (scope: 'favorites' | 'archive' | 'trash' | 'vault') =>
+export const collectionSource = (scope: 'favorites' | 'archive' | 'trash' | 'vault' | 'recent') =>
 	sourceAt(collectionBase(scope));
 
 /** The address of a person's picture, which changes with each new one; none when they have none. */

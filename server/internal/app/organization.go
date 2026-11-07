@@ -24,6 +24,7 @@ const (
 	vaultSessionTime    = 15 * time.Minute
 	vaultPinFailures    = 5
 	collectionVault     = "vault"
+	collectionRecent    = "recent"
 	maxTagLength        = 100
 	collectionCacheRule = "private, no-store"
 )
@@ -67,14 +68,25 @@ func (s *apiServer) GetCollectionBuckets(w http.ResponseWriter, r *http.Request,
 	if !ok {
 		return
 	}
-	rows, err := s.queries.CollectionBuckets(r.Context(), db.CollectionBucketsParams{UserID: user.ID, Scope: string(scope)})
-	if err != nil {
-		internalError(w, r, err)
-		return
-	}
-	out := make([]db.TimelineBucketsRow, len(rows))
-	for i, row := range rows {
-		out[i] = db.TimelineBucketsRow(row)
+	var out []db.TimelineBucketsRow
+	if scope == collectionRecent {
+		rows, err := s.queries.RecentBuckets(r.Context(), user.ID)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		for _, row := range rows {
+			out = append(out, db.TimelineBucketsRow(row))
+		}
+	} else {
+		rows, err := s.queries.CollectionBuckets(r.Context(), db.CollectionBucketsParams{UserID: user.ID, Scope: string(scope)})
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		for _, row := range rows {
+			out = append(out, db.TimelineBucketsRow(row))
+		}
 	}
 	writeBuckets(w, out, false)
 }
@@ -88,14 +100,25 @@ func (s *apiServer) GetCollectionBucket(w http.ResponseWriter, r *http.Request, 
 	if !ok {
 		return
 	}
-	rows, err := s.queries.CollectionBucket(r.Context(), db.CollectionBucketParams{UserID: user.ID, FromAt: from, ToAt: to, Scope: string(scope)})
-	if err != nil {
-		internalError(w, r, err)
-		return
-	}
-	out := make([]db.TimelineBucketRow, len(rows))
-	for i := range rows {
-		out[i] = db.TimelineBucketRow(rows[i])
+	var out []db.TimelineBucketRow
+	if scope == collectionRecent {
+		rows, err := s.queries.RecentBucket(r.Context(), db.RecentBucketParams{UserID: user.ID, FromAt: from, ToAt: to})
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		for i := range rows {
+			out = append(out, db.TimelineBucketRow(rows[i]))
+		}
+	} else {
+		rows, err := s.queries.CollectionBucket(r.Context(), db.CollectionBucketParams{UserID: user.ID, FromAt: from, ToAt: to, Scope: string(scope)})
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		for i := range rows {
+			out = append(out, db.TimelineBucketRow(rows[i]))
+		}
 	}
 	writeBucket(w, month, out, user.ID, false)
 }

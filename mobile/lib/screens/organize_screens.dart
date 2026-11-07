@@ -58,6 +58,8 @@ class OrganizeLinks extends ConsumerWidget {
         const <String>[];
     final places = <(IconData, String, Widget)>[
       ...leading,
+      if (!hidden.contains('/recent'))
+        (Icons.schedule_outlined, 'Recently added', const RecentScreen()),
       if (!hidden.contains('/favorites'))
         (Icons.star_outline, 'Favorites', const FavoritesScreen()),
       if (!hidden.contains('/memories'))
@@ -310,6 +312,66 @@ Future<void> _bulk(
       _tell(context, 'The action failed. ${cause.message ?? ''}');
     }
   }
+}
+
+/// What reached the server last, by when it came in, not when it was taken.
+class RecentScreen extends ConsumerStatefulWidget {
+  const RecentScreen({super.key});
+
+  @override
+  ConsumerState<RecentScreen> createState() => _RecentScreenState();
+}
+
+class _RecentScreenState extends ConsumerState<RecentScreen> {
+  late final _session = CollectionSession(
+    ref.read(sessionProvider).value!,
+    'recent',
+  );
+  late final _store = TimelineStore.collection(_session);
+
+  @override
+  void dispose() {
+    _store.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Recently added')),
+    body: _PhotoGrid(
+      store: _store,
+      session: _session,
+      emptyText: 'Nothing has been added yet.',
+      actions: (selected, clear) => [
+        IconButton(
+          tooltip: 'Add to favorites',
+          icon: const Icon(Icons.star_outline),
+          onPressed: () => _bulk(
+            context,
+            _session,
+            _store,
+            selected,
+            clear,
+            BulkRequestActionEnum.favorite,
+            'Added to favorites',
+          ),
+        ),
+        IconButton(
+          tooltip: 'Archive',
+          icon: const Icon(Icons.archive_outlined),
+          onPressed: () => _bulk(
+            context,
+            _session,
+            _store,
+            selected,
+            clear,
+            BulkRequestActionEnum.archive,
+            'Archived',
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class FavoritesScreen extends ConsumerStatefulWidget {

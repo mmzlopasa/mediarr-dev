@@ -981,6 +981,7 @@ func (e GetAssetThumbnailParamsSize) Valid() bool {
 const (
 	GetCollectionAssetParamsScopeArchive   GetCollectionAssetParamsScope = "archive"
 	GetCollectionAssetParamsScopeFavorites GetCollectionAssetParamsScope = "favorites"
+	GetCollectionAssetParamsScopeRecent    GetCollectionAssetParamsScope = "recent"
 	GetCollectionAssetParamsScopeTrash     GetCollectionAssetParamsScope = "trash"
 	GetCollectionAssetParamsScopeVault     GetCollectionAssetParamsScope = "vault"
 )
@@ -991,6 +992,8 @@ func (e GetCollectionAssetParamsScope) Valid() bool {
 	case GetCollectionAssetParamsScopeArchive:
 		return true
 	case GetCollectionAssetParamsScopeFavorites:
+		return true
+	case GetCollectionAssetParamsScopeRecent:
 		return true
 	case GetCollectionAssetParamsScopeTrash:
 		return true
@@ -1005,6 +1008,7 @@ func (e GetCollectionAssetParamsScope) Valid() bool {
 const (
 	GetCollectionMotionParamsScopeArchive   GetCollectionMotionParamsScope = "archive"
 	GetCollectionMotionParamsScopeFavorites GetCollectionMotionParamsScope = "favorites"
+	GetCollectionMotionParamsScopeRecent    GetCollectionMotionParamsScope = "recent"
 	GetCollectionMotionParamsScopeTrash     GetCollectionMotionParamsScope = "trash"
 	GetCollectionMotionParamsScopeVault     GetCollectionMotionParamsScope = "vault"
 )
@@ -1015,6 +1019,8 @@ func (e GetCollectionMotionParamsScope) Valid() bool {
 	case GetCollectionMotionParamsScopeArchive:
 		return true
 	case GetCollectionMotionParamsScopeFavorites:
+		return true
+	case GetCollectionMotionParamsScopeRecent:
 		return true
 	case GetCollectionMotionParamsScopeTrash:
 		return true
@@ -1029,6 +1035,7 @@ func (e GetCollectionMotionParamsScope) Valid() bool {
 const (
 	GetCollectionOriginalParamsScopeArchive   GetCollectionOriginalParamsScope = "archive"
 	GetCollectionOriginalParamsScopeFavorites GetCollectionOriginalParamsScope = "favorites"
+	GetCollectionOriginalParamsScopeRecent    GetCollectionOriginalParamsScope = "recent"
 	GetCollectionOriginalParamsScopeTrash     GetCollectionOriginalParamsScope = "trash"
 	GetCollectionOriginalParamsScopeVault     GetCollectionOriginalParamsScope = "vault"
 )
@@ -1039,6 +1046,8 @@ func (e GetCollectionOriginalParamsScope) Valid() bool {
 	case GetCollectionOriginalParamsScopeArchive:
 		return true
 	case GetCollectionOriginalParamsScopeFavorites:
+		return true
+	case GetCollectionOriginalParamsScopeRecent:
 		return true
 	case GetCollectionOriginalParamsScopeTrash:
 		return true
@@ -1074,6 +1083,7 @@ func (e GetCollectionThumbnailParamsSize) Valid() bool {
 const (
 	GetCollectionThumbnailParamsScopeArchive   GetCollectionThumbnailParamsScope = "archive"
 	GetCollectionThumbnailParamsScopeFavorites GetCollectionThumbnailParamsScope = "favorites"
+	GetCollectionThumbnailParamsScopeRecent    GetCollectionThumbnailParamsScope = "recent"
 	GetCollectionThumbnailParamsScopeTrash     GetCollectionThumbnailParamsScope = "trash"
 	GetCollectionThumbnailParamsScopeVault     GetCollectionThumbnailParamsScope = "vault"
 )
@@ -1084,6 +1094,8 @@ func (e GetCollectionThumbnailParamsScope) Valid() bool {
 	case GetCollectionThumbnailParamsScopeArchive:
 		return true
 	case GetCollectionThumbnailParamsScopeFavorites:
+		return true
+	case GetCollectionThumbnailParamsScopeRecent:
 		return true
 	case GetCollectionThumbnailParamsScopeTrash:
 		return true
@@ -1098,6 +1110,7 @@ func (e GetCollectionThumbnailParamsScope) Valid() bool {
 const (
 	GetCollectionVideoFileParamsScopeArchive   GetCollectionVideoFileParamsScope = "archive"
 	GetCollectionVideoFileParamsScopeFavorites GetCollectionVideoFileParamsScope = "favorites"
+	GetCollectionVideoFileParamsScopeRecent    GetCollectionVideoFileParamsScope = "recent"
 	GetCollectionVideoFileParamsScopeTrash     GetCollectionVideoFileParamsScope = "trash"
 	GetCollectionVideoFileParamsScopeVault     GetCollectionVideoFileParamsScope = "vault"
 )
@@ -1108,6 +1121,8 @@ func (e GetCollectionVideoFileParamsScope) Valid() bool {
 	case GetCollectionVideoFileParamsScopeArchive:
 		return true
 	case GetCollectionVideoFileParamsScopeFavorites:
+		return true
+	case GetCollectionVideoFileParamsScopeRecent:
 		return true
 	case GetCollectionVideoFileParamsScopeTrash:
 		return true
@@ -1122,6 +1137,7 @@ func (e GetCollectionVideoFileParamsScope) Valid() bool {
 const (
 	GetCollectionBucketsParamsScopeArchive   GetCollectionBucketsParamsScope = "archive"
 	GetCollectionBucketsParamsScopeFavorites GetCollectionBucketsParamsScope = "favorites"
+	GetCollectionBucketsParamsScopeRecent    GetCollectionBucketsParamsScope = "recent"
 	GetCollectionBucketsParamsScopeTrash     GetCollectionBucketsParamsScope = "trash"
 	GetCollectionBucketsParamsScopeVault     GetCollectionBucketsParamsScope = "vault"
 )
@@ -1132,6 +1148,8 @@ func (e GetCollectionBucketsParamsScope) Valid() bool {
 	case GetCollectionBucketsParamsScopeArchive:
 		return true
 	case GetCollectionBucketsParamsScopeFavorites:
+		return true
+	case GetCollectionBucketsParamsScopeRecent:
 		return true
 	case GetCollectionBucketsParamsScopeTrash:
 		return true
@@ -1146,6 +1164,7 @@ func (e GetCollectionBucketsParamsScope) Valid() bool {
 const (
 	GetCollectionBucketParamsScopeArchive   GetCollectionBucketParamsScope = "archive"
 	GetCollectionBucketParamsScopeFavorites GetCollectionBucketParamsScope = "favorites"
+	GetCollectionBucketParamsScopeRecent    GetCollectionBucketParamsScope = "recent"
 	GetCollectionBucketParamsScopeTrash     GetCollectionBucketParamsScope = "trash"
 	GetCollectionBucketParamsScopeVault     GetCollectionBucketParamsScope = "vault"
 )
@@ -1156,6 +1175,8 @@ func (e GetCollectionBucketParamsScope) Valid() bool {
 	case GetCollectionBucketParamsScopeArchive:
 		return true
 	case GetCollectionBucketParamsScopeFavorites:
+		return true
+	case GetCollectionBucketParamsScopeRecent:
 		return true
 	case GetCollectionBucketParamsScopeTrash:
 		return true

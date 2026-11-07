@@ -3,7 +3,7 @@ import { photo, signIn } from './helpers';
 
 test('a tag is renamed, and joined with another only after asking', async ({ page }) => {
 	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
-	await signIn(page, 'organizer');
+	await signIn(page, 'importer');
 	const stamp = Date.now();
 	const name = `tagrename-${stamp}.jpg`;
 	await page.goto('/');

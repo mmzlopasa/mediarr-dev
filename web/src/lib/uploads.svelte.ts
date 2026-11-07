@@ -1,4 +1,6 @@
 import { Upload } from 'tus-js-client';
+import { showToast } from '#lib/design/components/toast.svelte.ts';
+import { tr } from '#lib/i18n.svelte.ts';
 
 export type UploadStatus = 'queued' | 'uploading' | 'done' | 'duplicate' | 'failed';
 
@@ -16,11 +18,16 @@ const MAX_PARALLEL = 3;
 const CHUNK_SIZE = 50 * 1024 * 1024;
 const RETRY_DELAYS = [0, 1000, 3000, 5000, 10000];
 const PREPARING_TIMEOUT_MS = 180000;
+// A sent file stays a moment with its tick, then goes; one that failed stays, with its error.
+const DONE_LINGER_MS = 1500;
 
 let nextId = 1;
 let items = $state<UploadItem[]>([]);
 let preparing = $state(false);
 let preparingTimer = 0;
+// What this round of uploads did, said once when the last file is in.
+let sent = 0;
+let existed = 0;
 // Not reactive on purpose: the interface renders `items`, and this only holds the file handles.
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const files = new Map<number, File>();
@@ -46,6 +53,16 @@ export function clearFinishedUploads() {
 	items = items.filter((item) => item.status === 'queued' || item.status === 'uploading');
 }
 
+function finishRound() {
+	if (items.some((item) => item.status === 'queued' || item.status === 'uploading')) return;
+	if (sent + existed === 0) return;
+	const parts = [tr(`Poslano: ${sent}`, `Uploaded: ${sent}`)];
+	if (existed) parts.push(tr(`već postoji: ${existed}`, `already existed: ${existed}`));
+	showToast('ok', parts.join(' · '));
+	sent = 0;
+	existed = 0;
+}
+
 function update(id: number, changes: Partial<UploadItem>) {
 	items = items.map((item) => (item.id === id ? { ...item, ...changes } : item));
 }
@@ -54,6 +71,7 @@ function fail(id: number, message: string) {
 	files.delete(id);
 	update(id, { status: 'failed', error: message });
 	pump();
+	finishRound();
 }
 
 function pump() {
@@ -86,7 +104,13 @@ async function start(item: UploadItem) {
 			onSuccess: () => {
 				files.delete(item.id);
 				update(item.id, { status: duplicate ? 'duplicate' : 'done', loaded: file.size });
+				if (duplicate) existed += 1;
+				else sent += 1;
+				window.setTimeout(() => {
+					items = items.filter((entry) => entry.id !== item.id);
+				}, DONE_LINGER_MS);
 				pump();
+				finishRound();
 			},
 			onError: (error) => fail(item.id, error.message)
 		});

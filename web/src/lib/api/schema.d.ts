@@ -6744,7 +6744,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "favorites" | "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault" | "recent";
             };
             cookie?: never;
         };
@@ -6768,7 +6768,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "favorites" | "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault" | "recent";
                 month: string;
             };
             cookie?: never;
@@ -6794,7 +6794,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "favorites" | "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault" | "recent";
                 id: string;
             };
             cookie?: never;
@@ -6821,7 +6821,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                scope: "favorites" | "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault" | "recent";
                 id: string;
             };
             cookie?: never;
@@ -6848,7 +6848,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                scope: "favorites" | "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault" | "recent";
                 id: string;
             };
             cookie?: never;
@@ -6873,7 +6873,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "favorites" | "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault" | "recent";
                 id: string;
             };
             cookie?: never;
@@ -6898,7 +6898,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                scope: "favorites" | "archive" | "trash" | "vault";
+                scope: "favorites" | "archive" | "trash" | "vault" | "recent";
                 id: string;
                 file: string;
             };

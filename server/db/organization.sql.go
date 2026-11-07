@@ -255,6 +255,7 @@ WHERE a.id = $1 AND a.user_id = $2
         WHEN 'archive' THEN p.archived_at IS NOT NULL AND p.deleted_at IS NULL AND p.vault_at IS NULL
         WHEN 'trash' THEN p.deleted_at IS NOT NULL AND p.vault_at IS NULL
         WHEN 'vault' THEN p.vault_at IS NOT NULL AND p.deleted_at IS NULL
+        WHEN 'recent' THEN p.deleted_at IS NULL AND p.vault_at IS NULL AND p.archived_at IS NULL
         ELSE false END
 `
 
@@ -682,6 +683,109 @@ func (q *Queries) MoveToVault(ctx context.Context, arg MoveToVaultParams) (int64
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const recentBucket = `-- name: RecentBucket :many
+SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite,
+       (a.created_at AT TIME ZONE 'UTC')::timestamp AS local_at, a.duration_ms,
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id)::boolean AS is_live,
+       0::bigint AS stack_members
+FROM assets a
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
+  AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
+  AND a.created_at >= ($2::timestamp AT TIME ZONE 'UTC')
+  AND a.created_at < ($3::timestamp AT TIME ZONE 'UTC')
+ORDER BY a.created_at DESC, a.id DESC
+`
+
+type RecentBucketParams struct {
+	UserID pgtype.UUID
+	FromAt pgtype.Timestamp
+	ToAt   pgtype.Timestamp
+}
+
+type RecentBucketRow struct {
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	Kind         string
+	Width        pgtype.Int4
+	Height       pgtype.Int4
+	AspectRatio  pgtype.Float4
+	Blurhash     pgtype.Text
+	IsFavorite   bool
+	LocalAt      pgtype.Timestamp
+	DurationMs   pgtype.Int8
+	IsLive       bool
+	StackMembers int64
+}
+
+// local_at carries the time it was added, so the days in the grid are the days things came in.
+func (q *Queries) RecentBucket(ctx context.Context, arg RecentBucketParams) ([]RecentBucketRow, error) {
+	rows, err := q.db.Query(ctx, recentBucket, arg.UserID, arg.FromAt, arg.ToAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RecentBucketRow
+	for rows.Next() {
+		var i RecentBucketRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Kind,
+			&i.Width,
+			&i.Height,
+			&i.AspectRatio,
+			&i.Blurhash,
+			&i.IsFavorite,
+			&i.LocalAt,
+			&i.DurationMs,
+			&i.IsLive,
+			&i.StackMembers,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const recentBuckets = `-- name: RecentBuckets :many
+SELECT to_char(date_trunc('month', a.created_at AT TIME ZONE 'UTC'), 'YYYY-MM')::text AS month, count(*) AS count
+FROM assets a
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
+  AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
+GROUP BY 1
+ORDER BY 1 DESC
+`
+
+type RecentBucketsRow struct {
+	Month string
+	Count int64
+}
+
+// Recently added goes by when a photo reached the server, not when it was taken.
+func (q *Queries) RecentBuckets(ctx context.Context, userID pgtype.UUID) ([]RecentBucketsRow, error) {
+	rows, err := q.db.Query(ctx, recentBuckets, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RecentBucketsRow
+	for rows.Next() {
+		var i RecentBucketsRow
+		if err := rows.Scan(&i.Month, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const renameTag = `-- name: RenameTag :exec

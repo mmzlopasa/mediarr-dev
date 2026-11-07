@@ -300,10 +300,10 @@ class _TaskList extends ConsumerWidget {
                   style: text.titleMedium,
                 ),
               ),
-              if (done > 0)
+              if (tasks.any((task) => task.state == UploadState.failed))
                 TextButton(
                   onPressed: ref.read(uploadsProvider.notifier).clearFinished,
-                  child: const Text('Clear'),
+                  child: const Text('Clear failed'),
                 ),
             ],
           ),

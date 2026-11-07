@@ -37,6 +37,7 @@ WHERE a.id = sqlc.arg('id') AND a.user_id = sqlc.arg('user_id')
         WHEN 'archive' THEN p.archived_at IS NOT NULL AND p.deleted_at IS NULL AND p.vault_at IS NULL
         WHEN 'trash' THEN p.deleted_at IS NOT NULL AND p.vault_at IS NULL
         WHEN 'vault' THEN p.vault_at IS NOT NULL AND p.deleted_at IS NULL
+        WHEN 'recent' THEN p.deleted_at IS NULL AND p.vault_at IS NULL AND p.archived_at IS NULL
         ELSE false END;
 
 -- name: UnarchiveAssets :execrows
@@ -162,3 +163,25 @@ UPDATE tags SET name = $3 WHERE id = $1 AND user_id = $2;
 INSERT INTO asset_tags (asset_id, tag_id)
 SELECT x.asset_id, sqlc.arg('into')::uuid FROM asset_tags x WHERE x.tag_id = sqlc.arg('from')::uuid
 ON CONFLICT DO NOTHING;
+
+-- name: RecentBuckets :many
+-- Recently added goes by when a photo reached the server, not when it was taken.
+SELECT to_char(date_trunc('month', a.created_at AT TIME ZONE 'UTC'), 'YYYY-MM')::text AS month, count(*) AS count
+FROM assets a
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
+  AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
+GROUP BY 1
+ORDER BY 1 DESC;
+
+-- name: RecentBucket :many
+-- local_at carries the time it was added, so the days in the grid are the days things came in.
+SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite,
+       (a.created_at AT TIME ZONE 'UTC')::timestamp AS local_at, a.duration_ms,
+       EXISTS (SELECT 1 FROM assets v WHERE v.live_photo_of = a.id)::boolean AS is_live,
+       0::bigint AS stack_members
+FROM assets a
+WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.live_photo_of IS NULL
+  AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
+  AND a.created_at >= (sqlc.arg('from_at')::timestamp AT TIME ZONE 'UTC')
+  AND a.created_at < (sqlc.arg('to_at')::timestamp AT TIME ZONE 'UTC')
+ORDER BY a.created_at DESC, a.id DESC;

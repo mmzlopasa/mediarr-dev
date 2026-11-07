@@ -353,7 +353,7 @@ test.describe('timeline', () => {
 			.locator('input[type=file]')
 			.last()
 			.setInputFiles({ ...file, name: `copy-${file.name}` });
-		await expect(page.getByText('Već postoji')).toBeVisible({ timeout: 30000 });
+		await expect(page.getByText('već postoji: 1')).toBeVisible({ timeout: 30000 });
 	});
 
 	test('the viewer opens, shows details, closes and keeps the scroll position', async ({
@@ -439,8 +439,9 @@ test.describe('timeline', () => {
 			expect(chooser.isMultiple()).toBe(true);
 			await chooser.setFiles(batch.map((n) => photo(`image-${n}.jpg`)));
 		}
-		await expect(page.getByText('Poslano')).toHaveCount(7, { timeout: 45000 });
 		await expect(page.locator('.tl-tile').nth(before + 6)).toBeAttached({ timeout: 60000 });
+		// A sent file leaves the list by itself; only one that failed would stay.
+		await expect(page.locator('.kv', { hasText: 'image-' })).toHaveCount(0, { timeout: 15000 });
 	});
 
 	test('a video is transcoded and its stream is served to the owner', async ({ page }) => {

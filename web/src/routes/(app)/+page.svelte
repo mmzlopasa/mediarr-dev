@@ -112,7 +112,10 @@
 {#if uploads().length > 0}
 	<Card title={tr('Upload', 'Upload')}>
 		{#snippet actions()}
-			<Button small onclick={clearFinishedUploads}>{tr('Očisti gotove', 'Clear finished')}</Button>
+			{#if uploads().some((upload) => upload.status === 'failed')}
+				<Button small onclick={clearFinishedUploads}>{tr('Makni neuspjele', 'Clear failed')}</Button
+				>
+			{/if}
 		{/snippet}
 		{#each uploads() as upload (upload.id)}
 			<div class="kv">

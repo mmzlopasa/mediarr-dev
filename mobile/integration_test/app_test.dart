@@ -220,6 +220,21 @@ void main() {
     await waitFor(tester, find.text('Hvar'));
   });
 
+  testWidgets('Recently added shows what came in last', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.text('Library').last);
+    await waitFor(tester, find.text('Recently added'));
+    await tester.tap(find.text('Recently added'));
+    await waitFor(tester, find.text('Recently added').last);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Media').last);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('a tag is renamed in the app', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);

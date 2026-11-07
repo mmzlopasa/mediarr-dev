@@ -51,6 +51,14 @@ export const appNav: NavItem[] = [
 		emptyEn: 'No people recognised yet.'
 	},
 	{
+		path: '/recent',
+		icon: 'upload',
+		hr: 'Nedavno dodano',
+		en: 'Recently added',
+		emptyHr: 'Još ništa nije dodano.',
+		emptyEn: 'Nothing has been added yet.'
+	},
+	{
 		path: '/favorites',
 		icon: 'star',
 		hr: 'Favoriti',
