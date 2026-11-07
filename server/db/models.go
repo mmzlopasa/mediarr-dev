@@ -175,6 +175,27 @@ type BackupDestination struct {
 	CreatedAt     pgtype.Timestamptz
 }
 
+type BackupDevice struct {
+	ID          pgtype.UUID
+	UserID      pgtype.UUID
+	Name        string
+	Platform    string
+	AppVersion  string
+	Pending     int32
+	Working     int32
+	Verified    int32
+	Failed      int32
+	Failures    []byte
+	CreatedAt   pgtype.Timestamptz
+	ReportedAt  pgtype.Timestamptz
+	QuietToldAt pgtype.Timestamptz
+}
+
+type BackupDeviceFile struct {
+	DeviceID pgtype.UUID
+	Checksum []byte
+}
+
 type BackupRun struct {
 	ID            pgtype.UUID
 	Kind          string
@@ -461,19 +482,20 @@ type TrustedDevice struct {
 }
 
 type User struct {
-	ID            pgtype.UUID
-	Email         string
-	Name          string
-	PasswordHash  string
-	IsAdmin       bool
-	TotpSecret    pgtype.Text
-	TotpEnabled   bool
-	TotpLastStep  int64
-	CreatedAt     pgtype.Timestamptz
-	UpdatedAt     pgtype.Timestamptz
-	VaultPinHash  pgtype.Text
-	QuotaBytes    pgtype.Int8
-	AvatarVersion int32
+	ID              pgtype.UUID
+	Email           string
+	Name            string
+	PasswordHash    string
+	IsAdmin         bool
+	TotpSecret      pgtype.Text
+	TotpEnabled     bool
+	TotpLastStep    int64
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	VaultPinHash    pgtype.Text
+	QuotaBytes      pgtype.Int8
+	AvatarVersion   int32
+	BackupQuietDays int32
 }
 
 type UserPreference struct {

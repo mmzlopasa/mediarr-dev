@@ -198,6 +198,14 @@ export const adminNav: NavItem[] = [
 		emptyEn: 'Nothing recorded yet.'
 	},
 	{
+		path: '/admin/devices',
+		icon: 'phone',
+		hr: 'Uređaji za backup',
+		en: 'Backup devices',
+		emptyHr: '',
+		emptyEn: ''
+	},
+	{
 		path: '/admin/health',
 		icon: 'pulse',
 		hr: 'Zdravlje',

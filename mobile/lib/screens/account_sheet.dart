@@ -12,6 +12,7 @@ import '../services/settings.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'backup_screen.dart';
+import 'devices_screen.dart';
 import 'free_space_screen.dart';
 import 'imports_screen.dart';
 import 'profile_screen.dart';
@@ -335,6 +336,11 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             onTap: () => _push(const ProfileScreen()),
           ),
           ListTile(
+            leading: Icon(Icons.phone_iphone, color: Palette.dim),
+            title: const Text('Backup devices'),
+            onTap: () => _push(const BackupDevicesScreen()),
+          ),
+          ListTile(
             leading: Icon(Icons.download_outlined, color: Palette.dim),
             title: const Text('Import'),
             onTap: () => _push(const ImportsScreen()),
@@ -344,6 +350,12 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
               leading: Icon(Icons.backup_outlined, color: Palette.dim),
               title: const Text('Backup'),
               onTap: () => _push(const BackupScreen()),
+            ),
+          if (session.user.isAdmin)
+            ListTile(
+              leading: Icon(Icons.devices_other_outlined, color: Palette.dim),
+              title: const Text('All backup devices'),
+              onTap: () => _push(const BackupDevicesScreen(all: true)),
             ),
           ListTile(
             leading: Icon(Icons.settings_outlined, color: Palette.dim),

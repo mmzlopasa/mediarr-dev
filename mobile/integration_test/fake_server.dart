@@ -46,6 +46,7 @@ class FakeServer {
 
   /// The person's name, which they can change.
   String name = 'Owner';
+  int quietDays = 3;
 
   Map<String, Object> get _user => {
     'id': userId,
@@ -144,6 +145,54 @@ class FakeServer {
       ) as Map<String, dynamic>;
       name = (body['name'] as String?) ?? name;
       await _json(request, 200, _user);
+      return;
+    }
+    if (path == '/api/me/backup-devices') {
+      await _json(request, 200, {
+        'quietDays': quietDays,
+        'devices': [
+          {
+            'id': '00000000-0000-4000-8000-0000000000d1',
+            'name': 'Old phone',
+            'platform': 'android',
+            'appVersion': '0.7.0',
+            'createdAt': '2026-10-01T10:00:00Z',
+            'reportedAt': '2026-10-20T10:00:00Z',
+            'quiet': true,
+            'pending': 4,
+            'working': 0,
+            'verified': 120,
+            'failed': 1,
+            'files': 121,
+            'confirmed': 119,
+            'trashed': 1,
+            'gone': 1,
+            'ownerEmail': 'owner@example.com',
+            'ownerName': 'Owner',
+          },
+        ],
+      });
+      return;
+    }
+    if (path == '/api/me/backup-devices/quiet-days') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      quietDays = body['days'] as int;
+      request.response.statusCode = 204;
+      await request.response.close();
+      return;
+    }
+    if (path.endsWith('/missing') &&
+        path.startsWith('/api/me/backup-devices/')) {
+      await _json(request, 200, {
+        'failures': [
+          {'name': 'IMG_0042.HEIC', 'reason': 'The file could not be read.'},
+        ],
+        'gone': [
+          {'checksum': 'ab' * 32, 'name': 'beach.jpg', 'inTrash': true},
+        ],
+      });
       return;
     }
     if (path == '/api/search/options') {

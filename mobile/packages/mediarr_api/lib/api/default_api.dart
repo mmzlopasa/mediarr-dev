@@ -1815,6 +1815,55 @@ class DefaultApi {
     }
   }
 
+  /// Take a device off the list. Its photos stay
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteBackupDeviceWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/backup-devices/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Take a device off the list. Its photos stay
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteBackupDevice(
+    String id,
+  ) async {
+    final response = await deleteBackupDeviceWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Forget this device, which then has to be approved again
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7207,6 +7256,52 @@ class DefaultApi {
     return null;
   }
 
+  /// Every user's devices that back up
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listAllBackupDevicesWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/backup-devices';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Every user's devices that back up
+  Future<BackupDeviceList?> listAllBackupDevices() async {
+    final response = await listAllBackupDevicesWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BackupDeviceList',
+      ) as BackupDeviceList;
+    }
+    return null;
+  }
+
   /// The faces found in a picture of the signed-in user
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7461,6 +7556,112 @@ class DefaultApi {
               responseBody, 'List<BackupDestination>') as List)
           .cast<BackupDestination>()
           .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// What from a device is not safe on the server
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> listBackupDeviceMissingWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/backup-devices/{id}/missing'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// What from a device is not safe on the server
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<BackupDeviceMissing?> listBackupDeviceMissing(
+    String id,
+  ) async {
+    final response = await listBackupDeviceMissingWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BackupDeviceMissing',
+      ) as BackupDeviceMissing;
+    }
+    return null;
+  }
+
+  /// The current user's devices that back up, with what the server counts as safe from each
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listBackupDevicesWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/backup-devices';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The current user's devices that back up, with what the server counts as safe from each
+  Future<BackupDeviceList?> listBackupDevices() async {
+    final response = await listBackupDevicesWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BackupDeviceList',
+      ) as BackupDeviceList;
     }
     return null;
   }
@@ -9269,6 +9470,73 @@ class DefaultApi {
     }
   }
 
+  /// A device says how its backup is doing, with checksums of files it has seen confirmed
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [BackupDeviceReport] backupDeviceReport (required):
+  Future<Response> reportBackupDeviceWithHttpInfo(
+    String id,
+    BackupDeviceReport backupDeviceReport,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/backup-devices/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = backupDeviceReport;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// A device says how its backup is doing, with checksums of files it has seen confirmed
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [BackupDeviceReport] backupDeviceReport (required):
+  Future<BackupDevice?> reportBackupDevice(
+    String id,
+    BackupDeviceReport backupDeviceReport,
+  ) async {
+    final response = await reportBackupDeviceWithHttpInfo(
+      id,
+      backupDeviceReport,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BackupDevice',
+      ) as BackupDevice;
+    }
+    return null;
+  }
+
   /// Set a new password with a link from an email
   ///
   /// Note: This method returns the HTTP [Response].
@@ -10276,6 +10544,55 @@ class DefaultApi {
       ) as User;
     }
     return null;
+  }
+
+  /// After how many days without a report a device counts as quiet; 0 never warns
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [BackupQuietDays] backupQuietDays (required):
+  Future<Response> setBackupQuietDaysWithHttpInfo(
+    BackupQuietDays backupQuietDays,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/me/backup-devices/quiet-days';
+
+    // ignore: prefer_final_locals
+    Object? postBody = backupQuietDays;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// After how many days without a report a device counts as quiet; 0 never warns
+  ///
+  /// Parameters:
+  ///
+  /// * [BackupQuietDays] backupQuietDays (required):
+  Future<void> setBackupQuietDays(
+    BackupQuietDays backupQuietDays,
+  ) async {
+    final response = await setBackupQuietDaysWithHttpInfo(
+      backupQuietDays,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Change where backups go. A secret left out stays as it was

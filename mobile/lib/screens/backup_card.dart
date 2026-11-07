@@ -9,6 +9,7 @@ import 'package:photo_manager/photo_manager.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
 import '../theme.dart';
+import 'devices_screen.dart';
 import 'free_space_screen.dart';
 
 String describeLastBackup(DateTime? last, DateTime now) {
@@ -322,6 +323,17 @@ class _BackupCardState extends ConsumerState<BackupCard> {
             Text(
               describeLastBackup(status.lastFinished, DateTime.now()),
               style: text.bodySmall,
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const BackupDevicesScreen(),
+                  ),
+                ),
+                child: const Text('What the server confirms, per device'),
+              ),
             ),
             if (status.unauthorized)
               Padding(

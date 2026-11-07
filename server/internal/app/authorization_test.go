@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 // Reachable without an account, on purpose. Anything new has to be added here knowingly.
@@ -184,8 +185,12 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 			t.Fatalf("%d %s", resp.StatusCode, body)
 		}
 	}
+	device := uuid.NewString()
+	resp, body = owner.send(http.MethodPut, "/api/me/backup-devices/"+device, report("Owner's phone", nil, true))
+	expect(t, resp, body, http.StatusOK)
 	ids := map[string]string{
-		"assets/id": photo, "albums/id": album, "assetId": photo, "month": "2024-07", "file": "master.m3u8",
+		"backup-devices/id": device,
+		"assets/id":         photo, "albums/id": album, "assetId": photo, "month": "2024-07", "file": "master.m3u8",
 		"scope": "archive", "userId": s.userID("admin@example.com"),
 	}
 	for name, query := range map[string]string{

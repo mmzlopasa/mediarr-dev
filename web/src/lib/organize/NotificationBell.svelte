@@ -75,7 +75,10 @@
 	}
 
 	const failure = (item: Notification) =>
-		item.kind === 'import_failed' || item.kind === 'backup_failed' || item.kind === 'backup_late';
+		item.kind === 'import_failed' ||
+		item.kind === 'backup_failed' ||
+		item.kind === 'backup_late' ||
+		item.kind === 'device_quiet';
 
 	function icon(item: Notification): IconName {
 		switch (item.kind) {
@@ -107,6 +110,11 @@
 				);
 			case 'backup_failed':
 				return tr('Sigurnosna kopija nije uspjela', 'A backup failed');
+			case 'device_quiet':
+				return tr(
+					`${item.subject} je prestao raditi backup`,
+					`${item.subject} has stopped backing up`
+				);
 			case 'backup_late': {
 				// "to:<name>" is our copy at another Mediarr; "from:<name>" is one kept here.
 				const [way, name] = [
@@ -183,6 +191,10 @@
 									<a
 										href={resolve('/(app)/albums/[id]', { id: item.ref })}
 										onclick={() => (open = false)}>{sentence(item)}</a
+									>
+								{:else if item.kind === 'device_quiet'}
+									<a href={resolve('/(app)/account/devices')} onclick={() => (open = false)}
+										>{sentence(item)}</a
 									>
 								{:else}
 									<b>{sentence(item)}</b>

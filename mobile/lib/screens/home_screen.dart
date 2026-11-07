@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../services/backup.dart';
+import '../services/devices.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
 import '../services/shared_files.dart';
@@ -37,6 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final session = ref.read(sessionProvider).value;
       if (mounted && session != null) {
         unawaited(showUpdateNoticeIfNew(context, session));
+        unawaited(_reportDevice());
       }
     });
     SharedFilesChannel.listen((files) {
@@ -58,6 +60,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (state == AppLifecycleState.resumed) {
       unawaited(_recheckServer());
       unawaited(_mirrorAlbums());
+      unawaited(_reportDevice());
+    }
+  }
+
+  /// The server counts what is safe from this phone, from the checksums it is given here.
+  Future<void> _reportDevice() async {
+    final session = ref.read(sessionProvider).value;
+    if (session == null) return;
+    try {
+      await reportThisDevice(session.api, ref.read(backupProvider));
+    } on ApiException {
+      // Next time; the native engine still reports how it is doing.
+    } on MissingPluginException {
+      // No native backup on this platform.
+    } on PlatformException {
+      // The same.
     }
   }
 

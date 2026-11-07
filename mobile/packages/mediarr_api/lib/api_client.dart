@@ -295,6 +295,20 @@ class ApiClient {
           return BackupDestination.fromJson(value);
         case 'BackupDestinationCreate':
           return BackupDestinationCreate.fromJson(value);
+        case 'BackupDevice':
+          return BackupDevice.fromJson(value);
+        case 'BackupDeviceFailure':
+          return BackupDeviceFailure.fromJson(value);
+        case 'BackupDeviceGone':
+          return BackupDeviceGone.fromJson(value);
+        case 'BackupDeviceList':
+          return BackupDeviceList.fromJson(value);
+        case 'BackupDeviceMissing':
+          return BackupDeviceMissing.fromJson(value);
+        case 'BackupDeviceReport':
+          return BackupDeviceReport.fromJson(value);
+        case 'BackupQuietDays':
+          return BackupQuietDays.fromJson(value);
         case 'BackupRun':
           return BackupRun.fromJson(value);
         case 'BackupRunRequest':

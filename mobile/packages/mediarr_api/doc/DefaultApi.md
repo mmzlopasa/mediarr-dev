@@ -41,6 +41,7 @@ Method | HTTP request | Description
 [**deleteAlbum**](DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 [**deleteAlbumComment**](DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 [**deleteAlbumLink**](DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
+[**deleteBackupDevice**](DefaultApi.md#deletebackupdevice) | **DELETE** /api/me/backup-devices/{id} | Take a device off the list. Its photos stay
 [**deleteDevice**](DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 [**deleteFamilyRule**](DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
 [**deleteImport**](DefaultApi.md#deleteimport) | **DELETE** /api/imports/{id} | Remove an import and its ZIP files. What it brought in stays
@@ -136,10 +137,13 @@ Method | HTTP request | Description
 [**listAlbumComments**](DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 [**listAlbumLinks**](DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 [**listAlbums**](DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
+[**listAllBackupDevices**](DefaultApi.md#listallbackupdevices) | **GET** /api/admin/backup-devices | Every user's devices that back up
 [**listAssetFaces**](DefaultApi.md#listassetfaces) | **GET** /api/assets/{id}/faces | The faces found in a picture of the signed-in user
 [**listAssets**](DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 [**listAuditLog**](DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
 [**listBackupDestinations**](DefaultApi.md#listbackupdestinations) | **GET** /api/admin/backup/destinations | Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
+[**listBackupDeviceMissing**](DefaultApi.md#listbackupdevicemissing) | **GET** /api/me/backup-devices/{id}/missing | What from a device is not safe on the server
+[**listBackupDevices**](DefaultApi.md#listbackupdevices) | **GET** /api/me/backup-devices | The current user's devices that back up, with what the server counts as safe from each
 [**listBackupRuns**](DefaultApi.md#listbackupruns) | **GET** /api/admin/backup/runs | Backups and tests of bringing one back, the newest first
 [**listCameras**](DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 [**listDirectory**](DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
@@ -176,6 +180,7 @@ Method | HTTP request | Description
 [**removeFamilyMember**](DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
 [**removeKeepGuest**](DefaultApi.md#removekeepguest) | **DELETE** /api/admin/keep/guests/{id} | Delete a guest and everything kept for it. The name must be given again, as a confirmation
 [**removePartner**](DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
+[**reportBackupDevice**](DefaultApi.md#reportbackupdevice) | **PUT** /api/me/backup-devices/{id} | A device says how its backup is doing, with checksums of files it has seen confirmed
 [**resetPassword**](DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
 [**restoreKeepGuestDeleted**](DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
 [**resumeJobQueue**](DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
@@ -192,6 +197,7 @@ Method | HTTP request | Description
 [**setAssetEdits**](DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 [**setAssetFacts**](DefaultApi.md#setassetfacts) | **PATCH** /api/assets/{id}/facts | Change the date, location or description of a photo. Its file is never changed
 [**setAvatar**](DefaultApi.md#setavatar) | **PUT** /api/me/avatar | A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
+[**setBackupQuietDays**](DefaultApi.md#setbackupquietdays) | **PUT** /api/me/backup-devices/quiet-days | After how many days without a report a device counts as quiet; 0 never warns
 [**setBackupSettings**](DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
 [**setEmailSettings**](DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 [**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
@@ -1511,6 +1517,46 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **String**|  | 
  **linkId** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteBackupDevice**
+> deleteBackupDevice(id)
+
+Take a device off the list. Its photos stay
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.deleteBackupDevice(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->deleteBackupDevice: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
 
 ### Return type
 
@@ -5336,6 +5382,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listAllBackupDevices**
+> BackupDeviceList listAllBackupDevices()
+
+Every user's devices that back up
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listAllBackupDevices();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listAllBackupDevices: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**BackupDeviceList**](BackupDeviceList.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listAssetFaces**
 > AssetFaces listAssetFaces(id)
 
@@ -5488,6 +5571,84 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**List<BackupDestination>**](BackupDestination.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listBackupDeviceMissing**
+> BackupDeviceMissing listBackupDeviceMissing(id)
+
+What from a device is not safe on the server
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.listBackupDeviceMissing(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listBackupDeviceMissing: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**BackupDeviceMissing**](BackupDeviceMissing.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listBackupDevices**
+> BackupDeviceList listBackupDevices()
+
+The current user's devices that back up, with what the server counts as safe from each
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listBackupDevices();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listBackupDevices: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**BackupDeviceList**](BackupDeviceList.md)
 
 ### Authorization
 
@@ -6890,6 +7051,49 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **reportBackupDevice**
+> BackupDevice reportBackupDevice(id, backupDeviceReport)
+
+A device says how its backup is doing, with checksums of files it has seen confirmed
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final backupDeviceReport = BackupDeviceReport(); // BackupDeviceReport | 
+
+try {
+    final result = api_instance.reportBackupDevice(id, backupDeviceReport);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->reportBackupDevice: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **backupDeviceReport** | [**BackupDeviceReport**](BackupDeviceReport.md)|  | 
+
+### Return type
+
+[**BackupDevice**](BackupDevice.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **resetPassword**
 > resetPassword(passwordReset)
 
@@ -7561,6 +7765,46 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: image/*
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setBackupQuietDays**
+> setBackupQuietDays(backupQuietDays)
+
+After how many days without a report a device counts as quiet; 0 never warns
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final backupQuietDays = BackupQuietDays(); // BackupQuietDays | 
+
+try {
+    api_instance.setBackupQuietDays(backupQuietDays);
+} catch (e) {
+    print('Exception when calling DefaultApi->setBackupQuietDays: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **backupQuietDays** | [**BackupQuietDays**](BackupQuietDays.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

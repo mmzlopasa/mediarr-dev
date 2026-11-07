@@ -301,6 +301,85 @@ paths:
       responses:
         "204": { description: Key revoked }
         "401": { $ref: "#/components/responses/Error" }
+  /api/me/backup-devices:
+    get:
+      operationId: listBackupDevices
+      summary: The current user's devices that back up, with what the server counts as safe from each
+      responses:
+        "200":
+          description: The devices and how long one may stay quiet
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupDeviceList" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/me/backup-devices/quiet-days:
+    put:
+      operationId: setBackupQuietDays
+      summary: After how many days without a report a device counts as quiet; 0 never warns
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BackupQuietDays" }
+      responses:
+        "204": { description: Saved }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/me/backup-devices/{id}:
+    put:
+      operationId: reportBackupDevice
+      summary: A device says how its backup is doing, with checksums of files it has seen confirmed
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BackupDeviceReport" }
+      responses:
+        "200":
+          description: The device as the server now counts it
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupDevice" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteBackupDevice
+      summary: Take a device off the list. Its photos stay
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/me/backup-devices/{id}/missing:
+    get:
+      operationId: listBackupDeviceMissing
+      summary: What from a device is not safe on the server
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Files that could not be sent, and sent files no longer on the server
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupDeviceMissing" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/backup-devices:
+    get:
+      operationId: listAllBackupDevices
+      summary: Every user's devices that back up
+      responses:
+        "200":
+          description: All devices
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BackupDeviceList" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/admin/users:
     get:
       operationId: listUsers
@@ -3779,6 +3858,81 @@ components:
       required: [name]
       properties:
         name: { type: string }
+    BackupDeviceFailure:
+      type: object
+      required: [name, reason]
+      properties:
+        name: { type: string, maxLength: 300 }
+        reason: { type: string, maxLength: 500 }
+    BackupDeviceReport:
+      type: object
+      required: [name, platform, appVersion, pending, working, verified, failed]
+      properties:
+        name: { type: string, maxLength: 120 }
+        platform: { type: string, maxLength: 40 }
+        appVersion: { type: string, maxLength: 40 }
+        pending: { type: integer, minimum: 0 }
+        working: { type: integer, minimum: 0 }
+        verified: { type: integer, minimum: 0 }
+        failed: { type: integer, minimum: 0 }
+        failures:
+          description: Left out, the ones from before stay
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/BackupDeviceFailure" }
+        checksums:
+          description: Hex SHA-256 of files confirmed on the server, at most 5000 at a time
+          type: array
+          maxItems: 5000
+          items: { type: string }
+        replace:
+          description: These checksums start the list anew; the following reports add to it
+          type: boolean
+    BackupDevice:
+      type: object
+      required: [id, name, platform, appVersion, createdAt, reportedAt, quiet, pending, working, verified, failed, files, confirmed, trashed, gone, ownerEmail, ownerName]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        platform: { type: string }
+        appVersion: { type: string }
+        createdAt: { type: string, format: date-time }
+        reportedAt: { type: string, format: date-time }
+        quiet: { type: boolean, description: "Has not reported for longer than its owner allows" }
+        pending: { type: integer, description: "Waiting on the phone, as the phone counts" }
+        working: { type: integer }
+        verified: { type: integer, description: "Confirmed, as the phone counts" }
+        failed: { type: integer }
+        files: { type: integer, format: int64, description: "Checksums the phone has given the server" }
+        confirmed: { type: integer, format: int64, description: "Of those, safe on the server, as the server counts" }
+        trashed: { type: integer, format: int64, description: "Of those, in the trash" }
+        gone: { type: integer, format: int64, description: "Of those, no longer on the server" }
+        ownerEmail: { type: string }
+        ownerName: { type: string }
+    BackupDeviceList:
+      type: object
+      required: [devices, quietDays]
+      properties:
+        devices: { type: array, items: { $ref: "#/components/schemas/BackupDevice" } }
+        quietDays: { type: integer }
+    BackupQuietDays:
+      type: object
+      required: [days]
+      properties:
+        days: { type: integer, minimum: 0, maximum: 60 }
+    BackupDeviceGone:
+      type: object
+      required: [checksum, name, inTrash]
+      properties:
+        checksum: { type: string }
+        name: { type: string, description: "Known while it is in the trash" }
+        inTrash: { type: boolean }
+    BackupDeviceMissing:
+      type: object
+      required: [failures, gone]
+      properties:
+        failures: { type: array, items: { $ref: "#/components/schemas/BackupDeviceFailure" } }
+        gone: { type: array, items: { $ref: "#/components/schemas/BackupDeviceGone" } }
     DeviceKey:
       type: object
       required: [id, key]
@@ -3878,7 +4032,7 @@ components:
       required: [id, kind, subject, ref, createdAt, read]
       properties:
         id: { type: string, format: uuid }
-        kind: { type: string, enum: [album_shared, import_done, import_failed, backup_failed, backup_late] }
+        kind: { type: string, enum: [album_shared, import_done, import_failed, backup_failed, backup_late, device_quiet] }
         subject: { type: string, description: "What it is about: an album's name, an import's source, an error" }
         ref: { type: string, description: "The album it opens, if any" }
         createdAt: { type: string, format: date-time }

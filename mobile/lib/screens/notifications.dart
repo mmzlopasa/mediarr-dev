@@ -8,6 +8,7 @@ import 'package:mediarr_api/api.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'album_screen.dart';
+import 'devices_screen.dart';
 
 /// Null when the server has no answer, as an older server does not. The app can be newer than the
 /// server it talks to, and that must not get in the way of anything else on the screen.
@@ -28,6 +29,9 @@ String notificationSentence(Notification item) {
   }
   if (kind == NotificationKindEnum.importFailed) {
     return 'The import from ${item.subject} failed';
+  }
+  if (kind == NotificationKindEnum.deviceQuiet) {
+    return '${item.subject} has stopped backing up';
   }
   if (kind == NotificationKindEnum.backupLate) {
     // "to:<name>" is our copy at another Mediarr; "from:<name>" is one kept here.
@@ -161,6 +165,15 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
     }
   }
 
+  void _openDevices() {
+    final navigator = Navigator.of(context)..pop();
+    unawaited(
+      navigator.push(
+        MaterialPageRoute<void>(builder: (_) => const BackupDevicesScreen()),
+      ),
+    );
+  }
+
   void _openAlbum(Notification item) {
     final navigator = Navigator.of(context)..pop();
     unawaited(
@@ -200,11 +213,12 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                 MaterialLocalizations.of(context)
                     .formatMediumDate(item.createdAt.toLocal()),
               ),
-              onTap:
-                  item.kind == NotificationKindEnum.albumShared &&
-                      item.ref.isNotEmpty
-                  ? () => _openAlbum(item)
-                  : null,
+              onTap: switch (item.kind) {
+                NotificationKindEnum.albumShared when item.ref.isNotEmpty =>
+                  () => _openAlbum(item),
+                NotificationKindEnum.deviceQuiet => _openDevices,
+                _ => null,
+              },
               trailing: IconButton(
                 tooltip: 'Remove',
                 icon: const Icon(Icons.close, size: 18),

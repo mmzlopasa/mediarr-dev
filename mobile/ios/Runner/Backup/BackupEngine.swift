@@ -51,6 +51,9 @@ final class BackupEngine: NSObject {
     static let excludedAlbums = "backup.excludedAlbums"
     static let onlyNewPending = "backup.onlyNewPending"
     static let unauthorized = "backup.unauthorized"
+    static let deviceID = "backup.deviceID"
+    static let deviceName = "backup.deviceName"
+    static let lastReport = "backup.lastReport"
   }
 
   private let queue = DispatchQueue(label: "app.mediarr.backup")
@@ -111,6 +114,17 @@ final class BackupEngine: NSObject {
   private var chargingOnly: Bool { defaults.bool(forKey: Keys.chargingOnly) }
   private var pluggedIn = false
   private var paused: Bool { defaults.bool(forKey: Keys.unauthorized) }
+
+  /// This phone among the devices the server lists. Made up once, and kept when backup is off.
+  private var deviceID: String {
+    if let id = defaults.string(forKey: Keys.deviceID) { return id }
+    let id = UUID().uuidString.lowercased()
+    defaults.set(id, forKey: Keys.deviceID)
+    return id
+  }
+
+  private var deviceName: String { defaults.string(forKey: Keys.deviceName) ?? "iPhone" }
+  private static let reportEvery: TimeInterval = 60 * 60
 
   // MARK: Starting and stopping
 
@@ -284,6 +298,7 @@ final class BackupEngine: NSObject {
   private func watchBattery() {
     DispatchQueue.main.async { [self] in
       UIDevice.current.isBatteryMonitoringEnabled = true
+      self.defaults.set(UIDevice.current.name, forKey: Keys.deviceName)
       NotificationCenter.default.addObserver(
         forName: UIDevice.batteryStateDidChangeNotification, object: nil, queue: .main
       ) { [weak self] _ in self?.readBattery() }
@@ -414,9 +429,48 @@ final class BackupEngine: NSObject {
           room -= 1
           export(item)
         }
+        checkInIfDue()
         finishIfIdle()
       }
     }
+  }
+
+  /// Tells the server how this phone's backup is doing, at most once an hour, also when there is
+  /// nothing to send: a phone that stops doing so is the one its owner is warned about. The
+  /// checksums of what is safe are given by the app when it is open; this keeps them as they are.
+  private func checkInIfDue() {
+    guard enabled, !paused,
+      Date().timeIntervalSince1970 - defaults.double(forKey: Keys.lastReport)
+        >= BackupEngine.reportEvery,
+      let server = defaults.string(forKey: Keys.server),
+      let key = BackupKeychain.read(),
+      let url = URL(string: server + "/api/me/backup-devices/" + deviceID)
+    else { return }
+    let counts = openStore()?.counts() ?? [:]
+    let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+    let body: [String: Any] = [
+      "name": deviceName, "platform": "ios", "appVersion": version,
+      "pending": counts["pending"] ?? 0,
+      "working": (counts["exporting"] ?? 0) + (counts["uploading"] ?? 0),
+      "verified": counts["verified"] ?? 0,
+      "failed": counts["failed"] ?? 0,
+    ]
+    guard let data = try? JSONSerialization.data(withJSONObject: body) else { return }
+    var request = URLRequest(url: url)
+    request.httpMethod = "PUT"
+    request.timeoutInterval = 20
+    request.allowsCellularAccess = !wifiOnly
+    request.setValue(key, forHTTPHeaderField: "X-Api-Key")
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.httpBody = data
+    // Marked first, so that a slow answer does not start a second report.
+    let started = Date().timeIntervalSince1970
+    defaults.set(started, forKey: Keys.lastReport)
+    checkSession.dataTask(with: request) { [weak self] _, response, _ in
+      guard (response as? HTTPURLResponse)?.statusCode != 200 else { return }
+      // Not taken: the next pump tries again.
+      self?.queue.async { self?.defaults.set(0, forKey: Keys.lastReport) }
+    }.resume()
   }
 
   private func finishIfIdle() {
@@ -607,6 +661,8 @@ final class BackupEngine: NSObject {
         "moreAlbums": moreAlbums,
         "excludedAlbums": excludedAlbums,
         "limitedAccess": PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited,
+        "deviceId": deviceID,
+        "deviceName": deviceName,
       ]
       if let last = openStore()?.lastFinished() {
         out["lastFinished"] = last

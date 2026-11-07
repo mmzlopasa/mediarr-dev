@@ -340,6 +340,38 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('backup devices show what the server confirms', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Backup devices'));
+    await tester.ensureVisible(find.text('Backup devices'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Backup devices'));
+    await waitFor(tester, find.text('Old phone'));
+    expect(find.text('Quiet'), findsOneWidget);
+    expect(
+      find.text('119 files confirmed by the server, of 121 the device sent'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('What is missing'));
+    await waitFor(tester, find.textContaining('IMG_0042.HEIC'));
+    expect(find.textContaining('beach.jpg'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Warn me after'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('3 days'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('7 days').last);
+    await waitFor(tester, find.text('Saved.'));
+    expect(server.quietDays, 7);
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

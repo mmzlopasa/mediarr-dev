@@ -1,6 +1,9 @@
 import type { components } from './api/schema';
 
 export type User = components['schemas']['User'];
+export type BackupDevice = components['schemas']['BackupDevice'];
+export type BackupDeviceList = components['schemas']['BackupDeviceList'];
+export type BackupDeviceMissing = components['schemas']['BackupDeviceMissing'];
 export type Asset = components['schemas']['Asset'];
 export type AssetList = components['schemas']['AssetList'];
 export type AuthStatus = components['schemas']['AuthStatus'];
@@ -309,6 +312,14 @@ export const api = {
 	setAvatar: (file: Blob) => sendAvatar(file),
 	removeAvatar: () => request<User>(fetch, '/api/me/avatar', undefined, 'DELETE'),
 	myImports: () => request<UserImport[]>(fetch, '/api/imports'),
+	backupDevices: () => request<BackupDeviceList>(fetch, '/api/me/backup-devices'),
+	allBackupDevices: () => request<BackupDeviceList>(fetch, '/api/admin/backup-devices'),
+	backupDeviceMissing: (id: string) =>
+		request<BackupDeviceMissing>(fetch, `/api/me/backup-devices/${id}/missing`),
+	removeBackupDevice: (id: string) =>
+		request<void>(fetch, `/api/me/backup-devices/${id}`, undefined, 'DELETE'),
+	setBackupQuietDays: (days: number) =>
+		request<void>(fetch, '/api/me/backup-devices/quiet-days', { days }, 'PUT'),
 	createMyImport: (source: 'takeout' | 'icloud') =>
 		request<UserImport>(fetch, '/api/imports', { source }),
 	importDetail: (id: string) => request<ImportDetail>(fetch, `/api/imports/${id}`),

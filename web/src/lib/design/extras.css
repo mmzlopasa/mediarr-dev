@@ -1444,3 +1444,43 @@ video.viewer-media {
 .star.on {
 	color: var(--gold, #e0aa3e);
 }
+
+/* Devices that back up: what the server counts as safe from each. */
+.dev {
+	align-items: flex-start;
+}
+.dev-ic {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: var(--soft);
+	color: var(--dim);
+}
+.dev.quiet .dev-ic {
+	color: var(--err);
+}
+.dev .set-list-t {
+	display: grid;
+	gap: 6px;
+	min-width: 0;
+}
+.dev-safe {
+	font-size: 0.875rem;
+}
+.dev-safe strong {
+	font-variant-numeric: tabular-nums;
+	font-size: 1.05rem;
+}
+.dev-of,
+.dev-counts {
+	color: var(--dim);
+	font-variant-numeric: tabular-nums;
+}
+.dev-warn {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--err);
+}

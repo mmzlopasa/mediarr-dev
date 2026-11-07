@@ -92,6 +92,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteAlbum**](doc//DefaultApi.md#deletealbum) | **DELETE** /api/albums/{id} | Delete an album, but not its photos. Owner only.
 *DefaultApi* | [**deleteAlbumComment**](doc//DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
+*DefaultApi* | [**deleteBackupDevice**](doc//DefaultApi.md#deletebackupdevice) | **DELETE** /api/me/backup-devices/{id} | Take a device off the list. Its photos stay
 *DefaultApi* | [**deleteDevice**](doc//DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 *DefaultApi* | [**deleteFamilyRule**](doc//DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
 *DefaultApi* | [**deleteImport**](doc//DefaultApi.md#deleteimport) | **DELETE** /api/imports/{id} | Remove an import and its ZIP files. What it brought in stays
@@ -187,10 +188,13 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listAlbumComments**](doc//DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 *DefaultApi* | [**listAlbumLinks**](doc//DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 *DefaultApi* | [**listAlbums**](doc//DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
+*DefaultApi* | [**listAllBackupDevices**](doc//DefaultApi.md#listallbackupdevices) | **GET** /api/admin/backup-devices | Every user's devices that back up
 *DefaultApi* | [**listAssetFaces**](doc//DefaultApi.md#listassetfaces) | **GET** /api/assets/{id}/faces | The faces found in a picture of the signed-in user
 *DefaultApi* | [**listAssets**](doc//DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 *DefaultApi* | [**listAuditLog**](doc//DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
 *DefaultApi* | [**listBackupDestinations**](doc//DefaultApi.md#listbackupdestinations) | **GET** /api/admin/backup/destinations | Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
+*DefaultApi* | [**listBackupDeviceMissing**](doc//DefaultApi.md#listbackupdevicemissing) | **GET** /api/me/backup-devices/{id}/missing | What from a device is not safe on the server
+*DefaultApi* | [**listBackupDevices**](doc//DefaultApi.md#listbackupdevices) | **GET** /api/me/backup-devices | The current user's devices that back up, with what the server counts as safe from each
 *DefaultApi* | [**listBackupRuns**](doc//DefaultApi.md#listbackupruns) | **GET** /api/admin/backup/runs | Backups and tests of bringing one back, the newest first
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
@@ -227,6 +231,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**removeFamilyMember**](doc//DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
 *DefaultApi* | [**removeKeepGuest**](doc//DefaultApi.md#removekeepguest) | **DELETE** /api/admin/keep/guests/{id} | Delete a guest and everything kept for it. The name must be given again, as a confirmation
 *DefaultApi* | [**removePartner**](doc//DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
+*DefaultApi* | [**reportBackupDevice**](doc//DefaultApi.md#reportbackupdevice) | **PUT** /api/me/backup-devices/{id} | A device says how its backup is doing, with checksums of files it has seen confirmed
 *DefaultApi* | [**resetPassword**](doc//DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
 *DefaultApi* | [**restoreKeepGuestDeleted**](doc//DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
 *DefaultApi* | [**resumeJobQueue**](doc//DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
@@ -243,6 +248,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 *DefaultApi* | [**setAssetFacts**](doc//DefaultApi.md#setassetfacts) | **PATCH** /api/assets/{id}/facts | Change the date, location or description of a photo. Its file is never changed
 *DefaultApi* | [**setAvatar**](doc//DefaultApi.md#setavatar) | **PUT** /api/me/avatar | A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
+*DefaultApi* | [**setBackupQuietDays**](doc//DefaultApi.md#setbackupquietdays) | **PUT** /api/me/backup-devices/quiet-days | After how many days without a report a device counts as quiet; 0 never warns
 *DefaultApi* | [**setBackupSettings**](doc//DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
 *DefaultApi* | [**setEmailSettings**](doc//DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
@@ -307,6 +313,13 @@ Class | Method | HTTP request | Description
  - [AuthStatus](doc//AuthStatus.md)
  - [BackupDestination](doc//BackupDestination.md)
  - [BackupDestinationCreate](doc//BackupDestinationCreate.md)
+ - [BackupDevice](doc//BackupDevice.md)
+ - [BackupDeviceFailure](doc//BackupDeviceFailure.md)
+ - [BackupDeviceGone](doc//BackupDeviceGone.md)
+ - [BackupDeviceList](doc//BackupDeviceList.md)
+ - [BackupDeviceMissing](doc//BackupDeviceMissing.md)
+ - [BackupDeviceReport](doc//BackupDeviceReport.md)
+ - [BackupQuietDays](doc//BackupQuietDays.md)
  - [BackupRun](doc//BackupRun.md)
  - [BackupRunRequest](doc//BackupRunRequest.md)
  - [BackupSettings](doc//BackupSettings.md)

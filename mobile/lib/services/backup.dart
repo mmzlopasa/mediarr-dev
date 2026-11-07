@@ -52,6 +52,8 @@ class BackupStatus {
     this.albumName = '',
     this.albumFound = false,
     this.limitedAccess = false,
+    this.deviceId,
+    this.deviceName = '',
   });
 
   factory BackupStatus.fromMap(Map<Object?, Object?> map) => BackupStatus(
@@ -74,6 +76,8 @@ class BackupStatus {
     albumName: map['albumName']?.toString() ?? '',
     albumFound: map['albumFound'] == true,
     limitedAccess: map['limitedAccess'] == true,
+    deviceId: map['deviceId']?.toString(),
+    deviceName: map['deviceName']?.toString() ?? '',
     failures: [
       for (final raw in (map['failures'] as List<Object?>?) ?? const [])
         if (raw is Map)
@@ -99,6 +103,11 @@ class BackupStatus {
   final String albumName;
   final bool albumFound;
   final bool limitedAccess;
+
+  /// This phone among the devices the server lists; the native engine made it up when backup was
+  /// first turned on, and also reports with it on its own.
+  final String? deviceId;
+  final String deviceName;
 
   int get total => pending + working + verified + failed;
 }

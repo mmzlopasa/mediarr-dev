@@ -24,6 +24,11 @@
 	roleLabel={tr('Korisnik', 'User')}
 	footLinks={[
 		{ href: resolve('/(app)/account'), icon: 'user', label: tr('Račun', 'Account') },
+		{
+			href: resolve('/(app)/account/devices'),
+			icon: 'phone',
+			label: tr('Uređaji za backup', 'Backup devices')
+		},
 		{ href: resolve('/(app)/account/import'), icon: 'download', label: tr('Uvoz', 'Import') },
 		...(data.user.isAdmin
 			? [

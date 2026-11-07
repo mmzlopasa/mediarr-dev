@@ -331,6 +331,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/backup-devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The current user's devices that back up, with what the server counts as safe from each */
+        get: operations["listBackupDevices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/backup-devices/quiet-days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** After how many days without a report a device counts as quiet; 0 never warns */
+        put: operations["setBackupQuietDays"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/backup-devices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** A device says how its backup is doing, with checksums of files it has seen confirmed */
+        put: operations["reportBackupDevice"];
+        post?: never;
+        /** Take a device off the list. Its photos stay */
+        delete: operations["deleteBackupDevice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/backup-devices/{id}/missing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What from a device is not safe on the server */
+        get: operations["listBackupDeviceMissing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/backup-devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every user's devices that back up */
+        get: operations["listAllBackupDevices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/users": {
         parameters: {
             query?: never;
@@ -3936,6 +4022,83 @@ export interface components {
         CreateDeviceKeyRequest: {
             name: string;
         };
+        BackupDeviceFailure: {
+            name: string;
+            reason: string;
+        };
+        BackupDeviceReport: {
+            name: string;
+            platform: string;
+            appVersion: string;
+            pending: number;
+            working: number;
+            verified: number;
+            failed: number;
+            /** @description Left out, the ones from before stay */
+            failures?: components["schemas"]["BackupDeviceFailure"][];
+            /** @description Hex SHA-256 of files confirmed on the server, at most 5000 at a time */
+            checksums?: string[];
+            /** @description These checksums start the list anew; the following reports add to it */
+            replace?: boolean;
+        };
+        BackupDevice: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            platform: string;
+            appVersion: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            reportedAt: string;
+            /** @description Has not reported for longer than its owner allows */
+            quiet: boolean;
+            /** @description Waiting on the phone, as the phone counts */
+            pending: number;
+            working: number;
+            /** @description Confirmed, as the phone counts */
+            verified: number;
+            failed: number;
+            /**
+             * Format: int64
+             * @description Checksums the phone has given the server
+             */
+            files: number;
+            /**
+             * Format: int64
+             * @description Of those, safe on the server, as the server counts
+             */
+            confirmed: number;
+            /**
+             * Format: int64
+             * @description Of those, in the trash
+             */
+            trashed: number;
+            /**
+             * Format: int64
+             * @description Of those, no longer on the server
+             */
+            gone: number;
+            ownerEmail: string;
+            ownerName: string;
+        };
+        BackupDeviceList: {
+            devices: components["schemas"]["BackupDevice"][];
+            quietDays: number;
+        };
+        BackupQuietDays: {
+            days: number;
+        };
+        BackupDeviceGone: {
+            checksum: string;
+            /** @description Known while it is in the trash */
+            name: string;
+            inTrash: boolean;
+        };
+        BackupDeviceMissing: {
+            failures: components["schemas"]["BackupDeviceFailure"][];
+            gone: components["schemas"]["BackupDeviceGone"][];
+        };
         DeviceKey: {
             /** Format: uuid */
             id: string;
@@ -4031,7 +4194,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "album_shared" | "import_done" | "import_failed" | "backup_failed" | "backup_late";
+            kind: "album_shared" | "import_done" | "import_failed" | "backup_failed" | "backup_late" | "device_quiet";
             /** @description What it is about: an album's name, an import's source, an error */
             subject: string;
             /** @description The album it opens, if any */
@@ -4894,6 +5057,148 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Error"];
+        };
+    };
+    listBackupDevices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The devices and how long one may stay quiet */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupDeviceList"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    setBackupQuietDays: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BackupQuietDays"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    reportBackupDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BackupDeviceReport"];
+            };
+        };
+        responses: {
+            /** @description The device as the server now counts it */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupDevice"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    deleteBackupDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listBackupDeviceMissing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Files that could not be sent, and sent files no longer on the server */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupDeviceMissing"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listAllBackupDevices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All devices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupDeviceList"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     listUsers: {

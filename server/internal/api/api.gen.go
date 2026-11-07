@@ -652,6 +652,7 @@ const (
 	AlbumShared  NotificationKind = "album_shared"
 	BackupFailed NotificationKind = "backup_failed"
 	BackupLate   NotificationKind = "backup_late"
+	DeviceQuiet  NotificationKind = "device_quiet"
 	ImportDone   NotificationKind = "import_done"
 	ImportFailed NotificationKind = "import_failed"
 )
@@ -664,6 +665,8 @@ func (e NotificationKind) Valid() bool {
 	case BackupFailed:
 		return true
 	case BackupLate:
+		return true
+	case DeviceQuiet:
 		return true
 	case ImportDone:
 		return true
@@ -1633,6 +1636,93 @@ type BackupDestination struct {
 type BackupDestinationCreate struct {
 	// Code The code from the other server's administrator
 	Code string `json:"code"`
+}
+
+// BackupDevice defines model for BackupDevice.
+type BackupDevice struct {
+	AppVersion string `json:"appVersion"`
+
+	// Confirmed Of those, safe on the server, as the server counts
+	Confirmed int64     `json:"confirmed"`
+	CreatedAt time.Time `json:"createdAt"`
+	Failed    int       `json:"failed"`
+
+	// Files Checksums the phone has given the server
+	Files int64 `json:"files"`
+
+	// Gone Of those, no longer on the server
+	Gone       int64              `json:"gone"`
+	Id         openapi_types.UUID `json:"id"`
+	Name       string             `json:"name"`
+	OwnerEmail string             `json:"ownerEmail"`
+	OwnerName  string             `json:"ownerName"`
+
+	// Pending Waiting on the phone, as the phone counts
+	Pending  int    `json:"pending"`
+	Platform string `json:"platform"`
+
+	// Quiet Has not reported for longer than its owner allows
+	Quiet      bool      `json:"quiet"`
+	ReportedAt time.Time `json:"reportedAt"`
+
+	// Trashed Of those, in the trash
+	Trashed int64 `json:"trashed"`
+
+	// Verified Confirmed, as the phone counts
+	Verified int `json:"verified"`
+	Working  int `json:"working"`
+}
+
+// BackupDeviceFailure defines model for BackupDeviceFailure.
+type BackupDeviceFailure struct {
+	Name   string `json:"name"`
+	Reason string `json:"reason"`
+}
+
+// BackupDeviceGone defines model for BackupDeviceGone.
+type BackupDeviceGone struct {
+	Checksum string `json:"checksum"`
+	InTrash  bool   `json:"inTrash"`
+
+	// Name Known while it is in the trash
+	Name string `json:"name"`
+}
+
+// BackupDeviceList defines model for BackupDeviceList.
+type BackupDeviceList struct {
+	Devices   []BackupDevice `json:"devices"`
+	QuietDays int            `json:"quietDays"`
+}
+
+// BackupDeviceMissing defines model for BackupDeviceMissing.
+type BackupDeviceMissing struct {
+	Failures []BackupDeviceFailure `json:"failures"`
+	Gone     []BackupDeviceGone    `json:"gone"`
+}
+
+// BackupDeviceReport defines model for BackupDeviceReport.
+type BackupDeviceReport struct {
+	AppVersion string `json:"appVersion"`
+
+	// Checksums Hex SHA-256 of files confirmed on the server, at most 5000 at a time
+	Checksums *[]string `json:"checksums,omitempty"`
+	Failed    int       `json:"failed"`
+
+	// Failures Left out, the ones from before stay
+	Failures *[]BackupDeviceFailure `json:"failures,omitempty"`
+	Name     string                 `json:"name"`
+	Pending  int                    `json:"pending"`
+	Platform string                 `json:"platform"`
+
+	// Replace These checksums start the list anew; the following reports add to it
+	Replace  *bool `json:"replace,omitempty"`
+	Verified int   `json:"verified"`
+	Working  int   `json:"working"`
+}
+
+// BackupQuietDays defines model for BackupQuietDays.
+type BackupQuietDays struct {
+	Days int `json:"days"`
 }
 
 // BackupRun defines model for BackupRun.
@@ -3107,6 +3197,12 @@ type UpdateProfileJSONRequestBody = ProfileUpdate
 // CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
 type CreateAPIKeyJSONRequestBody = ApiKeyCreate
 
+// SetBackupQuietDaysJSONRequestBody defines body for SetBackupQuietDays for application/json ContentType.
+type SetBackupQuietDaysJSONRequestBody = BackupQuietDays
+
+// ReportBackupDeviceJSONRequestBody defines body for ReportBackupDevice for application/json ContentType.
+type ReportBackupDeviceJSONRequestBody = BackupDeviceReport
+
 // CreateDeviceKeyJSONRequestBody defines body for CreateDeviceKey for application/json ContentType.
 type CreateDeviceKeyJSONRequestBody = CreateDeviceKeyRequest
 
@@ -3175,6 +3271,9 @@ type ServerInterface interface {
 	// SetBackupSettings Change where backups go. A secret left out stays as it was
 	// (PUT /api/admin/backup)
 	SetBackupSettings(w http.ResponseWriter, r *http.Request)
+	// ListAllBackupDevices Every user's devices that back up
+	// (GET /api/admin/backup-devices)
+	ListAllBackupDevices(w http.ResponseWriter, r *http.Request)
 	// ListBackupDestinations Other Mediarr servers that keep a copy of this one's backup, besides the backup in the settings
 	// (GET /api/admin/backup/destinations)
 	ListBackupDestinations(w http.ResponseWriter, r *http.Request)
@@ -3580,6 +3679,21 @@ type ServerInterface interface {
 	// SetAvatar A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
 	// (PUT /api/me/avatar)
 	SetAvatar(w http.ResponseWriter, r *http.Request)
+	// ListBackupDevices The current user's devices that back up, with what the server counts as safe from each
+	// (GET /api/me/backup-devices)
+	ListBackupDevices(w http.ResponseWriter, r *http.Request)
+	// SetBackupQuietDays After how many days without a report a device counts as quiet; 0 never warns
+	// (PUT /api/me/backup-devices/quiet-days)
+	SetBackupQuietDays(w http.ResponseWriter, r *http.Request)
+	// DeleteBackupDevice Take a device off the list. Its photos stay
+	// (DELETE /api/me/backup-devices/{id})
+	DeleteBackupDevice(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ReportBackupDevice A device says how its backup is doing, with checksums of files it has seen confirmed
+	// (PUT /api/me/backup-devices/{id})
+	ReportBackupDevice(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// ListBackupDeviceMissing What from a device is not safe on the server
+	// (GET /api/me/backup-devices/{id}/missing)
+	ListBackupDeviceMissing(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// CreateDeviceKey Create a long-lived key for this device, used by background backup
 	// (POST /api/me/device-keys)
 	CreateDeviceKey(w http.ResponseWriter, r *http.Request)
@@ -3826,6 +3940,12 @@ func (_ Unimplemented) GetBackupSettings(w http.ResponseWriter, r *http.Request)
 // SetBackupSettings Change where backups go. A secret left out stays as it was
 // (PUT /api/admin/backup)
 func (_ Unimplemented) SetBackupSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAllBackupDevices Every user's devices that back up
+// (GET /api/admin/backup-devices)
+func (_ Unimplemented) ListAllBackupDevices(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4639,6 +4759,36 @@ func (_ Unimplemented) SetAvatar(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// ListBackupDevices The current user's devices that back up, with what the server counts as safe from each
+// (GET /api/me/backup-devices)
+func (_ Unimplemented) ListBackupDevices(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetBackupQuietDays After how many days without a report a device counts as quiet; 0 never warns
+// (PUT /api/me/backup-devices/quiet-days)
+func (_ Unimplemented) SetBackupQuietDays(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteBackupDevice Take a device off the list. Its photos stay
+// (DELETE /api/me/backup-devices/{id})
+func (_ Unimplemented) DeleteBackupDevice(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ReportBackupDevice A device says how its backup is doing, with checksums of files it has seen confirmed
+// (PUT /api/me/backup-devices/{id})
+func (_ Unimplemented) ReportBackupDevice(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListBackupDeviceMissing What from a device is not safe on the server
+// (GET /api/me/backup-devices/{id}/missing)
+func (_ Unimplemented) ListBackupDeviceMissing(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // CreateDeviceKey Create a long-lived key for this device, used by background backup
 // (POST /api/me/device-keys)
 func (_ Unimplemented) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
@@ -5169,6 +5319,20 @@ func (siw *ServerInterfaceWrapper) SetBackupSettings(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SetBackupSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAllBackupDevices operation middleware
+func (siw *ServerInterfaceWrapper) ListAllBackupDevices(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAllBackupDevices(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8263,6 +8427,112 @@ func (siw *ServerInterfaceWrapper) SetAvatar(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// ListBackupDevices operation middleware
+func (siw *ServerInterfaceWrapper) ListBackupDevices(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBackupDevices(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetBackupQuietDays operation middleware
+func (siw *ServerInterfaceWrapper) SetBackupQuietDays(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetBackupQuietDays(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteBackupDevice operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBackupDevice(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteBackupDevice(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ReportBackupDevice operation middleware
+func (siw *ServerInterfaceWrapper) ReportBackupDevice(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReportBackupDevice(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListBackupDeviceMissing operation middleware
+func (siw *ServerInterfaceWrapper) ListBackupDeviceMissing(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListBackupDeviceMissing(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateDeviceKey operation middleware
 func (siw *ServerInterfaceWrapper) CreateDeviceKey(w http.ResponseWriter, r *http.Request) {
 
@@ -10179,6 +10449,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/api/me/device-keys/{id}", wrapper.RevokeDeviceKey)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/me/backup-devices", wrapper.ListBackupDevices)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/me/backup-devices/quiet-days", wrapper.SetBackupQuietDays)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/me/backup-devices/{id}", wrapper.DeleteBackupDevice)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/me/backup-devices/{id}", wrapper.ReportBackupDevice)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/me/backup-devices/{id}/missing", wrapper.ListBackupDeviceMissing)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/backup-devices", wrapper.ListAllBackupDevices)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/users", wrapper.ListUsers)

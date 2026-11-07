@@ -29,6 +29,9 @@ func scopeFor(method, path string) string {
 	switch {
 	case path == "/api/auth/status":
 		return ""
+	case method == http.MethodPut && isDeviceReport(path):
+		// The backup key of a phone says how its backup is doing, also with the app closed.
+		return scopeUpload
 	case strings.HasPrefix(path, "/api/me") || strings.HasPrefix(path, "/api/auth/"):
 		return "none"
 	case strings.HasPrefix(path, "/api/admin/"):
@@ -39,6 +42,12 @@ func scopeFor(method, path string) string {
 		return scopeWrite
 	}
 	return scopeRead
+}
+
+// isDeviceReport is PUT /api/me/backup-devices/{id}, and nothing else under it.
+func isDeviceReport(path string) bool {
+	id, ok := strings.CutPrefix(path, "/api/me/backup-devices/")
+	return ok && id != "" && id != "quiet-days" && !strings.Contains(id, "/")
 }
 
 func keyMayDo(scopes []string, method, path string) bool {

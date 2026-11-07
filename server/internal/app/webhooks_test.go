@@ -74,14 +74,23 @@ func TestWebhooksTellWhatHappenedAndAreSigned(t *testing.T) {
 		t.Fatalf("%s", got[0].body)
 	}
 
-	// The secret is shown once, and the result of the delivery shows in the list.
-	resp, body = c.get("/api/admin/webhooks")
-	expect(t, resp, body, http.StatusOK)
-	if strings.Contains(string(body), created.Secret) {
-		t.Fatalf("%s", body)
-	}
-	if list := decode[[]api.Webhook](t, body); len(list) != 1 || list[0].LastStatus != http.StatusOK {
-		t.Fatalf("%s", body)
+	// The secret is shown once, and the result of the delivery shows in the list. The worker saves
+	// the result just after the receiver has it, so the list may need a moment.
+	end = time.Now().Add(10 * time.Second)
+	for {
+		resp, body = c.get("/api/admin/webhooks")
+		expect(t, resp, body, http.StatusOK)
+		if strings.Contains(string(body), created.Secret) {
+			t.Fatalf("%s", body)
+		}
+		list := decode[[]api.Webhook](t, body)
+		if len(list) == 1 && list[0].LastStatus == http.StatusOK {
+			break
+		}
+		if len(list) != 1 || time.Now().After(end) {
+			t.Fatalf("%s", body)
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	// The test button sends one whatever the event.

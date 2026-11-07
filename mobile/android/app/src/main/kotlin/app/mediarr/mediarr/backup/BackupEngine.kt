@@ -79,6 +79,17 @@ class BackupEngine(context: Context) {
     private val moreAlbums get() = prefs.getStringSet(KEY_MORE_ALBUMS, emptySet()) ?: emptySet()
     private val excludedAlbums get() = prefs.getStringSet(KEY_EXCLUDED_ALBUMS, emptySet()) ?: emptySet()
 
+    /** This phone among the devices the server lists. Made up once, and kept when backup is off. */
+    val deviceId: String
+        get() = prefs.getString(KEY_DEVICE_ID, null)
+            ?: java.util.UUID.randomUUID().toString().also { prefs.edit().putString(KEY_DEVICE_ID, it).apply() }
+
+    val deviceName: String
+        get() {
+            val maker = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+            return if (Build.MODEL.startsWith(maker, ignoreCase = true)) Build.MODEL else "$maker ${Build.MODEL}"
+        }
+
     fun enable(server: String, key: String, wifiOnly: Boolean, onlyNew: Boolean, albumId: String?, albumName: String) {
         prefs.edit()
             .putBoolean(KEY_ENABLED, true)
@@ -360,6 +371,49 @@ class BackupEngine(context: Context) {
             send(progress, stopped)
         } finally {
             running.set(false)
+            checkInIfDue()
+        }
+    }
+
+    /**
+     * Tells the server how this phone's backup is doing, at most once an hour, also when there is
+     * nothing to send: a phone that stops doing so is the one its owner is warned about. The
+     * checksums of what is safe are given by the app when it is open; this keeps them as they are.
+     */
+    private fun checkInIfDue() {
+        val server = server ?: return
+        val key = key ?: return
+        if (!enabled) return
+        val now = System.currentTimeMillis()
+        if (now - prefs.getLong(KEY_LAST_REPORT, 0) < REPORT_EVERY_MS) return
+        val counts = store.counts()
+        val version = try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+        val body = JSONObject()
+            .put("name", deviceName)
+            .put("platform", "android")
+            .put("appVersion", version)
+            .put("pending", counts[BackupStatus.PENDING] ?: 0)
+            .put("working", counts[BackupStatus.UPLOADING] ?: 0)
+            .put("verified", counts[BackupStatus.VERIFIED] ?: 0)
+            .put("failed", counts[BackupStatus.FAILED] ?: 0)
+        val connection = URL("$server/api/me/backup-devices/$deviceId").openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "PUT"
+            connection.doOutput = true
+            connection.connectTimeout = TIMEOUT_MS
+            connection.readTimeout = TIMEOUT_MS
+            connection.setRequestProperty("X-Api-Key", key)
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.outputStream.use { it.write(body.toString().toByteArray()) }
+            if (connection.responseCode == 200) prefs.edit().putLong(KEY_LAST_REPORT, now).apply()
+        } catch (_: java.io.IOException) {
+            // The next run tries again.
+        } finally {
+            connection.disconnect()
         }
     }
 
@@ -433,6 +487,8 @@ class BackupEngine(context: Context) {
             "moreAlbums" to moreAlbums.toList(),
             "excludedAlbums" to excludedAlbums.toList(),
             "limitedAccess" to false,
+            "deviceId" to deviceId,
+            "deviceName" to deviceName,
         )
     }
 
@@ -455,5 +511,8 @@ class BackupEngine(context: Context) {
         private const val KEY_ALBUM_NAME = "albumName"
         private const val KEY_MORE_ALBUMS = "moreAlbums"
         private const val KEY_EXCLUDED_ALBUMS = "excludedAlbums"
+        private const val KEY_DEVICE_ID = "deviceId"
+        private const val KEY_LAST_REPORT = "lastReport"
+        private const val REPORT_EVERY_MS = 60 * 60_000L
     }
 }
