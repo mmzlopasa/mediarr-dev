@@ -1567,3 +1567,80 @@ video.viewer-media {
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
 }
+
+/* The storage template: the field, its tokens, and where files would go. */
+.st-field {
+	display: grid;
+	gap: 6px;
+	margin: 10px 0 8px;
+}
+.st-field > span {
+	font-size: 0.8125rem;
+	color: var(--dim);
+}
+.st-tokens {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.st-token {
+	padding: 4px 9px;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	background: var(--soft);
+	color: var(--ink);
+	font: 500 0.75rem/1.2 var(--mono, ui-monospace, monospace);
+	cursor: pointer;
+}
+.st-token:hover {
+	border-color: var(--line-2);
+}
+.st-previews {
+	display: grid;
+	gap: 4px;
+	margin: 12px 0 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0.8125rem;
+}
+.st-previews li {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+	gap: 10px;
+	min-width: 0;
+}
+.st-previews span,
+.st-previews b {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.st-previews span {
+	color: var(--dim);
+}
+.st-previews b {
+	font-weight: 500;
+}
+.st-error {
+	margin: 10px 0 0;
+	color: var(--err);
+	font-size: 0.8125rem;
+}
+.st-apply {
+	margin-top: 18px;
+	padding-top: 14px;
+	border-top: 1px solid var(--line);
+}
+.st-apply h3 {
+	margin: 0 0 6px;
+	font-size: 0.9375rem;
+}
+.st-foot {
+	margin-top: 12px;
+}
+@media (max-width: 640px) {
+	.st-previews li {
+		grid-template-columns: 1fr;
+		gap: 0;
+	}
+}

@@ -3,6 +3,8 @@ import type { components } from './api/schema';
 export type User = components['schemas']['User'];
 export type BackupDevice = components['schemas']['BackupDevice'];
 export type UpgradeSnapshot = components['schemas']['UpgradeSnapshot'];
+export type StorageTemplate = components['schemas']['StorageTemplate'];
+export type StoragePreview = components['schemas']['StoragePreview'];
 export type BackupDeviceList = components['schemas']['BackupDeviceList'];
 export type BackupDeviceMissing = components['schemas']['BackupDeviceMissing'];
 export type Asset = components['schemas']['Asset'];
@@ -321,6 +323,13 @@ export const api = {
 	myImports: () => request<UserImport[]>(fetch, '/api/imports'),
 	backupDevices: () => request<BackupDeviceList>(fetch, '/api/me/backup-devices'),
 	upgradeSnapshots: () => request<UpgradeSnapshot[]>(fetch, '/api/admin/upgrade-snapshots'),
+	storageTemplate: () => request<StorageTemplate>(fetch, '/api/admin/storage-template'),
+	setStorageTemplate: (template: string) =>
+		request<StorageTemplate>(fetch, '/api/admin/storage-template', { template }, 'PUT'),
+	previewStorageTemplate: (template: string) =>
+		request<StoragePreview[]>(fetch, '/api/admin/storage-template/preview', { template }),
+	applyStorageTemplate: (dryRun: boolean) =>
+		request<void>(fetch, '/api/admin/storage-template/apply', { dryRun }),
 	deleteUpgradeSnapshot: (name: string) =>
 		request<void>(
 			fetch,

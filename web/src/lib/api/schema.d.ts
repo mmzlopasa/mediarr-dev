@@ -451,6 +451,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/storage-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How originals are laid out in each user's folder, and what the last run over all of them did */
+        get: operations["getStorageTemplate"];
+        /** Choose the template for new originals. Empty keeps the layout they have always had */
+        put: operations["setStorageTemplate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/storage-template/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Where a template would put a few real originals, without moving anything */
+        post: operations["previewStorageTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/storage-template/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Put every uploaded original where the template says, or with dryRun only say what would move */
+        post: operations["applyStorageTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/users": {
         parameters: {
             query?: never;
@@ -4192,6 +4244,47 @@ export interface components {
             /** Format: int64 */
             sizeBytes: number;
         };
+        StorageToken: {
+            token: string;
+            means: string;
+        };
+        StorageMove: {
+            from: string;
+            to: string;
+        };
+        StorageReport: {
+            template: string;
+            dryRun: boolean;
+            running: boolean;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            checked: number;
+            /** @description Moved, or with dryRun would move */
+            moved: number;
+            failed: number;
+            samples: components["schemas"]["StorageMove"][];
+            errors: string[];
+        };
+        StorageTemplate: {
+            /** @description Empty: the layout originals have always had */
+            template: string;
+            defaultLayout: string;
+            tokens: components["schemas"]["StorageToken"][];
+            report?: components["schemas"]["StorageReport"];
+        };
+        StorageTemplateChange: {
+            template: string;
+        };
+        StoragePreview: {
+            name: string;
+            /** @description Inside the owner's folder */
+            path: string;
+        };
+        StorageApply: {
+            dryRun: boolean;
+        };
         DeviceKey: {
             /** Format: uuid */
             id: string;
@@ -5341,6 +5434,107 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    getStorageTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The template */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageTemplate"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    setStorageTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StorageTemplateChange"];
+            };
+        };
+        responses: {
+            /** @description The template as kept */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageTemplate"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    previewStorageTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StorageTemplateChange"];
+            };
+        };
+        responses: {
+            /** @description Examples */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoragePreview"][];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    applyStorageTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StorageApply"];
+            };
+        };
+        responses: {
+            /** @description Started; the report shows in the template */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     listUsers: {

@@ -48,6 +48,7 @@ class FakeServer {
   String name = 'Owner';
   int quietDays = 3;
   String tagName = 'summer';
+  String storageTemplate = '';
 
   Map<String, Object> get _user => {
     'id': userId,
@@ -146,6 +147,31 @@ class FakeServer {
       ) as Map<String, dynamic>;
       name = (body['name'] as String?) ?? name;
       await _json(request, 200, _user);
+      return;
+    }
+    if (path == '/api/admin/storage-template') {
+      if (request.method == 'PUT') {
+        final body = jsonDecode(
+          await utf8.decoder.bind(request).join(),
+        ) as Map<String, dynamic>;
+        storageTemplate = body['template'] as String;
+      }
+      await _json(request, 200, {
+        'template': storageTemplate,
+        'defaultLayout': '{{y}}/{{MM}}/{{hash}}-{{filename}}.{{ext}}',
+        'tokens': [
+          {'token': '{{y}}', 'means': 'year, 2024'},
+          {'token': '{{filename}}', 'means': 'the name it came with'},
+          {'token': '{{ext}}', 'means': 'the extension, jpg'},
+        ],
+      });
+      return;
+    }
+    if (path == '/api/admin/storage-template/preview') {
+      await utf8.decoder.bind(request).join();
+      await _json(request, 200, [
+        {'name': 'beach.jpg', 'path': '2024/beach.jpg'},
+      ]);
       return;
     }
     const travelsId = '00000000-0000-4000-8000-0000000000a1';

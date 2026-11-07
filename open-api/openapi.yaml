@@ -405,6 +405,67 @@ paths:
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/admin/storage-template:
+    get:
+      operationId: getStorageTemplate
+      summary: How originals are laid out in each user's folder, and what the last run over all of them did
+      responses:
+        "200":
+          description: The template
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StorageTemplate" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setStorageTemplate
+      summary: Choose the template for new originals. Empty keeps the layout they have always had
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StorageTemplateChange" }
+      responses:
+        "200":
+          description: The template as kept
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StorageTemplate" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/storage-template/preview:
+    post:
+      operationId: previewStorageTemplate
+      summary: Where a template would put a few real originals, without moving anything
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StorageTemplateChange" }
+      responses:
+        "200":
+          description: Examples
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/StoragePreview" } }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/admin/storage-template/apply:
+    post:
+      operationId: applyStorageTemplate
+      summary: Put every uploaded original where the template says, or with dryRun only say what would move
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StorageApply" }
+      responses:
+        "202": { description: Started; the report shows in the template }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/admin/users:
     get:
       operationId: listUsers
@@ -4023,6 +4084,56 @@ components:
         toSchema: { type: integer, format: int64 }
         createdAt: { type: string, format: date-time }
         sizeBytes: { type: integer, format: int64 }
+    StorageToken:
+      type: object
+      required: [token, means]
+      properties:
+        token: { type: string }
+        means: { type: string }
+    StorageMove:
+      type: object
+      required: [from, to]
+      properties:
+        from: { type: string }
+        to: { type: string }
+    StorageReport:
+      type: object
+      required: [template, dryRun, running, startedAt, checked, moved, failed, samples, errors]
+      properties:
+        template: { type: string }
+        dryRun: { type: boolean }
+        running: { type: boolean }
+        startedAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time }
+        checked: { type: integer }
+        moved: { type: integer, description: "Moved, or with dryRun would move" }
+        failed: { type: integer }
+        samples: { type: array, items: { $ref: "#/components/schemas/StorageMove" } }
+        errors: { type: array, items: { type: string } }
+    StorageTemplate:
+      type: object
+      required: [template, defaultLayout, tokens]
+      properties:
+        template: { type: string, description: "Empty: the layout originals have always had" }
+        defaultLayout: { type: string }
+        tokens: { type: array, items: { $ref: "#/components/schemas/StorageToken" } }
+        report: { $ref: "#/components/schemas/StorageReport" }
+    StorageTemplateChange:
+      type: object
+      required: [template]
+      properties:
+        template: { type: string, maxLength: 200 }
+    StoragePreview:
+      type: object
+      required: [name, path]
+      properties:
+        name: { type: string }
+        path: { type: string, description: "Inside the owner's folder" }
+    StorageApply:
+      type: object
+      required: [dryRun]
+      properties:
+        dryRun: { type: boolean }
     DeviceKey:
       type: object
       required: [id, key]

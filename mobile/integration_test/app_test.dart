@@ -246,6 +246,32 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('an administrator chooses the storage template in the app', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Storage template'));
+    await tester.ensureVisible(find.text('Storage template'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Storage template'));
+    await waitFor(tester, find.widgetWithText(TextField, 'Template'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Template'),
+      '{{y}}/{{filename}}.{{ext}}',
+    );
+    await waitFor(tester, find.text('2024/beach.jpg'));
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Save'));
+    await waitFor(tester, find.text('Saved.'));
+    expect(server.storageTemplate, '{{y}}/{{filename}}.{{ext}}');
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('an album shows the albums inside it', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);

@@ -11,7 +11,7 @@ export default {
     },
     {
       type: 'category', label: 'Administration', collapsed: false,
-      items: ['administration/users', 'administration/sign-in', 'administration/backup', 'administration/keep', 'administration/reverse-proxy', 'administration/monitoring', 'administration/api-keys'],
+      items: ['administration/users', 'administration/sign-in', 'administration/backup', 'administration/storage-template', 'administration/keep', 'administration/reverse-proxy', 'administration/monitoring', 'administration/api-keys'],
     },
     'faq',
   ],

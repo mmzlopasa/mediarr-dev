@@ -18,6 +18,7 @@ import 'imports_screen.dart';
 import 'profile_screen.dart';
 import 'organize_screens.dart';
 import 'settings_screen.dart';
+import 'storage_template_screen.dart';
 
 Future<void> showAccountSheet(BuildContext context) =>
     showModalBottomSheet<void>(
@@ -356,6 +357,12 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
               leading: Icon(Icons.devices_other_outlined, color: Palette.dim),
               title: const Text('All backup devices'),
               onTap: () => _push(const BackupDevicesScreen(all: true)),
+            ),
+          if (session.user.isAdmin)
+            ListTile(
+              leading: Icon(Icons.drive_file_move_outline, color: Palette.dim),
+              title: const Text('Storage template'),
+              onTap: () => _push(const StorageTemplateScreen()),
             ),
           ListTile(
             leading: Icon(Icons.settings_outlined, color: Palette.dim),

@@ -241,6 +241,55 @@ class DefaultApi {
     }
   }
 
+  /// Put every uploaded original where the template says, or with dryRun only say what would move
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [StorageApply] storageApply (required):
+  Future<Response> applyStorageTemplateWithHttpInfo(
+    StorageApply storageApply,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/storage-template/apply';
+
+    // ignore: prefer_final_locals
+    Object? postBody = storageApply;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Put every uploaded original where the template says, or with dryRun only say what would move
+  ///
+  /// Parameters:
+  ///
+  /// * [StorageApply] storageApply (required):
+  Future<void> applyStorageTemplate(
+    StorageApply storageApply,
+  ) async {
+    final response = await applyStorageTemplateWithHttpInfo(
+      storageApply,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Let this device sign in
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6504,6 +6553,52 @@ class DefaultApi {
     return null;
   }
 
+  /// How originals are laid out in each user's folder, and what the last run over all of them did
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getStorageTemplateWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/storage-template';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// How originals are laid out in each user's folder, and what the last run over all of them did
+  Future<StorageTemplate?> getStorageTemplate() async {
+    final response = await getStorageTemplateWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'StorageTemplate',
+      ) as StorageTemplate;
+    }
+    return null;
+  }
+
   /// How a video is coming along
   ///
   /// Note: This method returns the HTTP [Response].
@@ -9054,6 +9149,67 @@ class DefaultApi {
     }
   }
 
+  /// Where a template would put a few real originals, without moving anything
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [StorageTemplateChange] storageTemplateChange (required):
+  Future<Response> previewStorageTemplateWithHttpInfo(
+    StorageTemplateChange storageTemplateChange,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/storage-template/preview';
+
+    // ignore: prefer_final_locals
+    Object? postBody = storageTemplateChange;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Where a template would put a few real originals, without moving anything
+  ///
+  /// Parameters:
+  ///
+  /// * [StorageTemplateChange] storageTemplateChange (required):
+  Future<List<StoragePreview>?> previewStorageTemplate(
+    StorageTemplateChange storageTemplateChange,
+  ) async {
+    final response = await previewStorageTemplateWithHttpInfo(
+      storageTemplateChange,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<StoragePreview>') as List)
+          .cast<StoragePreview>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// Mark every notification as read
   ///
   /// Note: This method returns the HTTP [Response].
@@ -11522,6 +11678,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Choose the template for new originals. Empty keeps the layout they have always had
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [StorageTemplateChange] storageTemplateChange (required):
+  Future<Response> setStorageTemplateWithHttpInfo(
+    StorageTemplateChange storageTemplateChange,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/storage-template';
+
+    // ignore: prefer_final_locals
+    Object? postBody = storageTemplateChange;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Choose the template for new originals. Empty keeps the layout they have always had
+  ///
+  /// Parameters:
+  ///
+  /// * [StorageTemplateChange] storageTemplateChange (required):
+  Future<StorageTemplate?> setStorageTemplate(
+    StorageTemplateChange storageTemplateChange,
+  ) async {
+    final response = await setStorageTemplateWithHttpInfo(
+      storageTemplateChange,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'StorageTemplate',
+      ) as StorageTemplate;
+    }
+    return null;
   }
 
   /// Set how much a user may store. Without a value there is no limit

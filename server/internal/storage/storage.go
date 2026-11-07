@@ -14,7 +14,10 @@ import (
 // MarkerName is the file that proves a directory is the expected, mounted disk.
 const MarkerName = ".mediarr"
 
-const maxNameLength = 120
+const (
+	maxNameLength  = 120
+	checksumPrefix = 16
+)
 
 // ErrMarkerMissing means a previously used directory no longer holds its marker.
 var ErrMarkerMissing = errors.New("storage marker is missing")

@@ -10,6 +10,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import Kv from '#lib/design/components/Kv.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
+	import StorageTemplateCard from '#lib/organize/StorageTemplateCard.svelte';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import { diskUsedPercent, liveOverview } from '#lib/overview.svelte.ts';
 
@@ -95,3 +96,5 @@
 {:else if !overview.failed}
 	<Skeleton height="220px" />
 {/if}
+
+<StorageTemplateCard />

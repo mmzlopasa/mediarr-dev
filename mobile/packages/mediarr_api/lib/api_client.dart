@@ -497,6 +497,20 @@ class ApiClient {
           return ShareLinkCreate.fromJson(value);
         case 'Sprite':
           return Sprite.fromJson(value);
+        case 'StorageApply':
+          return StorageApply.fromJson(value);
+        case 'StorageMove':
+          return StorageMove.fromJson(value);
+        case 'StoragePreview':
+          return StoragePreview.fromJson(value);
+        case 'StorageReport':
+          return StorageReport.fromJson(value);
+        case 'StorageTemplate':
+          return StorageTemplate.fromJson(value);
+        case 'StorageTemplateChange':
+          return StorageTemplateChange.fromJson(value);
+        case 'StorageToken':
+          return StorageToken.fromJson(value);
         case 'StoryExport':
           return StoryExport.fromJson(value);
         case 'StoryRequest':

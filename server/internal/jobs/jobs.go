@@ -136,6 +136,8 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &externalScanWorker{deps: d})
 	river.AddWorker(workers, &integrityWorker{deps: d})
 	river.AddWorker(workers, &deviceQuietWorker{deps: d})
+	river.AddWorker(workers, &storageMoveWorker{deps: d})
+	river.AddWorker(workers, &storageApplyWorker{deps: d})
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{
@@ -353,6 +355,14 @@ func (w *thumbnailWorker) Work(ctx context.Context, job *river.Job[ThumbnailArgs
 			AspectRatio: pgtype.Float4{Float32: result.Ratio, Valid: result.Ratio > 0},
 		}); err != nil {
 			return err
+		}
+		// A new original goes where the storage template says, now that its date is known.
+		if asset.Status != "ready" {
+			if template, err := LoadStorageTemplate(ctx, q); err == nil && template != "" {
+				if _, err := w.client().InsertTx(ctx, tx, StorageMoveArgs{AssetID: job.Args.AssetID}, nil); err != nil {
+					return err
+				}
+			}
 		}
 		if w.opts.MLURL == "" {
 			return nil

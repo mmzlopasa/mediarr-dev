@@ -64,6 +64,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**addBackupDestination**](doc//DefaultApi.md#addbackupdestination) | **POST** /api/admin/backup/destinations | Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
 *DefaultApi* | [**addFamilyMember**](doc//DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+*DefaultApi* | [**applyStorageTemplate**](doc//DefaultApi.md#applystoragetemplate) | **POST** /api/admin/storage-template/apply | Put every uploaded original where the template says, or with dryRun only say what would move
 *DefaultApi* | [**approveDevice**](doc//DefaultApi.md#approvedevice) | **POST** /api/admin/security/devices/{id}/approve | Let this device sign in
 *DefaultApi* | [**askSearch**](doc//DefaultApi.md#asksearch) | **POST** /api/search/ask | Turn a question into words to search for, with the local model
 *DefaultApi* | [**assignFace**](doc//DefaultApi.md#assignface) | **PUT** /api/faces/{id} | Say who this face is. Analysing the picture again keeps it
@@ -175,6 +176,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getSecurity**](doc//DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
 *DefaultApi* | [**getServerSettings**](doc//DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 *DefaultApi* | [**getServerStatus**](doc//DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
+*DefaultApi* | [**getStorageTemplate**](doc//DefaultApi.md#getstoragetemplate) | **GET** /api/admin/storage-template | How originals are laid out in each user's folder, and what the last run over all of them did
 *DefaultApi* | [**getStoryExport**](doc//DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
 *DefaultApi* | [**getStoryVideo**](doc//DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
 *DefaultApi* | [**getTagBucket**](doc//DefaultApi.md#gettagbucket) | **GET** /api/tags/{id}/buckets/{month} | Photos carrying a tag in one month
@@ -223,6 +225,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**moveAlbum**](doc//DefaultApi.md#movealbum) | **PUT** /api/albums/{id}/parent | Put an album inside another of one's own, or back at the top
 *DefaultApi* | [**pairKeepGuest**](doc//DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 *DefaultApi* | [**pauseJobQueue**](doc//DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
+*DefaultApi* | [**previewStorageTemplate**](doc//DefaultApi.md#previewstoragetemplate) | **POST** /api/admin/storage-template/preview | Where a template would put a few real originals, without moving anything
 *DefaultApi* | [**readNotifications**](doc//DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
 *DefaultApi* | [**reinviteKeepGuest**](doc//DefaultApi.md#reinvitekeepguest) | **POST** /api/admin/keep/guests/{id}/invite | A new code for a guest that has not paired yet
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
@@ -265,6 +268,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setSecurity**](doc//DefaultApi.md#setsecurity) | **PUT** /api/admin/security | Change the rules. Refused if it would lock out the person asking
 *DefaultApi* | [**setServerSettings**](doc//DefaultApi.md#setserversettings) | **PUT** /api/admin/server-settings | Change them. Applies to files processed from now on
 *DefaultApi* | [**setStackMain**](doc//DefaultApi.md#setstackmain) | **PUT** /api/assets/{id}/stack/main | Make this shot the one the timeline shows
+*DefaultApi* | [**setStorageTemplate**](doc//DefaultApi.md#setstoragetemplate) | **PUT** /api/admin/storage-template | Choose the template for new originals. Empty keeps the layout they have always had
 *DefaultApi* | [**setUserQuota**](doc//DefaultApi.md#setuserquota) | **PUT** /api/admin/users/{id}/quota | Set how much a user may store. Without a value there is no limit
 *DefaultApi* | [**setVaultPin**](doc//DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 *DefaultApi* | [**setup**](doc//DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
@@ -418,6 +422,13 @@ Class | Method | HTTP request | Description
  - [ShareLink](doc//ShareLink.md)
  - [ShareLinkCreate](doc//ShareLinkCreate.md)
  - [Sprite](doc//Sprite.md)
+ - [StorageApply](doc//StorageApply.md)
+ - [StorageMove](doc//StorageMove.md)
+ - [StoragePreview](doc//StoragePreview.md)
+ - [StorageReport](doc//StorageReport.md)
+ - [StorageTemplate](doc//StorageTemplate.md)
+ - [StorageTemplateChange](doc//StorageTemplateChange.md)
+ - [StorageToken](doc//StorageToken.md)
  - [StoryExport](doc//StoryExport.md)
  - [StoryRequest](doc//StoryRequest.md)
  - [Tag](doc//Tag.md)

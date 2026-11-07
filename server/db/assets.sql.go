@@ -873,6 +873,32 @@ func (q *Queries) OlderAsset(ctx context.Context, arg OlderAssetParams) (pgtype.
 	return id, err
 }
 
+const recentUploadAssets = `-- name: RecentUploadAssets :many
+SELECT a.id FROM assets a JOIN libraries l ON l.id = a.library_id AND l.kind = 'upload'
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.live_photo_of IS NULL
+ORDER BY a.created_at DESC LIMIT $1
+`
+
+func (q *Queries) RecentUploadAssets(ctx context.Context, limit int32) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, recentUploadAssets, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const restoreDeletedAsset = `-- name: RestoreDeletedAsset :exec
 UPDATE assets SET deleted_at = NULL, updated_at = now() WHERE id = $1 AND deleted_at IS NOT NULL
 `
@@ -1000,6 +1026,20 @@ func (q *Queries) SetManualLocation(ctx context.Context, arg SetManualLocationPa
 	return err
 }
 
+const setOriginalPath = `-- name: SetOriginalPath :exec
+UPDATE assets SET original_path = $2, updated_at = now() WHERE id = $1
+`
+
+type SetOriginalPathParams struct {
+	ID           pgtype.UUID
+	OriginalPath string
+}
+
+func (q *Queries) SetOriginalPath(ctx context.Context, arg SetOriginalPathParams) error {
+	_, err := q.db.Exec(ctx, setOriginalPath, arg.ID, arg.OriginalPath)
+	return err
+}
+
 const setOwnerRating = `-- name: SetOwnerRating :exec
 UPDATE assets SET rating = $2, rating_by_owner = true, updated_at = now() WHERE id = $1
 `
@@ -1032,6 +1072,46 @@ func (q *Queries) SoftDeleteAssets(ctx context.Context, arg SoftDeleteAssetsPara
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const storageFacts = `-- name: StorageFacts :one
+SELECT a.id, a.user_id, a.original_path, a.original_name, encode(a.checksum, 'hex')::text AS checksum_hex,
+       coalesce(a.local_at, (a.created_at AT TIME ZONE 'UTC'))::timestamp AS placed_at,
+       coalesce(e.model, '')::text AS camera,
+       coalesce((SELECT al.title FROM album_assets aa JOIN albums al ON al.id = aa.album_id
+                 WHERE aa.asset_id = a.id AND al.owner_id = a.user_id ORDER BY aa.added_at, al.title LIMIT 1), '')::text AS album
+FROM assets a
+JOIN libraries l ON l.id = a.library_id AND l.kind = 'upload'
+LEFT JOIN exif e ON e.asset_id = a.id
+WHERE a.id = $1
+`
+
+type StorageFactsRow struct {
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	OriginalPath string
+	OriginalName string
+	ChecksumHex  string
+	PlacedAt     pgtype.Timestamp
+	Camera       string
+	Album        string
+}
+
+// What a storage template needs to place one original. Only uploads move; an external library never.
+func (q *Queries) StorageFacts(ctx context.Context, id pgtype.UUID) (StorageFactsRow, error) {
+	row := q.db.QueryRow(ctx, storageFacts, id)
+	var i StorageFactsRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.OriginalPath,
+		&i.OriginalName,
+		&i.ChecksumHex,
+		&i.PlacedAt,
+		&i.Camera,
+		&i.Album,
+	)
+	return i, err
 }
 
 const timelineBucket = `-- name: TimelineBucket :many
@@ -1205,6 +1285,37 @@ type UpdateVideoInfoParams struct {
 func (q *Queries) UpdateVideoInfo(ctx context.Context, arg UpdateVideoInfoParams) error {
 	_, err := q.db.Exec(ctx, updateVideoInfo, arg.ID, arg.DurationMs, arg.VideoCodec)
 	return err
+}
+
+const uploadAssetsAfter = `-- name: UploadAssetsAfter :many
+SELECT a.id FROM assets a JOIN libraries l ON l.id = a.library_id AND l.kind = 'upload'
+WHERE a.id > $1 ORDER BY a.id LIMIT $2
+`
+
+type UploadAssetsAfterParams struct {
+	ID    pgtype.UUID
+	Limit int32
+}
+
+// Uploaded originals in order, a batch at a time, for putting them all where a template says.
+func (q *Queries) UploadAssetsAfter(ctx context.Context, arg UploadAssetsAfterParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, uploadAssetsAfter, arg.ID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const upsertAssetFile = `-- name: UpsertAssetFile :exec

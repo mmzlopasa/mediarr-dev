@@ -226,3 +226,28 @@ WHERE id = sqlc.arg('id');
 -- name: ListUprightVideos :many
 SELECT id FROM assets
 WHERE kind = 'video' AND status = 'ready' AND deleted_at IS NULL AND height > width AND live_photo_of IS NULL;
+
+-- name: StorageFacts :one
+-- What a storage template needs to place one original. Only uploads move; an external library never.
+SELECT a.id, a.user_id, a.original_path, a.original_name, encode(a.checksum, 'hex')::text AS checksum_hex,
+       coalesce(a.local_at, (a.created_at AT TIME ZONE 'UTC'))::timestamp AS placed_at,
+       coalesce(e.model, '')::text AS camera,
+       coalesce((SELECT al.title FROM album_assets aa JOIN albums al ON al.id = aa.album_id
+                 WHERE aa.asset_id = a.id AND al.owner_id = a.user_id ORDER BY aa.added_at, al.title LIMIT 1), '')::text AS album
+FROM assets a
+JOIN libraries l ON l.id = a.library_id AND l.kind = 'upload'
+LEFT JOIN exif e ON e.asset_id = a.id
+WHERE a.id = $1;
+
+-- name: SetOriginalPath :exec
+UPDATE assets SET original_path = $2, updated_at = now() WHERE id = $1;
+
+-- name: UploadAssetsAfter :many
+-- Uploaded originals in order, a batch at a time, for putting them all where a template says.
+SELECT a.id FROM assets a JOIN libraries l ON l.id = a.library_id AND l.kind = 'upload'
+WHERE a.id > $1 ORDER BY a.id LIMIT $2;
+
+-- name: RecentUploadAssets :many
+SELECT a.id FROM assets a JOIN libraries l ON l.id = a.library_id AND l.kind = 'upload'
+WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.live_photo_of IS NULL
+ORDER BY a.created_at DESC LIMIT $1;

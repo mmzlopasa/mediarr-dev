@@ -501,11 +501,11 @@ test.describe('timeline', () => {
 		await uploadPhoto(page, `e2e-zoom-${Date.now()}.jpg`);
 		const tile = page.locator('.tl-tile:not(:has(.tl-video))').first();
 		await tile.waitFor({ timeout: 45000 });
-		await tile.click();
-		const image = page.locator('img.viewer-media:not(.under)').first();
-		await image.waitFor();
+		// By default the full resolution comes as the viewer opens; zooming asks for it otherwise.
 		const full = page.waitForResponse((response) => response.url().includes('size=full'));
-		await image.hover();
+		await tile.click();
+		await page.locator('img.viewer-media:not(.under)').first().waitFor();
+		await page.locator('.viewer-stage').hover();
 		await page.mouse.wheel(0, -400);
 		expect((await full).status()).toBe(200);
 	});

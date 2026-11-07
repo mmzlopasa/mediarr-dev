@@ -2677,6 +2677,62 @@ type Sprite struct {
 	Rows       int `json:"rows"`
 }
 
+// StorageApply defines model for StorageApply.
+type StorageApply struct {
+	DryRun bool `json:"dryRun"`
+}
+
+// StorageMove defines model for StorageMove.
+type StorageMove struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+// StoragePreview defines model for StoragePreview.
+type StoragePreview struct {
+	Name string `json:"name"`
+
+	// Path Inside the owner's folder
+	Path string `json:"path"`
+}
+
+// StorageReport defines model for StorageReport.
+type StorageReport struct {
+	Checked    int        `json:"checked"`
+	DryRun     bool       `json:"dryRun"`
+	Errors     []string   `json:"errors"`
+	Failed     int        `json:"failed"`
+	FinishedAt *time.Time `json:"finishedAt,omitempty"`
+
+	// Moved Moved, or with dryRun would move
+	Moved     int           `json:"moved"`
+	Running   bool          `json:"running"`
+	Samples   []StorageMove `json:"samples"`
+	StartedAt time.Time     `json:"startedAt"`
+	Template  string        `json:"template"`
+}
+
+// StorageTemplate defines model for StorageTemplate.
+type StorageTemplate struct {
+	DefaultLayout string         `json:"defaultLayout"`
+	Report        *StorageReport `json:"report,omitempty"`
+
+	// Template Empty: the layout originals have always had
+	Template string         `json:"template"`
+	Tokens   []StorageToken `json:"tokens"`
+}
+
+// StorageTemplateChange defines model for StorageTemplateChange.
+type StorageTemplateChange struct {
+	Template string `json:"template"`
+}
+
+// StorageToken defines model for StorageToken.
+type StorageToken struct {
+	Means string `json:"means"`
+	Token string `json:"token"`
+}
+
 // StoryExport defines model for StoryExport.
 type StoryExport struct {
 	Id     openapi_types.UUID `json:"id"`
@@ -3169,6 +3225,15 @@ type SetSecurityJSONRequestBody = SecurityUpdate
 // SetServerSettingsJSONRequestBody defines body for SetServerSettings for application/json ContentType.
 type SetServerSettingsJSONRequestBody = ServerSettings
 
+// SetStorageTemplateJSONRequestBody defines body for SetStorageTemplate for application/json ContentType.
+type SetStorageTemplateJSONRequestBody = StorageTemplateChange
+
+// ApplyStorageTemplateJSONRequestBody defines body for ApplyStorageTemplate for application/json ContentType.
+type ApplyStorageTemplateJSONRequestBody = StorageApply
+
+// PreviewStorageTemplateJSONRequestBody defines body for PreviewStorageTemplate for application/json ContentType.
+type PreviewStorageTemplateJSONRequestBody = StorageTemplateChange
+
 // CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
 type CreateUserJSONRequestBody = CreateUserRequest
 
@@ -3468,6 +3533,18 @@ type ServerInterface interface {
 	// GetAdminStorage How much each user stores
 	// (GET /api/admin/storage)
 	GetAdminStorage(w http.ResponseWriter, r *http.Request)
+	// GetStorageTemplate How originals are laid out in each user's folder, and what the last run over all of them did
+	// (GET /api/admin/storage-template)
+	GetStorageTemplate(w http.ResponseWriter, r *http.Request)
+	// SetStorageTemplate Choose the template for new originals. Empty keeps the layout they have always had
+	// (PUT /api/admin/storage-template)
+	SetStorageTemplate(w http.ResponseWriter, r *http.Request)
+	// ApplyStorageTemplate Put every uploaded original where the template says, or with dryRun only say what would move
+	// (POST /api/admin/storage-template/apply)
+	ApplyStorageTemplate(w http.ResponseWriter, r *http.Request)
+	// PreviewStorageTemplate Where a template would put a few real originals, without moving anything
+	// (POST /api/admin/storage-template/preview)
+	PreviewStorageTemplate(w http.ResponseWriter, r *http.Request)
 	// ListUpgradeSnapshots Snapshots of the database made before upgrades, newest first
 	// (GET /api/admin/upgrade-snapshots)
 	ListUpgradeSnapshots(w http.ResponseWriter, r *http.Request)
@@ -4278,6 +4355,30 @@ func (_ Unimplemented) SetServerSettings(w http.ResponseWriter, r *http.Request)
 // GetAdminStorage How much each user stores
 // (GET /api/admin/storage)
 func (_ Unimplemented) GetAdminStorage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetStorageTemplate How originals are laid out in each user's folder, and what the last run over all of them did
+// (GET /api/admin/storage-template)
+func (_ Unimplemented) GetStorageTemplate(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetStorageTemplate Choose the template for new originals. Empty keeps the layout they have always had
+// (PUT /api/admin/storage-template)
+func (_ Unimplemented) SetStorageTemplate(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ApplyStorageTemplate Put every uploaded original where the template says, or with dryRun only say what would move
+// (POST /api/admin/storage-template/apply)
+func (_ Unimplemented) ApplyStorageTemplate(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// PreviewStorageTemplate Where a template would put a few real originals, without moving anything
+// (POST /api/admin/storage-template/preview)
+func (_ Unimplemented) PreviewStorageTemplate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6228,6 +6329,62 @@ func (siw *ServerInterfaceWrapper) GetAdminStorage(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAdminStorage(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetStorageTemplate operation middleware
+func (siw *ServerInterfaceWrapper) GetStorageTemplate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetStorageTemplate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetStorageTemplate operation middleware
+func (siw *ServerInterfaceWrapper) SetStorageTemplate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetStorageTemplate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ApplyStorageTemplate operation middleware
+func (siw *ServerInterfaceWrapper) ApplyStorageTemplate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApplyStorageTemplate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PreviewStorageTemplate operation middleware
+func (siw *ServerInterfaceWrapper) PreviewStorageTemplate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PreviewStorageTemplate(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10669,6 +10826,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/api/admin/upgrade-snapshots/{name}", wrapper.DeleteUpgradeSnapshot)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/storage-template", wrapper.GetStorageTemplate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/admin/storage-template", wrapper.SetStorageTemplate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/storage-template/preview", wrapper.PreviewStorageTemplate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/admin/storage-template/apply", wrapper.ApplyStorageTemplate)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/users", wrapper.ListUsers)

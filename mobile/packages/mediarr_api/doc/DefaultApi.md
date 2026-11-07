@@ -13,6 +13,7 @@ Method | HTTP request | Description
 [**addBackupDestination**](DefaultApi.md#addbackupdestination) | **POST** /api/admin/backup/destinations | Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
 [**addFamilyMember**](DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
 [**appendUpload**](DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
+[**applyStorageTemplate**](DefaultApi.md#applystoragetemplate) | **POST** /api/admin/storage-template/apply | Put every uploaded original where the template says, or with dryRun only say what would move
 [**approveDevice**](DefaultApi.md#approvedevice) | **POST** /api/admin/security/devices/{id}/approve | Let this device sign in
 [**askSearch**](DefaultApi.md#asksearch) | **POST** /api/search/ask | Turn a question into words to search for, with the local model
 [**assignFace**](DefaultApi.md#assignface) | **PUT** /api/faces/{id} | Say who this face is. Analysing the picture again keeps it
@@ -124,6 +125,7 @@ Method | HTTP request | Description
 [**getSecurity**](DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
 [**getServerSettings**](DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 [**getServerStatus**](DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
+[**getStorageTemplate**](DefaultApi.md#getstoragetemplate) | **GET** /api/admin/storage-template | How originals are laid out in each user's folder, and what the last run over all of them did
 [**getStoryExport**](DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
 [**getStoryVideo**](DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
 [**getTagBucket**](DefaultApi.md#gettagbucket) | **GET** /api/tags/{id}/buckets/{month} | Photos carrying a tag in one month
@@ -172,6 +174,7 @@ Method | HTTP request | Description
 [**moveAlbum**](DefaultApi.md#movealbum) | **PUT** /api/albums/{id}/parent | Put an album inside another of one's own, or back at the top
 [**pairKeepGuest**](DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 [**pauseJobQueue**](DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
+[**previewStorageTemplate**](DefaultApi.md#previewstoragetemplate) | **POST** /api/admin/storage-template/preview | Where a template would put a few real originals, without moving anything
 [**readNotifications**](DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
 [**reinviteKeepGuest**](DefaultApi.md#reinvitekeepguest) | **POST** /api/admin/keep/guests/{id}/invite | A new code for a guest that has not paired yet
 [**removeAlbumAssets**](DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
@@ -214,6 +217,7 @@ Method | HTTP request | Description
 [**setSecurity**](DefaultApi.md#setsecurity) | **PUT** /api/admin/security | Change the rules. Refused if it would lock out the person asking
 [**setServerSettings**](DefaultApi.md#setserversettings) | **PUT** /api/admin/server-settings | Change them. Applies to files processed from now on
 [**setStackMain**](DefaultApi.md#setstackmain) | **PUT** /api/assets/{id}/stack/main | Make this shot the one the timeline shows
+[**setStorageTemplate**](DefaultApi.md#setstoragetemplate) | **PUT** /api/admin/storage-template | Choose the template for new originals. Empty keeps the layout they have always had
 [**setUserQuota**](DefaultApi.md#setuserquota) | **PUT** /api/admin/users/{id}/quota | Set how much a user may store. Without a value there is no limit
 [**setVaultPin**](DefaultApi.md#setvaultpin) | **POST** /api/vault/pin | Set the vault PIN. Changing it needs the current one.
 [**setup**](DefaultApi.md#setup) | **POST** /api/auth/setup | Create the first administrator. Closed once any user exists.
@@ -391,6 +395,46 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **applyStorageTemplate**
+> applyStorageTemplate(storageApply)
+
+Put every uploaded original where the template says, or with dryRun only say what would move
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final storageApply = StorageApply(); // StorageApply | 
+
+try {
+    api_instance.applyStorageTemplate(storageApply);
+} catch (e) {
+    print('Exception when calling DefaultApi->applyStorageTemplate: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **storageApply** | [**StorageApply**](StorageApply.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -4865,6 +4909,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getStorageTemplate**
+> StorageTemplate getStorageTemplate()
+
+How originals are laid out in each user's folder, and what the last run over all of them did
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getStorageTemplate();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getStorageTemplate: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**StorageTemplate**](StorageTemplate.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getStoryExport**
 > StoryExport getStoryExport(id)
 
@@ -6732,6 +6813,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **previewStorageTemplate**
+> List<StoragePreview> previewStorageTemplate(storageTemplateChange)
+
+Where a template would put a few real originals, without moving anything
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final storageTemplateChange = StorageTemplateChange(); // StorageTemplateChange | 
+
+try {
+    final result = api_instance.previewStorageTemplate(storageTemplateChange);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->previewStorageTemplate: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **storageTemplateChange** | [**StorageTemplateChange**](StorageTemplateChange.md)|  | 
+
+### Return type
+
+[**List<StoragePreview>**](StoragePreview.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **readNotifications**
 > readNotifications()
 
@@ -8466,6 +8588,47 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setStorageTemplate**
+> StorageTemplate setStorageTemplate(storageTemplateChange)
+
+Choose the template for new originals. Empty keeps the layout they have always had
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final storageTemplateChange = StorageTemplateChange(); // StorageTemplateChange | 
+
+try {
+    final result = api_instance.setStorageTemplate(storageTemplateChange);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setStorageTemplate: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **storageTemplateChange** | [**StorageTemplateChange**](StorageTemplateChange.md)|  | 
+
+### Return type
+
+[**StorageTemplate**](StorageTemplate.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
