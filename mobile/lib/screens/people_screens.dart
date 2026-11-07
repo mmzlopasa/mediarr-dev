@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../services/dispose_later.dart';
 import '../services/search_query.dart';
 import '../services/session.dart';
 import '../services/timeline.dart';
@@ -466,7 +467,7 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
         ],
       ),
     );
-    field.dispose();
+    disposeLater([field]);
     if (name == null) return;
     try {
       await _session.api.updatePerson(

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../services/dispose_later.dart';
 import '../services/session.dart';
 import '../theme.dart';
 
@@ -102,7 +103,7 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
       ),
     );
     final text = name.text;
-    name.dispose();
+    disposeLater([name]);
     if (confirmed != true) return;
     try {
       final made = await _session.api.createAPIKey(

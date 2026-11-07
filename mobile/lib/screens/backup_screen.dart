@@ -5,6 +5,7 @@ import 'package:mediarr_api/api.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../services/dispose_later.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
@@ -226,9 +227,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       quotaBytes: ((double.tryParse(size.text) ?? 0) * _gb).round(),
       address: address.text.trim(),
     );
-    name.dispose();
-    size.dispose();
-    address.dispose();
+    disposeLater([name, size, address]);
     if (ok != true) return;
     try {
       final invite = await _session.api.inviteKeepGuest(body);
@@ -311,7 +310,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       ),
     );
     final bytes = ((double.tryParse(size.text) ?? 0) * _gb).round();
-    size.dispose();
+    disposeLater([size]);
     if (ok != true) return;
     await _act(
       () => _session.api.updateKeepGuest(
@@ -360,7 +359,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         ),
       ),
     );
-    typed.dispose();
+    disposeLater([typed]);
     if (ok != true) return;
     await _act(() => _session.api.removeKeepGuest(guest.id, name: guest.name));
   }

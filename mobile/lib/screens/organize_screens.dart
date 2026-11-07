@@ -1,3 +1,4 @@
+import '../services/dispose_later.dart';
 import '../services/days.dart';
 
 import 'dart:async';
@@ -987,6 +988,48 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
   }
 }
 
+/// Asks for a tag's new name. It owns its text field, which stays until the dialog has closed.
+class _RenameDialog extends StatefulWidget {
+  const _RenameDialog({required this.name});
+
+  final String name;
+
+  @override
+  State<_RenameDialog> createState() => _RenameDialogState();
+}
+
+class _RenameDialogState extends State<_RenameDialog> {
+  late final _field = TextEditingController(text: widget.name);
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Rename the tag'),
+    content: TextField(
+      controller: _field,
+      autofocus: true,
+      maxLength: 100,
+      decoration: const InputDecoration(labelText: 'New name'),
+      onSubmitted: (value) => Navigator.pop(context, value),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      TextButton(
+        onPressed: () => Navigator.pop(context, _field.text),
+        child: const Text('Save'),
+      ),
+    ],
+  );
+}
+
 class _TagScreen extends ConsumerStatefulWidget {
   const _TagScreen({required this.tag});
 
@@ -1007,32 +1050,10 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
     super.dispose();
   }
 
-  Future<String?> _askName() {
-    final field = TextEditingController(text: _name);
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Rename the tag'),
-        content: TextField(
-          controller: field,
-          autofocus: true,
-          maxLength: 100,
-          decoration: const InputDecoration(labelText: 'New name'),
-          onSubmitted: (value) => Navigator.pop(context, value),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, field.text),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    ).whenComplete(field.dispose);
-  }
+  Future<String?> _askName() => showDialog<String>(
+    context: context,
+    builder: (_) => _RenameDialog(name: _name),
+  );
 
   Future<bool> _askJoin(String name) async =>
       await showDialog<bool>(
@@ -1285,9 +1306,7 @@ class _FamilyRulesScreenState extends ConsumerState<_FamilyRulesScreen> {
     final name = title.text.trim();
     final since = DateTime.tryParse(from.text.trim());
     final where = place.text.trim();
-    title.dispose();
-    from.dispose();
-    place.dispose();
+    disposeLater([title, from, place]);
     if (confirmed != true) return;
     try {
       await _session.api.createFamilyRule(

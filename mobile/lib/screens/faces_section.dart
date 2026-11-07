@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../services/dispose_later.dart';
 import '../services/session.dart';
 import '../theme.dart';
 
@@ -85,7 +86,7 @@ class _FacesSectionState extends State<FacesSection> {
         ],
       ),
     );
-    field.dispose();
+    disposeLater([field]);
     if (name == null || name.isEmpty) return;
     await _attempt(() => _api.assignFace(face.id, FaceAssign(name: name)));
   }
