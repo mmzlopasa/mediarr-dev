@@ -11,7 +11,7 @@ GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down deploy landing docs testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e e2e-design-update lighthouse
+.PHONY: dev down deploy landing docs cli testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e e2e-design-update lighthouse
 
 dev:
 	mkdir -p .dev/cache .dev/web-node_modules .dev/library .dev/media-cache .dev/models .dev/external .dev/backup .dev/ollama
@@ -25,7 +25,19 @@ deploy:
 	docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d --build --wait
 
 # Builds the documentation for docs.mediarr.app, and publishes the install files on cdn.mediarr.app.
-docs:
+# The command-line uploader for every system, served from https://cdn.mediarr.app/install/cli/.
+CLI_VERSION ?= dev
+CLI_TARGETS := linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64
+cli:
+	mkdir -p $(HOME)/mediarr-apps/install/cli
+	cd server && for target in $(CLI_TARGETS); do \
+		os=$${target%/*}; arch=$${target#*/}; ext=$$([ $$os = windows ] && echo .exe); \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch go build -trimpath -ldflags "-s -w -X main.version=$(CLI_VERSION)" \
+			-o $(HOME)/mediarr-apps/install/cli/mediarr-cli-$$os-$$arch$$ext ./cmd/mediarr-cli || exit 1; \
+	done
+	cd $(HOME)/mediarr-apps/install/cli && sha256sum mediarr-cli-* > SHA256SUMS
+
+docs: cli
 	mkdir -p docs/static/install $(HOME)/mediarr-apps/install
 	cp docs/monitoring/grafana-dashboard.json docs/static/install/
 	cp docker/docker-compose.yml docker/example.env $(HOME)/mediarr-apps/install/
