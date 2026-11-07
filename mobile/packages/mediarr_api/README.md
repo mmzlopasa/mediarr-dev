@@ -233,6 +233,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**removeFamilyMember**](doc//DefaultApi.md#removefamilymember) | **DELETE** /api/admin/family/{userId} | Remove someone. Their photos stay in their own library
 *DefaultApi* | [**removeKeepGuest**](doc//DefaultApi.md#removekeepguest) | **DELETE** /api/admin/keep/guests/{id} | Delete a guest and everything kept for it. The name must be given again, as a confirmation
 *DefaultApi* | [**removePartner**](doc//DefaultApi.md#removepartner) | **DELETE** /api/partners/{userId} | Stop sharing your library with a user
+*DefaultApi* | [**renameTag**](doc//DefaultApi.md#renametag) | **PATCH** /api/tags/{id} | Rename a tag. When another tag already has the name, merge says to join the two
 *DefaultApi* | [**reportBackupDevice**](doc//DefaultApi.md#reportbackupdevice) | **PUT** /api/me/backup-devices/{id} | A device says how its backup is doing, with checksums of files it has seen confirmed
 *DefaultApi* | [**resetPassword**](doc//DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
 *DefaultApi* | [**restoreKeepGuestDeleted**](doc//DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
@@ -418,6 +419,7 @@ Class | Method | HTTP request | Description
  - [StoryExport](doc//StoryExport.md)
  - [StoryRequest](doc//StoryRequest.md)
  - [Tag](doc//Tag.md)
+ - [TagRename](doc//TagRename.md)
  - [TimelineBucket](doc//TimelineBucket.md)
  - [TimelineBuckets](doc//TimelineBuckets.md)
  - [TimelineBucketsBucketsInner](doc//TimelineBucketsBucketsInner.md)

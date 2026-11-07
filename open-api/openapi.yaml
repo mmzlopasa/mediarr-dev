@@ -1398,6 +1398,26 @@ paths:
               schema: { type: array, items: { $ref: "#/components/schemas/Tag" } }
         "401": { $ref: "#/components/responses/Error" }
   /api/tags/{id}:
+    patch:
+      operationId: renameTag
+      summary: Rename a tag. When another tag already has the name, merge says to join the two
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TagRename" }
+      responses:
+        "200":
+          description: The tag with its new name, or the one it was joined to
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Tag" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
     delete:
       operationId: deleteTag
       summary: Delete a tag. The photos stay.
@@ -3646,6 +3666,12 @@ components:
         id: { type: string, format: uuid }
         name: { type: string }
         assetCount: { type: integer, format: int64 }
+    TagRename:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        merge: { type: boolean, description: "Join with the tag that already has this name" }
     AssetTagChange:
       type: object
       required: [ids, name]

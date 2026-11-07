@@ -937,6 +937,7 @@ class _TagScreen extends ConsumerStatefulWidget {
 class _TagScreenState extends ConsumerState<_TagScreen> {
   late final Session _session = ref.read(sessionProvider).value!;
   late final _store = TimelineStore.tag(_session, widget.tag.id);
+  late String _name = widget.tag.name;
 
   @override
   void dispose() {
@@ -944,9 +945,99 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
     super.dispose();
   }
 
+  Future<String?> _askName() {
+    final field = TextEditingController(text: _name);
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename the tag'),
+        content: TextField(
+          controller: field,
+          autofocus: true,
+          maxLength: 100,
+          decoration: const InputDecoration(labelText: 'New name'),
+          onSubmitted: (value) => Navigator.pop(context, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, field.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    ).whenComplete(field.dispose);
+  }
+
+  Future<bool> _askJoin(String name) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('"$name" already exists'),
+          content: Text('Join them? All the photos will have "$name".'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Join'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  /// A new name stays on this screen; joined with another tag, this one is gone, so back to the list.
+  Future<void> _rename() async {
+    final name = (await _askName())?.trim();
+    if (name == null || name.isEmpty || name == _name || !mounted) return;
+    Tag? renamed;
+    try {
+      renamed = await _session.api.renameTag(
+        widget.tag.id,
+        TagRename(name: name),
+      );
+    } on ApiException catch (cause) {
+      if (cause.code != 409) {
+        if (mounted) _tell(context, 'Not renamed. ${cause.message ?? ''}');
+        return;
+      }
+      if (!mounted || !await _askJoin(name)) return;
+      try {
+        renamed = await _session.api.renameTag(
+          widget.tag.id,
+          TagRename(name: name, merge: true),
+        );
+      } on ApiException catch (again) {
+        if (mounted) _tell(context, 'Not joined. ${again.message ?? ''}');
+        return;
+      }
+    }
+    if (!mounted || renamed == null) return;
+    if (renamed.id != widget.tag.id) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() => _name = renamed!.name);
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.tag.name)),
+    appBar: AppBar(
+      title: Text(_name),
+      actions: [
+        IconButton(
+          tooltip: 'Rename',
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: _rename,
+        ),
+      ],
+    ),
     body: _PhotoGrid(
       store: _store,
       session: _session,
@@ -961,7 +1052,7 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
               await _session.api.changeAssetTags(
                 AssetTagChange(
                   ids: selected.toList(),
-                  name: widget.tag.name,
+                  name: _name,
                   remove: true,
                 ),
               );

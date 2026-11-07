@@ -150,3 +150,15 @@ FROM assets WHERE user_id = $1 AND deleted_at IS NOT NULL AND live_photo_of IS N
 
 -- name: CountOwnedOfIDs :one
 SELECT count(*) FROM assets WHERE user_id = $1 AND id = ANY($2::uuid[]);
+
+-- name: FindTagByName :one
+SELECT id, name FROM tags WHERE user_id = $1 AND lower(name) = lower(sqlc.arg('name'));
+
+-- name: RenameTag :exec
+UPDATE tags SET name = $3 WHERE id = $1 AND user_id = $2;
+
+-- name: MoveTagAssets :exec
+-- The photos of one tag get another, before the first goes.
+INSERT INTO asset_tags (asset_id, tag_id)
+SELECT x.asset_id, sqlc.arg('into')::uuid FROM asset_tags x WHERE x.tag_id = sqlc.arg('from')::uuid
+ON CONFLICT DO NOTHING;

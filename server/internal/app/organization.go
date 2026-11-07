@@ -2,11 +2,13 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
@@ -416,6 +418,78 @@ func (s *apiServer) DeleteTag(w http.ResponseWriter, r *http.Request, id openapi
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// RenameTag gives a tag a new name. When another tag already has it, the two are joined only when
+// asked, so nothing is merged by a typo.
+func (s *apiServer) RenameTag(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	var body api.TagRename
+	if !readJSON(w, r, &body) {
+		return
+	}
+	name := strings.TrimSpace(body.Name)
+	if name == "" || len([]rune(name)) > maxTagLength {
+		writeError(w, http.StatusBadRequest, "a tag must have between 1 and 100 characters")
+		return
+	}
+	ctx := r.Context()
+	tag, err := s.queries.GetTag(ctx, db.GetTagParams{ID: pgUUID(id), UserID: user.ID})
+	if db.IsNotFound(err) {
+		writeError(w, http.StatusNotFound, "no such tag")
+		return
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	result := tag.ID
+	err = pgx.BeginFunc(ctx, s.Pool, func(tx pgx.Tx) error {
+		q := s.queries.WithTx(tx)
+		other, err := q.FindTagByName(ctx, db.FindTagByNameParams{UserID: user.ID, Name: name})
+		switch {
+		case db.IsNotFound(err) || (err == nil && other.ID == tag.ID):
+			// A new name, or the same one written differently.
+			return q.RenameTag(ctx, db.RenameTagParams{ID: tag.ID, UserID: user.ID, Name: name})
+		case err != nil:
+			return err
+		case body.Merge == nil || !*body.Merge:
+			return errTagTaken
+		}
+		if err := q.MoveTagAssets(ctx, db.MoveTagAssetsParams{Into: other.ID, From: tag.ID}); err != nil {
+			return err
+		}
+		if _, err := q.DeleteTag(ctx, db.DeleteTagParams{ID: tag.ID, UserID: user.ID}); err != nil {
+			return err
+		}
+		result = other.ID
+		return nil
+	})
+	if errors.Is(err, errTagTaken) {
+		writeError(w, http.StatusConflict, "another tag already has this name; send merge to join them")
+		return
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	tags, err := s.queries.ListTags(ctx, user.ID)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	for _, row := range tags {
+		if row.ID == result {
+			writeJSON(w, http.StatusOK, api.Tag{Id: openapi_types.UUID(row.ID.Bytes), Name: row.Name, AssetCount: row.AssetCount})
+			return
+		}
+	}
+	writeError(w, http.StatusNotFound, "no such tag")
+}
+
+var errTagTaken = errors.New("tag name taken")
 
 func (s *apiServer) ownTag(ctx context.Context, w http.ResponseWriter, r *http.Request, id openapi_types.UUID) (*db.User, bool) {
 	user := requireUser(w, r)

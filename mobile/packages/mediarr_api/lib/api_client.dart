@@ -501,6 +501,8 @@ class ApiClient {
           return StoryRequest.fromJson(value);
         case 'Tag':
           return Tag.fromJson(value);
+        case 'TagRename':
+          return TagRename.fromJson(value);
         case 'TimelineBucket':
           return TimelineBucket.fromJson(value);
         case 'TimelineBuckets':

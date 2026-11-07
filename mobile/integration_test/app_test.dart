@@ -220,6 +220,35 @@ void main() {
     await waitFor(tester, find.text('Hvar'));
   });
 
+  testWidgets('a tag is renamed in the app', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.text('Library').last);
+    await waitFor(tester, find.text('Tags'));
+    await tester.ensureVisible(find.text('Tags'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Tags'));
+    await waitFor(tester, find.text('summer'));
+    await tester.tap(find.text('summer'));
+    await waitFor(tester, find.byTooltip('Rename'));
+    await tester.tap(find.byTooltip('Rename'));
+    await waitFor(tester, find.widgetWithText(TextField, 'New name'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'New name'),
+      'Summer 2024',
+    );
+    await tester.tap(find.text('Save'));
+    await waitFor(tester, find.text('Summer 2024'));
+    expect(server.tagName, 'Summer 2024');
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Media').last);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('an import from Google Takeout is followed from the account', (
     tester,
   ) async {

@@ -2660,6 +2660,13 @@ type Tag struct {
 	Name       string             `json:"name"`
 }
 
+// TagRename defines model for TagRename.
+type TagRename struct {
+	// Merge Join with the tag that already has this name
+	Merge *bool  `json:"merge,omitempty"`
+	Name  string `json:"name"`
+}
+
 // TimelineBucket defines model for TimelineBucket.
 type TimelineBucket struct {
 	Items []TimelineItem `json:"items"`
@@ -3257,6 +3264,9 @@ type AskSearchJSONRequestBody = AskRequest
 
 // CreateStoryExportJSONRequestBody defines body for CreateStoryExport for application/json ContentType.
 type CreateStoryExportJSONRequestBody = StoryRequest
+
+// RenameTagJSONRequestBody defines body for RenameTag for application/json ContentType.
+type RenameTagJSONRequestBody = TagRename
 
 // SetVaultPinJSONRequestBody defines body for SetVaultPin for application/json ContentType.
 type SetVaultPinJSONRequestBody = VaultPinChange
@@ -3869,6 +3879,9 @@ type ServerInterface interface {
 	// DeleteTag Delete a tag. The photos stay.
 	// (DELETE /api/tags/{id})
 	DeleteTag(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// RenameTag Rename a tag. When another tag already has the name, merge says to join the two
+	// (PATCH /api/tags/{id})
+	RenameTag(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetTagBuckets Months with photos carrying a tag
 	// (GET /api/tags/{id}/buckets)
 	GetTagBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -5129,6 +5142,12 @@ func (_ Unimplemented) ListTags(w http.ResponseWriter, r *http.Request) {
 // DeleteTag Delete a tag. The photos stay.
 // (DELETE /api/tags/{id})
 func (_ Unimplemented) DeleteTag(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RenameTag Rename a tag. When another tag already has the name, merge says to join the two
+// (PATCH /api/tags/{id})
+func (_ Unimplemented) RenameTag(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -10008,6 +10027,32 @@ func (siw *ServerInterfaceWrapper) DeleteTag(w http.ResponseWriter, r *http.Requ
 	handler.ServeHTTP(w, r)
 }
 
+// RenameTag operation middleware
+func (siw *ServerInterfaceWrapper) RenameTag(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RenameTag(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetTagBuckets operation middleware
 func (siw *ServerInterfaceWrapper) GetTagBuckets(w http.ResponseWriter, r *http.Request) {
 
@@ -10757,6 +10802,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/api/tags/{id}", wrapper.DeleteTag)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/tags/{id}", wrapper.RenameTag)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/tags/{id}/buckets", wrapper.GetTagBuckets)

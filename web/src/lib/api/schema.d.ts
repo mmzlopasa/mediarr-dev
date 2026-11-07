@@ -1495,7 +1495,8 @@ export interface paths {
         delete: operations["deleteTag"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Rename a tag. When another tag already has the name, merge says to join the two */
+        patch: operations["renameTag"];
         trace?: never;
     };
     "/api/tags/{id}/buckets": {
@@ -3832,6 +3833,11 @@ export interface components {
             name: string;
             /** Format: int64 */
             assetCount: number;
+        };
+        TagRename: {
+            name: string;
+            /** @description Join with the tag that already has this name */
+            merge?: boolean;
         };
         AssetTagChange: {
             ids: string[];
@@ -7067,6 +7073,36 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    renameTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagRename"];
+            };
+        };
+        responses: {
+            /** @description The tag with its new name, or the one it was joined to */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
         };
     };
     getTagBuckets: {

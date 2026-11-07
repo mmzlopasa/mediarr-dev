@@ -400,6 +400,8 @@ export const api = {
 	dissolveStack: (id: string) =>
 		request<void>(fetch, `/api/assets/${id}/stack`, undefined, 'DELETE'),
 	deleteTag: (id: string) => request<void>(fetch, `/api/tags/${id}`, undefined, 'DELETE'),
+	renameTag: (id: string, name: string, merge = false) =>
+		request<Tag>(fetch, `/api/tags/${id}`, { name, merge }, 'PATCH'),
 	changeTag: (ids: string[], name: string, remove = false) =>
 		request<{ changed: number }>(fetch, '/api/assets/tags', { ids, name, remove }),
 	publicLink: (token: string) => request<PublicLink>(fetch, `/api/public/${token}`),

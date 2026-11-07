@@ -1494,3 +1494,16 @@ video.viewer-media {
 	font-size: 0.8125rem;
 	overflow-x: auto;
 }
+
+/* Renaming a tag, in place of its title. */
+.tag-rename {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	flex: 1;
+}
+.tag-rename .in {
+	flex: 1 1 220px;
+	font-size: 1.25rem;
+}

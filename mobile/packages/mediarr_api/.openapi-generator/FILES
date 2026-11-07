@@ -139,6 +139,7 @@ doc/Sprite.md
 doc/StoryExport.md
 doc/StoryRequest.md
 doc/Tag.md
+doc/TagRename.md
 doc/TimelineBucket.md
 doc/TimelineBuckets.md
 doc/TimelineBucketsBucketsInner.md
@@ -309,6 +310,7 @@ lib/model/sprite.dart
 lib/model/story_export.dart
 lib/model/story_request.dart
 lib/model/tag.dart
+lib/model/tag_rename.dart
 lib/model/timeline_bucket.dart
 lib/model/timeline_buckets.dart
 lib/model/timeline_buckets_buckets_inner.dart
@@ -333,4 +335,4 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/upgrade_snapshot_test.dart
+test/tag_rename_test.dart

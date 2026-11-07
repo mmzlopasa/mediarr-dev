@@ -47,6 +47,7 @@ class FakeServer {
   /// The person's name, which they can change.
   String name = 'Owner';
   int quietDays = 3;
+  String tagName = 'summer';
 
   Map<String, Object> get _user => {
     'id': userId,
@@ -145,6 +146,29 @@ class FakeServer {
       ) as Map<String, dynamic>;
       name = (body['name'] as String?) ?? name;
       await _json(request, 200, _user);
+      return;
+    }
+    const tagId = '00000000-0000-4000-8000-0000000000t1';
+    if (path == '/api/tags') {
+      await _json(request, 200, [
+        {'id': tagId, 'name': tagName, 'assetCount': 1},
+      ]);
+      return;
+    }
+    if (path == '/api/tags/$tagId' && request.method == 'PATCH') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      tagName = body['name'] as String;
+      await _json(request, 200, {
+        'id': tagId,
+        'name': tagName,
+        'assetCount': 1,
+      });
+      return;
+    }
+    if (path == '/api/tags/$tagId/buckets') {
+      await _json(request, 200, {'buckets': []});
       return;
     }
     if (path == '/api/me/backup-devices') {

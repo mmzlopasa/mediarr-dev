@@ -224,6 +224,27 @@ func (q *Queries) EnsureTag(ctx context.Context, arg EnsureTagParams) (pgtype.UU
 	return id, err
 }
 
+const findTagByName = `-- name: FindTagByName :one
+SELECT id, name FROM tags WHERE user_id = $1 AND lower(name) = lower($2)
+`
+
+type FindTagByNameParams struct {
+	UserID pgtype.UUID
+	Name   string
+}
+
+type FindTagByNameRow struct {
+	ID   pgtype.UUID
+	Name string
+}
+
+func (q *Queries) FindTagByName(ctx context.Context, arg FindTagByNameParams) (FindTagByNameRow, error) {
+	row := q.db.QueryRow(ctx, findTagByName, arg.UserID, arg.Name)
+	var i FindTagByNameRow
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getCollectionAsset = `-- name: GetCollectionAsset :one
 SELECT a.id, a.user_id, a.library_id, a.checksum, a.original_name, a.original_path, a.size_bytes, a.mime_type, a.kind, a.status, a.error, a.width, a.height, a.blurhash, a.taken_at, a.taken_offset_minutes, a.created_at, a.updated_at, a.is_favorite, a.archived_at, a.deleted_at, a.aspect_ratio, a.local_at, a.content_id, a.live_photo_of, a.duration_ms, a.video_codec, a.sprite_columns, a.sprite_rows, a.sprite_count, a.sprite_interval_ms, a.vault_at, a.stack_parent, a.stack_free, a.stack_chosen, a.phash, a.sharpness, a.organized_at, a.missing_at, a.edits, a.edit_revision, a.edit_applied, a.import_taken_at, a.import_latitude, a.import_longitude, a.checksum_sha1, a.manual_taken_at, a.manual_offset_minutes, a.manual_latitude, a.manual_longitude, a.caption, a.rating, a.rating_by_owner, a.import_offset_minutes
 FROM assets a
@@ -627,6 +648,23 @@ func (q *Queries) MoveOutOfVault(ctx context.Context, arg MoveOutOfVaultParams) 
 	return result.RowsAffected(), nil
 }
 
+const moveTagAssets = `-- name: MoveTagAssets :exec
+INSERT INTO asset_tags (asset_id, tag_id)
+SELECT x.asset_id, $1::uuid FROM asset_tags x WHERE x.tag_id = $2::uuid
+ON CONFLICT DO NOTHING
+`
+
+type MoveTagAssetsParams struct {
+	Into pgtype.UUID
+	From pgtype.UUID
+}
+
+// The photos of one tag get another, before the first goes.
+func (q *Queries) MoveTagAssets(ctx context.Context, arg MoveTagAssetsParams) error {
+	_, err := q.db.Exec(ctx, moveTagAssets, arg.Into, arg.From)
+	return err
+}
+
 const moveToVault = `-- name: MoveToVault :execrows
 UPDATE assets SET vault_at = now(), updated_at = now()
 WHERE user_id = $1 AND deleted_at IS NULL AND vault_at IS NULL
@@ -644,6 +682,21 @@ func (q *Queries) MoveToVault(ctx context.Context, arg MoveToVaultParams) (int64
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const renameTag = `-- name: RenameTag :exec
+UPDATE tags SET name = $3 WHERE id = $1 AND user_id = $2
+`
+
+type RenameTagParams struct {
+	ID     pgtype.UUID
+	UserID pgtype.UUID
+	Name   string
+}
+
+func (q *Queries) RenameTag(ctx context.Context, arg RenameTagParams) error {
+	_, err := q.db.Exec(ctx, renameTag, arg.ID, arg.UserID, arg.Name)
+	return err
 }
 
 const restoreAssets = `-- name: RestoreAssets :execrows

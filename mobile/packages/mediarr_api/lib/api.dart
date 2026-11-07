@@ -166,6 +166,7 @@ part 'model/sprite.dart';
 part 'model/story_export.dart';
 part 'model/story_request.dart';
 part 'model/tag.dart';
+part 'model/tag_rename.dart';
 part 'model/timeline_bucket.dart';
 part 'model/timeline_buckets.dart';
 part 'model/timeline_buckets_buckets_inner.dart';
