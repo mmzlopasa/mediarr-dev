@@ -139,13 +139,26 @@ SELECT a.id
 FROM asset_search s
 JOIN assets a ON a.id = s.asset_id
 LEFT JOIN exif e ON e.asset_id = a.id
-WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+WHERE (a.user_id = sqlc.arg('user_id') OR sqlc.arg('album_shared')::boolean)
+  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (sqlc.narg('from_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('from_at'))
   AND (sqlc.narg('to_at')::timestamp IS NULL OR a.local_at < sqlc.narg('to_at'))
-  AND (sqlc.narg('person')::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = sqlc.narg('person')))
+  -- People: all of them on the picture, or any of them.
+  AND (coalesce(cardinality(sqlc.arg('people')::uuid[]), 0) = 0 OR (CASE WHEN sqlc.arg('people_all')::boolean
+        THEN (SELECT count(DISTINCT f.person_id) FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY(sqlc.arg('people')::uuid[])) = cardinality(sqlc.arg('people')::uuid[])
+        ELSE EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY(sqlc.arg('people')::uuid[])) END))
   AND (sqlc.narg('place')::text IS NULL OR lower(sqlc.narg('place')) IN (lower(e.city), lower(e.state), lower(e.country)))
   AND (sqlc.narg('camera')::text IS NULL OR lower(sqlc.narg('camera')) IN (lower(e.make), lower(e.model)))
+  AND (sqlc.narg('lens')::text IS NULL OR lower(e.lens) = lower(sqlc.narg('lens')))
+  AND (sqlc.narg('kind')::text IS NULL OR a.kind = sqlc.narg('kind'))
+  AND a.rating >= sqlc.arg('min_rating')::smallint
+  AND (NOT sqlc.arg('favorite_only')::boolean OR a.is_favorite)
+  -- Tags: every one asked for.
+  AND (coalesce(cardinality(sqlc.arg('tags')::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY(sqlc.arg('tags')::text[])) = cardinality(sqlc.arg('tags')::text[]))
+  AND (sqlc.narg('album')::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = sqlc.narg('album')))
+  AND (NOT sqlc.arg('not_in_album')::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
 ORDER BY s.embedding <=> sqlc.arg('embedding')::text::vector
 LIMIT sqlc.arg('row_limit');
 
@@ -160,15 +173,28 @@ WHERE a.id IN (
         UNION
         SELECT d.asset_id FROM asset_descriptions d WHERE d.tsv @@ plainto_tsquery('simple', sqlc.arg('words'))
         UNION
-        SELECT n.id FROM assets n WHERE n.original_name ILIKE sqlc.arg('name_pattern') AND n.user_id = sqlc.arg('user_id')
+        SELECT n.id FROM assets n WHERE n.original_name ILIKE sqlc.arg('name_pattern') AND (n.user_id = sqlc.arg('user_id') OR sqlc.arg('album_shared')::boolean)
       )
-  AND a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+  AND (a.user_id = sqlc.arg('user_id') OR sqlc.arg('album_shared')::boolean)
+  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (sqlc.narg('from_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('from_at'))
   AND (sqlc.narg('to_at')::timestamp IS NULL OR a.local_at < sqlc.narg('to_at'))
-  AND (sqlc.narg('person')::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = sqlc.narg('person')))
+  -- People: all of them on the picture, or any of them.
+  AND (coalesce(cardinality(sqlc.arg('people')::uuid[]), 0) = 0 OR (CASE WHEN sqlc.arg('people_all')::boolean
+        THEN (SELECT count(DISTINCT f.person_id) FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY(sqlc.arg('people')::uuid[])) = cardinality(sqlc.arg('people')::uuid[])
+        ELSE EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY(sqlc.arg('people')::uuid[])) END))
   AND (sqlc.narg('place')::text IS NULL OR lower(sqlc.narg('place')) IN (lower(e.city), lower(e.state), lower(e.country)))
   AND (sqlc.narg('camera')::text IS NULL OR lower(sqlc.narg('camera')) IN (lower(e.make), lower(e.model)))
+  AND (sqlc.narg('lens')::text IS NULL OR lower(e.lens) = lower(sqlc.narg('lens')))
+  AND (sqlc.narg('kind')::text IS NULL OR a.kind = sqlc.narg('kind'))
+  AND a.rating >= sqlc.arg('min_rating')::smallint
+  AND (NOT sqlc.arg('favorite_only')::boolean OR a.is_favorite)
+  -- Tags: every one asked for.
+  AND (coalesce(cardinality(sqlc.arg('tags')::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY(sqlc.arg('tags')::text[])) = cardinality(sqlc.arg('tags')::text[]))
+  AND (sqlc.narg('album')::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = sqlc.narg('album')))
+  AND (NOT sqlc.arg('not_in_album')::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
 ORDER BY ts_rank(s.ocr_tsv, plainto_tsquery('simple', sqlc.arg('words'))) DESC NULLS LAST, a.local_at DESC
 LIMIT sqlc.arg('row_limit');
 
@@ -176,13 +202,26 @@ LIMIT sqlc.arg('row_limit');
 SELECT a.id
 FROM assets a
 LEFT JOIN exif e ON e.asset_id = a.id
-WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+WHERE (a.user_id = sqlc.arg('user_id') OR sqlc.arg('album_shared')::boolean)
+  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND (sqlc.narg('from_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('from_at'))
   AND (sqlc.narg('to_at')::timestamp IS NULL OR a.local_at < sqlc.narg('to_at'))
-  AND (sqlc.narg('person')::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = sqlc.narg('person')))
+  -- People: all of them on the picture, or any of them.
+  AND (coalesce(cardinality(sqlc.arg('people')::uuid[]), 0) = 0 OR (CASE WHEN sqlc.arg('people_all')::boolean
+        THEN (SELECT count(DISTINCT f.person_id) FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY(sqlc.arg('people')::uuid[])) = cardinality(sqlc.arg('people')::uuid[])
+        ELSE EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY(sqlc.arg('people')::uuid[])) END))
   AND (sqlc.narg('place')::text IS NULL OR lower(sqlc.narg('place')) IN (lower(e.city), lower(e.state), lower(e.country)))
   AND (sqlc.narg('camera')::text IS NULL OR lower(sqlc.narg('camera')) IN (lower(e.make), lower(e.model)))
+  AND (sqlc.narg('lens')::text IS NULL OR lower(e.lens) = lower(sqlc.narg('lens')))
+  AND (sqlc.narg('kind')::text IS NULL OR a.kind = sqlc.narg('kind'))
+  AND a.rating >= sqlc.arg('min_rating')::smallint
+  AND (NOT sqlc.arg('favorite_only')::boolean OR a.is_favorite)
+  -- Tags: every one asked for.
+  AND (coalesce(cardinality(sqlc.arg('tags')::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY(sqlc.arg('tags')::text[])) = cardinality(sqlc.arg('tags')::text[]))
+  AND (sqlc.narg('album')::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = sqlc.narg('album')))
+  AND (NOT sqlc.arg('not_in_album')::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
 ORDER BY a.local_at DESC, a.id DESC
 LIMIT sqlc.arg('row_limit');
 
@@ -210,3 +249,24 @@ DELETE FROM faces WHERE id = $1;
 
 -- name: SetPersonBirthDate :exec
 UPDATE people SET birth_date = $2 WHERE id = $1;
+
+-- name: SearchOptions :many
+-- What can be chosen in the filters: only what this library has, the most used first.
+SELECT kind, value FROM (
+    SELECT 'camera' AS kind, e.model AS value, count(*) AS uses FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.deleted_at IS NULL AND e.model IS NOT NULL AND e.model <> '' GROUP BY e.model
+    UNION ALL
+    SELECT 'lens', e.lens, count(*) FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.deleted_at IS NULL AND e.lens IS NOT NULL AND e.lens <> '' GROUP BY e.lens
+    UNION ALL
+    SELECT 'place', e.city, count(*) FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.deleted_at IS NULL AND e.city IS NOT NULL AND e.city <> '' GROUP BY e.city
+    UNION ALL
+    SELECT 'place', e.country, count(*) FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.deleted_at IS NULL AND e.country IS NOT NULL AND e.country <> '' GROUP BY e.country
+    UNION ALL
+    SELECT 'tag', t.name, count(at.asset_id) FROM tags t LEFT JOIN asset_tags at ON at.tag_id = t.id
+    WHERE t.user_id = $1 GROUP BY t.name
+) options
+ORDER BY kind, uses DESC, value
+LIMIT 2000;

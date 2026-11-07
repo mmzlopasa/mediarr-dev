@@ -277,47 +277,218 @@ func (s *apiServer) vectorSearch(ctx context.Context, params *db.SearchVectorPar
 	return ids, err
 }
 
+// searchScope is everything a search is narrowed by: what was chosen in the filters, and what was
+// found in the words.
+type searchScope struct {
+	from, to    pgtype.Timestamp
+	people      []pgtype.UUID
+	peopleAll   bool
+	place       string
+	camera      string
+	lens        string
+	kind        string
+	minRating   int16
+	favorite    bool
+	tags        []string
+	album       pgtype.UUID
+	albumShared bool
+	notInAlbum  bool
+}
+
+func (c *searchScope) filtered(user pgtype.UUID, limit int32) db.SearchFilteredParams {
+	return db.SearchFilteredParams{
+		UserID: user, AlbumShared: c.albumShared, FromAt: c.from, ToAt: c.to, People: c.people, PeopleAll: c.peopleAll,
+		Place: textArg(c.place), Camera: textArg(c.camera), Lens: textArg(c.lens), Kind: textArg(c.kind),
+		MinRating: c.minRating, FavoriteOnly: c.favorite, Tags: c.tags, Album: c.album, NotInAlbum: c.notInAlbum, RowLimit: limit,
+	}
+}
+
+func (c *searchScope) text(user pgtype.UUID, words string, limit int32) db.SearchTextParams {
+	f := c.filtered(user, limit)
+	return db.SearchTextParams{
+		UserID: user, Words: words, NamePattern: likePattern(words), AlbumShared: f.AlbumShared, FromAt: f.FromAt, ToAt: f.ToAt,
+		People: f.People, PeopleAll: f.PeopleAll, Place: f.Place, Camera: f.Camera, Lens: f.Lens, Kind: f.Kind,
+		MinRating: f.MinRating, FavoriteOnly: f.FavoriteOnly, Tags: f.Tags, Album: f.Album, NotInAlbum: f.NotInAlbum, RowLimit: limit,
+	}
+}
+
+func (c *searchScope) vector(user pgtype.UUID, embedding string, limit int32) db.SearchVectorParams {
+	f := c.filtered(user, limit)
+	return db.SearchVectorParams{
+		UserID: user, Embedding: embedding, AlbumShared: f.AlbumShared, FromAt: f.FromAt, ToAt: f.ToAt,
+		People: f.People, PeopleAll: f.PeopleAll, Place: f.Place, Camera: f.Camera, Lens: f.Lens, Kind: f.Kind,
+		MinRating: f.MinRating, FavoriteOnly: f.FavoriteOnly, Tags: f.Tags, Album: f.Album, NotInAlbum: f.NotInAlbum, RowLimit: limit,
+	}
+}
+
+func cleanStrings(values *[]string) []string {
+	out := []string{}
+	if values == nil {
+		return out
+	}
+	for _, value := range *values {
+		if value = strings.ToLower(strings.TrimSpace(value)); value != "" && !slices.Contains(out, value) {
+			out = append(out, value)
+		}
+	}
+	return out
+}
+
+func trimmed(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return strings.TrimSpace(*value)
+}
+
 func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params api.SearchAssetsParams) {
 	user := requireUser(w, r)
 	if user == nil {
 		return
 	}
-	query := strings.TrimSpace(params.Q)
-	if query == "" || len(query) > maxQueryLength {
-		writeError(w, http.StatusBadRequest, "the search must have between 1 and 500 characters")
+	query := trimmed(params.Q)
+	if len(query) > maxQueryLength {
+		writeError(w, http.StatusBadRequest, "the search may have at most 500 characters")
 		return
 	}
 	ctx := r.Context()
-	terms, err := s.searchTerms(ctx, user.ID)
+	scope := searchScope{
+		peopleAll: params.People == nil || *params.People != api.SearchAssetsParamsPeopleAny,
+		place:     trimmed(params.Place), camera: trimmed(params.Camera), lens: trimmed(params.Lens),
+		tags:       cleanStrings(params.Tag),
+		favorite:   params.Favorite != nil && *params.Favorite,
+		notInAlbum: params.NotInAlbum != nil && *params.NotInAlbum,
+	}
+	filters := api.SearchFilters{}
+	if params.Type != nil {
+		scope.kind = string(*params.Type)
+		kind := api.SearchFiltersType(*params.Type)
+		filters.Type = &kind
+	}
+	if params.MinRating != nil {
+		scope.minRating = int16(min(max(*params.MinRating, 0), 5)) //nolint:gosec // Bounded.
+		filters.MinRating = params.MinRating
+	}
+	if params.Album != nil {
+		album, err := s.queries.GetAlbumForUser(ctx, db.GetAlbumForUserParams{ID: pgUUID(*params.Album), UserID: user.ID})
+		if db.IsNotFound(err) {
+			writeError(w, http.StatusNotFound, "no such album")
+			return
+		}
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		scope.album, scope.albumShared = album.ID, album.OwnerID != user.ID
+		filters.Album = &api.AlbumRef{Id: album.ID.Bytes, Title: album.Title}
+	}
+	if params.Person != nil {
+		names, err := s.queries.ListPeople(ctx, db.ListPeopleParams{UserID: user.ID, MinFaces: 0})
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		refs := []api.PersonRef{}
+		for _, id := range *params.Person {
+			for i := range names {
+				if names[i].ID.Bytes == id {
+					scope.people = append(scope.people, names[i].ID)
+					refs = append(refs, api.PersonRef{Id: id, Name: names[i].Name})
+				}
+			}
+		}
+		// A person who is not this user's matches nothing, rather than being left out.
+		if len(scope.people) < len(*params.Person) {
+			writeJSON(w, http.StatusOK, api.SearchResult{Items: []api.TimelineItem{}, Smart: false, Filters: filters})
+			return
+		}
+		filters.People = &refs
+	}
+	fromDay, err := parseDay(params.From)
 	if err != nil {
-		internalError(w, r, err)
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	parsed := parseQuery(query, terms)
-	from, to := parsed.dateRange(time.Now())
-	person := pgtype.UUID{}
-	filters := api.SearchFilters{}
-	if parsed.person != nil {
-		id, err := uuid.Parse(parsed.person.ref)
-		if err == nil {
-			person = pgtype.UUID{Bytes: id, Valid: true}
-			filters.Person = &parsed.person.value
+	toDay, err := parseDay(params.To)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	scope.from, scope.to = dateParam(fromDay, false), dateParam(toDay, true)
+
+	chosen := scope.from.Valid || scope.to.Valid || len(scope.people) > 0 || scope.place != "" || scope.camera != "" ||
+		scope.lens != "" || scope.kind != "" || scope.minRating > 0 || scope.favorite || len(scope.tags) > 0 ||
+		scope.album.Valid || scope.notInAlbum
+	if query == "" && !chosen {
+		writeError(w, http.StatusBadRequest, "type something to look for, or choose a filter")
+		return
+	}
+	words := query
+	if query != "" && (params.Plain == nil || !*params.Plain) {
+		terms, err := s.searchTerms(ctx, user.ID)
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		parsed := parseQuery(query, terms)
+		words = parsed.words
+		// What the words say narrows the search too, unless the filters already say it.
+		if from, to := parsed.dateRange(time.Now()); from.Valid && !scope.from.Valid && !scope.to.Valid {
+			scope.from, scope.to = from, to
+		}
+		if parsed.person != nil {
+			if id, err := uuid.Parse(parsed.person.ref); err == nil {
+				person := pgtype.UUID{Bytes: id, Valid: true}
+				if !slices.Contains(scope.people, person) {
+					scope.people = append(scope.people, person)
+					refs := []api.PersonRef{}
+					if filters.People != nil {
+						refs = *filters.People
+					}
+					refs = append(refs, api.PersonRef{Id: id, Name: parsed.person.value})
+					filters.People = &refs
+				}
+				filters.Person = &parsed.person.value
+			}
+		}
+		if scope.place == "" {
+			scope.place = parsed.place
+		}
+		if scope.camera == "" {
+			scope.camera = parsed.camera
 		}
 	}
-	filters.Place = optional(parsed.place, parsed.place != "")
-	filters.Camera = optional(parsed.camera, parsed.camera != "")
-	if from.Valid {
-		filters.From = &openapi_types.Date{Time: from.Time}
-		filters.To = &openapi_types.Date{Time: to.Time.AddDate(0, 0, -1)}
+	filters.Place = optional(scope.place, scope.place != "")
+	filters.Camera = optional(scope.camera, scope.camera != "")
+	filters.Lens = optional(scope.lens, scope.lens != "")
+	filters.Words = optional(words, words != "")
+	if len(scope.tags) > 0 {
+		filters.Tags = &scope.tags
+	}
+	if scope.favorite {
+		filters.Favorite = &scope.favorite
+	}
+	if scope.notInAlbum {
+		filters.NotInAlbum = &scope.notInAlbum
+	}
+	if len(scope.people) > 1 {
+		match := api.SearchFiltersPeopleMatchAll
+		if !scope.peopleAll {
+			match = api.SearchFiltersPeopleMatchAny
+		}
+		filters.PeopleMatch = &match
+	}
+	if scope.from.Valid {
+		filters.From = &openapi_types.Date{Time: scope.from.Time}
+	}
+	if scope.to.Valid {
+		filters.To = &openapi_types.Date{Time: scope.to.Time.AddDate(0, 0, -1)}
 	}
 
 	smart := s.embeddings.Enabled()
 	var ids []pgtype.UUID
-	if parsed.words == "" {
-		ids, err = s.queries.SearchFiltered(ctx, db.SearchFilteredParams{
-			UserID: user.ID, FromAt: from, ToAt: to, Person: person,
-			Place: textArg(parsed.place), Camera: textArg(parsed.camera), RowLimit: searchResultSize,
-		})
+	if words == "" {
+		ids, err = s.queries.SearchFiltered(ctx, scope.filtered(user.ID, searchResultSize))
 		if err != nil {
 			internalError(w, r, err)
 			return
@@ -330,11 +501,7 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 		}
 		textDone := make(chan textResult, 1)
 		go func() {
-			found, err := s.queries.SearchText(ctx, db.SearchTextParams{
-				UserID: user.ID, Words: parsed.words, NamePattern: likePattern(parsed.words),
-				FromAt: from, ToAt: to, Person: person,
-				Place: textArg(parsed.place), Camera: textArg(parsed.camera), RowLimit: searchCandidates,
-			})
+			found, err := s.queries.SearchText(ctx, scope.text(user.ID, words, searchCandidates))
 			textDone <- textResult{found, err}
 		}()
 		var vectorIDs []pgtype.UUID
@@ -342,7 +509,7 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 		if smart {
 			// Search still answers from words on pictures and file names if this fails.
 			textCtx, cancel := context.WithTimeout(ctx, textDeadline)
-			vector, err := s.embeddings.Text(textCtx, parsed.words)
+			vector, err := s.embeddings.Text(textCtx, words)
 			cancel()
 			if err != nil {
 				if !errors.Is(err, ml.ErrDisabled) {
@@ -350,10 +517,8 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 				}
 				smart = false
 			} else {
-				vectorIDs, vectorErr = s.vectorSearch(ctx, &db.SearchVectorParams{
-					UserID: user.ID, Embedding: vector, FromAt: from, ToAt: to, Person: person,
-					Place: textArg(parsed.place), Camera: textArg(parsed.camera), RowLimit: searchCandidates,
-				})
+				params := scope.vector(user.ID, vector, searchCandidates)
+				vectorIDs, vectorErr = s.vectorSearch(ctx, &params)
 			}
 		}
 		text := <-textDone
@@ -365,8 +530,7 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 			internalError(w, r, text.err)
 			return
 		}
-		textIDs := text.ids
-		ids = mergeRanks(searchResultSize, textIDs, vectorIDs)
+		ids = mergeRanks(searchResultSize, text.ids, vectorIDs)
 	}
 
 	items, err := s.itemsInOrder(ctx, ids)
@@ -375,6 +539,36 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 		return
 	}
 	writeJSON(w, http.StatusOK, api.SearchResult{Items: items, Smart: smart, Filters: filters})
+}
+
+// GetSearchOptions lists what the filters can offer: only what this library has.
+func (s *apiServer) GetSearchOptions(w http.ResponseWriter, r *http.Request) {
+	user := requireUser(w, r)
+	if user == nil {
+		return
+	}
+	rows, err := s.queries.SearchOptions(r.Context(), user.ID)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out := api.SearchOptions{Cameras: []string{}, Lenses: []string{}, Places: []string{}, Tags: []string{}}
+	for _, row := range rows {
+		value := row.Value.String
+		switch row.Kind {
+		case "camera":
+			out.Cameras = append(out.Cameras, value)
+		case "lens":
+			out.Lenses = append(out.Lenses, value)
+		case "place":
+			if !slices.Contains(out.Places, value) {
+				out.Places = append(out.Places, value)
+			}
+		case "tag":
+			out.Tags = append(out.Tags, value)
+		}
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 // itemsInOrder reads what the given photos need on screen, in the order asked for.

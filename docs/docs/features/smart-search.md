@@ -27,6 +27,23 @@ The models download on first use, about 1 GB, and the service needs about 2 GB o
 
 Describe what you are looking for, in your own language. You can also filter by date, person, place and camera, and words inside pictures are found too.
 
+## Filters
+
+Choose **Filters** beside the search to narrow it, with words or without any:
+
+- **Date**, from and to.
+- **People**: everyone chosen together on the picture, or any of them.
+- **Place**, **camera** and **lens**, from what your library has.
+- **Type**: photos or videos.
+- **Rating**: at least so many stars.
+- **Tags**: every one chosen.
+- **Album**: only in one album, or in no album at all.
+- **Favourites only**.
+
+The filters in a search show as chips under it. What Mediarr found in your words, such as a name, a place or a year, shows as an outlined chip: take it away and that word is searched as a word. In an album, **Search in album** searches only that album, also one shared with you.
+
+The web app keeps the filters in the address, so a search can be bookmarked or sent.
+
 ## People
 
 Faces are grouped into people, and you can name, merge and hide them. Names and faces stay private: partners, album members and guests do not see them, and nothing about faces leaves your server.

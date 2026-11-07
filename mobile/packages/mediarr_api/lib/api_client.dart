@@ -251,6 +251,8 @@ class ApiClient {
           return AlbumCreate.fromJson(value);
         case 'AlbumMember':
           return AlbumMember.fromJson(value);
+        case 'AlbumRef':
+          return AlbumRef.fromJson(value);
         case 'AlbumRules':
           return AlbumRules.fromJson(value);
         case 'AlbumUpdate':
@@ -455,6 +457,8 @@ class ApiClient {
           return QuotaUpdate.fromJson(value);
         case 'SearchFilters':
           return SearchFilters.fromJson(value);
+        case 'SearchOptions':
+          return SearchOptions.fromJson(value);
         case 'SearchResult':
           return SearchResult.fromJson(value);
         case 'SecurityDevice':

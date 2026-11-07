@@ -8,6 +8,7 @@ import '../services/session.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
+import 'people_screens.dart';
 import 'share_sheet.dart';
 import 'album_sheets.dart';
 import 'timeline_screen.dart';
@@ -255,6 +256,18 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
                 onPressed: _removeSelected,
               ),
           ] else if (album != null && rights != null && !readOnly) ...[
+            IconButton(
+              tooltip: 'Search in album',
+              icon: const Icon(Icons.search),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => SearchScreen(
+                    albumId: widget.albumId,
+                    albumTitle: album.title,
+                  ),
+                ),
+              ),
+            ),
             IconButton(
               tooltip: 'Comments',
               icon: const Icon(Icons.mode_comment_outlined),

@@ -1488,8 +1488,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Search in natural language. Dates, people, places and cameras in the query become filters. */
+        /** Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists. */
         get: operations["searchAssets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The cameras, lenses, places and tags in the user's library, to choose from in the filters */
+        get: operations["getSearchOptions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3524,14 +3541,40 @@ export interface components {
             smart: boolean;
             filters: components["schemas"]["SearchFilters"];
         };
+        /** @description Every filter the search used, those asked for and those found in the words. */
         SearchFilters: {
             /** Format: date */
             from?: string;
             /** Format: date */
             to?: string;
+            /** @description The name of a person found in the words */
             person?: string;
+            people?: components["schemas"]["PersonRef"][];
+            /** @enum {string} */
+            peopleMatch?: "all" | "any";
             place?: string;
             camera?: string;
+            lens?: string;
+            /** @enum {string} */
+            type?: "photo" | "video";
+            minRating?: number;
+            tags?: string[];
+            album?: components["schemas"]["AlbumRef"];
+            notInAlbum?: boolean;
+            favorite?: boolean;
+            /** @description What is left of the query after the filters were taken out */
+            words?: string;
+        };
+        AlbumRef: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+        };
+        SearchOptions: {
+            cameras: string[];
+            lenses: string[];
+            places: string[];
+            tags: string[];
         };
         Person: {
             /** Format: uuid */
@@ -6801,8 +6844,27 @@ export interface operations {
     };
     searchAssets: {
         parameters: {
-            query: {
-                q: string;
+            query?: {
+                q?: string;
+                /** @description The first day, as YYYY-MM-DD */
+                from?: string;
+                /** @description The last day, included, as YYYY-MM-DD */
+                to?: string;
+                person?: string[];
+                /** @description All of them on the picture, or any of them */
+                people?: "all" | "any";
+                place?: string;
+                camera?: string;
+                lens?: string;
+                type?: "photo" | "video";
+                minRating?: number;
+                tag?: string[];
+                /** @description Only in this album, which may be shared with the user */
+                album?: string;
+                notInAlbum?: boolean;
+                favorite?: boolean;
+                /** @description Take no filters from the words: every word is looked for as it is */
+                plain?: boolean;
             };
             header?: never;
             path?: never;
@@ -6820,6 +6882,27 @@ export interface operations {
                 };
             };
             400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    getSearchOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The choices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchOptions"];
+                };
+            };
             401: components["responses"]["Error"];
         };
     };

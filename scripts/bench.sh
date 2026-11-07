@@ -4,7 +4,7 @@
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-PORT=${BENCH_PORT:-9856}
+PORT=${BENCH_PORT:-9857}
 WORK=$(mktemp -d "$ROOT/.dev/bench-XXXXXX")
 PASSWORD=$(openssl rand -hex 16)
 mkdir -p "$WORK/library" "$WORK/cache" "$WORK/db"

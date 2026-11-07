@@ -6221,6 +6221,52 @@ class DefaultApi {
     return null;
   }
 
+  /// The cameras, lenses, places and tags in the user's library, to choose from in the filters
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getSearchOptionsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/search/options';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The cameras, lenses, places and tags in the user's library, to choose from in the filters
+  Future<SearchOptions?> getSearchOptions() async {
+    final response = await getSearchOptionsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'SearchOptions',
+      ) as SearchOptions;
+    }
+    return null;
+  }
+
   /// Who may reach this server, and the devices that have tried
   ///
   /// Note: This method returns the HTTP [Response].
@@ -9566,16 +9612,63 @@ class DefaultApi {
     }
   }
 
-  /// Search in natural language. Dates, people, places and cameras in the query become filters.
+  /// Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
   ///
   /// Note: This method returns the HTTP [Response].
   ///
   /// Parameters:
   ///
-  /// * [String] q (required):
-  Future<Response> searchAssetsWithHttpInfo(
-    String q,
-  ) async {
+  /// * [String] q:
+  ///
+  /// * [String] from:
+  ///   The first day, as YYYY-MM-DD
+  ///
+  /// * [String] to:
+  ///   The last day, included, as YYYY-MM-DD
+  ///
+  /// * [List<String>] person:
+  ///
+  /// * [String] people:
+  ///   All of them on the picture, or any of them
+  ///
+  /// * [String] place:
+  ///
+  /// * [String] camera:
+  ///
+  /// * [String] lens:
+  ///
+  /// * [String] type:
+  ///
+  /// * [int] minRating:
+  ///
+  /// * [List<String>] tag:
+  ///
+  /// * [String] album:
+  ///   Only in this album, which may be shared with the user
+  ///
+  /// * [bool] notInAlbum:
+  ///
+  /// * [bool] favorite:
+  ///
+  /// * [bool] plain:
+  ///   Take no filters from the words: every word is looked for as it is
+  Future<Response> searchAssetsWithHttpInfo({
+    String? q,
+    String? from,
+    String? to,
+    List<String>? person,
+    String? people,
+    String? place,
+    String? camera,
+    String? lens,
+    String? type,
+    int? minRating,
+    List<String>? tag,
+    String? album,
+    bool? notInAlbum,
+    bool? favorite,
+    bool? plain,
+  }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/search';
 
@@ -9586,7 +9679,51 @@ class DefaultApi {
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    queryParams.addAll(_queryParams('', 'q', q));
+    if (q != null) {
+      queryParams.addAll(_queryParams('', 'q', q));
+    }
+    if (from != null) {
+      queryParams.addAll(_queryParams('', 'from', from));
+    }
+    if (to != null) {
+      queryParams.addAll(_queryParams('', 'to', to));
+    }
+    if (person != null) {
+      queryParams.addAll(_queryParams('multi', 'person', person));
+    }
+    if (people != null) {
+      queryParams.addAll(_queryParams('', 'people', people));
+    }
+    if (place != null) {
+      queryParams.addAll(_queryParams('', 'place', place));
+    }
+    if (camera != null) {
+      queryParams.addAll(_queryParams('', 'camera', camera));
+    }
+    if (lens != null) {
+      queryParams.addAll(_queryParams('', 'lens', lens));
+    }
+    if (type != null) {
+      queryParams.addAll(_queryParams('', 'type', type));
+    }
+    if (minRating != null) {
+      queryParams.addAll(_queryParams('', 'minRating', minRating));
+    }
+    if (tag != null) {
+      queryParams.addAll(_queryParams('multi', 'tag', tag));
+    }
+    if (album != null) {
+      queryParams.addAll(_queryParams('', 'album', album));
+    }
+    if (notInAlbum != null) {
+      queryParams.addAll(_queryParams('', 'notInAlbum', notInAlbum));
+    }
+    if (favorite != null) {
+      queryParams.addAll(_queryParams('', 'favorite', favorite));
+    }
+    if (plain != null) {
+      queryParams.addAll(_queryParams('', 'plain', plain));
+    }
 
     const contentTypes = <String>[];
 
@@ -9601,16 +9738,77 @@ class DefaultApi {
     );
   }
 
-  /// Search in natural language. Dates, people, places and cameras in the query become filters.
+  /// Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
   ///
   /// Parameters:
   ///
-  /// * [String] q (required):
-  Future<SearchResult?> searchAssets(
-    String q,
-  ) async {
+  /// * [String] q:
+  ///
+  /// * [String] from:
+  ///   The first day, as YYYY-MM-DD
+  ///
+  /// * [String] to:
+  ///   The last day, included, as YYYY-MM-DD
+  ///
+  /// * [List<String>] person:
+  ///
+  /// * [String] people:
+  ///   All of them on the picture, or any of them
+  ///
+  /// * [String] place:
+  ///
+  /// * [String] camera:
+  ///
+  /// * [String] lens:
+  ///
+  /// * [String] type:
+  ///
+  /// * [int] minRating:
+  ///
+  /// * [List<String>] tag:
+  ///
+  /// * [String] album:
+  ///   Only in this album, which may be shared with the user
+  ///
+  /// * [bool] notInAlbum:
+  ///
+  /// * [bool] favorite:
+  ///
+  /// * [bool] plain:
+  ///   Take no filters from the words: every word is looked for as it is
+  Future<SearchResult?> searchAssets({
+    String? q,
+    String? from,
+    String? to,
+    List<String>? person,
+    String? people,
+    String? place,
+    String? camera,
+    String? lens,
+    String? type,
+    int? minRating,
+    List<String>? tag,
+    String? album,
+    bool? notInAlbum,
+    bool? favorite,
+    bool? plain,
+  }) async {
     final response = await searchAssetsWithHttpInfo(
-      q,
+      q: q,
+      from: from,
+      to: to,
+      person: person,
+      people: people,
+      place: place,
+      camera: camera,
+      lens: lens,
+      type: type,
+      minRating: minRating,
+      tag: tag,
+      album: album,
+      notInAlbum: notInAlbum,
+      favorite: favorite,
+      plain: plain,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

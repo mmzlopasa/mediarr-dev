@@ -198,6 +198,10 @@
 			{#if canAdd}
 				<UploadButton albumId={id} />
 			{/if}
+			<Button small href={`${resolve('/(app)/search')}?album=${id}`}>
+				<Icon name="search" size={14} />
+				{tr('Traži u albumu', 'Search in album')}
+			</Button>
 			<Button small onclick={() => (showComments = !showComments)}>
 				<Icon name="comment" size={14} />
 				{tr('Komentari', 'Comments')}

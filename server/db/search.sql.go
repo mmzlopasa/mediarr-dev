@@ -732,35 +732,66 @@ const searchFiltered = `-- name: SearchFiltered :many
 SELECT a.id
 FROM assets a
 LEFT JOIN exif e ON e.asset_id = a.id
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+WHERE (a.user_id = $1 OR $2::boolean)
+  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
-  AND ($2::timestamp IS NULL OR a.local_at >= $2)
-  AND ($3::timestamp IS NULL OR a.local_at < $3)
-  AND ($4::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = $4))
-  AND ($5::text IS NULL OR lower($5) IN (lower(e.city), lower(e.state), lower(e.country)))
-  AND ($6::text IS NULL OR lower($6) IN (lower(e.make), lower(e.model)))
+  AND ($3::timestamp IS NULL OR a.local_at >= $3)
+  AND ($4::timestamp IS NULL OR a.local_at < $4)
+  -- People: all of them on the picture, or any of them.
+  AND (coalesce(cardinality($5::uuid[]), 0) = 0 OR (CASE WHEN $6::boolean
+        THEN (SELECT count(DISTINCT f.person_id) FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY($5::uuid[])) = cardinality($5::uuid[])
+        ELSE EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY($5::uuid[])) END))
+  AND ($7::text IS NULL OR lower($7) IN (lower(e.city), lower(e.state), lower(e.country)))
+  AND ($8::text IS NULL OR lower($8) IN (lower(e.make), lower(e.model)))
+  AND ($9::text IS NULL OR lower(e.lens) = lower($9))
+  AND ($10::text IS NULL OR a.kind = $10)
+  AND a.rating >= $11::smallint
+  AND (NOT $12::boolean OR a.is_favorite)
+  -- Tags: every one asked for.
+  AND (coalesce(cardinality($13::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY($13::text[])) = cardinality($13::text[]))
+  AND ($14::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $14))
+  AND (NOT $15::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
 ORDER BY a.local_at DESC, a.id DESC
-LIMIT $7
+LIMIT $16
 `
 
 type SearchFilteredParams struct {
-	UserID   pgtype.UUID
-	FromAt   pgtype.Timestamp
-	ToAt     pgtype.Timestamp
-	Person   pgtype.UUID
-	Place    pgtype.Text
-	Camera   pgtype.Text
-	RowLimit int32
+	UserID       pgtype.UUID
+	AlbumShared  bool
+	FromAt       pgtype.Timestamp
+	ToAt         pgtype.Timestamp
+	People       []pgtype.UUID
+	PeopleAll    bool
+	Place        pgtype.Text
+	Camera       pgtype.Text
+	Lens         pgtype.Text
+	Kind         pgtype.Text
+	MinRating    int16
+	FavoriteOnly bool
+	Tags         []string
+	Album        pgtype.UUID
+	NotInAlbum   bool
+	RowLimit     int32
 }
 
 func (q *Queries) SearchFiltered(ctx context.Context, arg SearchFilteredParams) ([]pgtype.UUID, error) {
 	rows, err := q.db.Query(ctx, searchFiltered,
 		arg.UserID,
+		arg.AlbumShared,
 		arg.FromAt,
 		arg.ToAt,
-		arg.Person,
+		arg.People,
+		arg.PeopleAll,
 		arg.Place,
 		arg.Camera,
+		arg.Lens,
+		arg.Kind,
+		arg.MinRating,
+		arg.FavoriteOnly,
+		arg.Tags,
+		arg.Album,
+		arg.NotInAlbum,
 		arg.RowLimit,
 	)
 	if err != nil {
@@ -781,6 +812,53 @@ func (q *Queries) SearchFiltered(ctx context.Context, arg SearchFilteredParams) 
 	return items, nil
 }
 
+const searchOptions = `-- name: SearchOptions :many
+SELECT kind, value FROM (
+    SELECT 'camera' AS kind, e.model AS value, count(*) AS uses FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.deleted_at IS NULL AND e.model IS NOT NULL AND e.model <> '' GROUP BY e.model
+    UNION ALL
+    SELECT 'lens', e.lens, count(*) FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.deleted_at IS NULL AND e.lens IS NOT NULL AND e.lens <> '' GROUP BY e.lens
+    UNION ALL
+    SELECT 'place', e.city, count(*) FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.deleted_at IS NULL AND e.city IS NOT NULL AND e.city <> '' GROUP BY e.city
+    UNION ALL
+    SELECT 'place', e.country, count(*) FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.deleted_at IS NULL AND e.country IS NOT NULL AND e.country <> '' GROUP BY e.country
+    UNION ALL
+    SELECT 'tag', t.name, count(at.asset_id) FROM tags t LEFT JOIN asset_tags at ON at.tag_id = t.id
+    WHERE t.user_id = $1 GROUP BY t.name
+) options
+ORDER BY kind, uses DESC, value
+LIMIT 2000
+`
+
+type SearchOptionsRow struct {
+	Kind  string
+	Value pgtype.Text
+}
+
+// What can be chosen in the filters: only what this library has, the most used first.
+func (q *Queries) SearchOptions(ctx context.Context, userID pgtype.UUID) ([]SearchOptionsRow, error) {
+	rows, err := q.db.Query(ctx, searchOptions, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchOptionsRow
+	for rows.Next() {
+		var i SearchOptionsRow
+		if err := rows.Scan(&i.Kind, &i.Value); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchText = `-- name: SearchText :many
 SELECT a.id
 FROM assets a
@@ -791,29 +869,51 @@ WHERE a.id IN (
         UNION
         SELECT d.asset_id FROM asset_descriptions d WHERE d.tsv @@ plainto_tsquery('simple', $1)
         UNION
-        SELECT n.id FROM assets n WHERE n.original_name ILIKE $2 AND n.user_id = $3
+        SELECT n.id FROM assets n WHERE n.original_name ILIKE $2 AND (n.user_id = $3 OR $4::boolean)
       )
-  AND a.user_id = $3 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+  AND (a.user_id = $3 OR $4::boolean)
+  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
-  AND ($4::timestamp IS NULL OR a.local_at >= $4)
-  AND ($5::timestamp IS NULL OR a.local_at < $5)
-  AND ($6::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = $6))
-  AND ($7::text IS NULL OR lower($7) IN (lower(e.city), lower(e.state), lower(e.country)))
-  AND ($8::text IS NULL OR lower($8) IN (lower(e.make), lower(e.model)))
+  AND ($5::timestamp IS NULL OR a.local_at >= $5)
+  AND ($6::timestamp IS NULL OR a.local_at < $6)
+  -- People: all of them on the picture, or any of them.
+  AND (coalesce(cardinality($7::uuid[]), 0) = 0 OR (CASE WHEN $8::boolean
+        THEN (SELECT count(DISTINCT f.person_id) FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY($7::uuid[])) = cardinality($7::uuid[])
+        ELSE EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY($7::uuid[])) END))
+  AND ($9::text IS NULL OR lower($9) IN (lower(e.city), lower(e.state), lower(e.country)))
+  AND ($10::text IS NULL OR lower($10) IN (lower(e.make), lower(e.model)))
+  AND ($11::text IS NULL OR lower(e.lens) = lower($11))
+  AND ($12::text IS NULL OR a.kind = $12)
+  AND a.rating >= $13::smallint
+  AND (NOT $14::boolean OR a.is_favorite)
+  -- Tags: every one asked for.
+  AND (coalesce(cardinality($15::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY($15::text[])) = cardinality($15::text[]))
+  AND ($16::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $16))
+  AND (NOT $17::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
 ORDER BY ts_rank(s.ocr_tsv, plainto_tsquery('simple', $1)) DESC NULLS LAST, a.local_at DESC
-LIMIT $9
+LIMIT $18
 `
 
 type SearchTextParams struct {
-	Words       string
-	NamePattern string
-	UserID      pgtype.UUID
-	FromAt      pgtype.Timestamp
-	ToAt        pgtype.Timestamp
-	Person      pgtype.UUID
-	Place       pgtype.Text
-	Camera      pgtype.Text
-	RowLimit    int32
+	Words        string
+	NamePattern  string
+	UserID       pgtype.UUID
+	AlbumShared  bool
+	FromAt       pgtype.Timestamp
+	ToAt         pgtype.Timestamp
+	People       []pgtype.UUID
+	PeopleAll    bool
+	Place        pgtype.Text
+	Camera       pgtype.Text
+	Lens         pgtype.Text
+	Kind         pgtype.Text
+	MinRating    int16
+	FavoriteOnly bool
+	Tags         []string
+	Album        pgtype.UUID
+	NotInAlbum   bool
+	RowLimit     int32
 }
 
 // Words on the picture and in the file name. Each has its own index, so neither reads every row.
@@ -822,11 +922,20 @@ func (q *Queries) SearchText(ctx context.Context, arg SearchTextParams) ([]pgtyp
 		arg.Words,
 		arg.NamePattern,
 		arg.UserID,
+		arg.AlbumShared,
 		arg.FromAt,
 		arg.ToAt,
-		arg.Person,
+		arg.People,
+		arg.PeopleAll,
 		arg.Place,
 		arg.Camera,
+		arg.Lens,
+		arg.Kind,
+		arg.MinRating,
+		arg.FavoriteOnly,
+		arg.Tags,
+		arg.Album,
+		arg.NotInAlbum,
 		arg.RowLimit,
 	)
 	if err != nil {
@@ -852,36 +961,67 @@ SELECT a.id
 FROM asset_search s
 JOIN assets a ON a.id = s.asset_id
 LEFT JOIN exif e ON e.asset_id = a.id
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+WHERE (a.user_id = $1 OR $2::boolean)
+  AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
-  AND ($2::timestamp IS NULL OR a.local_at >= $2)
-  AND ($3::timestamp IS NULL OR a.local_at < $3)
-  AND ($4::uuid IS NULL OR EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = $4))
-  AND ($5::text IS NULL OR lower($5) IN (lower(e.city), lower(e.state), lower(e.country)))
-  AND ($6::text IS NULL OR lower($6) IN (lower(e.make), lower(e.model)))
-ORDER BY s.embedding <=> $7::text::vector
-LIMIT $8
+  AND ($3::timestamp IS NULL OR a.local_at >= $3)
+  AND ($4::timestamp IS NULL OR a.local_at < $4)
+  -- People: all of them on the picture, or any of them.
+  AND (coalesce(cardinality($5::uuid[]), 0) = 0 OR (CASE WHEN $6::boolean
+        THEN (SELECT count(DISTINCT f.person_id) FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY($5::uuid[])) = cardinality($5::uuid[])
+        ELSE EXISTS (SELECT 1 FROM faces f WHERE f.asset_id = a.id AND f.person_id = ANY($5::uuid[])) END))
+  AND ($7::text IS NULL OR lower($7) IN (lower(e.city), lower(e.state), lower(e.country)))
+  AND ($8::text IS NULL OR lower($8) IN (lower(e.make), lower(e.model)))
+  AND ($9::text IS NULL OR lower(e.lens) = lower($9))
+  AND ($10::text IS NULL OR a.kind = $10)
+  AND a.rating >= $11::smallint
+  AND (NOT $12::boolean OR a.is_favorite)
+  -- Tags: every one asked for.
+  AND (coalesce(cardinality($13::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY($13::text[])) = cardinality($13::text[]))
+  AND ($14::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $14))
+  AND (NOT $15::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
+ORDER BY s.embedding <=> $16::text::vector
+LIMIT $17
 `
 
 type SearchVectorParams struct {
-	UserID    pgtype.UUID
-	FromAt    pgtype.Timestamp
-	ToAt      pgtype.Timestamp
-	Person    pgtype.UUID
-	Place     pgtype.Text
-	Camera    pgtype.Text
-	Embedding string
-	RowLimit  int32
+	UserID       pgtype.UUID
+	AlbumShared  bool
+	FromAt       pgtype.Timestamp
+	ToAt         pgtype.Timestamp
+	People       []pgtype.UUID
+	PeopleAll    bool
+	Place        pgtype.Text
+	Camera       pgtype.Text
+	Lens         pgtype.Text
+	Kind         pgtype.Text
+	MinRating    int16
+	FavoriteOnly bool
+	Tags         []string
+	Album        pgtype.UUID
+	NotInAlbum   bool
+	Embedding    string
+	RowLimit     int32
 }
 
 func (q *Queries) SearchVector(ctx context.Context, arg SearchVectorParams) ([]pgtype.UUID, error) {
 	rows, err := q.db.Query(ctx, searchVector,
 		arg.UserID,
+		arg.AlbumShared,
 		arg.FromAt,
 		arg.ToAt,
-		arg.Person,
+		arg.People,
+		arg.PeopleAll,
 		arg.Place,
 		arg.Camera,
+		arg.Lens,
+		arg.Kind,
+		arg.MinRating,
+		arg.FavoriteOnly,
+		arg.Tags,
+		arg.Album,
+		arg.NotInAlbum,
 		arg.Embedding,
 		arg.RowLimit,
 	)

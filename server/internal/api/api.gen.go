@@ -674,6 +674,42 @@ func (e NotificationKind) Valid() bool {
 	}
 }
 
+// Defines values for SearchFiltersPeopleMatch.
+const (
+	SearchFiltersPeopleMatchAll SearchFiltersPeopleMatch = "all"
+	SearchFiltersPeopleMatchAny SearchFiltersPeopleMatch = "any"
+)
+
+// Valid indicates whether the value is a known member of the SearchFiltersPeopleMatch enum.
+func (e SearchFiltersPeopleMatch) Valid() bool {
+	switch e {
+	case SearchFiltersPeopleMatchAll:
+		return true
+	case SearchFiltersPeopleMatchAny:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SearchFiltersType.
+const (
+	SearchFiltersTypePhoto SearchFiltersType = "photo"
+	SearchFiltersTypeVideo SearchFiltersType = "video"
+)
+
+// Valid indicates whether the value is a known member of the SearchFiltersType enum.
+func (e SearchFiltersType) Valid() bool {
+	switch e {
+	case SearchFiltersTypePhoto:
+		return true
+	case SearchFiltersTypeVideo:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SecurityEventKind.
 const (
 	SecurityEventKindDeviceBlocked SecurityEventKind = "device_blocked"
@@ -1148,6 +1184,42 @@ func (e GetPublicThumbnailParamsSize) Valid() bool {
 	}
 }
 
+// Defines values for SearchAssetsParamsPeople.
+const (
+	SearchAssetsParamsPeopleAll SearchAssetsParamsPeople = "all"
+	SearchAssetsParamsPeopleAny SearchAssetsParamsPeople = "any"
+)
+
+// Valid indicates whether the value is a known member of the SearchAssetsParamsPeople enum.
+func (e SearchAssetsParamsPeople) Valid() bool {
+	switch e {
+	case SearchAssetsParamsPeopleAll:
+		return true
+	case SearchAssetsParamsPeopleAny:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SearchAssetsParamsType.
+const (
+	SearchAssetsParamsTypePhoto SearchAssetsParamsType = "photo"
+	SearchAssetsParamsTypeVideo SearchAssetsParamsType = "video"
+)
+
+// Valid indicates whether the value is a known member of the SearchAssetsParamsType enum.
+func (e SearchAssetsParamsType) Valid() bool {
+	switch e {
+	case SearchAssetsParamsTypePhoto:
+		return true
+	case SearchAssetsParamsTypeVideo:
+		return true
+	default:
+		return false
+	}
+}
+
 // AISettings defines model for AISettings.
 type AISettings struct {
 	Address     string `json:"address"`
@@ -1265,6 +1337,12 @@ type AlbumMember struct {
 
 // AlbumMemberRole defines model for AlbumMember.Role.
 type AlbumMemberRole string
+
+// AlbumRef defines model for AlbumRef.
+type AlbumRef struct {
+	Id    openapi_types.UUID `json:"id"`
+	Title string             `json:"title"`
+}
 
 // AlbumRules Conditions that must all hold.
 type AlbumRules struct {
@@ -2290,17 +2368,46 @@ type QuotaUpdate struct {
 	QuotaBytes *int64 `json:"quotaBytes,omitempty"`
 }
 
-// SearchFilters defines model for SearchFilters.
+// SearchFilters Every filter the search used, those asked for and those found in the words.
 type SearchFilters struct {
-	Camera *string             `json:"camera,omitempty"`
-	From   *openapi_types.Date `json:"from,omitempty"`
+	Album       *AlbumRef                 `json:"album,omitempty"`
+	Camera      *string                   `json:"camera,omitempty"`
+	Favorite    *bool                     `json:"favorite,omitempty"`
+	From        *openapi_types.Date       `json:"from,omitempty"`
+	Lens        *string                   `json:"lens,omitempty"`
+	MinRating   *int                      `json:"minRating,omitempty"`
+	NotInAlbum  *bool                     `json:"notInAlbum,omitempty"`
+	People      *[]PersonRef              `json:"people,omitempty"`
+	PeopleMatch *SearchFiltersPeopleMatch `json:"peopleMatch,omitempty"`
+
+	// Person The name of a person found in the words
 	Person *string             `json:"person,omitempty"`
 	Place  *string             `json:"place,omitempty"`
+	Tags   *[]string           `json:"tags,omitempty"`
 	To     *openapi_types.Date `json:"to,omitempty"`
+	Type   *SearchFiltersType  `json:"type,omitempty"`
+
+	// Words What is left of the query after the filters were taken out
+	Words *string `json:"words,omitempty"`
+}
+
+// SearchFiltersPeopleMatch defines model for SearchFilters.PeopleMatch.
+type SearchFiltersPeopleMatch string
+
+// SearchFiltersType defines model for SearchFilters.Type.
+type SearchFiltersType string
+
+// SearchOptions defines model for SearchOptions.
+type SearchOptions struct {
+	Cameras []string `json:"cameras"`
+	Lenses  []string `json:"lenses"`
+	Places  []string `json:"places"`
+	Tags    []string `json:"tags"`
 }
 
 // SearchResult defines model for SearchResult.
 type SearchResult struct {
+	// Filters Every filter the search used, those asked for and those found in the words.
 	Filters SearchFilters  `json:"filters"`
 	Items   []TimelineItem `json:"items"`
 
@@ -2835,8 +2942,38 @@ type GetPublicThumbnailParamsSize string
 
 // SearchAssetsParams defines parameters for SearchAssets.
 type SearchAssetsParams struct {
-	Q string `form:"q" json:"q"`
+	Q *string `form:"q,omitempty" json:"q,omitempty"`
+
+	// From The first day, as YYYY-MM-DD
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To The last day, included, as YYYY-MM-DD
+	To     *string               `form:"to,omitempty" json:"to,omitempty"`
+	Person *[]openapi_types.UUID `form:"person,omitempty" json:"person,omitempty"`
+
+	// People All of them on the picture, or any of them
+	People    *SearchAssetsParamsPeople `form:"people,omitempty" json:"people,omitempty"`
+	Place     *string                   `form:"place,omitempty" json:"place,omitempty"`
+	Camera    *string                   `form:"camera,omitempty" json:"camera,omitempty"`
+	Lens      *string                   `form:"lens,omitempty" json:"lens,omitempty"`
+	Type      *SearchAssetsParamsType   `form:"type,omitempty" json:"type,omitempty"`
+	MinRating *int                      `form:"minRating,omitempty" json:"minRating,omitempty"`
+	Tag       *[]string                 `form:"tag,omitempty" json:"tag,omitempty"`
+
+	// Album Only in this album, which may be shared with the user
+	Album      *openapi_types.UUID `form:"album,omitempty" json:"album,omitempty"`
+	NotInAlbum *bool               `form:"notInAlbum,omitempty" json:"notInAlbum,omitempty"`
+	Favorite   *bool               `form:"favorite,omitempty" json:"favorite,omitempty"`
+
+	// Plain Take no filters from the words: every word is looked for as it is
+	Plain *bool `form:"plain,omitempty" json:"plain,omitempty"`
 }
+
+// SearchAssetsParamsPeople defines parameters for SearchAssets.
+type SearchAssetsParamsPeople string
+
+// SearchAssetsParamsType defines parameters for SearchAssets.
+type SearchAssetsParamsType string
 
 // SetAISettingsJSONRequestBody defines body for SetAISettings for application/json ContentType.
 type SetAISettingsJSONRequestBody = AISettingsUpdate
@@ -3572,12 +3709,15 @@ type ServerInterface interface {
 	// CreatePublicUpload Send one whole file to a public album (tus 1.0 creation with upload)
 	// (POST /api/public/{token}/uploads)
 	CreatePublicUpload(w http.ResponseWriter, r *http.Request, token string)
-	// SearchAssets Search in natural language. Dates, people, places and cameras in the query become filters.
+	// SearchAssets Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 	// (GET /api/search)
 	SearchAssets(w http.ResponseWriter, r *http.Request, params SearchAssetsParams)
 	// AskSearch Turn a question into words to search for, with the local model
 	// (POST /api/search/ask)
 	AskSearch(w http.ResponseWriter, r *http.Request)
+	// GetSearchOptions The cameras, lenses, places and tags in the user's library, to choose from in the filters
+	// (GET /api/search/options)
+	GetSearchOptions(w http.ResponseWriter, r *http.Request)
 	// GetServerStatus The version of this server, whether a newer one exists, and its disk
 	// (GET /api/server/status)
 	GetServerStatus(w http.ResponseWriter, r *http.Request)
@@ -4757,7 +4897,7 @@ func (_ Unimplemented) CreatePublicUpload(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// SearchAssets Search in natural language. Dates, people, places and cameras in the query become filters.
+// SearchAssets Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 // (GET /api/search)
 func (_ Unimplemented) SearchAssets(w http.ResponseWriter, r *http.Request, params SearchAssetsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -4766,6 +4906,12 @@ func (_ Unimplemented) SearchAssets(w http.ResponseWriter, r *http.Request, para
 // AskSearch Turn a question into words to search for, with the local model
 // (POST /api/search/ask)
 func (_ Unimplemented) AskSearch(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetSearchOptions The cameras, lenses, places and tags in the user's library, to choose from in the filters
+// (GET /api/search/options)
+func (_ Unimplemented) GetSearchOptions(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -9167,15 +9313,197 @@ func (siw *ServerInterfaceWrapper) SearchAssets(w http.ResponseWriter, r *http.R
 	// Parameter object where we will unmarshal all parameters from the context
 	var params SearchAssetsParams
 
-	// ------------- Required query parameter "q" -------------
+	// ------------- Optional query parameter "q" -------------
 
-	err = runtime.BindQueryParameterWithOptions("form", true, true, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
 	if err != nil {
 		var requiredError *runtime.RequiredParameterError
 		if errors.As(err, &requiredError) {
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "from" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "from"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "from", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "to"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "to", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "person" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "person", r.URL.Query(), &params.Person, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "person"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "person", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "people" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "people", r.URL.Query(), &params.People, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "people"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "people", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "place" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "place", r.URL.Query(), &params.Place, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "place"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "place", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "camera" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "camera", r.URL.Query(), &params.Camera, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "camera"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "camera", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lens" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lens", r.URL.Query(), &params.Lens, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lens"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lens", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "type" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "type", r.URL.Query(), &params.Type, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "type"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "type", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "minRating" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "minRating", r.URL.Query(), &params.MinRating, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "minRating"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "minRating", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "tag" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "tag", r.URL.Query(), &params.Tag, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "tag"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "tag", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "album" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "album", r.URL.Query(), &params.Album, runtime.BindQueryParameterOptions{Type: "string", Format: "uuid"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "album"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "album", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "notInAlbum" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "notInAlbum", r.URL.Query(), &params.NotInAlbum, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "notInAlbum"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "notInAlbum", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "favorite" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "favorite", r.URL.Query(), &params.Favorite, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "favorite"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "favorite", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "plain" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "plain", r.URL.Query(), &params.Plain, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "plain"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "plain", Err: err})
 		}
 		return
 	}
@@ -9196,6 +9524,20 @@ func (siw *ServerInterfaceWrapper) AskSearch(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.AskSearch(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetSearchOptions operation middleware
+func (siw *ServerInterfaceWrapper) GetSearchOptions(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSearchOptions(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10074,6 +10416,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/search", wrapper.SearchAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/search/options", wrapper.GetSearchOptions)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/people", wrapper.ListPeople)

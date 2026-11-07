@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../services/search_query.dart';
 import '../services/session.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import 'album_sheets.dart';
 import 'asset_picture.dart';
+import 'search_filters_sheet.dart';
 import 'timeline_screen.dart';
 import 'viewer_screen.dart';
 
@@ -21,24 +23,24 @@ void _tell(BuildContext context, String message) {
       ?.showSnackBar(SnackBar(content: Text(message)));
 }
 
-/// What the server took from a query as filters, so that a wrong guess can be seen.
-List<String> filterLabels(SearchFilters filters) {
-  String day(DateTime value) =>
-      '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
-  return [
-    if (filters.from != null && filters.to != null)
-      '${day(filters.from!)} – ${day(filters.to!)}',
-    ?filters.person,
-    ?filters.place,
-    ?filters.camera,
-  ];
-}
+/// A day as shown on a chip.
+String _dayLabel(DateTime value) =>
+    '${value.day}.${value.month}.${value.year}.';
 
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key, this.initialQuery});
+  const SearchScreen({
+    super.key,
+    this.initialQuery,
+    this.albumId,
+    this.albumTitle,
+  });
 
   /// What to look for at once, when arriving from a place.
   final String? initialQuery;
+
+  /// Only in this album, when arriving from one.
+  final String? albumId;
+  final String? albumTitle;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -47,6 +49,10 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   late final Session _session = ref.read(sessionProvider).value!;
   final _query = TextEditingController();
+  late SearchQuery _q = SearchQuery(
+    album: widget.albumId,
+    albumTitle: widget.albumTitle,
+  );
   SearchResult? _result;
   bool _busy = false;
   bool _failed = false;
@@ -58,15 +64,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
-  Future<void> _search() async {
-    final query = _query.text.trim();
-    if (query.isEmpty) return;
+  /// Searches what is typed, with the filters chosen. New words are read for filters again.
+  Future<void> _search({bool fresh = true}) async {
+    _q = _q.copyWith(words: _query.text.trim(), plain: fresh ? false : null);
+    if (_q.isEmpty) return;
     setState(() {
       _busy = true;
       _failed = false;
     });
     try {
-      final result = await _session.api.searchAssets(query);
+      final result = await _q.run(_session.api);
       if (mounted) setState(() => _result = result);
     } on ApiException {
       if (mounted) setState(() => _failed = true);
@@ -79,10 +86,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void initState() {
     super.initState();
     final first = widget.initialQuery;
-    if (first != null) {
-      _query.text = first;
-      unawaited(_search());
-    }
+    if (first != null) _query.text = first;
+    if (first != null || widget.albumId != null) unawaited(_search());
     _session.api.getFeatures().then((features) {
       if (mounted) {
         setState(() => _askOn = features?['descriptions'] ?? false);
@@ -139,10 +144,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     } else if (result == null) {
       body = const EmptyMessage(
         icon: Icons.search,
-        text: 'Describe what you are looking for, in English or Croatian.',
+        text: 'Describe what you are looking for, in English or Croatian, or choose filters.',
       );
     } else {
-      final labels = filterLabels(result.filters);
+      final chips = chipsFor(result.filters, _q, _dayLabel);
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -155,13 +160,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 style: text.bodySmall?.copyWith(color: Palette.warn),
               ),
             ),
-          if (labels.isNotEmpty)
+          if (chips.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Wrap(
                 spacing: 6,
+                runSpacing: 6,
                 children: [
-                  for (final label in labels) Chip(label: Text(label)),
+                  for (final chip in chips)
+                    InputChip(
+                      label: Text(chip.label),
+                      // Found in the words: outlined, to tell it from a chosen one.
+                      backgroundColor: chip.found ? Colors.transparent : null,
+                      side: chip.found
+                          ? BorderSide(color: Palette.gold)
+                          : BorderSide.none,
+                      deleteButtonTooltipMessage: 'Remove ${chip.label}',
+                      onDeleted: () {
+                        _q = withoutChip(_q, chip, result.filters);
+                        if (_q.isEmpty) {
+                          setState(() => _result = null);
+                          return;
+                        }
+                        unawaited(_search(fresh: false));
+                      },
+                    ),
                 ],
               ),
             ),
@@ -216,6 +239,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               icon: const Icon(Icons.auto_awesome_outlined),
               onPressed: _busy ? null : _ask,
             ),
+          IconButton(
+            tooltip: 'Filters',
+            icon: Badge(
+              isLabelVisible: _q.chosen > 0,
+              label: Text('${_q.chosen}'),
+              child: const Icon(Icons.tune),
+            ),
+            onPressed: () async {
+              final next = await showSearchFilters(context, _session, _q);
+              if (next == null) return;
+              _q = next;
+              if (_q.copyWith(words: _query.text.trim()).isEmpty) {
+                setState(() => _result = null);
+                return;
+              }
+              unawaited(_search(fresh: false));
+            },
+          ),
           IconButton(
             tooltip: 'Search',
             icon: const Icon(Icons.search),

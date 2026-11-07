@@ -169,6 +169,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getPublicOriginal**](doc//DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 *DefaultApi* | [**getPublicThumbnail**](doc//DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 *DefaultApi* | [**getPublicVideoFile**](doc//DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+*DefaultApi* | [**getSearchOptions**](doc//DefaultApi.md#getsearchoptions) | **GET** /api/search/options | The cameras, lenses, places and tags in the user's library, to choose from in the filters
 *DefaultApi* | [**getSecurity**](doc//DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
 *DefaultApi* | [**getServerSettings**](doc//DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 *DefaultApi* | [**getServerStatus**](doc//DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
@@ -233,7 +234,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**revokeDeviceKey**](doc//DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 *DefaultApi* | [**runIntegrity**](doc//DefaultApi.md#runintegrity) | **POST** /api/admin/integrity | Check the originals now. This changes no file
 *DefaultApi* | [**scanExternalLibrary**](doc//DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
-*DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
+*DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 *DefaultApi* | [**searchPlaces**](doc//DefaultApi.md#searchplaces) | **GET** /api/places | Find a place by the start of its name
 *DefaultApi* | [**sendTestEmail**](doc//DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
 *DefaultApi* | [**setAISettings**](doc//DefaultApi.md#setaisettings) | **PUT** /api/admin/ai | Name the Ollama server. Previews of photos are sent to it
@@ -284,6 +285,7 @@ Class | Method | HTTP request | Description
  - [Album](doc//Album.md)
  - [AlbumCreate](doc//AlbumCreate.md)
  - [AlbumMember](doc//AlbumMember.md)
+ - [AlbumRef](doc//AlbumRef.md)
  - [AlbumRules](doc//AlbumRules.md)
  - [AlbumUpdate](doc//AlbumUpdate.md)
  - [AnalysisProgress](doc//AnalysisProgress.md)
@@ -386,6 +388,7 @@ Class | Method | HTTP request | Description
  - [PublicLink](doc//PublicLink.md)
  - [QuotaUpdate](doc//QuotaUpdate.md)
  - [SearchFilters](doc//SearchFilters.md)
+ - [SearchOptions](doc//SearchOptions.md)
  - [SearchResult](doc//SearchResult.md)
  - [SecurityDevice](doc//SecurityDevice.md)
  - [SecurityEvent](doc//SecurityEvent.md)

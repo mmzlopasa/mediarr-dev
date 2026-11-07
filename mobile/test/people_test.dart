@@ -77,19 +77,6 @@ Future<void> _show(
 }
 
 void main() {
-  test('filters are shown as the server understood them', () {
-    final labels = filterLabels(
-      SearchFilters(
-        from: DateTime.utc(2024),
-        to: DateTime.utc(2024, 12, 31),
-        person: 'Ana',
-        place: 'Hvar',
-      ),
-    );
-    expect(labels, ['2024-01-01 – 2024-12-31', 'Ana', 'Hvar']);
-    expect(filterLabels(SearchFilters()), isEmpty);
-  });
-
   testWidgets('people say when recognition is off, and when nobody is known', (
     tester,
   ) async {

@@ -332,7 +332,9 @@ test('search answers, shows its filters and says when something is not found', a
 	await page.getByRole('main').getByRole('button', { name: 'Search' }).click();
 	await expect(page).toHaveURL(/\/search\?q=/);
 	await expect(page.getByRole('button', { name: 'Open' })).toHaveCount(1);
-	await expect(page.getByText('2024-01-01 – 2024-12-31')).toBeVisible();
+	await expect(page.getByRole('list', { name: 'Filters in this search' })).toContainText(
+		/2024 – .*2024/
+	);
 	await page.getByRole('button', { name: 'Open' }).click();
 	await expect(page.locator('.viewer-media:not(.under)').first()).toBeVisible();
 	await page.goBack();

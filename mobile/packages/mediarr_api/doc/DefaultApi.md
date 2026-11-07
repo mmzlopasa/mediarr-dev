@@ -118,6 +118,7 @@ Method | HTTP request | Description
 [**getPublicOriginal**](DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 [**getPublicThumbnail**](DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 [**getPublicVideoFile**](DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+[**getSearchOptions**](DefaultApi.md#getsearchoptions) | **GET** /api/search/options | The cameras, lenses, places and tags in the user's library, to choose from in the filters
 [**getSecurity**](DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
 [**getServerSettings**](DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 [**getServerStatus**](DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
@@ -182,7 +183,7 @@ Method | HTTP request | Description
 [**revokeDeviceKey**](DefaultApi.md#revokedevicekey) | **DELETE** /api/me/device-keys/{id} | Revoke one of the current user's device keys
 [**runIntegrity**](DefaultApi.md#runintegrity) | **POST** /api/admin/integrity | Check the originals now. This changes no file
 [**scanExternalLibrary**](DefaultApi.md#scanexternallibrary) | **POST** /api/admin/external/scan | Look through the folder for changes now
-[**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language. Dates, people, places and cameras in the query become filters.
+[**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 [**searchPlaces**](DefaultApi.md#searchplaces) | **GET** /api/places | Find a place by the start of its name
 [**sendTestEmail**](DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
 [**setAISettings**](DefaultApi.md#setaisettings) | **PUT** /api/admin/ai | Name the Ollama server. Previews of photos are sent to it
@@ -4626,6 +4627,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getSearchOptions**
+> SearchOptions getSearchOptions()
+
+The cameras, lenses, places and tags in the user's library, to choose from in the filters
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getSearchOptions();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getSearchOptions: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**SearchOptions**](SearchOptions.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getSecurity**
 > SecuritySettings getSecurity()
 
@@ -7130,9 +7168,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **searchAssets**
-> SearchResult searchAssets(q)
+> SearchResult searchAssets(q, from, to, person, people, place, camera, lens, type, minRating, tag, album, notInAlbum, favorite, plain)
 
-Search in natural language. Dates, people, places and cameras in the query become filters.
+Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 
 ### Example
 ```dart
@@ -7140,9 +7178,23 @@ import 'package:mediarr_api/api.dart';
 
 final api_instance = DefaultApi();
 final q = q_example; // String | 
+final from = from_example; // String | The first day, as YYYY-MM-DD
+final to = to_example; // String | The last day, included, as YYYY-MM-DD
+final person = []; // List<String> | 
+final people = people_example; // String | All of them on the picture, or any of them
+final place = place_example; // String | 
+final camera = camera_example; // String | 
+final lens = lens_example; // String | 
+final type = type_example; // String | 
+final minRating = 56; // int | 
+final tag = []; // List<String> | 
+final album = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | Only in this album, which may be shared with the user
+final notInAlbum = true; // bool | 
+final favorite = true; // bool | 
+final plain = true; // bool | Take no filters from the words: every word is looked for as it is
 
 try {
-    final result = api_instance.searchAssets(q);
+    final result = api_instance.searchAssets(q, from, to, person, people, place, camera, lens, type, minRating, tag, album, notInAlbum, favorite, plain);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->searchAssets: $e\n');
@@ -7153,7 +7205,21 @@ try {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **q** | **String**|  | 
+ **q** | **String**|  | [optional] 
+ **from** | **String**| The first day, as YYYY-MM-DD | [optional] 
+ **to** | **String**| The last day, included, as YYYY-MM-DD | [optional] 
+ **person** | [**List<String>**](String.md)|  | [optional] [default to const []]
+ **people** | **String**| All of them on the picture, or any of them | [optional] [default to 'all']
+ **place** | **String**|  | [optional] 
+ **camera** | **String**|  | [optional] 
+ **lens** | **String**|  | [optional] 
+ **type** | **String**|  | [optional] 
+ **minRating** | **int**|  | [optional] 
+ **tag** | [**List<String>**](String.md)|  | [optional] [default to const []]
+ **album** | **String**| Only in this album, which may be shared with the user | [optional] 
+ **notInAlbum** | **bool**|  | [optional] 
+ **favorite** | **bool**|  | [optional] 
+ **plain** | **bool**| Take no filters from the words: every word is looked for as it is | [optional] 
 
 ### Return type
 

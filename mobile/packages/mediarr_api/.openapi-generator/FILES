@@ -13,6 +13,7 @@ doc/AdminOverviewJobs.md
 doc/Album.md
 doc/AlbumCreate.md
 doc/AlbumMember.md
+doc/AlbumRef.md
 doc/AlbumRules.md
 doc/AlbumUpdate.md
 doc/AnalysisProgress.md
@@ -116,6 +117,7 @@ doc/ProfileUpdate.md
 doc/PublicLink.md
 doc/QuotaUpdate.md
 doc/SearchFilters.md
+doc/SearchOptions.md
 doc/SearchResult.md
 doc/SecurityDevice.md
 doc/SecurityEvent.md
@@ -174,6 +176,7 @@ lib/model/ai_settings_update.dart
 lib/model/album.dart
 lib/model/album_create.dart
 lib/model/album_member.dart
+lib/model/album_ref.dart
 lib/model/album_rules.dart
 lib/model/album_update.dart
 lib/model/analysis_progress.dart
@@ -276,6 +279,7 @@ lib/model/profile_update.dart
 lib/model/public_link.dart
 lib/model/quota_update.dart
 lib/model/search_filters.dart
+lib/model/search_options.dart
 lib/model/search_result.dart
 lib/model/security_device.dart
 lib/model/security_event.dart

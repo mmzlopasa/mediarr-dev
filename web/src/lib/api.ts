@@ -71,6 +71,7 @@ export type SecurityUpdate = components['schemas']['SecurityUpdate'];
 export type SecurityEvent = components['schemas']['SecurityEvent'];
 export type StoryExport = components['schemas']['StoryExport'];
 export type SearchResult = components['schemas']['SearchResult'];
+export type SearchOptions = components['schemas']['SearchOptions'];
 export type Person = components['schemas']['Person'];
 export type PeopleList = components['schemas']['PeopleList'];
 export type AnalysisProgress = components['schemas']['AnalysisProgress'];
@@ -201,8 +202,10 @@ export const api = {
 	mapTrips: () => request<Trip[]>(fetch, '/api/map/trips'),
 	mapStyle: () => request<MapStyle>(fetch, '/api/map/style'),
 	setMapStyle: (body: MapStyle) => request<MapStyle>(fetch, '/api/map/style', body, 'PUT'),
-	search: (query: string) =>
-		request<SearchResult>(fetch, `/api/search?q=${encodeURIComponent(query)}`),
+	/** A search by words, by filters, or both; the parameters are those of the page's address. */
+	search: (params: URLSearchParams) =>
+		request<SearchResult>(fetch, `/api/search?${params.toString()}`),
+	searchOptions: () => request<SearchOptions>(fetch, '/api/search/options'),
 	people: () => request<PeopleList>(fetch, '/api/people'),
 	explorePlaces: () =>
 		request<components['schemas']['ExplorePlaces']>(fetch, '/api/explore/places'),

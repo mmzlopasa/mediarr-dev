@@ -299,6 +299,26 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('a search is narrowed by filters, shown as chips', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.text('Search').last);
+    await waitFor(tester, find.byTooltip('Filters'));
+    await tester.tap(find.byTooltip('Filters'));
+    await waitFor(tester, find.text('Favourites only'));
+    await tester.ensureVisible(find.text('Favourites only'));
+    await tester.tap(find.text('Favourites only'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Apply'));
+    await waitFor(tester, find.widgetWithText(InputChip, 'Favourites'));
+    // Back to the library, for the tests after this one.
+    await tester.tap(find.text('Media').last);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('read-only mode takes away uploading and deleting', (
     tester,
   ) async {

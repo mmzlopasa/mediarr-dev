@@ -4,30 +4,39 @@
 	import { page } from '$app/state';
 	import { api, type Features, type SearchResult } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
-	import Badge from '#lib/design/components/Badge.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { lang, tr } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import { blurUrl } from '#lib/timeline/blur.ts';
+	import FilterPanel from '#lib/search/FilterPanel.svelte';
+	import { FILTER_KEYS, chipsFor, hasSearch, withoutChip } from '#lib/search/filters.ts';
+
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
 	const item = appNav.find((candidate) => candidate.path === '/search') ?? appNav[0];
 
 	const query = $derived(page.url.searchParams.get('q')?.trim() ?? '');
+	// A copy to read and build on; the page's own is read only.
+	const params = $derived(new URLSearchParams(page.url.searchParams.toString()));
+	const searching = $derived(hasSearch(params));
+	const chosenCount = $derived(
+		FILTER_KEYS.filter((key) => key !== 'people' && params.has(key)).length
+	);
+	let panel = $state(false);
 	let typed = $state('');
 	let result = $state<SearchResult>();
 	let failed = $state(false);
 	let loading = $state(false);
 
 	$effect(() => {
-		const current = query;
-		typed = current;
+		const current = params;
+		typed = current.get('q') ?? '';
 		result = undefined;
 		failed = false;
-		if (!current) return;
+		if (!hasSearch(current)) return;
 		let stale = false;
 		loading = true;
 		api
@@ -74,11 +83,31 @@
 		}
 	}
 
+	/** The same page with another search, which keeps the filters chosen. */
+	function go(next: URLSearchParams) {
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the same page, with a query
+		goto(`${page.url.pathname}?${next.toString()}`);
+	}
+
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
-		// eslint-disable-next-line svelte/no-navigation-without-resolve -- the same page, with a query
-		goto(`${page.url.pathname}?q=${encodeURIComponent(typed.trim())}`);
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- a new address, built once
+		const next = new URLSearchParams(params);
+		const words = typed.trim();
+		if (words) next.set('q', words);
+		else next.delete('q');
+		// New words are read for filters again.
+		next.delete('plain');
+		go(next);
 	}
+
+	const day = (iso: string) =>
+		new Date(`${iso}T12:00:00`).toLocaleDateString(lang(), {
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric'
+		});
+	const chips = $derived(result ? chipsFor(result.filters, params, tr, day) : []);
 
 	function neighbours(id: string) {
 		const items = result?.items ?? [];
@@ -97,13 +126,28 @@
 		placeholder={tr('pas na plaži, Hvar 2024, račun…', 'dog on a beach, Hvar 2024, receipt…')}
 		bind:value={typed}
 	/>
-	<Button type="submit" variant="gold" disabled={!typed.trim()}>{tr('Traži', 'Search')}</Button>
+	<Button type="submit" variant="gold" disabled={!typed.trim() && !chosenCount}
+		>{tr('Traži', 'Search')}</Button
+	>
+	<Button onclick={() => (panel = !panel)} aria-expanded={panel}
+		>{tr('Filtri', 'Filters')}{chosenCount ? ` · ${chosenCount}` : ''}</Button
+	>
 	{#if askOn}
 		<Button disabled={!typed.trim() || asking} onclick={ask}>
 			{asking ? tr('Razmišljam…', 'Thinking…') : tr('Pitaj', 'Ask')}
 		</Button>
 	{/if}
 </form>
+{#if panel}
+	<FilterPanel
+		{params}
+		onClose={() => (panel = false)}
+		onApply={(next) => {
+			panel = false;
+			go(next);
+		}}
+	/>
+{/if}
 {#if asked && query}
 	<p class="alb-meta" data-testid="asked">
 		{tr('Za pitanje', 'For the question')} „{asked}”: {query}
@@ -114,14 +158,14 @@
 	<Alert kind="err">{tr('Pretraga nije uspjela.', 'The search failed.')}</Alert>
 {:else if loading}
 	<Skeleton height="220px" />
-{:else if !query}
+{:else if !searching}
 	<section class="card glass">
 		<div class="card-b">
 			<EmptyState
 				icon={item.icon}
 				text={tr(
-					'Opišite što tražite, na hrvatskom ili engleskom.',
-					'Describe what you are looking for, in English or Croatian.'
+					'Opišite što tražite, na hrvatskom ili engleskom, ili odaberite filtre.',
+					'Describe what you are looking for, in English or Croatian, or choose filters.'
 				)}
 			/>
 		</div>
@@ -135,13 +179,26 @@
 			)}
 		</Alert>
 	{/if}
-	<div class="ph-a">
-		{#if result.filters.from}<Badge kind="acc">{result.filters.from} – {result.filters.to}</Badge
-			>{/if}
-		{#if result.filters.person}<Badge kind="acc">{result.filters.person}</Badge>{/if}
-		{#if result.filters.place}<Badge kind="acc">{result.filters.place}</Badge>{/if}
-		{#if result.filters.camera}<Badge kind="acc">{result.filters.camera}</Badge>{/if}
-	</div>
+	{#if chips.length}
+		<ul class="sf-on" aria-label={tr('Filtri u pretrazi', 'Filters in this search')}>
+			{#each chips as chip (chip.key + (chip.value ?? ''))}
+				<li class:found={chip.found}>
+					<span>{chip.label}</span>
+					<button
+						type="button"
+						aria-label={tr(`Makni ${chip.label}`, `Remove ${chip.label}`)}
+						title={chip.found
+							? tr(
+									'Pronađeno u riječima; makni i traži kao riječ',
+									'Found in the words; remove to search it as a word'
+								)
+							: tr('Makni', 'Remove')}
+						onclick={() => go(withoutChip(params, chip, result!.filters))}>×</button
+					>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 	{#if result.items.length === 0}
 		<section class="card glass">
 			<div class="card-b">

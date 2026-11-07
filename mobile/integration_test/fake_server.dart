@@ -146,6 +146,24 @@ class FakeServer {
       await _json(request, 200, _user);
       return;
     }
+    if (path == '/api/search/options') {
+      await _json(request, 200, {
+        'cameras': ['X-T5'],
+        'lenses': [],
+        'places': ['Hvar'],
+        'tags': ['summer'],
+      });
+      return;
+    }
+    if (path == '/api/search') {
+      final favourite = request.uri.queryParameters['favorite'] == 'true';
+      await _json(request, 200, {
+        'items': [],
+        'smart': false,
+        'filters': {if (favourite) 'favorite': true},
+      });
+      return;
+    }
     if (path == '/api/features') {
       await _json(request, 200, {'backup': true});
       return;

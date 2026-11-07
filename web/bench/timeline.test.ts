@@ -112,6 +112,30 @@ test('smart search answers within its limit, in both languages', async ({ page }
 	const p95 = times[Math.ceil(times.length * 0.95) - 1];
 	console.log(`smart search: p50 ${median(times)} ms, p95 ${p95} ms, worst ${times.at(-1)} ms`);
 	expect(p95).toBeLessThan(SEARCH_P95_LIMIT_MS);
+
+	// The same words with filters, and filters alone, stay as fast. The server allows 120 searches
+	// a minute, so the minute above is waited out first, and this stays under it.
+	await page.waitForTimeout(61000);
+	const filtered: number[] = [];
+	for (const subject of subjects.slice(0, 30)) {
+		for (const filters of [
+			'&type=photo&from=2015-01-01&to=2026-12-31',
+			'&notInAlbum=true&minRating=0',
+			'&type=video'
+		]) {
+			const q = filters === '&type=video' ? '' : `q=${encodeURIComponent(subject)}`;
+			const started = Date.now();
+			const response = await page.request.get(`/api/search?${q}${filters}`);
+			filtered.push(Date.now() - started);
+			expect(response.status()).toBe(200);
+		}
+	}
+	filtered.sort((a, b) => a - b);
+	const filteredP95 = filtered[Math.ceil(filtered.length * 0.95) - 1];
+	console.log(
+		`search with filters: p50 ${median(filtered)} ms, p95 ${filteredP95} ms, worst ${filtered.at(-1)} ms`
+	);
+	expect(filteredP95).toBeLessThan(SEARCH_P95_LIMIT_MS);
 });
 
 test('scrolling stays smooth', async ({ page }) => {
