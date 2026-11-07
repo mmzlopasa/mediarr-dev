@@ -274,7 +274,10 @@ void main() {
       find.widgetWithText(TextField, 'Name'),
       'Ana Horvat',
     );
-    // With the keyboard up, Save can be below the fold of the list, not built yet.
+    // The keyboard is closed first: while it moves, the list changes size under the tap. Save can
+    // then still be below the fold of the list, not built yet.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump(const Duration(seconds: 1));
     await tester.scrollUntilVisible(
       find.text('Save'),
       200,
