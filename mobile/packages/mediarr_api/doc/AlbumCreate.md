@@ -9,6 +9,7 @@ import 'package:mediarr_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **title** | **String** |  | 
+**parentId** | **String** | Make it inside this album, which must be one's own | [optional] 
 **description** | **String** |  | [optional] 
 **rules** | [**AlbumRules**](AlbumRules.md) |  | [optional] 
 

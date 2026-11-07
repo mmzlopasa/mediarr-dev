@@ -24,11 +24,16 @@ List<Album> visibleAlbums(
   final wanted = search.trim().toLowerCase();
   return [
     for (final album in albums)
-      if (album.title.toLowerCase().contains(wanted) &&
+      // Albums inside others are on the page of the one they are in; a search finds all.
+      if ((wanted.isNotEmpty || album.parentId == null) &&
+          album.title.toLowerCase().contains(wanted) &&
           (mine == null || (album.role == AlbumRoleEnum.owner) == mine))
         album,
   ];
 }
+
+/// How many albums are inside one, in words.
+String albumsInside(int count) => count == 1 ? '1 album' : '$count albums';
 
 class AlbumsScreen extends ConsumerStatefulWidget {
   const AlbumsScreen({super.key});
@@ -282,6 +287,7 @@ class _AlbumRow extends StatelessWidget {
     final cover = album.coverAssetId;
     final details = [
       '${album.assetCount} items',
+      if ((album.childCount ?? 0) > 0) albumsInside(album.childCount!),
       if (album.isSmart) 'Smart',
       if (album.role == AlbumRoleEnum.owner) 'Owned' else album.ownerName,
     ].join(' • ');
@@ -364,6 +370,7 @@ class _AlbumTile extends StatelessWidget {
     final cover = album.coverAssetId;
     final details = [
       '${album.assetCount}',
+      if ((album.childCount ?? 0) > 0) albumsInside(album.childCount!),
       if (album.isSmart) 'Smart',
       if (album.role != AlbumRoleEnum.owner) album.ownerName,
     ].join(' · ');

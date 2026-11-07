@@ -70,6 +70,11 @@ func (s *apiServer) toAPIAlbum(ctx context.Context, row *db.GetAlbumForUserRow) 
 		IsSmart:     row.Rules != nil,
 		CreatedAt:   row.CreatedAt.Time,
 		UpdatedAt:   row.UpdatedAt.Time,
+		ChildCount:  optional(row.ChildCount, row.ChildCount > 0),
+	}
+	if row.ParentID.Valid {
+		parent := openapi_types.UUID(row.ParentID.Bytes)
+		out.ParentId = &parent
 	}
 	if row.Rules != nil {
 		var rules api.AlbumRules
@@ -218,7 +223,68 @@ func (s *apiServer) CreateAlbum(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	if body.ParentId != nil {
+		if code, message := s.checkParent(ctx, user.ID, id, *body.ParentId); code != 0 {
+			// The album is made only where it was asked for.
+			_ = s.queries.DeleteAlbum(ctx, id)
+			writeError(w, code, message)
+			return
+		}
+		if err := s.queries.SetAlbumParent(ctx, db.SetAlbumParentParams{ID: id, ParentID: pgUUID(*body.ParentId)}); err != nil {
+			internalError(w, r, err)
+			return
+		}
+	}
 	s.writeAlbum(w, r, http.StatusCreated, id, user.ID, false)
+}
+
+// checkParent says whether an album may go inside another: both one's own, and never inside itself
+// at any depth. It answers a status and a message, or 0 when it may.
+func (s *apiServer) checkParent(ctx context.Context, userID, id pgtype.UUID, parentID openapi_types.UUID) (int, string) {
+	parent, err := s.queries.GetAlbumForUser(ctx, db.GetAlbumForUserParams{ID: pgUUID(parentID), UserID: userID})
+	if db.IsNotFound(err) {
+		return http.StatusNotFound, "no such album to put it in"
+	}
+	if err != nil {
+		return http.StatusInternalServerError, "the album to put it in could not be read"
+	}
+	if parent.OwnerID != userID {
+		return http.StatusForbidden, "an album can only go inside one of your own"
+	}
+	within, err := s.queries.AlbumIsWithin(ctx, db.AlbumIsWithinParams{Album: pgUUID(parentID), Outer: id})
+	if err != nil {
+		return http.StatusInternalServerError, "the albums could not be read"
+	}
+	if within {
+		return http.StatusBadRequest, "an album cannot go inside itself or one of the albums in it"
+	}
+	return 0, ""
+}
+
+// MoveAlbum puts an album inside another of one's own, or back at the top.
+func (s *apiServer) MoveAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	row, user, ok := s.album(w, r, id, roleOwner)
+	if !ok {
+		return
+	}
+	var body api.AlbumParent
+	if !readJSON(w, r, &body) {
+		return
+	}
+	ctx := r.Context()
+	parent := pgtype.UUID{}
+	if body.ParentId != nil {
+		if code, message := s.checkParent(ctx, user.ID, row.ID, *body.ParentId); code != 0 {
+			writeError(w, code, message)
+			return
+		}
+		parent = pgUUID(*body.ParentId)
+	}
+	if err := s.queries.SetAlbumParent(ctx, db.SetAlbumParentParams{ID: row.ID, ParentID: parent}); err != nil {
+		internalError(w, r, err)
+		return
+	}
+	s.writeAlbum(w, r, http.StatusOK, row.ID, user.ID, false)
 }
 
 func (s *apiServer) writeAlbum(w http.ResponseWriter, r *http.Request, code int, id, userID pgtype.UUID, members bool) {

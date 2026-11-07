@@ -20,6 +20,7 @@ type Album struct {
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
 	IsFamily     bool
+	ParentID     pgtype.UUID
 }
 
 type AlbumAsset struct {

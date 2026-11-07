@@ -19,6 +19,7 @@
 	import UploadButton from '#lib/design/components/UploadButton.svelte';
 	import { tr } from '#lib/i18n.svelte.ts';
 	import LinksDialog from '#lib/albums/LinksDialog.svelte';
+	import AlbumCard from '#lib/albums/AlbumCard.svelte';
 	import RulesForm from '#lib/albums/RulesForm.svelte';
 	import ShareDialog from '#lib/albums/ShareDialog.svelte';
 	import AlbumActivity from '#lib/timeline/AlbumActivity.svelte';
@@ -36,6 +37,33 @@
 	let editing = $state(false);
 	let confirmDelete = $state(false);
 	let showComments = $state(false);
+	// Every album this user sees: the ones in this one, the one it is in, and where it can move.
+	let allAlbums = $state<Album[]>([]);
+	let making = $state(false);
+	let moving = $state(false);
+	let childTitle = $state('');
+	let moveTo = $state('');
+	const children = $derived(allAlbums.filter((entry) => entry.parentId === id));
+	const parent = $derived(allAlbums.find((entry) => entry.id === album?.parentId));
+	// Not into itself, nor into an album inside it.
+	const inside = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- made anew on each change, never changed in place
+		const out = new Set([id]);
+		let grew = true;
+		while (grew) {
+			grew = false;
+			for (const entry of allAlbums) {
+				if (entry.parentId && out.has(entry.parentId) && !out.has(entry.id)) {
+					out.add(entry.id);
+					grew = true;
+				}
+			}
+		}
+		return out;
+	});
+	const destinations = $derived(
+		allAlbums.filter((entry) => entry.role === 'owner' && !entry.isSmart && !inside.has(entry.id))
+	);
 
 	let title = $state('');
 	let description = $state('');
@@ -56,6 +84,10 @@
 	});
 
 	async function load() {
+		api
+			.albums('title')
+			.then((found) => (allAlbums = found))
+			.catch(() => undefined);
 		try {
 			const next = await api.album(id);
 			const changed = album && next.updatedAt !== album.updatedAt;
@@ -105,6 +137,43 @@
 			showToast(
 				'err',
 				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
+			);
+		}
+	}
+
+	async function makeChild(event: SubmitEvent) {
+		event.preventDefault();
+		try {
+			await api.createAlbum({ title: childTitle, parentId: id });
+			making = false;
+			childTitle = '';
+			await load();
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error
+					? cause.message
+					: tr('Album nije stvoren.', 'The album was not created.')
+			);
+		}
+	}
+
+	function startMove() {
+		moveTo = album?.parentId ?? '';
+		moving = true;
+	}
+
+	async function move(event: SubmitEvent) {
+		event.preventDefault();
+		try {
+			album = await api.moveAlbum(id, moveTo || null);
+			moving = false;
+			await load();
+			showToast('ok', tr('Album je premješten.', 'The album was moved.'));
+		} catch (cause) {
+			showToast(
+				'err',
+				cause instanceof Error ? cause.message : tr('Nije premješteno.', 'Not moved.')
 			);
 		}
 	}
@@ -185,6 +254,11 @@
 	{/if}
 	<div class="ph">
 		<div>
+			{#if parent}
+				<a class="alb-up" href={resolve('/(app)/albums/[id]', { id: parent.id })}
+					><Icon name="back" size={13} />{parent.title}</a
+				>
+			{/if}
 			<h1>{album.title}</h1>
 			<p>
 				{album.assetCount} ·
@@ -220,6 +294,13 @@
 				<Button small onclick={startEdit}>{tr('Uredi', 'Edit')}</Button>
 			{/if}
 			{#if isOwner}
+				<Button small onclick={() => (making = true)}>
+					<Icon name="plus" size={14} />
+					{tr('Album unutra', 'Album inside')}
+				</Button>
+				<Button small onclick={startMove}>{tr('Premjesti u…', 'Move to…')}</Button>
+			{/if}
+			{#if isOwner}
 				<Button small variant="danger" onclick={() => (confirmDelete = true)}
 					>{tr('Obriši', 'Delete')}</Button
 				>
@@ -241,7 +322,17 @@
 		</Card>
 	{/if}
 
-	{#if album.assetCount === 0}
+	{#if children.length}
+		<section class="alb-children" aria-label={tr('Albumi unutra', 'Albums inside')}>
+			<div class="alb-grid">
+				{#each children as child (child.id)}
+					<AlbumCard album={child} />
+				{/each}
+			</div>
+		</section>
+	{/if}
+
+	{#if album.assetCount === 0 && !children.length}
 		<section class="card glass">
 			<div class="card-b">
 				<EmptyState
@@ -324,12 +415,50 @@
 		{/snippet}
 	</Dialog>
 
+	<Dialog title={tr('Novi album unutra', 'New album inside')} bind:open={making}>
+		<form id="child-album" class="form" onsubmit={makeChild}>
+			<Input label={tr('Naziv', 'Name')} required maxlength={200} bind:value={childTitle} />
+		</form>
+		{#snippet footer()}
+			<Button onclick={() => (making = false)}>{tr('Odustani', 'Cancel')}</Button>
+			<Button type="submit" form="child-album" variant="gold" disabled={!childTitle.trim()}
+				>{tr('Stvori', 'Create')}</Button
+			>
+		{/snippet}
+	</Dialog>
+
+	<Dialog title={tr('Premjesti album', 'Move the album')} bind:open={moving}>
+		<form id="move-album" class="form" onsubmit={move}>
+			<Select
+				label={tr('U album', 'Into')}
+				bind:value={moveTo}
+				options={[
+					{ value: '', label: tr('Na vrh, među sve albume', 'The top, among all albums') },
+					...destinations.map((entry) => ({ value: entry.id, label: entry.title }))
+				]}
+			/>
+			<p class="alb-meta">
+				{tr(
+					'Tko vidi album unutra ne vidi time i album oko njega: svaki se dijeli zasebno.',
+					'Seeing an album inside another does not show the one around it: each is shared on its own.'
+				)}
+			</p>
+		</form>
+		{#snippet footer()}
+			<Button onclick={() => (moving = false)}>{tr('Odustani', 'Cancel')}</Button>
+			<Button type="submit" form="move-album" variant="gold">{tr('Premjesti', 'Move')}</Button>
+		{/snippet}
+	</Dialog>
+
 	<Dialog title={tr('Obrisati album?', 'Delete this album?')} bind:open={confirmDelete}>
 		<p>
 			{tr(
 				'Fotke ostaju u biblioteci. Javni linkovi prestaju raditi.',
 				'The photos stay in the library. Public links stop working.'
 			)}
+			{#if children.length}
+				{tr('Albumi unutra idu na vrh.', 'The albums inside move to the top.')}
+			{/if}
 		</p>
 		{#snippet footer()}
 			<Button onclick={() => (confirmDelete = false)}>{tr('Odustani', 'Cancel')}</Button>

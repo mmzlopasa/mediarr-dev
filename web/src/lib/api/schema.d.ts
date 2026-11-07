@@ -797,6 +797,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/albums/{id}/parent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put an album inside another of one's own, or back at the top */
+        put: operations["moveAlbum"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/albums/{id}": {
         parameters: {
             query?: never;
@@ -3891,13 +3908,35 @@ export interface components {
             isSmart: boolean;
             rules?: components["schemas"]["AlbumRules"];
             members?: components["schemas"]["AlbumMember"][];
+            /**
+             * Format: uuid
+             * @description The album this one is in, when this user can see that one
+             */
+            parentId?: string;
+            /**
+             * Format: int64
+             * @description Albums in this one that this user can see
+             */
+            childCount?: number;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
         };
+        AlbumParent: {
+            /**
+             * Format: uuid
+             * @description Left out or null moves it to the top
+             */
+            parentId?: string | null;
+        };
         AlbumCreate: {
             title: string;
+            /**
+             * Format: uuid
+             * @description Make it inside this album, which must be one's own
+             */
+            parentId?: string;
             description?: string;
             rules?: components["schemas"]["AlbumRules"];
         };
@@ -5889,6 +5928,36 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
+        };
+    };
+    moveAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumParent"];
+            };
+        };
+        responses: {
+            /** @description The album where it now is */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Album"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     getAlbum: {

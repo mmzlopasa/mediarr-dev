@@ -246,6 +246,23 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('an album shows the albums inside it', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.text('Albums').last);
+    await waitFor(tester, find.text('Travels'));
+    // Japan is inside Travels, so the list does not show it.
+    expect(find.text('Japan'), findsNothing);
+    await tester.tap(find.text('Travels'));
+    await waitFor(tester, find.text('Albums inside'));
+    expect(find.text('Japan'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Media').last);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('a tag is renamed in the app', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);

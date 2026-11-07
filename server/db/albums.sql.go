@@ -149,6 +149,28 @@ func (q *Queries) AlbumHasAsset(ctx context.Context, arg AlbumHasAssetParams) (b
 	return column_1, err
 }
 
+const albumIsWithin = `-- name: AlbumIsWithin :one
+WITH RECURSIVE up (album_id, up_id, depth) AS (
+    SELECT b.id, b.parent_id, 1 FROM albums b WHERE b.id = $2::uuid
+    UNION ALL
+    SELECT a.id, a.parent_id, up.depth + 1 FROM albums a JOIN up ON a.id = up.up_id WHERE up.depth < 100
+)
+SELECT EXISTS (SELECT 1 FROM up WHERE up.album_id = $1::uuid)::boolean
+`
+
+type AlbumIsWithinParams struct {
+	Outer pgtype.UUID
+	Album pgtype.UUID
+}
+
+// Whether an album is the other one, or inside it at any depth: moving the other into it would be a loop.
+func (q *Queries) AlbumIsWithin(ctx context.Context, arg AlbumIsWithinParams) (bool, error) {
+	row := q.db.QueryRow(ctx, albumIsWithin, arg.Outer, arg.Album)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const countHearts = `-- name: CountHearts :one
 SELECT count(*) AS total, count(*) FILTER (WHERE user_id = $1) AS mine
 FROM album_hearts WHERE album_id = $2 AND asset_id = $3
@@ -360,7 +382,14 @@ SELECT al.id, al.owner_id, al.title, al.description, al.cover_asset_id, al.asset
        COALESCE(m.role, 'owner')::text AS role, u.name AS owner_name,
        album_asset_count(al.id)::bigint AS asset_count,
        album_newest_asset(al.id) AS newest_asset_id,
-       (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at
+       (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at,
+       -- Sharing is per album: the one around it counts only when this user sees it too.
+       (CASE WHEN EXISTS (
+            SELECT 1 FROM albums p LEFT JOIN album_members pm ON pm.album_id = p.id AND pm.user_id = $1
+            WHERE p.id = al.parent_id AND (p.owner_id = $1 OR pm.user_id IS NOT NULL))
+        THEN al.parent_id END)::uuid AS parent_id,
+       (SELECT count(*) FROM albums c LEFT JOIN album_members cm ON cm.album_id = c.id AND cm.user_id = $1
+        WHERE c.parent_id = al.id AND NOT c.is_family AND (c.owner_id = $1 OR cm.user_id IS NOT NULL))::bigint AS child_count
 FROM albums al
 JOIN users u ON u.id = al.owner_id
 LEFT JOIN album_members m ON m.album_id = al.id AND m.user_id = $1
@@ -387,6 +416,8 @@ type GetAlbumForUserRow struct {
 	AssetCount    int64
 	NewestAssetID pgtype.UUID
 	NewestAt      pgtype.Timestamp
+	ParentID      pgtype.UUID
+	ChildCount    int64
 }
 
 func (q *Queries) GetAlbumForUser(ctx context.Context, arg GetAlbumForUserParams) (GetAlbumForUserRow, error) {
@@ -407,6 +438,8 @@ func (q *Queries) GetAlbumForUser(ctx context.Context, arg GetAlbumForUserParams
 		&i.AssetCount,
 		&i.NewestAssetID,
 		&i.NewestAt,
+		&i.ParentID,
+		&i.ChildCount,
 	)
 	return i, err
 }
@@ -668,7 +701,14 @@ SELECT al.id, al.owner_id, al.title, al.description, al.cover_asset_id, al.asset
        COALESCE(m.role, 'owner')::text AS role, u.name AS owner_name,
        album_asset_count(al.id)::bigint AS asset_count,
        album_newest_asset(al.id) AS newest_asset_id,
-       (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at
+       (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at,
+       -- Sharing is per album: the one around it counts only when this user sees it too.
+       (CASE WHEN EXISTS (
+            SELECT 1 FROM albums p LEFT JOIN album_members pm ON pm.album_id = p.id AND pm.user_id = $1
+            WHERE p.id = al.parent_id AND (p.owner_id = $1 OR pm.user_id IS NOT NULL))
+        THEN al.parent_id END)::uuid AS parent_id,
+       (SELECT count(*) FROM albums c LEFT JOIN album_members cm ON cm.album_id = c.id AND cm.user_id = $1
+        WHERE c.parent_id = al.id AND NOT c.is_family AND (c.owner_id = $1 OR cm.user_id IS NOT NULL))::bigint AS child_count
 FROM albums al
 JOIN users u ON u.id = al.owner_id
 LEFT JOIN album_members m ON m.album_id = al.id AND m.user_id = $1
@@ -691,6 +731,8 @@ type ListAlbumsRow struct {
 	AssetCount    int64
 	NewestAssetID pgtype.UUID
 	NewestAt      pgtype.Timestamp
+	ParentID      pgtype.UUID
+	ChildCount    int64
 }
 
 func (q *Queries) ListAlbums(ctx context.Context, userID pgtype.UUID) ([]ListAlbumsRow, error) {
@@ -717,6 +759,8 @@ func (q *Queries) ListAlbums(ctx context.Context, userID pgtype.UUID) ([]ListAlb
 			&i.AssetCount,
 			&i.NewestAssetID,
 			&i.NewestAt,
+			&i.ParentID,
+			&i.ChildCount,
 		); err != nil {
 			return nil, err
 		}
@@ -1255,6 +1299,20 @@ type SetAlbumOrderParams struct {
 
 func (q *Queries) SetAlbumOrder(ctx context.Context, arg SetAlbumOrderParams) error {
 	_, err := q.db.Exec(ctx, setAlbumOrder, arg.ID, arg.AssetOrder)
+	return err
+}
+
+const setAlbumParent = `-- name: SetAlbumParent :exec
+UPDATE albums SET parent_id = $1, updated_at = now() WHERE id = $2
+`
+
+type SetAlbumParentParams struct {
+	ParentID pgtype.UUID
+	ID       pgtype.UUID
+}
+
+func (q *Queries) SetAlbumParent(ctx context.Context, arg SetAlbumParentParams) error {
+	_, err := q.db.Exec(ctx, setAlbumParent, arg.ParentID, arg.ID)
 	return err
 }
 

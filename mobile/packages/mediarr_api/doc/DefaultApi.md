@@ -169,6 +169,7 @@ Method | HTTP request | Description
 [**login**](DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 [**logout**](DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 [**mergePeople**](DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
+[**moveAlbum**](DefaultApi.md#movealbum) | **PUT** /api/albums/{id}/parent | Put an album inside another of one's own, or back at the top
 [**pairKeepGuest**](DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 [**pauseJobQueue**](DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 [**readNotifications**](DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
@@ -6595,6 +6596,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **moveAlbum**
+> Album moveAlbum(id, albumParent)
+
+Put an album inside another of one's own, or back at the top
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final albumParent = AlbumParent(); // AlbumParent | 
+
+try {
+    final result = api_instance.moveAlbum(id, albumParent);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->moveAlbum: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **albumParent** | [**AlbumParent**](AlbumParent.md)|  | 
+
+### Return type
+
+[**Album**](Album.md)
 
 ### Authorization
 

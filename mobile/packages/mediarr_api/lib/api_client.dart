@@ -251,6 +251,8 @@ class ApiClient {
           return AlbumCreate.fromJson(value);
         case 'AlbumMember':
           return AlbumMember.fromJson(value);
+        case 'AlbumParent':
+          return AlbumParent.fromJson(value);
         case 'AlbumRef':
           return AlbumRef.fromJson(value);
         case 'AlbumRules':

@@ -8877,6 +8877,73 @@ class DefaultApi {
     }
   }
 
+  /// Put an album inside another of one's own, or back at the top
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AlbumParent] albumParent (required):
+  Future<Response> moveAlbumWithHttpInfo(
+    String id,
+    AlbumParent albumParent,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/parent'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = albumParent;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Put an album inside another of one's own, or back at the top
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [AlbumParent] albumParent (required):
+  Future<Album?> moveAlbum(
+    String id,
+    AlbumParent albumParent,
+  ) async {
+    final response = await moveAlbumWithHttpInfo(
+      id,
+      albumParent,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'Album',
+      ) as Album;
+    }
+    return null;
+  }
+
   /// Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
   ///
   /// Note: This method returns the HTTP [Response].

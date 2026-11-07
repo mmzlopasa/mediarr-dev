@@ -148,6 +148,43 @@ class FakeServer {
       await _json(request, 200, _user);
       return;
     }
+    const travelsId = '00000000-0000-4000-8000-0000000000a1';
+    const japanId = '00000000-0000-4000-8000-0000000000a2';
+    Map<String, Object?> album(
+      String id,
+      String title, {
+      String? parent,
+      int children = 0,
+    }) => {
+      'id': id,
+      'title': title,
+      'description': '',
+      'role': 'owner',
+      'ownerId': '11111111-1111-4111-8111-111111111111',
+      'ownerName': 'Owner',
+      'assetCount': 0,
+      'order': 'newest',
+      'isSmart': false,
+      'createdAt': '2026-11-01T10:00:00Z',
+      'updatedAt': '2026-11-01T10:00:00Z',
+      'parentId': ?parent,
+      if (children > 0) 'childCount': children,
+    };
+    if (path == '/api/albums' && request.method == 'GET') {
+      await _json(request, 200, [
+        album(travelsId, 'Travels', children: 1),
+        album(japanId, 'Japan', parent: travelsId),
+      ]);
+      return;
+    }
+    if (path == '/api/albums/$travelsId') {
+      await _json(request, 200, album(travelsId, 'Travels', children: 1));
+      return;
+    }
+    if (path == '/api/albums/$travelsId/buckets') {
+      await _json(request, 200, {'buckets': []});
+      return;
+    }
     const tagId = '00000000-0000-4000-8000-0000000000t1';
     if (path == '/api/tags') {
       await _json(request, 200, [

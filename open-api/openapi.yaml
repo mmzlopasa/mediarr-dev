@@ -733,6 +733,27 @@ paths:
             application/json:
               schema: { type: array, items: { type: string } }
         "401": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/parent:
+    put:
+      operationId: moveAlbum
+      summary: Put an album inside another of one's own, or back at the top
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AlbumParent" }
+      responses:
+        "200":
+          description: The album where it now is
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Album" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/albums/{id}:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
@@ -3719,13 +3740,20 @@ components:
         isSmart: { type: boolean }
         rules: { $ref: "#/components/schemas/AlbumRules" }
         members: { type: array, items: { $ref: "#/components/schemas/AlbumMember" } }
+        parentId: { type: string, format: uuid, description: "The album this one is in, when this user can see that one" }
+        childCount: { type: integer, format: int64, description: "Albums in this one that this user can see" }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+    AlbumParent:
+      type: object
+      properties:
+        parentId: { type: string, format: uuid, nullable: true, description: "Left out or null moves it to the top" }
     AlbumCreate:
       type: object
       required: [title]
       properties:
         title: { type: string }
+        parentId: { type: string, format: uuid, description: "Make it inside this album, which must be one's own" }
         description: { type: string }
         rules: { $ref: "#/components/schemas/AlbumRules" }
     AlbumUpdate:

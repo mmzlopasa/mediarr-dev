@@ -150,8 +150,14 @@ export const api = {
 	albums: (sort: 'updated' | 'title' | 'date' = 'updated') =>
 		request<Album[]>(fetch, `/api/albums?sort=${sort}`),
 	cameras: () => request<string[]>(fetch, '/api/albums/cameras'),
-	createAlbum: (body: { title: string; description?: string; rules?: AlbumRules }) =>
-		request<Album>(fetch, '/api/albums', body),
+	createAlbum: (body: {
+		title: string;
+		description?: string;
+		rules?: AlbumRules;
+		parentId?: string;
+	}) => request<Album>(fetch, '/api/albums', body),
+	moveAlbum: (id: string, parentId: string | null) =>
+		request<Album>(fetch, `/api/albums/${id}/parent`, { parentId }, 'PUT'),
 	album: (id: string) => request<Album>(fetch, `/api/albums/${id}`),
 	updateAlbum: (
 		id: string,

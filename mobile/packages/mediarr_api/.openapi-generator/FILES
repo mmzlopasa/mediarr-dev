@@ -13,6 +13,7 @@ doc/AdminOverviewJobs.md
 doc/Album.md
 doc/AlbumCreate.md
 doc/AlbumMember.md
+doc/AlbumParent.md
 doc/AlbumRef.md
 doc/AlbumRules.md
 doc/AlbumUpdate.md
@@ -185,6 +186,7 @@ lib/model/ai_settings_update.dart
 lib/model/album.dart
 lib/model/album_create.dart
 lib/model/album_member.dart
+lib/model/album_parent.dart
 lib/model/album_ref.dart
 lib/model/album_rules.dart
 lib/model/album_update.dart
@@ -335,3 +337,4 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
+test/album_parent_test.dart

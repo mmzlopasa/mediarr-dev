@@ -276,4 +276,54 @@ void main() {
     expect(titles(visibleAlbums(albums, search: '', mine: false)), ['Winter']);
     expect(visibleAlbums(albums, search: 'x', mine: null), isEmpty);
   });
+
+  test(
+    'albums inside others leave the list, and a search still finds them',
+    () {
+      final top = Album.fromJson(_album(title: 'Travels'))!;
+      final inside = Album.fromJson({
+        ..._album(title: 'Japan'),
+        'id': '00000000-0000-4000-8000-000000000099',
+        'parentId': _albumId,
+      })!;
+      List<String> titles(List<Album> list) => [for (final a in list) a.title];
+      expect(titles(visibleAlbums([top, inside], search: '', mine: null)), [
+        'Travels',
+      ]);
+      expect(titles(visibleAlbums([top, inside], search: 'jap', mine: null)), [
+        'Japan',
+      ]);
+      expect(albumsInside(1), '1 album');
+      expect(albumsInside(3), '3 albums');
+    },
+  );
+
+  testWidgets('an album shows the albums inside it, and offers moving', (
+    tester,
+  ) async {
+    final child = {
+      ..._album(title: 'Japan'),
+      'id': '00000000-0000-4000-8000-000000000099',
+      'parentId': _albumId,
+    };
+    await _show(
+      tester,
+      const AlbumScreen(albumId: _albumId, title: 'Travels'),
+      (request) async {
+        if (request.url.path.endsWith('/buckets')) {
+          return _json({'buckets': <Object>[]});
+        }
+        if (request.url.path == '/api/albums') {
+          return _json([_album(title: 'Travels'), child]);
+        }
+        return _json(_album(title: 'Travels'));
+      },
+    );
+    expect(find.text('Albums inside'), findsOneWidget);
+    expect(find.text('Japan'), findsOneWidget);
+    await _openMenu(tester);
+    expect(find.text('Album inside'), findsOneWidget);
+    expect(find.text('Move to…'), findsOneWidget);
+    await _finish(tester);
+  });
 }

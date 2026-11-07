@@ -14,11 +14,21 @@ class AlbumCreate {
   /// Returns a new [AlbumCreate] instance.
   AlbumCreate({
     required this.title,
+    this.parentId,
     this.description,
     this.rules,
   });
 
   String title;
+
+  /// Make it inside this album, which must be one's own
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? parentId;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -41,6 +51,7 @@ class AlbumCreate {
       identical(this, other) ||
       other is AlbumCreate &&
           other.title == title &&
+          other.parentId == parentId &&
           other.description == description &&
           other.rules == rules;
 
@@ -48,16 +59,22 @@ class AlbumCreate {
   int get hashCode =>
       // ignore: unnecessary_parenthesis
       (title.hashCode) +
+      (parentId == null ? 0 : parentId!.hashCode) +
       (description == null ? 0 : description!.hashCode) +
       (rules == null ? 0 : rules!.hashCode);
 
   @override
   String toString() =>
-      'AlbumCreate[title=$title, description=$description, rules=$rules]';
+      'AlbumCreate[title=$title, parentId=$parentId, description=$description, rules=$rules]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'title'] = this.title;
+    if (this.parentId != null) {
+      json[r'parentId'] = this.parentId;
+    } else {
+      json[r'parentId'] = null;
+    }
     if (this.description != null) {
       json[r'description'] = this.description;
     } else {
@@ -93,6 +110,7 @@ class AlbumCreate {
 
       return AlbumCreate(
         title: mapValueOfType<String>(json, r'title')!,
+        parentId: mapValueOfType<String>(json, r'parentId'),
         description: mapValueOfType<String>(json, r'description'),
         rules: AlbumRules.fromJson(json[r'rules']),
       );

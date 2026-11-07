@@ -41,6 +41,7 @@ part 'model/admin_overview_jobs.dart';
 part 'model/album.dart';
 part 'model/album_create.dart';
 part 'model/album_member.dart';
+part 'model/album_parent.dart';
 part 'model/album_ref.dart';
 part 'model/album_rules.dart';
 part 'model/album_update.dart';

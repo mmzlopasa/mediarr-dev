@@ -1532,3 +1532,38 @@ video.viewer-media {
 	margin: 0;
 	color: var(--dim);
 }
+
+/* Albums inside albums. */
+.alb-cover {
+	position: relative;
+}
+.alb-up {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 4px;
+	color: var(--dim);
+	font-size: 0.8125rem;
+	text-decoration: none;
+}
+.alb-up:hover {
+	color: var(--ink);
+}
+.alb-children {
+	margin-bottom: 18px;
+}
+.alb-inside {
+	position: absolute;
+	right: 8px;
+	bottom: 8px;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 2px 7px;
+	border-radius: 999px;
+	background: #06051a8c;
+	color: #fff;
+	font-size: 0.7rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}

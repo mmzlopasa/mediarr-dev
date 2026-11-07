@@ -3,7 +3,6 @@
 	import { resolve } from '$app/paths';
 	import { api, type Album, type AlbumRules } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
-	import Badge from '#lib/design/components/Badge.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Checkbox from '#lib/design/components/Checkbox.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
@@ -14,6 +13,7 @@
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { tr } from '#lib/i18n.svelte.ts';
+	import AlbumCard from '#lib/albums/AlbumCard.svelte';
 	import RulesForm from '#lib/albums/RulesForm.svelte';
 	import { appNav } from '#lib/nav.ts';
 
@@ -29,6 +29,8 @@
 	let smart = $state(false);
 	let rules = $state<AlbumRules>({});
 	let busy = $state(false);
+	// Albums inside others are on the page of the one they are in.
+	const top = $derived(albums?.filter((album) => !album.parentId));
 
 	async function load() {
 		try {
@@ -104,28 +106,14 @@
 	<div class="alb-grid" aria-hidden="true">
 		<Skeleton height="220px" /><Skeleton height="220px" /><Skeleton height="220px" />
 	</div>
-{:else if albums?.length === 0}
+{:else if top?.length === 0}
 	<section class="card glass">
 		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
 	</section>
-{:else if albums}
+{:else if top}
 	<div class="alb-grid">
-		{#each albums as album (album.id)}
-			<a class="alb-card" href={resolve('/(app)/albums/[id]', { id: album.id })}>
-				<span class="alb-cover">
-					{#if album.coverAssetId}
-						<img src="/api/assets/{album.coverAssetId}/thumbnail" alt="" loading="lazy" />
-					{:else}
-						<Icon name="album" size={32} />
-					{/if}
-				</span>
-				<span class="alb-name">{album.title}</span>
-				<span class="alb-meta">
-					{album.assetCount}
-					{#if album.isSmart}· <Badge kind="acc">{tr('Pametni', 'Smart')}</Badge>{/if}
-					{#if album.role !== 'owner'}· {album.ownerName}{/if}
-				</span>
-			</a>
+		{#each top as album (album.id)}
+			<AlbumCard {album} />
 		{/each}
 	</div>
 {/if}

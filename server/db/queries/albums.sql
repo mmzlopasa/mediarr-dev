@@ -6,7 +6,14 @@ SELECT al.id, al.owner_id, al.title, al.description, al.cover_asset_id, al.asset
        COALESCE(m.role, 'owner')::text AS role, u.name AS owner_name,
        album_asset_count(al.id)::bigint AS asset_count,
        album_newest_asset(al.id) AS newest_asset_id,
-       (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at
+       (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at,
+       -- Sharing is per album: the one around it counts only when this user sees it too.
+       (CASE WHEN EXISTS (
+            SELECT 1 FROM albums p LEFT JOIN album_members pm ON pm.album_id = p.id AND pm.user_id = sqlc.arg('user_id')
+            WHERE p.id = al.parent_id AND (p.owner_id = sqlc.arg('user_id') OR pm.user_id IS NOT NULL))
+        THEN al.parent_id END)::uuid AS parent_id,
+       (SELECT count(*) FROM albums c LEFT JOIN album_members cm ON cm.album_id = c.id AND cm.user_id = sqlc.arg('user_id')
+        WHERE c.parent_id = al.id AND NOT c.is_family AND (c.owner_id = sqlc.arg('user_id') OR cm.user_id IS NOT NULL))::bigint AS child_count
 FROM albums al
 JOIN users u ON u.id = al.owner_id
 LEFT JOIN album_members m ON m.album_id = al.id AND m.user_id = sqlc.arg('user_id')
@@ -18,7 +25,14 @@ SELECT al.id, al.owner_id, al.title, al.description, al.cover_asset_id, al.asset
        COALESCE(m.role, 'owner')::text AS role, u.name AS owner_name,
        album_asset_count(al.id)::bigint AS asset_count,
        album_newest_asset(al.id) AS newest_asset_id,
-       (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at
+       (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at,
+       -- Sharing is per album: the one around it counts only when this user sees it too.
+       (CASE WHEN EXISTS (
+            SELECT 1 FROM albums p LEFT JOIN album_members pm ON pm.album_id = p.id AND pm.user_id = sqlc.arg('user_id')
+            WHERE p.id = al.parent_id AND (p.owner_id = sqlc.arg('user_id') OR pm.user_id IS NOT NULL))
+        THEN al.parent_id END)::uuid AS parent_id,
+       (SELECT count(*) FROM albums c LEFT JOIN album_members cm ON cm.album_id = c.id AND cm.user_id = sqlc.arg('user_id')
+        WHERE c.parent_id = al.id AND NOT c.is_family AND (c.owner_id = sqlc.arg('user_id') OR cm.user_id IS NOT NULL))::bigint AS child_count
 FROM albums al
 JOIN users u ON u.id = al.owner_id
 LEFT JOIN album_members m ON m.album_id = al.id AND m.user_id = sqlc.arg('user_id')
@@ -230,3 +244,15 @@ SELECT * FROM users WHERE id = $1;
 
 -- name: SetAlbumOrder :exec
 UPDATE albums SET asset_order = $2 WHERE id = $1;
+
+-- name: SetAlbumParent :exec
+UPDATE albums SET parent_id = sqlc.narg('parent_id'), updated_at = now() WHERE id = sqlc.arg('id');
+
+-- name: AlbumIsWithin :one
+-- Whether an album is the other one, or inside it at any depth: moving the other into it would be a loop.
+WITH RECURSIVE up (album_id, up_id, depth) AS (
+    SELECT b.id, b.parent_id, 1 FROM albums b WHERE b.id = sqlc.arg('album')::uuid
+    UNION ALL
+    SELECT a.id, a.parent_id, up.depth + 1 FROM albums a JOIN up ON a.id = up.up_id WHERE up.depth < 100
+)
+SELECT EXISTS (SELECT 1 FROM up WHERE up.album_id = sqlc.arg('outer')::uuid)::boolean;

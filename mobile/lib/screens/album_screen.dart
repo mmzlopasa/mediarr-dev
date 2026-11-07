@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
@@ -36,6 +37,20 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
   final _selected = <String>{};
   Album? _album;
   bool _gone = false;
+
+  /// Every album this user sees: the ones in this one, the one it is in, and where it can move.
+  List<Album> _all = const [];
+  List<Album> get _children => [
+    for (final other in _all)
+      if (other.parentId == widget.albumId) other,
+  ];
+  Album? get _parent {
+    final id = _album?.parentId;
+    return id == null
+        ? null
+        : _all.where((other) => other.id == id).firstOrNull;
+  }
+
   Timer? _poll;
 
   @override
@@ -54,6 +69,9 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
   }
 
   Future<void> _load() async {
+    _session.api.listAlbums(sort: 'title').then((found) {
+      if (mounted && found != null) setState(() => _all = found);
+    }, onError: (Object _) {});
     try {
       final next = await _session.api.getAlbum(widget.albumId);
       if (!mounted) return;
@@ -155,8 +173,93 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
     });
   }
 
+  void _open(Album other) => Navigator.of(context)
+      .push(
+        MaterialPageRoute<void>(
+          builder: (_) => AlbumScreen(albumId: other.id, title: other.title),
+        ),
+      )
+      .then((_) => _load());
+
+  Future<void> _makeInside() async {
+    final title = await showDialog<String>(
+      context: context,
+      builder: (_) => const _TitleDialog(),
+    );
+    if (title == null || title.trim().isEmpty) return;
+    await _guard(() async {
+      await _session.api.createAlbum(
+        AlbumCreate(title: title.trim(), parentId: widget.albumId),
+      );
+      await _load();
+    });
+  }
+
+  /// Not into itself, nor into an album inside it.
+  List<Album> _destinations() {
+    final inside = {widget.albumId};
+    var grew = true;
+    while (grew) {
+      grew = false;
+      for (final other in _all) {
+        final parent = other.parentId;
+        if (parent != null && inside.contains(parent) && inside.add(other.id)) {
+          grew = true;
+        }
+      }
+    }
+    return [
+      for (final other in _all)
+        if (other.role == AlbumRoleEnum.owner &&
+            !other.isSmart &&
+            !inside.contains(other.id))
+          other,
+    ];
+  }
+
+  Future<void> _move() async {
+    final choices = _destinations();
+    // '' is the top; null is nothing chosen.
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const ListTile(title: Text('Move the album')),
+            ListTile(
+              leading: const Icon(Icons.vertical_align_top),
+              title: const Text('The top, among all albums'),
+              onTap: () => Navigator.pop(context, ''),
+            ),
+            for (final other in choices)
+              ListTile(
+                leading: const Icon(Icons.photo_album_outlined),
+                title: Text(other.title),
+                onTap: () => Navigator.pop(context, other.id),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (chosen == null) return;
+    await _guard(() async {
+      await _session.api.moveAlbum(
+        widget.albumId,
+        AlbumParent(parentId: chosen.isEmpty ? null : chosen),
+      );
+      if (mounted) _message('The album was moved.');
+      await _load();
+    });
+  }
+
   void _menu(String choice, Album album) {
     switch (choice) {
+      case 'inside':
+        _makeInside();
+      case 'move':
+        _move();
       case 'library':
         Navigator.of(context)
             .push(
@@ -199,7 +302,10 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
       case 'delete':
         _confirm(
           title: 'Delete this album?',
-          body: 'The photos stay in the library. Public links stop working.',
+          body: _children.isEmpty
+              ? 'The photos stay in the library. Public links stop working.'
+              : 'The photos stay in the library. Public links stop working. '
+                    'The albums inside move to the top.',
           action: 'Delete',
           run: () => _session.api.deleteAlbum(widget.albumId),
         );
@@ -290,6 +396,8 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
                   ),
                 ],
                 if (rights.isOwner) ...const [
+                  PopupMenuItem(value: 'inside', child: Text('Album inside')),
+                  PopupMenuItem(value: 'move', child: Text('Move to…')),
                   PopupMenuItem(
                     value: 'share',
                     child: Text('Share with users'),
@@ -328,7 +436,11 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         if (months == null) {
           return Center(child: CircularProgressIndicator(color: Palette.gold));
         }
+        final header = _nesting();
         if (months.isEmpty) {
+          if (header != null) {
+            return ListView(children: [header]);
+          }
           return EmptyMessage(
             icon: Icons.photo_album_outlined,
             text: album.isSmart
@@ -340,6 +452,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         }
         final canSelect = rights.canAdd || rights.canEdit;
         return TimelineGrid(
+          header: header,
           store: _store,
           session: _session,
           selected: _selected,
@@ -357,6 +470,137 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
       },
     );
   }
+
+  /// The album this one is in, and the ones inside it, above its photos.
+  Widget? _nesting() {
+    final parent = _parent;
+    final children = _children;
+    if (parent == null && children.isEmpty) return null;
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (parent != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: ActionChip(
+              avatar: const Icon(Icons.arrow_upward, size: 16),
+              label: Text(parent.title),
+              onPressed: () => _open(parent),
+            ),
+          ),
+        if (children.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+            child: Text('Albums inside', style: text.titleSmall),
+          ),
+          SizedBox(
+            height: 132,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: children.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              itemBuilder: (context, index) => _ChildAlbum(
+                album: children[index],
+                session: _session,
+                onTap: _open,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ],
+    );
+  }
+}
+
+/// One album inside another, as a small card.
+class _ChildAlbum extends StatelessWidget {
+  const _ChildAlbum({
+    required this.album,
+    required this.session,
+    required this.onTap,
+  });
+
+  final Album album;
+  final Session session;
+  final void Function(Album) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cover = album.coverAssetId;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => onTap(album),
+      child: SizedBox(
+        width: 100,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 100,
+                height: 90,
+                color: Palette.bg3,
+                child: cover == null
+                    ? Icon(Icons.photo_album_outlined, color: Palette.dim)
+                    : CachedNetworkImage(
+                        imageUrl: session.thumbnailUrl(cover),
+                        httpHeaders: session.headers,
+                        cacheKey: '${session.serverUrl}/$cover/s',
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(album.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Asks for the name of a new album. It owns its text field, which stays until it has closed.
+class _TitleDialog extends StatefulWidget {
+  const _TitleDialog();
+
+  @override
+  State<_TitleDialog> createState() => _TitleDialogState();
+}
+
+class _TitleDialogState extends State<_TitleDialog> {
+  final _field = TextEditingController();
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('New album inside'),
+    content: TextField(
+      controller: _field,
+      autofocus: true,
+      maxLength: 200,
+      decoration: const InputDecoration(labelText: 'Name'),
+      onSubmitted: (value) => Navigator.pop(context, value),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      TextButton(
+        onPressed: () => Navigator.pop(context, _field.text),
+        child: const Text('Create'),
+      ),
+    ],
+  );
 }
 
 /// Chooses from the user's own library. Only one's own photos can be added to an album.

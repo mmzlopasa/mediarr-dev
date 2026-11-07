@@ -220,6 +220,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**login**](doc//DefaultApi.md#login) | **POST** /api/auth/login | Sign in with email, password and, when enabled, a TOTP code
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 *DefaultApi* | [**mergePeople**](doc//DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
+*DefaultApi* | [**moveAlbum**](doc//DefaultApi.md#movealbum) | **PUT** /api/albums/{id}/parent | Put an album inside another of one's own, or back at the top
 *DefaultApi* | [**pairKeepGuest**](doc//DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 *DefaultApi* | [**pauseJobQueue**](doc//DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 *DefaultApi* | [**readNotifications**](doc//DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
@@ -294,6 +295,7 @@ Class | Method | HTTP request | Description
  - [Album](doc//Album.md)
  - [AlbumCreate](doc//AlbumCreate.md)
  - [AlbumMember](doc//AlbumMember.md)
+ - [AlbumParent](doc//AlbumParent.md)
  - [AlbumRef](doc//AlbumRef.md)
  - [AlbumRules](doc//AlbumRules.md)
  - [AlbumUpdate](doc//AlbumUpdate.md)

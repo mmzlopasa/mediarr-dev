@@ -25,6 +25,8 @@ class Album {
     required this.isSmart,
     this.rules,
     this.members = const [],
+    this.parentId,
+    this.childCount,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -65,6 +67,24 @@ class Album {
 
   List<AlbumMember> members;
 
+  /// The album this one is in, when this user can see that one
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? parentId;
+
+  /// Albums in this one that this user can see
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? childCount;
+
   DateTime createdAt;
 
   DateTime updatedAt;
@@ -85,6 +105,8 @@ class Album {
           other.isSmart == isSmart &&
           other.rules == rules &&
           _deepEquality.equals(other.members, members) &&
+          other.parentId == parentId &&
+          other.childCount == childCount &&
           other.createdAt == createdAt &&
           other.updatedAt == updatedAt;
 
@@ -103,12 +125,14 @@ class Album {
       (isSmart.hashCode) +
       (rules == null ? 0 : rules!.hashCode) +
       (members.hashCode) +
+      (parentId == null ? 0 : parentId!.hashCode) +
+      (childCount == null ? 0 : childCount!.hashCode) +
       (createdAt.hashCode) +
       (updatedAt.hashCode);
 
   @override
   String toString() =>
-      'Album[id=$id, title=$title, description=$description, role=$role, ownerId=$ownerId, ownerName=$ownerName, assetCount=$assetCount, coverAssetId=$coverAssetId, order=$order, isSmart=$isSmart, rules=$rules, members=$members, createdAt=$createdAt, updatedAt=$updatedAt]';
+      'Album[id=$id, title=$title, description=$description, role=$role, ownerId=$ownerId, ownerName=$ownerName, assetCount=$assetCount, coverAssetId=$coverAssetId, order=$order, isSmart=$isSmart, rules=$rules, members=$members, parentId=$parentId, childCount=$childCount, createdAt=$createdAt, updatedAt=$updatedAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -132,6 +156,16 @@ class Album {
       json[r'rules'] = null;
     }
     json[r'members'] = this.members;
+    if (this.parentId != null) {
+      json[r'parentId'] = this.parentId;
+    } else {
+      json[r'parentId'] = null;
+    }
+    if (this.childCount != null) {
+      json[r'childCount'] = this.childCount;
+    } else {
+      json[r'childCount'] = null;
+    }
     json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
     json[r'updatedAt'] = this.updatedAt.toUtc().toIso8601String();
     return json;
@@ -170,6 +204,8 @@ class Album {
         isSmart: mapValueOfType<bool>(json, r'isSmart')!,
         rules: AlbumRules.fromJson(json[r'rules']),
         members: AlbumMember.listFromJson(json[r'members']),
+        parentId: mapValueOfType<String>(json, r'parentId'),
+        childCount: mapValueOfType<int>(json, r'childCount'),
         createdAt: mapDateTime(json, r'createdAt', r'')!,
         updatedAt: mapDateTime(json, r'updatedAt', r'')!,
       );

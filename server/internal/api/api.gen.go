@@ -1319,7 +1319,10 @@ type AdminOverview struct {
 
 // Album defines model for Album.
 type Album struct {
-	AssetCount   int64               `json:"assetCount"`
+	AssetCount int64 `json:"assetCount"`
+
+	// ChildCount Albums in this one that this user can see
+	ChildCount   *int64              `json:"childCount,omitempty"`
 	CoverAssetId *openapi_types.UUID `json:"coverAssetId,omitempty"`
 	CreatedAt    time.Time           `json:"createdAt"`
 	Description  string              `json:"description"`
@@ -1329,7 +1332,10 @@ type Album struct {
 	Order        AlbumOrder          `json:"order"`
 	OwnerId      openapi_types.UUID  `json:"ownerId"`
 	OwnerName    string              `json:"ownerName"`
-	Role         AlbumRole           `json:"role"`
+
+	// ParentId The album this one is in, when this user can see that one
+	ParentId *openapi_types.UUID `json:"parentId,omitempty"`
+	Role     AlbumRole           `json:"role"`
 
 	// Rules Conditions that must all hold.
 	Rules     *AlbumRules `json:"rules,omitempty"`
@@ -1347,6 +1353,9 @@ type AlbumRole string
 type AlbumCreate struct {
 	Description *string `json:"description,omitempty"`
 
+	// ParentId Make it inside this album, which must be one's own
+	ParentId *openapi_types.UUID `json:"parentId,omitempty"`
+
 	// Rules Conditions that must all hold.
 	Rules *AlbumRules `json:"rules,omitempty"`
 	Title string      `json:"title"`
@@ -1361,6 +1370,12 @@ type AlbumMember struct {
 
 // AlbumMemberRole defines model for AlbumMember.Role.
 type AlbumMemberRole string
+
+// AlbumParent defines model for AlbumParent.
+type AlbumParent struct {
+	// ParentId Left out or null moves it to the top
+	ParentId *openapi_types.UUID `json:"parentId,omitempty"`
+}
 
 // AlbumRef defines model for AlbumRef.
 type AlbumRef struct {
@@ -3184,6 +3199,9 @@ type CreateAlbumLinkJSONRequestBody = ShareLinkCreate
 // SetAlbumMemberJSONRequestBody defines body for SetAlbumMember for application/json ContentType.
 type SetAlbumMemberJSONRequestBody = MemberRole
 
+// MoveAlbumJSONRequestBody defines body for MoveAlbum for application/json ContentType.
+type MoveAlbumJSONRequestBody = AlbumParent
+
 // BulkAssetsJSONRequestBody defines body for BulkAssets for application/json ContentType.
 type BulkAssetsJSONRequestBody = BulkRequest
 
@@ -3537,6 +3555,9 @@ type ServerInterface interface {
 	// SetAlbumMember Share an album with a user or change their role. Owner only.
 	// (PUT /api/albums/{id}/members/{userId})
 	SetAlbumMember(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userId openapi_types.UUID)
+	// MoveAlbum Put an album inside another of one's own, or back at the top
+	// (PUT /api/albums/{id}/parent)
+	MoveAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ListAssets List the current user's most recent assets and their processing status
 	// (GET /api/assets)
 	ListAssets(w http.ResponseWriter, r *http.Request, params ListAssetsParams)
@@ -4431,6 +4452,12 @@ func (_ Unimplemented) RemoveAlbumMember(w http.ResponseWriter, r *http.Request,
 // SetAlbumMember Share an album with a user or change their role. Owner only.
 // (PUT /api/albums/{id}/members/{userId})
 func (_ Unimplemented) SetAlbumMember(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// MoveAlbum Put an album inside another of one's own, or back at the top
+// (PUT /api/albums/{id}/parent)
+func (_ Unimplemented) MoveAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6957,6 +6984,32 @@ func (siw *ServerInterfaceWrapper) SetAlbumMember(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SetAlbumMember(w, r, id, userId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// MoveAlbum operation middleware
+func (siw *ServerInterfaceWrapper) MoveAlbum(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.MoveAlbum(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10688,6 +10741,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/albums/cameras", wrapper.ListCameras)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/albums/{id}/parent", wrapper.MoveAlbum)
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/api/albums/{id}", wrapper.DeleteAlbum)
