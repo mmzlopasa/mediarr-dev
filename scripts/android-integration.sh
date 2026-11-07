@@ -25,10 +25,12 @@ grep -iE 'mediarr|backup|AndroidRuntime|WM-' /tmp/emulator.log | tail -60
 echo '--- the release build starts ---'
 adb uninstall app.mediarr.mediarr >/dev/null 2>&1
 flutter build apk --release --suppress-analytics >/tmp/release-build.log 2>&1 || { tail -30 /tmp/release-build.log; exit 1; }
-# Built unsigned, as the server signs it; here the debug key is enough to install it.
+# Built unsigned, as the server signs it; a key made here for the run is enough to install it.
+keytool -genkeypair -keystore /tmp/ci.jks -storepass android -keypass android -alias ci -dname CN=ci \
+	-keyalg RSA -keysize 2048 -validity 1 >/dev/null 2>&1 || exit 1
 signer="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
-"$signer" sign --ks "$HOME/.android/debug.keystore" --ks-pass pass:android --key-pass pass:android \
-	--ks-key-alias androiddebugkey --out /tmp/release-signed.apk build/app/outputs/flutter-apk/app-release.apk || exit 1
+"$signer" sign --ks /tmp/ci.jks --ks-pass pass:android --key-pass pass:android \
+	--ks-key-alias ci --out /tmp/release-signed.apk build/app/outputs/flutter-apk/app-release.apk || exit 1
 adb install -r /tmp/release-signed.apk || exit 1
 adb logcat -c
 adb shell monkey -p app.mediarr.mediarr -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
