@@ -742,6 +742,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/dates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change */
+        post: operations["fixDates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change */
+        post: operations["fixLocations"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assets/check": {
         parameters: {
             query?: never;
@@ -4285,6 +4319,50 @@ export interface components {
         StorageApply: {
             dryRun: boolean;
         };
+        DateFix: {
+            ids: string[];
+            /** @enum {string} */
+            action: "shift" | "set" | "zoneFromPlace" | "travel" | "useFile";
+            /** @description shift: how far, forward or back */
+            minutes?: number;
+            /** @description set: RFC 3339 with the offset of where they were taken */
+            takenAt?: string;
+            /** @description travel: the zone the camera's clock was on, such as Europe/Zagreb */
+            cameraZone?: string;
+            /** @description travel: the zone where they were taken, such as Asia/Tokyo */
+            placeZone?: string;
+            dryRun?: boolean;
+        };
+        LocationFix: {
+            ids: string[];
+            /** @enum {string} */
+            action: "set" | "clear" | "fromNeighbours" | "fromTrack" | "useFile";
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            /** @description fromNeighbours: how far apart in time, 30 by default */
+            minutes?: number;
+            /** @description fromTrack: a GPX file */
+            track?: string;
+            dryRun?: boolean;
+        };
+        FixChange: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @description A date as 2024-07-05T14:30:00+02:00, or a location as 45.81234, 15.97810; empty is none */
+            before: string;
+            after: string;
+        };
+        FixResult: {
+            /** @description Changed, or with dryRun would be */
+            changed: number;
+            /** @description Left as they were, for nothing to go by */
+            skipped: number;
+            /** @description The first few */
+            changes: components["schemas"]["FixChange"][];
+        };
         DeviceKey: {
             /** Format: uuid */
             id: string;
@@ -5913,6 +5991,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TimelineBucket"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    fixDates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DateFix"];
+            };
+        };
+        responses: {
+            /** @description What changed, or would */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FixResult"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    fixLocations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationFix"];
+            };
+        };
+        responses: {
+            /** @description What changed, or would */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FixResult"];
                 };
             };
             400: components["responses"]["Error"];

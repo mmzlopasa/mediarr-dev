@@ -27,7 +27,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/ringsaturn/tzf"
 	"github.com/riverqueue/river"
 
 	"github.com/mediarr-app/mediarr/server/db"
@@ -181,9 +180,6 @@ type importRun struct {
 	*deps
 	row    *db.Import
 	origin string
-	// zones finds a time zone from a place, loaded the first time a photo needs it.
-	zones       tzf.F
-	zonesFailed bool
 }
 
 // importItem is one file, with what the place it came from knows about it.

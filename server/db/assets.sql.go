@@ -64,15 +64,44 @@ func (q *Queries) ArchiveAssets(ctx context.Context, arg ArchiveAssetsParams) (i
 	return result.RowsAffected(), nil
 }
 
+const clearExifLocation = `-- name: ClearExifLocation :exec
+UPDATE exif SET latitude = NULL, longitude = NULL, city = NULL, state = NULL, country = NULL, geocoded_at = NULL
+WHERE asset_id = $1
+`
+
+func (q *Queries) ClearExifLocation(ctx context.Context, assetID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, clearExifLocation, assetID)
+	return err
+}
+
+const clearManualDate = `-- name: ClearManualDate :exec
+UPDATE assets SET manual_taken_at = NULL, manual_offset_minutes = NULL, updated_at = now() WHERE id = $1
+`
+
+func (q *Queries) ClearManualDate(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, clearManualDate, id)
+	return err
+}
+
 const clearManualFacts = `-- name: ClearManualFacts :exec
 UPDATE assets
 SET manual_taken_at = NULL, manual_offset_minutes = NULL, manual_latitude = NULL, manual_longitude = NULL,
-    updated_at = now()
+    manual_location_none = false, updated_at = now()
 WHERE id = $1
 `
 
 func (q *Queries) ClearManualFacts(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, clearManualFacts, id)
+	return err
+}
+
+const clearManualLocation = `-- name: ClearManualLocation :exec
+UPDATE assets SET manual_latitude = NULL, manual_longitude = NULL, manual_location_none = false, updated_at = now()
+WHERE id = $1
+`
+
+func (q *Queries) ClearManualLocation(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, clearManualLocation, id)
 	return err
 }
 
@@ -110,6 +139,61 @@ ON CONFLICT (user_id) WHERE kind = 'upload' DO NOTHING
 func (q *Queries) CreateUploadLibrary(ctx context.Context, userID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, createUploadLibrary, userID)
 	return err
+}
+
+const dateFacts = `-- name: DateFacts :many
+SELECT a.id, a.original_name, a.kind, a.taken_at, a.taken_offset_minutes, a.created_at,
+       e.latitude, e.longitude
+FROM assets a
+LEFT JOIN exif e ON e.asset_id = a.id
+WHERE a.user_id = $1 AND a.deleted_at IS NULL AND a.id = ANY($2::uuid[])
+ORDER BY coalesce(a.taken_at, a.created_at), a.id
+`
+
+type DateFactsParams struct {
+	UserID pgtype.UUID
+	Ids    []pgtype.UUID
+}
+
+type DateFactsRow struct {
+	ID                 pgtype.UUID
+	OriginalName       string
+	Kind               string
+	TakenAt            pgtype.Timestamptz
+	TakenOffsetMinutes pgtype.Int4
+	CreatedAt          pgtype.Timestamptz
+	Latitude           pgtype.Float8
+	Longitude          pgtype.Float8
+}
+
+// What fixing the dates and places of some photos starts from. Only the user's own.
+func (q *Queries) DateFacts(ctx context.Context, arg DateFactsParams) ([]DateFactsRow, error) {
+	rows, err := q.db.Query(ctx, dateFacts, arg.UserID, arg.Ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DateFactsRow
+	for rows.Next() {
+		var i DateFactsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OriginalName,
+			&i.Kind,
+			&i.TakenAt,
+			&i.TakenOffsetMinutes,
+			&i.CreatedAt,
+			&i.Latitude,
+			&i.Longitude,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const deleteAssetFile = `-- name: DeleteAssetFile :exec
@@ -179,7 +263,7 @@ func (q *Queries) FindExistingChecksums(ctx context.Context, arg FindExistingChe
 }
 
 const getAsset = `-- name: GetAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection FROM assets WHERE id = $1
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none FROM assets WHERE id = $1
 `
 
 func (q *Queries) GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error) {
@@ -241,6 +325,7 @@ func (q *Queries) GetAsset(ctx context.Context, id pgtype.UUID) (Asset, error) {
 		&i.RatingByOwner,
 		&i.ImportOffsetMinutes,
 		&i.Projection,
+		&i.ManualLocationNone,
 	)
 	return i, err
 }
@@ -316,7 +401,7 @@ func (q *Queries) GetLiveVideo(ctx context.Context, livePhotoOf pgtype.UUID) (pg
 }
 
 const getOwnedAsset = `-- name: GetOwnedAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL AND vault_at IS NULL
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none FROM assets WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL AND vault_at IS NULL
 `
 
 type GetOwnedAssetParams struct {
@@ -383,6 +468,7 @@ func (q *Queries) GetOwnedAsset(ctx context.Context, arg GetOwnedAssetParams) (A
 		&i.RatingByOwner,
 		&i.ImportOffsetMinutes,
 		&i.Projection,
+		&i.ManualLocationNone,
 	)
 	return i, err
 }
@@ -494,7 +580,7 @@ func (q *Queries) ListAssetFiles(ctx context.Context, assetID pgtype.UUID) ([]As
 }
 
 const listAssets = `-- name: ListAssets :many
-SELECT assets.id, assets.user_id, assets.library_id, assets.checksum, assets.original_name, assets.original_path, assets.size_bytes, assets.mime_type, assets.kind, assets.status, assets.error, assets.width, assets.height, assets.blurhash, assets.taken_at, assets.taken_offset_minutes, assets.created_at, assets.updated_at, assets.is_favorite, assets.archived_at, assets.deleted_at, assets.aspect_ratio, assets.local_at, assets.content_id, assets.live_photo_of, assets.duration_ms, assets.video_codec, assets.sprite_columns, assets.sprite_rows, assets.sprite_count, assets.sprite_interval_ms, assets.vault_at, assets.stack_parent, assets.stack_free, assets.stack_chosen, assets.phash, assets.sharpness, assets.organized_at, assets.missing_at, assets.edits, assets.edit_revision, assets.edit_applied, assets.import_taken_at, assets.import_latitude, assets.import_longitude, assets.checksum_sha1, assets.manual_taken_at, assets.manual_offset_minutes, assets.manual_latitude, assets.manual_longitude, assets.caption, assets.rating, assets.rating_by_owner, assets.import_offset_minutes, assets.projection FROM assets
+SELECT assets.id, assets.user_id, assets.library_id, assets.checksum, assets.original_name, assets.original_path, assets.size_bytes, assets.mime_type, assets.kind, assets.status, assets.error, assets.width, assets.height, assets.blurhash, assets.taken_at, assets.taken_offset_minutes, assets.created_at, assets.updated_at, assets.is_favorite, assets.archived_at, assets.deleted_at, assets.aspect_ratio, assets.local_at, assets.content_id, assets.live_photo_of, assets.duration_ms, assets.video_codec, assets.sprite_columns, assets.sprite_rows, assets.sprite_count, assets.sprite_interval_ms, assets.vault_at, assets.stack_parent, assets.stack_free, assets.stack_chosen, assets.phash, assets.sharpness, assets.organized_at, assets.missing_at, assets.edits, assets.edit_revision, assets.edit_applied, assets.import_taken_at, assets.import_latitude, assets.import_longitude, assets.checksum_sha1, assets.manual_taken_at, assets.manual_offset_minutes, assets.manual_latitude, assets.manual_longitude, assets.caption, assets.rating, assets.rating_by_owner, assets.import_offset_minutes, assets.projection, assets.manual_location_none FROM assets
 WHERE assets.user_id = $1 AND assets.deleted_at IS NULL AND assets.vault_at IS NULL
   AND ($2::text IS NULL OR assets.status = $2)
   -- The moving part of a Live Photo that cannot be read is no problem to report: the photo is there.
@@ -578,6 +664,7 @@ func (q *Queries) ListAssets(ctx context.Context, arg ListAssetsParams) ([]Asset
 			&i.RatingByOwner,
 			&i.ImportOffsetMinutes,
 			&i.Projection,
+			&i.ManualLocationNone,
 		); err != nil {
 			return nil, err
 		}
@@ -657,7 +744,7 @@ func (q *Queries) ListOriginals(ctx context.Context, arg ListOriginalsParams) ([
 }
 
 const listOwnedAssets = `-- name: ListOwnedAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none FROM assets WHERE user_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
 `
 
 type ListOwnedAssetsParams struct {
@@ -730,6 +817,7 @@ func (q *Queries) ListOwnedAssets(ctx context.Context, arg ListOwnedAssetsParams
 			&i.RatingByOwner,
 			&i.ImportOffsetMinutes,
 			&i.Projection,
+			&i.ManualLocationNone,
 		); err != nil {
 			return nil, err
 		}
@@ -831,6 +919,39 @@ type MarkEditAppliedParams struct {
 func (q *Queries) MarkEditApplied(ctx context.Context, arg MarkEditAppliedParams) error {
 	_, err := q.db.Exec(ctx, markEditApplied, arg.ID, arg.EditApplied)
 	return err
+}
+
+const nearestLocated = `-- name: NearestLocated :one
+SELECT e.latitude::double precision AS latitude, e.longitude::double precision AS longitude,
+       abs(extract(epoch FROM (a.taken_at - $1::timestamptz)))::double precision AS seconds
+FROM assets a
+JOIN exif e ON e.asset_id = a.id
+WHERE a.user_id = $2 AND a.deleted_at IS NULL AND a.taken_at IS NOT NULL
+  AND e.latitude IS NOT NULL AND e.longitude IS NOT NULL
+  AND a.taken_at BETWEEN $1::timestamptz - make_interval(mins => $3::int)
+                     AND $1::timestamptz + make_interval(mins => $3::int)
+ORDER BY abs(extract(epoch FROM (a.taken_at - $1::timestamptz)))
+LIMIT 1
+`
+
+type NearestLocatedParams struct {
+	At      pgtype.Timestamptz
+	UserID  pgtype.UUID
+	Minutes int32
+}
+
+type NearestLocatedRow struct {
+	Latitude  float64
+	Longitude float64
+	Seconds   float64
+}
+
+// The photo with a location taken closest in time to a moment, for one that has none.
+func (q *Queries) NearestLocated(ctx context.Context, arg NearestLocatedParams) (NearestLocatedRow, error) {
+	row := q.db.QueryRow(ctx, nearestLocated, arg.At, arg.UserID, arg.Minutes)
+	var i NearestLocatedRow
+	err := row.Scan(&i.Latitude, &i.Longitude, &i.Seconds)
+	return i, err
 }
 
 const newerAsset = `-- name: NewerAsset :one
@@ -1012,7 +1133,7 @@ func (q *Queries) SetManualDate(ctx context.Context, arg SetManualDateParams) er
 }
 
 const setManualLocation = `-- name: SetManualLocation :exec
-UPDATE assets SET manual_latitude = $2, manual_longitude = $3, updated_at = now() WHERE id = $1
+UPDATE assets SET manual_latitude = $2, manual_longitude = $3, manual_location_none = false, updated_at = now() WHERE id = $1
 `
 
 type SetManualLocationParams struct {
@@ -1023,6 +1144,16 @@ type SetManualLocationParams struct {
 
 func (q *Queries) SetManualLocation(ctx context.Context, arg SetManualLocationParams) error {
 	_, err := q.db.Exec(ctx, setManualLocation, arg.ID, arg.ManualLatitude, arg.ManualLongitude)
+	return err
+}
+
+const setManualNoLocation = `-- name: SetManualNoLocation :exec
+UPDATE assets SET manual_latitude = NULL, manual_longitude = NULL, manual_location_none = true, updated_at = now()
+WHERE id = $1
+`
+
+func (q *Queries) SetManualNoLocation(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, setManualNoLocation, id)
 	return err
 }
 

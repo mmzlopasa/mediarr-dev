@@ -49,6 +49,7 @@ class FakeServer {
   int quietDays = 3;
   String tagName = 'summer';
   String storageTemplate = '';
+  Map<String, dynamic>? savedDates;
 
   Map<String, Object> get _user => {
     'id': userId,
@@ -160,6 +161,25 @@ class FakeServer {
     if (path.startsWith('/api/me/device-keys/') && request.method == 'DELETE') {
       request.response.statusCode = 204;
       await request.response.close();
+      return;
+    }
+    if (path == '/api/assets/dates' && request.method == 'POST') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      if (body['dryRun'] != true) savedDates = body;
+      await _json(request, 200, {
+        'changed': 1,
+        'skipped': 0,
+        'changes': [
+          {
+            'id': photoId,
+            'name': 'beach.jpg',
+            'before': '2024-07-01T10:00:00',
+            'after': '2024-07-01T09:00:00',
+          },
+        ],
+      });
       return;
     }
     if (path == '/api/admin/storage-template') {

@@ -339,6 +339,8 @@ class ApiClient {
           return CreateUserRequest.fromJson(value);
         case 'CropBox':
           return CropBox.fromJson(value);
+        case 'DateFix':
+          return DateFix.fromJson(value);
         case 'DeviceKey':
           return DeviceKey.fromJson(value);
         case 'Documents':
@@ -375,6 +377,10 @@ class ApiClient {
           return FamilyRuleCreate.fromJson(value);
         case 'FeatureUpdate':
           return FeatureUpdate.fromJson(value);
+        case 'FixChange':
+          return FixChange.fromJson(value);
+        case 'FixResult':
+          return FixResult.fromJson(value);
         case 'Folder':
           return Folder.fromJson(value);
         case 'FolderEntry':
@@ -415,6 +421,8 @@ class ApiClient {
           return KeepRestored.fromJson(value);
         case 'LinkPassword':
           return LinkPassword.fromJson(value);
+        case 'LocationFix':
+          return LocationFix.fromJson(value);
         case 'LoginError':
           return LoginError.fromJson(value);
         case 'LoginRequest':

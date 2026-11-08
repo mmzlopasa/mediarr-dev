@@ -1781,3 +1781,40 @@ img.ss-in.ss-zoom.ss-still {
 		animation-duration: 300ms;
 	}
 }
+
+/* Fixing the dates and places of many photos. */
+.fix-choices {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.fix-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: end;
+}
+.fix-row label {
+	display: grid;
+	gap: 4px;
+	font-size: 0.8125rem;
+	color: var(--dim);
+}
+.fix-row .in {
+	width: 6.5rem;
+}
+.fix-field {
+	display: grid;
+	gap: 4px;
+	font-size: 0.8125rem;
+	color: var(--dim);
+}
+.fix-preview {
+	min-height: 2.5rem;
+	padding-top: 10px;
+	border-top: 1px solid var(--line);
+	font-size: 0.875rem;
+}
+.fix-preview p {
+	margin: 0;
+}

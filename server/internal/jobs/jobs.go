@@ -257,6 +257,7 @@ func (w *metadataWorker) Work(ctx context.Context, job *river.Job[MetadataArgs])
 	}
 	meta.fillFromImport(&asset)
 	meta.fillFromManual(&asset)
+	meta.zoneFromPlace(&asset)
 
 	return pgx.BeginFunc(ctx, w.pool, func(tx pgx.Tx) error {
 		q := w.queries.WithTx(tx)

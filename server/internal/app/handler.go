@@ -284,7 +284,12 @@ func internalError(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 func readJSON(w http.ResponseWriter, r *http.Request, target any) bool {
-	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
+	return readJSONUpTo(w, r, target, maxJSONBody)
+}
+
+// readJSONUpTo is readJSON for the few requests that carry a file, such as a GPX track.
+func readJSONUpTo(w http.ResponseWriter, r *http.Request, target any, limit int64) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	if err := json.NewDecoder(r.Body).Decode(target); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return false

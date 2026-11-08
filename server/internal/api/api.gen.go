@@ -371,6 +371,33 @@ func (e BulkRequestAction) Valid() bool {
 	}
 }
 
+// Defines values for DateFixAction.
+const (
+	DateFixActionSet           DateFixAction = "set"
+	DateFixActionShift         DateFixAction = "shift"
+	DateFixActionTravel        DateFixAction = "travel"
+	DateFixActionUseFile       DateFixAction = "useFile"
+	DateFixActionZoneFromPlace DateFixAction = "zoneFromPlace"
+)
+
+// Valid indicates whether the value is a known member of the DateFixAction enum.
+func (e DateFixAction) Valid() bool {
+	switch e {
+	case DateFixActionSet:
+		return true
+	case DateFixActionShift:
+		return true
+	case DateFixActionTravel:
+		return true
+	case DateFixActionUseFile:
+		return true
+	case DateFixActionZoneFromPlace:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for EmailSettingsSecurity.
 const (
 	EmailSettingsSecurityNone     EmailSettingsSecurity = "none"
@@ -602,6 +629,33 @@ func (e KeepGuestUpdateStatus) Valid() bool {
 	case KeepGuestUpdateStatusActive:
 		return true
 	case KeepGuestUpdateStatusStopped:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for LocationFixAction.
+const (
+	LocationFixActionClear          LocationFixAction = "clear"
+	LocationFixActionFromNeighbours LocationFixAction = "fromNeighbours"
+	LocationFixActionFromTrack      LocationFixAction = "fromTrack"
+	LocationFixActionSet            LocationFixAction = "set"
+	LocationFixActionUseFile        LocationFixAction = "useFile"
+)
+
+// Valid indicates whether the value is a known member of the LocationFixAction enum.
+func (e LocationFixAction) Valid() bool {
+	switch e {
+	case LocationFixActionClear:
+		return true
+	case LocationFixActionFromNeighbours:
+		return true
+	case LocationFixActionFromTrack:
+		return true
+	case LocationFixActionSet:
+		return true
+	case LocationFixActionUseFile:
 		return true
 	default:
 		return false
@@ -1890,6 +1944,28 @@ type CropBox struct {
 	Y      float64 `json:"y"`
 }
 
+// DateFix defines model for DateFix.
+type DateFix struct {
+	Action DateFixAction `json:"action"`
+
+	// CameraZone travel: the zone the camera's clock was on, such as Europe/Zagreb
+	CameraZone *string              `json:"cameraZone,omitempty"`
+	DryRun     *bool                `json:"dryRun,omitempty"`
+	Ids        []openapi_types.UUID `json:"ids"`
+
+	// Minutes shift: how far, forward or back
+	Minutes *int `json:"minutes,omitempty"`
+
+	// PlaceZone travel: the zone where they were taken, such as Asia/Tokyo
+	PlaceZone *string `json:"placeZone,omitempty"`
+
+	// TakenAt set: RFC 3339 with the offset of where they were taken
+	TakenAt *string `json:"takenAt,omitempty"`
+}
+
+// DateFixAction defines model for DateFix.Action.
+type DateFixAction string
+
 // DeviceKey defines model for DeviceKey.
 type DeviceKey struct {
 	Id  openapi_types.UUID `json:"id"`
@@ -2054,6 +2130,28 @@ type FeatureUpdate struct {
 
 // Features defines model for Features.
 type Features map[string]bool
+
+// FixChange defines model for FixChange.
+type FixChange struct {
+	After string `json:"after"`
+
+	// Before A date as 2024-07-05T14:30:00+02:00, or a location as 45.81234, 15.97810; empty is none
+	Before string             `json:"before"`
+	Id     openapi_types.UUID `json:"id"`
+	Name   string             `json:"name"`
+}
+
+// FixResult defines model for FixResult.
+type FixResult struct {
+	// Changed Changed, or with dryRun would be
+	Changed int `json:"changed"`
+
+	// Changes The first few
+	Changes []FixChange `json:"changes"`
+
+	// Skipped Left as they were, for nothing to go by
+	Skipped int `json:"skipped"`
+}
 
 // Folder defines model for Folder.
 type Folder struct {
@@ -2269,6 +2367,24 @@ type KeepRestored struct {
 type LinkPassword struct {
 	Password string `json:"password"`
 }
+
+// LocationFix defines model for LocationFix.
+type LocationFix struct {
+	Action    LocationFixAction    `json:"action"`
+	DryRun    *bool                `json:"dryRun,omitempty"`
+	Ids       []openapi_types.UUID `json:"ids"`
+	Latitude  *float64             `json:"latitude,omitempty"`
+	Longitude *float64             `json:"longitude,omitempty"`
+
+	// Minutes fromNeighbours: how far apart in time, 30 by default
+	Minutes *int `json:"minutes,omitempty"`
+
+	// Track fromTrack: a GPX file
+	Track *string `json:"track,omitempty"`
+}
+
+// LocationFixAction defines model for LocationFix.Action.
+type LocationFixAction string
 
 // LoginError defines model for LoginError.
 type LoginError struct {
@@ -3273,6 +3389,12 @@ type BulkAssetsJSONRequestBody = BulkRequest
 // CheckAssetsJSONRequestBody defines body for CheckAssets for application/json ContentType.
 type CheckAssetsJSONRequestBody = ChecksumCheckRequest
 
+// FixDatesJSONRequestBody defines body for FixDates for application/json ContentType.
+type FixDatesJSONRequestBody = DateFix
+
+// FixLocationsJSONRequestBody defines body for FixLocations for application/json ContentType.
+type FixLocationsJSONRequestBody = LocationFix
+
 // ChangeAssetTagsJSONRequestBody defines body for ChangeAssetTags for application/json ContentType.
 type ChangeAssetTagsJSONRequestBody = AssetTagChange
 
@@ -3644,9 +3766,15 @@ type ServerInterface interface {
 	// CheckAssets Report which SHA-256 checksums the current user already has, so uploads can be skipped
 	// (POST /api/assets/check)
 	CheckAssets(w http.ResponseWriter, r *http.Request)
+	// FixDates Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
+	// (POST /api/assets/dates)
+	FixDates(w http.ResponseWriter, r *http.Request)
 	// DownloadAssets Download several originals as one uncompressed ZIP file
 	// (GET /api/assets/download)
 	DownloadAssets(w http.ResponseWriter, r *http.Request, params DownloadAssetsParams)
+	// FixLocations Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
+	// (POST /api/assets/locations)
+	FixLocations(w http.ResponseWriter, r *http.Request)
 	// ChangeAssetTags Add a tag to the user's own assets, or remove it
 	// (POST /api/assets/tags)
 	ChangeAssetTags(w http.ResponseWriter, r *http.Request)
@@ -4580,9 +4708,21 @@ func (_ Unimplemented) CheckAssets(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// FixDates Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
+// (POST /api/assets/dates)
+func (_ Unimplemented) FixDates(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // DownloadAssets Download several originals as one uncompressed ZIP file
 // (GET /api/assets/download)
 func (_ Unimplemented) DownloadAssets(w http.ResponseWriter, r *http.Request, params DownloadAssetsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// FixLocations Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
+// (POST /api/assets/locations)
+func (_ Unimplemented) FixLocations(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -7250,6 +7390,20 @@ func (siw *ServerInterfaceWrapper) CheckAssets(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// FixDates operation middleware
+func (siw *ServerInterfaceWrapper) FixDates(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FixDates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // DownloadAssets operation middleware
 func (siw *ServerInterfaceWrapper) DownloadAssets(w http.ResponseWriter, r *http.Request) {
 
@@ -7274,6 +7428,20 @@ func (siw *ServerInterfaceWrapper) DownloadAssets(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DownloadAssets(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// FixLocations operation middleware
+func (siw *ServerInterfaceWrapper) FixLocations(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FixLocations(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10883,6 +11051,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/timeline/buckets/{month}", wrapper.GetTimelineBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/assets/dates", wrapper.FixDates)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/assets/locations", wrapper.FixLocations)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/assets/check", wrapper.CheckAssets)

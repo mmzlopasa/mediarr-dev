@@ -120,6 +120,7 @@ type Asset struct {
 	RatingByOwner       bool
 	ImportOffsetMinutes pgtype.Int4
 	Projection          pgtype.Text
+	ManualLocationNone  bool
 }
 
 type AssetDescription struct {

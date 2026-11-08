@@ -114,6 +114,8 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**finishOIDC**](doc//DefaultApi.md#finishoidc) | **GET** /api/auth/oidc/callback | Where the identity provider sends the browser back
 *DefaultApi* | [**finishPasskeyLogin**](doc//DefaultApi.md#finishpasskeylogin) | **POST** /api/auth/passkey/finish | Finish signing in with a passkey
 *DefaultApi* | [**finishPasskeyRegistration**](doc//DefaultApi.md#finishpasskeyregistration) | **POST** /api/me/passkeys/finish | Finish adding a passkey
+*DefaultApi* | [**fixDates**](doc//DefaultApi.md#fixdates) | **POST** /api/assets/dates | Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
+*DefaultApi* | [**fixLocations**](doc//DefaultApi.md#fixlocations) | **POST** /api/assets/locations | Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
 *DefaultApi* | [**forgotPassword**](doc//DefaultApi.md#forgotpassword) | **POST** /api/auth/password/forgot | Send a link for a new password. Answers the same whether or not the address has an account
 *DefaultApi* | [**getAISettings**](doc//DefaultApi.md#getaisettings) | **GET** /api/admin/ai | The local Ollama server and how far descriptions have come
 *DefaultApi* | [**getAdminHealth**](doc//DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
@@ -343,6 +345,7 @@ Class | Method | HTTP request | Description
  - [CreateDeviceKeyRequest](doc//CreateDeviceKeyRequest.md)
  - [CreateUserRequest](doc//CreateUserRequest.md)
  - [CropBox](doc//CropBox.md)
+ - [DateFix](doc//DateFix.md)
  - [DeviceKey](doc//DeviceKey.md)
  - [Documents](doc//Documents.md)
  - [DuplicateGroup](doc//DuplicateGroup.md)
@@ -361,6 +364,8 @@ Class | Method | HTTP request | Description
  - [FamilyRule](doc//FamilyRule.md)
  - [FamilyRuleCreate](doc//FamilyRuleCreate.md)
  - [FeatureUpdate](doc//FeatureUpdate.md)
+ - [FixChange](doc//FixChange.md)
+ - [FixResult](doc//FixResult.md)
  - [Folder](doc//Folder.md)
  - [FolderEntry](doc//FolderEntry.md)
  - [Health](doc//Health.md)
@@ -381,6 +386,7 @@ Class | Method | HTTP request | Description
  - [KeepPairing](doc//KeepPairing.md)
  - [KeepRestored](doc//KeepRestored.md)
  - [LinkPassword](doc//LinkPassword.md)
+ - [LocationFix](doc//LocationFix.md)
  - [LoginError](doc//LoginError.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [MapPoints](doc//MapPoints.md)

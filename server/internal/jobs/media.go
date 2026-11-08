@@ -18,6 +18,7 @@ import (
 
 	"github.com/bbrks/go-blurhash"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/ringsaturn/tzf"
 	"golang.org/x/image/webp"
 
 	"github.com/mediarr-app/mediarr/server/db"
@@ -324,6 +325,22 @@ func (m *Metadata) fillFromManual(asset *db.Asset) {
 		lat, lon := asset.ManualLatitude.Float64, asset.ManualLongitude.Float64
 		m.Latitude, m.Longitude = &lat, &lon
 	}
+	if asset.ManualLocationNone {
+		m.Latitude, m.Longitude = nil, nil
+	}
+}
+
+// zoneFromPlace gives a time without a zone the zone of where it was taken, so it shows the hour it
+// was there. A zone the file gives, or a date set by hand, stays as it is.
+func (m *Metadata) zoneFromPlace(asset *db.Asset) {
+	if m.OffsetMinutes != nil || m.TakenAt == nil || m.Latitude == nil || m.Longitude == nil || asset.ManualTakenAt.Valid {
+		return
+	}
+	WithZones(func(finder tzf.F) {
+		if at, zone, ok := ZoneFromPlace(finder, *m.TakenAt, nil, m.Kind == "video", *m.Latitude, *m.Longitude); ok {
+			m.TakenAt, m.OffsetMinutes = &at, &zone
+		}
+	})
 }
 
 func (m *Metadata) assetParams(id pgtype.UUID) db.UpdateAssetMetadataParams {

@@ -312,6 +312,27 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('the dates of selected photos are shifted after a preview', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.longPress(find.byType(AssetPicture).first);
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.byTooltip('More'));
+    await waitFor(tester, find.text('Date and time…'));
+    await tester.tap(find.text('Date and time…'));
+    await waitFor(tester, find.widgetWithText(TextField, 'Hours'));
+    await tester.enterText(find.widgetWithText(TextField, 'Hours'), '1');
+    await waitFor(tester, find.text('Will change: 1'));
+    await tester.tap(find.text('Save'));
+    await waitFor(tester, find.text('Changed: 1'));
+    expect(server.savedDates?['action'], 'shift');
+    expect(server.savedDates?['minutes'], -60);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('an album shows the albums inside it', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);

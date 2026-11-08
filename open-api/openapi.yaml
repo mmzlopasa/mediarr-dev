@@ -693,6 +693,40 @@ paths:
               schema: { $ref: "#/components/schemas/TimelineBucket" }
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/assets/dates:
+    post:
+      operationId: fixDates
+      summary: Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DateFix" }
+      responses:
+        "200":
+          description: What changed, or would
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FixResult" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/assets/locations:
+    post:
+      operationId: fixLocations
+      summary: Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LocationFix" }
+      responses:
+        "200":
+          description: What changed, or would
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FixResult" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/assets/check:
     post:
       operationId: checkAssets
@@ -4134,6 +4168,43 @@ components:
       required: [dryRun]
       properties:
         dryRun: { type: boolean }
+    DateFix:
+      type: object
+      required: [ids, action]
+      properties:
+        ids: { type: array, minItems: 1, maxItems: 1000, items: { type: string, format: uuid } }
+        action: { type: string, enum: [shift, set, zoneFromPlace, travel, useFile] }
+        minutes: { type: integer, description: "shift: how far, forward or back" }
+        takenAt: { type: string, description: "set: RFC 3339 with the offset of where they were taken" }
+        cameraZone: { type: string, description: "travel: the zone the camera's clock was on, such as Europe/Zagreb" }
+        placeZone: { type: string, description: "travel: the zone where they were taken, such as Asia/Tokyo" }
+        dryRun: { type: boolean }
+    LocationFix:
+      type: object
+      required: [ids, action]
+      properties:
+        ids: { type: array, minItems: 1, maxItems: 1000, items: { type: string, format: uuid } }
+        action: { type: string, enum: [set, clear, fromNeighbours, fromTrack, useFile] }
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        minutes: { type: integer, description: "fromNeighbours: how far apart in time, 30 by default" }
+        track: { type: string, maxLength: 20000000, description: "fromTrack: a GPX file" }
+        dryRun: { type: boolean }
+    FixChange:
+      type: object
+      required: [id, name, before, after]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        before: { type: string, description: "A date as 2024-07-05T14:30:00+02:00, or a location as 45.81234, 15.97810; empty is none" }
+        after: { type: string }
+    FixResult:
+      type: object
+      required: [changed, skipped, changes]
+      properties:
+        changed: { type: integer, description: "Changed, or with dryRun would be" }
+        skipped: { type: integer, description: "Left as they were, for nothing to go by" }
+        changes: { type: array, items: { $ref: "#/components/schemas/FixChange" }, description: "The first few" }
     DeviceKey:
       type: object
       required: [id, key]

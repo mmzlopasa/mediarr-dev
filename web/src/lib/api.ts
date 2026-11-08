@@ -1,6 +1,8 @@
 import type { components } from './api/schema';
 
 export type User = components['schemas']['User'];
+export type FixResult = components['schemas']['FixResult'];
+export type Place = components['schemas']['Place'];
 export type BackupDevice = components['schemas']['BackupDevice'];
 export type UpgradeSnapshot = components['schemas']['UpgradeSnapshot'];
 export type StorageTemplate = components['schemas']['StorageTemplate'];

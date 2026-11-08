@@ -155,7 +155,7 @@ func TestTheTimeZoneComesFromThePlace(t *testing.T) {
 			t.Errorf("%s: %d %v", c.name, got, ok)
 		}
 	}
-	run := &importRun{zones: finder}
+	run := &importRun{}
 	lat, lon := 43.508, 16.44
 	item := &importItem{takenAt: &summer, latitude: &lat, longitude: &lon}
 	run.placeInTime(item)

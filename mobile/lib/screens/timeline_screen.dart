@@ -11,6 +11,7 @@ import '../services/trash.dart';
 import '../services/timeline.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
+import 'fix_sheet.dart';
 import 'share_sheet.dart';
 import '../services/settings.dart';
 import '../timeline/layout.dart';
@@ -82,6 +83,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       case 'tag':
         final done = await showAddTag(context, session, _selected.toList());
         if (done && mounted) setState(_selected.clear);
+      case 'dates' || 'locations':
+        final done = await showFixSheet(
+          context,
+          session,
+          _selected.toList(),
+          dates: choice == 'dates',
+        );
+        if (done && mounted) {
+          setState(_selected.clear);
+          await _store.refresh(reloadLoaded: true);
+        }
       case 'vault':
         final status = await session.api.getVaultStatus();
         if (!mounted) return;
@@ -216,6 +228,14 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     itemBuilder: (_) => const [
                       PopupMenuItem(value: 'archive', child: Text('Archive')),
                       PopupMenuItem(value: 'tag', child: Text('Add a tag')),
+                      PopupMenuItem(
+                        value: 'dates',
+                        child: Text('Date and time…'),
+                      ),
+                      PopupMenuItem(
+                        value: 'locations',
+                        child: Text('Location…'),
+                      ),
                       PopupMenuItem(
                         value: 'vault',
                         child: Text('Move to the vault'),

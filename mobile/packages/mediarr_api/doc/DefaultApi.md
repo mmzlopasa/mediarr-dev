@@ -63,6 +63,8 @@ Method | HTTP request | Description
 [**finishOIDC**](DefaultApi.md#finishoidc) | **GET** /api/auth/oidc/callback | Where the identity provider sends the browser back
 [**finishPasskeyLogin**](DefaultApi.md#finishpasskeylogin) | **POST** /api/auth/passkey/finish | Finish signing in with a passkey
 [**finishPasskeyRegistration**](DefaultApi.md#finishpasskeyregistration) | **POST** /api/me/passkeys/finish | Finish adding a passkey
+[**fixDates**](DefaultApi.md#fixdates) | **POST** /api/assets/dates | Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
+[**fixLocations**](DefaultApi.md#fixlocations) | **POST** /api/assets/locations | Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
 [**forgotPassword**](DefaultApi.md#forgotpassword) | **POST** /api/auth/password/forgot | Send a link for a new password. Answers the same whether or not the address has an account
 [**getAISettings**](DefaultApi.md#getaisettings) | **GET** /api/admin/ai | The local Ollama server and how far descriptions have come
 [**getAdminHealth**](DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
@@ -2408,6 +2410,88 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Map<String, Object>**](Object.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **fixDates**
+> FixResult fixDates(dateFix)
+
+Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final dateFix = DateFix(); // DateFix | 
+
+try {
+    final result = api_instance.fixDates(dateFix);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->fixDates: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **dateFix** | [**DateFix**](DateFix.md)|  | 
+
+### Return type
+
+[**FixResult**](FixResult.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **fixLocations**
+> FixResult fixLocations(locationFix)
+
+Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final locationFix = LocationFix(); // LocationFix | 
+
+try {
+    final result = api_instance.fixLocations(locationFix);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->fixLocations: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **locationFix** | [**LocationFix**](LocationFix.md)|  | 
+
+### Return type
+
+[**FixResult**](FixResult.md)
 
 ### Authorization
 

@@ -199,7 +199,7 @@ SET manual_taken_at = $2, manual_offset_minutes = $3, taken_at = $2, taken_offse
 WHERE id = $1;
 
 -- name: SetManualLocation :exec
-UPDATE assets SET manual_latitude = $2, manual_longitude = $3, updated_at = now() WHERE id = $1;
+UPDATE assets SET manual_latitude = $2, manual_longitude = $3, manual_location_none = false, updated_at = now() WHERE id = $1;
 
 -- name: SetExifLocation :exec
 INSERT INTO exif (asset_id, latitude, longitude, raw) VALUES ($1, $2, $3, '{}')
@@ -210,8 +210,45 @@ SET latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude,
 -- name: ClearManualFacts :exec
 UPDATE assets
 SET manual_taken_at = NULL, manual_offset_minutes = NULL, manual_latitude = NULL, manual_longitude = NULL,
-    updated_at = now()
+    manual_location_none = false, updated_at = now()
 WHERE id = $1;
+
+-- name: ClearManualDate :exec
+UPDATE assets SET manual_taken_at = NULL, manual_offset_minutes = NULL, updated_at = now() WHERE id = $1;
+
+-- name: ClearManualLocation :exec
+UPDATE assets SET manual_latitude = NULL, manual_longitude = NULL, manual_location_none = false, updated_at = now()
+WHERE id = $1;
+
+-- name: SetManualNoLocation :exec
+UPDATE assets SET manual_latitude = NULL, manual_longitude = NULL, manual_location_none = true, updated_at = now()
+WHERE id = $1;
+
+-- name: ClearExifLocation :exec
+UPDATE exif SET latitude = NULL, longitude = NULL, city = NULL, state = NULL, country = NULL, geocoded_at = NULL
+WHERE asset_id = $1;
+
+-- name: DateFacts :many
+-- What fixing the dates and places of some photos starts from. Only the user's own.
+SELECT a.id, a.original_name, a.kind, a.taken_at, a.taken_offset_minutes, a.created_at,
+       e.latitude, e.longitude
+FROM assets a
+LEFT JOIN exif e ON e.asset_id = a.id
+WHERE a.user_id = sqlc.arg('user_id') AND a.deleted_at IS NULL AND a.id = ANY(sqlc.arg('ids')::uuid[])
+ORDER BY coalesce(a.taken_at, a.created_at), a.id;
+
+-- name: NearestLocated :one
+-- The photo with a location taken closest in time to a moment, for one that has none.
+SELECT e.latitude::double precision AS latitude, e.longitude::double precision AS longitude,
+       abs(extract(epoch FROM (a.taken_at - sqlc.arg('at')::timestamptz)))::double precision AS seconds
+FROM assets a
+JOIN exif e ON e.asset_id = a.id
+WHERE a.user_id = sqlc.arg('user_id') AND a.deleted_at IS NULL AND a.taken_at IS NOT NULL
+  AND e.latitude IS NOT NULL AND e.longitude IS NOT NULL
+  AND a.taken_at BETWEEN sqlc.arg('at')::timestamptz - make_interval(mins => sqlc.arg('minutes')::int)
+                     AND sqlc.arg('at')::timestamptz + make_interval(mins => sqlc.arg('minutes')::int)
+ORDER BY abs(extract(epoch FROM (a.taken_at - sqlc.arg('at')::timestamptz)))
+LIMIT 1;
 
 -- name: SetOwnerRating :exec
 UPDATE assets SET rating = $2, rating_by_owner = true, updated_at = now() WHERE id = $1;

@@ -1,7 +1,6 @@
 package jobs
 
 import (
-	"log/slog"
 	"time"
 	_ "time/tzdata" // Zones by name, whether or not the system has them.
 
@@ -15,22 +14,11 @@ func (i *importRun) placeInTime(item *importItem) {
 	if item.offset != nil || item.takenAt == nil || item.latitude == nil || item.longitude == nil {
 		return
 	}
-	if i.zones == nil {
-		if i.zonesFailed {
-			return
+	WithZones(func(finder tzf.F) {
+		if offset, ok := OffsetAt(finder, *item.latitude, *item.longitude, *item.takenAt); ok {
+			item.offset = &offset
 		}
-		// Loaded only for an import that needs it, and dropped with it, to keep the worker small.
-		finder, err := tzf.NewDefaultFinder()
-		if err != nil {
-			i.zonesFailed = true
-			slog.Warn("time zones by place are not available", "error", err)
-			return
-		}
-		i.zones = finder
-	}
-	if offset, ok := OffsetAt(i.zones, *item.latitude, *item.longitude, *item.takenAt); ok {
-		item.offset = &offset
-	}
+	})
 }
 
 // OffsetAt is the offset from UTC, in minutes, at a place and moment, summer time included.

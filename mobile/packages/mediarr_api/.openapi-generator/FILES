@@ -57,6 +57,7 @@ doc/CommentCreate.md
 doc/CreateDeviceKeyRequest.md
 doc/CreateUserRequest.md
 doc/CropBox.md
+doc/DateFix.md
 doc/DefaultApi.md
 doc/DeviceKey.md
 doc/Documents.md
@@ -76,6 +77,8 @@ doc/Family.md
 doc/FamilyRule.md
 doc/FamilyRuleCreate.md
 doc/FeatureUpdate.md
+doc/FixChange.md
+doc/FixResult.md
 doc/Folder.md
 doc/FolderEntry.md
 doc/Health.md
@@ -96,6 +99,7 @@ doc/KeepPairRequest.md
 doc/KeepPairing.md
 doc/KeepRestored.md
 doc/LinkPassword.md
+doc/LocationFix.md
 doc/LoginError.md
 doc/LoginRequest.md
 doc/MapPoints.md
@@ -237,6 +241,7 @@ lib/model/comment_create.dart
 lib/model/create_device_key_request.dart
 lib/model/create_user_request.dart
 lib/model/crop_box.dart
+lib/model/date_fix.dart
 lib/model/device_key.dart
 lib/model/documents.dart
 lib/model/duplicate_group.dart
@@ -255,6 +260,8 @@ lib/model/family.dart
 lib/model/family_rule.dart
 lib/model/family_rule_create.dart
 lib/model/feature_update.dart
+lib/model/fix_change.dart
+lib/model/fix_result.dart
 lib/model/folder.dart
 lib/model/folder_entry.dart
 lib/model/health.dart
@@ -275,6 +282,7 @@ lib/model/keep_pair_request.dart
 lib/model/keep_pairing.dart
 lib/model/keep_restored.dart
 lib/model/link_password.dart
+lib/model/location_fix.dart
 lib/model/login_error.dart
 lib/model/login_request.dart
 lib/model/map_points.dart
@@ -351,10 +359,7 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/storage_apply_test.dart
-test/storage_move_test.dart
-test/storage_preview_test.dart
-test/storage_report_test.dart
-test/storage_template_change_test.dart
-test/storage_template_test.dart
-test/storage_token_test.dart
+test/date_fix_test.dart
+test/fix_change_test.dart
+test/fix_result_test.dart
+test/location_fix_test.dart

@@ -2939,6 +2939,126 @@ class DefaultApi {
     return null;
   }
 
+  /// Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [DateFix] dateFix (required):
+  Future<Response> fixDatesWithHttpInfo(
+    DateFix dateFix,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/dates';
+
+    // ignore: prefer_final_locals
+    Object? postBody = dateFix;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
+  ///
+  /// Parameters:
+  ///
+  /// * [DateFix] dateFix (required):
+  Future<FixResult?> fixDates(
+    DateFix dateFix,
+  ) async {
+    final response = await fixDatesWithHttpInfo(
+      dateFix,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'FixResult',
+      ) as FixResult;
+    }
+    return null;
+  }
+
+  /// Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [LocationFix] locationFix (required):
+  Future<Response> fixLocationsWithHttpInfo(
+    LocationFix locationFix,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/locations';
+
+    // ignore: prefer_final_locals
+    Object? postBody = locationFix;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
+  ///
+  /// Parameters:
+  ///
+  /// * [LocationFix] locationFix (required):
+  Future<FixResult?> fixLocations(
+    LocationFix locationFix,
+  ) async {
+    final response = await fixLocationsWithHttpInfo(
+      locationFix,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'FixResult',
+      ) as FixResult;
+    }
+    return null;
+  }
+
   /// Send a link for a new password. Answers the same whether or not the address has an account
   ///
   /// Note: This method returns the HTTP [Response].

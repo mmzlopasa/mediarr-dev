@@ -9,6 +9,7 @@
 	import Dialog from '#lib/design/components/Dialog.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
+	import FixDialog from '#lib/organize/FixDialog.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { lang, tr } from '#lib/i18n.svelte.ts';
 	import { blurUrl, thumbUrl } from './blur.ts';
@@ -74,6 +75,7 @@
 	const selected = new SvelteSet<string>();
 	let lastIndex = $state<{ month: string; index: number } | null>(null);
 	let confirmDelete = $state(false);
+	let fixing = $state<'dates' | 'locations'>();
 	let dragBox = $state<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
 	let busy = $state(false);
 
@@ -608,6 +610,20 @@
 			{#if ownActions}<button
 					type="button"
 					class="icon-btn"
+					aria-label={tr('Datum i vrijeme', 'Date and time')}
+					title={tr('Datum i vrijeme', 'Date and time')}
+					onclick={() => (fixing = 'dates')}><Icon name="clock" /></button
+				>
+				<button
+					type="button"
+					class="icon-btn"
+					aria-label={tr('Lokacija', 'Location')}
+					title={tr('Lokacija', 'Location')}
+					onclick={() => (fixing = 'locations')}><Icon name="map" /></button
+				>{/if}
+			{#if ownActions}<button
+					type="button"
+					class="icon-btn"
 					disabled={busy}
 					aria-label={tr('Arhiviraj', 'Archive')}
 					title={tr('Arhiviraj', 'Archive')}
@@ -623,6 +639,24 @@
 				>{/if}
 		</div>
 	</div>
+{/if}
+
+{#if fixing}
+	<FixDialog
+		ids={[...selected]}
+		kind={fixing}
+		bind:open={
+			() => fixing !== undefined,
+			(on) => {
+				if (!on) fixing = undefined;
+			}
+		}
+		onDone={async () => {
+			selected.clear();
+			await refresh();
+			await reloadLoaded();
+		}}
+	/>
 {/if}
 
 <Dialog title={tr('Obrisati odabrano?', 'Delete the selection?')} bind:open={confirmDelete}>
