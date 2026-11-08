@@ -416,6 +416,15 @@ void main() {
     // then still be below the fold of the list, not built yet.
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pump(const Duration(seconds: 1));
+    // An emulator's keyboard can take back what was typed as it closes.
+    if (find.text('Ana Horvat').evaluate().isEmpty) {
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Name'),
+        'Ana Horvat',
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    expect(find.text('Ana Horvat'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Save'),
       200,
