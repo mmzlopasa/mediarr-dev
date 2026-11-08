@@ -429,21 +429,17 @@ void main() {
     await tester.ensureVisible(find.text('Profile'));
     await tester.tap(find.text('Profile'));
     await waitFor(tester, find.text('Add a picture'));
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Name'),
-      'Ana Horvat',
-    );
     // The keyboard is closed first: while it moves, the list changes size under the tap. Save can
-    // then still be below the fold of the list, not built yet.
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pump(const Duration(seconds: 1));
-    // An emulator's keyboard can take back what was typed as it closes.
-    if (find.text('Ana Horvat').evaluate().isEmpty) {
+    // then still be below the fold of the list, not built yet. An emulator's keyboard can take
+    // back what was typed as it closes, so it is typed again until it stays.
+    for (var attempt = 0; attempt < 5; attempt++) {
       await tester.enterText(
         find.widgetWithText(TextField, 'Name'),
         'Ana Horvat',
       );
-      await tester.pump(const Duration(milliseconds: 500));
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump(const Duration(seconds: 1));
+      if (find.text('Ana Horvat').evaluate().isNotEmpty) break;
     }
     expect(find.text('Ana Horvat'), findsOneWidget);
     await tester.scrollUntilVisible(
