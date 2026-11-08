@@ -169,5 +169,6 @@
 		onChanged={() => timeline?.reloadLoaded()}
 		neighbours={partnersShown ? (id) => timeline?.neighbours(id) ?? {} : undefined}
 		strip={(id) => timeline?.around(id) ?? []}
+		playlist={(id) => timeline?.playlist(id) ?? Promise.resolve([])}
 	/>
 {/if}

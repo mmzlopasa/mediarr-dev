@@ -28,6 +28,7 @@ import UIKit
       BackupChannel.register(messenger: registrar.messenger())
       SharedFiles.shared.register(messenger: registrar.messenger())
       WidgetChannel.register(messenger: registrar.messenger())
+      AwakeChannel.register(messenger: registrar.messenger())
     }
   }
 }

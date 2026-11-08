@@ -73,6 +73,24 @@ class TimelineStore extends ChangeNotifier {
     for (final month in months ?? const <TimelineMonth>[]) ...?month.items,
   ];
 
+  /// What a slideshow from this photo shows: what is loaded, and the months after its own loaded
+  /// now, up to a limit, so a long timeline does not load everything.
+  Future<List<TimelineItem>> playlist(
+    String startId, {
+    int limit = 3000,
+  }) async {
+    final all = months ?? const <TimelineMonth>[];
+    var at = all.indexWhere(
+      (month) => month.items?.any((item) => item.id == startId) ?? false,
+    );
+    if (at < 0) at = 0;
+    for (final month in all.skip(at)) {
+      if (loadedItems.length >= limit) break;
+      if (month.items == null) await load(month);
+    }
+    return loadedItems;
+  }
+
   int startOf(TimelineMonth target) {
     var start = 0;
     for (final month in months ?? const <TimelineMonth>[]) {

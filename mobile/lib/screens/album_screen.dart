@@ -11,6 +11,7 @@ import '../services/timeline.dart';
 import '../theme.dart';
 import 'people_screens.dart';
 import 'share_sheet.dart';
+import 'slideshow_screen.dart';
 import 'album_sheets.dart';
 import 'timeline_screen.dart';
 import 'upload_screen.dart';
@@ -181,6 +182,21 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
       )
       .then((_) => _load());
 
+  Future<void> _slideshow() async {
+    final items = await _store.playlist('');
+    if (!mounted || items.isEmpty) return;
+    await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => SlideshowScreen(
+          session: _session,
+          items: items,
+          startId: items.first.id,
+        ),
+      ),
+    );
+  }
+
   Future<void> _makeInside() async {
     final title = await showDialog<String>(
       context: context,
@@ -256,6 +272,8 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
 
   void _menu(String choice, Album album) {
     switch (choice) {
+      case 'slideshow':
+        _slideshow();
       case 'inside':
         _makeInside();
       case 'move':
@@ -385,6 +403,11 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
               tooltip: 'More',
               onSelected: (choice) => _menu(choice, album),
               itemBuilder: (_) => [
+                if (album.assetCount > 0)
+                  const PopupMenuItem(
+                    value: 'slideshow',
+                    child: Text('Slideshow'),
+                  ),
                 if (rights.canAdd) ...const [
                   PopupMenuItem(
                     value: 'library',

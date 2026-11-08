@@ -232,6 +232,24 @@
 		return { newer: items[index - 1]?.id, older: items[index + 1]?.id };
 	}
 
+	/**
+	 * What a slideshow from this photo shows: the photos loaded already, and the months after this
+	 * one loaded now, up to a limit, so a long timeline does not load everything.
+	 */
+	export async function playlist(startId: string, limit = 3000) {
+		const list = months ?? [];
+		const at = list.findIndex((entry) => entry.items?.some((item) => item.id === startId));
+		let count = allItems().length;
+		for (const entry of list.slice(Math.max(0, at))) {
+			if (count >= limit) break;
+			if (!entry.items) {
+				await loadMonth(entry.month);
+				count = allItems().length;
+			}
+		}
+		return allItems().map((item) => ({ id: item.id, kind: item.kind, localAt: item.localAt }));
+	}
+
 	/** The photos around one, as far as they are loaded, for the viewer's strip. */
 	export function around(id: string, count = 3) {
 		const items = allItems();

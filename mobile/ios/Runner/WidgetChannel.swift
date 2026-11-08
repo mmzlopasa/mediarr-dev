@@ -1,5 +1,19 @@
 import Flutter
+import UIKit
 import WidgetKit
+
+/// Keeps the screen on while a slideshow plays.
+enum AwakeChannel {
+  static func register(messenger: FlutterBinaryMessenger) {
+    FlutterMethodChannel(name: "app.mediarr/awake", binaryMessenger: messenger).setMethodCallHandler {
+      call, result in
+      guard call.method == "set" else { return result(FlutterMethodNotImplemented) }
+      let on = (call.arguments as? [String: Any])?["on"] as? Bool ?? false
+      DispatchQueue.main.async { UIApplication.shared.isIdleTimerDisabled = on }
+      result(nil)
+    }
+  }
+}
 
 /// Lets the app choose what the home screen widget shows.
 enum WidgetChannel {

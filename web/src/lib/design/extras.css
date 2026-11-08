@@ -1644,3 +1644,140 @@ video.viewer-media {
 		gap: 0;
 	}
 }
+
+/* Slideshow: full screen, one photo after another. */
+.ss {
+	position: fixed;
+	inset: 0;
+	z-index: 90;
+	display: grid;
+	place-items: center;
+	overflow: hidden;
+	background: #000;
+	color: #fff;
+	outline: none;
+	touch-action: pan-y;
+}
+.ss-idle {
+	cursor: none;
+}
+.ss-media {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	user-select: none;
+}
+.ss-in.ss-fade,
+.ss-in.ss-zoom {
+	animation: ss-fade 700ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.ss-in.ss-slide {
+	animation: ss-slide 600ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+/* The slow zoom lasts as long as the photo stays, and stops with it. */
+img.ss-in.ss-zoom {
+	animation:
+		ss-fade 700ms cubic-bezier(0.23, 1, 0.32, 1) both,
+		ss-zoom calc(var(--ss-seconds) + 700ms) linear both;
+}
+img.ss-in.ss-zoom.ss-still {
+	animation-play-state: running, paused;
+}
+@keyframes ss-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes ss-slide {
+	from {
+		opacity: 0;
+		transform: translateX(6%);
+	}
+}
+@keyframes ss-zoom {
+	to {
+		transform: scale(1.08);
+	}
+}
+.ss-caption,
+.ss-end {
+	position: absolute;
+	margin: 0;
+	padding: 6px 12px;
+	border-radius: 999px;
+	background: rgb(0 0 0 / 0.45);
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+}
+.ss-caption {
+	left: 20px;
+	bottom: 84px;
+}
+.ss-end {
+	top: 20px;
+}
+.ss-bar {
+	position: absolute;
+	inset: auto 0 0 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px 20px max(16px, env(safe-area-inset-bottom));
+	background: linear-gradient(transparent, rgb(0 0 0 / 0.6));
+	transition: opacity 200ms ease;
+}
+.ss-idle .ss-bar {
+	opacity: 0;
+	pointer-events: none;
+}
+.ss-bar .icon-btn {
+	color: #fff;
+}
+.ss-buttons {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+.ss-count {
+	min-width: 72px;
+	font-size: 0.8125rem;
+	font-variant-numeric: tabular-nums;
+	opacity: 0.8;
+}
+.ss-settings {
+	position: absolute;
+	right: 20px;
+	bottom: 80px;
+	display: grid;
+	gap: 10px;
+	width: min(280px, calc(100vw - 40px));
+	padding: 14px;
+	border-radius: 14px;
+	background: rgb(20 20 24 / 0.92);
+	backdrop-filter: blur(12px);
+	font-size: 0.875rem;
+}
+.ss-settings label {
+	display: grid;
+	gap: 4px;
+}
+.ss-settings .ss-check {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+.ss-note {
+	margin: 0;
+	font-size: 0.75rem;
+	opacity: 0.75;
+}
+@media (prefers-reduced-motion: reduce) {
+	.ss-in.ss-fade,
+	.ss-in.ss-zoom,
+	.ss-in.ss-slide {
+		animation-duration: 300ms;
+	}
+}

@@ -109,6 +109,7 @@
 			onChanged={() => timeline?.reloadLoaded()}
 			neighbours={(photo) => timeline?.neighbours(photo) ?? {}}
 			strip={(photo) => timeline?.around(photo) ?? []}
+			playlist={(photo) => timeline?.playlist(photo) ?? Promise.resolve([])}
 		/>
 	{/if}
 	<Dialog title={tr('Spoji s…', 'Merge with…')} bind:open={merging}>

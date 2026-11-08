@@ -18,6 +18,8 @@
 	import { lang, tr } from '#lib/i18n.svelte.ts';
 	import { formatDateTime, formatDuration } from './layout.ts';
 	import PanoramaView from './PanoramaView.svelte';
+	import Slideshow from './Slideshow.svelte';
+	import type { SlideItem } from './slideshow.ts';
 	import VideoPlayer from './VideoPlayer.svelte';
 	import AlbumActivity from './AlbumActivity.svelte';
 	import PhotoEditor from '#lib/edit/PhotoEditor.svelte';
@@ -35,6 +37,7 @@
 		base = '/api',
 		neighbours,
 		strip,
+		playlist,
 		albumId,
 		previewOnly = false
 	}: {
@@ -46,6 +49,8 @@
 		neighbours?: (id: string) => { newer?: string; older?: string };
 		/** The photos around this one, to show as a strip; the ones that are loaded. */
 		strip?: (id: string) => { id: string; blurhash?: string | null }[];
+		/** Everything a slideshow from this photo can show; without it, the photos already loaded. */
+		playlist?: (id: string) => Promise<SlideItem[]>;
 		albumId?: string;
 		previewOnly?: boolean;
 	} = $props();
@@ -66,6 +71,28 @@
 	let videoFailed = $state(false);
 	let fullLoaded = $state(false);
 	let fullWanted = $state(preferences()?.photoFull ?? true);
+	let slides = $state<SlideItem[]>();
+
+	/** The photos loaded around this one, walked one way, when no fuller list is given. */
+	function loadedSlides(from: string): SlideItem[] {
+		const out: SlideItem[] = [{ id: from }];
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- a list made once, not shown
+		const seen = new Set([from]);
+		let at: string | undefined = from;
+		while (at && out.length < 3000) {
+			at = neighbours?.(at).older;
+			if (!at || seen.has(at)) break;
+			seen.add(at);
+			out.push({ id: at });
+		}
+		return out;
+	}
+
+	async function startSlideshow() {
+		const found = playlist ? await playlist(id).catch(() => undefined) : undefined;
+		slides = found?.length ? found : loadedSlides(id);
+	}
+
 	let playingLive = $state(false);
 	// A 360° panorama opens as one; the button shows it flat.
 	let flat = $state(false);
@@ -351,6 +378,15 @@
 			>
 			<div class="viewer-acts">
 				{#if detail}
+					{#if !previewOnly}
+						<button
+							type="button"
+							class="icon-btn"
+							aria-label={tr('Slideshow', 'Slideshow')}
+							title={tr('Slideshow', 'Slideshow')}
+							onclick={startSlideshow}><Icon name="play" /></button
+						>
+					{/if}
 					{#if isPanorama}
 						<button
 							type="button"
@@ -735,3 +771,15 @@
 		<Button variant="danger" onclick={remove}>{tr('Obriši', 'Delete')}</Button>
 	{/snippet}
 </Dialog>
+
+{#if slides}
+	<Slideshow
+		items={slides}
+		startId={id}
+		{base}
+		onClose={(last) => {
+			slides = undefined;
+			if (last !== id) onNavigate(last);
+		}}
+	/>
+{/if}

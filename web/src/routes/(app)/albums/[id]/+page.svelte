@@ -24,6 +24,8 @@
 	import ShareDialog from '#lib/albums/ShareDialog.svelte';
 	import AlbumActivity from '#lib/timeline/AlbumActivity.svelte';
 	import Timeline from '#lib/timeline/Timeline.svelte';
+	import Slideshow from '#lib/timeline/Slideshow.svelte';
+	import type { SlideItem } from '#lib/timeline/slideshow.ts';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
 	const POLL_MS = 10000;
@@ -37,6 +39,12 @@
 	let editing = $state(false);
 	let confirmDelete = $state(false);
 	let showComments = $state(false);
+	let slides = $state<SlideItem[]>();
+
+	async function startSlideshow() {
+		const all = (await timeline?.playlist('')) ?? [];
+		if (all.length) slides = all;
+	}
 	// Every album this user sees: the ones in this one, the one it is in, and where it can move.
 	let allAlbums = $state<Album[]>([]);
 	let making = $state(false);
@@ -272,6 +280,12 @@
 			{#if canAdd}
 				<UploadButton albumId={id} />
 			{/if}
+			{#if album.assetCount > 0}
+				<Button small onclick={startSlideshow}>
+					<Icon name="play" size={14} />
+					{tr('Slideshow', 'Slideshow')}
+				</Button>
+			{/if}
 			<Button small href={`${resolve('/(app)/search')}?album=${id}`}>
 				<Icon name="search" size={14} />
 				{tr('Traži u albumu', 'Search in album')}
@@ -389,7 +403,12 @@
 			onChanged={() => timeline?.reloadLoaded()}
 			neighbours={(photo) => timeline?.neighbours(photo) ?? {}}
 			strip={(photo) => timeline?.around(photo) ?? []}
+			playlist={(photo) => timeline?.playlist(photo) ?? Promise.resolve([])}
 		/>
+	{/if}
+
+	{#if slides}
+		<Slideshow items={slides} startId={slides[0].id} onClose={() => (slides = undefined)} />
 	{/if}
 
 	<ShareDialog {album} bind:open={sharing} onChanged={load} />

@@ -238,6 +238,14 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(PanoramaView), findsNothing);
     expect(find.byTooltip('360° view'), findsOneWidget);
+    // A slideshow from the open photo, and back.
+    await tester.tap(find.byTooltip('Slideshow'));
+    await waitFor(tester, find.text('1 / 1'));
+    // The controls hide after a moment; a tap brings them back.
+    await tester.tapAt(const Offset(160, 300));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pump(const Duration(seconds: 1));
     await tester.pageBack();
     await tester.pump(const Duration(seconds: 1));
     await tester.pageBack();

@@ -20,6 +20,7 @@ import 'asset_picture.dart';
 import 'duplicates_screen.dart';
 import 'faces_section.dart';
 import 'panorama_view.dart';
+import 'slideshow_screen.dart';
 import 'photo_editor_screen.dart';
 
 /// A full screen view on a clean black background: colors around a photo must not affect it.
@@ -225,6 +226,30 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
                 () => store.refresh(reloadLoaded: true),
               ),
             ),
+          IconButton(
+            tooltip: 'Slideshow',
+            icon: const Icon(Icons.slideshow_outlined),
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final items = await store.playlist(current.id);
+              if (!mounted) return;
+              final last = await navigator.push<String>(
+                MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (_) => SlideshowScreen(
+                    session: session,
+                    items: items,
+                    startId: current.id,
+                  ),
+                ),
+              );
+              // Back where the slideshow stopped.
+              final at = store.loadedItems.indexWhere(
+                (item) => item.id == last,
+              );
+              if (at >= 0 && mounted) _pages.jumpToPage(at);
+            },
+          ),
           if (current.isPanorama == true)
             IconButton(
               tooltip: _flat ? '360° view' : 'Flat view',

@@ -33,6 +33,19 @@ class MainActivity : FlutterFragmentActivity() {
                 }
             }
         }
+        // A slideshow keeps the screen on while it plays.
+        MethodChannel(messenger, "app.mediarr/awake").setMethodCallHandler { call, result ->
+            if (call.method == "set") {
+                if (call.argument<Boolean>("on") == true) {
+                    window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+                result.success(null)
+            } else {
+                result.notImplemented()
+            }
+        }
         // The home screen widget shows an album the user chooses here.
         MethodChannel(messenger, "app.mediarr/widget").setMethodCallHandler { call, result ->
             val store = WidgetStore(this)

@@ -229,5 +229,7 @@
 		onNavigate={(photo) => replaceState('', { viewer: photo })}
 		onChanged={() => {}}
 		{neighbours}
+		playlist={async () =>
+			(result?.items ?? []).map((found) => ({ id: found.id, kind: found.kind }))}
 	/>
 {/if}

@@ -141,6 +141,7 @@
 			onNavigate={(photo) => replaceState('', { viewer: photo })}
 			onChanged={() => {}}
 			neighbours={(photo) => timeline?.neighbours(photo) ?? {}}
+			playlist={(photo) => timeline?.playlist(photo) ?? Promise.resolve([])}
 		/>
 	{/if}
 {/if}
