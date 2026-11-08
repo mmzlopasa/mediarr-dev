@@ -27,6 +27,15 @@ jobs:
           flutter-version: 3.47.9
           channel: stable
           cache: true
+      # Swift packages such as MapLibre come from GitHub releases, which sometimes answer 504 for
+      # a while. Kept between runs, a build does not need them each time.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/org.swift.swiftpm
+          key: swiftpm-${{ hashFiles('mobile/pubspec.lock') }}
+          restore-keys: swiftpm-
       - name: Make it Mediarr Dev
         if: github.ref_type != 'tag'
         run: dev-channel/apply.sh
