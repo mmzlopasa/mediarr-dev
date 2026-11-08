@@ -380,7 +380,10 @@ class _FixSheetState extends State<_FixSheet> {
   List<Widget> _dateFields(TextTheme text) => switch (_dateAction) {
     'shift' => [
       Text("When the camera's clock was wrong.", style: text.bodySmall),
-      Row(
+      Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        crossAxisAlignment: WrapCrossAlignment.end,
         children: [
           DropdownButton<bool>(
             value: _later,
@@ -393,11 +396,8 @@ class _FixSheetState extends State<_FixSheet> {
               _refresh();
             },
           ),
-          const SizedBox(width: 10),
           _number3('Days', _days),
-          const SizedBox(width: 6),
           _number3('Hours', _hours),
-          const SizedBox(width: 6),
           _number3('Minutes', _minutes),
         ],
       ),
