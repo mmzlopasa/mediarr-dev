@@ -51,6 +51,17 @@ jobs:
           test "${PIPESTATUS[0]}" -eq 0
         shell: bash
       - run: flutter build ios --release --no-codesign --build-number=${{ github.run_number }}
+      - name: The widget is in the app, with the app's version
+        run: |
+          app=build/ios/iphoneos/Runner.app
+          widget=$app/PlugIns/MediarrWidget.appex
+          test -x "$widget/MediarrWidget"
+          for key in CFBundleShortVersionString CFBundleVersion; do
+            mine=$(/usr/libexec/PlistBuddy -c "Print :$key" "$app/Info.plist")
+            its=$(/usr/libexec/PlistBuddy -c "Print :$key" "$widget/Info.plist")
+            echo "$key: app $mine, widget $its"
+            test "$mine" = "$its"
+          done
       - name: Package the .ipa
         run: |
           mkdir -p build/ipa/Payload
