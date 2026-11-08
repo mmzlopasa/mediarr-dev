@@ -8,19 +8,27 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		31009907BDAAA61A3A697259 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E8CADB1A45950BDF9B86C7A /* Foundation.framework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
+		376FF73F6EB17D5E0596A804 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC52C8B5E2CECBEF05FD952 /* SwiftUI.framework */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		55AEBF8A11278381FDD337E0 /* WidgetShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34060F14B3FB05DD7DA650EB /* WidgetShare.swift */; };
+		69A9F34A1C10F35C318C9083 /* MediarrWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5EE7EB0086F80DFD5252F18A /* MediarrWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+		80F62A7419795163337AC273 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6953C17ACF24B3F9EF6B6534 /* WidgetKit.framework */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		9F5B1333C5AB05675C0DC0B2 /* MediarrWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C72D9D1256CD67844D35AC /* MediarrWidget.swift */; };
 		A1B2C3D4E5F6000000000000 /* BackupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000010 /* BackupStore.swift */; };
 		A1B2C3D4E5F6000000000001 /* BackupRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* BackupRequest.swift */; };
 		A1B2C3D4E5F6000000000002 /* BackupKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000012 /* BackupKeychain.swift */; };
 		A1B2C3D4E5F6000000000003 /* BackupEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000013 /* BackupEngine.swift */; };
 		A1B2C3D4E5F6000000000004 /* BackupChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000014 /* BackupChannel.swift */; };
+		B02DD64D1F3D0E955A696166 /* WidgetShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34060F14B3FB05DD7DA650EB /* WidgetShare.swift */; };
+		FB1E900A0FAD0CB73F70DE9C /* WidgetChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5091C1B05A8FD10E0C829574 /* WidgetChannel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +38,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
+		};
+		4E47CB26D9349FE03B867E6F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E349DD7DACA4BB22FFC3F9A3;
+			remoteInfo = MediarrWidget;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -44,14 +59,32 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B608359CF5944207E7050294 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				69A9F34A1C10F35C318C9083 /* MediarrWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		1FC52C8B5E2CECBEF05FD952 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/SwiftUI.framework; sourceTree = DEVELOPER_DIR; };
+		2E8CADB1A45950BDF9B86C7A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		34060F14B3FB05DD7DA650EB /* WidgetShare.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetShare.swift; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		5091C1B05A8FD10E0C829574 /* WidgetChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetChannel.swift; sourceTree = "<group>"; };
+		5EE7EB0086F80DFD5252F18A /* MediarrWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MediarrWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6953C17ACF24B3F9EF6B6534 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/WidgetKit.framework; sourceTree = DEVELOPER_DIR; };
+		70AC1E5E0F7698F8B650FAE1 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -69,9 +102,20 @@
 		A1B2C3D4E5F6000000000012 /* BackupKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackupKeychain.swift; path = Backup/BackupKeychain.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000013 /* BackupEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackupEngine.swift; path = Backup/BackupEngine.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000014 /* BackupChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BackupChannel.swift; path = Backup/BackupChannel.swift; sourceTree = "<group>"; };
+		B6C72D9D1256CD67844D35AC /* MediarrWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediarrWidget.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		37C3F4C725785FF7150C6825 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				31009907BDAAA61A3A697259 /* Foundation.framework in Frameworks */,
+				80F62A7419795163337AC273 /* WidgetKit.framework in Frameworks */,
+				376FF73F6EB17D5E0596A804 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EB1CF9000F007C117D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -83,12 +127,39 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		256EF29D4AD2D2F12F45766F /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				34060F14B3FB05DD7DA650EB /* WidgetShare.swift */,
+			);
+			name = Shared;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
 			);
 			path = RunnerTests;
+			sourceTree = "<group>";
+		};
+		395970390961F722078E044B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C6A6278071481F8984652B19 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		5901824FC31B0E915C7A66E6 /* MediarrWidget */ = {
+			isa = PBXGroup;
+			children = (
+				B6C72D9D1256CD67844D35AC /* MediarrWidget.swift */,
+				70AC1E5E0F7698F8B650FAE1 /* Info.plist */,
+			);
+			name = MediarrWidget;
+			path = MediarrWidget;
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -110,6 +181,9 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
+				395970390961F722078E044B /* Frameworks */,
+				5901824FC31B0E915C7A66E6 /* MediarrWidget */,
+				256EF29D4AD2D2F12F45766F /* Shared */,
 			);
 			sourceTree = "<group>";
 		};
@@ -118,6 +192,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
+				5EE7EB0086F80DFD5252F18A /* MediarrWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -139,8 +214,19 @@
 				A1B2C3D4E5F6000000000013 /* BackupEngine.swift */,
 				A1B2C3D4E5F6000000000014 /* BackupChannel.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				5091C1B05A8FD10E0C829574 /* WidgetChannel.swift */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		C6A6278071481F8984652B19 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				2E8CADB1A45950BDF9B86C7A /* Foundation.framework */,
+				6953C17ACF24B3F9EF6B6534 /* WidgetKit.framework */,
+				1FC52C8B5E2CECBEF05FD952 /* SwiftUI.framework */,
+			);
+			name = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -172,11 +258,13 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
+				B608359CF5944207E7050294 /* Embed Foundation Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F06585F7D7B4C5E90C3C0957 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -185,6 +273,23 @@
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		E349DD7DACA4BB22FFC3F9A3 /* MediarrWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 03B247D6DFE0E1AF66E80981 /* Build configuration list for PBXNativeTarget "MediarrWidget" */;
+			buildPhases = (
+				96B80B5E46CBD926BB6F59CE /* Sources */,
+				37C3F4C725785FF7150C6825 /* Frameworks */,
+				5C253ADEAF74C56A777B03DE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MediarrWidget;
+			productName = MediarrWidget;
+			productReference = 5EE7EB0086F80DFD5252F18A /* MediarrWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -216,7 +321,7 @@
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
-				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */,
+				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
 			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
@@ -224,12 +329,20 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
+				E349DD7DACA4BB22FFC3F9A3 /* MediarrWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		331C807F294A63A400263BE5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5C253ADEAF74C56A777B03DE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -292,6 +405,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		96B80B5E46CBD926BB6F59CE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9F5B1333C5AB05675C0DC0B2 /* MediarrWidget.swift in Sources */,
+				B02DD64D1F3D0E955A696166 /* WidgetShare.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EA1CF9000F007C117D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -304,6 +426,8 @@
 				A1B2C3D4E5F6000000000002 /* BackupKeychain.swift in Sources */,
 				A1B2C3D4E5F6000000000003 /* BackupEngine.swift in Sources */,
 				A1B2C3D4E5F6000000000004 /* BackupChannel.swift in Sources */,
+				FB1E900A0FAD0CB73F70DE9C /* WidgetChannel.swift in Sources */,
+				55AEBF8A11278381FDD337E0 /* WidgetShare.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -314,6 +438,12 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		F06585F7D7B4C5E90C3C0957 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MediarrWidget;
+			target = E349DD7DACA4BB22FFC3F9A3 /* MediarrWidget */;
+			targetProxy = 4E47CB26D9349FE03B867E6F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -455,6 +585,32 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
+			};
+			name = Profile;
+		};
+		4206DCEDF570B05650F13F8D /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MediarrWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.mediarr.mediarr.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Profile;
 		};
@@ -614,9 +770,70 @@
 			};
 			name = Release;
 		};
+		9A6181F4C148670865BA92A9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MediarrWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.mediarr.mediarr.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9EC97E6C9EBFBAA2ABDA85D9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MediarrWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.mediarr.mediarr.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		03B247D6DFE0E1AF66E80981 /* Build configuration list for PBXNativeTarget "MediarrWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9EC97E6C9EBFBAA2ABDA85D9 /* Release */,
+				9A6181F4C148670865BA92A9 /* Debug */,
+				4206DCEDF570B05650F13F8D /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -650,7 +867,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */ = {
+		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
 		};

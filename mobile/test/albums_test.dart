@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:mediarr/screens/home_widget_screen.dart';
+import 'package:mediarr/services/home_widget.dart';
 import 'package:mediarr/screens/album_screen.dart';
 import 'package:mediarr/screens/album_sheets.dart';
 import 'package:mediarr/screens/albums_screen.dart';
@@ -326,4 +328,50 @@ void main() {
     expect(find.text('Move to…'), findsOneWidget);
     await _finish(tester);
   });
+
+  test('the widget screen says where its photos are kept', () {
+    expect(widgetPicturesLine(-1), contains('fetches its photos itself'));
+    expect(widgetPicturesLine(0), 'Fetching its photos…');
+    expect(widgetPicturesLine(1), '1 photo kept on this phone for it');
+    expect(widgetPicturesLine(20), '20 photos kept on this phone for it');
+  });
+
+  testWidgets('choosing an album hands it to the widget', (tester) async {
+    final widget = _FakeWidget();
+    await _show(
+      tester,
+      HomeWidgetScreen(service: widget),
+      (request) async => _json([_album(title: 'Summer', count: 12)]),
+    );
+    expect(find.text('Summer'), findsOneWidget);
+    expect(find.text('Turn off'), findsNothing);
+    await tester.tap(find.text('Summer'));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(widget.chosen, 'Summer');
+    expect(find.text('Showing Summer'), findsOneWidget);
+    await tester.tap(find.text('Turn off'));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(widget.chosen, isNull);
+    await _finish(tester);
+  });
+}
+
+class _FakeWidget extends HomeWidgetService {
+  String? chosen;
+
+  @override
+  Future<WidgetChoice> status() async => chosen == null
+      ? const WidgetChoice()
+      : WidgetChoice(albumId: _albumId, albumTitle: chosen!, pictures: 5);
+
+  @override
+  Future<void> choose(Session session, Album album) async =>
+      chosen = album.title;
+
+  @override
+  Future<void> clear(Session session) async => chosen = null;
 }

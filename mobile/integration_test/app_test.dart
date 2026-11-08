@@ -272,6 +272,35 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('the home screen widget is given an album', (tester) async {
+    // On iOS only the signing at install lets the app share with its widget.
+    if (!Platform.isAndroid) return;
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Settings'));
+    await tester.ensureVisible(find.text('Settings'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Settings'));
+    await waitFor(tester, find.text('Asset viewer'));
+    await tester.scrollUntilVisible(
+      find.text('Home screen widget'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Home screen widget'));
+    await waitFor(tester, find.text('Travels'));
+    await tester.tap(find.text('Travels'));
+    await waitFor(tester, find.text('Showing Travels'));
+    await tester.tap(find.text('Turn off'));
+    await waitFor(tester, find.text('The widget shows nothing now.'));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('an album shows the albums inside it', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);

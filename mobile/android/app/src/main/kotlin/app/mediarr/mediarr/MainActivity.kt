@@ -5,6 +5,9 @@ import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
 import app.mediarr.mediarr.backup.BackupChannel
+import app.mediarr.mediarr.widget.AlbumWidget
+import app.mediarr.mediarr.widget.WidgetStore
+import app.mediarr.mediarr.widget.WidgetSync
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -28,6 +31,37 @@ class MainActivity : FlutterFragmentActivity() {
                 } else {
                     result.notImplemented()
                 }
+            }
+        }
+        // The home screen widget shows an album the user chooses here.
+        MethodChannel(messenger, "app.mediarr/widget").setMethodCallHandler { call, result ->
+            val store = WidgetStore(this)
+            when (call.method) {
+                "configure" -> {
+                    store.configure(
+                        call.argument<String>("server") ?: "",
+                        call.argument<String>("key") ?: "",
+                        call.argument<String>("albumId") ?: "",
+                        call.argument<String>("albumTitle") ?: "",
+                    )
+                    WidgetSync.schedule(this)
+                    AlbumWidget.refresh(this)
+                    result.success(null)
+                }
+                "clear" -> {
+                    WidgetSync.cancel(this)
+                    store.clear()
+                    AlbumWidget.refresh(this)
+                    result.success(null)
+                }
+                "status" -> result.success(
+                    mapOf(
+                        "albumId" to store.albumId,
+                        "albumTitle" to store.albumTitle,
+                        "pictures" to store.pictures.size,
+                    ),
+                )
+                else -> result.notImplemented()
             }
         }
         receive(intent)

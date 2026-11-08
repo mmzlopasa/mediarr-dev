@@ -17,6 +17,7 @@ import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
+import 'home_widget_screen.dart';
 import 'app_header.dart';
 import 'free_space_screen.dart';
 import 'memories_screen.dart';
@@ -114,6 +115,12 @@ class SettingsScreen extends StatelessWidget {
               'Sync status',
               'What is on this phone and on the server',
               const SyncStatusScreen(),
+            ),
+            row(
+              Icons.widgets_outlined,
+              'Home screen widget',
+              'An album on the home screen',
+              const HomeWidgetScreen(),
             ),
             row(
               Icons.notifications_outlined,

@@ -51,3 +51,9 @@ Tap **Share** on a photo, or select several and tap **Share**, then choose:
 Mediarr remembers the choice between original and smaller. A photo with edits is sent as it looks. A photo from the vault asks first, as it leaves the protected place.
 
 The web app on a phone has the same **Share** button. On a computer, use **Download**.
+
+## Home screen widget
+
+The widget shows a photo from an album you choose, a different one every hour, also without a connection. Choose the album in the app under **Settings → Home screen widget**; the app makes a key for the widget that can only read. Then touch and hold an empty spot on the home screen and add the **Mediarr** widget: on an iPhone with **+** or **Edit → Add Widget**, on Android under **Widgets**. Tapping it opens Mediarr. **Turn off** in the same place empties it and revokes its key.
+
+On an iPhone the widget fetches its photos itself. It needs the app and the widget to share a keychain group, which the certificate Feather signs with allows; if it does not, the app says so when you choose an album.

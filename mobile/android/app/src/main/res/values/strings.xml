@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">A photo from an album you choose in Mediarr</string>
+    <string name="widget_choose">Choose an album in Mediarr: Settings, Home screen widget</string>
+    <string name="widget_loading">Fetching photos from the album…</string>
+</resources>

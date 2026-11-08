@@ -149,6 +149,19 @@ class FakeServer {
       await _json(request, 200, _user);
       return;
     }
+    if (path == '/api/me/api-keys' && request.method == 'POST') {
+      await utf8.decoder.bind(request).join();
+      await _json(request, 201, {
+        'id': '44444444-4444-4444-8444-444444444444',
+        'key': 'widget-key',
+      });
+      return;
+    }
+    if (path.startsWith('/api/me/device-keys/') && request.method == 'DELETE') {
+      request.response.statusCode = 204;
+      await request.response.close();
+      return;
+    }
     if (path == '/api/admin/storage-template') {
       if (request.method == 'PUT') {
         final body = jsonDecode(
