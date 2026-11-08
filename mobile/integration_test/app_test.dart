@@ -289,6 +289,9 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).last,
     );
+    // On a small screen it can stop right at the edge.
+    await tester.ensureVisible(find.text('Home screen widget'));
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('Home screen widget'));
     await waitFor(tester, find.text('Travels'));
     await tester.tap(find.text('Travels'));
