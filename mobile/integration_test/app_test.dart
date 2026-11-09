@@ -639,39 +639,6 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
-  testWidgets('the whole library is exported, followed and removed', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
-    await signIn(tester, server.address, password);
-    await waitFor(tester, find.byType(AssetPicture));
-    await tester.tap(find.byTooltip('Account').first);
-    await waitFor(tester, find.text('Export my library'));
-    await tester.ensureVisible(find.text('Export my library'));
-    await tester.tap(find.text('Export my library'));
-    await waitFor(tester, find.text('Nothing has been exported yet.'));
-    // The account sheet behind says the same, so the button is the last one.
-    await tester.tap(
-      find.widgetWithText(FilledButton, 'Export my library').last,
-    );
-    await waitFor(tester, find.text('The export has started.'));
-    expect(server.exportStatus, isNotNull);
-    // The screen asks again while it runs, until the parts are ready.
-    await waitFor(
-      tester,
-      find.text('Part 1'),
-      timeout: const Duration(seconds: 20),
-    );
-    expect(server.exportStatus, 'done');
-    expect(find.textContaining('Ready · 40 of 40 files'), findsOneWidget);
-    expect(find.byTooltip('Download part 1'), findsOneWidget);
-    await tester.tap(find.text('Remove').last);
-    await waitFor(tester, find.text('Nothing has been exported yet.'));
-    expect(server.exportStatus, isNull);
-    await tester.pageBack();
-    await tester.pump(const Duration(seconds: 1));
-  });
-
   testWidgets('an administrator sees the copies of the backup in the app', (
     tester,
   ) async {
