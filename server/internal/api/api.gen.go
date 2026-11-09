@@ -871,13 +871,13 @@ func (e SecurityEventKind) Valid() bool {
 
 // Defines values for ServerHelloApp.
 const (
-	Mediarr ServerHelloApp = "mediarr"
+	ServerHelloAppMediarr ServerHelloApp = "mediarr"
 )
 
 // Valid indicates whether the value is a known member of the ServerHelloApp enum.
 func (e ServerHelloApp) Valid() bool {
 	switch e {
-	case Mediarr:
+	case ServerHelloAppMediarr:
 		return true
 	default:
 		return false
@@ -1112,6 +1112,24 @@ func (e GetAssetThumbnailParamsSize) Valid() bool {
 	case GetAssetThumbnailParamsSizeSmall:
 		return true
 	case GetAssetThumbnailParamsSizeSource:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for StartOIDCParamsAppReturn.
+const (
+	StartOIDCParamsAppReturnMediarr    StartOIDCParamsAppReturn = "mediarr"
+	StartOIDCParamsAppReturnMediarrSso StartOIDCParamsAppReturn = "mediarr-sso"
+)
+
+// Valid indicates whether the value is a known member of the StartOIDCParamsAppReturn enum.
+func (e StartOIDCParamsAppReturn) Valid() bool {
+	switch e {
+	case StartOIDCParamsAppReturnMediarr:
+		return true
+	case StartOIDCParamsAppReturnMediarrSso:
 		return true
 	default:
 		return false
@@ -1837,7 +1855,8 @@ type AuthMethods struct {
 	PasswordLogin bool `json:"passwordLogin"`
 
 	// PasswordReset A forgotten password can be reset by email
-	PasswordReset bool `json:"passwordReset"`
+	PasswordReset bool   `json:"passwordReset"`
+	ServerName    string `json:"serverName"`
 
 	// SsoLabel The name of the single sign-on button, if it is turned on
 	SsoLabel *string `json:"ssoLabel,omitempty"`
@@ -2973,6 +2992,7 @@ type SecurityUpdate struct {
 // ServerHello defines model for ServerHello.
 type ServerHello struct {
 	App     ServerHelloApp `json:"app"`
+	Name    *string        `json:"name,omitempty"`
 	Version string         `json:"version"`
 }
 
@@ -2994,11 +3014,14 @@ type ServerSettings struct {
 	LoginMessage string  `json:"loginMessage"`
 
 	// Maintenance Only administrators can use the server
-	Maintenance    bool `json:"maintenance"`
-	PasswordLogin  bool `json:"passwordLogin"`
-	PreviewSize    int  `json:"previewSize"`
-	TrashDays      int  `json:"trashDays"`
-	VideoMaxHeight int  `json:"videoMaxHeight"`
+	Maintenance   bool `json:"maintenance"`
+	PasswordLogin bool `json:"passwordLogin"`
+	PreviewSize   int  `json:"previewSize"`
+
+	// ServerName What people see this server called. Left out keeps the name it has
+	ServerName     *string `json:"serverName,omitempty"`
+	TrashDays      int     `json:"trashDays"`
+	VideoMaxHeight int     `json:"videoMaxHeight"`
 
 	// VideoQuality Lower is better and larger
 	VideoQuality int `json:"videoQuality"`
@@ -3459,7 +3482,13 @@ type StartOIDCParams struct {
 
 	// AppChallenge SHA-256 of a secret the app keeps, base64url
 	AppChallenge *string `form:"appChallenge,omitempty" json:"appChallenge,omitempty"`
+
+	// AppReturn Where the app is sent back: mediarr-sso, or mediarr for apps from before it
+	AppReturn *StartOIDCParamsAppReturn `form:"appReturn,omitempty" json:"appReturn,omitempty"`
 }
+
+// StartOIDCParamsAppReturn defines parameters for StartOIDC.
+type StartOIDCParamsAppReturn string
 
 // BeginPasskeyLoginJSONBody defines parameters for BeginPasskeyLogin.
 type BeginPasskeyLoginJSONBody map[string]interface{}
@@ -8400,6 +8429,19 @@ func (siw *ServerInterfaceWrapper) StartOIDC(w http.ResponseWriter, r *http.Requ
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "appChallenge"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "appChallenge", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "appReturn" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "appReturn", r.URL.Query(), &params.AppReturn, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "appReturn"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "appReturn", Err: err})
 		}
 		return
 	}

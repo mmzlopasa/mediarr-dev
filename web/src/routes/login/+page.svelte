@@ -131,6 +131,9 @@
 		</p>
 	{:else}
 		<h1 class="as-h" use:revealTitle>{tr('Dobrodošli', 'Welcome')}</h1>
+		{#if methods && methods.serverName !== 'Mediarr'}<p class="as-p login-server">
+				{methods.serverName}
+			</p>{/if}
 		<p class="as-p">{tr('Prijavite se svojim računom.', 'Sign in with your account.')}</p>
 		{#if methods?.maintenance}<p class="as-p login-note">
 				{tr(

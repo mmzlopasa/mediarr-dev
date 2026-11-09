@@ -4,13 +4,17 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
-const maxLoginMessage = 1000
+const (
+	maxLoginMessage = 1000
+	maxServerName   = 60
+)
 
 func settingsToAPI(in *jobs.ServerSettings) api.ServerSettings {
 	return api.ServerSettings{
@@ -21,6 +25,7 @@ func settingsToAPI(in *jobs.ServerSettings) api.ServerSettings {
 		WorkerConcurrency: in.WorkerConcurrency, VideoWorkers: in.VideoWorkers,
 		AnalysisWorkers: in.AnalysisWorkers, ExternalScanHours: in.ExternalScanHours,
 		VisibleOnNetwork: new(!in.HiddenOnNetwork),
+		ServerName:       new(in.Name()),
 	}
 }
 
@@ -45,6 +50,19 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	body.LoginMessage = strings.TrimSpace(body.LoginMessage)
+	ctx := r.Context()
+	saved, err := jobs.LoadServerSettings(ctx, s.queries)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	name := saved.ServerName
+	if body.ServerName != nil {
+		name = strings.TrimSpace(*body.ServerName)
+		if name == jobs.DefaultServerName {
+			name = ""
+		}
+	}
 	problem := ""
 	switch {
 	case body.TrashDays < 1 || body.TrashDays > 3650:
@@ -69,12 +87,13 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 		problem = "the scan interval must be between 1 and 720 hours"
 	case len(body.LoginMessage) > maxLoginMessage:
 		problem = "the sign-in message is too long"
+	case utf8.RuneCountInString(name) > maxServerName:
+		problem = "the server's name can be up to 60 characters"
 	}
 	if problem != "" {
 		writeError(w, http.StatusBadRequest, problem)
 		return
 	}
-	ctx := r.Context()
 	if !body.PasswordLogin {
 		oidc, err := s.loadOIDC(ctx)
 		if err != nil {
@@ -94,6 +113,7 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 		WorkerConcurrency: body.WorkerConcurrency, VideoWorkers: body.VideoWorkers,
 		AnalysisWorkers: body.AnalysisWorkers, ExternalScanHours: body.ExternalScanHours,
 		HiddenOnNetwork: body.VisibleOnNetwork != nil && !*body.VisibleOnNetwork,
+		ServerName:      name,
 	})
 	if err != nil {
 		internalError(w, r, err)

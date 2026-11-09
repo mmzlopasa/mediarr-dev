@@ -300,7 +300,11 @@ func TestTheAppGetsItsSessionOnlyWithItsSecret(t *testing.T) {
 	p.mu.Lock()
 	p.nonce = ""
 	p.mu.Unlock()
-	resp, _ = p.signInWith(s.client(), "/api/auth/oidc/start?appChallenge="+challenge)
+	// The app now waits on its own address, which leaves mediarr:// to sign-in links.
+	resp, _ = p.signInWith(s.client(), "/api/auth/oidc/start?appReturn=mediarr-sso&appChallenge="+challenge)
+	if location := resp.Header.Get("Location"); !strings.HasPrefix(location, oidcAppReturn+"?code=") {
+		t.Fatalf("redirect: %s", location)
+	}
 	parsed, err = url.Parse(resp.Header.Get("Location"))
 	if err != nil {
 		t.Fatal(err)

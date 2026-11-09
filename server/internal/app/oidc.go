@@ -37,7 +37,9 @@ const (
 	oidcAppCodeAge   = time.Minute
 	oidcCallbackPath = "/api/auth/oidc/callback"
 	oidcAppScheme    = "mediarr://oidc"
-	maxShortLived    = 10000
+	// oidcAppReturn leaves mediarr:// to sign-in links, which the phone's camera opens in the app.
+	oidcAppReturn = "mediarr-sso://oidc"
+	maxShortLived = 10000
 )
 
 // shortLived holds what a sign-in needs between two of its steps, and only for a moment.
@@ -91,6 +93,8 @@ type oidcFlow struct {
 	next                   string
 	// appChallenge is set when the app started this. It proves later that the same app is asking.
 	appChallenge string
+	// ownReturn is an app that waits on mediarr-sso://, not on mediarr:// as apps from before.
+	ownReturn bool
 }
 
 type oidcAppCode struct {
@@ -196,6 +200,7 @@ func (s *apiServer) StartOIDC(w http.ResponseWriter, r *http.Request, params api
 	}
 	if params.AppChallenge != nil {
 		flow.appChallenge = *params.AppChallenge
+		flow.ownReturn = params.AppReturn != nil && *params.AppReturn == api.StartOIDCParamsAppReturnMediarrSso
 	}
 	for _, target := range []*string{&flow.state, &flow.nonce} {
 		if *target, err = randomText(); err != nil {
@@ -313,11 +318,22 @@ func (s *apiServer) createOIDCUser(ctx context.Context, email, name string) (*db
 	return &created, nil
 }
 
-func oidcFailureURL(flow *oidcFlow) string {
-	if flow != nil && flow.appChallenge != "" {
-		return oidcAppScheme + "?error=failed"
+// appReturnOf is one of two fixed addresses, never one that was asked for.
+func appReturnOf(flow *oidcFlow) string {
+	if flow.ownReturn {
+		return oidcAppReturn
 	}
-	return "/login?sso=failed"
+	return oidcAppScheme
+}
+
+func oidcFailureURL(flow *oidcFlow) string {
+	switch {
+	case flow == nil || flow.appChallenge == "":
+		return "/login?sso=failed"
+	case flow.ownReturn:
+		return oidcAppReturn + "?error=failed"
+	}
+	return oidcAppScheme + "?error=failed"
 }
 
 func (s *apiServer) FinishOIDC(w http.ResponseWriter, r *http.Request, params api.FinishOIDCParams) {
@@ -354,7 +370,7 @@ func (s *apiServer) FinishOIDC(w http.ResponseWriter, r *http.Request, params ap
 			return
 		}
 		s.oidcCodes.put(code, oidcAppCode{user.ID, flow.appChallenge}, oidcAppCodeAge)
-		http.Redirect(w, r, oidcAppScheme+"?code="+url.QueryEscape(code), http.StatusFound)
+		http.Redirect(w, r, appReturnOf(&flow)+"?code="+url.QueryEscape(code), http.StatusFound)
 		return
 	}
 	if s.closedForMaintenance(w, r, user.IsAdmin) {
@@ -420,7 +436,7 @@ func (s *apiServer) GetAuthMethods(w http.ResponseWriter, r *http.Request) {
 	}
 	out := api.AuthMethods{
 		Passkeys: passkeysAvailable(r), PasswordLogin: server.PasswordLogin, LoginMessage: server.LoginMessage,
-		Maintenance: server.Maintenance,
+		Maintenance: server.Maintenance, ServerName: server.Name(),
 	}
 	mail, err := s.loadEmail(r.Context())
 	if err != nil {

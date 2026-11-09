@@ -347,6 +347,45 @@ func (q *Queries) ListUncheckedEmbeddings(ctx context.Context, limit int32) ([]L
 	return items, nil
 }
 
+const listUnfingerprintedVideos = `-- name: ListUnfingerprintedVideos :many
+SELECT id, user_id, original_path, duration_ms FROM assets
+WHERE kind = 'video' AND vhash IS NULL AND status = 'ready' AND deleted_at IS NULL
+  AND vault_at IS NULL AND live_photo_of IS NULL
+LIMIT $1
+`
+
+type ListUnfingerprintedVideosRow struct {
+	ID           pgtype.UUID
+	UserID       pgtype.UUID
+	OriginalPath string
+	DurationMs   pgtype.Int8
+}
+
+func (q *Queries) ListUnfingerprintedVideos(ctx context.Context, limit int32) ([]ListUnfingerprintedVideosRow, error) {
+	rows, err := q.db.Query(ctx, listUnfingerprintedVideos, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUnfingerprintedVideosRow
+	for rows.Next() {
+		var i ListUnfingerprintedVideosRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.OriginalPath,
+			&i.DurationMs,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUnorganized = `-- name: ListUnorganized :many
 SELECT a.id, a.user_id, a.phash, a.local_at
 FROM assets a
@@ -378,6 +417,38 @@ func (q *Queries) ListUnorganized(ctx context.Context, limit int32) ([]ListUnorg
 			&i.Phash,
 			&i.LocalAt,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listVideoHashes = `-- name: ListVideoHashes :many
+SELECT id, vhash, duration_ms FROM assets
+WHERE user_id = $1 AND kind = 'video' AND status = 'ready' AND cardinality(vhash) > 0
+  AND deleted_at IS NULL AND vault_at IS NULL AND live_photo_of IS NULL
+`
+
+type ListVideoHashesRow struct {
+	ID         pgtype.UUID
+	Vhash      []int64
+	DurationMs pgtype.Int8
+}
+
+func (q *Queries) ListVideoHashes(ctx context.Context, userID pgtype.UUID) ([]ListVideoHashesRow, error) {
+	rows, err := q.db.Query(ctx, listVideoHashes, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListVideoHashesRow
+	for rows.Next() {
+		var i ListVideoHashesRow
+		if err := rows.Scan(&i.ID, &i.Vhash, &i.DurationMs); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -476,5 +547,19 @@ type SetStackMainParams struct {
 
 func (q *Queries) SetStackMain(ctx context.Context, arg SetStackMainParams) error {
 	_, err := q.db.Exec(ctx, setStackMain, arg.NewMain, arg.OldMain)
+	return err
+}
+
+const setVideoFingerprint = `-- name: SetVideoFingerprint :exec
+UPDATE assets SET vhash = $2 WHERE id = $1
+`
+
+type SetVideoFingerprintParams struct {
+	ID    pgtype.UUID
+	Vhash []int64
+}
+
+func (q *Queries) SetVideoFingerprint(ctx context.Context, arg SetVideoFingerprintParams) error {
+	_, err := q.db.Exec(ctx, setVideoFingerprint, arg.ID, arg.Vhash)
 	return err
 }

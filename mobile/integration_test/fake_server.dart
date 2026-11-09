@@ -57,6 +57,25 @@ class FakeServer {
   /// A copy of the photo, for duplicates.
   static const copyId = '33333333-3333-4333-8333-333333333333';
   Map<String, dynamic>? savedResolve;
+
+  /// The server settings an administrator changes in the app.
+  Map<String, dynamic> serverSettings = {
+    'trashDays': 30,
+    'imageQuality': 82,
+    'previewSize': 1440,
+    'videoQuality': 26,
+    'videoMaxHeight': 1080,
+    'loginMessage': '',
+    'passwordLogin': true,
+    'maintenance': false,
+    'faceMinScore': 0.6,
+    'faceMaxDistance': 0.5,
+    'workerConcurrency': 0,
+    'videoWorkers': 1,
+    'analysisWorkers': 1,
+    'externalScanHours': 6,
+    'visibleOnNetwork': true,
+  };
   List<String> trashed = [];
   String? qrDevice;
   int qrWaits = 0;
@@ -201,6 +220,15 @@ class FakeServer {
     if (path.startsWith('/api/me/device-keys/') && request.method == 'DELETE') {
       request.response.statusCode = 204;
       await request.response.close();
+      return;
+    }
+    if (path == '/api/admin/server-settings') {
+      if (request.method == 'PUT') {
+        serverSettings = jsonDecode(
+          await utf8.decoder.bind(request).join(),
+        ) as Map<String, dynamic>;
+      }
+      await _json(request, 200, serverSettings);
       return;
     }
     if (path == '/api/duplicates') {

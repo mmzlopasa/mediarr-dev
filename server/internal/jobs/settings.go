@@ -30,6 +30,19 @@ type ServerSettings struct {
 	ExternalScanHours int     `json:"externalScanHours"`
 	// HiddenOnNetwork stops apps on the same network from finding this server.
 	HiddenOnNetwork bool `json:"hiddenOnNetwork,omitempty"`
+	// ServerName is what people see this server called; empty is "Mediarr".
+	ServerName string `json:"serverName,omitempty"`
+}
+
+// DefaultServerName is what a server is called until its administrator names it.
+const DefaultServerName = "Mediarr"
+
+// Name is what people see this server called.
+func (s *ServerSettings) Name() string {
+	if s.ServerName == "" {
+		return DefaultServerName
+	}
+	return s.ServerName
 }
 
 // DefaultServerSettings are what a new installation uses.

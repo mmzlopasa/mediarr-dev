@@ -419,6 +419,39 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('an administrator changes a server setting in the app', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Administration'));
+    await tester.ensureVisible(find.text('Administration'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Administration'));
+    await waitFor(tester, find.text('Server settings'));
+    await tester.tap(find.text('Server settings'));
+    await waitFor(tester, find.byKey(const ValueKey('setting-trashDays')));
+    await tester.enterText(
+      find.byKey(const ValueKey('setting-trashDays')),
+      '45',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Save'));
+    // The number is in the field already, so the server is what is waited for.
+    for (var i = 0; i < 100 && server.serverSettings['trashDays'] != 45; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(server.serverSettings['trashDays'], 45);
+    expect(server.serverSettings['visibleOnNetwork'], isTrue);
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('a tag is renamed in the app', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);

@@ -3688,6 +3688,7 @@ export interface components {
             passkeys: boolean;
             /** @description The name of the single sign-on button, if it is turned on */
             ssoLabel?: string;
+            serverName: string;
         };
         QRSignIn: {
             id: string;
@@ -3722,6 +3723,7 @@ export interface components {
             /** @enum {string} */
             app: "mediarr";
             version: string;
+            name?: string;
         };
         OIDCExchange: {
             code: string;
@@ -4807,6 +4809,8 @@ export interface components {
             externalScanHours: number;
             /** @description Apps on the same network can find this server. Left out keeps it on */
             visibleOnNetwork?: boolean;
+            /** @description What people see this server called. Left out keeps the name it has */
+            serverName?: string;
         };
         EmailSettings: {
             enabled: boolean;
@@ -9101,6 +9105,8 @@ export interface operations {
                 next?: string;
                 /** @description SHA-256 of a secret the app keeps, base64url */
                 appChallenge?: string;
+                /** @description Where the app is sent back: mediarr-sso, or mediarr for apps from before it */
+                appReturn?: "mediarr" | "mediarr-sso";
             };
             header?: never;
             path?: never;

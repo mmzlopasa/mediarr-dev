@@ -123,6 +123,7 @@ type Asset struct {
 	ManualLocationNone  bool
 	CleanupKeptAt       pgtype.Timestamptz
 	ScreenshotHint      pgtype.Bool
+	Vhash               []int64
 }
 
 type AssetDescription struct {

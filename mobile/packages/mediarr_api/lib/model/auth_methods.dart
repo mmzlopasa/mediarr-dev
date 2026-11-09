@@ -19,6 +19,7 @@ class AuthMethods {
     required this.loginMessage,
     required this.passkeys,
     this.ssoLabel,
+    required this.serverName,
   });
 
   bool maintenance;
@@ -42,6 +43,8 @@ class AuthMethods {
   ///
   String? ssoLabel;
 
+  String serverName;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -51,7 +54,8 @@ class AuthMethods {
           other.passwordLogin == passwordLogin &&
           other.loginMessage == loginMessage &&
           other.passkeys == passkeys &&
-          other.ssoLabel == ssoLabel;
+          other.ssoLabel == ssoLabel &&
+          other.serverName == serverName;
 
   @override
   int get hashCode =>
@@ -61,11 +65,12 @@ class AuthMethods {
       (passwordLogin.hashCode) +
       (loginMessage.hashCode) +
       (passkeys.hashCode) +
-      (ssoLabel == null ? 0 : ssoLabel!.hashCode);
+      (ssoLabel == null ? 0 : ssoLabel!.hashCode) +
+      (serverName.hashCode);
 
   @override
   String toString() =>
-      'AuthMethods[maintenance=$maintenance, passwordReset=$passwordReset, passwordLogin=$passwordLogin, loginMessage=$loginMessage, passkeys=$passkeys, ssoLabel=$ssoLabel]';
+      'AuthMethods[maintenance=$maintenance, passwordReset=$passwordReset, passwordLogin=$passwordLogin, loginMessage=$loginMessage, passkeys=$passkeys, ssoLabel=$ssoLabel, serverName=$serverName]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -79,6 +84,7 @@ class AuthMethods {
     } else {
       json[r'ssoLabel'] = null;
     }
+    json[r'serverName'] = this.serverName;
     return json;
   }
 
@@ -109,6 +115,7 @@ class AuthMethods {
         loginMessage: mapValueOfType<String>(json, r'loginMessage')!,
         passkeys: mapValueOfType<bool>(json, r'passkeys')!,
         ssoLabel: mapValueOfType<String>(json, r'ssoLabel'),
+        serverName: mapValueOfType<String>(json, r'serverName')!,
       );
     }
     return null;
@@ -170,5 +177,6 @@ class AuthMethods {
     'passwordLogin',
     'loginMessage',
     'passkeys',
+    'serverName',
   };
 }

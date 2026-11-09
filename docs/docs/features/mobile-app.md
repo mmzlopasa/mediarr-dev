@@ -17,7 +17,7 @@ Enter your server's address, such as `http://192.168.1.20:9851`, and your accoun
 
 ### Finding the server
 
-On the sign-in screen the app looks for Mediarr servers on the Wi-Fi the phone is on and lists them under **On this network**. Tap one to fill in its address. The app asks each address of the network on port 9851, which works with the standard `docker-compose.yml`, and also listens for servers that announce themselves over mDNS (`_mediarr._tcp`), which needs the server container on the host network. iPhone asks once for permission to use the local network.
+On the sign-in screen the app looks for Mediarr servers on the Wi-Fi the phone is on and lists them under **On this network**, with the name the administrator gave the server (**Administration → Server settings → The server's name**). Tap one to fill in its address. The app asks each address of the network on port 9851, which works with the standard `docker-compose.yml`, and also listens for servers that announce themselves over mDNS (`_mediarr._tcp`), which needs the server container on the host network. iPhone asks once for permission to use the local network.
 
 An administrator can turn this off under **Administration → Server → Apps on the same network can find this server**, or in the app under **Settings → Networking**. Finding a server never signs anyone in.
 
@@ -26,7 +26,7 @@ An administrator can turn this off under **Administration → Server → Apps on
 Without typing a password on the phone:
 
 1. Where you are already signed in, on the web or in the app, open the account menu and choose **Sign in on a phone** (in the app, **Sign in on another device**). A QR code and an eight-character code appear. They work once and for five minutes.
-2. In the app on the new phone, tap **Scan QR code** on the sign-in screen and point the camera at the code. Or tap **Enter a sign-in code** and type it, after the server's address.
+2. In the app on the new phone, tap **Scan QR code** on the sign-in screen and point the camera at the code. Scanning it with the phone's own camera app opens Mediarr and does the same. Or tap **Enter a sign-in code** and type it, after the server's address.
 3. The screen with the code asks **Allow sign-in on (phone)?** Choose **Allow** only if it is your phone. A photo of the code alone gives nobody access.
 
 The new phone shows under **Account → Devices**, where it can be signed out, and the security log records the sign-in. It also works for accounts that sign in only with single sign-on or a passkey. If you opened the web on the server itself (`localhost`), type the address the phone reaches into the dialog, so the QR code carries that address.
@@ -73,3 +73,17 @@ The web app on a phone has the same **Share** button. On a computer, use **Downl
 The widget shows a photo from an album you choose, a different one every hour, also without a connection. Choose the album in the app under **Settings → Home screen widget**; the app makes a key for the widget that can only read. Then touch and hold an empty spot on the home screen and add the **Mediarr** widget: on an iPhone with **+** or **Edit → Add Widget**, on Android under **Widgets**. Tapping it opens Mediarr. **Turn off** in the same place empties it and revokes its key.
 
 On an iPhone the widget fetches its photos itself. It needs the app and the widget to share a keychain group, which the certificate Feather signs with allows; if it does not, the app says so when you choose an album.
+
+## Administration
+
+Administrators find **Administration** in the account menu of the app, with what the web has:
+
+- **Overview**: users, photos and videos, what is processing or failed, disk, versions.
+- **Users**: the list with storage used, adding a user, and quotas.
+- **Server settings**: every setting from the web, including the server's name and whether apps on the network can find it.
+- **Email**: the mail server and a test message.
+- **Security**: single sign-on, device approval and allowed addresses, and attempts to get in.
+- **Jobs**: each queue, pausing and resuming it, and failed jobs with **Try again**.
+- **Audit log**: who changed what.
+
+Backup, all backup devices and the storage template are there too.

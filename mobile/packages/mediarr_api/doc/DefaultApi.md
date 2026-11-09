@@ -9339,7 +9339,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **startOIDC**
-> startOIDC(next, appChallenge)
+> startOIDC(next, appChallenge, appReturn)
 
 Go to the identity provider
 
@@ -9350,9 +9350,10 @@ import 'package:mediarr_api/api.dart';
 final api_instance = DefaultApi();
 final next = next_example; // String | 
 final appChallenge = appChallenge_example; // String | SHA-256 of a secret the app keeps, base64url
+final appReturn = appReturn_example; // String | Where the app is sent back: mediarr-sso, or mediarr for apps from before it
 
 try {
-    api_instance.startOIDC(next, appChallenge);
+    api_instance.startOIDC(next, appChallenge, appReturn);
 } catch (e) {
     print('Exception when calling DefaultApi->startOIDC: $e\n');
 }
@@ -9364,6 +9365,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **next** | **String**|  | [optional] 
  **appChallenge** | **String**| SHA-256 of a secret the app keeps, base64url | [optional] 
+ **appReturn** | **String**| Where the app is sent back: mediarr-sso, or mediarr for apps from before it | [optional] 
 
 ### Return type
 

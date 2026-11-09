@@ -2132,3 +2132,13 @@ img.ss-in.ss-zoom.ss-still {
 .cln-video {
 	width: min(720px, 80vw);
 }
+
+/* The server's name, when its administrator gave it one. */
+.login-server {
+	margin-top: -6px;
+	color: var(--ink);
+	font-weight: 600;
+}
+.me-srv {
+	color: var(--dim);
+}

@@ -365,5 +365,5 @@ func (s *apiServer) GetServerHello(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, api.ServerHello{App: api.Mediarr, Version: Version})
+	writeJSON(w, http.StatusOK, api.ServerHello{App: api.ServerHelloAppMediarr, Version: Version, Name: new(settings.Name())})
 }

@@ -67,6 +67,18 @@
 				</select>
 			</label>
 			<label>
+				{tr('Ime poslužitelja', "The server's name")}
+				<input
+					class="in"
+					maxlength="60"
+					placeholder="Mediarr"
+					value={settings.serverName ?? ''}
+					oninput={(event) => {
+						if (settings) settings.serverName = event.currentTarget.value;
+					}}
+				/>
+			</label>
+			<label>
 				{tr('Poruka na stranici za prijavu', 'Message on the sign-in page')}
 				<textarea class="in" rows="2" maxlength="1000" bind:value={settings.loginMessage}
 				></textarea>

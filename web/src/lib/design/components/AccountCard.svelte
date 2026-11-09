@@ -33,9 +33,14 @@
 
 	let stats = $state<AccountStats>();
 	let failedJobs = $state(0);
+	let serverName = $state<string>();
 	let theme = $state<ThemeChoice>(themeChoice());
 
 	onMount(() => {
+		api
+			.authMethods()
+			.then((methods) => (serverName = methods.serverName))
+			.catch(() => undefined);
 		api
 			.myStats()
 			.then((value) => (stats = value))
@@ -70,6 +75,9 @@
 		<div class="me-id">
 			<b>{user.name}</b>
 			<small>{user.email}</small>
+			{#if serverName && serverName !== 'Mediarr'}<small class="me-srv"
+					>{tr(`na ${serverName}`, `on ${serverName}`)}</small
+				>{/if}
 		</div>
 		{#if user.isAdmin}<span class="me-role">{roleLabel}</span>{/if}
 	</div>

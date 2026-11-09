@@ -23,6 +23,7 @@ Name | Type | Description | Notes
 **analysisWorkers** | **int** | Applies after a restart of the worker | 
 **externalScanHours** | **int** |  | 
 **visibleOnNetwork** | **bool** | Apps on the same network can find this server. Left out keeps it on | [optional] 
+**serverName** | **String** | What people see this server called. Left out keeps the name it has | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

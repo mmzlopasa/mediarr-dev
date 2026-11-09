@@ -103,3 +103,17 @@ WHERE user_id = $1 AND a_id = ANY($2::uuid[]) AND b_id = ANY($2::uuid[]);
 SELECT count(*) FROM assets a
 WHERE a.user_id = $1 AND a.organized_at IS NULL AND a.kind = 'photo' AND a.status = 'ready'
   AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL;
+
+-- name: ListUnfingerprintedVideos :many
+SELECT id, user_id, original_path, duration_ms FROM assets
+WHERE kind = 'video' AND vhash IS NULL AND status = 'ready' AND deleted_at IS NULL
+  AND vault_at IS NULL AND live_photo_of IS NULL
+LIMIT $1;
+
+-- name: SetVideoFingerprint :exec
+UPDATE assets SET vhash = $2 WHERE id = $1;
+
+-- name: ListVideoHashes :many
+SELECT id, vhash, duration_ms FROM assets
+WHERE user_id = $1 AND kind = 'video' AND status = 'ready' AND cardinality(vhash) > 0
+  AND deleted_at IS NULL AND vault_at IS NULL AND live_photo_of IS NULL;

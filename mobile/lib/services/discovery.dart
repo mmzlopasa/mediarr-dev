@@ -6,10 +6,13 @@ import 'package:bonsoir/bonsoir.dart';
 
 /// A Mediarr server that answered on this network.
 class FoundServer {
-  const FoundServer(this.url, this.version);
+  const FoundServer(this.url, this.version, [this.name = 'Mediarr']);
 
   final String url;
   final String version;
+
+  /// What its administrator named it.
+  final String name;
 
   @override
   bool operator ==(Object other) => other is FoundServer && other.url == url;
@@ -41,8 +44,11 @@ List<String> neighboursOf(InternetAddress address) {
   ];
 }
 
-/// The version, if a Mediarr server answers at this address.
-Future<String?> helloFrom(String url, {Duration wait = _probeWait}) async {
+/// The version and name, if a Mediarr server answers at this address.
+Future<({String version, String name})?> helloOf(
+  String url, {
+  Duration wait = _probeWait,
+}) async {
   final client = HttpClient()..connectionTimeout = wait;
   try {
     final request = await client
@@ -53,7 +59,10 @@ Future<String?> helloFrom(String url, {Duration wait = _probeWait}) async {
     final body = await response.transform(utf8.decoder).join().timeout(wait);
     final data = jsonDecode(body);
     if (data is Map && data['app'] == 'mediarr') {
-      return data['version']?.toString() ?? '';
+      return (
+        version: data['version']?.toString() ?? '',
+        name: data['name']?.toString() ?? 'Mediarr',
+      );
     }
     return null;
   } on Object {
@@ -63,6 +72,10 @@ Future<String?> helloFrom(String url, {Duration wait = _probeWait}) async {
   }
 }
 
+/// The version, if a Mediarr server answers at this address.
+Future<String?> helloFrom(String url, {Duration wait = _probeWait}) async =>
+    (await helloOf(url, wait: wait))?.version;
+
 /// Looks for Mediarr servers on the Wi-Fi this phone is on: by mDNS where the server announces
 /// itself, and by asking the addresses of the network, which also finds a server inside Docker.
 Stream<FoundServer> discoverServers({
@@ -71,9 +84,9 @@ Stream<FoundServer> discoverServers({
 }) {
   final out = StreamController<FoundServer>();
   final seen = <String>{};
-  void found(String url, String? version) {
-    if (version != null && seen.add(url) && !out.isClosed) {
-      out.add(FoundServer(url, version));
+  void found(String url, ({String version, String name})? hello) {
+    if (hello != null && seen.add(url) && !out.isClosed) {
+      out.add(FoundServer(url, hello.version, hello.name));
     }
   }
 
@@ -94,7 +107,7 @@ Stream<FoundServer> discoverServers({
               continue;
             }
             final url = 'http://$host:${service.port}';
-            checks.add(helloFrom(url).then((version) => found(url, version)));
+            checks.add(helloOf(url).then((hello) => found(url, hello)));
           }
         }
       });
@@ -131,7 +144,7 @@ Stream<FoundServer> discoverServers({
     Future<void> worker() async {
       while (next < targets.length && !out.isClosed) {
         final url = targets[next++];
-        found(url, await helloFrom(url));
+        found(url, await helloOf(url));
       }
     }
 

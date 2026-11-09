@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,6 +26,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _waiting = false;
   bool _cancelWait = false;
   String? _error;
+  StreamSubscription<Uri>? _links;
 
   @override
   void initState() {
@@ -30,10 +34,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.read(sessionProvider.notifier).lastServer().then((value) {
       if (value != null && mounted) _server.text = value;
     });
+    _listenForLinks();
+  }
+
+  /// A sign-in code scanned with the phone's own camera opens the app here, and signs in.
+  void _listenForLinks() {
+    try {
+      final links = AppLinks();
+      _links = links.uriLinkStream.listen(_fromLink, onError: (Object _) {});
+    } on Object {
+      // Without the platform's links, the code is scanned in the app.
+    }
+  }
+
+  void _fromLink(Uri uri) {
+    final link = parseSignInLink(uri.toString());
+    if (link != null && mounted && !_waiting) _signInWith(link);
   }
 
   @override
   void dispose() {
+    _links?.cancel();
     _server.dispose();
     _email.dispose();
     _password.dispose();

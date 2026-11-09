@@ -141,7 +141,11 @@ class _FoundServersState extends State<FoundServers> {
             contentPadding: EdgeInsets.zero,
             dense: true,
             leading: const Icon(Icons.dns_outlined),
-            title: Text(Uri.parse(server.url).authority),
+            title: Text(
+              server.name == 'Mediarr'
+                  ? Uri.parse(server.url).authority
+                  : '${server.name} · ${Uri.parse(server.url).authority}',
+            ),
             subtitle: Text('Mediarr ${server.version}'),
             onTap: () => widget.onPick(server.url),
           ),

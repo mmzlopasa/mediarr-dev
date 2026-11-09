@@ -15,29 +15,46 @@ class ServerHello {
   ServerHello({
     required this.app,
     required this.version,
+    this.name,
   });
 
   ServerHelloAppEnum app;
 
   String version;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? name;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ServerHello && other.app == app && other.version == version;
+      other is ServerHello &&
+          other.app == app &&
+          other.version == version &&
+          other.name == name;
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (app.hashCode) + (version.hashCode);
+      (app.hashCode) + (version.hashCode) + (name == null ? 0 : name!.hashCode);
 
   @override
-  String toString() => 'ServerHello[app=$app, version=$version]';
+  String toString() => 'ServerHello[app=$app, version=$version, name=$name]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'app'] = this.app;
     json[r'version'] = this.version;
+    if (this.name != null) {
+      json[r'name'] = this.name;
+    } else {
+      json[r'name'] = null;
+    }
     return json;
   }
 
@@ -64,6 +81,7 @@ class ServerHello {
       return ServerHello(
         app: ServerHelloAppEnum.fromJson(json[r'app'])!,
         version: mapValueOfType<String>(json, r'version')!,
+        name: mapValueOfType<String>(json, r'name'),
       );
     }
     return null;

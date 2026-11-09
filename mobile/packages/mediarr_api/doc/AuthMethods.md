@@ -14,6 +14,7 @@ Name | Type | Description | Notes
 **loginMessage** | **String** |  | 
 **passkeys** | **bool** | This address can use passkeys: HTTPS and a domain name | 
 **ssoLabel** | **String** | The name of the single sign-on button, if it is turned on | [optional] 
+**serverName** | **String** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

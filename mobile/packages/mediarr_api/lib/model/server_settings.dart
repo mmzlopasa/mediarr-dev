@@ -28,6 +28,7 @@ class ServerSettings {
     required this.analysisWorkers,
     required this.externalScanHours,
     this.visibleOnNetwork,
+    this.serverName,
   });
 
   int trashDays;
@@ -74,6 +75,15 @@ class ServerSettings {
   ///
   bool? visibleOnNetwork;
 
+  /// What people see this server called. Left out keeps the name it has
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? serverName;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -92,7 +102,8 @@ class ServerSettings {
           other.videoWorkers == videoWorkers &&
           other.analysisWorkers == analysisWorkers &&
           other.externalScanHours == externalScanHours &&
-          other.visibleOnNetwork == visibleOnNetwork;
+          other.visibleOnNetwork == visibleOnNetwork &&
+          other.serverName == serverName;
 
   @override
   int get hashCode =>
@@ -111,11 +122,12 @@ class ServerSettings {
       (videoWorkers.hashCode) +
       (analysisWorkers.hashCode) +
       (externalScanHours.hashCode) +
-      (visibleOnNetwork == null ? 0 : visibleOnNetwork!.hashCode);
+      (visibleOnNetwork == null ? 0 : visibleOnNetwork!.hashCode) +
+      (serverName == null ? 0 : serverName!.hashCode);
 
   @override
   String toString() =>
-      'ServerSettings[trashDays=$trashDays, imageQuality=$imageQuality, previewSize=$previewSize, videoQuality=$videoQuality, videoMaxHeight=$videoMaxHeight, loginMessage=$loginMessage, passwordLogin=$passwordLogin, maintenance=$maintenance, faceMinScore=$faceMinScore, faceMaxDistance=$faceMaxDistance, workerConcurrency=$workerConcurrency, videoWorkers=$videoWorkers, analysisWorkers=$analysisWorkers, externalScanHours=$externalScanHours, visibleOnNetwork=$visibleOnNetwork]';
+      'ServerSettings[trashDays=$trashDays, imageQuality=$imageQuality, previewSize=$previewSize, videoQuality=$videoQuality, videoMaxHeight=$videoMaxHeight, loginMessage=$loginMessage, passwordLogin=$passwordLogin, maintenance=$maintenance, faceMinScore=$faceMinScore, faceMaxDistance=$faceMaxDistance, workerConcurrency=$workerConcurrency, videoWorkers=$videoWorkers, analysisWorkers=$analysisWorkers, externalScanHours=$externalScanHours, visibleOnNetwork=$visibleOnNetwork, serverName=$serverName]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -137,6 +149,11 @@ class ServerSettings {
       json[r'visibleOnNetwork'] = this.visibleOnNetwork;
     } else {
       json[r'visibleOnNetwork'] = null;
+    }
+    if (this.serverName != null) {
+      json[r'serverName'] = this.serverName;
+    } else {
+      json[r'serverName'] = null;
     }
     return json;
   }
@@ -177,6 +194,7 @@ class ServerSettings {
         analysisWorkers: mapValueOfType<int>(json, r'analysisWorkers')!,
         externalScanHours: mapValueOfType<int>(json, r'externalScanHours')!,
         visibleOnNetwork: mapValueOfType<bool>(json, r'visibleOnNetwork'),
+        serverName: mapValueOfType<String>(json, r'serverName'),
       );
     }
     return null;

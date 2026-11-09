@@ -161,7 +161,7 @@ String newSsoVerifier() {
 String ssoStartUrl(String server, String verifier) {
   final challenge = base64UrlEncode(sha256.convert(utf8.encode(verifier)).bytes)
       .replaceAll('=', '');
-  return '$server/api/auth/oidc/start?appChallenge=$challenge';
+  return '$server/api/auth/oidc/start?appReturn=mediarr-sso&appChallenge=$challenge';
 }
 
 /// The one-time code in the address the browser came back with, if the sign-in worked.
@@ -350,7 +350,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     try {
       answer = await FlutterWebAuth2.authenticate(
         url: ssoStartUrl(url, verifier),
-        callbackUrlScheme: 'mediarr',
+        callbackUrlScheme: 'mediarr-sso',
       );
     } on PlatformException catch (cause) {
       if (cause.code == 'CANCELED') {

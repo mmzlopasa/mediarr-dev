@@ -29,13 +29,18 @@ void main() {
         request.response.headers.contentType = ContentType.json;
         request.response.write(
           request.uri.path == '/api/server/hello'
-              ? jsonEncode({'app': 'mediarr', 'version': '0.2.30'})
+              ? jsonEncode({
+                  'app': 'mediarr',
+                  'version': '0.2.30',
+                  'name': 'Kuća',
+                })
               : '{}',
         );
         request.response.close();
       });
       final url = 'http://127.0.0.1:${server.port}';
       expect(await helloFrom(url), '0.2.30');
+      expect((await helloOf(url))?.name, 'Kuća');
       expect(await helloFrom('http://127.0.0.1:1'), isNull);
       await server.close(force: true);
     },

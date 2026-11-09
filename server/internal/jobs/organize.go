@@ -79,6 +79,15 @@ func Organize(ctx context.Context, pool beginner, q *db.Queries) error {
 		}
 	}
 	for {
+		count, err := organizeVideos(ctx, q)
+		if err != nil {
+			return err
+		}
+		if count < organizeBatch {
+			break
+		}
+	}
+	for {
 		count, err := compareEmbeddings(ctx, pool, q)
 		if err != nil {
 			return err

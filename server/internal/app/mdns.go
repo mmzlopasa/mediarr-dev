@@ -39,6 +39,7 @@ func localAddresses() []net.IP {
 // finds the server by asking the addresses of its network instead.
 func AdvertiseOnNetwork(ctx context.Context, queries *db.Queries, port int) {
 	var server *mdns.Server
+	announced := ""
 	stop := func() {
 		if server != nil {
 			_ = server.Shutdown()
@@ -51,9 +52,13 @@ func AdvertiseOnNetwork(ctx context.Context, queries *db.Queries, port int) {
 	for {
 		settings, err := jobs.LoadServerSettings(ctx, queries)
 		visible := err == nil && !settings.HiddenOnNetwork
+		if server != nil && settings.Name() != announced {
+			stop()
+		}
 		switch {
 		case visible && server == nil:
-			service, err := mdns.NewMDNSService("Mediarr", MDNSService, "", "", port, localAddresses(), []string{"version=" + Version})
+			announced = settings.Name()
+			service, err := mdns.NewMDNSService(settings.Name(), MDNSService, "", "", port, localAddresses(), []string{"version=" + Version, "name=" + settings.Name()})
 			if err == nil {
 				server, err = mdns.NewServer(&mdns.Config{Zone: service, Logger: log.New(io.Discard, "", 0)})
 			}

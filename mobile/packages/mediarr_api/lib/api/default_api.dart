@@ -12736,9 +12736,13 @@ class DefaultApi {
   ///
   /// * [String] appChallenge:
   ///   SHA-256 of a secret the app keeps, base64url
+  ///
+  /// * [String] appReturn:
+  ///   Where the app is sent back: mediarr-sso, or mediarr for apps from before it
   Future<Response> startOIDCWithHttpInfo({
     String? next,
     String? appChallenge,
+    String? appReturn,
   }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/auth/oidc/start';
@@ -12755,6 +12759,9 @@ class DefaultApi {
     }
     if (appChallenge != null) {
       queryParams.addAll(_queryParams('', 'appChallenge', appChallenge));
+    }
+    if (appReturn != null) {
+      queryParams.addAll(_queryParams('', 'appReturn', appReturn));
     }
 
     const contentTypes = <String>[];
@@ -12778,13 +12785,18 @@ class DefaultApi {
   ///
   /// * [String] appChallenge:
   ///   SHA-256 of a secret the app keeps, base64url
+  ///
+  /// * [String] appReturn:
+  ///   Where the app is sent back: mediarr-sso, or mediarr for apps from before it
   Future<void> startOIDC({
     String? next,
     String? appChallenge,
+    String? appReturn,
   }) async {
     final response = await startOIDCWithHttpInfo(
       next: next,
       appChallenge: appChallenge,
+      appReturn: appReturn,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

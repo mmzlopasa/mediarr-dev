@@ -8,7 +8,7 @@ Both are under **More** on the web and under **Library** in the app. Nothing is 
 
 ## Duplicates
 
-Mediarr compares your photos and groups the ones that look alike. Each group says whether it is the **Same picture** (the same file, or the same picture in the same size) or only **Alike**, and how much space removing the copies frees.
+Mediarr compares your photos and groups the ones that look alike. Videos are compared too: the same video saved twice, also smaller or with another name, is proposed when it is as long and four of its frames match. Each group says whether it is the **Same picture** (the same file, or the same picture in the same size) or only **Alike**, and how much space removing the copies frees.
 
 One photo of each group is proposed to keep, and the group says why:
 

@@ -15,6 +15,8 @@ void main() {
     ).replaceAll('=', '');
     expect(challenge, expected);
     expect(address, startsWith('http://192.168.1.10:9851/api/auth/oidc/start'));
+    // The browser comes back to an address of its own, so mediarr:// stays for sign-in links.
+    expect(Uri.parse(address).queryParameters['appReturn'], 'mediarr-sso');
   });
 
   test('each sign-in has its own secret', () {
@@ -23,7 +25,7 @@ void main() {
   });
 
   test('the code comes from the address the browser came back with', () {
-    expect(ssoCodeFrom('mediarr://oidc?code=abc'), 'abc');
+    expect(ssoCodeFrom('mediarr-sso://oidc?code=abc'), 'abc');
     expect(ssoCodeFrom('mediarr://oidc?error=failed'), isNull);
   });
 }

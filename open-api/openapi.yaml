@@ -2271,6 +2271,7 @@ paths:
       parameters:
         - { name: next, in: query, schema: { type: string } }
         - { name: appChallenge, in: query, description: "SHA-256 of a secret the app keeps, base64url", schema: { type: string } }
+        - { name: appReturn, in: query, description: "Where the app is sent back: mediarr-sso, or mediarr for apps from before it", schema: { type: string, enum: [mediarr, mediarr-sso] } }
       responses:
         "302": { description: To the provider }
         "404": { $ref: "#/components/responses/Error" }
@@ -3506,7 +3507,7 @@ components:
         bytes: { type: integer, format: int64 }
     AuthMethods:
       type: object
-      required: [passkeys, passwordLogin, loginMessage, passwordReset, maintenance]
+      required: [passkeys, passwordLogin, loginMessage, passwordReset, maintenance, serverName]
       properties:
         maintenance: { type: boolean }
         passwordReset: { type: boolean, description: "A forgotten password can be reset by email" }
@@ -3514,6 +3515,7 @@ components:
         loginMessage: { type: string }
         passkeys: { type: boolean, description: "This address can use passkeys: HTTPS and a domain name" }
         ssoLabel: { type: string, description: "The name of the single sign-on button, if it is turned on" }
+        serverName: { type: string }
     QRSignIn:
       type: object
       required: [id, code, link, expiresAt]
@@ -3552,6 +3554,7 @@ components:
       properties:
         app: { type: string, enum: [mediarr] }
         version: { type: string }
+        name: { type: string }
     OIDCExchange:
       type: object
       required: [code, verifier]
@@ -4624,6 +4627,7 @@ components:
         analysisWorkers: { type: integer, description: "Applies after a restart of the worker" }
         externalScanHours: { type: integer }
         visibleOnNetwork: { type: boolean, description: "Apps on the same network can find this server. Left out keeps it on" }
+        serverName: { type: string, maxLength: 60, description: "What people see this server called. Left out keeps the name it has" }
     EmailSettings:
       type: object
       required: [enabled, host, port, username, from, security, publicUrl, hasPassword]

@@ -130,7 +130,7 @@ func TestTheServerSaysHelloUnlessItIsHidden(t *testing.T) {
 	admin := s.admin()
 	resp, body := s.client().get(serverHelloPath)
 	expect(t, resp, body, http.StatusOK)
-	if hello := decode[api.ServerHello](t, body); hello.App != api.Mediarr || hello.Version == "" {
+	if hello := decode[api.ServerHello](t, body); hello.App != api.ServerHelloAppMediarr || hello.Version == "" {
 		t.Fatalf("%+v", hello)
 	}
 	resp, body = admin.get("/api/admin/server-settings")
@@ -139,9 +139,38 @@ func TestTheServerSaysHelloUnlessItIsHidden(t *testing.T) {
 	if settings.VisibleOnNetwork == nil || !*settings.VisibleOnNetwork {
 		t.Fatalf("%+v", settings.VisibleOnNetwork)
 	}
+	if hello := decode[api.ServerHello](t, mustGet(t, s.client(), serverHelloPath)); hello.Name == nil || *hello.Name != "Mediarr" {
+		t.Fatalf("%+v", hello)
+	}
+
+	// A name shows where people sign in and where apps find the server.
+	settings.ServerName = new("  Kuća  ")
+	resp, body = admin.send(http.MethodPut, "/api/admin/server-settings", settings)
+	expect(t, resp, body, http.StatusOK)
+	if hello := decode[api.ServerHello](t, mustGet(t, s.client(), serverHelloPath)); *hello.Name != "Kuća" {
+		t.Fatalf("%+v", hello)
+	}
+	if methods := decode[api.AuthMethods](t, mustGet(t, s.client(), "/api/auth/methods")); methods.ServerName != "Kuća" {
+		t.Fatalf("%+v", methods)
+	}
+	settings.ServerName = new("x" + strings.Repeat("y", 60))
+	resp, body = admin.send(http.MethodPut, "/api/admin/server-settings", settings)
+	expect(t, resp, body, http.StatusBadRequest)
+	// Left out, the name stays.
+	settings.ServerName = nil
 	settings.VisibleOnNetwork = new(false)
 	resp, body = admin.send(http.MethodPut, "/api/admin/server-settings", settings)
 	expect(t, resp, body, http.StatusOK)
+	if methods := decode[api.AuthMethods](t, mustGet(t, s.client(), "/api/auth/methods")); methods.ServerName != "Kuća" {
+		t.Fatalf("%+v", methods)
+	}
 	resp, body = s.client().get(serverHelloPath)
 	expect(t, resp, body, http.StatusNotFound)
+}
+
+func mustGet(t *testing.T, c *client, path string) []byte {
+	t.Helper()
+	resp, body := c.get(path)
+	expect(t, resp, body, http.StatusOK)
+	return body
 }

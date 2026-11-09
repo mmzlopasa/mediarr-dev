@@ -5,6 +5,7 @@ import 'package:mediarr_api/api.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'admin/admin_screen.dart';
 import '../brand.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
@@ -45,6 +46,7 @@ class AccountSheet extends ConsumerStatefulWidget {
 
 class _AccountSheetState extends ConsumerState<AccountSheet> {
   ServerStatus? _status;
+  String? _serverName;
   AccountStats? _stats;
   AssetList? _problems;
   String? _appVersion;
@@ -84,6 +86,12 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
       if (mounted) setState(() => _problems = problems);
     } on ApiException {
       // Nothing to tell.
+    }
+    try {
+      final methods = await session.api.getAuthMethods();
+      if (mounted) setState(() => _serverName = methods?.serverName);
+    } on ApiException {
+      // The name is only shown when it is known.
     }
     try {
       final status = await session.api.getServerStatus();
@@ -323,6 +331,8 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             _row('Server version', status?.version ?? (_online ? '…' : '—')),
             if (status?.updateAvailable == true)
               _row('New version', '${status?.latestVersion} is available'),
+            if (_serverName != null && _serverName != 'Mediarr')
+              _row('Server', _serverName!),
             _row('Server address', session.serverUrl),
           ]),
           Divider(color: Palette.line, height: 1),
@@ -352,6 +362,15 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             title: const Text('Import'),
             onTap: () => _push(const ImportsScreen()),
           ),
+          if (session.user.isAdmin)
+            ListTile(
+              leading: Icon(
+                Icons.admin_panel_settings_outlined,
+                color: Palette.dim,
+              ),
+              title: const Text('Administration'),
+              onTap: () => _push(const AdminScreen()),
+            ),
           if (session.user.isAdmin)
             ListTile(
               leading: Icon(Icons.backup_outlined, color: Palette.dim),
