@@ -264,6 +264,8 @@ void main() {
   testWidgets('a memory is titled in words, and hiding it is remembered', (
     tester,
   ) async {
+    server.showMemories = true;
+    addTearDown(() => server.showMemories = false);
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);
     await waitFor(tester, find.byType(AssetPicture));

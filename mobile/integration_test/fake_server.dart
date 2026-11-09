@@ -83,6 +83,9 @@ class FakeServer {
     'visibleOnNetwork': true,
   };
   List<String> trashed = [];
+
+  /// Only the test of memories sees one; on the home screen it would come before the photos.
+  bool showMemories = false;
   bool tripHidden = false;
   String? hiddenMemoryKey;
 
@@ -229,7 +232,7 @@ class FakeServer {
     }
     if (path == '/api/memories') {
       await _json(request, 200, [
-        if (!tripHidden)
+        if (showMemories && !tripHidden)
           {
             'kind': 'trip',
             'key': 'Split|2024-07-03',
