@@ -1,9 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
-import '../services/trash.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'asset_picture.dart';
@@ -18,6 +19,64 @@ List<String> shotsToTrash(DuplicateGroup group, Map<String, bool> choices) {
   return out.length == group.items.length ? const [] : out;
 }
 
+/// One photo stays and takes over what the others had; the unticked go to the trash. A second
+/// ticked photo is left as it is.
+DuplicateChoice? duplicateChoice(
+  DuplicateGroup group,
+  Map<String, bool> choices,
+) {
+  bool keeps(DuplicateItem item) => choices[item.id] ?? item.id == group.keepId;
+  final kept = group.items.where(keeps).toList();
+  final trash = [
+    for (final item in group.items)
+      if (!keeps(item)) item.id,
+  ];
+  if (kept.isEmpty || trash.isEmpty) return null;
+  final keepId = kept.any((item) => item.id == group.keepId)
+      ? group.keepId
+      : kept.first.id;
+  return DuplicateChoice(keepId: keepId, trashIds: trash);
+}
+
+/// Short facts about one copy, for telling the copies apart.
+List<String> duplicateNotes(DuplicateItem item) => [
+  if (item.favorite) 'Favorite',
+  if (item.original) 'Original',
+  if (item.resaved) 'Saved again by an app',
+  if (item.hasLocation) 'Has a location',
+  if (item.hasCaption) 'Has a description',
+  if (!item.hasDate) 'No date',
+];
+
+/// Why the proposed one is kept: the first way it is better than the others.
+String duplicateReason(DuplicateGroup group) {
+  final keep = group.items.where((item) => item.id == group.keepId).firstOrNull;
+  if (keep == null) return '';
+  final others = group.items.where((item) => item != keep);
+  int pixels(DuplicateItem item) => (item.width ?? 0) * (item.height ?? 0);
+  if (keep.favorite && others.any((item) => !item.favorite)) {
+    return 'a favorite';
+  }
+  if (keep.original && others.any((item) => !item.original)) {
+    return "the camera's original";
+  }
+  if (!keep.resaved && others.any((item) => item.resaved)) {
+    return 'the others were saved again by apps';
+  }
+  if (others.every((item) => pixels(item) < pixels(keep))) {
+    return 'the highest resolution';
+  }
+  if (others.every((item) => item.sizeBytes < keep.sizeBytes)) {
+    return 'the largest file';
+  }
+  if (others.every(
+    (item) => item.sizeBytes == keep.sizeBytes && pixels(item) == pixels(keep),
+  )) {
+    return 'they are equal, so any one can stay';
+  }
+  return 'the sharpest';
+}
+
 class DuplicatesScreen extends ConsumerStatefulWidget {
   const DuplicatesScreen({super.key});
 
@@ -30,11 +89,19 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
   Duplicates? _data;
   bool _failed = false;
   final Map<String, bool> _choices = {};
+  Timer? _poll;
+  bool _working = false;
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -45,6 +112,11 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
           _data = data;
           _failed = false;
         });
+        // While all are being resolved, the progress is asked for often.
+        _poll?.cancel();
+        if (data?.resolving != null) {
+          _poll = Timer(const Duration(milliseconds: 1500), _load);
+        }
       }
     } on ApiException {
       if (mounted) setState(() => _failed = true);
@@ -56,32 +128,64 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
         ?.showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _trash(List<String> ids) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Move to the trash?'),
-        content: TrashSentence(
-          (days) => days == null
-              ? 'The selected photos move to the trash and can be restored.'
-              : 'The selected photos stay in the trash for $days days and can be restored.',
+  Future<bool> _confirm(String title, String sentence, String action) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: Text(sentence),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(action, style: TextStyle(color: Palette.err)),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Move', style: TextStyle(color: Palette.err)),
-          ),
-        ],
-      ),
+      ) ??
+      false;
+
+  Future<void> _resolve(DuplicateChoice choice) async {
+    final confirmed = await _confirm(
+      'Resolve this group?',
+      'The kept photo takes over the albums, tags, favorite, description, rating, '
+          'location and names of people from the others. They go to the trash and can be restored.',
+      'Resolve',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
+    setState(() => _working = true);
     try {
-      await _session.api.bulkAssets(
-        BulkRequest(ids: ids, action: BulkRequestActionEnum.delete),
+      await _session.api.resolveDuplicates(DuplicateResolve(groups: [choice]));
+      _tell('Resolved. The copies are in the trash.');
+      await _load();
+    } on ApiException {
+      _tell('The action failed.');
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _resolveAll({required bool exactOnly}) async {
+    try {
+      final preview = await _session.api.resolveDuplicates(
+        DuplicateResolve(all: true, exactOnly: exactOnly, dryRun: true),
+      );
+      if (preview == null || !mounted) return;
+      final confirmed = await _confirm(
+        exactOnly
+            ? 'Resolve every identical picture?'
+            : 'Resolve all duplicates?',
+        'Groups: ${preview.groups}. ${preview.trashed} photos go to the trash, which frees '
+            '${formatBytes(preview.freedBytes)} once it is emptied. In each group the proposed '
+            'photo stays and takes over what the others had.',
+        'Resolve all',
+      );
+      if (!confirmed) return;
+      await _session.api.resolveDuplicates(
+        DuplicateResolve(all: true, exactOnly: exactOnly),
       );
       await _load();
     } on ApiException {
@@ -102,6 +206,8 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
 
   Widget _group(DuplicateGroup group) {
     final trash = shotsToTrash(group, _choices);
+    final choice = duplicateChoice(group, _choices);
+    final text = Theme.of(context).textTheme;
     return Card(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Padding(
@@ -109,6 +215,21 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Chip(
+                  label: Text(group.exact ? 'Same picture' : 'Alike'),
+                  visualDensity: VisualDensity.compact,
+                ),
+                Text(
+                  'Proposed to keep: ${duplicateReason(group)} · frees ${formatBytes(group.freedBytes)}',
+                  style: text.bodySmall,
+                ),
+              ],
+            ),
             for (final item in group.items)
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
@@ -138,6 +259,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                     if (item.width != null && item.height != null)
                       '${item.width} × ${item.height}',
                     formatBytes(item.sizeBytes),
+                    ...duplicateNotes(item),
                   ].join(' · '),
                 ),
               ),
@@ -150,8 +272,10 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                   child: const Text('Not duplicates'),
                 ),
                 TextButton(
-                  onPressed: trash.isEmpty ? null : () => _trash(trash),
-                  child: Text('Move to the trash (${trash.length})'),
+                  onPressed: choice == null || _working
+                      ? null
+                      : () => _resolve(choice),
+                  child: Text('Resolve (${trash.length} to the trash)'),
                 ),
               ],
             ),
@@ -192,6 +316,51 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                       ].join(' '),
                     ),
                   ),
+                  if (data.resolving case final progress?)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Resolving duplicates: ${progress.done} of ${progress.total}',
+                          ),
+                          const SizedBox(height: 6),
+                          LinearProgressIndicator(
+                            value: progress.total == 0
+                                ? null
+                                : progress.done / progress.total,
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (data.groups.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        children: [
+                          if ((data.exactTotal ?? 0) > 0)
+                            OutlinedButton(
+                              onPressed: () => _resolveAll(exactOnly: true),
+                              child: Text(
+                                'Resolve the identical (${data.exactTotal})',
+                              ),
+                            ),
+                          FilledButton(
+                            onPressed: () => _resolveAll(exactOnly: false),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Palette.buttonGold,
+                              foregroundColor: Palette.onGold,
+                            ),
+                            child: Text(
+                              'Resolve all as proposed (${data.total})',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   for (final group in data.groups) _group(group),
                 ],
               ),

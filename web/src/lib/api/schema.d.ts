@@ -1961,6 +1961,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/duplicates/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Keeps one photo of each group, gives it what the others had, and moves the others to the trash */
+        post: operations["resolveDuplicates"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How many of my photos and videos each kind of clean-up would offer, and their size */
+        get: operations["getCleanup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cleanup/keep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** These stay, and clean-up does not offer them again */
+        post: operations["keepFromCleanup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cleanup/{category}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The photos or videos of one kind of clean-up, a page at a time */
+        get: operations["listCleanup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/audit": {
         parameters: {
             query?: never;
@@ -3367,17 +3435,98 @@ export interface components {
             total: number;
             /** @description Photos not compared yet */
             pending: number;
+            /** @description Groups of the same file or picture */
+            exactTotal?: number;
+            resolving?: components["schemas"]["ResolveProgress"];
             groups: components["schemas"]["DuplicateGroup"][];
+        };
+        ResolveProgress: {
+            done: number;
+            total: number;
+        };
+        DuplicateChoice: {
+            /** Format: uuid */
+            keepId: string;
+            trashIds: string[];
+        };
+        DuplicateResolve: {
+            groups?: components["schemas"]["DuplicateChoice"][];
+            /** @description Every group, each by its proposal */
+            all?: boolean;
+            /** @description With all: only groups of the same file or picture */
+            exactOnly?: boolean;
+            dryRun?: boolean;
+        };
+        DuplicateResolveResult: {
+            groups: number;
+            trashed: number;
+            /** Format: int64 */
+            freedBytes: number;
+            background: boolean;
+        };
+        /** @enum {string} */
+        CleanupCategoryId: "blurry" | "screenshots" | "largeVideos" | "bursts";
+        CleanupCategory: {
+            id: components["schemas"]["CleanupCategoryId"];
+            /** Format: int64 */
+            count: number;
+            /** Format: int64 */
+            bytes: number;
+        };
+        CleanupSummary: {
+            categories: components["schemas"]["CleanupCategory"][];
+            /**
+             * Format: int64
+             * @description Photos whose sharpness is not measured yet
+             */
+            pending: number;
+        };
+        CleanupItem: {
+            /** Format: uuid */
+            id: string;
+            originalName: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            /** @enum {string} */
+            kind: "photo" | "video";
+            width?: number;
+            height?: number;
+            /** Format: float */
+            ratio: number;
+            localAt: string;
+            favorite: boolean;
+            inAlbum: boolean;
+            /** Format: int64 */
+            durationMs?: number;
+        };
+        CleanupPage: {
+            items: components["schemas"]["CleanupItem"][];
+            nextOffset?: number;
         };
         DuplicateGroup: {
             /**
              * Format: uuid
-             * @description The largest one, proposed to keep
+             * @description The best one, proposed to keep
              */
             keepId: string;
+            /** @description The same file or the same picture, not only alike */
+            exact: boolean;
+            /**
+             * Format: int64
+             * @description What moving the others to the trash frees, once it is emptied
+             */
+            freedBytes: number;
             items: components["schemas"]["DuplicateItem"][];
         };
         DuplicateItem: {
+            favorite: boolean;
+            /** @description A camera's own format, such as HEIC, RAW or ProRes */
+            original: boolean;
+            /** @description Saved again by an app, such as a WhatsApp copy */
+            resaved: boolean;
+            hasDate: boolean;
+            hasLocation: boolean;
+            hasCaption: boolean;
             /** Format: uuid */
             id: string;
             originalName: string;
@@ -8203,6 +8352,121 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    resolveDuplicates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DuplicateResolve"];
+            };
+        };
+        responses: {
+            /** @description Done, or what would be done */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicateResolveResult"];
+                };
+            };
+            /** @description Many groups; they are resolved in the background */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicateResolveResult"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    getCleanup: {
+        parameters: {
+            query?: {
+                /** @description How strict: 1 offers only the blurriest, 5 the most */
+                blur?: number;
+                /** @description Videos at least this large */
+                videoMb?: 250 | 500 | 1000 | 2000;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CleanupSummary"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    keepFromCleanup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetIds"];
+            };
+        };
+        responses: {
+            /** @description Kept */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    listCleanup: {
+        parameters: {
+            query?: {
+                blur?: number;
+                videoMb?: 250 | 500 | 1000 | 2000;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                category: components["schemas"]["CleanupCategoryId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CleanupPage"];
+                };
             };
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];

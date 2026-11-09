@@ -13,6 +13,12 @@ part of openapi.api;
 class DuplicateItem {
   /// Returns a new [DuplicateItem] instance.
   DuplicateItem({
+    required this.favorite,
+    required this.original,
+    required this.resaved,
+    required this.hasDate,
+    required this.hasLocation,
+    required this.hasCaption,
     required this.id,
     required this.originalName,
     required this.sizeBytes,
@@ -21,6 +27,20 @@ class DuplicateItem {
     required this.ratio,
     required this.localAt,
   });
+
+  bool favorite;
+
+  /// A camera's own format, such as HEIC, RAW or ProRes
+  bool original;
+
+  /// Saved again by an app, such as a WhatsApp copy
+  bool resaved;
+
+  bool hasDate;
+
+  bool hasLocation;
+
+  bool hasCaption;
 
   String id;
 
@@ -52,6 +72,12 @@ class DuplicateItem {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is DuplicateItem &&
+          other.favorite == favorite &&
+          other.original == original &&
+          other.resaved == resaved &&
+          other.hasDate == hasDate &&
+          other.hasLocation == hasLocation &&
+          other.hasCaption == hasCaption &&
           other.id == id &&
           other.originalName == originalName &&
           other.sizeBytes == sizeBytes &&
@@ -63,6 +89,12 @@ class DuplicateItem {
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
+      (favorite.hashCode) +
+      (original.hashCode) +
+      (resaved.hashCode) +
+      (hasDate.hashCode) +
+      (hasLocation.hashCode) +
+      (hasCaption.hashCode) +
       (id.hashCode) +
       (originalName.hashCode) +
       (sizeBytes.hashCode) +
@@ -73,10 +105,16 @@ class DuplicateItem {
 
   @override
   String toString() =>
-      'DuplicateItem[id=$id, originalName=$originalName, sizeBytes=$sizeBytes, width=$width, height=$height, ratio=$ratio, localAt=$localAt]';
+      'DuplicateItem[favorite=$favorite, original=$original, resaved=$resaved, hasDate=$hasDate, hasLocation=$hasLocation, hasCaption=$hasCaption, id=$id, originalName=$originalName, sizeBytes=$sizeBytes, width=$width, height=$height, ratio=$ratio, localAt=$localAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+    json[r'favorite'] = this.favorite;
+    json[r'original'] = this.original;
+    json[r'resaved'] = this.resaved;
+    json[r'hasDate'] = this.hasDate;
+    json[r'hasLocation'] = this.hasLocation;
+    json[r'hasCaption'] = this.hasCaption;
     json[r'id'] = this.id;
     json[r'originalName'] = this.originalName;
     json[r'sizeBytes'] = this.sizeBytes;
@@ -116,6 +154,12 @@ class DuplicateItem {
       }());
 
       return DuplicateItem(
+        favorite: mapValueOfType<bool>(json, r'favorite')!,
+        original: mapValueOfType<bool>(json, r'original')!,
+        resaved: mapValueOfType<bool>(json, r'resaved')!,
+        hasDate: mapValueOfType<bool>(json, r'hasDate')!,
+        hasLocation: mapValueOfType<bool>(json, r'hasLocation')!,
+        hasCaption: mapValueOfType<bool>(json, r'hasCaption')!,
         id: mapValueOfType<String>(json, r'id')!,
         originalName: mapValueOfType<String>(json, r'originalName')!,
         sizeBytes: mapValueOfType<int>(json, r'sizeBytes')!,
@@ -179,6 +223,12 @@ class DuplicateItem {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
+    'favorite',
+    'original',
+    'resaved',
+    'hasDate',
+    'hasLocation',
+    'hasCaption',
     'id',
     'originalName',
     'sizeBytes',

@@ -377,6 +377,48 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('a duplicate is resolved, and a screenshot is cleaned up', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.text('Library').last);
+    await waitFor(tester, find.text('Duplicates'));
+    await tester.ensureVisible(find.text('Duplicates'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Duplicates'));
+    await waitFor(tester, find.text('Resolve (1 to the trash)'));
+    expect(find.textContaining("the camera's original"), findsOneWidget);
+    await tester.tap(find.text('Resolve (1 to the trash)'));
+    await waitFor(tester, find.text('Resolve this group?'));
+    await tester.tap(find.widgetWithText(TextButton, 'Resolve'));
+    await waitFor(tester, find.text('No similar photos were found.'));
+    final groups = server.savedResolve?['groups'] as List?;
+    expect((groups?.first as Map?)?['keepId'], photoId);
+    expect((groups?.first as Map?)?['trashIds'], [FakeServer.copyId]);
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+
+    await waitFor(tester, find.text('Clean up'));
+    await tester.ensureVisible(find.text('Clean up'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Clean up'));
+    await waitFor(tester, find.byKey(const ValueKey('cleanup-screenshots')));
+    await tester.tap(find.byKey(const ValueKey('cleanup-screenshots')));
+    await waitFor(
+      tester,
+      find.byKey(const ValueKey('cleanup-item-Screenshot_1.png')),
+    );
+    await tester.tap(find.textContaining('To the trash (1'));
+    await waitFor(tester, find.text('Move to the trash?'));
+    await tester.tap(find.widgetWithText(TextButton, 'Move'));
+    await waitFor(tester, find.text('Nothing to clean up here.'));
+    expect(server.trashed, [photoId]);
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('a tag is renamed in the app', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);

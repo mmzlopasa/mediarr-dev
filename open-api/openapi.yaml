@@ -1866,6 +1866,74 @@ paths:
         "204": { description: Dismissed }
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/duplicates/resolve:
+    post:
+      operationId: resolveDuplicates
+      summary: Keeps one photo of each group, gives it what the others had, and moves the others to the trash
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DuplicateResolve" }
+      responses:
+        "200":
+          description: Done, or what would be done
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DuplicateResolveResult" }
+        "202":
+          description: Many groups; they are resolved in the background
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DuplicateResolveResult" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/cleanup:
+    get:
+      operationId: getCleanup
+      summary: How many of my photos and videos each kind of clean-up would offer, and their size
+      parameters:
+        - { name: blur, in: query, description: "How strict: 1 offers only the blurriest, 5 the most", schema: { type: integer, minimum: 1, maximum: 5 } }
+        - { name: videoMb, in: query, description: "Videos at least this large", schema: { type: integer, enum: [250, 500, 1000, 2000] } }
+      responses:
+        "200":
+          description: The counts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CleanupSummary" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/cleanup/keep:
+    post:
+      operationId: keepFromCleanup
+      summary: These stay, and clean-up does not offer them again
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetIds" }
+      responses:
+        "204": { description: Kept }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/cleanup/{category}:
+    get:
+      operationId: listCleanup
+      summary: The photos or videos of one kind of clean-up, a page at a time
+      parameters:
+        - { name: category, in: path, required: true, schema: { $ref: "#/components/schemas/CleanupCategoryId" } }
+        - { name: blur, in: query, schema: { type: integer, minimum: 1, maximum: 5 } }
+        - { name: videoMb, in: query, schema: { type: integer, enum: [250, 500, 1000, 2000] } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        "200":
+          description: One page
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CleanupPage" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/admin/audit:
     get:
       operationId: listAuditLog
@@ -3206,21 +3274,95 @@ components:
       properties:
         total: { type: integer, description: "All groups, of which at most the first 100 are listed" }
         pending: { type: integer, description: "Photos not compared yet" }
+        exactTotal: { type: integer, description: "Groups of the same file or picture" }
+        resolving: { $ref: "#/components/schemas/ResolveProgress" }
         groups:
           type: array
           items: { $ref: "#/components/schemas/DuplicateGroup" }
+    ResolveProgress:
+      type: object
+      required: [done, total]
+      properties:
+        done: { type: integer }
+        total: { type: integer }
+    DuplicateChoice:
+      type: object
+      required: [keepId, trashIds]
+      properties:
+        keepId: { type: string, format: uuid }
+        trashIds: { type: array, items: { type: string, format: uuid }, minItems: 1, maxItems: 50 }
+    DuplicateResolve:
+      type: object
+      properties:
+        groups: { type: array, items: { $ref: "#/components/schemas/DuplicateChoice" }, maxItems: 100 }
+        all: { type: boolean, description: "Every group, each by its proposal" }
+        exactOnly: { type: boolean, description: "With all: only groups of the same file or picture" }
+        dryRun: { type: boolean }
+    DuplicateResolveResult:
+      type: object
+      required: [groups, trashed, freedBytes, background]
+      properties:
+        groups: { type: integer }
+        trashed: { type: integer }
+        freedBytes: { type: integer, format: int64 }
+        background: { type: boolean }
+    CleanupCategoryId:
+      type: string
+      enum: [blurry, screenshots, largeVideos, bursts]
+    CleanupCategory:
+      type: object
+      required: [id, count, bytes]
+      properties:
+        id: { $ref: "#/components/schemas/CleanupCategoryId" }
+        count: { type: integer, format: int64 }
+        bytes: { type: integer, format: int64 }
+    CleanupSummary:
+      type: object
+      required: [categories, pending]
+      properties:
+        categories: { type: array, items: { $ref: "#/components/schemas/CleanupCategory" } }
+        pending: { type: integer, format: int64, description: "Photos whose sharpness is not measured yet" }
+    CleanupItem:
+      type: object
+      required: [id, originalName, sizeBytes, kind, ratio, localAt, favorite, inAlbum]
+      properties:
+        id: { type: string, format: uuid }
+        originalName: { type: string }
+        sizeBytes: { type: integer, format: int64 }
+        kind: { type: string, enum: [photo, video] }
+        width: { type: integer }
+        height: { type: integer }
+        ratio: { type: number, format: float }
+        localAt: { type: string }
+        favorite: { type: boolean }
+        inAlbum: { type: boolean }
+        durationMs: { type: integer, format: int64 }
+    CleanupPage:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/CleanupItem" } }
+        nextOffset: { type: integer }
     DuplicateGroup:
       type: object
-      required: [items, keepId]
+      required: [items, keepId, exact, freedBytes]
       properties:
-        keepId: { type: string, format: uuid, description: "The largest one, proposed to keep" }
+        keepId: { type: string, format: uuid, description: "The best one, proposed to keep" }
+        exact: { type: boolean, description: "The same file or the same picture, not only alike" }
+        freedBytes: { type: integer, format: int64, description: "What moving the others to the trash frees, once it is emptied" }
         items:
           type: array
           items: { $ref: "#/components/schemas/DuplicateItem" }
     DuplicateItem:
       type: object
-      required: [id, originalName, sizeBytes, ratio, localAt]
+      required: [id, originalName, sizeBytes, ratio, localAt, favorite, original, resaved, hasDate, hasLocation, hasCaption]
       properties:
+        favorite: { type: boolean }
+        original: { type: boolean, description: "A camera's own format, such as HEIC, RAW or ProRes" }
+        resaved: { type: boolean, description: "Saved again by an app, such as a WhatsApp copy" }
+        hasDate: { type: boolean }
+        hasLocation: { type: boolean }
+        hasCaption: { type: boolean }
         id: { type: string, format: uuid }
         originalName: { type: string }
         sizeBytes: { type: integer, format: int64 }

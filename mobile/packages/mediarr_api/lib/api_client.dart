@@ -329,6 +329,16 @@ class ApiClient {
           return ChecksumCheckRequest.fromJson(value);
         case 'ChecksumCheckResponse':
           return ChecksumCheckResponse.fromJson(value);
+        case 'CleanupCategory':
+          return CleanupCategory.fromJson(value);
+        case 'CleanupCategoryId':
+          return CleanupCategoryIdTypeTransformer().decode(value);
+        case 'CleanupItem':
+          return CleanupItem.fromJson(value);
+        case 'CleanupPage':
+          return CleanupPage.fromJson(value);
+        case 'CleanupSummary':
+          return CleanupSummary.fromJson(value);
         case 'Comment':
           return Comment.fromJson(value);
         case 'CommentCreate':
@@ -345,10 +355,16 @@ class ApiClient {
           return DeviceKey.fromJson(value);
         case 'Documents':
           return Documents.fromJson(value);
+        case 'DuplicateChoice':
+          return DuplicateChoice.fromJson(value);
         case 'DuplicateGroup':
           return DuplicateGroup.fromJson(value);
         case 'DuplicateItem':
           return DuplicateItem.fromJson(value);
+        case 'DuplicateResolve':
+          return DuplicateResolve.fromJson(value);
+        case 'DuplicateResolveResult':
+          return DuplicateResolveResult.fromJson(value);
         case 'Duplicates':
           return Duplicates.fromJson(value);
         case 'EmailSettings':
@@ -489,6 +505,8 @@ class ApiClient {
           return QRTicket.fromJson(value);
         case 'QuotaUpdate':
           return QuotaUpdate.fromJson(value);
+        case 'ResolveProgress':
+          return ResolveProgress.fromJson(value);
         case 'SearchFilters':
           return SearchFilters.fromJson(value);
         case 'SearchOptions':

@@ -52,6 +52,11 @@ doc/BulkResponse.md
 doc/ChangePasswordRequest.md
 doc/ChecksumCheckRequest.md
 doc/ChecksumCheckResponse.md
+doc/CleanupCategory.md
+doc/CleanupCategoryId.md
+doc/CleanupItem.md
+doc/CleanupPage.md
+doc/CleanupSummary.md
 doc/Comment.md
 doc/CommentCreate.md
 doc/CreateDeviceKeyRequest.md
@@ -61,8 +66,11 @@ doc/DateFix.md
 doc/DefaultApi.md
 doc/DeviceKey.md
 doc/Documents.md
+doc/DuplicateChoice.md
 doc/DuplicateGroup.md
 doc/DuplicateItem.md
+doc/DuplicateResolve.md
+doc/DuplicateResolveResult.md
 doc/Duplicates.md
 doc/EmailSettings.md
 doc/EmailSettingsUpdate.md
@@ -133,6 +141,7 @@ doc/QRSignIn.md
 doc/QRSignInState.md
 doc/QRTicket.md
 doc/QuotaUpdate.md
+doc/ResolveProgress.md
 doc/SearchFilters.md
 doc/SearchOptions.md
 doc/SearchResult.md
@@ -242,6 +251,11 @@ lib/model/bulk_response.dart
 lib/model/change_password_request.dart
 lib/model/checksum_check_request.dart
 lib/model/checksum_check_response.dart
+lib/model/cleanup_category.dart
+lib/model/cleanup_category_id.dart
+lib/model/cleanup_item.dart
+lib/model/cleanup_page.dart
+lib/model/cleanup_summary.dart
 lib/model/comment.dart
 lib/model/comment_create.dart
 lib/model/create_device_key_request.dart
@@ -250,8 +264,11 @@ lib/model/crop_box.dart
 lib/model/date_fix.dart
 lib/model/device_key.dart
 lib/model/documents.dart
+lib/model/duplicate_choice.dart
 lib/model/duplicate_group.dart
 lib/model/duplicate_item.dart
+lib/model/duplicate_resolve.dart
+lib/model/duplicate_resolve_result.dart
 lib/model/duplicates.dart
 lib/model/email_settings.dart
 lib/model/email_settings_update.dart
@@ -322,6 +339,7 @@ lib/model/qr_sign_in.dart
 lib/model/qr_sign_in_state.dart
 lib/model/qr_ticket.dart
 lib/model/quota_update.dart
+lib/model/resolve_progress.dart
 lib/model/search_filters.dart
 lib/model/search_options.dart
 lib/model/search_result.dart
@@ -371,9 +389,3 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/qr_answer_test.dart
-test/qr_redeem_test.dart
-test/qr_sign_in_state_test.dart
-test/qr_sign_in_test.dart
-test/qr_ticket_test.dart
-test/server_hello_test.dart

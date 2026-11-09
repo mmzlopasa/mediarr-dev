@@ -558,7 +558,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 }
 
 const getVisibleAsset = `-- name: GetVisibleAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none, cleanup_kept_at FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
 `
 
 type GetVisibleAssetParams struct {
@@ -626,6 +626,7 @@ func (q *Queries) GetVisibleAsset(ctx context.Context, arg GetVisibleAssetParams
 		&i.ImportOffsetMinutes,
 		&i.Projection,
 		&i.ManualLocationNone,
+		&i.CleanupKeptAt,
 	)
 	return i, err
 }
@@ -992,7 +993,7 @@ func (q *Queries) ListPartnersReceived(ctx context.Context, partnerID pgtype.UUI
 }
 
 const listVisibleAssets = `-- name: ListVisibleAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none, cleanup_kept_at FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
 `
 
 type ListVisibleAssetsParams struct {
@@ -1066,6 +1067,7 @@ func (q *Queries) ListVisibleAssets(ctx context.Context, arg ListVisibleAssetsPa
 			&i.ImportOffsetMinutes,
 			&i.Projection,
 			&i.ManualLocationNone,
+			&i.CleanupKeptAt,
 		); err != nil {
 			return nil, err
 		}

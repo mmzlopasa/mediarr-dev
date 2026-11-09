@@ -139,6 +139,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 *DefaultApi* | [**getAvatar**](doc//DefaultApi.md#getavatar) | **GET** /api/users/{id}/avatar | The picture of a person with an account here, for anyone signed in
 *DefaultApi* | [**getBackupSettings**](doc//DefaultApi.md#getbackupsettings) | **GET** /api/admin/backup | Where backups go, without any secret
+*DefaultApi* | [**getCleanup**](doc//DefaultApi.md#getcleanup) | **GET** /api/cleanup | How many of my photos and videos each kind of clean-up would offer, and their size
 *DefaultApi* | [**getCollectionAsset**](doc//DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 *DefaultApi* | [**getCollectionBucket**](doc//DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
 *DefaultApi* | [**getCollectionBuckets**](doc//DefaultApi.md#getcollectionbuckets) | **GET** /api/collections/{scope}/buckets | Months in the archive, the trash or the unlocked vault
@@ -193,6 +194,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getUploadOffset**](doc//DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 *DefaultApi* | [**getVaultStatus**](doc//DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
 *DefaultApi* | [**inviteKeepGuest**](doc//DefaultApi.md#invitekeepguest) | **POST** /api/admin/keep/guests | Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
+*DefaultApi* | [**keepFromCleanup**](doc//DefaultApi.md#keepfromcleanup) | **POST** /api/cleanup/keep | These stay, and clean-up does not offer them again
 *DefaultApi* | [**listAPIKeys**](doc//DefaultApi.md#listapikeys) | **GET** /api/me/api-keys | The current user's keys, without the keys themselves
 *DefaultApi* | [**listAlbumComments**](doc//DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 *DefaultApi* | [**listAlbumLinks**](doc//DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
@@ -206,6 +208,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listBackupDevices**](doc//DefaultApi.md#listbackupdevices) | **GET** /api/me/backup-devices | The current user's devices that back up, with what the server counts as safe from each
 *DefaultApi* | [**listBackupRuns**](doc//DefaultApi.md#listbackupruns) | **GET** /api/admin/backup/runs | Backups and tests of bringing one back, the newest first
 *DefaultApi* | [**listCameras**](doc//DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
+*DefaultApi* | [**listCleanup**](doc//DefaultApi.md#listcleanup) | **GET** /api/cleanup/{category} | The photos or videos of one kind of clean-up, a page at a time
 *DefaultApi* | [**listDirectory**](doc//DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 *DefaultApi* | [**listDuplicates**](doc//DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
 *DefaultApi* | [**listExplorePlaces**](doc//DefaultApi.md#listexploreplaces) | **GET** /api/explore/places | The places in the user's own photos, those with the most first
@@ -247,6 +250,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**renameTag**](doc//DefaultApi.md#renametag) | **PATCH** /api/tags/{id} | Rename a tag. When another tag already has the name, merge says to join the two
 *DefaultApi* | [**reportBackupDevice**](doc//DefaultApi.md#reportbackupdevice) | **PUT** /api/me/backup-devices/{id} | A device says how its backup is doing, with checksums of files it has seen confirmed
 *DefaultApi* | [**resetPassword**](doc//DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
+*DefaultApi* | [**resolveDuplicates**](doc//DefaultApi.md#resolveduplicates) | **POST** /api/duplicates/resolve | Keeps one photo of each group, gives it what the others had, and moves the others to the trash
 *DefaultApi* | [**restoreKeepGuestDeleted**](doc//DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
 *DefaultApi* | [**resumeJobQueue**](doc//DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 *DefaultApi* | [**retryJob**](doc//DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
@@ -346,6 +350,11 @@ Class | Method | HTTP request | Description
  - [ChangePasswordRequest](doc//ChangePasswordRequest.md)
  - [ChecksumCheckRequest](doc//ChecksumCheckRequest.md)
  - [ChecksumCheckResponse](doc//ChecksumCheckResponse.md)
+ - [CleanupCategory](doc//CleanupCategory.md)
+ - [CleanupCategoryId](doc//CleanupCategoryId.md)
+ - [CleanupItem](doc//CleanupItem.md)
+ - [CleanupPage](doc//CleanupPage.md)
+ - [CleanupSummary](doc//CleanupSummary.md)
  - [Comment](doc//Comment.md)
  - [CommentCreate](doc//CommentCreate.md)
  - [CreateDeviceKeyRequest](doc//CreateDeviceKeyRequest.md)
@@ -354,8 +363,11 @@ Class | Method | HTTP request | Description
  - [DateFix](doc//DateFix.md)
  - [DeviceKey](doc//DeviceKey.md)
  - [Documents](doc//Documents.md)
+ - [DuplicateChoice](doc//DuplicateChoice.md)
  - [DuplicateGroup](doc//DuplicateGroup.md)
  - [DuplicateItem](doc//DuplicateItem.md)
+ - [DuplicateResolve](doc//DuplicateResolve.md)
+ - [DuplicateResolveResult](doc//DuplicateResolveResult.md)
  - [Duplicates](doc//Duplicates.md)
  - [EmailSettings](doc//EmailSettings.md)
  - [EmailSettingsUpdate](doc//EmailSettingsUpdate.md)
@@ -426,6 +438,7 @@ Class | Method | HTTP request | Description
  - [QRSignInState](doc//QRSignInState.md)
  - [QRTicket](doc//QRTicket.md)
  - [QuotaUpdate](doc//QuotaUpdate.md)
+ - [ResolveProgress](doc//ResolveProgress.md)
  - [SearchFilters](doc//SearchFilters.md)
  - [SearchOptions](doc//SearchOptions.md)
  - [SearchResult](doc//SearchResult.md)

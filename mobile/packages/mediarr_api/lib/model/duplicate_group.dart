@@ -14,11 +14,19 @@ class DuplicateGroup {
   /// Returns a new [DuplicateGroup] instance.
   DuplicateGroup({
     required this.keepId,
+    required this.exact,
+    required this.freedBytes,
     this.items = const [],
   });
 
-  /// The largest one, proposed to keep
+  /// The best one, proposed to keep
   String keepId;
+
+  /// The same file or the same picture, not only alike
+  bool exact;
+
+  /// What moving the others to the trash frees, once it is emptied
+  int freedBytes;
 
   List<DuplicateItem> items;
 
@@ -27,19 +35,27 @@ class DuplicateGroup {
       identical(this, other) ||
       other is DuplicateGroup &&
           other.keepId == keepId &&
+          other.exact == exact &&
+          other.freedBytes == freedBytes &&
           _deepEquality.equals(other.items, items);
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (keepId.hashCode) + (items.hashCode);
+      (keepId.hashCode) +
+      (exact.hashCode) +
+      (freedBytes.hashCode) +
+      (items.hashCode);
 
   @override
-  String toString() => 'DuplicateGroup[keepId=$keepId, items=$items]';
+  String toString() =>
+      'DuplicateGroup[keepId=$keepId, exact=$exact, freedBytes=$freedBytes, items=$items]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'keepId'] = this.keepId;
+    json[r'exact'] = this.exact;
+    json[r'freedBytes'] = this.freedBytes;
     json[r'items'] = this.items;
     return json;
   }
@@ -66,6 +82,8 @@ class DuplicateGroup {
 
       return DuplicateGroup(
         keepId: mapValueOfType<String>(json, r'keepId')!,
+        exact: mapValueOfType<bool>(json, r'exact')!,
+        freedBytes: mapValueOfType<int>(json, r'freedBytes')!,
         items: DuplicateItem.listFromJson(json[r'items']),
       );
     }
@@ -124,6 +142,8 @@ class DuplicateGroup {
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
     'keepId',
+    'exact',
+    'freedBytes',
     'items',
   };
 }

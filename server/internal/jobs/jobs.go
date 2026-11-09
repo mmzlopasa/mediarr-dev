@@ -138,6 +138,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &deviceQuietWorker{deps: d})
 	river.AddWorker(workers, &storageMoveWorker{deps: d})
 	river.AddWorker(workers, &storageApplyWorker{deps: d})
+	river.AddWorker(workers, &resolveDuplicatesWorker{deps: d})
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{

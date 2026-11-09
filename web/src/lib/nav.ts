@@ -123,6 +123,14 @@ export const appNav: NavItem[] = [
 		emptyEn: 'No similar photos were found.'
 	},
 	{
+		path: '/cleanup',
+		icon: 'spark',
+		hr: 'Čišćenje',
+		en: 'Clean up',
+		emptyHr: 'Ovdje nema ničega za čišćenje.',
+		emptyEn: 'Nothing to clean up here.'
+	},
+	{
 		path: '/archive',
 		icon: 'archive',
 		hr: 'Arhiva',

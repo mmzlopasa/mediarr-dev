@@ -4340,6 +4340,84 @@ class DefaultApi {
     return null;
   }
 
+  /// How many of my photos and videos each kind of clean-up would offer, and their size
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [int] blur:
+  ///   How strict: 1 offers only the blurriest, 5 the most
+  ///
+  /// * [int] videoMb:
+  ///   Videos at least this large
+  Future<Response> getCleanupWithHttpInfo({
+    int? blur,
+    int? videoMb,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/cleanup';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (blur != null) {
+      queryParams.addAll(_queryParams('', 'blur', blur));
+    }
+    if (videoMb != null) {
+      queryParams.addAll(_queryParams('', 'videoMb', videoMb));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// How many of my photos and videos each kind of clean-up would offer, and their size
+  ///
+  /// Parameters:
+  ///
+  /// * [int] blur:
+  ///   How strict: 1 offers only the blurriest, 5 the most
+  ///
+  /// * [int] videoMb:
+  ///   Videos at least this large
+  Future<CleanupSummary?> getCleanup({
+    int? blur,
+    int? videoMb,
+  }) async {
+    final response = await getCleanupWithHttpInfo(
+      blur: blur,
+      videoMb: videoMb,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'CleanupSummary',
+      ) as CleanupSummary;
+    }
+    return null;
+  }
+
   /// An asset in a collection
   ///
   /// Note: This method returns the HTTP [Response].
@@ -7485,6 +7563,55 @@ class DefaultApi {
     return null;
   }
 
+  /// These stay, and clean-up does not offer them again
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<Response> keepFromCleanupWithHttpInfo(
+    AssetIds assetIds,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/cleanup/keep';
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetIds;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// These stay, and clean-up does not offer them again
+  ///
+  /// Parameters:
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<void> keepFromCleanup(
+    AssetIds assetIds,
+  ) async {
+    final response = await keepFromCleanupWithHttpInfo(
+      assetIds,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// The current user's keys, without the keys themselves
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8229,6 +8356,108 @@ class DefaultApi {
               as List)
           .cast<String>()
           .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// The photos or videos of one kind of clean-up, a page at a time
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [CleanupCategoryId] category (required):
+  ///
+  /// * [int] blur:
+  ///
+  /// * [int] videoMb:
+  ///
+  /// * [int] offset:
+  ///
+  /// * [int] limit:
+  Future<Response> listCleanupWithHttpInfo(
+    CleanupCategoryId category, {
+    int? blur,
+    int? videoMb,
+    int? offset,
+    int? limit,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/cleanup/{category}'
+        .replaceAll('{category}', category.toString());
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (blur != null) {
+      queryParams.addAll(_queryParams('', 'blur', blur));
+    }
+    if (videoMb != null) {
+      queryParams.addAll(_queryParams('', 'videoMb', videoMb));
+    }
+    if (offset != null) {
+      queryParams.addAll(_queryParams('', 'offset', offset));
+    }
+    if (limit != null) {
+      queryParams.addAll(_queryParams('', 'limit', limit));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The photos or videos of one kind of clean-up, a page at a time
+  ///
+  /// Parameters:
+  ///
+  /// * [CleanupCategoryId] category (required):
+  ///
+  /// * [int] blur:
+  ///
+  /// * [int] videoMb:
+  ///
+  /// * [int] offset:
+  ///
+  /// * [int] limit:
+  Future<CleanupPage?> listCleanup(
+    CleanupCategoryId category, {
+    int? blur,
+    int? videoMb,
+    int? offset,
+    int? limit,
+  }) async {
+    final response = await listCleanupWithHttpInfo(
+      category,
+      blur: blur,
+      videoMb: videoMb,
+      offset: offset,
+      limit: limit,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'CleanupPage',
+      ) as CleanupPage;
     }
     return null;
   }
@@ -10359,6 +10588,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Keeps one photo of each group, gives it what the others had, and moves the others to the trash
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [DuplicateResolve] duplicateResolve (required):
+  Future<Response> resolveDuplicatesWithHttpInfo(
+    DuplicateResolve duplicateResolve,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/duplicates/resolve';
+
+    // ignore: prefer_final_locals
+    Object? postBody = duplicateResolve;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Keeps one photo of each group, gives it what the others had, and moves the others to the trash
+  ///
+  /// Parameters:
+  ///
+  /// * [DuplicateResolve] duplicateResolve (required):
+  Future<DuplicateResolveResult?> resolveDuplicates(
+    DuplicateResolve duplicateResolve,
+  ) async {
+    final response = await resolveDuplicatesWithHttpInfo(
+      duplicateResolve,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'DuplicateResolveResult',
+      ) as DuplicateResolveResult;
+    }
+    return null;
   }
 
   /// Put back what the guest deleted in the last 90 days, after an attack or a mistake

@@ -18,7 +18,7 @@ async function upload(page: Page, names: string[]) {
 	await expect(page.locator('.tl-tile')).toHaveCount(before + names.length, { timeout: 60000 });
 }
 
-test('similar photos are proposed, and removed only after confirming', async ({ page }) => {
+test('similar photos are proposed, and resolving one keeps what the copy had', async ({ page }) => {
 	await signIn(page, 'stacker');
 	await upload(page, ['similar-a.jpg', 'similar-b.jpg']);
 
@@ -28,20 +28,40 @@ test('similar photos are proposed, and removed only after confirming', async ({ 
 	}).toPass({ timeout: WORKER_WAIT, intervals: [5000] });
 	await expect(page.locator('.dup-item.on')).toHaveCount(1);
 	await expect(page.locator('.dup-item.on')).toContainText('similar-a.jpg');
+	await expect(page.locator('.dup-head')).toContainText('Proposed to keep');
 
-	// Keeping both leaves nothing to remove.
+	// The copy that goes is in an album; the kept one takes its place there.
+	const list = await (await page.request.get('/api/assets?limit=200')).json();
+	const idOf = (name: string) =>
+		list.items.find((asset: { originalName: string }) => asset.originalName === name).id;
+	const album = await (
+		await page.request.post('/api/albums', { data: { title: `Dup ${Date.now()}` } })
+	).json();
+	await page.request.post(`/api/albums/${album.id}/assets`, {
+		data: { ids: [idOf('similar-b.jpg')] }
+	});
+
+	// Keeping both leaves nothing to resolve.
 	await page.locator('.dup-item:not(.on)').click();
-	await expect(page.getByRole('button', { name: 'Move to the trash (0)' })).toBeDisabled();
+	await expect(page.getByRole('button', { name: 'Resolve (0 to the trash)' })).toBeDisabled();
 	await page.locator('.dup-item', { hasText: 'similar-b.jpg' }).click();
 
-	await page.getByRole('button', { name: 'Move to the trash (1)' }).click();
+	await page.getByRole('button', { name: 'Resolve (1 to the trash)' }).click();
 	await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
 	await expect(page.locator('.dup-item')).toHaveCount(2);
 
-	await page.getByRole('button', { name: 'Move to the trash (1)' }).click();
-	await page.getByRole('dialog').getByRole('button', { name: 'Move' }).click();
+	await page.getByRole('button', { name: 'Resolve (1 to the trash)' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Resolve' }).click();
 	await expect(page.getByText('No similar photos were found.')).toBeVisible();
 
+	const buckets = await (await page.request.get(`/api/albums/${album.id}/buckets`)).json();
+	let members = '';
+	for (const bucket of buckets.buckets) {
+		const month = await page.request.get(`/api/albums/${album.id}/buckets/${bucket.month}`);
+		members += await month.text();
+	}
+	expect(members).toContain(idOf('similar-a.jpg'));
+	expect(members).not.toContain(idOf('similar-b.jpg'));
 	await page.goto('/trash');
 	await expect(page.locator('.tl-tile')).toHaveCount(1);
 });

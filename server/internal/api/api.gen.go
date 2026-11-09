@@ -371,6 +371,48 @@ func (e BulkRequestAction) Valid() bool {
 	}
 }
 
+// Defines values for CleanupCategoryId.
+const (
+	Blurry      CleanupCategoryId = "blurry"
+	Bursts      CleanupCategoryId = "bursts"
+	LargeVideos CleanupCategoryId = "largeVideos"
+	Screenshots CleanupCategoryId = "screenshots"
+)
+
+// Valid indicates whether the value is a known member of the CleanupCategoryId enum.
+func (e CleanupCategoryId) Valid() bool {
+	switch e {
+	case Blurry:
+		return true
+	case Bursts:
+		return true
+	case LargeVideos:
+		return true
+	case Screenshots:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CleanupItemKind.
+const (
+	CleanupItemKindPhoto CleanupItemKind = "photo"
+	CleanupItemKindVideo CleanupItemKind = "video"
+)
+
+// Valid indicates whether the value is a known member of the CleanupItemKind enum.
+func (e CleanupItemKind) Valid() bool {
+	switch e {
+	case CleanupItemKindPhoto:
+		return true
+	case CleanupItemKindVideo:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DateFixAction.
 const (
 	DateFixActionSet           DateFixAction = "set"
@@ -1070,6 +1112,54 @@ func (e GetAssetThumbnailParamsSize) Valid() bool {
 	case GetAssetThumbnailParamsSizeSmall:
 		return true
 	case GetAssetThumbnailParamsSizeSource:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetCleanupParamsVideoMb.
+const (
+	GetCleanupParamsVideoMbN1000 GetCleanupParamsVideoMb = 1000
+	GetCleanupParamsVideoMbN2000 GetCleanupParamsVideoMb = 2000
+	GetCleanupParamsVideoMbN250  GetCleanupParamsVideoMb = 250
+	GetCleanupParamsVideoMbN500  GetCleanupParamsVideoMb = 500
+)
+
+// Valid indicates whether the value is a known member of the GetCleanupParamsVideoMb enum.
+func (e GetCleanupParamsVideoMb) Valid() bool {
+	switch e {
+	case GetCleanupParamsVideoMbN1000:
+		return true
+	case GetCleanupParamsVideoMbN2000:
+		return true
+	case GetCleanupParamsVideoMbN250:
+		return true
+	case GetCleanupParamsVideoMbN500:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListCleanupParamsVideoMb.
+const (
+	ListCleanupParamsVideoMbN1000 ListCleanupParamsVideoMb = 1000
+	ListCleanupParamsVideoMbN2000 ListCleanupParamsVideoMb = 2000
+	ListCleanupParamsVideoMbN250  ListCleanupParamsVideoMb = 250
+	ListCleanupParamsVideoMbN500  ListCleanupParamsVideoMb = 500
+)
+
+// Valid indicates whether the value is a known member of the ListCleanupParamsVideoMb enum.
+func (e ListCleanupParamsVideoMb) Valid() bool {
+	switch e {
+	case ListCleanupParamsVideoMbN1000:
+		return true
+	case ListCleanupParamsVideoMbN2000:
+		return true
+	case ListCleanupParamsVideoMbN250:
+		return true
+	case ListCleanupParamsVideoMbN500:
 		return true
 	default:
 		return false
@@ -1952,6 +2042,48 @@ type ChecksumCheckResponse struct {
 	Ids map[string]openapi_types.UUID `json:"ids"`
 }
 
+// CleanupCategory defines model for CleanupCategory.
+type CleanupCategory struct {
+	Bytes int64             `json:"bytes"`
+	Count int64             `json:"count"`
+	Id    CleanupCategoryId `json:"id"`
+}
+
+// CleanupCategoryId defines model for CleanupCategoryId.
+type CleanupCategoryId string
+
+// CleanupItem defines model for CleanupItem.
+type CleanupItem struct {
+	DurationMs   *int64             `json:"durationMs,omitempty"`
+	Favorite     bool               `json:"favorite"`
+	Height       *int               `json:"height,omitempty"`
+	Id           openapi_types.UUID `json:"id"`
+	InAlbum      bool               `json:"inAlbum"`
+	Kind         CleanupItemKind    `json:"kind"`
+	LocalAt      string             `json:"localAt"`
+	OriginalName string             `json:"originalName"`
+	Ratio        float32            `json:"ratio"`
+	SizeBytes    int64              `json:"sizeBytes"`
+	Width        *int               `json:"width,omitempty"`
+}
+
+// CleanupItemKind defines model for CleanupItem.Kind.
+type CleanupItemKind string
+
+// CleanupPage defines model for CleanupPage.
+type CleanupPage struct {
+	Items      []CleanupItem `json:"items"`
+	NextOffset *int          `json:"nextOffset,omitempty"`
+}
+
+// CleanupSummary defines model for CleanupSummary.
+type CleanupSummary struct {
+	Categories []CleanupCategory `json:"categories"`
+
+	// Pending Photos whose sharpness is not measured yet
+	Pending int64 `json:"pending"`
+}
+
 // Comment defines model for Comment.
 type Comment struct {
 	Body      string             `json:"body"`
@@ -2027,31 +2159,74 @@ type Documents struct {
 	Items   []TimelineItem `json:"items"`
 }
 
+// DuplicateChoice defines model for DuplicateChoice.
+type DuplicateChoice struct {
+	KeepId   openapi_types.UUID   `json:"keepId"`
+	TrashIds []openapi_types.UUID `json:"trashIds"`
+}
+
 // DuplicateGroup defines model for DuplicateGroup.
 type DuplicateGroup struct {
-	Items []DuplicateItem `json:"items"`
+	// Exact The same file or the same picture, not only alike
+	Exact bool `json:"exact"`
 
-	// KeepId The largest one, proposed to keep
+	// FreedBytes What moving the others to the trash frees, once it is emptied
+	FreedBytes int64           `json:"freedBytes"`
+	Items      []DuplicateItem `json:"items"`
+
+	// KeepId The best one, proposed to keep
 	KeepId openapi_types.UUID `json:"keepId"`
 }
 
 // DuplicateItem defines model for DuplicateItem.
 type DuplicateItem struct {
-	Height       *int               `json:"height,omitempty"`
-	Id           openapi_types.UUID `json:"id"`
-	LocalAt      string             `json:"localAt"`
-	OriginalName string             `json:"originalName"`
-	Ratio        float32            `json:"ratio"`
-	SizeBytes    int64              `json:"sizeBytes"`
-	Width        *int               `json:"width,omitempty"`
+	Favorite    bool               `json:"favorite"`
+	HasCaption  bool               `json:"hasCaption"`
+	HasDate     bool               `json:"hasDate"`
+	HasLocation bool               `json:"hasLocation"`
+	Height      *int               `json:"height,omitempty"`
+	Id          openapi_types.UUID `json:"id"`
+	LocalAt     string             `json:"localAt"`
+
+	// Original A camera's own format, such as HEIC, RAW or ProRes
+	Original     bool    `json:"original"`
+	OriginalName string  `json:"originalName"`
+	Ratio        float32 `json:"ratio"`
+
+	// Resaved Saved again by an app, such as a WhatsApp copy
+	Resaved   bool  `json:"resaved"`
+	SizeBytes int64 `json:"sizeBytes"`
+	Width     *int  `json:"width,omitempty"`
+}
+
+// DuplicateResolve defines model for DuplicateResolve.
+type DuplicateResolve struct {
+	// All Every group, each by its proposal
+	All    *bool `json:"all,omitempty"`
+	DryRun *bool `json:"dryRun,omitempty"`
+
+	// ExactOnly With all: only groups of the same file or picture
+	ExactOnly *bool              `json:"exactOnly,omitempty"`
+	Groups    *[]DuplicateChoice `json:"groups,omitempty"`
+}
+
+// DuplicateResolveResult defines model for DuplicateResolveResult.
+type DuplicateResolveResult struct {
+	Background bool  `json:"background"`
+	FreedBytes int64 `json:"freedBytes"`
+	Groups     int   `json:"groups"`
+	Trashed    int   `json:"trashed"`
 }
 
 // Duplicates defines model for Duplicates.
 type Duplicates struct {
-	Groups []DuplicateGroup `json:"groups"`
+	// ExactTotal Groups of the same file or picture
+	ExactTotal *int             `json:"exactTotal,omitempty"`
+	Groups     []DuplicateGroup `json:"groups"`
 
 	// Pending Photos not compared yet
-	Pending int `json:"pending"`
+	Pending   int              `json:"pending"`
+	Resolving *ResolveProgress `json:"resolving,omitempty"`
 
 	// Total All groups, of which at most the first 100 are listed
 	Total int `json:"total"`
@@ -2699,6 +2874,12 @@ type QuotaUpdate struct {
 	QuotaBytes *int64 `json:"quotaBytes,omitempty"`
 }
 
+// ResolveProgress defines model for ResolveProgress.
+type ResolveProgress struct {
+	Done  int `json:"done"`
+	Total int `json:"total"`
+}
+
 // SearchFilters Every filter the search used, those asked for and those found in the words.
 type SearchFilters struct {
 	Album       *AlbumRef                 `json:"album,omitempty"`
@@ -3286,6 +3467,29 @@ type BeginPasskeyLoginJSONBody map[string]interface{}
 // FinishPasskeyLoginJSONBody defines parameters for FinishPasskeyLogin.
 type FinishPasskeyLoginJSONBody map[string]interface{}
 
+// GetCleanupParams defines parameters for GetCleanup.
+type GetCleanupParams struct {
+	// Blur How strict: 1 offers only the blurriest, 5 the most
+	Blur *int `form:"blur,omitempty" json:"blur,omitempty"`
+
+	// VideoMb Videos at least this large
+	VideoMb *GetCleanupParamsVideoMb `form:"videoMb,omitempty" json:"videoMb,omitempty"`
+}
+
+// GetCleanupParamsVideoMb defines parameters for GetCleanup.
+type GetCleanupParamsVideoMb int
+
+// ListCleanupParams defines parameters for ListCleanup.
+type ListCleanupParams struct {
+	Blur    *int                      `form:"blur,omitempty" json:"blur,omitempty"`
+	VideoMb *ListCleanupParamsVideoMb `form:"videoMb,omitempty" json:"videoMb,omitempty"`
+	Offset  *int                      `form:"offset,omitempty" json:"offset,omitempty"`
+	Limit   *int                      `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListCleanupParamsVideoMb defines parameters for ListCleanup.
+type ListCleanupParamsVideoMb int
+
 // GetCollectionAssetParamsScope defines parameters for GetCollectionAsset.
 type GetCollectionAssetParamsScope string
 
@@ -3532,8 +3736,14 @@ type AnswerQRSignInJSONRequestBody = QRAnswer
 // SetupJSONRequestBody defines body for Setup for application/json ContentType.
 type SetupJSONRequestBody = SetupRequest
 
+// KeepFromCleanupJSONRequestBody defines body for KeepFromCleanup for application/json ContentType.
+type KeepFromCleanupJSONRequestBody = AssetIds
+
 // DismissDuplicatesJSONRequestBody defines body for DismissDuplicates for application/json ContentType.
 type DismissDuplicatesJSONRequestBody = AssetIds
+
+// ResolveDuplicatesJSONRequestBody defines body for ResolveDuplicates for application/json ContentType.
+type ResolveDuplicatesJSONRequestBody = DuplicateResolve
 
 // AssignFaceJSONRequestBody defines body for AssignFace for application/json ContentType.
 type AssignFaceJSONRequestBody = FaceAssign
@@ -3975,6 +4185,15 @@ type ServerInterface interface {
 	// GetAuthStatus Report whether setup is needed and who is signed in
 	// (GET /api/auth/status)
 	GetAuthStatus(w http.ResponseWriter, r *http.Request)
+	// GetCleanup How many of my photos and videos each kind of clean-up would offer, and their size
+	// (GET /api/cleanup)
+	GetCleanup(w http.ResponseWriter, r *http.Request, params GetCleanupParams)
+	// KeepFromCleanup These stay, and clean-up does not offer them again
+	// (POST /api/cleanup/keep)
+	KeepFromCleanup(w http.ResponseWriter, r *http.Request)
+	// ListCleanup The photos or videos of one kind of clean-up, a page at a time
+	// (GET /api/cleanup/{category})
+	ListCleanup(w http.ResponseWriter, r *http.Request, category CleanupCategoryId, params ListCleanupParams)
 	// GetCollectionAsset An asset in a collection
 	// (GET /api/collections/{scope}/assets/{id})
 	GetCollectionAsset(w http.ResponseWriter, r *http.Request, scope GetCollectionAssetParamsScope, id openapi_types.UUID)
@@ -4005,6 +4224,9 @@ type ServerInterface interface {
 	// DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 	// (POST /api/duplicates/dismiss)
 	DismissDuplicates(w http.ResponseWriter, r *http.Request)
+	// ResolveDuplicates Keeps one photo of each group, gives it what the others had, and moves the others to the trash
+	// (POST /api/duplicates/resolve)
+	ResolveDuplicates(w http.ResponseWriter, r *http.Request)
 	// ListExplorePlaces The places in the user's own photos, those with the most first
 	// (GET /api/explore/places)
 	ListExplorePlaces(w http.ResponseWriter, r *http.Request)
@@ -5037,6 +5259,24 @@ func (_ Unimplemented) GetAuthStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// GetCleanup How many of my photos and videos each kind of clean-up would offer, and their size
+// (GET /api/cleanup)
+func (_ Unimplemented) GetCleanup(w http.ResponseWriter, r *http.Request, params GetCleanupParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// KeepFromCleanup These stay, and clean-up does not offer them again
+// (POST /api/cleanup/keep)
+func (_ Unimplemented) KeepFromCleanup(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListCleanup The photos or videos of one kind of clean-up, a page at a time
+// (GET /api/cleanup/{category})
+func (_ Unimplemented) ListCleanup(w http.ResponseWriter, r *http.Request, category CleanupCategoryId, params ListCleanupParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetCollectionAsset An asset in a collection
 // (GET /api/collections/{scope}/assets/{id})
 func (_ Unimplemented) GetCollectionAsset(w http.ResponseWriter, r *http.Request, scope GetCollectionAssetParamsScope, id openapi_types.UUID) {
@@ -5094,6 +5334,12 @@ func (_ Unimplemented) ListDuplicates(w http.ResponseWriter, r *http.Request) {
 // DismissDuplicates These photos are not duplicates of each other, and are not proposed again
 // (POST /api/duplicates/dismiss)
 func (_ Unimplemented) DismissDuplicates(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ResolveDuplicates Keeps one photo of each group, gives it what the others had, and moves the others to the trash
+// (POST /api/duplicates/resolve)
+func (_ Unimplemented) ResolveDuplicates(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -8347,6 +8593,147 @@ func (siw *ServerInterfaceWrapper) GetAuthStatus(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// GetCleanup operation middleware
+func (siw *ServerInterfaceWrapper) GetCleanup(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetCleanupParams
+
+	// ------------- Optional query parameter "blur" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "blur", r.URL.Query(), &params.Blur, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "blur"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "blur", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "videoMb" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "videoMb", r.URL.Query(), &params.VideoMb, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "videoMb"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "videoMb", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCleanup(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// KeepFromCleanup operation middleware
+func (siw *ServerInterfaceWrapper) KeepFromCleanup(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.KeepFromCleanup(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListCleanup operation middleware
+func (siw *ServerInterfaceWrapper) ListCleanup(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "category" -------------
+	var category CleanupCategoryId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "category", chi.URLParam(r, "category"), &category, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "category", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListCleanupParams
+
+	// ------------- Optional query parameter "blur" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "blur", r.URL.Query(), &params.Blur, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "blur"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "blur", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "videoMb" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "videoMb", r.URL.Query(), &params.VideoMb, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "videoMb"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "videoMb", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "offset", r.URL.Query(), &params.Offset, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "offset"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListCleanup(w, r, category, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetCollectionAsset operation middleware
 func (siw *ServerInterfaceWrapper) GetCollectionAsset(w http.ResponseWriter, r *http.Request) {
 
@@ -8657,6 +9044,20 @@ func (siw *ServerInterfaceWrapper) DismissDuplicates(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DismissDuplicates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ResolveDuplicates operation middleware
+func (siw *ServerInterfaceWrapper) ResolveDuplicates(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResolveDuplicates(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -11569,6 +11970,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/duplicates/dismiss", wrapper.DismissDuplicates)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/duplicates/resolve", wrapper.ResolveDuplicates)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/cleanup", wrapper.GetCleanup)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/cleanup/keep", wrapper.KeepFromCleanup)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/cleanup/{category}", wrapper.ListCleanup)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/audit", wrapper.ListAuditLog)

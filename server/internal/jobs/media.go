@@ -583,3 +583,6 @@ func WriteSidecar(ctx context.Context, original, path string) (int64, error) {
 	}
 	return info.Size(), nil
 }
+
+// IsRaw tells a camera's RAW file by its name.
+func IsRaw(path string) bool { return isRaw(path) }

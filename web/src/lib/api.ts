@@ -62,6 +62,12 @@ export type AssetEdits = components['schemas']['AssetEdits'];
 export type Folder = components['schemas']['Folder'];
 export type ExternalLibrary = components['schemas']['ExternalLibrary'];
 export type Duplicates = components['schemas']['Duplicates'];
+export type DuplicateResolve = components['schemas']['DuplicateResolve'];
+export type DuplicateResolveResult = components['schemas']['DuplicateResolveResult'];
+export type CleanupSummary = components['schemas']['CleanupSummary'];
+export type CleanupCategoryId = components['schemas']['CleanupCategoryId'];
+export type CleanupItem = components['schemas']['CleanupItem'];
+export type CleanupPage = components['schemas']['CleanupPage'];
 export type DuplicateGroup = components['schemas']['DuplicateGroup'];
 export type MapPoints = components['schemas']['MapPoints'];
 export type Memory = components['schemas']['Memory'];
@@ -418,6 +424,16 @@ export const api = {
 		request<{ query: string }>(fetch, '/api/search/ask', { question }),
 	duplicates: () => request<Duplicates>(fetch, '/api/duplicates'),
 	dismissDuplicates: (ids: string[]) => request<void>(fetch, '/api/duplicates/dismiss', { ids }),
+	resolveDuplicates: (body: DuplicateResolve) =>
+		request<DuplicateResolveResult>(fetch, '/api/duplicates/resolve', body),
+	cleanup: (blur: number, videoMb: number) =>
+		request<CleanupSummary>(fetch, `/api/cleanup?blur=${blur}&videoMb=${videoMb}`),
+	cleanupPage: (category: CleanupCategoryId, blur: number, videoMb: number, offset = 0) =>
+		request<CleanupPage>(
+			fetch,
+			`/api/cleanup/${category}?blur=${blur}&videoMb=${videoMb}&offset=${offset}`
+		),
+	keepFromCleanup: (ids: string[]) => request<void>(fetch, '/api/cleanup/keep', { ids }),
 	setStackMain: (id: string) =>
 		request<void>(fetch, `/api/assets/${id}/stack/main`, undefined, 'PUT'),
 	dissolveStack: (id: string) =>

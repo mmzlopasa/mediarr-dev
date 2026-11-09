@@ -110,6 +110,7 @@ var ownOnlyRoutes = map[string]bool{
 	"PUT /api/faces/{id}":                          true,
 	"DELETE /api/faces/{id}":                       true,
 	"GET /api/timeline/buckets/{month}":            true,
+	"GET /api/cleanup/{category}":                  true,
 	"GET /api/collections/{scope}/buckets":         true,
 	"GET /api/collections/{scope}/buckets/{month}": true,
 	"PUT /api/partners/{userId}":                   true,

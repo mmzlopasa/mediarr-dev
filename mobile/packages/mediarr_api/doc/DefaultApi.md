@@ -88,6 +88,7 @@ Method | HTTP request | Description
 [**getAuthStatus**](DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 [**getAvatar**](DefaultApi.md#getavatar) | **GET** /api/users/{id}/avatar | The picture of a person with an account here, for anyone signed in
 [**getBackupSettings**](DefaultApi.md#getbackupsettings) | **GET** /api/admin/backup | Where backups go, without any secret
+[**getCleanup**](DefaultApi.md#getcleanup) | **GET** /api/cleanup | How many of my photos and videos each kind of clean-up would offer, and their size
 [**getCollectionAsset**](DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 [**getCollectionBucket**](DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
 [**getCollectionBuckets**](DefaultApi.md#getcollectionbuckets) | **GET** /api/collections/{scope}/buckets | Months in the archive, the trash or the unlocked vault
@@ -142,6 +143,7 @@ Method | HTTP request | Description
 [**getUploadOffset**](DefaultApi.md#getuploadoffset) | **HEAD** /api/uploads/{id} | Read how much of an upload has arrived (tus 1.0)
 [**getVaultStatus**](DefaultApi.md#getvaultstatus) | **GET** /api/vault/status | Whether the vault has a PIN and is unlocked
 [**inviteKeepGuest**](DefaultApi.md#invitekeepguest) | **POST** /api/admin/keep/guests | Invite another Mediarr server to keep its backup here. The code is shown once and works once, within seven days
+[**keepFromCleanup**](DefaultApi.md#keepfromcleanup) | **POST** /api/cleanup/keep | These stay, and clean-up does not offer them again
 [**listAPIKeys**](DefaultApi.md#listapikeys) | **GET** /api/me/api-keys | The current user's keys, without the keys themselves
 [**listAlbumComments**](DefaultApi.md#listalbumcomments) | **GET** /api/albums/{id}/comments | Comments on an album, or with assetId on one photo, and that photo's hearts
 [**listAlbumLinks**](DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
@@ -155,6 +157,7 @@ Method | HTTP request | Description
 [**listBackupDevices**](DefaultApi.md#listbackupdevices) | **GET** /api/me/backup-devices | The current user's devices that back up, with what the server counts as safe from each
 [**listBackupRuns**](DefaultApi.md#listbackupruns) | **GET** /api/admin/backup/runs | Backups and tests of bringing one back, the newest first
 [**listCameras**](DefaultApi.md#listcameras) | **GET** /api/albums/cameras | Cameras in the current user's library, for smart album rules
+[**listCleanup**](DefaultApi.md#listcleanup) | **GET** /api/cleanup/{category} | The photos or videos of one kind of clean-up, a page at a time
 [**listDirectory**](DefaultApi.md#listdirectory) | **GET** /api/users/directory | The other users of this server, for choosing who to share with
 [**listDuplicates**](DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
 [**listExplorePlaces**](DefaultApi.md#listexploreplaces) | **GET** /api/explore/places | The places in the user's own photos, those with the most first
@@ -196,6 +199,7 @@ Method | HTTP request | Description
 [**renameTag**](DefaultApi.md#renametag) | **PATCH** /api/tags/{id} | Rename a tag. When another tag already has the name, merge says to join the two
 [**reportBackupDevice**](DefaultApi.md#reportbackupdevice) | **PUT** /api/me/backup-devices/{id} | A device says how its backup is doing, with checksums of files it has seen confirmed
 [**resetPassword**](DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
+[**resolveDuplicates**](DefaultApi.md#resolveduplicates) | **POST** /api/duplicates/resolve | Keeps one photo of each group, gives it what the others had, and moves the others to the trash
 [**restoreKeepGuestDeleted**](DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
 [**resumeJobQueue**](DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 [**retryJob**](DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
@@ -3423,6 +3427,49 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getCleanup**
+> CleanupSummary getCleanup(blur, videoMb)
+
+How many of my photos and videos each kind of clean-up would offer, and their size
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final blur = 56; // int | How strict: 1 offers only the blurriest, 5 the most
+final videoMb = 56; // int | Videos at least this large
+
+try {
+    final result = api_instance.getCleanup(blur, videoMb);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCleanup: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **blur** | **int**| How strict: 1 offers only the blurriest, 5 the most | [optional] 
+ **videoMb** | **int**| Videos at least this large | [optional] 
+
+### Return type
+
+[**CleanupSummary**](CleanupSummary.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getCollectionAsset**
 > AssetDetail getCollectionAsset(scope, id)
 
@@ -5592,6 +5639,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **keepFromCleanup**
+> keepFromCleanup(assetIds)
+
+These stay, and clean-up does not offer them again
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final assetIds = AssetIds(); // AssetIds | 
+
+try {
+    api_instance.keepFromCleanup(assetIds);
+} catch (e) {
+    print('Exception when calling DefaultApi->keepFromCleanup: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **assetIds** | [**AssetIds**](AssetIds.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listAPIKeys**
 > List<ApiKey> listAPIKeys()
 
@@ -6095,6 +6182,55 @@ This endpoint does not need any parameter.
 ### Return type
 
 **List<String>**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listCleanup**
+> CleanupPage listCleanup(category, blur, videoMb, offset, limit)
+
+The photos or videos of one kind of clean-up, a page at a time
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final category = ; // CleanupCategoryId | 
+final blur = 56; // int | 
+final videoMb = 56; // int | 
+final offset = 56; // int | 
+final limit = 56; // int | 
+
+try {
+    final result = api_instance.listCleanup(category, blur, videoMb, offset, limit);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listCleanup: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **category** | [**CleanupCategoryId**](.md)|  | 
+ **blur** | **int**|  | [optional] 
+ **videoMb** | **int**|  | [optional] 
+ **offset** | **int**|  | [optional] 
+ **limit** | **int**|  | [optional] 
+
+### Return type
+
+[**CleanupPage**](CleanupPage.md)
 
 ### Authorization
 
@@ -7699,6 +7835,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **resolveDuplicates**
+> DuplicateResolveResult resolveDuplicates(duplicateResolve)
+
+Keeps one photo of each group, gives it what the others had, and moves the others to the trash
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final duplicateResolve = DuplicateResolve(); // DuplicateResolve | 
+
+try {
+    final result = api_instance.resolveDuplicates(duplicateResolve);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->resolveDuplicates: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **duplicateResolve** | [**DuplicateResolve**](DuplicateResolve.md)|  | 
+
+### Return type
+
+[**DuplicateResolveResult**](DuplicateResolveResult.md)
 
 ### Authorization
 

@@ -121,8 +121,11 @@ func (q *Queries) ListHashes(ctx context.Context, userID pgtype.UUID) ([]ListHas
 }
 
 const listSimilarItems = `-- name: ListSimilarItems :many
-SELECT a.id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.original_name, a.size_bytes, a.sharpness
+SELECT a.id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.original_name, a.size_bytes, a.sharpness,
+       a.mime_type, a.checksum, a.phash, (a.taken_at IS NOT NULL)::boolean AS has_date, (a.caption <> '')::boolean AS has_caption,
+       (e.latitude IS NOT NULL)::boolean AS has_location, coalesce(e.make, '') AS camera_make
 FROM assets a
+LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.id = ANY($1::uuid[]) AND a.user_id = $2
 `
 
@@ -143,6 +146,13 @@ type ListSimilarItemsRow struct {
 	OriginalName string
 	SizeBytes    int64
 	Sharpness    pgtype.Float4
+	MimeType     pgtype.Text
+	Checksum     []byte
+	Phash        pgtype.Int8
+	HasDate      bool
+	HasCaption   bool
+	HasLocation  bool
+	CameraMake   string
 }
 
 func (q *Queries) ListSimilarItems(ctx context.Context, arg ListSimilarItemsParams) ([]ListSimilarItemsRow, error) {
@@ -166,6 +176,13 @@ func (q *Queries) ListSimilarItems(ctx context.Context, arg ListSimilarItemsPara
 			&i.OriginalName,
 			&i.SizeBytes,
 			&i.Sharpness,
+			&i.MimeType,
+			&i.Checksum,
+			&i.Phash,
+			&i.HasDate,
+			&i.HasCaption,
+			&i.HasLocation,
+			&i.CameraMake,
 		); err != nil {
 			return nil, err
 		}

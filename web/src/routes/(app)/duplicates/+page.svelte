@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { trashDays } from '#lib/preferences.svelte.ts';
-	import { api, formatBytes, type DuplicateGroup, type Duplicates } from '#lib/api.ts';
+	import {
+		api,
+		formatBytes,
+		type DuplicateGroup,
+		type DuplicateResolveResult,
+		type Duplicates
+	} from '#lib/api.ts';
+	import { choiceOf, notesOf, reasonOf } from '#lib/organize/duplicates.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
@@ -11,12 +18,16 @@
 	import { tr } from '#lib/i18n.svelte.ts';
 
 	const POLL_MS = 10000;
+	const BUSY_POLL_MS = 1500;
 
 	let data = $state<Duplicates>();
 	let failed = $state(false);
 	// What the user changed by hand. Everything else follows the proposal.
 	let choices = $state<Record<string, boolean>>({});
 	let confirming = $state<DuplicateGroup>();
+	// Resolving every group: what it would do, before it is confirmed.
+	let all = $state<{ exactOnly: boolean; result: DuplicateResolveResult }>();
+	let working = $state(false);
 
 	async function load() {
 		try {
@@ -29,7 +40,7 @@
 
 	$effect(() => {
 		load();
-		const timer = setInterval(load, POLL_MS);
+		const timer = setInterval(load, data?.resolving ? BUSY_POLL_MS : POLL_MS);
 		return () => clearInterval(timer);
 	});
 
@@ -37,16 +48,44 @@
 	const toTrash = (group: DuplicateGroup) =>
 		group.items.filter((item) => !keeps(group, item.id)).map((item) => item.id);
 
-	async function trash() {
+	async function resolve() {
 		if (!confirming) return;
-		const ids = toTrash(confirming);
+		const group = confirming;
+		const choice = choiceOf(group, (id) => keeps(group, id));
+		if (!choice) return;
+		working = true;
 		try {
-			await api.bulk(ids, 'delete');
+			await api.resolveDuplicates({ groups: [choice] });
 			confirming = undefined;
-			showToast('ok', tr('Premješteno u smeće.', 'Moved to the trash.'));
+			showToast('ok', tr('Riješeno. Kopije su u smeću.', 'Resolved. The copies are in the trash.'));
 			await load();
 		} catch {
 			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		} finally {
+			working = false;
+		}
+	}
+
+	async function previewAll(exactOnly: boolean) {
+		try {
+			const result = await api.resolveDuplicates({ all: true, exactOnly, dryRun: true });
+			all = { exactOnly, result };
+		} catch {
+			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		}
+	}
+
+	async function resolveAll() {
+		if (!all) return;
+		working = true;
+		try {
+			await api.resolveDuplicates({ all: true, exactOnly: all.exactOnly });
+			all = undefined;
+			await load();
+		} catch {
+			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+		} finally {
+			working = false;
 		}
 	}
 
@@ -77,6 +116,19 @@
 			)}</Alert
 		>
 	{/if}
+	{#if data.resolving}
+		<section class="card glass dup-progress" aria-live="polite">
+			<div class="card-b">
+				<b
+					>{tr(
+						`Rješavam duplikate: ${data.resolving.done} od ${data.resolving.total}`,
+						`Resolving duplicates: ${data.resolving.done} of ${data.resolving.total}`
+					)}</b
+				>
+				<progress max={data.resolving.total} value={data.resolving.done}></progress>
+			</div>
+		</section>
+	{/if}
 	{#if data.groups.length === 0}
 		<section class="card glass">
 			<div class="card-b">
@@ -99,9 +151,39 @@
 				)}
 			{/if}
 		</p>
+		{#if !data.resolving}
+			<div class="dup-all">
+				{#if (data.exactTotal ?? 0) > 0}
+					<Button onclick={() => previewAll(true)}
+						>{tr(
+							`Riješi iste (${data.exactTotal})`,
+							`Resolve the identical (${data.exactTotal})`
+						)}</Button
+					>
+				{/if}
+				<Button variant="gold" onclick={() => previewAll(false)}
+					>{tr(
+						`Riješi sve po prijedlogu (${data.total})`,
+						`Resolve all as proposed (${data.total})`
+					)}</Button
+				>
+			</div>
+		{/if}
 		{#each data.groups as group (group.items[0].id)}
 			<section class="card glass dup-group">
 				<div class="card-b">
+					<p class="dup-head">
+						<span class="dup-kind" class:exact={group.exact}
+							>{group.exact ? tr('Ista slika', 'Same picture') : tr('Slične', 'Alike')}</span
+						>
+						<span
+							>{tr('Predlažem zadržati', 'Proposed to keep')}: {reasonOf(group, tr)} · {tr(
+								'oslobađa',
+								'frees'
+							)}
+							{formatBytes(group.freedBytes)}</span
+						>
+					</p>
 					<div class="dup-grid">
 						{#each group.items as item (item.id)}
 							<button
@@ -122,6 +204,11 @@
 									{#if item.width && item.height}{item.width} × {item.height} ·
 									{/if}{formatBytes(item.sizeBytes)}
 								</small>
+								{#if notesOf(item, tr).length}
+									<span class="dup-notes">
+										{#each notesOf(item, tr) as note (note)}<i>{note}</i>{/each}
+									</span>
+								{/if}
 							</button>
 						{/each}
 					</div>
@@ -133,8 +220,8 @@
 							onclick={() => (confirming = group)}
 						>
 							{tr(
-								`Premjesti u smeće (${toTrash(group).length})`,
-								`Move to the trash (${toTrash(group).length})`
+								`Riješi (${toTrash(group).length} u smeće)`,
+								`Resolve (${toTrash(group).length} to the trash)`
 							)}
 						</Button>
 					</div>
@@ -145,17 +232,45 @@
 {/if}
 
 <Dialog
-	title={tr('Premjestiti u smeće?', 'Move to the trash?')}
+	title={tr('Riješiti ovu grupu?', 'Resolve this group?')}
 	bind:open={() => confirming !== undefined, (open) => !open && (confirming = undefined)}
 >
 	<p>
 		{tr(
-			`Odabrane fotke ostaju u smeću ${trashDays()} dana i mogu se vratiti.`,
-			`The selected photos stay in the trash for ${trashDays()} days and can be restored.`
+			`Zadržana fotka preuzima albume, oznake, favorit, opis, ocjenu, lokaciju i imena osoba od ostalih. One idu u smeće na ${trashDays()} dana i mogu se vratiti.`,
+			`The kept photo takes over the albums, tags, favorite, description, rating, location and names of people from the others. They go to the trash for ${trashDays()} days and can be restored.`
 		)}
 	</p>
 	{#snippet footer()}
 		<Button onclick={() => (confirming = undefined)}>{tr('Odustani', 'Cancel')}</Button>
-		<Button variant="danger" onclick={trash}>{tr('Premjesti', 'Move')}</Button>
+		<Button variant="danger" disabled={working} onclick={resolve}>{tr('Riješi', 'Resolve')}</Button>
+	{/snippet}
+</Dialog>
+
+<Dialog
+	title={all?.exactOnly
+		? tr('Riješiti sve iste slike?', 'Resolve every identical picture?')
+		: tr('Riješiti sve duplikate?', 'Resolve all duplicates?')}
+	bind:open={() => all !== undefined, (open) => !open && (all = undefined)}
+>
+	{#if all}
+		<p>
+			{tr(
+				`Grupa: ${all.result.groups}. U smeće ide ${all.result.trashed} fotki, što oslobađa ${formatBytes(all.result.freedBytes)} kad se smeće isprazni.`,
+				`Groups: ${all.result.groups}. ${all.result.trashed} photos go to the trash, which frees ${formatBytes(all.result.freedBytes)} once it is emptied.`
+			)}
+		</p>
+		<p>
+			{tr(
+				`U svakoj grupi ostaje predložena fotka i preuzima ono što su imale ostale. Sve ostaje u smeću ${trashDays()} dana i može se vratiti.`,
+				`In each group the proposed photo stays and takes over what the others had. Everything stays in the trash for ${trashDays()} days and can be restored.`
+			)}
+		</p>
+	{/if}
+	{#snippet footer()}
+		<Button onclick={() => (all = undefined)}>{tr('Odustani', 'Cancel')}</Button>
+		<Button variant="danger" disabled={working} onclick={resolveAll}
+			>{tr('Riješi sve', 'Resolve all')}</Button
+		>
 	{/snippet}
 </Dialog>

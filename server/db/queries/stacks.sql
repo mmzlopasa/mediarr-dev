@@ -88,8 +88,11 @@ WHERE p.user_id = $1 AND p.dismissed_at IS NULL
   AND b.status = 'ready' AND b.deleted_at IS NULL AND b.archived_at IS NULL AND b.vault_at IS NULL AND b.stack_parent IS NULL;
 
 -- name: ListSimilarItems :many
-SELECT a.id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.original_name, a.size_bytes, a.sharpness
+SELECT a.id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a.is_favorite, a.local_at, a.original_name, a.size_bytes, a.sharpness,
+       a.mime_type, a.checksum, a.phash, (a.taken_at IS NOT NULL)::boolean AS has_date, (a.caption <> '')::boolean AS has_caption,
+       (e.latitude IS NOT NULL)::boolean AS has_location, coalesce(e.make, '') AS camera_make
 FROM assets a
+LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.id = ANY($1::uuid[]) AND a.user_id = $2;
 
 -- name: DismissSimilar :exec

@@ -121,6 +121,7 @@ type Asset struct {
 	ImportOffsetMinutes pgtype.Int4
 	Projection          pgtype.Text
 	ManualLocationNone  bool
+	CleanupKeptAt       pgtype.Timestamptz
 }
 
 type AssetDescription struct {

@@ -53,6 +53,11 @@ class FakeServer {
 
   /// The code a signed-in screen showed, and the device that handed it in.
   static const qrCode = 'K7QM-2XPA';
+
+  /// A copy of the photo, for duplicates.
+  static const copyId = '33333333-3333-4333-8333-333333333333';
+  Map<String, dynamic>? savedResolve;
+  List<String> trashed = [];
   String? qrDevice;
   int qrWaits = 0;
 
@@ -196,6 +201,101 @@ class FakeServer {
     if (path.startsWith('/api/me/device-keys/') && request.method == 'DELETE') {
       request.response.statusCode = 204;
       await request.response.close();
+      return;
+    }
+    if (path == '/api/duplicates') {
+      Map<String, Object> item(
+        String id,
+        String name, {
+        bool original = false,
+      }) => {
+        'id': id,
+        'originalName': name,
+        'sizeBytes': 2000000,
+        'width': 3000,
+        'height': 2000,
+        'ratio': 1.5,
+        'localAt': '2024-07-01T10:00:00',
+        'favorite': false,
+        'original': original,
+        'resaved': !original,
+        'hasDate': true,
+        'hasLocation': false,
+        'hasCaption': false,
+      };
+      await _json(request, 200, {
+        'total': savedResolve == null ? 1 : 0,
+        'pending': 0,
+        'exactTotal': 0,
+        'groups': [
+          if (savedResolve == null)
+            {
+              'keepId': photoId,
+              'exact': false,
+              'freedBytes': 2000000,
+              'items': [
+                item(photoId, 'beach.heic', original: true),
+                item(copyId, 'IMG-20240701-WA0001.jpg'),
+              ],
+            },
+        ],
+      });
+      return;
+    }
+    if (path == '/api/duplicates/resolve' && request.method == 'POST') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      if (body['dryRun'] != true) savedResolve = body;
+      await _json(request, 200, {
+        'groups': 1,
+        'trashed': 1,
+        'freedBytes': 2000000,
+        'background': false,
+      });
+      return;
+    }
+    if (path == '/api/cleanup') {
+      await _json(request, 200, {
+        'pending': 0,
+        'categories': [
+          for (final id in ['blurry', 'screenshots', 'largeVideos', 'bursts'])
+            {
+              'id': id,
+              'count': id == 'screenshots' && trashed.isEmpty ? 1 : 0,
+              'bytes': 1000,
+            },
+        ],
+      });
+      return;
+    }
+    if (path.startsWith('/api/cleanup/')) {
+      final screenshots = path.endsWith('/screenshots') && trashed.isEmpty;
+      await _json(request, 200, {
+        'items': [
+          if (screenshots)
+            {
+              'id': photoId,
+              'originalName': 'Screenshot_1.png',
+              'sizeBytes': 1000,
+              'kind': 'photo',
+              'ratio': 0.5,
+              'localAt': '2024-07-01T10:00:00',
+              'favorite': false,
+              'inAlbum': false,
+            },
+        ],
+      });
+      return;
+    }
+    if (path == '/api/assets/bulk' && request.method == 'POST') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      if (body['action'] == 'delete') {
+        trashed = [...(body['ids'] as List).cast<String>()];
+      }
+      await _json(request, 200, {'changed': (body['ids'] as List).length});
       return;
     }
     if (path == '/api/assets/dates' && request.method == 'POST') {

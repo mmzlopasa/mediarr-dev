@@ -17,6 +17,7 @@ import '../services/settings.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import 'share_sheet.dart';
+import 'cleanup_screen.dart';
 import '../timeline/layout.dart';
 import 'album_sheets.dart';
 import 'api_keys_screen.dart';
@@ -77,6 +78,8 @@ class OrganizeLinks extends ConsumerWidget {
         (Icons.description_outlined, 'Documents', const DocumentsScreen()),
       if (!readOnly && !hidden.contains('/duplicates'))
         (Icons.copy_all_outlined, 'Duplicates', const DuplicatesScreen()),
+      if (!readOnly && !hidden.contains('/cleanup'))
+        (Icons.cleaning_services_outlined, 'Clean up', const CleanupScreen()),
       if (!readOnly) (Icons.archive_outlined, 'Archive', const ArchiveScreen()),
       if (!readOnly) (Icons.delete_outline, 'Trash', const TrashScreen()),
       if (!readOnly) (Icons.lock_outline, 'Vault', const VaultScreen()),

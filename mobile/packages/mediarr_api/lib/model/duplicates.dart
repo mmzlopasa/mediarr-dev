@@ -15,6 +15,8 @@ class Duplicates {
   Duplicates({
     required this.total,
     required this.pending,
+    this.exactTotal,
+    this.resolving,
     this.groups = const [],
   });
 
@@ -24,6 +26,23 @@ class Duplicates {
   /// Photos not compared yet
   int pending;
 
+  /// Groups of the same file or picture
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? exactTotal;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  ResolveProgress? resolving;
+
   List<DuplicateGroup> groups;
 
   @override
@@ -32,21 +51,37 @@ class Duplicates {
       other is Duplicates &&
           other.total == total &&
           other.pending == pending &&
+          other.exactTotal == exactTotal &&
+          other.resolving == resolving &&
           _deepEquality.equals(other.groups, groups);
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (total.hashCode) + (pending.hashCode) + (groups.hashCode);
+      (total.hashCode) +
+      (pending.hashCode) +
+      (exactTotal == null ? 0 : exactTotal!.hashCode) +
+      (resolving == null ? 0 : resolving!.hashCode) +
+      (groups.hashCode);
 
   @override
   String toString() =>
-      'Duplicates[total=$total, pending=$pending, groups=$groups]';
+      'Duplicates[total=$total, pending=$pending, exactTotal=$exactTotal, resolving=$resolving, groups=$groups]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'total'] = this.total;
     json[r'pending'] = this.pending;
+    if (this.exactTotal != null) {
+      json[r'exactTotal'] = this.exactTotal;
+    } else {
+      json[r'exactTotal'] = null;
+    }
+    if (this.resolving != null) {
+      json[r'resolving'] = this.resolving;
+    } else {
+      json[r'resolving'] = null;
+    }
     json[r'groups'] = this.groups;
     return json;
   }
@@ -74,6 +109,8 @@ class Duplicates {
       return Duplicates(
         total: mapValueOfType<int>(json, r'total')!,
         pending: mapValueOfType<int>(json, r'pending')!,
+        exactTotal: mapValueOfType<int>(json, r'exactTotal'),
+        resolving: ResolveProgress.fromJson(json[r'resolving']),
         groups: DuplicateGroup.listFromJson(json[r'groups']),
       );
     }
