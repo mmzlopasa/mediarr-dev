@@ -423,7 +423,8 @@ void main() {
     expect(find.textContaining('Opened 2 times'), findsOneWidget);
     await tester.tap(find.text('Family'));
     await waitFor(tester, find.byKey(const ValueKey('link-faces-all')));
-    await tester.tap(find.byKey(const ValueKey('link-faces-all')));
+    // The new link's form, with the same chip, stays built behind this screen.
+    await tester.tap(find.byKey(const ValueKey('link-faces-all')).last);
     // The chip is chosen at once, so the server is what is waited for.
     for (var i = 0; i < 100 && server.link['hideFaces'] != 'all'; i++) {
       await tester.pump(const Duration(milliseconds: 100));
