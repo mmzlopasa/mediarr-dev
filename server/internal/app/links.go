@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -45,6 +46,8 @@ func toAPILink(row *db.ShareLink) api.ShareLink {
 		ExpiresAt:     optional(row.ExpiresAt.Time, row.ExpiresAt.Valid),
 		DownloadLimit: optional(int(row.DownloadLimit.Int32), row.DownloadLimit.Valid),
 		Watermark:     optional(row.Watermark.String, row.Watermark.Valid),
+		HideFaces:     new(api.HideFaces(row.HideFaces)),
+		StripCamera:   new(row.StripCamera), StripDate: new(row.StripDate), AskName: new(row.AskName),
 	}
 	return out
 }
@@ -63,6 +66,10 @@ func (s *apiServer) ListAlbumLinks(w http.ResponseWriter, r *http.Request, id op
 	for i := range rows {
 		out[i] = toAPILink(&rows[i])
 	}
+	if err := s.linkExtras(r.Context(), out); err != nil {
+		internalError(w, r, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, out)
 }
 
@@ -74,7 +81,7 @@ func flag(value *bool, fallback bool) bool {
 }
 
 func (s *apiServer) CreateAlbumLink(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
-	album, _, ok := s.album(w, r, id, roleOwner)
+	album, user, ok := s.album(w, r, id, roleOwner)
 	if !ok {
 		return
 	}
@@ -140,7 +147,22 @@ func (s *apiServer) CreateAlbumLink(w http.ResponseWriter, r *http.Request, id o
 		internalError(w, r, err)
 		return
 	}
-	out := toAPILink(&row)
+	// Camera details stay out of a new link's downloads unless asked for.
+	row, problem := s.setLinkPrivacy(r.Context(), row, user.ID, &api.LinkPrivacy{
+		HideFaces: body.HideFaces, VisiblePeople: body.VisiblePeople,
+		StripCamera: new(flag(body.StripCamera, true)), StripDate: body.StripDate, AskName: body.AskName,
+	})
+	if problem != "" {
+		_, _ = s.queries.DeleteLink(r.Context(), db.DeleteLinkParams{ID: row.ID, AlbumID: album.ID})
+		writeError(w, http.StatusBadRequest, problem)
+		return
+	}
+	links := []api.ShareLink{toAPILink(&row)}
+	if err := s.linkExtras(r.Context(), links); err != nil {
+		internalError(w, r, err)
+		return
+	}
+	out := links[0]
 	out.Token = &token
 	writeJSON(w, http.StatusCreated, out)
 }
@@ -225,6 +247,10 @@ func (s *apiServer) viewLink(w http.ResponseWriter, r *http.Request, token strin
 		writeError(w, http.StatusForbidden, "this link only receives files")
 		return nil, false
 	}
+	if !s.visitorNamed(r, link) {
+		writeError(w, http.StatusForbidden, errNameFirstReply)
+		return nil, false
+	}
 	return link, true
 }
 
@@ -255,10 +281,12 @@ func (s *apiServer) GetPublicLink(w http.ResponseWriter, r *http.Request, token 
 		internalError(w, r, err)
 		return
 	}
+	s.recordVisit(w, r, token, link)
 	out := api.PublicLink{
 		Kiosk:         kiosk,
 		AllowDownload: link.AllowDownload, AllowUpload: link.AllowUpload,
 		UploadOnly: link.UploadOnly, Watermarked: link.Watermark.Valid,
+		AskName: new(link.AskName), Named: new(s.visitorNamed(r, link)), HidesFaces: new(hidesFaces(link)),
 	}
 	out.Title = &link.Title
 	if link.Description != "" {
@@ -351,6 +379,7 @@ func (s *apiServer) GetPublicAsset(w http.ResponseWriter, r *http.Request, token
 		internalError(w, r, err)
 		return
 	}
+	s.countVisit(r, link, false)
 	detail.IsOwner = optional(false, true)
 	detail.IsFavorite, detail.IsArchived = false, false
 	detail.DownloadAllowed = optional(downloadsLeft(link), true)
@@ -359,8 +388,8 @@ func (s *apiServer) GetPublicAsset(w http.ResponseWriter, r *http.Request, token
 		detail.Latitude, detail.Longitude = nil, nil
 		detail.City, detail.State, detail.Country = nil, nil, nil
 	}
-	if link.Watermark.Valid {
-		// Only the marked previews exist on such a link, so nothing plays or opens unmarked.
+	if link.Watermark.Valid || hidesFaces(link) {
+		// Only the marked or blurred previews exist on such a link, so nothing plays or opens without.
 		detail.HlsReady, detail.HasMotion, detail.LiveVideoId, detail.Sprite = nil, nil, nil, nil
 	}
 	writeJSON(w, http.StatusOK, detail)
@@ -375,6 +404,10 @@ func (s *apiServer) GetPublicThumbnail(w http.ResponseWriter, r *http.Request, t
 	kind := "thumb_small"
 	if params.Size != nil && *params.Size != api.GetPublicThumbnailParamsSizeSmall {
 		kind = "thumb_large"
+	}
+	if hidesFaces(link) {
+		s.servePublicBlurred(w, r, link, id, kind, params.Size != nil && *params.Size == api.GetPublicThumbnailParamsSizeFull)
+		return
 	}
 	// Without downloads, a full size preview would be the download.
 	if !link.Watermark.Valid && link.AllowDownload && params.Size != nil && *params.Size == api.GetPublicThumbnailParamsSizeFull {
@@ -446,11 +479,15 @@ func (s *apiServer) GetPublicOriginal(w http.ResponseWriter, r *http.Request, to
 			internalError(w, r, err)
 			return
 		}
-		if row.Kind != "video" || ready != "" || link.Watermark.Valid || !downloadsLeft(link) {
+		if row.Kind != "video" || ready != "" || link.Watermark.Valid || hidesFaces(link) || !downloadsLeft(link) {
 			writeError(w, http.StatusForbidden, "this link does not allow this file")
 			return
 		}
-		s.serveLinkOriginal(w, r, link.ID, link.ShowLocation, &row, false)
+		s.serveLinkOriginal(w, r, link, &row, false)
+		return
+	}
+	if hidesFaces(link) && row.Kind != "photo" {
+		writeError(w, http.StatusForbidden, "videos are not shared on a link that hides faces")
 		return
 	}
 	// Every request is one whole download. Honouring Range would let a client take a file piece by
@@ -465,30 +502,74 @@ func (s *apiServer) GetPublicOriginal(w http.ResponseWriter, r *http.Request, to
 		writeError(w, http.StatusForbidden, "this link has no downloads left")
 		return
 	}
-	s.serveLinkOriginal(w, r, link.ID, link.ShowLocation, &row, true)
+	s.countVisit(r, link, true)
+	s.serveLinkOriginal(w, r, link, &row, true)
 }
 
-// serveLinkOriginal gives a guest the file, without what the link does not share: the location, and
-// what the owner cropped out.
-func (s *apiServer) serveLinkOriginal(w http.ResponseWriter, r *http.Request, link pgtype.UUID, showLocation bool, row *db.Asset, download bool) {
+// serveLinkOriginal gives a guest the file, without what the link does not share: faces, the
+// location, camera details, the date, and what the owner cropped out.
+func (s *apiServer) serveLinkOriginal(w http.ResponseWriter, r *http.Request, link *db.GetLinkByTokenRow, row *db.Asset, download bool) {
+	privacy := jobs.Privacy{Location: !link.ShowLocation, Camera: link.StripCamera, Date: link.StripDate}
+	dir := filepath.Join(s.linkCacheDir(link.ID), fmt.Sprintf("v%d", link.PrivacyVersion))
+	var faces func(context.Context) ([][4]float32, error)
+	if hidesFaces(link) {
+		faces = func(ctx context.Context) ([][4]float32, error) { return s.facesOf(ctx, link, row.ID) }
+	}
+	s.servePrivate(w, r, row, dir, privacy, faces, download, pgtype.UUID{})
+}
+
+// servePrivate gives a file without what privacy leaves out. With faces, a photo comes as a JPEG of
+// its full preview with them blurred; a video cannot be given. Copies are kept in dir.
+func (s *apiServer) servePrivate(w http.ResponseWriter, r *http.Request, row *db.Asset, dir string, privacy jobs.Privacy, faces func(context.Context) ([][4]float32, error), download bool, viewer pgtype.UUID) {
+	ctx := r.Context()
+	id := uuid.UUID(row.ID.Bytes).String()
+	choices := fmt.Sprintf("l%tc%td%t-r%d", privacy.Location, privacy.Camera, privacy.Date, row.EditRevision)
+	if faces != nil {
+		if row.Kind != "photo" {
+			writeError(w, http.StatusForbidden, "videos are not shared with hidden faces")
+			return
+		}
+		dest := filepath.Join(dir, id+"-faces-"+choices+".jpg")
+		if _, err := os.Stat(dest); err != nil {
+			source, err := s.fullPreviewFile(ctx, row)
+			if err != nil {
+				internalError(w, r, err)
+				return
+			}
+			if privacy.Faces, err = faces(ctx); err != nil {
+				internalError(w, r, err)
+				return
+			}
+			if err := jobs.BlurFaces(ctx, source, dest, privacy); err != nil {
+				slog.Warn("faces could not be hidden", "asset", id, "error", err)
+				writeError(w, http.StatusForbidden, "this file cannot be shared with hidden faces")
+				return
+			}
+		}
+		copied := *row
+		copied.OriginalPath = dest
+		copied.MimeType = pgtype.Text{String: "image/jpeg", Valid: true}
+		copied.OriginalName = strings.TrimSuffix(row.OriginalName, filepath.Ext(row.OriginalName)) + ".jpg"
+		serveOriginal(w, r, &copied, download)
+		return
+	}
 	if len(row.Edits) > 0 {
 		s.serveFullPreview(w, r, row)
 		return
 	}
-	if s.refuseCropped(w, r, row.ID, pgtype.UUID{}) {
+	if s.refuseCropped(w, r, row.ID, viewer) {
 		return
 	}
-	if showLocation {
+	if !privacy.Location && !privacy.Camera && !privacy.Date {
 		serveOriginal(w, r, row, download)
 		return
 	}
-	id := uuid.UUID(row.ID.Bytes).String()
-	dest := filepath.Join(s.linkCacheDir(link), id+"-nolocation"+strings.ToLower(filepath.Ext(row.OriginalName)))
+	dest := filepath.Join(dir, id+"-"+choices+strings.ToLower(filepath.Ext(row.OriginalName)))
 	if _, err := os.Stat(dest); err != nil {
-		if err := jobs.StripLocation(r.Context(), row.OriginalPath, dest); err != nil {
+		if err := jobs.StripDetails(ctx, row.OriginalPath, dest, privacy); err != nil {
 			// Never fall back to the original, which is the very thing this avoids.
-			slog.Warn("a location could not be removed for a link", "asset", id, "error", err)
-			writeError(w, http.StatusForbidden, "this file cannot be shared without its location")
+			slog.Warn("details could not be removed for sharing", "asset", id, "error", err)
+			writeError(w, http.StatusForbidden, "this file cannot be shared without its details")
 			return
 		}
 	}
@@ -497,9 +578,55 @@ func (s *apiServer) serveLinkOriginal(w http.ResponseWriter, r *http.Request, li
 	serveOriginal(w, r, &copied, download)
 }
 
+// servePublicBlurred gives a preview of a link that hides faces, blurred and watermarked as asked.
+func (s *apiServer) servePublicBlurred(w http.ResponseWriter, r *http.Request, link *db.GetLinkByTokenRow, id openapi_types.UUID, kind string, full bool) {
+	ctx := r.Context()
+	var source string
+	var err error
+	if full && !link.Watermark.Valid && link.AllowDownload {
+		row, rowErr := s.queries.GetAsset(ctx, pgUUID(id))
+		if rowErr != nil {
+			internalError(w, r, rowErr)
+			return
+		}
+		kind = "thumb_full"
+		source, err = s.fullPreviewFile(ctx, &row)
+	} else {
+		source, err = s.queries.GetAssetFile(ctx, db.GetAssetFileParams{AssetID: pgUUID(id), Kind: kind})
+	}
+	if db.IsNotFound(err) {
+		writeError(w, http.StatusNotFound, "no such thumbnail")
+		return
+	}
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	path, err := s.privateCopy(ctx, link, pgUUID(id), kind, source, ".webp", false)
+	if err != nil {
+		slog.Warn("faces could not be hidden", "asset", id.String(), "error", err)
+		writeError(w, http.StatusNotFound, "this picture cannot be shown with hidden faces")
+		return
+	}
+	if link.Watermark.Valid {
+		if path, err = s.watermarked(ctx, link, id, kind+"-faces", path); err != nil {
+			internalError(w, r, err)
+			return
+		}
+	}
+	w.Header().Set("Content-Type", "image/webp")
+	w.Header().Set("Cache-Control", "private, no-cache")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	serveFile(w, r, path)
+}
+
 func (s *apiServer) GetPublicMotion(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID) {
 	link, ok := s.viewLinkAsset(w, r, token, id)
 	if !ok {
+		return
+	}
+	if hidesFaces(link) {
+		writeError(w, http.StatusForbidden, "videos are not shared on a link that hides faces")
 		return
 	}
 	if s.refuseCropped(w, r, pgUUID(id), pgtype.UUID{}) {
@@ -538,6 +665,10 @@ func (s *apiServer) GetPublicMotion(w http.ResponseWriter, r *http.Request, toke
 func (s *apiServer) GetPublicVideoFile(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, file string) {
 	link, ok := s.viewLinkAsset(w, r, token, id)
 	if !ok {
+		return
+	}
+	if hidesFaces(link) {
+		writeError(w, http.StatusForbidden, "videos are not shared on a link that hides faces")
 		return
 	}
 	if s.refuseCropped(w, r, pgUUID(id), pgtype.UUID{}) {

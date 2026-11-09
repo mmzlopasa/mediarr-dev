@@ -253,6 +253,8 @@ class ApiClient {
           return AlbumMember.fromJson(value);
         case 'AlbumParent':
           return AlbumParent.fromJson(value);
+        case 'AlbumPrivacy':
+          return AlbumPrivacy.fromJson(value);
         case 'AlbumRef':
           return AlbumRef.fromJson(value);
         case 'AlbumRules':
@@ -403,6 +405,8 @@ class ApiClient {
           return FolderEntry.fromJson(value);
         case 'Health':
           return Health.fromJson(value);
+        case 'HideFaces':
+          return HideFacesTypeTransformer().decode(value);
         case 'ImportCreate':
           return ImportCreate.fromJson(value);
         case 'ImportDetail':
@@ -439,6 +443,12 @@ class ApiClient {
           return LanguageTypeTransformer().decode(value);
         case 'LinkPassword':
           return LinkPassword.fromJson(value);
+        case 'LinkPrivacy':
+          return LinkPrivacy.fromJson(value);
+        case 'LinkVisit':
+          return LinkVisit.fromJson(value);
+        case 'LinkVisitor':
+          return LinkVisitor.fromJson(value);
         case 'LocationFix':
           return LocationFix.fromJson(value);
         case 'LoginError':

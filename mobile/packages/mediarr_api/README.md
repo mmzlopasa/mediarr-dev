@@ -127,6 +127,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAlbum**](doc//DefaultApi.md#getalbum) | **GET** /api/albums/{id} | Read an album and its members
 *DefaultApi* | [**getAlbumBucket**](doc//DefaultApi.md#getalbumbucket) | **GET** /api/albums/{id}/buckets/{month} | Assets of one month in an album
 *DefaultApi* | [**getAlbumBuckets**](doc//DefaultApi.md#getalbumbuckets) | **GET** /api/albums/{id}/buckets | Months in an album, in the album's order
+*DefaultApi* | [**getAlbumPrivacy**](doc//DefaultApi.md#getalbumprivacy) | **GET** /api/albums/{id}/privacy | What hiding faces in a link to this album can and cannot cover
 *DefaultApi* | [**getAnalysisProgress**](doc//DefaultApi.md#getanalysisprogress) | **GET** /api/admin/analysis | How far picture analysis has come. Administrators only.
 *DefaultApi* | [**getAsset**](doc//DefaultApi.md#getasset) | **GET** /api/assets/{id} | Read an asset's details and its neighbours on the timeline
 *DefaultApi* | [**getAssetMotion**](doc//DefaultApi.md#getassetmotion) | **GET** /api/assets/{id}/motion | Read the video embedded in an Android Motion Photo
@@ -183,6 +184,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getServerHello**](doc//DefaultApi.md#getserverhello) | **GET** /api/server/hello | Lets an app on the same network recognise a Mediarr server; only its version
 *DefaultApi* | [**getServerSettings**](doc//DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 *DefaultApi* | [**getServerStatus**](doc//DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
+*DefaultApi* | [**getShareableAsset**](doc//DefaultApi.md#getshareableasset) | **GET** /api/assets/{id}/shareable | One of my photos ready to send elsewhere, without what I choose to keep to myself
 *DefaultApi* | [**getStorageTemplate**](doc//DefaultApi.md#getstoragetemplate) | **GET** /api/admin/storage-template | How originals are laid out in each user's folder, and what the last run over all of them did
 *DefaultApi* | [**getStoryExport**](doc//DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
 *DefaultApi* | [**getStoryVideo**](doc//DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
@@ -215,6 +217,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listFamilyMembersAdmin**](doc//DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 *DefaultApi* | [**listImports**](doc//DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 *DefaultApi* | [**listKeepGuests**](doc//DefaultApi.md#listkeepguests) | **GET** /api/admin/keep/guests | Other Mediarr servers whose encrypted backup this one keeps
+*DefaultApi* | [**listLinkVisits**](doc//DefaultApi.md#listlinkvisits) | **GET** /api/albums/{id}/links/{linkId}/visits | Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 *DefaultApi* | [**listMyImports**](doc//DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 *DefaultApi* | [**listMySessions**](doc//DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
@@ -232,6 +235,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**logout**](doc//DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 *DefaultApi* | [**mergePeople**](doc//DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
 *DefaultApi* | [**moveAlbum**](doc//DefaultApi.md#movealbum) | **PUT** /api/albums/{id}/parent | Put an album inside another of one's own, or back at the top
+*DefaultApi* | [**nameLinkVisitor**](doc//DefaultApi.md#namelinkvisitor) | **POST** /api/public/{token}/visitor | The visitor says who they are, when the link asks
 *DefaultApi* | [**pairKeepGuest**](doc//DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 *DefaultApi* | [**pauseJobQueue**](doc//DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 *DefaultApi* | [**previewStorageTemplate**](doc//DefaultApi.md#previewstoragetemplate) | **POST** /api/admin/storage-template/preview | Where a template would put a few real originals, without moving anything
@@ -292,6 +296,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**unlockPublicLink**](doc//DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 *DefaultApi* | [**unlockVault**](doc//DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 *DefaultApi* | [**updateAlbum**](doc//DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
+*DefaultApi* | [**updateAlbumLink**](doc//DefaultApi.md#updatealbumlink) | **PATCH** /api/albums/{id}/links/{linkId} | Changes how private a link is; turning faces or details off applies at once
 *DefaultApi* | [**updateKeepGuest**](doc//DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 *DefaultApi* | [**updatePerson**](doc//DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 *DefaultApi* | [**updateProfile**](doc//DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, language, or email address with the current password
@@ -312,6 +317,7 @@ Class | Method | HTTP request | Description
  - [AlbumCreate](doc//AlbumCreate.md)
  - [AlbumMember](doc//AlbumMember.md)
  - [AlbumParent](doc//AlbumParent.md)
+ - [AlbumPrivacy](doc//AlbumPrivacy.md)
  - [AlbumRef](doc//AlbumRef.md)
  - [AlbumRules](doc//AlbumRules.md)
  - [AlbumUpdate](doc//AlbumUpdate.md)
@@ -387,6 +393,7 @@ Class | Method | HTTP request | Description
  - [Folder](doc//Folder.md)
  - [FolderEntry](doc//FolderEntry.md)
  - [Health](doc//Health.md)
+ - [HideFaces](doc//HideFaces.md)
  - [ImportCreate](doc//ImportCreate.md)
  - [ImportDetail](doc//ImportDetail.md)
  - [ImportEntry](doc//ImportEntry.md)
@@ -405,6 +412,9 @@ Class | Method | HTTP request | Description
  - [KeepRestored](doc//KeepRestored.md)
  - [Language](doc//Language.md)
  - [LinkPassword](doc//LinkPassword.md)
+ - [LinkPrivacy](doc//LinkPrivacy.md)
+ - [LinkVisit](doc//LinkVisit.md)
+ - [LinkVisitor](doc//LinkVisitor.md)
  - [LocationFix](doc//LocationFix.md)
  - [LoginError](doc//LoginError.md)
  - [LoginRequest](doc//LoginRequest.md)

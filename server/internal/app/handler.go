@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -20,6 +21,7 @@ import (
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/auth"
+	"github.com/mediarr-app/mediarr/server/internal/geo"
 	"github.com/mediarr-app/mediarr/server/internal/jobs"
 	"github.com/mediarr-app/mediarr/server/internal/ml"
 	"github.com/mediarr-app/mediarr/server/internal/webui"
@@ -87,6 +89,7 @@ type apiServer struct {
 	oidcCodes         *shortLived[oidcAppCode]
 	passkeyChallenges *shortLived[passkeyChallenge]
 	qrSignIns         *qrSignIns
+	geo               *geo.Finder
 	guestBytes        *byteBudget
 	uploads           *tusd.UnroutedHandler
 	// fullPreviews limits how many full resolution previews are made at once.
@@ -109,6 +112,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		oidcCodes:         newShortLived[oidcAppCode](),
 		passkeyChallenges: newShortLived[passkeyChallenge](),
 		qrSignIns:         newQRSignIns(),
+		geo:               geo.New(filepath.Join(deps.CachePath, "geo"), deps.CheckUpdates),
 		guestBytes:        newByteBudget(),
 		blockedLogged:     auth.NewLimiter(1, time.Minute),
 		resetLimiter:      auth.NewLimiter(5, time.Hour),

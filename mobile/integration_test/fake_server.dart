@@ -80,6 +80,28 @@ class FakeServer {
     'visibleOnNetwork': true,
   };
   List<String> trashed = [];
+
+  /// The album's one public link, as the app last changed it.
+  static const linkId = '00000000-0000-4000-8000-0000000000b1';
+  static const visitorName = 'Ana from school';
+  Map<String, dynamic> link = {
+    'id': linkId,
+    'label': 'Family',
+    'hasPassword': false,
+    'downloadCount': 1,
+    'allowDownload': true,
+    'allowUpload': false,
+    'uploadOnly': false,
+    'showLocation': false,
+    'createdAt': '2026-11-01T10:00:00Z',
+    'hideFaces': 'none',
+    'visiblePeople': <String>[],
+    'stripCamera': true,
+    'stripDate': false,
+    'askName': false,
+    'visits': 2,
+    'lastVisitAt': '2026-11-08T18:30:00Z',
+  };
   String? qrDevice;
   int qrWaits = 0;
 
@@ -401,6 +423,47 @@ class FakeServer {
         album(travelsId, 'Travels', children: 1),
         album(japanId, 'Japan', parent: travelsId),
       ]);
+      return;
+    }
+    if (path == '/api/albums/$travelsId/links' && request.method == 'GET') {
+      await _json(request, 200, [link]);
+      return;
+    }
+    if (path == '/api/albums/$travelsId/links/$linkId' &&
+        request.method == 'PATCH') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      link = {
+        ...link,
+        for (final entry in body.entries)
+          if (entry.value != null) entry.key: entry.value,
+      };
+      await _json(request, 200, link);
+      return;
+    }
+    if (path == '/api/albums/$travelsId/links/$linkId/visits') {
+      await _json(request, 200, [
+        {
+          'at': '2026-11-08T18:30:00Z',
+          'name': visitorName,
+          'city': 'Split',
+          'country': 'Croatia',
+          'device': 'Phone · Safari',
+          'viewed': 4,
+          'downloaded': 1,
+        },
+        {
+          'at': '2026-11-07T09:00:00Z',
+          'device': 'Computer · Firefox',
+          'viewed': 2,
+          'downloaded': 0,
+        },
+      ]);
+      return;
+    }
+    if (path == '/api/albums/$travelsId/privacy') {
+      await _json(request, 200, {'photos': 12, 'unchecked': 2, 'videos': 1});
       return;
     }
     if (path == '/api/albums/$travelsId') {

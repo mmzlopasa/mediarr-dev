@@ -19,6 +19,8 @@ const (
 	QuietBody      Key = "quiet.body"
 	QuietDevices   Key = "quiet.devices"
 	QuietSomeone   Key = "quiet.someone"
+	LinkSubject    Key = "link.subject"
+	LinkBody       Key = "link.body"
 	dateTimeLayout     = "2006-01-02 15:04 UTC"
 )
 
@@ -27,6 +29,8 @@ const DateTime = dateTimeLayout
 
 var texts = map[string]map[Key]string{
 	"en": {
+		LinkSubject:   "Your link was opened: %s",
+		LinkBody:      "Someone opened your link \"%s\" for the first time. Who opened it, and when, is under the album's links in Mediarr.\n",
 		TestSubject:   "Mediarr test message",
 		TestBody:      "Email from your Mediarr server works.",
 		SharedSubject: "An album was shared with you: %s",
@@ -39,6 +43,8 @@ var texts = map[string]map[Key]string{
 		QuietSomeone:  "A device",
 	},
 	"hr": {
+		LinkSubject:   "Vaša poveznica je otvorena: %s",
+		LinkBody:      "Netko je prvi put otvorio vašu poveznicu \"%s\". Tko ju je otvorio i kada piše uz poveznice albuma u Mediarru.\n",
 		TestSubject:   "Probna poruka s Mediarra",
 		TestBody:      "E-pošta s vašeg Mediarr poslužitelja radi.",
 		SharedSubject: "S vama je podijeljen album: %s",
@@ -51,6 +57,8 @@ var texts = map[string]map[Key]string{
 		QuietSomeone:  "Uređaj",
 	},
 	"de": {
+		LinkSubject:   "Dein Link wurde geöffnet: %s",
+		LinkBody:      "Jemand hat deinen Link „%s“ zum ersten Mal geöffnet. Wer ihn wann geöffnet hat, steht in Mediarr bei den Links des Albums.\n",
 		TestSubject:   "Mediarr-Testnachricht",
 		TestBody:      "E-Mails von deinem Mediarr-Server funktionieren.",
 		SharedSubject: "Ein Album wurde mit dir geteilt: %s",
@@ -63,6 +71,8 @@ var texts = map[string]map[Key]string{
 		QuietSomeone:  "Ein Gerät",
 	},
 	"sl": {
+		LinkSubject:   "Vaša povezava je bila odprta: %s",
+		LinkBody:      "Nekdo je prvič odprl vašo povezavo »%s«. Kdo jo je odprl in kdaj, piše pri povezavah albuma v Mediarru.\n",
 		TestSubject:   "Testno sporočilo Mediarr",
 		TestBody:      "E-pošta z vašega strežnika Mediarr deluje.",
 		SharedSubject: "Z vami je bil deljen album: %s",

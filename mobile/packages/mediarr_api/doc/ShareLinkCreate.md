@@ -17,6 +17,11 @@ Name | Type | Description | Notes
 **uploadOnly** | **bool** |  | [optional] [default to false]
 **showLocation** | **bool** |  | [optional] [default to false]
 **watermark** | **String** |  | [optional] 
+**hideFaces** | [**HideFaces**](HideFaces.md) |  | [optional] 
+**visiblePeople** | **List<String>** |  | [optional] [default to const []]
+**stripCamera** | **bool** |  | [optional] [default to true]
+**stripDate** | **bool** |  | [optional] [default to false]
+**askName** | **bool** |  | [optional] [default to false]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

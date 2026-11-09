@@ -14,6 +14,7 @@ doc/Album.md
 doc/AlbumCreate.md
 doc/AlbumMember.md
 doc/AlbumParent.md
+doc/AlbumPrivacy.md
 doc/AlbumRef.md
 doc/AlbumRules.md
 doc/AlbumUpdate.md
@@ -90,6 +91,7 @@ doc/FixResult.md
 doc/Folder.md
 doc/FolderEntry.md
 doc/Health.md
+doc/HideFaces.md
 doc/ImportCreate.md
 doc/ImportDetail.md
 doc/ImportEntry.md
@@ -108,6 +110,9 @@ doc/KeepPairing.md
 doc/KeepRestored.md
 doc/Language.md
 doc/LinkPassword.md
+doc/LinkPrivacy.md
+doc/LinkVisit.md
+doc/LinkVisitor.md
 doc/LocationFix.md
 doc/LoginError.md
 doc/LoginRequest.md
@@ -214,6 +219,7 @@ lib/model/album.dart
 lib/model/album_create.dart
 lib/model/album_member.dart
 lib/model/album_parent.dart
+lib/model/album_privacy.dart
 lib/model/album_ref.dart
 lib/model/album_rules.dart
 lib/model/album_update.dart
@@ -289,6 +295,7 @@ lib/model/fix_result.dart
 lib/model/folder.dart
 lib/model/folder_entry.dart
 lib/model/health.dart
+lib/model/hide_faces.dart
 lib/model/import_create.dart
 lib/model/import_detail.dart
 lib/model/import_entry.dart
@@ -307,6 +314,9 @@ lib/model/keep_pairing.dart
 lib/model/keep_restored.dart
 lib/model/language.dart
 lib/model/link_password.dart
+lib/model/link_privacy.dart
+lib/model/link_visit.dart
+lib/model/link_visitor.dart
 lib/model/location_fix.dart
 lib/model/login_error.dart
 lib/model/login_request.dart

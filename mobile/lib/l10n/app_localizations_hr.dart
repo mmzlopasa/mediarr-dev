@@ -4512,4 +4512,130 @@ class AppLocalizationsHr extends AppLocalizations {
   ) {
     return '$day. $month $year., $hour:$minute';
   }
+
+  @override
+  String get linkPrivacyHideFaces => 'Sakrij lica';
+
+  @override
+  String get linkPrivacyFacesNone => 'Nijedno';
+
+  @override
+  String get linkPrivacyFacesAll => 'Sva lica';
+
+  @override
+  String get linkPrivacyFacesExcept => 'Sva osim odabranih osoba';
+
+  @override
+  String get linkPrivacyChoosePeople => 'Lica ovih osoba ostaju vidljiva:';
+
+  @override
+  String get linkPrivacyNoPeople =>
+      'Još nitko nema ime. Najprije imenujte osobe pod Osobe.';
+
+  @override
+  String get linkPrivacyPeopleFailed => 'Osobe se nisu učitale.';
+
+  @override
+  String get linkPrivacyUnrecognized =>
+      'Lice koje nije prepoznato neće biti zamućeno.';
+
+  @override
+  String linkPrivacyUnchecked(String count, String total) {
+    return 'Lica još nisu provjerena na $count od $total fotki, pa na njima ništa nije zamućeno.';
+  }
+
+  @override
+  String get linkPrivacyAllChecked =>
+      'Sve fotke u albumu provjerene su na lica.';
+
+  @override
+  String linkPrivacyVideosStill(String count) {
+    return 'Videi ($count) prikazuju se samo kao sličica, sa zamućenim licima.';
+  }
+
+  @override
+  String get linkPrivacyNoOriginals =>
+      'Posjetitelji dobivaju zamućenu kopiju pune veličine, nikad original.';
+
+  @override
+  String get linkPrivacyRemoveCamera => 'Ukloni podatke o fotoaparatu';
+
+  @override
+  String get linkPrivacyRemoveCameraDetail =>
+      'Preuzete datoteke ne nose fotoaparat, objektiv, serijske brojeve, autora ni softver.';
+
+  @override
+  String get linkPrivacyRemoveDate => 'Ukloni i datum';
+
+  @override
+  String get linkPrivacyAskName => 'Traži ime';
+
+  @override
+  String get linkPrivacyAskNameDetail =>
+      'Posjetitelji upišu ime prije nego što vide album.';
+
+  @override
+  String get linkPrivacyNotOpened => 'Još nije otvoren';
+
+  @override
+  String linkPrivacyOpened(int count, String when) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Otvoren $count puta',
+      one: 'Otvoren jednom',
+    );
+    return '$_temp0 · zadnji put $when';
+  }
+
+  @override
+  String get linkPrivacyWhoOpened => 'Tko ga je otvorio';
+
+  @override
+  String get linkPrivacyNoVisits => 'Ovaj link još nitko nije otvorio.';
+
+  @override
+  String get linkPrivacyVisitsFailed => 'Posjeti se nisu učitali.';
+
+  @override
+  String get linkPrivacyUnknownPlace => 'Nepoznato mjesto';
+
+  @override
+  String get linkPrivacyNoName => 'Bez imena';
+
+  @override
+  String linkPrivacyViewed(String count) {
+    return 'pogledano: $count';
+  }
+
+  @override
+  String linkPrivacyDownloaded(String count) {
+    return 'preuzeto: $count';
+  }
+
+  @override
+  String get linkPrivacyAttribution =>
+      'Mjesta prema DB-IP (db-ip.com), CC BY 4.0. Posjeti se čuvaju 90 dana.';
+
+  @override
+  String get sharePrivacyRemoveLocation => 'Ukloni lokaciju';
+
+  @override
+  String get sharePrivacyRemoveCamera => 'Ukloni podatke o fotoaparatu';
+
+  @override
+  String get sharePrivacyHideFaces => 'Sakrij lica';
+
+  @override
+  String get sharePrivacyHideFacesDetail =>
+      'Fotke idu kao zamućena kopija. Videi se izostavljaju.';
+
+  @override
+  String get sharePrivacyVideosLeftOut =>
+      'Videi su izostavljeni: lica u njima ne mogu se sakriti.';
+
+  @override
+  String notificationsLinkOpened(String subject) {
+    return 'Vaš link „$subject” otvoren je prvi put.';
+  }
 }

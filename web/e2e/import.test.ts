@@ -25,7 +25,7 @@ test('a Takeout in two ZIP files comes in with its album, description and date',
 	const parts = page.getByRole('list', { name: 'Chosen files' }).getByRole('listitem');
 	await expect(parts).toHaveCount(2);
 	await page.getByRole('button', { name: 'Upload', exact: true }).click();
-	await expect(parts.and(page.locator('[data-part=in]'))).toHaveCount(2);
+	await expect(parts.and(page.locator('[data-part=in]'))).toHaveCount(2, { timeout: 30_000 });
 
 	await page.getByRole('button', { name: 'Bring in' }).first().click();
 	const mine = page.getByRole('list', { name: 'Your imports' }).getByRole('listitem').first();

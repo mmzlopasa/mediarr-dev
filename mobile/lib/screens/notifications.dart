@@ -34,6 +34,9 @@ String notificationSentence(Notification item) {
   if (kind == NotificationKindEnum.deviceQuiet) {
     return l.notificationsDeviceQuiet(item.subject);
   }
+  if (kind == NotificationKindEnum.linkOpened) {
+    return l.notificationsLinkOpened(item.subject);
+  }
   if (kind == NotificationKindEnum.backupLate) {
     // "to:<name>" is our copy at another Mediarr; "from:<name>" is one kept here.
     final at = item.subject.indexOf(':');

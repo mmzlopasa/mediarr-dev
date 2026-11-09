@@ -4557,4 +4557,130 @@ class AppLocalizationsSl extends AppLocalizations {
   ) {
     return '$day. $month $year, $hour:$minute';
   }
+
+  @override
+  String get linkPrivacyHideFaces => 'Skrij obraze';
+
+  @override
+  String get linkPrivacyFacesNone => 'Nobenega';
+
+  @override
+  String get linkPrivacyFacesAll => 'Vse obraze';
+
+  @override
+  String get linkPrivacyFacesExcept => 'Vse razen izbranih oseb';
+
+  @override
+  String get linkPrivacyChoosePeople => 'Obrazi teh oseb ostanejo vidni:';
+
+  @override
+  String get linkPrivacyNoPeople =>
+      'Nihče še nima imena. Najprej poimenuj osebe pod Osebe.';
+
+  @override
+  String get linkPrivacyPeopleFailed => 'Osebe se niso naložile.';
+
+  @override
+  String get linkPrivacyUnrecognized =>
+      'Obraz, ki ni bil prepoznan, ni zamegljen.';
+
+  @override
+  String linkPrivacyUnchecked(String count, String total) {
+    return '$count od $total fotografij še ni pregledanih za obraze, zato na njih ni nič zamegljeno.';
+  }
+
+  @override
+  String get linkPrivacyAllChecked =>
+      'Vse fotografije v albumu so pregledane za obraze.';
+
+  @override
+  String linkPrivacyVideosStill(String count) {
+    return 'Videoposnetki ($count) so prikazani le kot sličica z zamegljenimi obrazi.';
+  }
+
+  @override
+  String get linkPrivacyNoOriginals =>
+      'Obiskovalci dobijo zamegljeno kopijo v polni velikosti, nikoli izvirnika.';
+
+  @override
+  String get linkPrivacyRemoveCamera => 'Odstrani podatke o fotoaparatu';
+
+  @override
+  String get linkPrivacyRemoveCameraDetail =>
+      'Prenosi ne vsebujejo fotoaparata, objektiva, serijskih številk, avtorja ali programske opreme.';
+
+  @override
+  String get linkPrivacyRemoveDate => 'Odstrani tudi datum';
+
+  @override
+  String get linkPrivacyAskName => 'Vprašaj za ime';
+
+  @override
+  String get linkPrivacyAskNameDetail =>
+      'Obiskovalci vpišejo ime, preden vidijo album.';
+
+  @override
+  String get linkPrivacyNotOpened => 'Še ni odprta';
+
+  @override
+  String linkPrivacyOpened(int count, String when) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Odprta $count-krat',
+      one: 'Odprta enkrat',
+    );
+    return '$_temp0 · nazadnje $when';
+  }
+
+  @override
+  String get linkPrivacyWhoOpened => 'Kdo jo je odprl';
+
+  @override
+  String get linkPrivacyNoVisits => 'Te povezave še nihče ni odprl.';
+
+  @override
+  String get linkPrivacyVisitsFailed => 'Obiskov ni bilo mogoče naložiti.';
+
+  @override
+  String get linkPrivacyUnknownPlace => 'Neznan kraj';
+
+  @override
+  String get linkPrivacyNoName => 'Brez imena';
+
+  @override
+  String linkPrivacyViewed(String count) {
+    return 'ogledano: $count';
+  }
+
+  @override
+  String linkPrivacyDownloaded(String count) {
+    return 'preneseno: $count';
+  }
+
+  @override
+  String get linkPrivacyAttribution =>
+      'Kraji po DB-IP (db-ip.com), CC BY 4.0. Obiski se hranijo 90 dni.';
+
+  @override
+  String get sharePrivacyRemoveLocation => 'Odstrani lokacijo';
+
+  @override
+  String get sharePrivacyRemoveCamera => 'Odstrani podatke o fotoaparatu';
+
+  @override
+  String get sharePrivacyHideFaces => 'Skrij obraze';
+
+  @override
+  String get sharePrivacyHideFacesDetail =>
+      'Fotografije gredo kot zamegljena kopija. Videoposnetki so izpuščeni.';
+
+  @override
+  String get sharePrivacyVideosLeftOut =>
+      'Videoposnetki so izpuščeni: obrazov v njih ni mogoče skriti.';
+
+  @override
+  String notificationsLinkOpened(String subject) {
+    return 'Tvoja povezava »$subject« je bila prvič odprta.';
+  }
 }

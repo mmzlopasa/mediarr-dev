@@ -9,7 +9,9 @@ import (
 
 // Kinds of notification. Clients write the sentence, in the language of the person reading it.
 const (
-	NotifyAlbumShared  = "album_shared"
+	NotifyAlbumShared = "album_shared"
+	// NotifyLinkOpened is a public link's first visitor; its subject is the link's label or album.
+	NotifyLinkOpened   = "link_opened"
 	notifyImportDone   = "import_done"
 	notifyImportFailed = "import_failed"
 	notifyBackupFailed = "backup_failed"

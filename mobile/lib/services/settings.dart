@@ -123,6 +123,9 @@ class AppSettings {
     this.mirrorAlbums = false,
     this.freeSpace = const FreeSpaceRules(),
     this.shareSmall = false,
+    this.shareRemoveLocation = true,
+    this.shareRemoveCamera = true,
+    this.shareHideFaces = false,
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
@@ -145,6 +148,9 @@ class AppSettings {
     readOnly: json['readOnly'] as bool? ?? false,
     mirrorAlbums: json['mirrorAlbums'] as bool? ?? false,
     shareSmall: json['shareSmall'] as bool? ?? false,
+    shareRemoveLocation: json['shareRemoveLocation'] as bool? ?? true,
+    shareRemoveCamera: json['shareRemoveCamera'] as bool? ?? true,
+    shareHideFaces: json['shareHideFaces'] as bool? ?? false,
     freeSpace: FreeSpaceRules.fromJson(
       json['freeSpace'] as Map<String, dynamic>? ?? const {},
     ),
@@ -167,6 +173,12 @@ class AppSettings {
   /// Whether photos are sent smaller, for messages, instead of as their originals.
   final bool shareSmall;
 
+  /// What is kept to oneself when a photo goes to another app: where it was taken, the camera
+  /// details, and the faces in it.
+  final bool shareRemoveLocation;
+  final bool shareRemoveCamera;
+  final bool shareHideFaces;
+
   Map<String, dynamic> toJson() => {
     'perRow': perRow,
     'groupByDay': groupByDay,
@@ -182,6 +194,9 @@ class AppSettings {
     'mirrorAlbums': mirrorAlbums,
     'freeSpace': freeSpace.toJson(),
     'shareSmall': shareSmall,
+    'shareRemoveLocation': shareRemoveLocation,
+    'shareRemoveCamera': shareRemoveCamera,
+    'shareHideFaces': shareHideFaces,
   };
 
   AppSettings copyWith({
@@ -199,6 +214,9 @@ class AppSettings {
     bool? mirrorAlbums,
     FreeSpaceRules? freeSpace,
     bool? shareSmall,
+    bool? shareRemoveLocation,
+    bool? shareRemoveCamera,
+    bool? shareHideFaces,
   }) => AppSettings(
     perRow: perRow ?? this.perRow,
     groupByDay: groupByDay ?? this.groupByDay,
@@ -214,6 +232,9 @@ class AppSettings {
     mirrorAlbums: mirrorAlbums ?? this.mirrorAlbums,
     freeSpace: freeSpace ?? this.freeSpace,
     shareSmall: shareSmall ?? this.shareSmall,
+    shareRemoveLocation: shareRemoveLocation ?? this.shareRemoveLocation,
+    shareRemoveCamera: shareRemoveCamera ?? this.shareRemoveCamera,
+    shareHideFaces: shareHideFaces ?? this.shareHideFaces,
   );
 }
 

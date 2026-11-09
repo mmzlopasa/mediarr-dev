@@ -511,6 +511,10 @@ func (w *cleanupWorker) Work(ctx context.Context, _ *river.Job[CleanupArgs]) err
 	if err := w.queries.DeleteOldAudit(ctx, pgtype.Timestamptz{Time: time.Now().Add(-auditKeptFor), Valid: true}); err != nil {
 		return err
 	}
+	// Who opened a link is kept for 90 days.
+	if err := w.queries.DeleteOldLinkVisits(ctx); err != nil {
+		return err
+	}
 	if err := w.queries.DeleteOldSecurityEvents(ctx, pgtype.Timestamptz{Time: time.Now().Add(-auditKeptFor), Valid: true}); err != nil {
 		return err
 	}

@@ -1,4 +1,7 @@
+import de from './i18n/de.json';
 import en from './i18n/en.json';
+import hr from './i18n/hr.json';
+import sl from './i18n/sl.json';
 
 /** Every text has a key; English is the source and what is shown when a translation is missing. */
 export type Key = keyof typeof en;
@@ -19,11 +22,9 @@ export const unreviewed: readonly Lang[] = ['de', 'sl'];
 
 const KEY = 'mediarr_lang';
 
-const loaders: Record<Exclude<Lang, 'en'>, () => Promise<{ default: Catalog }>> = {
-	hr: () => import('./i18n/hr.json'),
-	de: () => import('./i18n/de.json'),
-	sl: () => import('./i18n/sl.json')
-};
+// All of them come with the page: loading one later could fail, and a page must never fail over its
+// words. Each is about 20 KB compressed.
+const catalogs: Record<Exclude<Lang, 'en'>, Catalog> = { hr, de, sl };
 
 /** English is the main language; other languages apply only when chosen. */
 export function parseLang(stored: string | null | undefined): Lang {
@@ -40,20 +41,15 @@ function initial(): Lang {
 }
 
 let current = $state<Lang>(initial());
-let catalog = $state<Catalog>({});
+let catalog = $state<Catalog>(current === 'en' ? {} : catalogs[current]);
 
 export function lang() {
 	return current;
 }
 
-/** Loads the texts of a language; until then, English shows. */
+/** Picks the texts of a language. Kept async for callers that awaited loading. */
 export async function loadLang(next: Lang = current) {
-	if (next === 'en') {
-		catalog = {};
-		return;
-	}
-	const loaded = (await loaders[next]()).default;
-	if (current === next) catalog = loaded;
+	catalog = next === 'en' ? {} : catalogs[next];
 }
 
 export async function setLang(next: Lang) {

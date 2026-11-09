@@ -2562,5 +2562,86 @@
         "type": "String"
       }
     }
+  },
+  "linkPrivacyHideFaces": "Hide faces",
+  "linkPrivacyFacesNone": "None",
+  "linkPrivacyFacesAll": "All faces",
+  "linkPrivacyFacesExcept": "All but chosen people",
+  "linkPrivacyChoosePeople": "The faces of these people stay visible:",
+  "linkPrivacyNoPeople": "Nobody has a name yet. Name people under People first.",
+  "linkPrivacyPeopleFailed": "People could not be loaded.",
+  "linkPrivacyUnrecognized": "A face that was not recognized is not blurred.",
+  "linkPrivacyUnchecked": "{count} of {total} photos have not been checked for faces yet, so nothing in them is blurred.",
+  "@linkPrivacyUnchecked": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPrivacyAllChecked": "Every photo in the album has been checked for faces.",
+  "linkPrivacyVideosStill": "Videos ({count}) are shown only as a still, with faces blurred.",
+  "@linkPrivacyVideosStill": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPrivacyNoOriginals": "Visitors get a blurred copy at full size, never the original.",
+  "linkPrivacyRemoveCamera": "Remove camera details",
+  "linkPrivacyRemoveCameraDetail": "Downloads carry no camera, lens, serial numbers, author or software.",
+  "linkPrivacyRemoveDate": "Remove the date too",
+  "linkPrivacyAskName": "Ask for a name",
+  "linkPrivacyAskNameDetail": "Visitors type their name before they see the album.",
+  "linkPrivacyNotOpened": "Not opened yet",
+  "linkPrivacyOpened": "{count, plural, =1{Opened once} other{Opened {count} times}} · last {when}",
+  "@linkPrivacyOpened": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPrivacyWhoOpened": "Who opened it",
+  "linkPrivacyNoVisits": "Nobody has opened this link yet.",
+  "linkPrivacyVisitsFailed": "The visits could not be loaded.",
+  "linkPrivacyUnknownPlace": "Unknown place",
+  "linkPrivacyNoName": "No name given",
+  "linkPrivacyViewed": "{count} viewed",
+  "@linkPrivacyViewed": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPrivacyDownloaded": "{count} downloaded",
+  "@linkPrivacyDownloaded": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPrivacyAttribution": "Places by DB-IP (db-ip.com), CC BY 4.0. Visits are kept 90 days.",
+  "sharePrivacyRemoveLocation": "Remove location",
+  "sharePrivacyRemoveCamera": "Remove camera details",
+  "sharePrivacyHideFaces": "Hide faces",
+  "sharePrivacyHideFacesDetail": "Photos go as a blurred copy. Videos are left out.",
+  "sharePrivacyVideosLeftOut": "Videos were left out: their faces cannot be hidden.",
+  "notificationsLinkOpened": "Your link “{subject}” was opened for the first time.",
+  "@notificationsLinkOpened": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -10,6 +10,7 @@ import 'package:mediarr_api/api.dart';
 import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../theme.dart';
+import 'link_privacy.dart';
 
 /// What a role allows. The server decides; this only hides what would be refused.
 class AlbumRights {
@@ -518,6 +519,7 @@ class _LinksSheetState extends State<LinksSheet> {
   bool _allowUpload = false;
   bool _uploadOnly = false;
   bool _showLocation = false;
+  LinkPrivacyChoice _privacy = const LinkPrivacyChoice();
 
   DefaultApi get _api => widget.session.api;
 
@@ -561,6 +563,11 @@ class _LinksSheetState extends State<LinksSheet> {
           allowUpload: _allowUpload,
           uploadOnly: _uploadOnly,
           showLocation: _showLocation,
+          hideFaces: _privacy.hideFaces,
+          visiblePeople: _privacy.sentPeople,
+          stripCamera: _privacy.stripCamera,
+          stripDate: _privacy.stripCamera && _privacy.stripDate,
+          askName: _privacy.askName,
         ),
       );
       if (link?.token != null) {
@@ -571,6 +578,7 @@ class _LinksSheetState extends State<LinksSheet> {
           _limit.clear();
           _watermark.clear();
           _expires = null;
+          _privacy = const LinkPrivacyChoice();
         });
       }
       await _load();
@@ -622,7 +630,18 @@ class _LinksSheetState extends State<LinksSheet> {
             title: Text(
               link.label.isEmpty ? l.albumSheetsUnnamedLink : link.label,
             ),
-            subtitle: Text(linkSummary(link)),
+            subtitle: Text('${linkSummary(link)}\n${linkOpenedLine(link)}'),
+            onTap: () => Navigator.of(context)
+                .push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => LinkSettingsScreen(
+                      session: widget.session,
+                      albumId: widget.albumId,
+                      link: link,
+                    ),
+                  ),
+                )
+                .then((_) => _load()),
             trailing: TextButton(
               onPressed: () async {
                 try {
@@ -683,6 +702,12 @@ class _LinksSheetState extends State<LinksSheet> {
             title: Text(l.albumSheetsShowLocation),
             value: _showLocation,
             onChanged: (value) => setState(() => _showLocation = value),
+          ),
+          LinkPrivacyFields(
+            session: widget.session,
+            albumId: widget.albumId,
+            value: _privacy,
+            onChanged: (value) => setState(() => _privacy = value),
           ),
         ],
         if (!widget.isSmart) ...[

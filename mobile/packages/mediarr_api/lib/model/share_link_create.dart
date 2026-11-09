@@ -22,6 +22,11 @@ class ShareLinkCreate {
     this.uploadOnly = false,
     this.showLocation = false,
     this.watermark,
+    this.hideFaces,
+    this.visiblePeople = const [],
+    this.stripCamera = true,
+    this.stripDate = false,
+    this.askName = false,
   });
 
   ///
@@ -73,6 +78,22 @@ class ShareLinkCreate {
   ///
   String? watermark;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  HideFaces? hideFaces;
+
+  List<String> visiblePeople;
+
+  bool stripCamera;
+
+  bool stripDate;
+
+  bool askName;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -85,7 +106,12 @@ class ShareLinkCreate {
           other.allowUpload == allowUpload &&
           other.uploadOnly == uploadOnly &&
           other.showLocation == showLocation &&
-          other.watermark == watermark;
+          other.watermark == watermark &&
+          other.hideFaces == hideFaces &&
+          _deepEquality.equals(other.visiblePeople, visiblePeople) &&
+          other.stripCamera == stripCamera &&
+          other.stripDate == stripDate &&
+          other.askName == askName;
 
   @override
   int get hashCode =>
@@ -98,11 +124,16 @@ class ShareLinkCreate {
       (allowUpload.hashCode) +
       (uploadOnly.hashCode) +
       (showLocation.hashCode) +
-      (watermark == null ? 0 : watermark!.hashCode);
+      (watermark == null ? 0 : watermark!.hashCode) +
+      (hideFaces == null ? 0 : hideFaces!.hashCode) +
+      (visiblePeople.hashCode) +
+      (stripCamera.hashCode) +
+      (stripDate.hashCode) +
+      (askName.hashCode);
 
   @override
   String toString() =>
-      'ShareLinkCreate[label=$label, password=$password, expiresAt=$expiresAt, downloadLimit=$downloadLimit, allowDownload=$allowDownload, allowUpload=$allowUpload, uploadOnly=$uploadOnly, showLocation=$showLocation, watermark=$watermark]';
+      'ShareLinkCreate[label=$label, password=$password, expiresAt=$expiresAt, downloadLimit=$downloadLimit, allowDownload=$allowDownload, allowUpload=$allowUpload, uploadOnly=$uploadOnly, showLocation=$showLocation, watermark=$watermark, hideFaces=$hideFaces, visiblePeople=$visiblePeople, stripCamera=$stripCamera, stripDate=$stripDate, askName=$askName]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -135,6 +166,15 @@ class ShareLinkCreate {
     } else {
       json[r'watermark'] = null;
     }
+    if (this.hideFaces != null) {
+      json[r'hideFaces'] = this.hideFaces;
+    } else {
+      json[r'hideFaces'] = null;
+    }
+    json[r'visiblePeople'] = this.visiblePeople;
+    json[r'stripCamera'] = this.stripCamera;
+    json[r'stripDate'] = this.stripDate;
+    json[r'askName'] = this.askName;
     return json;
   }
 
@@ -168,6 +208,15 @@ class ShareLinkCreate {
         uploadOnly: mapValueOfType<bool>(json, r'uploadOnly') ?? false,
         showLocation: mapValueOfType<bool>(json, r'showLocation') ?? false,
         watermark: mapValueOfType<String>(json, r'watermark'),
+        hideFaces: HideFaces.fromJson(json[r'hideFaces']),
+        visiblePeople: json[r'visiblePeople'] is Iterable
+            ? (json[r'visiblePeople'] as Iterable)
+                .cast<String>()
+                .toList(growable: false)
+            : const [],
+        stripCamera: mapValueOfType<bool>(json, r'stripCamera') ?? true,
+        stripDate: mapValueOfType<bool>(json, r'stripDate') ?? false,
+        askName: mapValueOfType<bool>(json, r'askName') ?? false,
       );
     }
     return null;

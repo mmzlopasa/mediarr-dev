@@ -48,4 +48,44 @@ void main() {
       'http://10.0.0.2:9851/api/assets/a1/share?small=true',
     );
   });
+
+  test(
+    'a copy without location, camera or faces comes from its own address',
+    () {
+      final session = Session(
+        serverUrl: 'http://10.0.0.2:9851',
+        cookie: 'c',
+        user: User(
+          id: 'u',
+          email: 'a@b.c',
+          name: 'A',
+          isAdmin: false,
+          totpEnabled: false,
+        ),
+      );
+      const plain = SharePrivacy.none;
+      expect(plain.changesFile(), isFalse);
+      expect(
+        shareUrl(session, 'a1', privacy: plain),
+        'http://10.0.0.2:9851/api/assets/a1/share',
+      );
+      const usual = SharePrivacy(removeLocation: true, removeCamera: true);
+      expect(
+        shareUrl(session, 'a1', privacy: usual),
+        'http://10.0.0.2:9851/api/assets/a1/shareable'
+        '?location=false&camera=false&faces=none',
+      );
+      // A smaller file carries no details anyway, so it stays as it was.
+      expect(
+        shareUrl(session, 'a1', small: true, privacy: usual),
+        'http://10.0.0.2:9851/api/assets/a1/share?small=true',
+      );
+      const faces = SharePrivacy(hideFaces: true);
+      expect(
+        shareUrl(session, 'a1', small: true, privacy: faces),
+        'http://10.0.0.2:9851/api/assets/a1/shareable'
+        '?location=true&camera=true&faces=all',
+      );
+    },
+  );
 }

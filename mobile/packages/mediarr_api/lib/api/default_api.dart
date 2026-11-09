@@ -3630,6 +3630,66 @@ class DefaultApi {
     return null;
   }
 
+  /// What hiding faces in a link to this album can and cannot cover
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getAlbumPrivacyWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/privacy'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// What hiding faces in a link to this album can and cannot cover
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<AlbumPrivacy?> getAlbumPrivacy(
+    String id,
+  ) async {
+    final response = await getAlbumPrivacyWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'AlbumPrivacy',
+      ) as AlbumPrivacy;
+    }
+    return null;
+  }
+
   /// How far picture analysis has come. Administrators only.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6959,6 +7019,101 @@ class DefaultApi {
     return null;
   }
 
+  /// One of my photos ready to send elsewhere, without what I choose to keep to myself
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] location:
+  ///   Keep where it was taken
+  ///
+  /// * [bool] camera:
+  ///   Keep the camera, lens, serial numbers and author
+  ///
+  /// * [HideFaces] faces:
+  Future<Response> getShareableAssetWithHttpInfo(
+    String id, {
+    bool? location,
+    bool? camera,
+    HideFaces? faces,
+  }) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/{id}/shareable'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    if (location != null) {
+      queryParams.addAll(_queryParams('', 'location', location));
+    }
+    if (camera != null) {
+      queryParams.addAll(_queryParams('', 'camera', camera));
+    }
+    if (faces != null) {
+      queryParams.addAll(_queryParams('', 'faces', faces));
+    }
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// One of my photos ready to send elsewhere, without what I choose to keep to myself
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [bool] location:
+  ///   Keep where it was taken
+  ///
+  /// * [bool] camera:
+  ///   Keep the camera, lens, serial numbers and author
+  ///
+  /// * [HideFaces] faces:
+  Future<MultipartFile?> getShareableAsset(
+    String id, {
+    bool? location,
+    bool? camera,
+    HideFaces? faces,
+  }) async {
+    final response = await getShareableAssetWithHttpInfo(
+      id,
+      location: location,
+      camera: camera,
+      faces: faces,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
   /// How originals are laid out in each user's folder, and what the last run over all of them did
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8742,6 +8897,76 @@ class DefaultApi {
     return null;
   }
 
+  /// Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] linkId (required):
+  Future<Response> listLinkVisitsWithHttpInfo(
+    String id,
+    String linkId,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/links/{linkId}/visits'
+        .replaceAll('{id}', id)
+        .replaceAll('{linkId}', linkId);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] linkId (required):
+  Future<List<LinkVisit>?> listLinkVisits(
+    String id,
+    String linkId,
+  ) async {
+    final response = await listLinkVisitsWithHttpInfo(
+      id,
+      linkId,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(responseBody, 'List<LinkVisit>')
+              as List)
+          .cast<LinkVisit>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// On this day in earlier years, and the last week
   ///
   /// Note: This method returns the HTTP [Response].
@@ -9594,6 +9819,62 @@ class DefaultApi {
       ) as Album;
     }
     return null;
+  }
+
+  /// The visitor says who they are, when the link asks
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [LinkVisitor] linkVisitor (required):
+  Future<Response> nameLinkVisitorWithHttpInfo(
+    String token,
+    LinkVisitor linkVisitor,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/public/{token}/visitor'.replaceAll('{token}', token);
+
+    // ignore: prefer_final_locals
+    Object? postBody = linkVisitor;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The visitor says who they are, when the link asks
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [LinkVisitor] linkVisitor (required):
+  Future<void> nameLinkVisitor(
+    String token,
+    LinkVisitor linkVisitor,
+  ) async {
+    final response = await nameLinkVisitorWithHttpInfo(
+      token,
+      linkVisitor,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
@@ -13080,6 +13361,82 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'Album',
       ) as Album;
+    }
+    return null;
+  }
+
+  /// Changes how private a link is; turning faces or details off applies at once
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] linkId (required):
+  ///
+  /// * [LinkPrivacy] linkPrivacy (required):
+  Future<Response> updateAlbumLinkWithHttpInfo(
+    String id,
+    String linkId,
+    LinkPrivacy linkPrivacy,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/albums/{id}/links/{linkId}'
+        .replaceAll('{id}', id)
+        .replaceAll('{linkId}', linkId);
+
+    // ignore: prefer_final_locals
+    Object? postBody = linkPrivacy;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PATCH',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Changes how private a link is; turning faces or details off applies at once
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] linkId (required):
+  ///
+  /// * [LinkPrivacy] linkPrivacy (required):
+  Future<ShareLink?> updateAlbumLink(
+    String id,
+    String linkId,
+    LinkPrivacy linkPrivacy,
+  ) async {
+    final response = await updateAlbumLinkWithHttpInfo(
+      id,
+      linkId,
+      linkPrivacy,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'ShareLink',
+      ) as ShareLink;
     }
     return null;
   }

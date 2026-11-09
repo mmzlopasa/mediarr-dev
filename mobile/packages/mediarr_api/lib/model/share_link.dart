@@ -26,6 +26,13 @@ class ShareLink {
     required this.showLocation,
     this.watermark,
     required this.createdAt,
+    this.hideFaces,
+    this.visiblePeople = const [],
+    this.stripCamera,
+    this.stripDate,
+    this.askName,
+    this.visits,
+    this.lastVisitAt,
   });
 
   String id;
@@ -79,6 +86,58 @@ class ShareLink {
 
   DateTime createdAt;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  HideFaces? hideFaces;
+
+  /// With hideFaces except: the people who stay visible
+  List<String> visiblePeople;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? stripCamera;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? stripDate;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? askName;
+
+  /// Times it was opened in the last 90 days
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? visits;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  DateTime? lastVisitAt;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -95,7 +154,14 @@ class ShareLink {
           other.uploadOnly == uploadOnly &&
           other.showLocation == showLocation &&
           other.watermark == watermark &&
-          other.createdAt == createdAt;
+          other.createdAt == createdAt &&
+          other.hideFaces == hideFaces &&
+          _deepEquality.equals(other.visiblePeople, visiblePeople) &&
+          other.stripCamera == stripCamera &&
+          other.stripDate == stripDate &&
+          other.askName == askName &&
+          other.visits == visits &&
+          other.lastVisitAt == lastVisitAt;
 
   @override
   int get hashCode =>
@@ -112,11 +178,18 @@ class ShareLink {
       (uploadOnly.hashCode) +
       (showLocation.hashCode) +
       (watermark == null ? 0 : watermark!.hashCode) +
-      (createdAt.hashCode);
+      (createdAt.hashCode) +
+      (hideFaces == null ? 0 : hideFaces!.hashCode) +
+      (visiblePeople.hashCode) +
+      (stripCamera == null ? 0 : stripCamera!.hashCode) +
+      (stripDate == null ? 0 : stripDate!.hashCode) +
+      (askName == null ? 0 : askName!.hashCode) +
+      (visits == null ? 0 : visits!.hashCode) +
+      (lastVisitAt == null ? 0 : lastVisitAt!.hashCode);
 
   @override
   String toString() =>
-      'ShareLink[id=$id, token=$token, label=$label, hasPassword=$hasPassword, expiresAt=$expiresAt, downloadLimit=$downloadLimit, downloadCount=$downloadCount, allowDownload=$allowDownload, allowUpload=$allowUpload, uploadOnly=$uploadOnly, showLocation=$showLocation, watermark=$watermark, createdAt=$createdAt]';
+      'ShareLink[id=$id, token=$token, label=$label, hasPassword=$hasPassword, expiresAt=$expiresAt, downloadLimit=$downloadLimit, downloadCount=$downloadCount, allowDownload=$allowDownload, allowUpload=$allowUpload, uploadOnly=$uploadOnly, showLocation=$showLocation, watermark=$watermark, createdAt=$createdAt, hideFaces=$hideFaces, visiblePeople=$visiblePeople, stripCamera=$stripCamera, stripDate=$stripDate, askName=$askName, visits=$visits, lastVisitAt=$lastVisitAt]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -149,6 +222,37 @@ class ShareLink {
       json[r'watermark'] = null;
     }
     json[r'createdAt'] = this.createdAt.toUtc().toIso8601String();
+    if (this.hideFaces != null) {
+      json[r'hideFaces'] = this.hideFaces;
+    } else {
+      json[r'hideFaces'] = null;
+    }
+    json[r'visiblePeople'] = this.visiblePeople;
+    if (this.stripCamera != null) {
+      json[r'stripCamera'] = this.stripCamera;
+    } else {
+      json[r'stripCamera'] = null;
+    }
+    if (this.stripDate != null) {
+      json[r'stripDate'] = this.stripDate;
+    } else {
+      json[r'stripDate'] = null;
+    }
+    if (this.askName != null) {
+      json[r'askName'] = this.askName;
+    } else {
+      json[r'askName'] = null;
+    }
+    if (this.visits != null) {
+      json[r'visits'] = this.visits;
+    } else {
+      json[r'visits'] = null;
+    }
+    if (this.lastVisitAt != null) {
+      json[r'lastVisitAt'] = this.lastVisitAt!.toUtc().toIso8601String();
+    } else {
+      json[r'lastVisitAt'] = null;
+    }
     return json;
   }
 
@@ -186,6 +290,17 @@ class ShareLink {
         showLocation: mapValueOfType<bool>(json, r'showLocation')!,
         watermark: mapValueOfType<String>(json, r'watermark'),
         createdAt: mapDateTime(json, r'createdAt', r'')!,
+        hideFaces: HideFaces.fromJson(json[r'hideFaces']),
+        visiblePeople: json[r'visiblePeople'] is Iterable
+            ? (json[r'visiblePeople'] as Iterable)
+                .cast<String>()
+                .toList(growable: false)
+            : const [],
+        stripCamera: mapValueOfType<bool>(json, r'stripCamera'),
+        stripDate: mapValueOfType<bool>(json, r'stripDate'),
+        askName: mapValueOfType<bool>(json, r'askName'),
+        visits: mapValueOfType<int>(json, r'visits'),
+        lastVisitAt: mapDateTime(json, r'lastVisitAt', r''),
       );
     }
     return null;

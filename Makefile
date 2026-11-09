@@ -120,11 +120,12 @@ e2e:
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-stacker@example.com "Demo korisnik"
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-librarian@example.com "Demo korisnik"
 	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-importer@example.com "Demo korisnik"
+	printf '%s\n' "$(E2E_PASSWORD)" | $(DEV_COMPOSE) exec -T server /tmp/air/mediarr user upsert e2e-language@example.com "Demo korisnik"
 	mkdir -p "$(E2E_EXTERNAL)/e2e-folder/inner"
 	cp web/e2e/fixtures/gps.jpg "$(E2E_EXTERNAL)/e2e-folder/inner/external-photo.jpg"
 	docker run --rm --network host --user $(DEV_UID):$(DEV_GID) -e HOME=/tmp -e E2E_PASSWORD=$(E2E_PASSWORD) \
 		-v "$(CURDIR)/web:/web" -w /web mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
-		node_modules/.bin/playwright test $(E2E_ARGS); status=$$?; rm -rf "$(E2E_EXTERNAL)/e2e-folder"; $(DEV_COMPOSE) exec -T worker sh -c 'rm -rf /backup/e2e-*'; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker e2e-librarian e2e-importer"; exit $$status
+		node_modules/.bin/playwright test $(E2E_ARGS); status=$$?; rm -rf "$(E2E_EXTERNAL)/e2e-folder"; $(DEV_COMPOSE) exec -T worker sh -c 'rm -rf /backup/e2e-*'; $(MAKE) clean-test-users TEST_USERS="e2e-admin e2e-user e2e-uploader e2e-owner e2e-member e2e-organizer e2e-stacker e2e-librarian e2e-importer e2e-language"; exit $$status
 
 # After an intended change to the look: new screenshots of the approved design. Look at them before committing.
 e2e-design-update:

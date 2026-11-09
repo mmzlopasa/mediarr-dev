@@ -86,6 +86,8 @@
 				return 'album';
 			case 'import_done':
 				return 'download';
+			case 'link_opened':
+				return 'eye';
 			default:
 				return 'warn';
 		}
@@ -99,6 +101,8 @@
 				return t('notificationBell.theImportFromSubjectFinished', { subject: item.subject });
 			case 'import_failed':
 				return t('notificationBell.theImportFromSubjectFailed', { subject: item.subject });
+			case 'link_opened':
+				return t('notificationBell.yourLinkSubjectWasOpened', { subject: item.subject });
 			case 'backup_failed':
 				return t('notificationBell.aBackupFailed');
 			case 'device_quiet':
@@ -169,7 +173,7 @@
 						<li class="notify-row" class:unread={group.unread} class:bad={failure(item)}>
 							<span class="notify-ic"><Icon name={icon(item)} size={16} /></span>
 							<div class="notify-t">
-								{#if item.kind === 'album_shared' && item.ref}
+								{#if (item.kind === 'album_shared' || item.kind === 'link_opened') && item.ref}
 									<a
 										href={resolve('/(app)/albums/[id]', { id: item.ref })}
 										onclick={() => (open = false)}>{sentence(item)}</a

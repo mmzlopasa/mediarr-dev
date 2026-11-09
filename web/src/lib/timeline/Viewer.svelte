@@ -39,7 +39,8 @@
 		strip,
 		playlist,
 		albumId,
-		previewOnly = false
+		previewOnly = false,
+		videoNote
 	}: {
 		id: string;
 		onClose: () => void;
@@ -53,6 +54,8 @@
 		playlist?: (id: string) => Promise<SlideItem[]>;
 		albumId?: string;
 		previewOnly?: boolean;
+		/** Videos do not play here: their still is shown with this note instead. */
+		videoNote?: string;
 	} = $props();
 
 	const load = (asset: string) =>
@@ -398,7 +401,7 @@
 							onclick={() => (flat = !flat)}><Icon name="globe" /></button
 						>
 					{/if}
-					{#if hasLive}
+					{#if hasLive && !videoNote}
 						<button
 							type="button"
 							class="icon-btn"
@@ -488,7 +491,7 @@
 				<div class="viewer-msg">
 					<Alert kind="err">{t('viewer.thisPhotoIsNotAvailable')}</Alert>
 				</div>
-			{:else if detail?.kind === 'video' && !videoFailed && !previewOnly}
+			{:else if detail?.kind === 'video' && !videoFailed && !previewOnly && !videoNote}
 				<VideoPlayer
 					assetId={id}
 					sources={{
@@ -505,7 +508,7 @@
 					loop={preferences()?.videoLoop ?? false}
 					onFailed={() => (videoFailed = true)}
 				/>
-			{:else if detail?.kind === 'video' && !previewOnly}
+			{:else if detail?.kind === 'video' && !previewOnly && !videoNote}
 				<div class="viewer-msg">
 					<Alert kind="warn">{t('viewer.thisBrowserCannotPlayThis')}</Alert>
 					{#if detail.downloadAllowed !== false}<a
@@ -537,6 +540,9 @@
 						style="transform:translate({x}px,{y}px) scale({scale})"
 						onload={() => (fullLoaded = true)}
 					/>
+				{/if}
+				{#if videoNote && detail.kind === 'video'}
+					<p class="viewer-note">{videoNote}</p>
 				{/if}
 				{#if playingLive && liveSources}
 					<div class="viewer-live">

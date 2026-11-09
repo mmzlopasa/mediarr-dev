@@ -40,46 +40,97 @@ Future<void> shareAssets(
     if (sure != true || !context.mounted) return;
   }
   final settings = ref.read(settingsProvider);
+  var privacy = SharePrivacy(
+    removeLocation: settings.shareRemoveLocation,
+    removeCamera: settings.shareRemoveCamera,
+    hideFaces: settings.shareHideFaces,
+  );
   final choice = await showModalBottomSheet<String>(
     context: context,
     showDragHandle: true,
-    builder: (context) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(
-              ids.length == 1
-                  ? l.shareSheetSendThis
-                  : l.shareSheetSendCount('${ids.length}'),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          for (final option in [false, true])
-            ListTile(
-              leading: Icon(
-                option ? Icons.compress : Icons.photo_outlined,
-                color: Palette.dim,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setSheet) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Text(
+                  ids.length == 1
+                      ? l.shareSheetSendThis
+                      : l.shareSheetSendCount('${ids.length}'),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
-              title: Text(option ? l.shareSheetSmaller : l.shareSheetOriginal),
-              subtitle: Text(
-                option ? l.shareSheetSmallerDetail : l.shareSheetOriginalDetail,
+              for (final option in [false, true])
+                ListTile(
+                  leading: Icon(
+                    option ? Icons.compress : Icons.photo_outlined,
+                    color: Palette.dim,
+                  ),
+                  title: Text(
+                    option ? l.shareSheetSmaller : l.shareSheetOriginal,
+                  ),
+                  subtitle: Text(
+                    option
+                        ? l.shareSheetSmallerDetail
+                        : l.shareSheetOriginalDetail,
+                  ),
+                  trailing: settings.shareSmall == option
+                      ? Icon(Icons.check, color: Palette.gold)
+                      : null,
+                  onTap: () =>
+                      Navigator.pop(context, option ? 'small' : 'original'),
+                ),
+              Divider(height: 1, color: Palette.line),
+              SwitchListTile(
+                key: const ValueKey('share-remove-location'),
+                title: Text(l.sharePrivacyRemoveLocation),
+                value: privacy.removeLocation,
+                onChanged: (value) => setSheet(
+                  () => privacy = SharePrivacy(
+                    removeLocation: value,
+                    removeCamera: privacy.removeCamera,
+                    hideFaces: privacy.hideFaces,
+                  ),
+                ),
               ),
-              trailing: settings.shareSmall == option
-                  ? Icon(Icons.check, color: Palette.gold)
-                  : null,
-              onTap: () =>
-                  Navigator.pop(context, option ? 'small' : 'original'),
-            ),
-          Divider(height: 1, color: Palette.line),
-          ListTile(
-            leading: Icon(Icons.download_outlined, color: Palette.dim),
-            title: Text(l.shareSheetSaveToPhone),
-            subtitle: Text(l.shareSheetSaveDetail),
-            onTap: () => Navigator.pop(context, 'save'),
+              SwitchListTile(
+                key: const ValueKey('share-remove-camera'),
+                title: Text(l.sharePrivacyRemoveCamera),
+                value: privacy.removeCamera,
+                onChanged: (value) => setSheet(
+                  () => privacy = SharePrivacy(
+                    removeLocation: privacy.removeLocation,
+                    removeCamera: value,
+                    hideFaces: privacy.hideFaces,
+                  ),
+                ),
+              ),
+              SwitchListTile(
+                key: const ValueKey('share-hide-faces'),
+                title: Text(l.sharePrivacyHideFaces),
+                subtitle: Text(l.sharePrivacyHideFacesDetail),
+                value: privacy.hideFaces,
+                onChanged: (value) => setSheet(
+                  () => privacy = SharePrivacy(
+                    removeLocation: privacy.removeLocation,
+                    removeCamera: privacy.removeCamera,
+                    hideFaces: value,
+                  ),
+                ),
+              ),
+              Divider(height: 1, color: Palette.line),
+              ListTile(
+                leading: Icon(Icons.download_outlined, color: Palette.dim),
+                title: Text(l.shareSheetSaveToPhone),
+                subtitle: Text(l.shareSheetSaveDetail),
+                onTap: () => Navigator.pop(context, 'save'),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     ),
   );
@@ -89,15 +140,44 @@ Future<void> shareAssets(
     return;
   }
   final small = choice == 'small';
-  if (small != settings.shareSmall) {
+  if (small != settings.shareSmall ||
+      privacy.removeLocation != settings.shareRemoveLocation ||
+      privacy.removeCamera != settings.shareRemoveCamera ||
+      privacy.hideFaces != settings.shareHideFaces) {
     await ref
         .read(settingsProvider.notifier)
-        .change(settings.copyWith(shareSmall: small));
+        .change(
+          settings.copyWith(
+            shareSmall: small,
+            shareRemoveLocation: privacy.removeLocation,
+            shareRemoveCamera: privacy.removeCamera,
+            shareHideFaces: privacy.hideFaces,
+          ),
+        );
   }
   if (!context.mounted) return;
   final size = MediaQuery.sizeOf(context);
-  final files = await _fetch(context, session, ids, small: small);
-  if (files == null || files.isEmpty) return;
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final files = await _fetch(
+    context,
+    session,
+    ids,
+    small: small,
+    privacy: privacy,
+  );
+  if (files == null || files.isEmpty) {
+    if (files != null && privacy.hideFaces) {
+      messenger?.showSnackBar(
+        SnackBar(content: Text(l.sharePrivacyVideosLeftOut)),
+      );
+    }
+    return;
+  }
+  if (files.length < ids.length && privacy.hideFaces) {
+    messenger?.showSnackBar(
+      SnackBar(content: Text(l.sharePrivacyVideosLeftOut)),
+    );
+  }
   // An iPad shows the sheet as a popover, which needs a place on the screen.
   await shareFiles(
     files,
@@ -137,6 +217,7 @@ Future<List<File>?> _fetch(
   Session session,
   List<String> ids, {
   required bool small,
+  SharePrivacy privacy = SharePrivacy.none,
 }) async {
   final progress = ValueNotifier<int>(0);
   var cancelled = false;
@@ -178,6 +259,7 @@ Future<List<File>?> _fetch(
       session,
       ids,
       small: small,
+      privacy: privacy,
       onProgress: (done, _) => progress.value = done,
       cancelled: () => cancelled,
     );

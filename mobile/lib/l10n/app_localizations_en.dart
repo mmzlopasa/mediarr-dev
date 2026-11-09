@@ -4482,4 +4482,131 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '$day $month $year, $hour:$minute';
   }
+
+  @override
+  String get linkPrivacyHideFaces => 'Hide faces';
+
+  @override
+  String get linkPrivacyFacesNone => 'None';
+
+  @override
+  String get linkPrivacyFacesAll => 'All faces';
+
+  @override
+  String get linkPrivacyFacesExcept => 'All but chosen people';
+
+  @override
+  String get linkPrivacyChoosePeople =>
+      'The faces of these people stay visible:';
+
+  @override
+  String get linkPrivacyNoPeople =>
+      'Nobody has a name yet. Name people under People first.';
+
+  @override
+  String get linkPrivacyPeopleFailed => 'People could not be loaded.';
+
+  @override
+  String get linkPrivacyUnrecognized =>
+      'A face that was not recognized is not blurred.';
+
+  @override
+  String linkPrivacyUnchecked(String count, String total) {
+    return '$count of $total photos have not been checked for faces yet, so nothing in them is blurred.';
+  }
+
+  @override
+  String get linkPrivacyAllChecked =>
+      'Every photo in the album has been checked for faces.';
+
+  @override
+  String linkPrivacyVideosStill(String count) {
+    return 'Videos ($count) are shown only as a still, with faces blurred.';
+  }
+
+  @override
+  String get linkPrivacyNoOriginals =>
+      'Visitors get a blurred copy at full size, never the original.';
+
+  @override
+  String get linkPrivacyRemoveCamera => 'Remove camera details';
+
+  @override
+  String get linkPrivacyRemoveCameraDetail =>
+      'Downloads carry no camera, lens, serial numbers, author or software.';
+
+  @override
+  String get linkPrivacyRemoveDate => 'Remove the date too';
+
+  @override
+  String get linkPrivacyAskName => 'Ask for a name';
+
+  @override
+  String get linkPrivacyAskNameDetail =>
+      'Visitors type their name before they see the album.';
+
+  @override
+  String get linkPrivacyNotOpened => 'Not opened yet';
+
+  @override
+  String linkPrivacyOpened(int count, String when) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Opened $count times',
+      one: 'Opened once',
+    );
+    return '$_temp0 · last $when';
+  }
+
+  @override
+  String get linkPrivacyWhoOpened => 'Who opened it';
+
+  @override
+  String get linkPrivacyNoVisits => 'Nobody has opened this link yet.';
+
+  @override
+  String get linkPrivacyVisitsFailed => 'The visits could not be loaded.';
+
+  @override
+  String get linkPrivacyUnknownPlace => 'Unknown place';
+
+  @override
+  String get linkPrivacyNoName => 'No name given';
+
+  @override
+  String linkPrivacyViewed(String count) {
+    return '$count viewed';
+  }
+
+  @override
+  String linkPrivacyDownloaded(String count) {
+    return '$count downloaded';
+  }
+
+  @override
+  String get linkPrivacyAttribution =>
+      'Places by DB-IP (db-ip.com), CC BY 4.0. Visits are kept 90 days.';
+
+  @override
+  String get sharePrivacyRemoveLocation => 'Remove location';
+
+  @override
+  String get sharePrivacyRemoveCamera => 'Remove camera details';
+
+  @override
+  String get sharePrivacyHideFaces => 'Hide faces';
+
+  @override
+  String get sharePrivacyHideFacesDetail =>
+      'Photos go as a blurred copy. Videos are left out.';
+
+  @override
+  String get sharePrivacyVideosLeftOut =>
+      'Videos were left out: their faces cannot be hidden.';
+
+  @override
+  String notificationsLinkOpened(String subject) {
+    return 'Your link “$subject” was opened for the first time.';
+  }
 }

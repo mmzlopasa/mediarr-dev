@@ -424,26 +424,49 @@ type Session struct {
 }
 
 type ShareLink struct {
-	ID            pgtype.UUID
-	AlbumID       pgtype.UUID
-	TokenHash     []byte
-	Label         string
-	PasswordHash  pgtype.Text
-	ExpiresAt     pgtype.Timestamptz
-	DownloadLimit pgtype.Int4
-	DownloadCount int32
-	AllowDownload bool
-	AllowUpload   bool
-	UploadOnly    bool
-	ShowLocation  bool
-	Watermark     pgtype.Text
-	CreatedAt     pgtype.Timestamptz
+	ID             pgtype.UUID
+	AlbumID        pgtype.UUID
+	TokenHash      []byte
+	Label          string
+	PasswordHash   pgtype.Text
+	ExpiresAt      pgtype.Timestamptz
+	DownloadLimit  pgtype.Int4
+	DownloadCount  int32
+	AllowDownload  bool
+	AllowUpload    bool
+	UploadOnly     bool
+	ShowLocation   bool
+	Watermark      pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	HideFaces      string
+	StripCamera    bool
+	StripDate      bool
+	AskName        bool
+	PrivacyVersion int32
 }
 
 type ShareLinkSession struct {
 	TokenHash []byte
 	LinkID    pgtype.UUID
 	ExpiresAt pgtype.Timestamptz
+}
+
+type ShareLinkVisiblePerson struct {
+	LinkID   pgtype.UUID
+	PersonID pgtype.UUID
+}
+
+type ShareLinkVisit struct {
+	ID          int64
+	LinkID      pgtype.UUID
+	VisitorHash []byte
+	At          pgtype.Timestamptz
+	Name        string
+	City        string
+	Country     string
+	Device      string
+	Viewed      int32
+	Downloaded  int32
 }
 
 type SimilarPair struct {

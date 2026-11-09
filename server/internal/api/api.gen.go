@@ -500,6 +500,27 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for HideFaces.
+const (
+	HideFacesAll    HideFaces = "all"
+	HideFacesExcept HideFaces = "except"
+	HideFacesNone   HideFaces = "none"
+)
+
+// Valid indicates whether the value is a known member of the HideFaces enum.
+func (e HideFaces) Valid() bool {
+	switch e {
+	case HideFacesAll:
+		return true
+	case HideFacesExcept:
+		return true
+	case HideFacesNone:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ImportCreateSource.
 const (
 	ImportCreateSourceIcloud  ImportCreateSource = "icloud"
@@ -775,6 +796,7 @@ const (
 	DeviceQuiet  NotificationKind = "device_quiet"
 	ImportDone   NotificationKind = "import_done"
 	ImportFailed NotificationKind = "import_failed"
+	LinkOpened   NotificationKind = "link_opened"
 )
 
 // Valid indicates whether the value is a known member of the NotificationKind enum.
@@ -791,6 +813,8 @@ func (e NotificationKind) Valid() bool {
 	case ImportDone:
 		return true
 	case ImportFailed:
+		return true
+	case LinkOpened:
 		return true
 	default:
 		return false
@@ -1606,6 +1630,17 @@ type AlbumMemberRole string
 type AlbumParent struct {
 	// ParentId Left out or null moves it to the top
 	ParentId *openapi_types.UUID `json:"parentId,omitempty"`
+}
+
+// AlbumPrivacy defines model for AlbumPrivacy.
+type AlbumPrivacy struct {
+	Photos int `json:"photos"`
+
+	// Unchecked Photos whose faces have not been looked for yet
+	Unchecked int `json:"unchecked"`
+
+	// Videos Videos, which only show as a still with hidden faces
+	Videos int `json:"videos"`
 }
 
 // AlbumRef defines model for AlbumRef.
@@ -2441,6 +2476,9 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// HideFaces Blur no faces, every face, or every face but those of the visible people
+type HideFaces string
+
 // ImportCreate defines model for ImportCreate.
 type ImportCreate struct {
 	// Address Immich only
@@ -2632,6 +2670,38 @@ type Language string
 // LinkPassword defines model for LinkPassword.
 type LinkPassword struct {
 	Password string `json:"password"`
+}
+
+// LinkPrivacy defines model for LinkPrivacy.
+type LinkPrivacy struct {
+	AskName *bool `json:"askName,omitempty"`
+
+	// HideFaces Blur no faces, every face, or every face but those of the visible people
+	HideFaces     *HideFaces            `json:"hideFaces,omitempty"`
+	ShowLocation  *bool                 `json:"showLocation,omitempty"`
+	StripCamera   *bool                 `json:"stripCamera,omitempty"`
+	StripDate     *bool                 `json:"stripDate,omitempty"`
+	VisiblePeople *[]openapi_types.UUID `json:"visiblePeople,omitempty"`
+}
+
+// LinkVisit defines model for LinkVisit.
+type LinkVisit struct {
+	At      time.Time `json:"at"`
+	City    *string   `json:"city,omitempty"`
+	Country *string   `json:"country,omitempty"`
+
+	// Device The kind of device and browser, such as iPhone · Safari
+	Device     string `json:"device"`
+	Downloaded int    `json:"downloaded"`
+
+	// Name What the visitor said they are called, when the link asked
+	Name   *string `json:"name,omitempty"`
+	Viewed int     `json:"viewed"`
+}
+
+// LinkVisitor defines model for LinkVisitor.
+type LinkVisitor struct {
+	Name string `json:"name"`
 }
 
 // LocationFix defines model for LocationFix.
@@ -2863,15 +2933,22 @@ type ProfileUpdate struct {
 
 // PublicLink defines model for PublicLink.
 type PublicLink struct {
-	AllowDownload bool    `json:"allowDownload"`
-	AllowUpload   bool    `json:"allowUpload"`
-	Description   *string `json:"description,omitempty"`
+	AllowDownload bool `json:"allowDownload"`
+	AllowUpload   bool `json:"allowUpload"`
+
+	// AskName Asks who is looking before showing the album
+	AskName     *bool   `json:"askName,omitempty"`
+	Description *string `json:"description,omitempty"`
+	HidesFaces  *bool   `json:"hidesFaces,omitempty"`
 
 	// Kiosk This server allows this link as a slideshow
 	Kiosk bool `json:"kiosk"`
 
 	// Locked A password is needed first. Nothing else is told until then.
-	Locked      bool    `json:"locked"`
+	Locked bool `json:"locked"`
+
+	// Named This visitor has said who they are
+	Named       *bool   `json:"named,omitempty"`
 	Title       *string `json:"title,omitempty"`
 	UploadOnly  bool    `json:"uploadOnly"`
 	Watermarked bool    `json:"watermarked"`
@@ -3087,34 +3164,54 @@ type SetupRequest struct {
 
 // ShareLink defines model for ShareLink.
 type ShareLink struct {
-	AllowDownload bool               `json:"allowDownload"`
-	AllowUpload   bool               `json:"allowUpload"`
-	CreatedAt     time.Time          `json:"createdAt"`
-	DownloadCount int                `json:"downloadCount"`
-	DownloadLimit *int               `json:"downloadLimit,omitempty"`
-	ExpiresAt     *time.Time         `json:"expiresAt,omitempty"`
-	HasPassword   bool               `json:"hasPassword"`
-	Id            openapi_types.UUID `json:"id"`
-	Label         string             `json:"label"`
-	ShowLocation  bool               `json:"showLocation"`
+	AllowDownload bool       `json:"allowDownload"`
+	AllowUpload   bool       `json:"allowUpload"`
+	AskName       *bool      `json:"askName,omitempty"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	DownloadCount int        `json:"downloadCount"`
+	DownloadLimit *int       `json:"downloadLimit,omitempty"`
+	ExpiresAt     *time.Time `json:"expiresAt,omitempty"`
+	HasPassword   bool       `json:"hasPassword"`
+
+	// HideFaces Blur no faces, every face, or every face but those of the visible people
+	HideFaces    *HideFaces         `json:"hideFaces,omitempty"`
+	Id           openapi_types.UUID `json:"id"`
+	Label        string             `json:"label"`
+	LastVisitAt  *time.Time         `json:"lastVisitAt,omitempty"`
+	ShowLocation bool               `json:"showLocation"`
+	StripCamera  *bool              `json:"stripCamera,omitempty"`
+	StripDate    *bool              `json:"stripDate,omitempty"`
 
 	// Token Returned only when the link is created
 	Token      *string `json:"token,omitempty"`
 	UploadOnly bool    `json:"uploadOnly"`
-	Watermark  *string `json:"watermark,omitempty"`
+
+	// VisiblePeople With hideFaces except: the people who stay visible
+	VisiblePeople *[]openapi_types.UUID `json:"visiblePeople,omitempty"`
+
+	// Visits Times it was opened in the last 90 days
+	Visits    *int    `json:"visits,omitempty"`
+	Watermark *string `json:"watermark,omitempty"`
 }
 
 // ShareLinkCreate defines model for ShareLinkCreate.
 type ShareLinkCreate struct {
 	AllowDownload *bool      `json:"allowDownload,omitempty"`
 	AllowUpload   *bool      `json:"allowUpload,omitempty"`
+	AskName       *bool      `json:"askName,omitempty"`
 	DownloadLimit *int       `json:"downloadLimit,omitempty"`
 	ExpiresAt     *time.Time `json:"expiresAt,omitempty"`
-	Label         *string    `json:"label,omitempty"`
-	Password      *string    `json:"password,omitempty"`
-	ShowLocation  *bool      `json:"showLocation,omitempty"`
-	UploadOnly    *bool      `json:"uploadOnly,omitempty"`
-	Watermark     *string    `json:"watermark,omitempty"`
+
+	// HideFaces Blur no faces, every face, or every face but those of the visible people
+	HideFaces     *HideFaces            `json:"hideFaces,omitempty"`
+	Label         *string               `json:"label,omitempty"`
+	Password      *string               `json:"password,omitempty"`
+	ShowLocation  *bool                 `json:"showLocation,omitempty"`
+	StripCamera   *bool                 `json:"stripCamera,omitempty"`
+	StripDate     *bool                 `json:"stripDate,omitempty"`
+	UploadOnly    *bool                 `json:"uploadOnly,omitempty"`
+	VisiblePeople *[]openapi_types.UUID `json:"visiblePeople,omitempty"`
+	Watermark     *string               `json:"watermark,omitempty"`
 }
 
 // Sprite defines model for Sprite.
@@ -3494,6 +3591,16 @@ type GetAssetShareParams struct {
 	Small *bool `form:"small,omitempty" json:"small,omitempty"`
 }
 
+// GetShareableAssetParams defines parameters for GetShareableAsset.
+type GetShareableAssetParams struct {
+	// Location Keep where it was taken
+	Location *bool `form:"location,omitempty" json:"location,omitempty"`
+
+	// Camera Keep the camera, lens, serial numbers and author
+	Camera *bool      `form:"camera,omitempty" json:"camera,omitempty"`
+	Faces  *HideFaces `form:"faces,omitempty" json:"faces,omitempty"`
+}
+
 // GetAssetThumbnailParams defines parameters for GetAssetThumbnail.
 type GetAssetThumbnailParams struct {
 	// Size source is the unedited picture, for its owner
@@ -3741,6 +3848,9 @@ type CreateAlbumCommentJSONRequestBody = CommentCreate
 // CreateAlbumLinkJSONRequestBody defines body for CreateAlbumLink for application/json ContentType.
 type CreateAlbumLinkJSONRequestBody = ShareLinkCreate
 
+// UpdateAlbumLinkJSONRequestBody defines body for UpdateAlbumLink for application/json ContentType.
+type UpdateAlbumLinkJSONRequestBody = LinkPrivacy
+
 // SetAlbumMemberJSONRequestBody defines body for SetAlbumMember for application/json ContentType.
 type SetAlbumMemberJSONRequestBody = MemberRole
 
@@ -3869,6 +3979,9 @@ type MergePeopleJSONRequestBody = AssetIds
 
 // UnlockPublicLinkJSONRequestBody defines body for UnlockPublicLink for application/json ContentType.
 type UnlockPublicLinkJSONRequestBody = LinkPassword
+
+// NameLinkVisitorJSONRequestBody defines body for NameLinkVisitor for application/json ContentType.
+type NameLinkVisitorJSONRequestBody = LinkVisitor
 
 // AskSearchJSONRequestBody defines body for AskSearch for application/json ContentType.
 type AskSearchJSONRequestBody = AskRequest
@@ -4127,6 +4240,12 @@ type ServerInterface interface {
 	// DeleteAlbumLink Revoke a public link. It stops working at once.
 	// (DELETE /api/albums/{id}/links/{linkId})
 	DeleteAlbumLink(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, linkId openapi_types.UUID)
+	// UpdateAlbumLink Changes how private a link is; turning faces or details off applies at once
+	// (PATCH /api/albums/{id}/links/{linkId})
+	UpdateAlbumLink(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, linkId openapi_types.UUID)
+	// ListLinkVisits Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
+	// (GET /api/albums/{id}/links/{linkId}/visits)
+	ListLinkVisits(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, linkId openapi_types.UUID)
 	// RemoveAlbumMember End a user's access. The owner can remove anyone, and a member can leave.
 	// (DELETE /api/albums/{id}/members/{userId})
 	RemoveAlbumMember(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userId openapi_types.UUID)
@@ -4136,6 +4255,9 @@ type ServerInterface interface {
 	// MoveAlbum Put an album inside another of one's own, or back at the top
 	// (PUT /api/albums/{id}/parent)
 	MoveAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetAlbumPrivacy What hiding faces in a link to this album can and cannot cover
+	// (GET /api/albums/{id}/privacy)
+	GetAlbumPrivacy(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// ListAssets List the current user's most recent assets and their processing status
 	// (GET /api/assets)
 	ListAssets(w http.ResponseWriter, r *http.Request, params ListAssetsParams)
@@ -4181,6 +4303,9 @@ type ServerInterface interface {
 	// GetAssetShare A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original.
 	// (GET /api/assets/{id}/share)
 	GetAssetShare(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetShareParams)
+	// GetShareableAsset One of my photos ready to send elsewhere, without what I choose to keep to myself
+	// (GET /api/assets/{id}/shareable)
+	GetShareableAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetShareableAssetParams)
 	// GetAssetSidecar An XMP sidecar with what the file says and what Mediarr knows, for other programs
 	// (GET /api/assets/{id}/sidecar)
 	GetAssetSidecar(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -4511,6 +4636,9 @@ type ServerInterface interface {
 	// CreatePublicUpload Send one whole file to a public album (tus 1.0 creation with upload)
 	// (POST /api/public/{token}/uploads)
 	CreatePublicUpload(w http.ResponseWriter, r *http.Request, token string)
+	// NameLinkVisitor The visitor says who they are, when the link asks
+	// (POST /api/public/{token}/visitor)
+	NameLinkVisitor(w http.ResponseWriter, r *http.Request, token string)
 	// SearchAssets Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 	// (GET /api/search)
 	SearchAssets(w http.ResponseWriter, r *http.Request, params SearchAssetsParams)
@@ -5081,6 +5209,18 @@ func (_ Unimplemented) DeleteAlbumLink(w http.ResponseWriter, r *http.Request, i
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// UpdateAlbumLink Changes how private a link is; turning faces or details off applies at once
+// (PATCH /api/albums/{id}/links/{linkId})
+func (_ Unimplemented) UpdateAlbumLink(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, linkId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListLinkVisits Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
+// (GET /api/albums/{id}/links/{linkId}/visits)
+func (_ Unimplemented) ListLinkVisits(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, linkId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // RemoveAlbumMember End a user's access. The owner can remove anyone, and a member can leave.
 // (DELETE /api/albums/{id}/members/{userId})
 func (_ Unimplemented) RemoveAlbumMember(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, userId openapi_types.UUID) {
@@ -5096,6 +5236,12 @@ func (_ Unimplemented) SetAlbumMember(w http.ResponseWriter, r *http.Request, id
 // MoveAlbum Put an album inside another of one's own, or back at the top
 // (PUT /api/albums/{id}/parent)
 func (_ Unimplemented) MoveAlbum(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetAlbumPrivacy What hiding faces in a link to this album can and cannot cover
+// (GET /api/albums/{id}/privacy)
+func (_ Unimplemented) GetAlbumPrivacy(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5186,6 +5332,12 @@ func (_ Unimplemented) GetAssetOriginal(w http.ResponseWriter, r *http.Request, 
 // GetAssetShare A file to send to other apps or save on a phone. A photo comes as its original, or, when it has edits or a smaller one is asked for, as a JPEG of how it looks, without location. A video comes as its original.
 // (GET /api/assets/{id}/share)
 func (_ Unimplemented) GetAssetShare(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAssetShareParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetShareableAsset One of my photos ready to send elsewhere, without what I choose to keep to myself
+// (GET /api/assets/{id}/shareable)
+func (_ Unimplemented) GetShareableAsset(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetShareableAssetParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5846,6 +5998,12 @@ func (_ Unimplemented) UnlockPublicLink(w http.ResponseWriter, r *http.Request, 
 // CreatePublicUpload Send one whole file to a public album (tus 1.0 creation with upload)
 // (POST /api/public/{token}/uploads)
 func (_ Unimplemented) CreatePublicUpload(w http.ResponseWriter, r *http.Request, token string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// NameLinkVisitor The visitor says who they are, when the link asks
+// (POST /api/public/{token}/visitor)
+func (_ Unimplemented) NameLinkVisitor(w http.ResponseWriter, r *http.Request, token string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -7689,6 +7847,76 @@ func (siw *ServerInterfaceWrapper) DeleteAlbumLink(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// UpdateAlbumLink operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAlbumLink(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "linkId" -------------
+	var linkId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "linkId", chi.URLParam(r, "linkId"), &linkId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "linkId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateAlbumLink(w, r, id, linkId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListLinkVisits operation middleware
+func (siw *ServerInterfaceWrapper) ListLinkVisits(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "linkId" -------------
+	var linkId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "linkId", chi.URLParam(r, "linkId"), &linkId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "linkId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListLinkVisits(w, r, id, linkId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RemoveAlbumMember operation middleware
 func (siw *ServerInterfaceWrapper) RemoveAlbumMember(w http.ResponseWriter, r *http.Request) {
 
@@ -7776,6 +8004,32 @@ func (siw *ServerInterfaceWrapper) MoveAlbum(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.MoveAlbum(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAlbumPrivacy operation middleware
+func (siw *ServerInterfaceWrapper) GetAlbumPrivacy(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAlbumPrivacy(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8165,6 +8419,74 @@ func (siw *ServerInterfaceWrapper) GetAssetShare(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAssetShare(w, r, id, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetShareableAsset operation middleware
+func (siw *ServerInterfaceWrapper) GetShareableAsset(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetShareableAssetParams
+
+	// ------------- Optional query parameter "location" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "location", r.URL.Query(), &params.Location, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "location"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "location", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "camera" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "camera", r.URL.Query(), &params.Camera, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "camera"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "camera", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "faces" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "faces", r.URL.Query(), &params.Faces, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "faces"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "faces", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetShareableAsset(w, r, id, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10800,6 +11122,32 @@ func (siw *ServerInterfaceWrapper) CreatePublicUpload(w http.ResponseWriter, r *
 	handler.ServeHTTP(w, r)
 }
 
+// NameLinkVisitor operation middleware
+func (siw *ServerInterfaceWrapper) NameLinkVisitor(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.NameLinkVisitor(w, r, token)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // SearchAssets operation middleware
 func (siw *ServerInterfaceWrapper) SearchAssets(w http.ResponseWriter, r *http.Request) {
 
@@ -11885,6 +12233,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Delete(options.BaseURL+"/api/albums/{id}/links/{linkId}", wrapper.DeleteAlbumLink)
 	})
 	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/api/albums/{id}/links/{linkId}", wrapper.UpdateAlbumLink)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/partners", wrapper.ListPartners)
 	})
 	r.Group(func(r chi.Router) {
@@ -11901,6 +12252,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/partners/{userId}/buckets/{month}", wrapper.GetPartnerBucket)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums/{id}/links/{linkId}/visits", wrapper.ListLinkVisits)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/albums/{id}/privacy", wrapper.GetAlbumPrivacy)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/public/{token}/visitor", wrapper.NameLinkVisitor)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/assets/{id}/shareable", wrapper.GetShareableAsset)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/public/{token}", wrapper.GetPublicLink)

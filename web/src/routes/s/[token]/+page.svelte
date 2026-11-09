@@ -6,6 +6,7 @@
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Button from '#lib/design/components/Button.svelte';
 	import Card from '#lib/design/components/Card.svelte';
+	import Input from '#lib/design/components/Input.svelte';
 	import LangMenu from '#lib/design/components/LangMenu.svelte';
 	import Logo from '#lib/design/components/Logo.svelte';
 	import PasswordInput from '#lib/design/components/PasswordInput.svelte';
@@ -23,6 +24,8 @@
 	let link = $state<PublicLink>();
 	let gone = $state(false);
 	let unlockError = $state('');
+	let visitor = $state('');
+	let nameError = $state('');
 	let busy = $state(false);
 	let timeline = $state<Timeline>();
 	let total = $state<number>();
@@ -66,6 +69,26 @@
 				cause instanceof ApiError && cause.status === 429
 					? t('common.tooManyAttemptsTryAgain')
 					: t('s.token.wrongPassword');
+		} finally {
+			busy = false;
+		}
+	}
+
+	// The owner asked to know who is looking: the album opens once the visitor says.
+	async function introduce(event: SubmitEvent) {
+		event.preventDefault();
+		const name = visitor.trim();
+		if (!name) return;
+		busy = true;
+		nameError = '';
+		try {
+			await api.nameVisitor(token, name);
+			await load();
+		} catch (cause) {
+			nameError =
+				cause instanceof ApiError && cause.status === 429
+					? t('common.tooManyAttemptsTryAgain')
+					: t('common.theActionFailed');
 		} finally {
 			busy = false;
 		}
@@ -133,11 +156,33 @@
 				</form>
 			</Card>
 		</div>
+	{:else if link.askName && !link.named}
+		<div class="pub-box">
+			<Card title={t('s.token.whoIsLooking')}>
+				<form class="form" onsubmit={introduce}>
+					<p class="alb-meta">{t('s.token.theOwnerOfThisAlbum')}</p>
+					{#if nameError}<Alert kind="err">{nameError}</Alert>{/if}
+					<Input
+						label={t('s.token.yourName')}
+						autocomplete="name"
+						maxlength={100}
+						required
+						bind:value={visitor}
+					/>
+					<Button type="submit" variant="gold" disabled={busy || !visitor.trim()}
+						>{t('common.open')}</Button
+					>
+				</form>
+			</Card>
+		</div>
 	{:else}
 		<div class="ph">
 			<div>
 				<h1>{link.title}</h1>
 				{#if link.description}<p>{link.description}</p>{/if}
+				{#if link.hidesFaces && !link.uploadOnly}
+					<p class="alb-meta">{t('s.token.videosAreNotAvailable')}</p>
+				{/if}
 			</div>
 			{#if link.allowUpload}
 				<div class="ph-a">
@@ -176,7 +221,8 @@
 				<Viewer
 					id={page.state.viewer}
 					{base}
-					previewOnly={link.watermarked}
+					previewOnly={link.watermarked || link.hidesFaces}
+					videoNote={link.hidesFaces ? t('s.token.videosAreNotAvailable') : undefined}
 					onClose={() => history.back()}
 					onNavigate={(photo) => replaceState('', { viewer: photo })}
 					onChanged={() => {}}

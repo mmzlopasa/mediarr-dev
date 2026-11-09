@@ -408,6 +408,49 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('a link hides faces and shows who opened it', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.text('Albums').last);
+    await waitFor(tester, find.text('Travels'));
+    await tester.tap(find.text('Travels'));
+    await waitFor(tester, find.byTooltip('More'));
+    await tester.tap(find.byTooltip('More').last);
+    await waitFor(tester, find.text('Public links'));
+    await tester.tap(find.text('Public links'));
+    await waitFor(tester, find.text('Family'));
+    expect(find.textContaining('Opened 2 times'), findsOneWidget);
+    await tester.tap(find.text('Family'));
+    await waitFor(tester, find.byKey(const ValueKey('link-faces-all')));
+    await tester.tap(find.byKey(const ValueKey('link-faces-all')));
+    // The chip is chosen at once, so the server is what is waited for.
+    for (var i = 0; i < 100 && server.link['hideFaces'] != 'all'; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(server.link['hideFaces'], 'all');
+    // What hiding faces does not cover is said under it.
+    await waitFor(tester, find.textContaining('2 of 12 photos'));
+
+    await tester.tap(find.byKey(const ValueKey('link-who-opened')));
+    await waitFor(tester, find.text(FakeServer.visitorName));
+    expect(find.textContaining('Split, Croatia'), findsOneWidget);
+    expect(find.textContaining('Unknown place'), findsOneWidget);
+    expect(find.textContaining('DB-IP'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    // The links sheet, then the album.
+    await tester.tapAt(const Offset(20, 40));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Media').last);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('a duplicate is resolved, and a screenshot is cleaned up', (
     tester,
   ) async {
@@ -603,6 +646,15 @@ void main() {
     await waitFor(tester, find.text('Smaller, for messages'));
     expect(find.text('Original'), findsOneWidget);
     expect(find.text('Save to this phone'), findsOneWidget);
+    // What is kept to oneself is offered too, with location and camera removed by default.
+    expect(
+      tester
+          .widget<SwitchListTile>(
+            find.byKey(const ValueKey('share-remove-location')),
+          )
+          .value,
+      isTrue,
+    );
     await tester.tapAt(const Offset(20, 40));
     await tester.pump(const Duration(seconds: 1));
     await tester.pageBack();

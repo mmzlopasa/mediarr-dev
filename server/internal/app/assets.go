@@ -392,6 +392,15 @@ func (s *apiServer) GetAssetThumbnail(w http.ResponseWriter, r *http.Request, id
 
 // serveFullPreview makes the full resolution preview on first request and keeps it. Only a few run
 // at once, because a RAW decode takes a lot of CPU and memory.
+// fullPreviewFile is the upright, edited picture in full size, made when first asked for.
+func (s *apiServer) fullPreviewFile(ctx context.Context, row *db.Asset) (string, error) {
+	path, err := s.queries.GetAssetFile(ctx, db.GetAssetFileParams{AssetID: row.ID, Kind: "thumb_full"})
+	if db.IsNotFound(err) {
+		path, err = s.makeFullPreview(ctx, row)
+	}
+	return path, err
+}
+
 func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, row *db.Asset) {
 	ctx := r.Context()
 	if row.Kind != "photo" || row.Status != "ready" {
@@ -399,10 +408,7 @@ func (s *apiServer) serveFullPreview(w http.ResponseWriter, r *http.Request, row
 		return
 	}
 
-	path, err := s.queries.GetAssetFile(ctx, db.GetAssetFileParams{AssetID: row.ID, Kind: "thumb_full"})
-	if db.IsNotFound(err) {
-		path, err = s.makeFullPreview(ctx, row)
-	}
+	path, err := s.fullPreviewFile(ctx, row)
 	if err != nil {
 		var unreadable interface{ Unreadable() bool }
 		if errors.As(err, &unreadable) && unreadable.Unreadable() {

@@ -181,6 +181,7 @@ class NotificationKindEnum {
   static const backupFailed = NotificationKindEnum._(r'backup_failed');
   static const backupLate = NotificationKindEnum._(r'backup_late');
   static const deviceQuiet = NotificationKindEnum._(r'device_quiet');
+  static const linkOpened = NotificationKindEnum._(r'link_opened');
 
   /// List of all possible values in this [enum][NotificationKindEnum].
   static const values = <NotificationKindEnum>[
@@ -190,6 +191,7 @@ class NotificationKindEnum {
     backupFailed,
     backupLate,
     deviceQuiet,
+    linkOpened,
   ];
 
   static NotificationKindEnum? fromJson(dynamic value) =>
@@ -245,6 +247,8 @@ class NotificationKindEnumTypeTransformer {
           return NotificationKindEnum.backupLate;
         case r'device_quiet':
           return NotificationKindEnum.deviceQuiet;
+        case r'link_opened':
+          return NotificationKindEnum.linkOpened;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

@@ -7881,6 +7881,204 @@ abstract class AppLocalizations {
     String hour,
     String minute,
   );
+
+  /// No description provided for @linkPrivacyHideFaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide faces'**
+  String get linkPrivacyHideFaces;
+
+  /// No description provided for @linkPrivacyFacesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get linkPrivacyFacesNone;
+
+  /// No description provided for @linkPrivacyFacesAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All faces'**
+  String get linkPrivacyFacesAll;
+
+  /// No description provided for @linkPrivacyFacesExcept.
+  ///
+  /// In en, this message translates to:
+  /// **'All but chosen people'**
+  String get linkPrivacyFacesExcept;
+
+  /// No description provided for @linkPrivacyChoosePeople.
+  ///
+  /// In en, this message translates to:
+  /// **'The faces of these people stay visible:'**
+  String get linkPrivacyChoosePeople;
+
+  /// No description provided for @linkPrivacyNoPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has a name yet. Name people under People first.'**
+  String get linkPrivacyNoPeople;
+
+  /// No description provided for @linkPrivacyPeopleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'People could not be loaded.'**
+  String get linkPrivacyPeopleFailed;
+
+  /// No description provided for @linkPrivacyUnrecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'A face that was not recognized is not blurred.'**
+  String get linkPrivacyUnrecognized;
+
+  /// No description provided for @linkPrivacyUnchecked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {total} photos have not been checked for faces yet, so nothing in them is blurred.'**
+  String linkPrivacyUnchecked(String count, String total);
+
+  /// No description provided for @linkPrivacyAllChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Every photo in the album has been checked for faces.'**
+  String get linkPrivacyAllChecked;
+
+  /// No description provided for @linkPrivacyVideosStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos ({count}) are shown only as a still, with faces blurred.'**
+  String linkPrivacyVideosStill(String count);
+
+  /// No description provided for @linkPrivacyNoOriginals.
+  ///
+  /// In en, this message translates to:
+  /// **'Visitors get a blurred copy at full size, never the original.'**
+  String get linkPrivacyNoOriginals;
+
+  /// No description provided for @linkPrivacyRemoveCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove camera details'**
+  String get linkPrivacyRemoveCamera;
+
+  /// No description provided for @linkPrivacyRemoveCameraDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads carry no camera, lens, serial numbers, author or software.'**
+  String get linkPrivacyRemoveCameraDetail;
+
+  /// No description provided for @linkPrivacyRemoveDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the date too'**
+  String get linkPrivacyRemoveDate;
+
+  /// No description provided for @linkPrivacyAskName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for a name'**
+  String get linkPrivacyAskName;
+
+  /// No description provided for @linkPrivacyAskNameDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Visitors type their name before they see the album.'**
+  String get linkPrivacyAskNameDetail;
+
+  /// No description provided for @linkPrivacyNotOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Not opened yet'**
+  String get linkPrivacyNotOpened;
+
+  /// No description provided for @linkPrivacyOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Opened once} other{Opened {count} times}} · last {when}'**
+  String linkPrivacyOpened(int count, String when);
+
+  /// No description provided for @linkPrivacyWhoOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Who opened it'**
+  String get linkPrivacyWhoOpened;
+
+  /// No description provided for @linkPrivacyNoVisits.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has opened this link yet.'**
+  String get linkPrivacyNoVisits;
+
+  /// No description provided for @linkPrivacyVisitsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The visits could not be loaded.'**
+  String get linkPrivacyVisitsFailed;
+
+  /// No description provided for @linkPrivacyUnknownPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown place'**
+  String get linkPrivacyUnknownPlace;
+
+  /// No description provided for @linkPrivacyNoName.
+  ///
+  /// In en, this message translates to:
+  /// **'No name given'**
+  String get linkPrivacyNoName;
+
+  /// No description provided for @linkPrivacyViewed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} viewed'**
+  String linkPrivacyViewed(String count);
+
+  /// No description provided for @linkPrivacyDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} downloaded'**
+  String linkPrivacyDownloaded(String count);
+
+  /// No description provided for @linkPrivacyAttribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Places by DB-IP (db-ip.com), CC BY 4.0. Visits are kept 90 days.'**
+  String get linkPrivacyAttribution;
+
+  /// No description provided for @sharePrivacyRemoveLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove location'**
+  String get sharePrivacyRemoveLocation;
+
+  /// No description provided for @sharePrivacyRemoveCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove camera details'**
+  String get sharePrivacyRemoveCamera;
+
+  /// No description provided for @sharePrivacyHideFaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide faces'**
+  String get sharePrivacyHideFaces;
+
+  /// No description provided for @sharePrivacyHideFacesDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos go as a blurred copy. Videos are left out.'**
+  String get sharePrivacyHideFacesDetail;
+
+  /// No description provided for @sharePrivacyVideosLeftOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos were left out: their faces cannot be hidden.'**
+  String get sharePrivacyVideosLeftOut;
+
+  /// No description provided for @notificationsLinkOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Your link “{subject}” was opened for the first time.'**
+  String notificationsLinkOpened(String subject);
 }
 
 class _AppLocalizationsDelegate

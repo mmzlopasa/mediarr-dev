@@ -73,6 +73,19 @@ void main() {
     expect(AppSettings.fromJson(const {'perRow': 99}).perRow, maxPerRow);
   });
 
+  test('what is kept to oneself when sharing is remembered', () {
+    const fresh = AppSettings();
+    expect(fresh.shareRemoveLocation, isTrue);
+    expect(fresh.shareRemoveCamera, isTrue);
+    expect(fresh.shareHideFaces, isFalse);
+    final changed = AppSettings.fromJson(
+      fresh.copyWith(shareRemoveLocation: false, shareHideFaces: true).toJson(),
+    );
+    expect(changed.shareRemoveLocation, isFalse);
+    expect(changed.shareRemoveCamera, isTrue);
+    expect(changed.shareHideFaces, isTrue);
+  });
+
   test('the accent is midnight blue with contrast in both themes, and the button stays gold', () {
     Palette.light = false;
     expect(Palette.gold, const Color(0xFF8FB0FF));

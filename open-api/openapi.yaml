@@ -1082,6 +1082,26 @@ paths:
         "403": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
   /api/albums/{id}/links/{linkId}:
+    patch:
+      operationId: updateAlbumLink
+      summary: Changes how private a link is; turning faces or details off applies at once
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: linkId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LinkPrivacy" }
+      responses:
+        "200":
+          description: Changed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ShareLink" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
     delete:
       operationId: deleteAlbumLink
       summary: Revoke a public link. It stops working at once.
@@ -1170,6 +1190,67 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/TimelineBucket" }
         "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/links/{linkId}/visits:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: linkId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: listLinkVisits
+      summary: Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
+      responses:
+        "200":
+          description: The visits
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/LinkVisit" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/albums/{id}/privacy:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getAlbumPrivacy
+      summary: What hiding faces in a link to this album can and cannot cover
+      responses:
+        "200":
+          description: The facts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AlbumPrivacy" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/public/{token}/visitor:
+    post:
+      operationId: nameLinkVisitor
+      summary: The visitor says who they are, when the link asks
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LinkVisitor" }
+      responses:
+        "204": { description: Noted }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/assets/{id}/shareable:
+    get:
+      operationId: getShareableAsset
+      summary: One of my photos ready to send elsewhere, without what I choose to keep to myself
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: location, in: query, description: "Keep where it was taken", schema: { type: boolean } }
+        - { name: camera, in: query, description: "Keep the camera, lens, serial numbers and author", schema: { type: boolean } }
+        - { name: faces, in: query, schema: { $ref: "#/components/schemas/HideFaces" } }
+      responses:
+        "200":
+          description: The file
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
   /api/public/{token}:
@@ -4181,6 +4262,13 @@ components:
         showLocation: { type: boolean }
         watermark: { type: string }
         createdAt: { type: string, format: date-time }
+        hideFaces: { $ref: "#/components/schemas/HideFaces" }
+        visiblePeople: { type: array, items: { type: string, format: uuid }, description: "With hideFaces except: the people who stay visible" }
+        stripCamera: { type: boolean }
+        stripDate: { type: boolean }
+        askName: { type: boolean }
+        visits: { type: integer, description: "Times it was opened in the last 90 days" }
+        lastVisitAt: { type: string, format: date-time }
     ShareLinkCreate:
       type: object
       properties:
@@ -4193,6 +4281,47 @@ components:
         uploadOnly: { type: boolean, default: false }
         showLocation: { type: boolean, default: false }
         watermark: { type: string }
+        hideFaces: { $ref: "#/components/schemas/HideFaces" }
+        visiblePeople: { type: array, items: { type: string, format: uuid }, maxItems: 100 }
+        stripCamera: { type: boolean, default: true }
+        stripDate: { type: boolean, default: false }
+        askName: { type: boolean, default: false }
+    HideFaces:
+      type: string
+      enum: [none, all, except]
+      description: "Blur no faces, every face, or every face but those of the visible people"
+    LinkPrivacy:
+      type: object
+      properties:
+        showLocation: { type: boolean }
+        hideFaces: { $ref: "#/components/schemas/HideFaces" }
+        visiblePeople: { type: array, items: { type: string, format: uuid }, maxItems: 100 }
+        stripCamera: { type: boolean }
+        stripDate: { type: boolean }
+        askName: { type: boolean }
+    LinkVisit:
+      type: object
+      required: [at, viewed, downloaded, device]
+      properties:
+        at: { type: string, format: date-time }
+        name: { type: string, description: "What the visitor said they are called, when the link asked" }
+        city: { type: string }
+        country: { type: string }
+        device: { type: string, description: "The kind of device and browser, such as iPhone · Safari" }
+        viewed: { type: integer }
+        downloaded: { type: integer }
+    LinkVisitor:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 80 }
+    AlbumPrivacy:
+      type: object
+      required: [photos, unchecked, videos]
+      properties:
+        photos: { type: integer }
+        unchecked: { type: integer, description: "Photos whose faces have not been looked for yet" }
+        videos: { type: integer, description: "Videos, which only show as a still with hidden faces" }
     PublicLink:
       type: object
       required: [locked, allowDownload, allowUpload, uploadOnly, watermarked, kiosk]
@@ -4205,6 +4334,9 @@ components:
         uploadOnly: { type: boolean }
         watermarked: { type: boolean }
         kiosk: { type: boolean, description: "This server allows this link as a slideshow" }
+        askName: { type: boolean, description: "Asks who is looking before showing the album" }
+        named: { type: boolean, description: "This visitor has said who they are" }
+        hidesFaces: { type: boolean }
     LinkPassword:
       type: object
       required: [password]
@@ -4582,7 +4714,7 @@ components:
       required: [id, kind, subject, ref, createdAt, read]
       properties:
         id: { type: string, format: uuid }
-        kind: { type: string, enum: [album_shared, import_done, import_failed, backup_failed, backup_late, device_quiet] }
+        kind: { type: string, enum: [album_shared, import_done, import_failed, backup_failed, backup_late, device_quiet, link_opened] }
         subject: { type: string, description: "What it is about: an album's name, an import's source, an error" }
         ref: { type: string, description: "The album it opens, if any" }
         createdAt: { type: string, format: date-time }

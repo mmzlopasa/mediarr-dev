@@ -1102,7 +1102,8 @@ export interface paths {
         delete: operations["deleteAlbumLink"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Changes how private a link is; turning faces or details off applies at once */
+        patch: operations["updateAlbumLink"];
         trace?: never;
     };
     "/api/partners": {
@@ -1185,6 +1186,79 @@ export interface paths {
         };
         /** Assets of one month in a library shared with you */
         get: operations["getPartnerBucket"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/links/{linkId}/visits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        /** Who opened a link, newest first, for the last 90 days. Only the album's owner sees it */
+        get: operations["listLinkVisits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/albums/{id}/privacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** What hiding faces in a link to this album can and cannot cover */
+        get: operations["getAlbumPrivacy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/{token}/visitor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The visitor says who they are, when the link asks */
+        post: operations["nameLinkVisitor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/{id}/shareable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of my photos ready to send elsewhere, without what I choose to keep to myself */
+        get: operations["getShareableAsset"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4369,6 +4443,16 @@ export interface components {
             watermark?: string;
             /** Format: date-time */
             createdAt: string;
+            hideFaces?: components["schemas"]["HideFaces"];
+            /** @description With hideFaces except: the people who stay visible */
+            visiblePeople?: string[];
+            stripCamera?: boolean;
+            stripDate?: boolean;
+            askName?: boolean;
+            /** @description Times it was opened in the last 90 days */
+            visits?: number;
+            /** Format: date-time */
+            lastVisitAt?: string;
         };
         ShareLinkCreate: {
             label?: string;
@@ -4385,6 +4469,49 @@ export interface components {
             /** @default false */
             showLocation: boolean;
             watermark?: string;
+            hideFaces?: components["schemas"]["HideFaces"];
+            visiblePeople?: string[];
+            /** @default true */
+            stripCamera: boolean;
+            /** @default false */
+            stripDate: boolean;
+            /** @default false */
+            askName: boolean;
+        };
+        /**
+         * @description Blur no faces, every face, or every face but those of the visible people
+         * @enum {string}
+         */
+        HideFaces: "none" | "all" | "except";
+        LinkPrivacy: {
+            showLocation?: boolean;
+            hideFaces?: components["schemas"]["HideFaces"];
+            visiblePeople?: string[];
+            stripCamera?: boolean;
+            stripDate?: boolean;
+            askName?: boolean;
+        };
+        LinkVisit: {
+            /** Format: date-time */
+            at: string;
+            /** @description What the visitor said they are called, when the link asked */
+            name?: string;
+            city?: string;
+            country?: string;
+            /** @description The kind of device and browser, such as iPhone · Safari */
+            device: string;
+            viewed: number;
+            downloaded: number;
+        };
+        LinkVisitor: {
+            name: string;
+        };
+        AlbumPrivacy: {
+            photos: number;
+            /** @description Photos whose faces have not been looked for yet */
+            unchecked: number;
+            /** @description Videos, which only show as a still with hidden faces */
+            videos: number;
         };
         PublicLink: {
             /** @description A password is needed first. Nothing else is told until then. */
@@ -4397,6 +4524,11 @@ export interface components {
             watermarked: boolean;
             /** @description This server allows this link as a slideshow */
             kiosk: boolean;
+            /** @description Asks who is looking before showing the album */
+            askName?: boolean;
+            /** @description This visitor has said who they are */
+            named?: boolean;
+            hidesFaces?: boolean;
         };
         LinkPassword: {
             password: string;
@@ -4752,7 +4884,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "album_shared" | "import_done" | "import_failed" | "backup_failed" | "backup_late" | "device_quiet";
+            kind: "album_shared" | "import_done" | "import_failed" | "backup_failed" | "backup_late" | "device_quiet" | "link_opened";
             /** @description What it is about: an album's name, an import's source, an error */
             subject: string;
             /** @description The album it opens, if any */
@@ -7026,6 +7158,36 @@ export interface operations {
             404: components["responses"]["Error"];
         };
     };
+    updateAlbumLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkPrivacy"];
+            };
+        };
+        responses: {
+            /** @description Changed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLink"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
     listPartners: {
         parameters: {
             query?: never;
@@ -7168,6 +7330,111 @@ export interface operations {
                 };
             };
             400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listLinkVisits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The visits */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkVisit"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getAlbumPrivacy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The facts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumPrivacy"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    nameLinkVisitor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkVisitor"];
+            };
+        };
+        responses: {
+            /** @description Noted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getShareableAsset: {
+        parameters: {
+            query?: {
+                /** @description Keep where it was taken */
+                location?: boolean;
+                /** @description Keep the camera, lens, serial numbers and author */
+                camera?: boolean;
+                faces?: components["schemas"]["HideFaces"];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
         };

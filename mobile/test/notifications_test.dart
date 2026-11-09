@@ -26,6 +26,10 @@ void main() {
       'The import from immich failed',
     );
     expect(
+      notificationSentence(_item(NotificationKindEnum.linkOpened, 'Family')),
+      'Your link “Family” was opened for the first time.',
+    );
+    expect(
       notificationSentence(_item(NotificationKindEnum.backupFailed, 'full')),
       'A backup failed: full',
     );

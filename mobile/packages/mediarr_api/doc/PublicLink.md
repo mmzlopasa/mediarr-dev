@@ -16,6 +16,9 @@ Name | Type | Description | Notes
 **uploadOnly** | **bool** |  | 
 **watermarked** | **bool** |  | 
 **kiosk** | **bool** | This server allows this link as a slideshow | 
+**askName** | **bool** | Asks who is looking before showing the album | [optional] 
+**named** | **bool** | This visitor has said who they are | [optional] 
+**hidesFaces** | **bool** |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

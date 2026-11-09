@@ -12,6 +12,13 @@ test.beforeEach(async ({ page }) => {
 test('the interface defaults to English', async ({ page }) => {
 	await signIn(page, 'admin');
 	await page.addInitScript(() => localStorage.setItem('mediarr_lang', ''));
+	// A new account has no language yet; other tests save one to this account.
+	await page.route('**/api/auth/status', async (route) => {
+		const response = await route.fetch();
+		const status = await response.json();
+		delete status.user?.language;
+		await route.fulfill({ response, json: status });
+	});
 	await page.goto('/');
 	await expect(page.getByRole('heading', { name: 'Media' })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -638,7 +645,12 @@ test('jobs can be paused, and storage shows each user', async ({ page }) => {
 	await page.goto('/admin/storage');
 	const row = page.locator('[data-user="e2e-user@example.com"]');
 	await row.getByRole('textbox').fill('5');
+	// The page is read again only once the server has the new quota.
+	const saved = page.waitForResponse(
+		(response) => response.url().includes('/quota') && response.request().method() !== 'GET'
+	);
 	await row.getByRole('button', { name: /Spremi|Save/ }).click();
+	expect((await saved).ok()).toBe(true);
 	await page.reload();
 	await expect(row.getByRole('textbox')).toHaveValue('5');
 	await row.getByRole('textbox').fill('');

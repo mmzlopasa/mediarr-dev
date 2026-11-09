@@ -16,7 +16,7 @@ export async function followAccount(language: string | undefined) {
 		if (language) await setLang(parseLang(language));
 		return;
 	}
-	if (language !== lang()) await api.updateProfile({ language: lang() }).catch(() => undefined);
+	if (language !== lang()) void api.updateProfile({ language: lang() }).catch(() => undefined);
 }
 
 function chosenHere() {

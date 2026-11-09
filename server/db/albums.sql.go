@@ -267,7 +267,7 @@ func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (p
 const createLink = `-- name: CreateLink :one
 INSERT INTO share_links (album_id, token_hash, label, password_hash, expires_at, download_limit, allow_download, allow_upload, upload_only, show_location, watermark)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-RETURNING id, album_id, token_hash, label, password_hash, expires_at, download_limit, download_count, allow_download, allow_upload, upload_only, show_location, watermark, created_at
+RETURNING id, album_id, token_hash, label, password_hash, expires_at, download_limit, download_count, allow_download, allow_upload, upload_only, show_location, watermark, created_at, hide_faces, strip_camera, strip_date, ask_name, privacy_version
 `
 
 type CreateLinkParams struct {
@@ -314,6 +314,11 @@ func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (ShareLi
 		&i.ShowLocation,
 		&i.Watermark,
 		&i.CreatedAt,
+		&i.HideFaces,
+		&i.StripCamera,
+		&i.StripDate,
+		&i.AskName,
+		&i.PrivacyVersion,
 	)
 	return i, err
 }
@@ -461,31 +466,36 @@ func (q *Queries) GetComment(ctx context.Context, arg GetCommentParams) (pgtype.
 }
 
 const getLinkByToken = `-- name: GetLinkByToken :one
-SELECT l.id, l.album_id, l.token_hash, l.label, l.password_hash, l.expires_at, l.download_limit, l.download_count, l.allow_download, l.allow_upload, l.upload_only, l.show_location, l.watermark, l.created_at, al.title, al.description, al.owner_id, al.asset_order, (al.rules IS NOT NULL)::boolean AS is_smart
+SELECT l.id, l.album_id, l.token_hash, l.label, l.password_hash, l.expires_at, l.download_limit, l.download_count, l.allow_download, l.allow_upload, l.upload_only, l.show_location, l.watermark, l.created_at, l.hide_faces, l.strip_camera, l.strip_date, l.ask_name, l.privacy_version, al.title, al.description, al.owner_id, al.asset_order, (al.rules IS NOT NULL)::boolean AS is_smart
 FROM share_links l JOIN albums al ON al.id = l.album_id
 WHERE l.token_hash = $1 AND (l.expires_at IS NULL OR l.expires_at > now())
 `
 
 type GetLinkByTokenRow struct {
-	ID            pgtype.UUID
-	AlbumID       pgtype.UUID
-	TokenHash     []byte
-	Label         string
-	PasswordHash  pgtype.Text
-	ExpiresAt     pgtype.Timestamptz
-	DownloadLimit pgtype.Int4
-	DownloadCount int32
-	AllowDownload bool
-	AllowUpload   bool
-	UploadOnly    bool
-	ShowLocation  bool
-	Watermark     pgtype.Text
-	CreatedAt     pgtype.Timestamptz
-	Title         string
-	Description   string
-	OwnerID       pgtype.UUID
-	AssetOrder    string
-	IsSmart       bool
+	ID             pgtype.UUID
+	AlbumID        pgtype.UUID
+	TokenHash      []byte
+	Label          string
+	PasswordHash   pgtype.Text
+	ExpiresAt      pgtype.Timestamptz
+	DownloadLimit  pgtype.Int4
+	DownloadCount  int32
+	AllowDownload  bool
+	AllowUpload    bool
+	UploadOnly     bool
+	ShowLocation   bool
+	Watermark      pgtype.Text
+	CreatedAt      pgtype.Timestamptz
+	HideFaces      string
+	StripCamera    bool
+	StripDate      bool
+	AskName        bool
+	PrivacyVersion int32
+	Title          string
+	Description    string
+	OwnerID        pgtype.UUID
+	AssetOrder     string
+	IsSmart        bool
 }
 
 func (q *Queries) GetLinkByToken(ctx context.Context, tokenHash []byte) (GetLinkByTokenRow, error) {
@@ -506,6 +516,11 @@ func (q *Queries) GetLinkByToken(ctx context.Context, tokenHash []byte) (GetLink
 		&i.ShowLocation,
 		&i.Watermark,
 		&i.CreatedAt,
+		&i.HideFaces,
+		&i.StripCamera,
+		&i.StripDate,
+		&i.AskName,
+		&i.PrivacyVersion,
 		&i.Title,
 		&i.Description,
 		&i.OwnerID,
@@ -883,7 +898,7 @@ func (q *Queries) ListDirectory(ctx context.Context, id pgtype.UUID) ([]ListDire
 }
 
 const listLinks = `-- name: ListLinks :many
-SELECT id, album_id, token_hash, label, password_hash, expires_at, download_limit, download_count, allow_download, allow_upload, upload_only, show_location, watermark, created_at FROM share_links WHERE album_id = $1 ORDER BY created_at DESC, id
+SELECT id, album_id, token_hash, label, password_hash, expires_at, download_limit, download_count, allow_download, allow_upload, upload_only, show_location, watermark, created_at, hide_faces, strip_camera, strip_date, ask_name, privacy_version FROM share_links WHERE album_id = $1 ORDER BY created_at DESC, id
 `
 
 func (q *Queries) ListLinks(ctx context.Context, albumID pgtype.UUID) ([]ShareLink, error) {
@@ -910,6 +925,11 @@ func (q *Queries) ListLinks(ctx context.Context, albumID pgtype.UUID) ([]ShareLi
 			&i.ShowLocation,
 			&i.Watermark,
 			&i.CreatedAt,
+			&i.HideFaces,
+			&i.StripCamera,
+			&i.StripDate,
+			&i.AskName,
+			&i.PrivacyVersion,
 		); err != nil {
 			return nil, err
 		}

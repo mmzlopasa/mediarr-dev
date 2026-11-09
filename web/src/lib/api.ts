@@ -29,6 +29,10 @@ export type Activity = components['schemas']['Activity'];
 export type ShareLink = components['schemas']['ShareLink'];
 export type ShareLinkCreate = components['schemas']['ShareLinkCreate'];
 export type PublicLink = components['schemas']['PublicLink'];
+export type LinkPrivacy = components['schemas']['LinkPrivacy'];
+export type LinkVisit = components['schemas']['LinkVisit'];
+export type AlbumPrivacy = components['schemas']['AlbumPrivacy'];
+export type HideFaces = components['schemas']['HideFaces'];
 export type Partners = components['schemas']['Partners'];
 export type PartnerEntry = components['schemas']['PartnerEntry'];
 export type MemberRole = AlbumMember['role'];
@@ -208,6 +212,11 @@ export const api = {
 		request<ShareLink>(fetch, `/api/albums/${id}/links`, body),
 	deleteLink: (id: string, linkId: string) =>
 		request<void>(fetch, `/api/albums/${id}/links/${linkId}`, undefined, 'DELETE'),
+	updateLink: (id: string, linkId: string, body: LinkPrivacy) =>
+		request<ShareLink>(fetch, `/api/albums/${id}/links/${linkId}`, body, 'PATCH'),
+	linkVisits: (id: string, linkId: string) =>
+		request<LinkVisit[]>(fetch, `/api/albums/${id}/links/${linkId}/visits`),
+	albumPrivacy: (id: string) => request<AlbumPrivacy>(fetch, `/api/albums/${id}/privacy`),
 	partners: () => request<Partners>(fetch, '/api/partners'),
 	setPartner: (userId: string, since?: string) =>
 		request<void>(fetch, `/api/partners/${userId}`, { since }, 'PUT'),
@@ -449,7 +458,9 @@ export const api = {
 		request<{ changed: number }>(fetch, '/api/assets/tags', { ids, name, remove }),
 	publicLink: (token: string) => request<PublicLink>(fetch, `/api/public/${token}`),
 	unlockLink: (token: string, password: string) =>
-		request<void>(fetch, `/api/public/${token}/unlock`, { password })
+		request<void>(fetch, `/api/public/${token}/unlock`, { password }),
+	nameVisitor: (token: string, name: string) =>
+		request<void>(fetch, `/api/public/${token}/visitor`, { name })
 };
 
 /** Where a timeline reads its months from: the library, an album, a partner or a public link. */

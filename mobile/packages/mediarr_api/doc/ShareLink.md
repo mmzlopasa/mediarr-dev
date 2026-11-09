@@ -21,6 +21,13 @@ Name | Type | Description | Notes
 **showLocation** | **bool** |  | 
 **watermark** | **String** |  | [optional] 
 **createdAt** | [**DateTime**](DateTime.md) |  | 
+**hideFaces** | [**HideFaces**](HideFaces.md) |  | [optional] 
+**visiblePeople** | **List<String>** | With hideFaces except: the people who stay visible | [optional] [default to const []]
+**stripCamera** | **bool** |  | [optional] 
+**stripDate** | **bool** |  | [optional] 
+**askName** | **bool** |  | [optional] 
+**visits** | **int** | Times it was opened in the last 90 days | [optional] 
+**lastVisitAt** | [**DateTime**](DateTime.md) |  | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

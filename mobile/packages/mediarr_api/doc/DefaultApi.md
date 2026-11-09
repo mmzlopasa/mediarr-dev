@@ -76,6 +76,7 @@ Method | HTTP request | Description
 [**getAlbum**](DefaultApi.md#getalbum) | **GET** /api/albums/{id} | Read an album and its members
 [**getAlbumBucket**](DefaultApi.md#getalbumbucket) | **GET** /api/albums/{id}/buckets/{month} | Assets of one month in an album
 [**getAlbumBuckets**](DefaultApi.md#getalbumbuckets) | **GET** /api/albums/{id}/buckets | Months in an album, in the album's order
+[**getAlbumPrivacy**](DefaultApi.md#getalbumprivacy) | **GET** /api/albums/{id}/privacy | What hiding faces in a link to this album can and cannot cover
 [**getAnalysisProgress**](DefaultApi.md#getanalysisprogress) | **GET** /api/admin/analysis | How far picture analysis has come. Administrators only.
 [**getAsset**](DefaultApi.md#getasset) | **GET** /api/assets/{id} | Read an asset's details and its neighbours on the timeline
 [**getAssetMotion**](DefaultApi.md#getassetmotion) | **GET** /api/assets/{id}/motion | Read the video embedded in an Android Motion Photo
@@ -132,6 +133,7 @@ Method | HTTP request | Description
 [**getServerHello**](DefaultApi.md#getserverhello) | **GET** /api/server/hello | Lets an app on the same network recognise a Mediarr server; only its version
 [**getServerSettings**](DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 [**getServerStatus**](DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
+[**getShareableAsset**](DefaultApi.md#getshareableasset) | **GET** /api/assets/{id}/shareable | One of my photos ready to send elsewhere, without what I choose to keep to myself
 [**getStorageTemplate**](DefaultApi.md#getstoragetemplate) | **GET** /api/admin/storage-template | How originals are laid out in each user's folder, and what the last run over all of them did
 [**getStoryExport**](DefaultApi.md#getstoryexport) | **GET** /api/stories/{id} | How a video is coming along
 [**getStoryVideo**](DefaultApi.md#getstoryvideo) | **GET** /api/stories/{id}/video | The finished video
@@ -164,6 +166,7 @@ Method | HTTP request | Description
 [**listFamilyMembersAdmin**](DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
 [**listImports**](DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 [**listKeepGuests**](DefaultApi.md#listkeepguests) | **GET** /api/admin/keep/guests | Other Mediarr servers whose encrypted backup this one keeps
+[**listLinkVisits**](DefaultApi.md#listlinkvisits) | **GET** /api/albums/{id}/links/{linkId}/visits | Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
 [**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
 [**listMyImports**](DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 [**listMySessions**](DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
@@ -181,6 +184,7 @@ Method | HTTP request | Description
 [**logout**](DefaultApi.md#logout) | **POST** /api/auth/logout | End the current session
 [**mergePeople**](DefaultApi.md#mergepeople) | **POST** /api/people/{id}/merge | Treat other people as this one
 [**moveAlbum**](DefaultApi.md#movealbum) | **PUT** /api/albums/{id}/parent | Put an album inside another of one's own, or back at the top
+[**nameLinkVisitor**](DefaultApi.md#namelinkvisitor) | **POST** /api/public/{token}/visitor | The visitor says who they are, when the link asks
 [**pairKeepGuest**](DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 [**pauseJobQueue**](DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 [**previewStorageTemplate**](DefaultApi.md#previewstoragetemplate) | **POST** /api/admin/storage-template/preview | Where a template would put a few real originals, without moving anything
@@ -241,6 +245,7 @@ Method | HTTP request | Description
 [**unlockPublicLink**](DefaultApi.md#unlockpubliclink) | **POST** /api/public/{token}/unlock | Send a link's password. Success sets a cookie valid only for this link.
 [**unlockVault**](DefaultApi.md#unlockvault) | **POST** /api/vault/unlock | Unlock the vault for a short time
 [**updateAlbum**](DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
+[**updateAlbumLink**](DefaultApi.md#updatealbumlink) | **PATCH** /api/albums/{id}/links/{linkId} | Changes how private a link is; turning faces or details off applies at once
 [**updateKeepGuest**](DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 [**updatePerson**](DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 [**updateProfile**](DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, language, or email address with the current password
@@ -2943,6 +2948,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getAlbumPrivacy**
+> AlbumPrivacy getAlbumPrivacy(id)
+
+What hiding faces in a link to this album can and cannot cover
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getAlbumPrivacy(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getAlbumPrivacy: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**AlbumPrivacy**](AlbumPrivacy.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getAnalysisProgress**
 > AnalysisProgress getAnalysisProgress()
 
@@ -5203,6 +5249,53 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getShareableAsset**
+> MultipartFile getShareableAsset(id, location, camera, faces)
+
+One of my photos ready to send elsewhere, without what I choose to keep to myself
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final location = true; // bool | Keep where it was taken
+final camera = true; // bool | Keep the camera, lens, serial numbers and author
+final faces = ; // HideFaces | 
+
+try {
+    final result = api_instance.getShareableAsset(id, location, camera, faces);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getShareableAsset: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **location** | **bool**| Keep where it was taken | [optional] 
+ **camera** | **bool**| Keep the camera, lens, serial numbers and author | [optional] 
+ **faces** | [**HideFaces**](.md)|  | [optional] 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getStorageTemplate**
 > StorageTemplate getStorageTemplate()
 
@@ -6465,6 +6558,49 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listLinkVisits**
+> List<LinkVisit> listLinkVisits(id, linkId)
+
+Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final linkId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.listLinkVisits(id, linkId);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listLinkVisits: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **linkId** | **String**|  | 
+
+### Return type
+
+[**List<LinkVisit>**](LinkVisit.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listMemories**
 > List<Memory> listMemories(date)
 
@@ -7103,6 +7239,48 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Album**](Album.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **nameLinkVisitor**
+> nameLinkVisitor(token, linkVisitor)
+
+The visitor says who they are, when the link asks
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final token = token_example; // String | 
+final linkVisitor = LinkVisitor(); // LinkVisitor | 
+
+try {
+    api_instance.nameLinkVisitor(token, linkVisitor);
+} catch (e) {
+    print('Exception when calling DefaultApi->nameLinkVisitor: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **token** | **String**|  | 
+ **linkVisitor** | [**LinkVisitor**](LinkVisitor.md)|  | 
+
+### Return type
+
+void (empty response body)
 
 ### Authorization
 
@@ -9576,6 +9754,51 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**Album**](Album.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateAlbumLink**
+> ShareLink updateAlbumLink(id, linkId, linkPrivacy)
+
+Changes how private a link is; turning faces or details off applies at once
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final linkId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final linkPrivacy = LinkPrivacy(); // LinkPrivacy | 
+
+try {
+    final result = api_instance.updateAlbumLink(id, linkId, linkPrivacy);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->updateAlbumLink: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **linkId** | **String**|  | 
+ **linkPrivacy** | [**LinkPrivacy**](LinkPrivacy.md)|  | 
+
+### Return type
+
+[**ShareLink**](ShareLink.md)
 
 ### Authorization
 

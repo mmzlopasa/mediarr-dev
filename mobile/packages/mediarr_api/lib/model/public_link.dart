@@ -21,6 +21,9 @@ class PublicLink {
     required this.uploadOnly,
     required this.watermarked,
     required this.kiosk,
+    this.askName,
+    this.named,
+    this.hidesFaces,
   });
 
   /// A password is needed first. Nothing else is told until then.
@@ -53,6 +56,32 @@ class PublicLink {
   /// This server allows this link as a slideshow
   bool kiosk;
 
+  /// Asks who is looking before showing the album
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? askName;
+
+  /// This visitor has said who they are
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? named;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? hidesFaces;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -64,7 +93,10 @@ class PublicLink {
           other.allowUpload == allowUpload &&
           other.uploadOnly == uploadOnly &&
           other.watermarked == watermarked &&
-          other.kiosk == kiosk;
+          other.kiosk == kiosk &&
+          other.askName == askName &&
+          other.named == named &&
+          other.hidesFaces == hidesFaces;
 
   @override
   int get hashCode =>
@@ -76,11 +108,14 @@ class PublicLink {
       (allowUpload.hashCode) +
       (uploadOnly.hashCode) +
       (watermarked.hashCode) +
-      (kiosk.hashCode);
+      (kiosk.hashCode) +
+      (askName == null ? 0 : askName!.hashCode) +
+      (named == null ? 0 : named!.hashCode) +
+      (hidesFaces == null ? 0 : hidesFaces!.hashCode);
 
   @override
   String toString() =>
-      'PublicLink[locked=$locked, title=$title, description=$description, allowDownload=$allowDownload, allowUpload=$allowUpload, uploadOnly=$uploadOnly, watermarked=$watermarked, kiosk=$kiosk]';
+      'PublicLink[locked=$locked, title=$title, description=$description, allowDownload=$allowDownload, allowUpload=$allowUpload, uploadOnly=$uploadOnly, watermarked=$watermarked, kiosk=$kiosk, askName=$askName, named=$named, hidesFaces=$hidesFaces]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -100,6 +135,21 @@ class PublicLink {
     json[r'uploadOnly'] = this.uploadOnly;
     json[r'watermarked'] = this.watermarked;
     json[r'kiosk'] = this.kiosk;
+    if (this.askName != null) {
+      json[r'askName'] = this.askName;
+    } else {
+      json[r'askName'] = null;
+    }
+    if (this.named != null) {
+      json[r'named'] = this.named;
+    } else {
+      json[r'named'] = null;
+    }
+    if (this.hidesFaces != null) {
+      json[r'hidesFaces'] = this.hidesFaces;
+    } else {
+      json[r'hidesFaces'] = null;
+    }
     return json;
   }
 
@@ -132,6 +182,9 @@ class PublicLink {
         uploadOnly: mapValueOfType<bool>(json, r'uploadOnly')!,
         watermarked: mapValueOfType<bool>(json, r'watermarked')!,
         kiosk: mapValueOfType<bool>(json, r'kiosk')!,
+        askName: mapValueOfType<bool>(json, r'askName'),
+        named: mapValueOfType<bool>(json, r'named'),
+        hidesFaces: mapValueOfType<bool>(json, r'hidesFaces'),
       );
     }
     return null;

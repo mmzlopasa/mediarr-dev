@@ -4556,4 +4556,133 @@ class AppLocalizationsDe extends AppLocalizations {
   ) {
     return '$day. $month $year, $hour:$minute';
   }
+
+  @override
+  String get linkPrivacyHideFaces => 'Gesichter verbergen';
+
+  @override
+  String get linkPrivacyFacesNone => 'Keine';
+
+  @override
+  String get linkPrivacyFacesAll => 'Alle Gesichter';
+
+  @override
+  String get linkPrivacyFacesExcept => 'Alle außer ausgewählten Personen';
+
+  @override
+  String get linkPrivacyChoosePeople =>
+      'Die Gesichter dieser Personen bleiben sichtbar:';
+
+  @override
+  String get linkPrivacyNoPeople =>
+      'Noch hat niemand einen Namen. Benenne zuerst Personen unter Personen.';
+
+  @override
+  String get linkPrivacyPeopleFailed =>
+      'Personen konnten nicht geladen werden.';
+
+  @override
+  String get linkPrivacyUnrecognized =>
+      'Ein nicht erkanntes Gesicht wird nicht verwischt.';
+
+  @override
+  String linkPrivacyUnchecked(String count, String total) {
+    return '$count von $total Fotos wurden noch nicht auf Gesichter geprüft, daher wird in ihnen nichts verwischt.';
+  }
+
+  @override
+  String get linkPrivacyAllChecked =>
+      'Alle Fotos im Album wurden auf Gesichter geprüft.';
+
+  @override
+  String linkPrivacyVideosStill(String count) {
+    return 'Videos ($count) werden nur als Standbild mit verwischten Gesichtern gezeigt.';
+  }
+
+  @override
+  String get linkPrivacyNoOriginals =>
+      'Besucher erhalten eine verwischte Kopie in voller Größe, nie das Original.';
+
+  @override
+  String get linkPrivacyRemoveCamera => 'Kameradetails entfernen';
+
+  @override
+  String get linkPrivacyRemoveCameraDetail =>
+      'Downloads enthalten weder Kamera, Objektiv, Seriennummern, Urheber noch Software.';
+
+  @override
+  String get linkPrivacyRemoveDate => 'Auch das Datum entfernen';
+
+  @override
+  String get linkPrivacyAskName => 'Nach einem Namen fragen';
+
+  @override
+  String get linkPrivacyAskNameDetail =>
+      'Besucher geben ihren Namen ein, bevor sie das Album sehen.';
+
+  @override
+  String get linkPrivacyNotOpened => 'Noch nicht geöffnet';
+
+  @override
+  String linkPrivacyOpened(int count, String when) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count-mal geöffnet',
+      one: 'Einmal geöffnet',
+    );
+    return '$_temp0 · zuletzt $when';
+  }
+
+  @override
+  String get linkPrivacyWhoOpened => 'Wer ihn geöffnet hat';
+
+  @override
+  String get linkPrivacyNoVisits => 'Diesen Link hat noch niemand geöffnet.';
+
+  @override
+  String get linkPrivacyVisitsFailed =>
+      'Die Besuche konnten nicht geladen werden.';
+
+  @override
+  String get linkPrivacyUnknownPlace => 'Unbekannter Ort';
+
+  @override
+  String get linkPrivacyNoName => 'Kein Name angegeben';
+
+  @override
+  String linkPrivacyViewed(String count) {
+    return '$count angesehen';
+  }
+
+  @override
+  String linkPrivacyDownloaded(String count) {
+    return '$count heruntergeladen';
+  }
+
+  @override
+  String get linkPrivacyAttribution =>
+      'Orte von DB-IP (db-ip.com), CC BY 4.0. Besuche werden 90 Tage aufbewahrt.';
+
+  @override
+  String get sharePrivacyRemoveLocation => 'Ort entfernen';
+
+  @override
+  String get sharePrivacyRemoveCamera => 'Kameradetails entfernen';
+
+  @override
+  String get sharePrivacyHideFaces => 'Gesichter verbergen';
+
+  @override
+  String get sharePrivacyHideFacesDetail =>
+      'Fotos werden als verwischte Kopie gesendet. Videos werden ausgelassen.';
+
+  @override
+  String get sharePrivacyVideosLeftOut =>
+      'Videos wurden ausgelassen: Ihre Gesichter lassen sich nicht verbergen.';
+
+  @override
+  String notificationsLinkOpened(String subject) {
+    return 'Dein Link „$subject“ wurde zum ersten Mal geöffnet.';
+  }
 }
