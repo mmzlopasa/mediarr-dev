@@ -639,6 +639,39 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('the whole library is exported, followed and removed', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Export my library'));
+    await tester.ensureVisible(find.text('Export my library'));
+    await tester.tap(find.text('Export my library'));
+    await waitFor(tester, find.text('Nothing has been exported yet.'));
+    // The account sheet behind says the same, so the button is the last one.
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Export my library').last,
+    );
+    await waitFor(tester, find.text('The export has started.'));
+    expect(server.exportStatus, isNotNull);
+    // The screen asks again while it runs, until the parts are ready.
+    await waitFor(
+      tester,
+      find.text('Part 1'),
+      timeout: const Duration(seconds: 20),
+    );
+    expect(server.exportStatus, 'done');
+    expect(find.textContaining('Ready · 40 of 40 files'), findsOneWidget);
+    expect(find.byTooltip('Download part 1'), findsOneWidget);
+    await tester.tap(find.text('Remove').last);
+    await waitFor(tester, find.text('Nothing has been exported yet.'));
+    expect(server.exportStatus, isNull);
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('an administrator sees the copies of the backup in the app', (
     tester,
   ) async {
@@ -672,18 +705,12 @@ void main() {
     await tester.ensureVisible(find.text('Profile'));
     await tester.tap(find.text('Profile'));
     await waitFor(tester, find.text('Add a picture'));
-    // The keyboard is closed first: while it moves, the list changes size under the tap. Save can
-    // then still be below the fold of the list, not built yet. An emulator's keyboard can take
-    // back what was typed as it closes, so it is typed again until it stays.
-    for (var attempt = 0; attempt < 5; attempt++) {
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Name'),
-        'Ana Horvat',
-      );
-      FocusManager.instance.primaryFocus?.unfocus();
-      await tester.pump(const Duration(seconds: 1));
-      if (find.text('Ana Horvat').evaluate().isNotEmpty) break;
-    }
+    // The name goes straight into the field: an emulator's keyboard can take back what was typed
+    // as it closes, which is the keyboard's doing, not the app's.
+    final field = find.widgetWithText(TextField, 'Name');
+    tester.widget<TextField>(field).controller!.text = 'Ana Horvat';
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump(const Duration(seconds: 1));
     expect(find.text('Ana Horvat'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Save'),
