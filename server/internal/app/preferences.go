@@ -78,6 +78,9 @@ func (s *apiServer) SetMyPreferences(w http.ResponseWriter, r *http.Request) {
 	case len(body.HiddenSections) > maxHiddenCount:
 		writeError(w, http.StatusBadRequest, "too many sections")
 		return
+	case !validMemoryKinds(body.MemoryKindsOff):
+		writeError(w, http.StatusBadRequest, "unknown kind of memory")
+		return
 	}
 	data, err := json.Marshal(body)
 	if err != nil {

@@ -215,10 +215,11 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listDuplicates**](doc//DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
 *DefaultApi* | [**listExplorePlaces**](doc//DefaultApi.md#listexploreplaces) | **GET** /api/explore/places | The places in the user's own photos, those with the most first
 *DefaultApi* | [**listFamilyMembersAdmin**](doc//DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
+*DefaultApi* | [**listHiddenMemories**](doc//DefaultApi.md#listhiddenmemories) | **GET** /api/memories/hidden | What this person asked not to be shown again
 *DefaultApi* | [**listImports**](doc//DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 *DefaultApi* | [**listKeepGuests**](doc//DefaultApi.md#listkeepguests) | **GET** /api/admin/keep/guests | Other Mediarr servers whose encrypted backup this one keeps
 *DefaultApi* | [**listLinkVisits**](doc//DefaultApi.md#listlinkvisits) | **GET** /api/albums/{id}/links/{linkId}/visits | Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
-*DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
+*DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | Memories to show on this day
 *DefaultApi* | [**listMyImports**](doc//DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 *DefaultApi* | [**listMySessions**](doc//DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
 *DefaultApi* | [**listNotifications**](doc//DefaultApi.md#listnotifications) | **GET** /api/notifications | The newest notifications of the signed-in user
@@ -256,6 +257,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**reportBackupDevice**](doc//DefaultApi.md#reportbackupdevice) | **PUT** /api/me/backup-devices/{id} | A device says how its backup is doing, with checksums of files it has seen confirmed
 *DefaultApi* | [**resetPassword**](doc//DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
 *DefaultApi* | [**resolveDuplicates**](doc//DefaultApi.md#resolveduplicates) | **POST** /api/duplicates/resolve | Keeps one photo of each group, gives it what the others had, and moves the others to the trash
+*DefaultApi* | [**restoreHiddenMemories**](doc//DefaultApi.md#restorehiddenmemories) | **DELETE** /api/memories/hidden | Show every hidden memory again
 *DefaultApi* | [**restoreKeepGuestDeleted**](doc//DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
 *DefaultApi* | [**resumeJobQueue**](doc//DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 *DefaultApi* | [**retryJob**](doc//DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
@@ -278,6 +280,8 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 *DefaultApi* | [**setFeature**](doc//DefaultApi.md#setfeature) | **PUT** /api/admin/features/{name} | Turn an addition on or off
 *DefaultApi* | [**setMapStyle**](doc//DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
+*DefaultApi* | [**setMemoryHidden**](doc//DefaultApi.md#setmemoryhidden) | **PUT** /api/memories/hidden | Hide one memory, or show it again
+*DefaultApi* | [**setMemoryPersonHidden**](doc//DefaultApi.md#setmemorypersonhidden) | **PUT** /api/memories/hidden-people | Leave a person out of memories, or take them back in
 *DefaultApi* | [**setMyPreferences**](doc//DefaultApi.md#setmypreferences) | **PUT** /api/me/preferences | Change what this person chose
 *DefaultApi* | [**setOIDCSettings**](doc//DefaultApi.md#setoidcsettings) | **PUT** /api/admin/oidc | Change single sign-on. An empty issuer turns it off
 *DefaultApi* | [**setPartner**](doc//DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
@@ -395,6 +399,7 @@ Class | Method | HTTP request | Description
  - [Folder](doc//Folder.md)
  - [FolderEntry](doc//FolderEntry.md)
  - [Health](doc//Health.md)
+ - [HiddenMemories](doc//HiddenMemories.md)
  - [HideFaces](doc//HideFaces.md)
  - [ImportCreate](doc//ImportCreate.md)
  - [ImportDetail](doc//ImportDetail.md)
@@ -424,6 +429,9 @@ Class | Method | HTTP request | Description
  - [MapStyle](doc//MapStyle.md)
  - [MemberRole](doc//MemberRole.md)
  - [Memory](doc//Memory.md)
+ - [MemoryHideRequest](doc//MemoryHideRequest.md)
+ - [MemoryPersonHideRequest](doc//MemoryPersonHideRequest.md)
+ - [MemoryTitleParams](doc//MemoryTitleParams.md)
  - [MlAcceleration](doc//MlAcceleration.md)
  - [MlModel](doc//MlModel.md)
  - [MlServiceStatus](doc//MlServiceStatus.md)

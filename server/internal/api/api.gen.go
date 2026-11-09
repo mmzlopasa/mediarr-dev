@@ -772,16 +772,64 @@ func (e MemberRoleRole) Valid() bool {
 
 // Defines values for MemoryKind.
 const (
-	OnThisDay MemoryKind = "on_this_day"
-	Week      MemoryKind = "week"
+	MemoryKindBirthday    MemoryKind = "birthday"
+	MemoryKindMonthAgo    MemoryKind = "month_ago"
+	MemoryKindOnThisDay   MemoryKind = "on_this_day"
+	MemoryKindPersonYears MemoryKind = "person_years"
+	MemoryKindTrip        MemoryKind = "trip"
+	MemoryKindWeek        MemoryKind = "week"
+	MemoryKindYearReview  MemoryKind = "year_review"
 )
 
 // Valid indicates whether the value is a known member of the MemoryKind enum.
 func (e MemoryKind) Valid() bool {
 	switch e {
-	case OnThisDay:
+	case MemoryKindBirthday:
 		return true
-	case Week:
+	case MemoryKindMonthAgo:
+		return true
+	case MemoryKindOnThisDay:
+		return true
+	case MemoryKindPersonYears:
+		return true
+	case MemoryKindTrip:
+		return true
+	case MemoryKindWeek:
+		return true
+	case MemoryKindYearReview:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MemoryHideRequestKind.
+const (
+	MemoryHideRequestKindBirthday    MemoryHideRequestKind = "birthday"
+	MemoryHideRequestKindMonthAgo    MemoryHideRequestKind = "month_ago"
+	MemoryHideRequestKindOnThisDay   MemoryHideRequestKind = "on_this_day"
+	MemoryHideRequestKindPersonYears MemoryHideRequestKind = "person_years"
+	MemoryHideRequestKindTrip        MemoryHideRequestKind = "trip"
+	MemoryHideRequestKindWeek        MemoryHideRequestKind = "week"
+	MemoryHideRequestKindYearReview  MemoryHideRequestKind = "year_review"
+)
+
+// Valid indicates whether the value is a known member of the MemoryHideRequestKind enum.
+func (e MemoryHideRequestKind) Valid() bool {
+	switch e {
+	case MemoryHideRequestKindBirthday:
+		return true
+	case MemoryHideRequestKindMonthAgo:
+		return true
+	case MemoryHideRequestKindOnThisDay:
+		return true
+	case MemoryHideRequestKindPersonYears:
+		return true
+	case MemoryHideRequestKindTrip:
+		return true
+	case MemoryHideRequestKindWeek:
+		return true
+	case MemoryHideRequestKindYearReview:
 		return true
 	default:
 		return false
@@ -1073,6 +1121,39 @@ func (e UserPreferencesAlbumOrder) Valid() bool {
 	case UserPreferencesAlbumOrderNewest:
 		return true
 	case UserPreferencesAlbumOrderOldest:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UserPreferencesMemoryKindsOff.
+const (
+	UserPreferencesMemoryKindsOffBirthday    UserPreferencesMemoryKindsOff = "birthday"
+	UserPreferencesMemoryKindsOffMonthAgo    UserPreferencesMemoryKindsOff = "month_ago"
+	UserPreferencesMemoryKindsOffOnThisDay   UserPreferencesMemoryKindsOff = "on_this_day"
+	UserPreferencesMemoryKindsOffPersonYears UserPreferencesMemoryKindsOff = "person_years"
+	UserPreferencesMemoryKindsOffTrip        UserPreferencesMemoryKindsOff = "trip"
+	UserPreferencesMemoryKindsOffWeek        UserPreferencesMemoryKindsOff = "week"
+	UserPreferencesMemoryKindsOffYearReview  UserPreferencesMemoryKindsOff = "year_review"
+)
+
+// Valid indicates whether the value is a known member of the UserPreferencesMemoryKindsOff enum.
+func (e UserPreferencesMemoryKindsOff) Valid() bool {
+	switch e {
+	case UserPreferencesMemoryKindsOffBirthday:
+		return true
+	case UserPreferencesMemoryKindsOffMonthAgo:
+		return true
+	case UserPreferencesMemoryKindsOffOnThisDay:
+		return true
+	case UserPreferencesMemoryKindsOffPersonYears:
+		return true
+	case UserPreferencesMemoryKindsOffTrip:
+		return true
+	case UserPreferencesMemoryKindsOffWeek:
+		return true
+	case UserPreferencesMemoryKindsOffYearReview:
 		return true
 	default:
 		return false
@@ -2500,6 +2581,13 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// HiddenMemories defines model for HiddenMemories.
+type HiddenMemories struct {
+	// Count Memories that are hidden
+	Count  int         `json:"count"`
+	People []PersonRef `json:"people"`
+}
+
 // HideFaces Blur no faces, every face, or every face but those of the visible people
 type HideFaces string
 
@@ -2784,10 +2872,16 @@ type MemberRoleRole string
 // Memory defines model for Memory.
 type Memory struct {
 	Items []TimelineItem `json:"items"`
-	Kind  MemoryKind     `json:"kind"`
+
+	// Key Together with kind, what identifies this memory when hiding it. Not sent by older servers.
+	Key  string     `json:"key,omitempty"`
+	Kind MemoryKind `json:"kind"`
 
 	// Title A date or date span. The client words the rest.
 	Title string `json:"title"`
+
+	// TitleParams The facts a client words a title from, in the reader's language
+	TitleParams *MemoryTitleParams `json:"titleParams,omitempty"`
 
 	// Year The year, for on_this_day
 	Year *int `json:"year,omitempty"`
@@ -2795,6 +2889,35 @@ type Memory struct {
 
 // MemoryKind defines model for Memory.Kind.
 type MemoryKind string
+
+// MemoryHideRequest defines model for MemoryHideRequest.
+type MemoryHideRequest struct {
+	Hidden bool                  `json:"hidden"`
+	Key    string                `json:"key"`
+	Kind   MemoryHideRequestKind `json:"kind"`
+}
+
+// MemoryHideRequestKind defines model for MemoryHideRequest.Kind.
+type MemoryHideRequestKind string
+
+// MemoryPersonHideRequest defines model for MemoryPersonHideRequest.
+type MemoryPersonHideRequest struct {
+	Hidden   bool               `json:"hidden"`
+	PersonId openapi_types.UUID `json:"personId"`
+}
+
+// MemoryTitleParams The facts a client words a title from, in the reader's language
+type MemoryTitleParams struct {
+	Month *int `json:"month,omitempty"`
+
+	// Person A person's name
+	Person   *string             `json:"person,omitempty"`
+	PersonId *openapi_types.UUID `json:"personId,omitempty"`
+
+	// Place A trip's place
+	Place *string `json:"place,omitempty"`
+	Year  *int    `json:"year,omitempty"`
+}
 
 // MlAcceleration defines model for MlAcceleration.
 type MlAcceleration struct {
@@ -3521,19 +3644,23 @@ type UserImportCreateSource string
 
 // UserPreferences defines model for UserPreferences.
 type UserPreferences struct {
-	AlbumOrder     UserPreferencesAlbumOrder `json:"albumOrder"`
-	ConfirmDelete  bool                      `json:"confirmDelete"`
-	HiddenSections []string                  `json:"hiddenSections"`
-	MemorySeconds  int                       `json:"memorySeconds"`
-	MinFaces       int                       `json:"minFaces"`
-	PhotoFull      bool                      `json:"photoFull"`
-	VideoAutoplay  bool                      `json:"videoAutoplay"`
-	VideoLoop      bool                      `json:"videoLoop"`
-	VideoOriginal  bool                      `json:"videoOriginal"`
+	AlbumOrder     UserPreferencesAlbumOrder        `json:"albumOrder"`
+	ConfirmDelete  bool                             `json:"confirmDelete"`
+	HiddenSections []string                         `json:"hiddenSections"`
+	MemoryKindsOff *[]UserPreferencesMemoryKindsOff `json:"memoryKindsOff,omitempty"`
+	MemorySeconds  int                              `json:"memorySeconds"`
+	MinFaces       int                              `json:"minFaces"`
+	PhotoFull      bool                             `json:"photoFull"`
+	VideoAutoplay  bool                             `json:"videoAutoplay"`
+	VideoLoop      bool                             `json:"videoLoop"`
+	VideoOriginal  bool                             `json:"videoOriginal"`
 }
 
 // UserPreferencesAlbumOrder defines model for UserPreferences.AlbumOrder.
 type UserPreferencesAlbumOrder string
+
+// UserPreferencesMemoryKindsOff defines model for UserPreferences.MemoryKindsOff.
+type UserPreferencesMemoryKindsOff string
 
 // UserRef defines model for UserRef.
 type UserRef struct {
@@ -3804,6 +3931,9 @@ type FinishPasskeyRegistrationJSONBody map[string]interface{}
 type ListMemoriesParams struct {
 	// Date The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone
 	Date *string `form:"date,omitempty" json:"date,omitempty"`
+
+	// Smart Also the memories worked out in the background (trips, people, birthdays, a year, a month ago). Older apps do not ask, so they never meet a kind they cannot read.
+	Smart *bool `form:"smart,omitempty" json:"smart,omitempty"`
 }
 
 // SearchPlacesParams defines parameters for SearchPlaces.
@@ -4062,6 +4192,12 @@ type DisableTotpJSONRequestBody = PasswordConfirm
 
 // EnableTotpJSONRequestBody defines body for EnableTotp for application/json ContentType.
 type EnableTotpJSONRequestBody = TotpCode
+
+// SetMemoryHiddenJSONRequestBody defines body for SetMemoryHidden for application/json ContentType.
+type SetMemoryHiddenJSONRequestBody = MemoryHideRequest
+
+// SetMemoryPersonHiddenJSONRequestBody defines body for SetMemoryPersonHidden for application/json ContentType.
+type SetMemoryPersonHiddenJSONRequestBody = MemoryPersonHideRequest
 
 // SetPartnerJSONRequestBody defines body for SetPartner for application/json ContentType.
 type SetPartnerJSONRequestBody = PartnerShare
@@ -4659,9 +4795,21 @@ type ServerInterface interface {
 	// SetupTotp Generate a TOTP secret. It takes effect only after confirmation.
 	// (POST /api/me/totp/setup)
 	SetupTotp(w http.ResponseWriter, r *http.Request)
-	// ListMemories On this day in earlier years, and the last week
+	// ListMemories Memories to show on this day
 	// (GET /api/memories)
 	ListMemories(w http.ResponseWriter, r *http.Request, params ListMemoriesParams)
+	// RestoreHiddenMemories Show every hidden memory again
+	// (DELETE /api/memories/hidden)
+	RestoreHiddenMemories(w http.ResponseWriter, r *http.Request)
+	// ListHiddenMemories What this person asked not to be shown again
+	// (GET /api/memories/hidden)
+	ListHiddenMemories(w http.ResponseWriter, r *http.Request)
+	// SetMemoryHidden Hide one memory, or show it again
+	// (PUT /api/memories/hidden)
+	SetMemoryHidden(w http.ResponseWriter, r *http.Request)
+	// SetMemoryPersonHidden Leave a person out of memories, or take them back in
+	// (PUT /api/memories/hidden-people)
+	SetMemoryPersonHidden(w http.ResponseWriter, r *http.Request)
 	// ListNotifications The newest notifications of the signed-in user
 	// (GET /api/notifications)
 	ListNotifications(w http.ResponseWriter, r *http.Request)
@@ -5955,9 +6103,33 @@ func (_ Unimplemented) SetupTotp(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// ListMemories On this day in earlier years, and the last week
+// ListMemories Memories to show on this day
 // (GET /api/memories)
 func (_ Unimplemented) ListMemories(w http.ResponseWriter, r *http.Request, params ListMemoriesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RestoreHiddenMemories Show every hidden memory again
+// (DELETE /api/memories/hidden)
+func (_ Unimplemented) RestoreHiddenMemories(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListHiddenMemories What this person asked not to be shown again
+// (GET /api/memories/hidden)
+func (_ Unimplemented) ListHiddenMemories(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetMemoryHidden Hide one memory, or show it again
+// (PUT /api/memories/hidden)
+func (_ Unimplemented) SetMemoryHidden(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetMemoryPersonHidden Leave a person out of memories, or take them back in
+// (PUT /api/memories/hidden-people)
+func (_ Unimplemented) SetMemoryPersonHidden(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -10539,8 +10711,77 @@ func (siw *ServerInterfaceWrapper) ListMemories(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// ------------- Optional query parameter "smart" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "smart", r.URL.Query(), &params.Smart, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "smart"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "smart", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListMemories(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RestoreHiddenMemories operation middleware
+func (siw *ServerInterfaceWrapper) RestoreHiddenMemories(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RestoreHiddenMemories(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListHiddenMemories operation middleware
+func (siw *ServerInterfaceWrapper) ListHiddenMemories(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListHiddenMemories(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetMemoryHidden operation middleware
+func (siw *ServerInterfaceWrapper) SetMemoryHidden(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetMemoryHidden(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetMemoryPersonHidden operation middleware
+func (siw *ServerInterfaceWrapper) SetMemoryPersonHidden(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetMemoryPersonHidden(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -12903,6 +13144,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/memories", wrapper.ListMemories)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/memories/hidden", wrapper.RestoreHiddenMemories)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/memories/hidden", wrapper.ListHiddenMemories)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/memories/hidden", wrapper.SetMemoryHidden)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/memories/hidden-people", wrapper.SetMemoryPersonHidden)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/stories", wrapper.CreateStoryExport)

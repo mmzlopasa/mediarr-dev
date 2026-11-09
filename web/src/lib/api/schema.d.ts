@@ -3473,9 +3473,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** On this day in earlier years, and the last week */
+        /** Memories to show on this day */
         get: operations["listMemories"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memories/hidden": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What this person asked not to be shown again */
+        get: operations["listHiddenMemories"];
+        /** Hide one memory, or show it again */
+        put: operations["setMemoryHidden"];
+        post?: never;
+        /** Show every hidden memory again */
+        delete: operations["restoreHiddenMemories"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memories/hidden-people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Leave a person out of memories, or take them back in */
+        put: operations["setMemoryPersonHidden"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4160,12 +4196,42 @@ export interface components {
         };
         Memory: {
             /** @enum {string} */
-            kind: "on_this_day" | "week";
+            kind: "on_this_day" | "week" | "trip" | "person_years" | "birthday" | "year_review" | "month_ago";
+            /** @description Together with kind, what identifies this memory when hiding it. Not sent by older servers. */
+            key?: string;
             /** @description The year, for on_this_day */
             year?: number;
             /** @description A date or date span. The client words the rest. */
             title: string;
+            titleParams?: components["schemas"]["MemoryTitleParams"];
             items: components["schemas"]["TimelineItem"][];
+        };
+        /** @description The facts a client words a title from, in the reader's language */
+        MemoryTitleParams: {
+            /** @description A trip's place */
+            place?: string;
+            /** @description A person's name */
+            person?: string;
+            /** Format: uuid */
+            personId?: string;
+            year?: number;
+            month?: number;
+        };
+        MemoryHideRequest: {
+            /** @enum {string} */
+            kind: "on_this_day" | "week" | "trip" | "person_years" | "birthday" | "year_review" | "month_ago";
+            key: string;
+            hidden: boolean;
+        };
+        MemoryPersonHideRequest: {
+            /** Format: uuid */
+            personId: string;
+            hidden: boolean;
+        };
+        HiddenMemories: {
+            /** @description Memories that are hidden */
+            count: number;
+            people: components["schemas"]["PersonRef"][];
         };
         StoryRequest: {
             title: string;
@@ -4911,6 +4977,7 @@ export interface components {
             /** @enum {string} */
             albumOrder: "newest" | "oldest";
             hiddenSections: string[];
+            memoryKindsOff?: ("on_this_day" | "week" | "trip" | "person_years" | "birthday" | "year_review" | "month_ago")[];
         };
         UserSession: {
             /** Format: uuid */
@@ -11213,6 +11280,8 @@ export interface operations {
             query?: {
                 /** @description The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone */
                 date?: string;
+                /** @description Also the memories worked out in the background (trips, people, birthdays, a year, a month ago). Older apps do not ask, so they never meet a kind they cannot read. */
+                smart?: boolean;
             };
             header?: never;
             path?: never;
@@ -11230,6 +11299,94 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
+        };
+    };
+    listHiddenMemories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hidden memories and people */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HiddenMemories"];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    setMemoryHidden: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemoryHideRequest"];
+            };
+        };
+        responses: {
+            /** @description Remembered */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    restoreHiddenMemories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Shown again */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    setMemoryPersonHidden: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemoryPersonHideRequest"];
+            };
+        };
+        responses: {
+            /** @description Remembered */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
     createStoryExport: {

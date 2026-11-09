@@ -4780,4 +4780,127 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get adminMlWrongToken =>
       'Servis je odbio token. ML_TOKEN mora biti isti u .env ovdje i na računalu na kojem servis radi.';
+
+  @override
+  String memoriesTripTitle(String place, String monthName, String year) {
+    return '$place, $monthName $year';
+  }
+
+  @override
+  String get memoriesMonth1 => 'siječanj';
+
+  @override
+  String get memoriesMonth2 => 'veljača';
+
+  @override
+  String get memoriesMonth3 => 'ožujak';
+
+  @override
+  String get memoriesMonth4 => 'travanj';
+
+  @override
+  String get memoriesMonth5 => 'svibanj';
+
+  @override
+  String get memoriesMonth6 => 'lipanj';
+
+  @override
+  String get memoriesMonth7 => 'srpanj';
+
+  @override
+  String get memoriesMonth8 => 'kolovoz';
+
+  @override
+  String get memoriesMonth9 => 'rujan';
+
+  @override
+  String get memoriesMonth10 => 'listopad';
+
+  @override
+  String get memoriesMonth11 => 'studeni';
+
+  @override
+  String get memoriesMonth12 => 'prosinac';
+
+  @override
+  String memoriesPersonYears(String person) {
+    return '$person kroz godine';
+  }
+
+  @override
+  String memoriesBirthday(String person) {
+    return 'Rođendan: $person';
+  }
+
+  @override
+  String memoriesYearReview(String year) {
+    return '$year. u fotkama';
+  }
+
+  @override
+  String get memoriesMonthAgo => 'Prije mjesec dana';
+
+  @override
+  String get memoriesHidden => 'Uspomena je skrivena.';
+
+  @override
+  String get memoriesPersonHidden =>
+      'Ova se osoba više neće prikazivati u uspomenama.';
+
+  @override
+  String get memoriesHideThis => 'Sakrij ovu uspomenu';
+
+  @override
+  String get memoriesHidePerson => 'Ne prikazuj ovu osobu';
+
+  @override
+  String get memoriesMenuMore => 'Više';
+
+  @override
+  String get settingsScreenMemoryKinds => 'Vrste uspomena';
+
+  @override
+  String get settingsScreenMemoryOnThisDay => 'Na današnji dan';
+
+  @override
+  String get settingsScreenMemoryWeek => 'Protekli tjedan';
+
+  @override
+  String get settingsScreenMemoryTrip => 'Putovanja';
+
+  @override
+  String get settingsScreenMemoryPersonYears => 'Osoba kroz godine';
+
+  @override
+  String get settingsScreenMemoryBirthday => 'Rođendani';
+
+  @override
+  String get settingsScreenMemoryYearReview => 'Godina u fotkama';
+
+  @override
+  String get settingsScreenMemoryMonthAgo => 'Prije mjesec dana';
+
+  @override
+  String get settingsScreenHiddenFromMemories => 'Skriveno iz uspomena';
+
+  @override
+  String get settingsScreenNothingHidden => 'Ništa nije skriveno.';
+
+  @override
+  String get settingsScreenShowAgain => 'Prikaži ponovno';
+
+  @override
+  String settingsScreenHiddenMemoryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skrivenih uspomena',
+      few: '$count skrivene uspomene',
+      one: '$count skrivena uspomena',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsScreenShowAllAgain => 'Prikaži sve ponovno';
 }

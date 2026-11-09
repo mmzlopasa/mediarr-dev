@@ -1,5 +1,7 @@
 <script lang="ts">
-	import type { UserPreferences } from '#lib/api.ts';
+	import { onMount } from 'svelte';
+	import { api, type HiddenMemories, type UserPreferences } from '#lib/api.ts';
+	import Button from '#lib/design/components/Button.svelte';
 	import Card from '#lib/design/components/Card.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
@@ -18,6 +20,52 @@
 		}
 	];
 	const sections = appNav.filter((item) => item.path !== '/');
+
+	type MemoryKind = NonNullable<UserPreferences['memoryKindsOff']>[number];
+	const memoryKinds: { kind: MemoryKind; label: Key }[] = [
+		{ kind: 'on_this_day', label: k('preferencesCard.memoryOnThisDay') },
+		{ kind: 'week', label: k('preferencesCard.memoryWeek') },
+		{ kind: 'trip', label: k('preferencesCard.memoryTrip') },
+		{ kind: 'person_years', label: k('preferencesCard.memoryPersonYears') },
+		{ kind: 'birthday', label: k('preferencesCard.memoryBirthday') },
+		{ kind: 'year_review', label: k('preferencesCard.memoryYearReview') },
+		{ kind: 'month_ago', label: k('preferencesCard.memoryMonthAgo') }
+	];
+
+	let hidden = $state<HiddenMemories>();
+
+	async function loadHidden() {
+		try {
+			hidden = await api.hiddenMemories();
+		} catch {
+			hidden = undefined;
+		}
+	}
+
+	onMount(loadHidden);
+
+	function toggleKind(kind: MemoryKind, shown: boolean) {
+		const off = preferences()?.memoryKindsOff ?? [];
+		change({ memoryKindsOff: shown ? off.filter((other) => other !== kind) : [...off, kind] });
+	}
+
+	async function showPersonAgain(id: string) {
+		try {
+			await api.setMemoryPersonHidden(id, false);
+			await loadHidden();
+		} catch {
+			showToast('err', t('common.notSaved'));
+		}
+	}
+
+	async function showAllAgain() {
+		try {
+			await api.restoreHiddenMemories();
+			await loadHidden();
+		} catch {
+			showToast('err', t('common.notSaved'));
+		}
+	}
 
 	async function change(update: Partial<UserPreferences>) {
 		const now = preferences();
@@ -90,6 +138,45 @@
 					<option value="oldest">{t('preferencesCard.oldestFirst')}</option>
 				</select>
 			</label>
+		</div>
+		<div class="set-group">
+			<h3>{t('preferencesCard.kindsOfMemories')}</h3>
+			<div class="set-tiles">
+				{#each memoryKinds as item (item.kind)}
+					<label class="set-tile">
+						<span>{t(item.label)}</span>
+						<input
+							type="checkbox"
+							class="switch"
+							checked={!(now.memoryKindsOff ?? []).includes(item.kind)}
+							onchange={(event) => toggleKind(item.kind, event.currentTarget.checked)}
+						/>
+					</label>
+				{/each}
+			</div>
+		</div>
+		<div class="set-group">
+			<h3>{t('preferencesCard.hiddenFromMemories')}</h3>
+			{#if !hidden}
+				<Skeleton height="40px" />
+			{:else if hidden.count === 0 && hidden.people.length === 0}
+				<p class="alb-meta">{t('preferencesCard.nothingHiddenFromMemories')}</p>
+			{:else}
+				{#each hidden.people as person (person.id)}
+					<div class="set-row">
+						<span>{person.name}</span>
+						<Button small onclick={() => showPersonAgain(person.id)}
+							>{t('preferencesCard.showAgain')}</Button
+						>
+					</div>
+				{/each}
+				{#if hidden.count > 0}
+					<div class="set-row">
+						<span>{t('preferencesCard.hiddenMemoryCount', { count: hidden.count })}</span>
+						<Button small onclick={showAllAgain}>{t('preferencesCard.showAllAgain')}</Button>
+					</div>
+				{/if}
+			{/if}
 		</div>
 		<div class="set-group">
 			<h3>{t('preferencesCard.showInTheMenu')}</h3>

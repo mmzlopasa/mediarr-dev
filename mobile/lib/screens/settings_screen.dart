@@ -573,6 +573,7 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
       final albums = await session.api.listAlbums();
       final memories = await session.api.listMemories(
         date: localToday(DateTime.now()),
+        smart: true,
       );
       if (mounted) {
         setState(() {
@@ -1041,6 +1042,132 @@ class _AccountChoices extends ConsumerWidget {
             },
           ),
         ),
+        _Heading(Icons.auto_awesome_outlined, l.settingsScreenMemoryKinds),
+        for (final (kind, label) in _memoryKindChoices)
+          SwitchListTile(
+            title: Text(label),
+            value: !prefs.memoryKindsOff.contains(kind),
+            activeTrackColor: Palette.gold,
+            onChanged: (shown) {
+              prefs.memoryKindsOff = shown
+                  ? prefs.memoryKindsOff.where((k) => k != kind).toList()
+                  : [...prefs.memoryKindsOff, kind];
+              notifier.change(prefs);
+            },
+          ),
+        const _HiddenFromMemories(),
+      ],
+    );
+  }
+}
+
+List<(UserPreferencesMemoryKindsOffEnum, String)> get _memoryKindChoices => [
+  (
+    UserPreferencesMemoryKindsOffEnum.onThisDay,
+    l.settingsScreenMemoryOnThisDay,
+  ),
+  (UserPreferencesMemoryKindsOffEnum.week, l.settingsScreenMemoryWeek),
+  (UserPreferencesMemoryKindsOffEnum.trip, l.settingsScreenMemoryTrip),
+  (
+    UserPreferencesMemoryKindsOffEnum.personYears,
+    l.settingsScreenMemoryPersonYears,
+  ),
+  (UserPreferencesMemoryKindsOffEnum.birthday, l.settingsScreenMemoryBirthday),
+  (
+    UserPreferencesMemoryKindsOffEnum.yearReview,
+    l.settingsScreenMemoryYearReview,
+  ),
+  (UserPreferencesMemoryKindsOffEnum.monthAgo, l.settingsScreenMemoryMonthAgo),
+];
+
+/// What was hidden from memories, and the way back.
+class _HiddenFromMemories extends ConsumerStatefulWidget {
+  const _HiddenFromMemories();
+
+  @override
+  ConsumerState<_HiddenFromMemories> createState() =>
+      _HiddenFromMemoriesState();
+}
+
+class _HiddenFromMemoriesState extends ConsumerState<_HiddenFromMemories> {
+  HiddenMemories? _hidden;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final hidden = await ref
+          .read(sessionProvider)
+          .value
+          ?.api
+          .listHiddenMemories();
+      if (mounted) setState(() => _hidden = hidden);
+    } on ApiException {
+      // Nothing to offer: the rest of the settings still work.
+    }
+  }
+
+  Future<void> _showPerson(String id) async {
+    final api = ref.read(sessionProvider).value?.api;
+    if (api == null) return;
+    try {
+      await api.setMemoryPersonHidden(
+        MemoryPersonHideRequest(personId: id, hidden: false),
+      );
+      await _load();
+    } on ApiException {
+      // Stays listed, so it can be tried again.
+    }
+  }
+
+  Future<void> _showAll() async {
+    final api = ref.read(sessionProvider).value?.api;
+    if (api == null) return;
+    try {
+      await api.restoreHiddenMemories();
+      await _load();
+    } on ApiException {
+      // Stays listed, so it can be tried again.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hidden = _hidden;
+    if (hidden == null) return const SizedBox.shrink();
+    final nothing = hidden.count == 0 && hidden.people.isEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Heading(
+          Icons.visibility_off_outlined,
+          l.settingsScreenHiddenFromMemories,
+        ),
+        if (nothing)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(l.settingsScreenNothingHidden),
+          ),
+        for (final person in hidden.people)
+          ListTile(
+            title: Text(person.name),
+            trailing: TextButton(
+              onPressed: () => _showPerson(person.id),
+              child: Text(l.settingsScreenShowAgain),
+            ),
+          ),
+        if (hidden.count > 0)
+          ListTile(
+            title: Text(l.settingsScreenHiddenMemoryCount(hidden.count)),
+            trailing: TextButton(
+              onPressed: _showAll,
+              child: Text(l.settingsScreenShowAllAgain),
+            ),
+          ),
       ],
     );
   }

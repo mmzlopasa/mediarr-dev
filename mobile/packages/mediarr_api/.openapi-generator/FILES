@@ -91,6 +91,7 @@ doc/FixResult.md
 doc/Folder.md
 doc/FolderEntry.md
 doc/Health.md
+doc/HiddenMemories.md
 doc/HideFaces.md
 doc/ImportCreate.md
 doc/ImportDetail.md
@@ -120,6 +121,9 @@ doc/MapPoints.md
 doc/MapStyle.md
 doc/MemberRole.md
 doc/Memory.md
+doc/MemoryHideRequest.md
+doc/MemoryPersonHideRequest.md
+doc/MemoryTitleParams.md
 doc/MlAcceleration.md
 doc/MlModel.md
 doc/MlServiceStatus.md
@@ -301,6 +305,7 @@ lib/model/fix_result.dart
 lib/model/folder.dart
 lib/model/folder_entry.dart
 lib/model/health.dart
+lib/model/hidden_memories.dart
 lib/model/hide_faces.dart
 lib/model/import_create.dart
 lib/model/import_detail.dart
@@ -330,6 +335,9 @@ lib/model/map_points.dart
 lib/model/map_style.dart
 lib/model/member_role.dart
 lib/model/memory.dart
+lib/model/memory_hide_request.dart
+lib/model/memory_person_hide_request.dart
+lib/model/memory_title_params.dart
 lib/model/ml_acceleration.dart
 lib/model/ml_model.dart
 lib/model/ml_service_status.dart
@@ -413,3 +421,4 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
+test/hidden_memories_test.dart

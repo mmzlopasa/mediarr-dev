@@ -75,6 +75,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     try {
       final list = await _session.api.listMemories(
         date: localToday(DateTime.now()),
+        smart: true,
       );
       if (mounted) setState(() => _memories = list ?? const []);
     } on ApiException {
@@ -248,7 +249,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       fit: BoxFit.cover,
                       error: broken,
                     ),
-                    memory.title,
+                    memoryTitle(memory, DateTime.now()),
                     '${memory.items.length}',
                     () => _open(const MemoriesScreen()),
                   ),

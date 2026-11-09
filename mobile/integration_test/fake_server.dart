@@ -83,6 +83,8 @@ class FakeServer {
     'visibleOnNetwork': true,
   };
   List<String> trashed = [];
+  bool tripHidden = false;
+  String? hiddenMemoryKey;
 
   /// The album's one public link, as the app last changed it.
   static const linkId = '00000000-0000-4000-8000-0000000000b1';
@@ -226,7 +228,34 @@ class FakeServer {
       return;
     }
     if (path == '/api/memories') {
-      await _json(request, 200, []);
+      await _json(request, 200, [
+        if (!tripHidden)
+          {
+            'kind': 'trip',
+            'key': 'Split|2024-07-03',
+            'title': '2024-07-03 – 2024-07-05',
+            'titleParams': {'place': 'Split', 'month': 7, 'year': 2024},
+            'items': [
+              {
+                'id': photoId,
+                'kind': 'photo',
+                'ratio': 1.33,
+                'isFavorite': false,
+                'localAt': '2024-07-03T10:00:00',
+              },
+            ],
+          },
+      ]);
+      return;
+    }
+    if (path == '/api/memories/hidden' && request.method == 'PUT') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      tripHidden = body['hidden'] == true;
+      hiddenMemoryKey = body['key'] as String?;
+      request.response.statusCode = 204;
+      await request.response.close();
       return;
     }
     if (path == '/api/me' && request.method == 'PATCH') {

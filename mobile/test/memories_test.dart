@@ -28,5 +28,27 @@ void main() {
       memoryTitle(Memory(kind: MemoryKindEnum.week, title: 'x'), now),
       'The last week',
     );
+    expect(
+      memoryTitle(
+        Memory(
+          kind: MemoryKindEnum.trip,
+          title: 'x',
+          titleParams: MemoryTitleParams(place: 'Split', month: 7, year: 2024),
+        ),
+        now,
+      ),
+      'Split, July 2024',
+    );
+    expect(
+      memoryTitle(
+        Memory(
+          kind: MemoryKindEnum.birthday,
+          title: 'x',
+          titleParams: MemoryTitleParams(person: 'Ana'),
+        ),
+        now,
+      ),
+      "Ana's birthday",
+    );
   });
 }

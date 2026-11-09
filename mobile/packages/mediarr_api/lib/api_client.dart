@@ -405,6 +405,8 @@ class ApiClient {
           return FolderEntry.fromJson(value);
         case 'Health':
           return Health.fromJson(value);
+        case 'HiddenMemories':
+          return HiddenMemories.fromJson(value);
         case 'HideFaces':
           return HideFacesTypeTransformer().decode(value);
         case 'ImportCreate':
@@ -463,6 +465,12 @@ class ApiClient {
           return MemberRole.fromJson(value);
         case 'Memory':
           return Memory.fromJson(value);
+        case 'MemoryHideRequest':
+          return MemoryHideRequest.fromJson(value);
+        case 'MemoryPersonHideRequest':
+          return MemoryPersonHideRequest.fromJson(value);
+        case 'MemoryTitleParams':
+          return MemoryTitleParams.fromJson(value);
         case 'MlAcceleration':
           return MlAcceleration.fromJson(value);
         case 'MlModel':

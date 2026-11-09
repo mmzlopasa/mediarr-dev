@@ -11,7 +11,13 @@
 	const pictureMs = (preferences()?.memorySeconds ?? 4) * 1000;
 	const EXPORT_POLL_MS = 2000;
 
-	let { memory, title, onClose }: { memory: Memory; title: string; onClose: () => void } = $props();
+	let {
+		memory,
+		title,
+		onClose,
+		onHidden
+	}: { memory: Memory; title: string; onClose: () => void; onHidden?: (memory: Memory) => void } =
+		$props();
 
 	let index = $state(0);
 	let paused = $state(false);
@@ -37,6 +43,30 @@
 		else if (event.key === 'ArrowLeft') move(-1);
 		else if (event.key === 'ArrowRight') move(1);
 		else if (event.key === ' ') paused = !paused;
+	}
+
+	async function hideMemory() {
+		try {
+			await api.setMemoryHidden(memory.kind, memory.key ?? memory.title, true);
+			showToast('ok', t('memories.hidden'));
+			onHidden?.(memory);
+			onClose();
+		} catch {
+			showToast('err', t('common.notSaved'));
+		}
+	}
+
+	async function hidePerson() {
+		const person = memory.titleParams?.personId;
+		if (!person) return;
+		try {
+			await api.setMemoryPersonHidden(person, true);
+			showToast('ok', t('memories.personHidden'));
+			onHidden?.(memory);
+			onClose();
+		} catch {
+			showToast('err', t('common.notSaved'));
+		}
 	}
 
 	async function exportVideo() {
@@ -116,5 +146,11 @@
 			aria-label={t('story.next')}
 			onclick={() => move(1)}><Icon name="forward" /></button
 		>
+	</div>
+	<div class="story-foot">
+		<Button small onclick={hideMemory}>{t('story.hideThisMemory')}</Button>
+		{#if memory.titleParams?.personId}
+			<Button small onclick={hidePerson}>{t('story.dontShowThisPerson')}</Button>
+		{/if}
 	</div>
 </div>

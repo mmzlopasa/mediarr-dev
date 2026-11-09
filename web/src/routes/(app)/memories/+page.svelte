@@ -50,7 +50,7 @@
 	</section>
 {:else}
 	<div class="stories stories-page">
-		{#each memories as memory (memory.kind + memory.title)}
+		{#each memories as memory (memory.kind + (memory.key ?? memory.title))}
 			<button type="button" class="story-tile" onclick={() => (open = memory)}>
 				<img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" />
 				<span class="story-tile-t">
@@ -63,5 +63,10 @@
 {/if}
 
 {#if open}
-	<Story memory={open} title={titleOf(open)} onClose={() => (open = undefined)} />
+	<Story
+		memory={open}
+		title={titleOf(open)}
+		onClose={() => (open = undefined)}
+		onHidden={(gone) => (memories = memories?.filter((other) => other !== gone))}
+	/>
 {/if}

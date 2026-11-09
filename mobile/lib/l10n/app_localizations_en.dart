@@ -4747,4 +4747,126 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminMlWrongToken =>
       'The service refused the token. ML_TOKEN must be the same in .env here and on the computer that runs it.';
+
+  @override
+  String memoriesTripTitle(String place, String monthName, String year) {
+    return '$place, $monthName $year';
+  }
+
+  @override
+  String get memoriesMonth1 => 'January';
+
+  @override
+  String get memoriesMonth2 => 'February';
+
+  @override
+  String get memoriesMonth3 => 'March';
+
+  @override
+  String get memoriesMonth4 => 'April';
+
+  @override
+  String get memoriesMonth5 => 'May';
+
+  @override
+  String get memoriesMonth6 => 'June';
+
+  @override
+  String get memoriesMonth7 => 'July';
+
+  @override
+  String get memoriesMonth8 => 'August';
+
+  @override
+  String get memoriesMonth9 => 'September';
+
+  @override
+  String get memoriesMonth10 => 'October';
+
+  @override
+  String get memoriesMonth11 => 'November';
+
+  @override
+  String get memoriesMonth12 => 'December';
+
+  @override
+  String memoriesPersonYears(String person) {
+    return '$person through the years';
+  }
+
+  @override
+  String memoriesBirthday(String person) {
+    return '$person\'s birthday';
+  }
+
+  @override
+  String memoriesYearReview(String year) {
+    return '$year in photos';
+  }
+
+  @override
+  String get memoriesMonthAgo => 'A month ago';
+
+  @override
+  String get memoriesHidden => 'This memory is hidden.';
+
+  @override
+  String get memoriesPersonHidden =>
+      'This person will no longer appear in memories.';
+
+  @override
+  String get memoriesHideThis => 'Hide this memory';
+
+  @override
+  String get memoriesHidePerson => 'Don\'t show this person';
+
+  @override
+  String get memoriesMenuMore => 'More';
+
+  @override
+  String get settingsScreenMemoryKinds => 'Kinds of memories';
+
+  @override
+  String get settingsScreenMemoryOnThisDay => 'On this day';
+
+  @override
+  String get settingsScreenMemoryWeek => 'The last week';
+
+  @override
+  String get settingsScreenMemoryTrip => 'Trips';
+
+  @override
+  String get settingsScreenMemoryPersonYears => 'A person through the years';
+
+  @override
+  String get settingsScreenMemoryBirthday => 'Birthdays';
+
+  @override
+  String get settingsScreenMemoryYearReview => 'A year in photos';
+
+  @override
+  String get settingsScreenMemoryMonthAgo => 'A month ago';
+
+  @override
+  String get settingsScreenHiddenFromMemories => 'Hidden from memories';
+
+  @override
+  String get settingsScreenNothingHidden => 'Nothing is hidden.';
+
+  @override
+  String get settingsScreenShowAgain => 'Show again';
+
+  @override
+  String settingsScreenHiddenMemoryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count memories are hidden',
+      one: '1 memory is hidden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsScreenShowAllAgain => 'Show all again';
 }

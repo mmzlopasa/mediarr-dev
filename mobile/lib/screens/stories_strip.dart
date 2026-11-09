@@ -9,8 +9,11 @@ import 'asset_picture.dart';
 import 'memories_screen.dart';
 
 String storyLabel(Memory memory, int thisYear) {
+  if (memory.kind == MemoryKindEnum.week) return l.storiesStripLastWeek;
   final year = memory.year;
-  if (year == null) return l.storiesStripLastWeek;
+  if (memory.kind != MemoryKindEnum.onThisDay || year == null) {
+    return memoryTitle(memory, DateTime(thisYear));
+  }
   final years = thisYear - year;
   return l.storiesStripYearsAgo(years);
 }
@@ -39,6 +42,7 @@ class _StoriesStripState extends ConsumerState<StoriesStrip> {
     try {
       final memories = await widget.session.api.listMemories(
         date: localToday(DateTime.now()),
+        smart: true,
       );
       if (!mounted) return;
       setState(() {
@@ -84,6 +88,12 @@ class _StoriesStripState extends ConsumerState<StoriesStrip> {
                     session: widget.session,
                     memory: memory,
                     title: memoryTitle(memory, now),
+                    onHidden: () => setState(() {
+                      _memories = [
+                        for (final other in _memories)
+                          if (!identical(other, memory)) other,
+                      ];
+                    }),
                   ),
                 ),
               ),

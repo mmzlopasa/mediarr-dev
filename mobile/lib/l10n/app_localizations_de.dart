@@ -4824,4 +4824,126 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get adminMlWrongToken =>
       'Der Dienst hat das Token abgelehnt. ML_TOKEN muss in der .env hier und auf dem Rechner des Dienstes gleich sein.';
+
+  @override
+  String memoriesTripTitle(String place, String monthName, String year) {
+    return '$place, $monthName $year';
+  }
+
+  @override
+  String get memoriesMonth1 => 'Januar';
+
+  @override
+  String get memoriesMonth2 => 'Februar';
+
+  @override
+  String get memoriesMonth3 => 'März';
+
+  @override
+  String get memoriesMonth4 => 'April';
+
+  @override
+  String get memoriesMonth5 => 'Mai';
+
+  @override
+  String get memoriesMonth6 => 'Juni';
+
+  @override
+  String get memoriesMonth7 => 'Juli';
+
+  @override
+  String get memoriesMonth8 => 'August';
+
+  @override
+  String get memoriesMonth9 => 'September';
+
+  @override
+  String get memoriesMonth10 => 'Oktober';
+
+  @override
+  String get memoriesMonth11 => 'November';
+
+  @override
+  String get memoriesMonth12 => 'Dezember';
+
+  @override
+  String memoriesPersonYears(String person) {
+    return '$person im Lauf der Jahre';
+  }
+
+  @override
+  String memoriesBirthday(String person) {
+    return 'Geburtstag: $person';
+  }
+
+  @override
+  String memoriesYearReview(String year) {
+    return '$year in Fotos';
+  }
+
+  @override
+  String get memoriesMonthAgo => 'Vor einem Monat';
+
+  @override
+  String get memoriesHidden => 'Diese Erinnerung ist ausgeblendet.';
+
+  @override
+  String get memoriesPersonHidden =>
+      'Diese Person erscheint nicht mehr in Erinnerungen.';
+
+  @override
+  String get memoriesHideThis => 'Diese Erinnerung ausblenden';
+
+  @override
+  String get memoriesHidePerson => 'Diese Person nicht anzeigen';
+
+  @override
+  String get memoriesMenuMore => 'Mehr';
+
+  @override
+  String get settingsScreenMemoryKinds => 'Arten von Erinnerungen';
+
+  @override
+  String get settingsScreenMemoryOnThisDay => 'An diesem Tag';
+
+  @override
+  String get settingsScreenMemoryWeek => 'Die letzte Woche';
+
+  @override
+  String get settingsScreenMemoryTrip => 'Reisen';
+
+  @override
+  String get settingsScreenMemoryPersonYears => 'Eine Person im Lauf der Jahre';
+
+  @override
+  String get settingsScreenMemoryBirthday => 'Geburtstage';
+
+  @override
+  String get settingsScreenMemoryYearReview => 'Ein Jahr in Fotos';
+
+  @override
+  String get settingsScreenMemoryMonthAgo => 'Vor einem Monat';
+
+  @override
+  String get settingsScreenHiddenFromMemories => 'In Erinnerungen ausgeblendet';
+
+  @override
+  String get settingsScreenNothingHidden => 'Nichts ist ausgeblendet.';
+
+  @override
+  String get settingsScreenShowAgain => 'Wieder anzeigen';
+
+  @override
+  String settingsScreenHiddenMemoryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Erinnerungen ausgeblendet',
+      one: '1 Erinnerung ausgeblendet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsScreenShowAllAgain => 'Alle wieder anzeigen';
 }

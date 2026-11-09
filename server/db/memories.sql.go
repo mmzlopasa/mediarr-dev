@@ -11,6 +11,15 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const clearComputedMemories = `-- name: ClearComputedMemories :exec
+DELETE FROM memories WHERE user_id = $1 AND hidden_at IS NULL
+`
+
+func (q *Queries) ClearComputedMemories(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, clearComputedMemories, userID)
+	return err
+}
+
 const createStoryExport = `-- name: CreateStoryExport :one
 INSERT INTO story_exports (user_id, title) VALUES ($1, $2) RETURNING id
 `
@@ -36,6 +45,39 @@ func (q *Queries) DeleteStoryExport(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const filterMemoryItems = `-- name: FilterMemoryItems :many
+SELECT a.id FROM assets a
+WHERE a.id = ANY($1::uuid[]) AND a.user_id = $2 AND a.status = 'ready'
+  AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.pick <> -1
+  AND NOT EXISTS (SELECT 1 FROM faces f JOIN memory_hidden_people h ON h.person_id = f.person_id AND h.user_id = a.user_id WHERE f.asset_id = a.id)
+`
+
+type FilterMemoryItemsParams struct {
+	Ids    []pgtype.UUID
+	UserID pgtype.UUID
+}
+
+// A photo can have gone to the trash or the vault since the memory was worked out.
+func (q *Queries) FilterMemoryItems(ctx context.Context, arg FilterMemoryItemsParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, filterMemoryItems, arg.Ids, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const finishStoryExport = `-- name: FinishStoryExport :exec
 UPDATE story_exports SET status = $2, path = $3 WHERE id = $1
 `
@@ -49,6 +91,17 @@ type FinishStoryExportParams struct {
 func (q *Queries) FinishStoryExport(ctx context.Context, arg FinishStoryExportParams) error {
 	_, err := q.db.Exec(ctx, finishStoryExport, arg.ID, arg.Status, arg.Path)
 	return err
+}
+
+const getMemoryRun = `-- name: GetMemoryRun :one
+SELECT computed_for FROM memory_runs WHERE user_id = $1
+`
+
+func (q *Queries) GetMemoryRun(ctx context.Context, userID pgtype.UUID) (pgtype.Date, error) {
+	row := q.db.QueryRow(ctx, getMemoryRun, userID)
+	var computed_for pgtype.Date
+	err := row.Scan(&computed_for)
+	return computed_for, err
 }
 
 const getStoryExport = `-- name: GetStoryExport :one
@@ -72,6 +125,281 @@ func (q *Queries) GetStoryExport(ctx context.Context, arg GetStoryExportParams) 
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const hideMemory = `-- name: HideMemory :exec
+INSERT INTO memories (user_id, kind, key, hidden_at) VALUES ($1, $2, $3, now())
+ON CONFLICT (user_id, kind, key) DO UPDATE SET hidden_at = now()
+`
+
+type HideMemoryParams struct {
+	UserID pgtype.UUID
+	Kind   string
+	Key    string
+}
+
+func (q *Queries) HideMemory(ctx context.Context, arg HideMemoryParams) error {
+	_, err := q.db.Exec(ctx, hideMemory, arg.UserID, arg.Kind, arg.Key)
+	return err
+}
+
+const hideMemoryPerson = `-- name: HideMemoryPerson :exec
+INSERT INTO memory_hidden_people (user_id, person_id) VALUES ($1, $2) ON CONFLICT DO NOTHING
+`
+
+type HideMemoryPersonParams struct {
+	UserID   pgtype.UUID
+	PersonID pgtype.UUID
+}
+
+func (q *Queries) HideMemoryPerson(ctx context.Context, arg HideMemoryPersonParams) error {
+	_, err := q.db.Exec(ctx, hideMemoryPerson, arg.UserID, arg.PersonID)
+	return err
+}
+
+const listDueMemories = `-- name: ListDueMemories :many
+SELECT kind, key, title, title_params, items FROM memories
+WHERE user_id = $1 AND hidden_at IS NULL
+  AND shown_from <= $2::date AND shown_until >= $2::date
+ORDER BY rank, key
+`
+
+type ListDueMemoriesParams struct {
+	UserID pgtype.UUID
+	Day    pgtype.Date
+}
+
+type ListDueMemoriesRow struct {
+	Kind        string
+	Key         string
+	Title       string
+	TitleParams []byte
+	Items       []pgtype.UUID
+}
+
+func (q *Queries) ListDueMemories(ctx context.Context, arg ListDueMemoriesParams) ([]ListDueMemoriesRow, error) {
+	rows, err := q.db.Query(ctx, listDueMemories, arg.UserID, arg.Day)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListDueMemoriesRow
+	for rows.Next() {
+		var i ListDueMemoriesRow
+		if err := rows.Scan(
+			&i.Kind,
+			&i.Key,
+			&i.Title,
+			&i.TitleParams,
+			&i.Items,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listHiddenMemoryKeys = `-- name: ListHiddenMemoryKeys :many
+SELECT kind, key FROM memories WHERE user_id = $1 AND hidden_at IS NOT NULL
+`
+
+type ListHiddenMemoryKeysRow struct {
+	Kind string
+	Key  string
+}
+
+func (q *Queries) ListHiddenMemoryKeys(ctx context.Context, userID pgtype.UUID) ([]ListHiddenMemoryKeysRow, error) {
+	rows, err := q.db.Query(ctx, listHiddenMemoryKeys, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListHiddenMemoryKeysRow
+	for rows.Next() {
+		var i ListHiddenMemoryKeysRow
+		if err := rows.Scan(&i.Kind, &i.Key); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMemoryCandidates = `-- name: ListMemoryCandidates :many
+SELECT a.id, a.local_at, a.is_favorite, a.rating, a.sharpness,
+       e.latitude, e.longitude, COALESCE(e.city, '')::text AS city, COALESCE(e.country, '')::text AS country
+FROM assets a LEFT JOIN exif e ON e.asset_id = a.id
+WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
+  AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+  AND a.pick <> -1 AND a.screenshot_hint IS NOT TRUE
+  AND COALESCE(e.raw->>'UserComment', '') <> 'Screenshot'
+  AND NOT EXISTS (SELECT 1 FROM similar_pairs p WHERE p.b_id = a.id AND p.dismissed_at IS NULL)
+ORDER BY a.local_at, a.id
+`
+
+type ListMemoryCandidatesRow struct {
+	ID         pgtype.UUID
+	LocalAt    pgtype.Timestamp
+	IsFavorite bool
+	Rating     int16
+	Sharpness  pgtype.Float4
+	Latitude   pgtype.Float8
+	Longitude  pgtype.Float8
+	City       string
+	Country    string
+}
+
+// Everything a memory may be made of. Faces are read separately, and only named people matter there.
+func (q *Queries) ListMemoryCandidates(ctx context.Context, userID pgtype.UUID) ([]ListMemoryCandidatesRow, error) {
+	rows, err := q.db.Query(ctx, listMemoryCandidates, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMemoryCandidatesRow
+	for rows.Next() {
+		var i ListMemoryCandidatesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.LocalAt,
+			&i.IsFavorite,
+			&i.Rating,
+			&i.Sharpness,
+			&i.Latitude,
+			&i.Longitude,
+			&i.City,
+			&i.Country,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMemoryFaces = `-- name: ListMemoryFaces :many
+SELECT f.asset_id, f.person_id FROM faces f
+WHERE f.user_id = $1 AND f.person_id IS NOT NULL
+`
+
+type ListMemoryFacesRow struct {
+	AssetID  pgtype.UUID
+	PersonID pgtype.UUID
+}
+
+func (q *Queries) ListMemoryFaces(ctx context.Context, userID pgtype.UUID) ([]ListMemoryFacesRow, error) {
+	rows, err := q.db.Query(ctx, listMemoryFaces, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMemoryFacesRow
+	for rows.Next() {
+		var i ListMemoryFacesRow
+		if err := rows.Scan(&i.AssetID, &i.PersonID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMemoryHiddenPeople = `-- name: ListMemoryHiddenPeople :many
+SELECT p.id, p.name FROM memory_hidden_people h JOIN people p ON p.id = h.person_id
+WHERE h.user_id = $1 ORDER BY p.name, p.id
+`
+
+type ListMemoryHiddenPeopleRow struct {
+	ID   pgtype.UUID
+	Name string
+}
+
+func (q *Queries) ListMemoryHiddenPeople(ctx context.Context, userID pgtype.UUID) ([]ListMemoryHiddenPeopleRow, error) {
+	rows, err := q.db.Query(ctx, listMemoryHiddenPeople, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMemoryHiddenPeopleRow
+	for rows.Next() {
+		var i ListMemoryHiddenPeopleRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMemoryHiddenPeopleIDs = `-- name: ListMemoryHiddenPeopleIDs :many
+SELECT person_id FROM memory_hidden_people WHERE user_id = $1
+`
+
+func (q *Queries) ListMemoryHiddenPeopleIDs(ctx context.Context, userID pgtype.UUID) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, listMemoryHiddenPeopleIDs, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var person_id pgtype.UUID
+		if err := rows.Scan(&person_id); err != nil {
+			return nil, err
+		}
+		items = append(items, person_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMemoryPeople = `-- name: ListMemoryPeople :many
+SELECT p.id, p.name, p.birth_date FROM people p
+WHERE p.user_id = $1 AND p.name <> '' AND NOT p.hidden
+`
+
+type ListMemoryPeopleRow struct {
+	ID        pgtype.UUID
+	Name      string
+	BirthDate pgtype.Date
+}
+
+func (q *Queries) ListMemoryPeople(ctx context.Context, userID pgtype.UUID) ([]ListMemoryPeopleRow, error) {
+	rows, err := q.db.Query(ctx, listMemoryPeople, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMemoryPeopleRow
+	for rows.Next() {
+		var i ListMemoryPeopleRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.BirthDate); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listOldStoryExports = `-- name: ListOldStoryExports :many
@@ -146,6 +474,10 @@ FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
   AND EXTRACT(MONTH FROM a.local_at) = $2::int AND EXTRACT(DAY FROM a.local_at) = $3::int
+  AND a.pick <> -1 AND a.screenshot_hint IS NOT TRUE
+  AND NOT EXISTS (SELECT 1 FROM exif e WHERE e.asset_id = a.id AND e.raw->>'UserComment' = 'Screenshot')
+  AND NOT EXISTS (SELECT 1 FROM similar_pairs p WHERE p.b_id = a.id AND p.dismissed_at IS NULL)
+  AND NOT EXISTS (SELECT 1 FROM faces f JOIN memory_hidden_people h ON h.person_id = f.person_id AND h.user_id = a.user_id WHERE f.asset_id = a.id)
   AND a.local_at < $4
 ORDER BY a.local_at DESC, a.id
 `
@@ -192,6 +524,10 @@ SELECT a.id
 FROM assets a
 WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+  AND a.pick <> -1 AND a.screenshot_hint IS NOT TRUE
+  AND NOT EXISTS (SELECT 1 FROM exif e WHERE e.asset_id = a.id AND e.raw->>'UserComment' = 'Screenshot')
+  AND NOT EXISTS (SELECT 1 FROM similar_pairs p WHERE p.b_id = a.id AND p.dismissed_at IS NULL)
+  AND NOT EXISTS (SELECT 1 FROM faces f JOIN memory_hidden_people h ON h.person_id = f.person_id AND h.user_id = a.user_id WHERE f.asset_id = a.id)
   AND a.local_at >= $2 AND a.local_at < $3
 ORDER BY a.is_favorite DESC, a.local_at DESC, a.id
 LIMIT 200
@@ -221,4 +557,93 @@ func (q *Queries) RecentForSummary(ctx context.Context, arg RecentForSummaryPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const setMemoryRun = `-- name: SetMemoryRun :exec
+INSERT INTO memory_runs (user_id, computed_for) VALUES ($1, $2)
+ON CONFLICT (user_id) DO UPDATE SET computed_for = EXCLUDED.computed_for
+`
+
+type SetMemoryRunParams struct {
+	UserID      pgtype.UUID
+	ComputedFor pgtype.Date
+}
+
+func (q *Queries) SetMemoryRun(ctx context.Context, arg SetMemoryRunParams) error {
+	_, err := q.db.Exec(ctx, setMemoryRun, arg.UserID, arg.ComputedFor)
+	return err
+}
+
+const showAllMemories = `-- name: ShowAllMemories :exec
+UPDATE memories SET hidden_at = NULL WHERE user_id = $1 AND hidden_at IS NOT NULL
+`
+
+func (q *Queries) ShowAllMemories(ctx context.Context, userID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, showAllMemories, userID)
+	return err
+}
+
+const showMemory = `-- name: ShowMemory :exec
+UPDATE memories SET hidden_at = NULL WHERE user_id = $1 AND kind = $2 AND key = $3
+`
+
+type ShowMemoryParams struct {
+	UserID pgtype.UUID
+	Kind   string
+	Key    string
+}
+
+func (q *Queries) ShowMemory(ctx context.Context, arg ShowMemoryParams) error {
+	_, err := q.db.Exec(ctx, showMemory, arg.UserID, arg.Kind, arg.Key)
+	return err
+}
+
+const showMemoryPerson = `-- name: ShowMemoryPerson :exec
+DELETE FROM memory_hidden_people WHERE user_id = $1 AND person_id = $2
+`
+
+type ShowMemoryPersonParams struct {
+	UserID   pgtype.UUID
+	PersonID pgtype.UUID
+}
+
+func (q *Queries) ShowMemoryPerson(ctx context.Context, arg ShowMemoryPersonParams) error {
+	_, err := q.db.Exec(ctx, showMemoryPerson, arg.UserID, arg.PersonID)
+	return err
+}
+
+const upsertMemory = `-- name: UpsertMemory :exec
+INSERT INTO memories (user_id, kind, key, title, title_params, items, rank, shown_from, shown_until)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+ON CONFLICT (user_id, kind, key) DO UPDATE
+SET title = EXCLUDED.title, title_params = EXCLUDED.title_params, items = EXCLUDED.items, rank = EXCLUDED.rank,
+    shown_from = EXCLUDED.shown_from, shown_until = EXCLUDED.shown_until
+`
+
+type UpsertMemoryParams struct {
+	UserID      pgtype.UUID
+	Kind        string
+	Key         string
+	Title       string
+	TitleParams []byte
+	Items       []pgtype.UUID
+	Rank        int32
+	ShownFrom   pgtype.Date
+	ShownUntil  pgtype.Date
+}
+
+// What was hidden stays hidden when the same memory is worked out again.
+func (q *Queries) UpsertMemory(ctx context.Context, arg UpsertMemoryParams) error {
+	_, err := q.db.Exec(ctx, upsertMemory,
+		arg.UserID,
+		arg.Kind,
+		arg.Key,
+		arg.Title,
+		arg.TitleParams,
+		arg.Items,
+		arg.Rank,
+		arg.ShownFrom,
+		arg.ShownUntil,
+	)
+	return err
 }

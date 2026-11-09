@@ -14,12 +14,23 @@ class Memory {
   /// Returns a new [Memory] instance.
   Memory({
     required this.kind,
+    this.key,
     this.year,
     required this.title,
+    this.titleParams,
     this.items = const [],
   });
 
   MemoryKindEnum kind;
+
+  /// Together with kind, what identifies this memory when hiding it. Not sent by older servers.
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? key;
 
   /// The year, for on_this_day
   ///
@@ -33,6 +44,14 @@ class Memory {
   /// A date or date span. The client words the rest.
   String title;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  MemoryTitleParams? titleParams;
+
   List<TimelineItem> items;
 
   @override
@@ -40,31 +59,45 @@ class Memory {
       identical(this, other) ||
       other is Memory &&
           other.kind == kind &&
+          other.key == key &&
           other.year == year &&
           other.title == title &&
+          other.titleParams == titleParams &&
           _deepEquality.equals(other.items, items);
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
       (kind.hashCode) +
+      (key == null ? 0 : key!.hashCode) +
       (year == null ? 0 : year!.hashCode) +
       (title.hashCode) +
+      (titleParams == null ? 0 : titleParams!.hashCode) +
       (items.hashCode);
 
   @override
   String toString() =>
-      'Memory[kind=$kind, year=$year, title=$title, items=$items]';
+      'Memory[kind=$kind, key=$key, year=$year, title=$title, titleParams=$titleParams, items=$items]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'kind'] = this.kind;
+    if (this.key != null) {
+      json[r'key'] = this.key;
+    } else {
+      json[r'key'] = null;
+    }
     if (this.year != null) {
       json[r'year'] = this.year;
     } else {
       json[r'year'] = null;
     }
     json[r'title'] = this.title;
+    if (this.titleParams != null) {
+      json[r'titleParams'] = this.titleParams;
+    } else {
+      json[r'titleParams'] = null;
+    }
     json[r'items'] = this.items;
     return json;
   }
@@ -91,8 +124,10 @@ class Memory {
 
       return Memory(
         kind: MemoryKindEnum.fromJson(json[r'kind'])!,
+        key: mapValueOfType<String>(json, r'key'),
         year: mapValueOfType<int>(json, r'year'),
         title: mapValueOfType<String>(json, r'title')!,
+        titleParams: MemoryTitleParams.fromJson(json[r'titleParams']),
         items: TimelineItem.listFromJson(json[r'items']),
       );
     }
@@ -170,11 +205,21 @@ class MemoryKindEnum {
 
   static const onThisDay = MemoryKindEnum._(r'on_this_day');
   static const week = MemoryKindEnum._(r'week');
+  static const trip = MemoryKindEnum._(r'trip');
+  static const personYears = MemoryKindEnum._(r'person_years');
+  static const birthday = MemoryKindEnum._(r'birthday');
+  static const yearReview = MemoryKindEnum._(r'year_review');
+  static const monthAgo = MemoryKindEnum._(r'month_ago');
 
   /// List of all possible values in this [enum][MemoryKindEnum].
   static const values = <MemoryKindEnum>[
     onThisDay,
     week,
+    trip,
+    personYears,
+    birthday,
+    yearReview,
+    monthAgo,
   ];
 
   static MemoryKindEnum? fromJson(dynamic value) =>
@@ -222,6 +267,16 @@ class MemoryKindEnumTypeTransformer {
           return MemoryKindEnum.onThisDay;
         case r'week':
           return MemoryKindEnum.week;
+        case r'trip':
+          return MemoryKindEnum.trip;
+        case r'person_years':
+          return MemoryKindEnum.personYears;
+        case r'birthday':
+          return MemoryKindEnum.birthday;
+        case r'year_review':
+          return MemoryKindEnum.yearReview;
+        case r'month_ago':
+          return MemoryKindEnum.monthAgo;
         default:
           if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');

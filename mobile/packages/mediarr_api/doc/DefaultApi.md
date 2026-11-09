@@ -164,10 +164,11 @@ Method | HTTP request | Description
 [**listDuplicates**](DefaultApi.md#listduplicates) | **GET** /api/duplicates | Groups of photos that look alike. Only a proposal, nothing is removed without asking
 [**listExplorePlaces**](DefaultApi.md#listexploreplaces) | **GET** /api/explore/places | The places in the user's own photos, those with the most first
 [**listFamilyMembersAdmin**](DefaultApi.md#listfamilymembersadmin) | **GET** /api/admin/family | Who is in the family library
+[**listHiddenMemories**](DefaultApi.md#listhiddenmemories) | **GET** /api/memories/hidden | What this person asked not to be shown again
 [**listImports**](DefaultApi.md#listimports) | **GET** /api/admin/imports | Imports, the newest first
 [**listKeepGuests**](DefaultApi.md#listkeepguests) | **GET** /api/admin/keep/guests | Other Mediarr servers whose encrypted backup this one keeps
 [**listLinkVisits**](DefaultApi.md#listlinkvisits) | **GET** /api/albums/{id}/links/{linkId}/visits | Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
-[**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | On this day in earlier years, and the last week
+[**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | Memories to show on this day
 [**listMyImports**](DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 [**listMySessions**](DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
 [**listNotifications**](DefaultApi.md#listnotifications) | **GET** /api/notifications | The newest notifications of the signed-in user
@@ -205,6 +206,7 @@ Method | HTTP request | Description
 [**reportBackupDevice**](DefaultApi.md#reportbackupdevice) | **PUT** /api/me/backup-devices/{id} | A device says how its backup is doing, with checksums of files it has seen confirmed
 [**resetPassword**](DefaultApi.md#resetpassword) | **POST** /api/auth/password/reset | Set a new password with a link from an email
 [**resolveDuplicates**](DefaultApi.md#resolveduplicates) | **POST** /api/duplicates/resolve | Keeps one photo of each group, gives it what the others had, and moves the others to the trash
+[**restoreHiddenMemories**](DefaultApi.md#restorehiddenmemories) | **DELETE** /api/memories/hidden | Show every hidden memory again
 [**restoreKeepGuestDeleted**](DefaultApi.md#restorekeepguestdeleted) | **POST** /api/admin/keep/guests/{id}/restore-deleted | Put back what the guest deleted in the last 90 days, after an attack or a mistake
 [**resumeJobQueue**](DefaultApi.md#resumejobqueue) | **POST** /api/admin/jobs/queues/{queue}/resume | Continue a paused queue
 [**retryJob**](DefaultApi.md#retryjob) | **POST** /api/admin/jobs/{id}/retry | Try a failed job again
@@ -227,6 +229,8 @@ Method | HTTP request | Description
 [**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 [**setFeature**](DefaultApi.md#setfeature) | **PUT** /api/admin/features/{name} | Turn an addition on or off
 [**setMapStyle**](DefaultApi.md#setmapstyle) | **PUT** /api/map/style | Choose the map's background. Administrators only. Empty goes back to the default.
+[**setMemoryHidden**](DefaultApi.md#setmemoryhidden) | **PUT** /api/memories/hidden | Hide one memory, or show it again
+[**setMemoryPersonHidden**](DefaultApi.md#setmemorypersonhidden) | **PUT** /api/memories/hidden-people | Leave a person out of memories, or take them back in
 [**setMyPreferences**](DefaultApi.md#setmypreferences) | **PUT** /api/me/preferences | Change what this person chose
 [**setOIDCSettings**](DefaultApi.md#setoidcsettings) | **PUT** /api/admin/oidc | Change single sign-on. An empty issuer turns it off
 [**setPartner**](DefaultApi.md#setpartner) | **PUT** /api/partners/{userId} | Share your library with a user, all of it or from a date
@@ -6490,6 +6494,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listHiddenMemories**
+> HiddenMemories listHiddenMemories()
+
+What this person asked not to be shown again
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listHiddenMemories();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listHiddenMemories: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**HiddenMemories**](HiddenMemories.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listImports**
 > List<ImportEntry> listImports()
 
@@ -6608,9 +6649,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listMemories**
-> List<Memory> listMemories(date)
+> List<Memory> listMemories(date, smart)
 
-On this day in earlier years, and the last week
+Memories to show on this day
 
 ### Example
 ```dart
@@ -6618,9 +6659,10 @@ import 'package:mediarr_api/api.dart';
 
 final api_instance = DefaultApi();
 final date = 2026-11-06; // String | The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone
+final smart = true; // bool | Also the memories worked out in the background (trips, people, birthdays, a year, a month ago). Older apps do not ask, so they never meet a kind they cannot read.
 
 try {
-    final result = api_instance.listMemories(date);
+    final result = api_instance.listMemories(date, smart);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->listMemories: $e\n');
@@ -6632,6 +6674,7 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **date** | **String**| The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone | [optional] 
+ **smart** | **bool**| Also the memories worked out in the background (trips, people, birthdays, a year, a month ago). Older apps do not ask, so they never meet a kind they cannot read. | [optional] 
 
 ### Return type
 
@@ -8113,6 +8156,42 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **restoreHiddenMemories**
+> restoreHiddenMemories()
+
+Show every hidden memory again
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    api_instance.restoreHiddenMemories();
+} catch (e) {
+    print('Exception when calling DefaultApi->restoreHiddenMemories: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **restoreKeepGuestDeleted**
 > KeepRestored restoreKeepGuestDeleted(id)
 
@@ -9025,6 +9104,86 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**MapStyle**](MapStyle.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setMemoryHidden**
+> setMemoryHidden(memoryHideRequest)
+
+Hide one memory, or show it again
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final memoryHideRequest = MemoryHideRequest(); // MemoryHideRequest | 
+
+try {
+    api_instance.setMemoryHidden(memoryHideRequest);
+} catch (e) {
+    print('Exception when calling DefaultApi->setMemoryHidden: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **memoryHideRequest** | [**MemoryHideRequest**](MemoryHideRequest.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setMemoryPersonHidden**
+> setMemoryPersonHidden(memoryPersonHideRequest)
+
+Leave a person out of memories, or take them back in
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final memoryPersonHideRequest = MemoryPersonHideRequest(); // MemoryPersonHideRequest | 
+
+try {
+    api_instance.setMemoryPersonHidden(memoryPersonHideRequest);
+} catch (e) {
+    print('Exception when calling DefaultApi->setMemoryPersonHidden: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **memoryPersonHideRequest** | [**MemoryPersonHideRequest**](MemoryPersonHideRequest.md)|  | 
+
+### Return type
+
+void (empty response body)
 
 ### Authorization
 

@@ -62,7 +62,7 @@
 	function memoryCard(memory: Memory): Card {
 		const photos = memory.items.filter((item) => item.kind === 'photo');
 		return {
-			key: `m-${memory.kind}-${memory.title}`,
+			key: `m-${memory.kind}-${memory.key ?? memory.title}`,
 			title: memoryTitle(memory),
 			sub: itemCount(memory.items.length, lang()),
 			cover: thumbUrl('/api', memory.items[0].id, memory.items[0].blurhash, 'large'),

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { api, type Memory, type PeopleList } from '#lib/api.ts';
+	import { memoryTitle } from '#lib/organize/memories.ts';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
@@ -109,12 +110,12 @@
 		<p class="alb-meta">{t('explore.noMemoriesToday')}</p>
 	{:else}
 		<div class="alb-grid">
-			{#each memories as memory (memory.kind + memory.title)}
+			{#each memories as memory (memory.kind + (memory.key ?? memory.title))}
 				<a class="alb-card" href={resolve('/(app)/memories')}>
 					<span class="alb-cover"
 						><img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" /></span
 					>
-					<span class="alb-name">{memory.title}</span>
+					<span class="alb-name">{memoryTitle(memory)}</span>
 					<span class="alb-meta">{memory.items.length}</span>
 				</a>
 			{/each}

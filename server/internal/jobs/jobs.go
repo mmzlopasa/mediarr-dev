@@ -141,6 +141,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &storageMoveWorker{deps: d})
 	river.AddWorker(workers, &storageApplyWorker{deps: d})
 	river.AddWorker(workers, &resolveDuplicatesWorker{deps: d})
+	river.AddWorker(workers, &memoriesWorker{deps: d})
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{
@@ -171,6 +172,9 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 				func() (river.JobArgs, *river.InsertOpts) { return BackupTickArgs{}, nil }, nil),
 			river.NewPeriodicJob(river.PeriodicInterval(externalScanTick),
 				func() (river.JobArgs, *river.InsertOpts) { return ExternalScanArgs{Scheduled: true}, nil },
+				&river.PeriodicJobOpts{RunOnStart: true}),
+			river.NewPeriodicJob(river.PeriodicInterval(memoriesEvery),
+				func() (river.JobArgs, *river.InsertOpts) { return MemoriesArgs{}, nil },
 				&river.PeriodicJobOpts{RunOnStart: true}),
 			river.NewPeriodicJob(river.PeriodicInterval(integrityEvery),
 				func() (river.JobArgs, *river.InsertOpts) { return IntegrityArgs{}, nil }, nil),

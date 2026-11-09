@@ -7,7 +7,7 @@ export default {
     },
     {
       type: 'category', label: 'Features', collapsed: false,
-      items: ['features/library', 'features/cli', 'features/mobile-app', 'features/smart-search', 'features/external-library', 'features/import', 'features/sharing', 'features/editing', 'features/clean-up', 'features/languages', 'features/ai-descriptions', 'features/additions', 'features/profile'],
+      items: ['features/library', 'features/cli', 'features/mobile-app', 'features/smart-search', 'features/external-library', 'features/import', 'features/sharing', 'features/editing', 'features/clean-up', 'features/languages', 'features/ai-descriptions', 'features/memories', 'features/additions', 'features/profile'],
     },
     {
       type: 'category', label: 'Administration', collapsed: false,

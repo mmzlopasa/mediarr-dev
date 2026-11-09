@@ -205,6 +205,7 @@ void main() {
   testWidgets('a day is gone through: a pick, a reject, then to the trash', (
     tester,
   ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
     await signIn(tester, server.address, password);
     final open = find.byTooltip('Cull');
     await waitFor(tester, open);
@@ -258,6 +259,29 @@ void main() {
     await waitFor(tester, find.text('Explore'));
     await tester.tap(find.text('Explore'));
     await waitFor(tester, find.text('Hvar'));
+  });
+
+  testWidgets('a memory is titled in words, and hiding it is remembered', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.text('Library').last);
+    await waitFor(tester, find.text('Memories'));
+    await tester.tap(find.text('Memories').last);
+    await waitFor(tester, find.text('Split, July 2024'));
+    await tester.tap(find.text('Split, July 2024').last);
+    await waitFor(tester, find.byTooltip('More'));
+    await tester.tap(find.byTooltip('More').last);
+    await waitFor(tester, find.text('Hide this memory'));
+    await tester.tap(find.text('Hide this memory').last);
+    for (var i = 0; i < 50 && server.hiddenMemoryKey == null; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(server.hiddenMemoryKey, 'Split|2024-07-03');
+    await waitFor(tester, find.text('No memories yet.'));
+    expect(find.text('Split, July 2024'), findsNothing);
   });
 
   testWidgets('Recently added shows what came in last', (tester) async {

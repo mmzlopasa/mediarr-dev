@@ -75,6 +75,7 @@ export type CleanupPage = components['schemas']['CleanupPage'];
 export type DuplicateGroup = components['schemas']['DuplicateGroup'];
 export type MapPoints = components['schemas']['MapPoints'];
 export type Memory = components['schemas']['Memory'];
+export type HiddenMemories = components['schemas']['HiddenMemories'];
 export type ServerStatus = components['schemas']['ServerStatus'];
 export type UserSession = components['schemas']['UserSession'];
 export type EmailSettings = components['schemas']['EmailSettings'];
@@ -270,7 +271,13 @@ export const api = {
 	endOtherSessions: () => request<void>(fetch, '/api/me/sessions', undefined, 'DELETE'),
 	myStats: () => request<AccountStats>(fetch, '/api/me/stats'),
 	serverStatus: () => request<ServerStatus>(fetch, '/api/server/status'),
-	memories: (date: string) => request<Memory[]>(fetch, `/api/memories?date=${date}`),
+	memories: (date: string) => request<Memory[]>(fetch, `/api/memories?date=${date}&smart=true`),
+	hiddenMemories: () => request<HiddenMemories>(fetch, '/api/memories/hidden'),
+	setMemoryHidden: (kind: Memory['kind'], key: string, hidden: boolean) =>
+		request<void>(fetch, '/api/memories/hidden', { kind, key, hidden }, 'PUT'),
+	restoreHiddenMemories: () => request<void>(fetch, '/api/memories/hidden', undefined, 'DELETE'),
+	setMemoryPersonHidden: (personId: string, hidden: boolean) =>
+		request<void>(fetch, '/api/memories/hidden-people', { personId, hidden }, 'PUT'),
 	createStory: (title: string, ids: string[]) =>
 		request<StoryExport>(fetch, '/api/stories', { title, ids }),
 	story: (id: string) => request<StoryExport>(fetch, `/api/stories/${id}`),

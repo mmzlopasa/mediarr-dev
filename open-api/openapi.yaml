@@ -3324,9 +3324,10 @@ paths:
   /api/memories:
     get:
       operationId: listMemories
-      summary: On this day in earlier years, and the last week
+      summary: Memories to show on this day
       parameters:
         - { name: date, in: query, description: "The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone", schema: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$', example: '2026-11-06' } }
+        - { name: smart, in: query, description: "Also the memories worked out in the background (trips, people, birthdays, a year, a month ago). Older apps do not ask, so they never meet a kind they cannot read.", schema: { type: boolean } }
       responses:
         "200":
           description: Memories, newest first
@@ -3334,6 +3335,48 @@ paths:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/Memory" } }
         "401": { $ref: "#/components/responses/Error" }
+  /api/memories/hidden:
+    get:
+      operationId: listHiddenMemories
+      summary: What this person asked not to be shown again
+      responses:
+        "200":
+          description: Hidden memories and people
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HiddenMemories" }
+        "401": { $ref: "#/components/responses/Error" }
+    put:
+      operationId: setMemoryHidden
+      summary: Hide one memory, or show it again
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemoryHideRequest" }
+      responses:
+        "204": { description: Remembered }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: restoreHiddenMemories
+      summary: Show every hidden memory again
+      responses:
+        "204": { description: Shown again }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/memories/hidden-people:
+    put:
+      operationId: setMemoryPersonHidden
+      summary: Leave a person out of memories, or take them back in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemoryPersonHideRequest" }
+      responses:
+        "204": { description: Remembered }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/stories:
     post:
       operationId: createStoryExport
@@ -3995,10 +4038,40 @@ components:
       type: object
       required: [kind, title, items]
       properties:
-        kind: { type: string, enum: [on_this_day, week] }
+        kind: { type: string, enum: [on_this_day, week, trip, person_years, birthday, year_review, month_ago] }
+        key: { type: string, x-go-type-skip-optional-pointer: true, description: "Together with kind, what identifies this memory when hiding it. Not sent by older servers." }
         year: { type: integer, description: "The year, for on_this_day" }
         title: { type: string, description: "A date or date span. The client words the rest." }
+        titleParams: { $ref: "#/components/schemas/MemoryTitleParams" }
         items: { type: array, items: { $ref: "#/components/schemas/TimelineItem" } }
+    MemoryTitleParams:
+      type: object
+      description: The facts a client words a title from, in the reader's language
+      properties:
+        place: { type: string, description: "A trip's place" }
+        person: { type: string, description: "A person's name" }
+        personId: { type: string, format: uuid }
+        year: { type: integer }
+        month: { type: integer, minimum: 1, maximum: 12 }
+    MemoryHideRequest:
+      type: object
+      required: [kind, key, hidden]
+      properties:
+        kind: { type: string, enum: [on_this_day, week, trip, person_years, birthday, year_review, month_ago] }
+        key: { type: string, maxLength: 200 }
+        hidden: { type: boolean }
+    MemoryPersonHideRequest:
+      type: object
+      required: [personId, hidden]
+      properties:
+        personId: { type: string, format: uuid }
+        hidden: { type: boolean }
+    HiddenMemories:
+      type: object
+      required: [count, people]
+      properties:
+        count: { type: integer, description: "Memories that are hidden" }
+        people: { type: array, items: { $ref: "#/components/schemas/PersonRef" } }
     StoryRequest:
       type: object
       required: [title, ids]
@@ -4751,6 +4824,7 @@ components:
         minFaces: { type: integer, minimum: 1, maximum: 100 }
         albumOrder: { type: string, enum: [newest, oldest] }
         hiddenSections: { type: array, items: { type: string } }
+        memoryKindsOff: { type: array, items: { type: string, enum: [on_this_day, week, trip, person_years, birthday, year_review, month_ago] } }
     UserSession:
       type: object
       required: [id, userAgent, ip, createdAt, lastSeenAt, current]

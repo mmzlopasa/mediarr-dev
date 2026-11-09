@@ -20,10 +20,47 @@ import 'stories_strip.dart';
 /// Today as the person's phone sees it, which decides what a memory is.
 String localToday(DateTime now) => dayString(now);
 
-String memoryTitle(Memory memory, DateTime now) =>
-    memory.kind == MemoryKindEnum.week
-    ? l.memoriesScreenLastWeek
-    : l.memoriesScreenOnThisDay(now.year - (memory.year ?? now.year));
+/// A month by its number, as the name stands alone in the reader's language.
+String monthName(int? month) => switch (month) {
+  1 => l.memoriesMonth1,
+  2 => l.memoriesMonth2,
+  3 => l.memoriesMonth3,
+  4 => l.memoriesMonth4,
+  5 => l.memoriesMonth5,
+  6 => l.memoriesMonth6,
+  7 => l.memoriesMonth7,
+  8 => l.memoriesMonth8,
+  9 => l.memoriesMonth9,
+  10 => l.memoriesMonth10,
+  11 => l.memoriesMonth11,
+  12 => l.memoriesMonth12,
+  _ => '',
+};
+
+/// A memory's title in words: the server only says what kind it is and gives the facts.
+String memoryTitle(Memory memory, DateTime now) {
+  final params = memory.titleParams;
+  switch (memory.kind) {
+    case MemoryKindEnum.week:
+      return l.memoriesScreenLastWeek;
+    case MemoryKindEnum.trip:
+      return l.memoriesTripTitle(
+        params?.place ?? '',
+        monthName(params?.month),
+        '${params?.year ?? ''}',
+      );
+    case MemoryKindEnum.personYears:
+      return l.memoriesPersonYears(params?.person ?? '');
+    case MemoryKindEnum.birthday:
+      return l.memoriesBirthday(params?.person ?? '');
+    case MemoryKindEnum.yearReview:
+      return l.memoriesYearReview('${params?.year ?? ''}');
+    case MemoryKindEnum.monthAgo:
+      return l.memoriesMonthAgo;
+    default:
+      return l.memoriesScreenOnThisDay(now.year - (memory.year ?? now.year));
+  }
+}
 
 class MemoriesScreen extends ConsumerStatefulWidget {
   const MemoriesScreen({super.key});
@@ -47,6 +84,7 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
     try {
       final memories = await _session.api.listMemories(
         date: localToday(DateTime.now()),
+        smart: true,
       );
       if (mounted) {
         setState(() {
@@ -105,6 +143,12 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
                   session: _session,
                   memory: memory,
                   title: memoryTitle(memory, now),
+                  onHidden: () => setState(
+                    () => _memories = [
+                      for (final other in memories)
+                        if (!identical(other, memory)) other,
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -133,12 +177,14 @@ class StoryScreen extends StatefulWidget {
     required this.session,
     required this.memory,
     required this.title,
+    this.onHidden,
   });
 
   final Session session;
   final Memory memory;
   final String title;
   final int secondsPerPicture;
+  final VoidCallback? onHidden;
 
   @override
   State<StoryScreen> createState() => _StoryScreenState();
@@ -175,6 +221,41 @@ class _StoryScreenState extends State<StoryScreen> {
   void _tell(String message) {
     ScaffoldMessenger.maybeOf(context)
         ?.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _hideMemory() async {
+    final key = widget.memory.key;
+    final kind = MemoryHideRequestKindEnum.fromJson(widget.memory.kind.value);
+    if (key == null || kind == null) return;
+    try {
+      await widget.session.api.setMemoryHidden(
+        MemoryHideRequest(kind: kind, key: key, hidden: true),
+      );
+      _tell(l.memoriesHidden);
+      _leave();
+    } on ApiException {
+      _tell(l.devicesScreenNotSaved);
+    }
+  }
+
+  Future<void> _hidePerson() async {
+    final person = widget.memory.titleParams?.personId;
+    if (person == null) return;
+    try {
+      await widget.session.api.setMemoryPersonHidden(
+        MemoryPersonHideRequest(personId: person, hidden: true),
+      );
+      _tell(l.memoriesPersonHidden);
+      _leave();
+    } on ApiException {
+      _tell(l.devicesScreenNotSaved);
+    }
+  }
+
+  void _leave() {
+    if (!mounted) return;
+    widget.onHidden?.call();
+    Navigator.of(context).pop();
   }
 
   Future<void> _export() async {
@@ -248,6 +329,22 @@ class _StoryScreenState extends State<StoryScreen> {
                   onPressed: _export,
                   child: Text(l.memoriesScreenMakeVideo),
                 ),
+          if (widget.memory.key != null)
+            PopupMenuButton<VoidCallback>(
+              tooltip: l.memoriesMenuMore,
+              onSelected: (action) => action(),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: _hideMemory,
+                  child: Text(l.memoriesHideThis),
+                ),
+                if (widget.memory.titleParams?.personId != null)
+                  PopupMenuItem(
+                    value: _hidePerson,
+                    child: Text(l.memoriesHidePerson),
+                  ),
+              ],
+            ),
         ],
       ),
       body: Column(

@@ -829,6 +829,13 @@ video.viewer-media {
 	flex: 1 1 140px;
 	min-width: 0;
 }
+.story-foot {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 8px;
+	padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+}
 .story-stage {
 	flex: 1;
 	min-height: 0;

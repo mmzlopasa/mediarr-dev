@@ -345,6 +345,29 @@ type Library struct {
 	ScanError      pgtype.Text
 }
 
+type Memory struct {
+	UserID      pgtype.UUID
+	Kind        string
+	Key         string
+	Title       string
+	TitleParams []byte
+	Items       []pgtype.UUID
+	Rank        int32
+	ShownFrom   pgtype.Date
+	ShownUntil  pgtype.Date
+	HiddenAt    pgtype.Timestamptz
+}
+
+type MemoryHiddenPerson struct {
+	UserID   pgtype.UUID
+	PersonID pgtype.UUID
+}
+
+type MemoryRun struct {
+	UserID      pgtype.UUID
+	ComputedFor pgtype.Date
+}
+
 type Notification struct {
 	ID        pgtype.UUID
 	UserID    pgtype.UUID

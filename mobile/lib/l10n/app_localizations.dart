@@ -8283,6 +8283,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The service refused the token. ML_TOKEN must be the same in .env here and on the computer that runs it.'**
   String get adminMlWrongToken;
+
+  /// No description provided for @memoriesTripTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{place}, {monthName} {year}'**
+  String memoriesTripTitle(String place, String monthName, String year);
+
+  /// No description provided for @memoriesMonth1.
+  ///
+  /// In en, this message translates to:
+  /// **'January'**
+  String get memoriesMonth1;
+
+  /// No description provided for @memoriesMonth2.
+  ///
+  /// In en, this message translates to:
+  /// **'February'**
+  String get memoriesMonth2;
+
+  /// No description provided for @memoriesMonth3.
+  ///
+  /// In en, this message translates to:
+  /// **'March'**
+  String get memoriesMonth3;
+
+  /// No description provided for @memoriesMonth4.
+  ///
+  /// In en, this message translates to:
+  /// **'April'**
+  String get memoriesMonth4;
+
+  /// No description provided for @memoriesMonth5.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get memoriesMonth5;
+
+  /// No description provided for @memoriesMonth6.
+  ///
+  /// In en, this message translates to:
+  /// **'June'**
+  String get memoriesMonth6;
+
+  /// No description provided for @memoriesMonth7.
+  ///
+  /// In en, this message translates to:
+  /// **'July'**
+  String get memoriesMonth7;
+
+  /// No description provided for @memoriesMonth8.
+  ///
+  /// In en, this message translates to:
+  /// **'August'**
+  String get memoriesMonth8;
+
+  /// No description provided for @memoriesMonth9.
+  ///
+  /// In en, this message translates to:
+  /// **'September'**
+  String get memoriesMonth9;
+
+  /// No description provided for @memoriesMonth10.
+  ///
+  /// In en, this message translates to:
+  /// **'October'**
+  String get memoriesMonth10;
+
+  /// No description provided for @memoriesMonth11.
+  ///
+  /// In en, this message translates to:
+  /// **'November'**
+  String get memoriesMonth11;
+
+  /// No description provided for @memoriesMonth12.
+  ///
+  /// In en, this message translates to:
+  /// **'December'**
+  String get memoriesMonth12;
+
+  /// No description provided for @memoriesPersonYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{person} through the years'**
+  String memoriesPersonYears(String person);
+
+  /// No description provided for @memoriesBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'{person}\'s birthday'**
+  String memoriesBirthday(String person);
+
+  /// No description provided for @memoriesYearReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{year} in photos'**
+  String memoriesYearReview(String year);
+
+  /// No description provided for @memoriesMonthAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'A month ago'**
+  String get memoriesMonthAgo;
+
+  /// No description provided for @memoriesHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'This memory is hidden.'**
+  String get memoriesHidden;
+
+  /// No description provided for @memoriesPersonHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'This person will no longer appear in memories.'**
+  String get memoriesPersonHidden;
+
+  /// No description provided for @memoriesHideThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this memory'**
+  String get memoriesHideThis;
+
+  /// No description provided for @memoriesHidePerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show this person'**
+  String get memoriesHidePerson;
+
+  /// No description provided for @memoriesMenuMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get memoriesMenuMore;
+
+  /// No description provided for @settingsScreenMemoryKinds.
+  ///
+  /// In en, this message translates to:
+  /// **'Kinds of memories'**
+  String get settingsScreenMemoryKinds;
+
+  /// No description provided for @settingsScreenMemoryOnThisDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On this day'**
+  String get settingsScreenMemoryOnThisDay;
+
+  /// No description provided for @settingsScreenMemoryWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'The last week'**
+  String get settingsScreenMemoryWeek;
+
+  /// No description provided for @settingsScreenMemoryTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Trips'**
+  String get settingsScreenMemoryTrip;
+
+  /// No description provided for @settingsScreenMemoryPersonYears.
+  ///
+  /// In en, this message translates to:
+  /// **'A person through the years'**
+  String get settingsScreenMemoryPersonYears;
+
+  /// No description provided for @settingsScreenMemoryBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Birthdays'**
+  String get settingsScreenMemoryBirthday;
+
+  /// No description provided for @settingsScreenMemoryYearReview.
+  ///
+  /// In en, this message translates to:
+  /// **'A year in photos'**
+  String get settingsScreenMemoryYearReview;
+
+  /// No description provided for @settingsScreenMemoryMonthAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'A month ago'**
+  String get settingsScreenMemoryMonthAgo;
+
+  /// No description provided for @settingsScreenHiddenFromMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden from memories'**
+  String get settingsScreenHiddenFromMemories;
+
+  /// No description provided for @settingsScreenNothingHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is hidden.'**
+  String get settingsScreenNothingHidden;
+
+  /// No description provided for @settingsScreenShowAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Show again'**
+  String get settingsScreenShowAgain;
+
+  /// No description provided for @settingsScreenHiddenMemoryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 memory is hidden} other{{count} memories are hidden}}'**
+  String settingsScreenHiddenMemoryCount(int count);
+
+  /// No description provided for @settingsScreenShowAllAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all again'**
+  String get settingsScreenShowAllAgain;
 }
 
 class _AppLocalizationsDelegate

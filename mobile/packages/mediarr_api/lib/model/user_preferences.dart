@@ -22,6 +22,7 @@ class UserPreferences {
     required this.minFaces,
     required this.albumOrder,
     this.hiddenSections = const [],
+    this.memoryKindsOff = const [],
   });
 
   bool videoAutoplay;
@@ -46,6 +47,8 @@ class UserPreferences {
 
   List<String> hiddenSections;
 
+  List<UserPreferencesMemoryKindsOffEnum> memoryKindsOff;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -58,7 +61,8 @@ class UserPreferences {
           other.memorySeconds == memorySeconds &&
           other.minFaces == minFaces &&
           other.albumOrder == albumOrder &&
-          _deepEquality.equals(other.hiddenSections, hiddenSections);
+          _deepEquality.equals(other.hiddenSections, hiddenSections) &&
+          _deepEquality.equals(other.memoryKindsOff, memoryKindsOff);
 
   @override
   int get hashCode =>
@@ -71,11 +75,12 @@ class UserPreferences {
       (memorySeconds.hashCode) +
       (minFaces.hashCode) +
       (albumOrder.hashCode) +
-      (hiddenSections.hashCode);
+      (hiddenSections.hashCode) +
+      (memoryKindsOff.hashCode);
 
   @override
   String toString() =>
-      'UserPreferences[videoAutoplay=$videoAutoplay, videoLoop=$videoLoop, videoOriginal=$videoOriginal, photoFull=$photoFull, confirmDelete=$confirmDelete, memorySeconds=$memorySeconds, minFaces=$minFaces, albumOrder=$albumOrder, hiddenSections=$hiddenSections]';
+      'UserPreferences[videoAutoplay=$videoAutoplay, videoLoop=$videoLoop, videoOriginal=$videoOriginal, photoFull=$photoFull, confirmDelete=$confirmDelete, memorySeconds=$memorySeconds, minFaces=$minFaces, albumOrder=$albumOrder, hiddenSections=$hiddenSections, memoryKindsOff=$memoryKindsOff]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -88,6 +93,7 @@ class UserPreferences {
     json[r'minFaces'] = this.minFaces;
     json[r'albumOrder'] = this.albumOrder;
     json[r'hiddenSections'] = this.hiddenSections;
+    json[r'memoryKindsOff'] = this.memoryKindsOff;
     return json;
   }
 
@@ -126,6 +132,8 @@ class UserPreferences {
                 .cast<String>()
                 .toList(growable: false)
             : const [],
+        memoryKindsOff: UserPreferencesMemoryKindsOffEnum.listFromJson(
+            json[r'memoryKindsOff']),
       );
     }
     return null;
@@ -271,4 +279,105 @@ class UserPreferencesAlbumOrderEnumTypeTransformer {
 
   /// Singleton [UserPreferencesAlbumOrderEnumTypeTransformer] instance.
   static UserPreferencesAlbumOrderEnumTypeTransformer? _instance;
+}
+
+class UserPreferencesMemoryKindsOffEnum {
+  /// Instantiate a new enum with the provided [value].
+  const UserPreferencesMemoryKindsOffEnum._(this.value);
+
+  /// The underlying value of this enum member.
+  final String value;
+
+  @override
+  String toString() => value;
+
+  String toJson() => value;
+
+  static const onThisDay = UserPreferencesMemoryKindsOffEnum._(r'on_this_day');
+  static const week = UserPreferencesMemoryKindsOffEnum._(r'week');
+  static const trip = UserPreferencesMemoryKindsOffEnum._(r'trip');
+  static const personYears =
+      UserPreferencesMemoryKindsOffEnum._(r'person_years');
+  static const birthday = UserPreferencesMemoryKindsOffEnum._(r'birthday');
+  static const yearReview = UserPreferencesMemoryKindsOffEnum._(r'year_review');
+  static const monthAgo = UserPreferencesMemoryKindsOffEnum._(r'month_ago');
+
+  /// List of all possible values in this [enum][UserPreferencesMemoryKindsOffEnum].
+  static const values = <UserPreferencesMemoryKindsOffEnum>[
+    onThisDay,
+    week,
+    trip,
+    personYears,
+    birthday,
+    yearReview,
+    monthAgo,
+  ];
+
+  static UserPreferencesMemoryKindsOffEnum? fromJson(dynamic value) =>
+      UserPreferencesMemoryKindsOffEnumTypeTransformer().decode(value);
+
+  static List<UserPreferencesMemoryKindsOffEnum> listFromJson(
+    dynamic json, {
+    bool growable = false,
+  }) {
+    final result = <UserPreferencesMemoryKindsOffEnum>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = UserPreferencesMemoryKindsOffEnum.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
+}
+
+/// Transformation class that can [encode] an instance of [UserPreferencesMemoryKindsOffEnum] to String,
+/// and [decode] dynamic data back to [UserPreferencesMemoryKindsOffEnum].
+class UserPreferencesMemoryKindsOffEnumTypeTransformer {
+  factory UserPreferencesMemoryKindsOffEnumTypeTransformer() =>
+      _instance ??= const UserPreferencesMemoryKindsOffEnumTypeTransformer._();
+
+  const UserPreferencesMemoryKindsOffEnumTypeTransformer._();
+
+  String encode(UserPreferencesMemoryKindsOffEnum data) => data.value;
+
+  /// Decodes a [dynamic value][data] to a UserPreferencesMemoryKindsOffEnum.
+  ///
+  /// If [allowNull] is true and the [dynamic value][data] cannot be decoded successfully,
+  /// then null is returned. However, if [allowNull] is false and the [dynamic value][data]
+  /// cannot be decoded successfully, then an [UnimplementedError] is thrown.
+  ///
+  /// The [allowNull] is very handy when an API changes and a new enum value is added or removed,
+  /// and users are still using an old app with the old code.
+  UserPreferencesMemoryKindsOffEnum? decode(dynamic data,
+      {bool allowNull = true}) {
+    if (data != null) {
+      switch (data) {
+        case r'on_this_day':
+          return UserPreferencesMemoryKindsOffEnum.onThisDay;
+        case r'week':
+          return UserPreferencesMemoryKindsOffEnum.week;
+        case r'trip':
+          return UserPreferencesMemoryKindsOffEnum.trip;
+        case r'person_years':
+          return UserPreferencesMemoryKindsOffEnum.personYears;
+        case r'birthday':
+          return UserPreferencesMemoryKindsOffEnum.birthday;
+        case r'year_review':
+          return UserPreferencesMemoryKindsOffEnum.yearReview;
+        case r'month_ago':
+          return UserPreferencesMemoryKindsOffEnum.monthAgo;
+        default:
+          if (!allowNull) {
+            throw ArgumentError('Unknown enum value to decode: $data');
+          }
+      }
+    }
+    return null;
+  }
+
+  /// Singleton [UserPreferencesMemoryKindsOffEnumTypeTransformer] instance.
+  static UserPreferencesMemoryKindsOffEnumTypeTransformer? _instance;
 }

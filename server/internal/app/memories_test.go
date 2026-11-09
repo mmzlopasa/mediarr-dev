@@ -53,7 +53,7 @@ func TestMemories(t *testing.T) {
 	resp, body = c.get("/api/memories?date=2024-06-15")
 	expect(t, resp, body, http.StatusOK)
 	memories = decode[[]api.Memory](t, body)
-	if memories[0].Kind != api.Week || len(memories[0].Items) != 3 {
+	if memories[0].Kind != api.MemoryKindWeek || len(memories[0].Items) != 3 {
 		t.Fatalf("week: %s", body)
 	}
 	resp, body = c.get("/api/memories?date=1999-01-01")

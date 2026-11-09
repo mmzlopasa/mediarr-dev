@@ -8829,6 +8829,52 @@ class DefaultApi {
     return null;
   }
 
+  /// What this person asked not to be shown again
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listHiddenMemoriesWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/memories/hidden';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// What this person asked not to be shown again
+  Future<HiddenMemories?> listHiddenMemories() async {
+    final response = await listHiddenMemoriesWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'HiddenMemories',
+      ) as HiddenMemories;
+    }
+    return null;
+  }
+
   /// Imports, the newest first
   ///
   /// Note: This method returns the HTTP [Response].
@@ -8993,7 +9039,7 @@ class DefaultApi {
     return null;
   }
 
-  /// On this day in earlier years, and the last week
+  /// Memories to show on this day
   ///
   /// Note: This method returns the HTTP [Response].
   ///
@@ -9001,8 +9047,12 @@ class DefaultApi {
   ///
   /// * [String] date:
   ///   The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone
+  ///
+  /// * [bool] smart:
+  ///   Also the memories worked out in the background (trips, people, birthdays, a year, a month ago). Older apps do not ask, so they never meet a kind they cannot read.
   Future<Response> listMemoriesWithHttpInfo({
     String? date,
+    bool? smart,
   }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/memories';
@@ -9016,6 +9066,9 @@ class DefaultApi {
 
     if (date != null) {
       queryParams.addAll(_queryParams('', 'date', date));
+    }
+    if (smart != null) {
+      queryParams.addAll(_queryParams('', 'smart', smart));
     }
 
     const contentTypes = <String>[];
@@ -9031,17 +9084,22 @@ class DefaultApi {
     );
   }
 
-  /// On this day in earlier years, and the last week
+  /// Memories to show on this day
   ///
   /// Parameters:
   ///
   /// * [String] date:
   ///   The user's own date, which decides what today is, as YYYY-MM-DD. A plain day, so no client turns it into another day by its time zone
+  ///
+  /// * [bool] smart:
+  ///   Also the memories worked out in the background (trips, people, birthdays, a year, a month ago). Older apps do not ask, so they never meet a kind they cannot read.
   Future<List<Memory>?> listMemories({
     String? date,
+    bool? smart,
   }) async {
     final response = await listMemoriesWithHttpInfo(
       date: date,
+      smart: smart,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -11017,6 +11075,41 @@ class DefaultApi {
     return null;
   }
 
+  /// Show every hidden memory again
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> restoreHiddenMemoriesWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/memories/hidden';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Show every hidden memory again
+  Future<void> restoreHiddenMemories() async {
+    final response = await restoreHiddenMemoriesWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Put back what the guest deleted in the last 90 days, after an attack or a mistake
   ///
   /// Note: This method returns the HTTP [Response].
@@ -12392,6 +12485,104 @@ class DefaultApi {
       ) as MapStyle;
     }
     return null;
+  }
+
+  /// Hide one memory, or show it again
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [MemoryHideRequest] memoryHideRequest (required):
+  Future<Response> setMemoryHiddenWithHttpInfo(
+    MemoryHideRequest memoryHideRequest,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/memories/hidden';
+
+    // ignore: prefer_final_locals
+    Object? postBody = memoryHideRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Hide one memory, or show it again
+  ///
+  /// Parameters:
+  ///
+  /// * [MemoryHideRequest] memoryHideRequest (required):
+  Future<void> setMemoryHidden(
+    MemoryHideRequest memoryHideRequest,
+  ) async {
+    final response = await setMemoryHiddenWithHttpInfo(
+      memoryHideRequest,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Leave a person out of memories, or take them back in
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [MemoryPersonHideRequest] memoryPersonHideRequest (required):
+  Future<Response> setMemoryPersonHiddenWithHttpInfo(
+    MemoryPersonHideRequest memoryPersonHideRequest,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/memories/hidden-people';
+
+    // ignore: prefer_final_locals
+    Object? postBody = memoryPersonHideRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Leave a person out of memories, or take them back in
+  ///
+  /// Parameters:
+  ///
+  /// * [MemoryPersonHideRequest] memoryPersonHideRequest (required):
+  Future<void> setMemoryPersonHidden(
+    MemoryPersonHideRequest memoryPersonHideRequest,
+  ) async {
+    final response = await setMemoryPersonHiddenWithHttpInfo(
+      memoryPersonHideRequest,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
   }
 
   /// Change what this person chose
