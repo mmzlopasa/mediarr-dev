@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { toggleTheme } from '../theme';
 	import Icon from './Icon.svelte';
 </script>
@@ -8,8 +8,8 @@
 	type="button"
 	class="icon-btn"
 	data-theme-btn
-	aria-label={tr('Promijeni temu', 'Toggle theme')}
-	title={tr('Svijetla / tamna tema', 'Light / dark theme')}
+	aria-label={t('themeButton.toggleTheme')}
+	title={t('themeButton.lightDarkTheme')}
 	onclick={toggleTheme}
 >
 	<span class="i-sun"><Icon name="sun" /></span>

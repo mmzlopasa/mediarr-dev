@@ -11,7 +11,7 @@
 	import Kv from '#lib/design/components/Kv.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import StorageTemplateCard from '#lib/organize/StorageTemplateCard.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { diskUsedPercent, liveOverview } from '#lib/overview.svelte.ts';
 
 	const overview = liveOverview();
@@ -40,46 +40,40 @@
 		const value = limits[id]?.trim();
 		const number = Number(value);
 		if (value && (!Number.isFinite(number) || number < 0)) {
-			showToast('err', tr('Upišite broj GB.', 'Enter a number of GB.'));
+			showToast('err', t('admin.storage.enterANumberOfGb'));
 			return;
 		}
 		try {
 			await api.setQuota(id, value ? Math.round(number * GB) : undefined);
-			showToast('ok', tr('Spremljeno.', 'Saved.'));
+			showToast('ok', t('common.saved'));
 			await loadUsers();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr('Pohrana', 'Storage')} — Mediarr Admin</title></svelte:head>
+<svelte:head><title>{t('admin.storage.storage')} — Mediarr Admin</title></svelte:head>
 
 <div class="ph">
-	<div><h1>{tr('Pohrana', 'Storage')}</h1></div>
+	<div><h1>{t('admin.storage.storage')}</h1></div>
 </div>
 
 {#if overview.failed}
-	<Alert kind="err">{tr('Podaci se nisu učitali.', 'The data could not be loaded.')}</Alert>
+	<Alert kind="err">{t('common.theDataCouldNotBe')}</Alert>
 {/if}
 {#if overview.data}
 	{@const data = overview.data}
-	<Card title={tr('Disk biblioteke', 'Library disk')}>
-		<Kv label={tr('Originali', 'Originals')} value={formatBytes(data.libraryBytes)} />
-		<Kv
-			label={tr('Slobodno na disku', 'Free disk space')}
-			value={formatBytes(data.diskFreeBytes)}
-		/>
-		<Kv label={tr('Veličina diska', 'Disk size')} value={formatBytes(data.diskTotalBytes)} />
+	<Card title={t('admin.storage.libraryDisk')}>
+		<Kv label={t('admin.storage.originals')} value={formatBytes(data.libraryBytes)} />
+		<Kv label={t('admin.storage.freeDiskSpace')} value={formatBytes(data.diskFreeBytes)} />
+		<Kv label={t('admin.storage.diskSize')} value={formatBytes(data.diskTotalBytes)} />
 		<Bar pct={diskUsedPercent(data)} />
 	</Card>
 	{#if users}
-		<Card title={tr('Po korisniku', 'By user')}>
+		<Card title={t('admin.storage.byUser')}>
 			<p class="alb-meta">
-				{tr(
-					'Vanjska mapa se ne računa u kvotu. Prazno polje znači bez ograničenja.',
-					'An external folder does not count towards a quota. An empty field means no limit.'
-				)}
+				{t('admin.storage.anExternalFolderDoesNot')}
 			</p>
 			{#each users as user (user.id)}
 				<div class="alb-list" data-user={user.email}>
@@ -87,8 +81,8 @@
 					<span class="alb-meta"
 						>{user.email} · {formatBytes(user.storedBytes)} · {user.assets}</span
 					>
-					<Input label={tr('Kvota u GB', 'Quota in GB')} bind:value={limits[user.id]} />
-					<Button small onclick={() => saveLimit(user.id)}>{tr('Spremi', 'Save')}</Button>
+					<Input label={t('admin.storage.quotaInGb')} bind:value={limits[user.id]} />
+					<Button small onclick={() => saveLimit(user.id)}>{t('common.save')}</Button>
 				</div>
 			{/each}
 		</Card>

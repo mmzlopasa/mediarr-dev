@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../l10n/l10n.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
 import '../theme.dart';
@@ -13,12 +14,12 @@ import 'devices_screen.dart';
 import 'free_space_screen.dart';
 
 String describeLastBackup(DateTime? last, DateTime now) {
-  if (last == null) return 'Nothing has been backed up yet.';
+  if (last == null) return l.backupCardNothingYet;
   final age = now.difference(last);
-  if (age.inMinutes < 1) return 'Last file backed up just now.';
-  if (age.inHours < 1) return 'Last file backed up ${age.inMinutes} min ago.';
-  if (age.inDays < 1) return 'Last file backed up ${age.inHours} h ago.';
-  return 'Last file backed up ${age.inDays} d ago.';
+  if (age.inMinutes < 1) return l.backupCardLastJustNow;
+  if (age.inHours < 1) return l.backupCardLastMinutes(age.inMinutes.toString());
+  if (age.inDays < 1) return l.backupCardLastHours(age.inHours.toString());
+  return l.backupCardLastDays(age.inDays.toString());
 }
 
 /// The switch and the live state of the automatic backup.
@@ -72,19 +73,16 @@ class _BackupCardState extends ConsumerState<BackupCard> {
   Future<bool?> _askScope(String album) => showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('Back up "$album"'),
-      content: const Text(
-        'Should photos already in this album be sent? Anything already on the server is '
-        'never sent twice.',
-      ),
+      title: Text(l.backupCardScopeTitle(album)),
+      content: Text(l.backupCardScopeBody),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Only photos added from now'),
+          child: Text(l.backupCardOnlyNew),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Also the ones in it now'),
+          child: Text(l.backupCardAlsoExisting),
         ),
       ],
     ),
@@ -119,7 +117,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
     );
     if (chosen == null) return;
     final added = chosen.more.any((id) => !status.moreAlbums.contains(id));
-    final onlyNew = added ? await _askScope('the added albums') : false;
+    final onlyNew = added ? await _askScope(l.backupCardTheAddedAlbums) : false;
     if (onlyNew == null) return;
     await _run(() async {
       await service.setAlbumLists(
@@ -136,9 +134,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
     final service = ref.read(backupProvider);
     final permission = await PhotoManager.requestPermissionExtend();
     if (permission != PermissionState.authorized) {
-      setState(
-        () => _error = 'Albums need access to all photos. Allow it in Settings: Mediarr > Photos > Full Access.',
-      );
+      setState(() => _error = l.backupCardNeedsFullAccess);
       return false;
     }
     final album = await _pickAlbum();
@@ -178,8 +174,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
     } on ApiException catch (cause) {
       if (mounted) {
         setState(
-          () => _error =
-              'The server could not be reached. ${cause.message ?? ''}',
+          () => _error = l.backupCardServerUnreachable(cause.message ?? ''),
         );
       }
     } on PlatformException catch (cause) {
@@ -221,7 +216,10 @@ class _BackupCardState extends ConsumerState<BackupCard> {
           Row(
             children: [
               Expanded(
-                child: Text('Automatic backup', style: text.titleMedium),
+                child: Text(
+                  l.backupCardAutomaticBackup,
+                  style: text.titleMedium,
+                ),
               ),
               Switch(
                 value: status.enabled,
@@ -235,7 +233,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
               children: [
                 Expanded(
                   child: Text(
-                    'Album: ${status.albumName}',
+                    l.backupCardAlbum(status.albumName),
                     overflow: TextOverflow.ellipsis,
                     style: text.bodyLarge,
                   ),
@@ -246,7 +244,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                       : () => _run(() async {
                           await _chooseAndApply(enable: false);
                         }),
-                  child: const Text('Change'),
+                  child: Text(l.backupCardChange),
                 ),
               ],
             ),
@@ -255,9 +253,8 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Text(
                   status.limitedAccess
-                      ? 'Albums need access to all photos. Allow it in Settings: '
-                            'Mediarr > Photos > Full Access. Nothing is being sent.'
-                      : 'No album with this name on the device. Nothing is being sent.',
+                      ? l.backupCardNeedsFullAccessNothingSent
+                      : l.backupCardNoSuchAlbum,
                   style: text.bodySmall?.copyWith(color: Palette.warn),
                 ),
               ),
@@ -266,13 +263,18 @@ class _BackupCardState extends ConsumerState<BackupCard> {
               child: TextButton(
                 onPressed: _busy ? null : _editAlbums,
                 child: Text(
-                  'More albums: ${status.moreAlbums.length}, never sent: ${status.excludedAlbums.length}',
+                  l.backupCardMoreAlbums(
+                    status.moreAlbums.length.toString(),
+                    status.excludedAlbums.length.toString(),
+                  ),
                 ),
               ),
             ),
             Row(
               children: [
-                Expanded(child: Text('Only on Wi-Fi', style: text.bodyMedium)),
+                Expanded(
+                  child: Text(l.backupCardOnlyWifi, style: text.bodyMedium),
+                ),
                 Switch(
                   value: status.wifiOnly,
                   activeTrackColor: Palette.gold,
@@ -286,7 +288,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
             Row(
               children: [
                 Expanded(
-                  child: Text('Only while charging', style: text.bodyMedium),
+                  child: Text(l.backupCardOnlyCharging, style: text.bodyMedium),
                 ),
                 Switch(
                   value: status.chargingOnly,
@@ -300,7 +302,10 @@ class _BackupCardState extends ConsumerState<BackupCard> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${status.verified} of ${status.total} verified on the server',
+              l.backupCardVerified(
+                status.verified.toString(),
+                status.total.toString(),
+              ),
               style: text.bodyLarge,
             ),
             if (status.total > 0) ...[
@@ -317,7 +322,11 @@ class _BackupCardState extends ConsumerState<BackupCard> {
             ],
             const SizedBox(height: 6),
             Text(
-              '${status.working} sending · ${status.pending} waiting · ${status.failed} failed',
+              l.backupCardCounts(
+                status.working.toString(),
+                status.pending.toString(),
+                status.failed.toString(),
+              ),
               style: text.bodySmall,
             ),
             Text(
@@ -332,14 +341,14 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                     builder: (_) => const BackupDevicesScreen(),
                   ),
                 ),
-                child: const Text('What the server confirms, per device'),
+                child: Text(l.backupCardPerDevice),
               ),
             ),
             if (status.unauthorized)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'The server refused this device. Turn backup off and on again.',
+                  l.backupCardRefused,
                   style: text.bodySmall?.copyWith(color: Palette.err),
                 ),
               ),
@@ -347,7 +356,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 icon: const Icon(Icons.cleaning_services_outlined, size: 18),
-                label: const Text('Free up space'),
+                label: Text(l.backupCardFreeUpSpace),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const FreeSpaceScreen(),
@@ -363,7 +372,9 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                     await ref.read(backupProvider).retryFailed();
                     await _refresh();
                   },
-                  child: Text('Try the ${status.failed} failed again'),
+                  child: Text(
+                    l.backupCardRetryFailed(status.failed.toString()),
+                  ),
                 ),
               ),
             if (status.failures.isNotEmpty)
@@ -372,12 +383,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                 style: text.bodySmall?.copyWith(color: Palette.err),
               ),
           ] else
-            Text(
-              'Sends one album of your choice, and nothing else. Checks for new photos every minute '
-              'while the app is open. When it is closed, iOS decides when, often much later, and '
-              'stops it if you swipe the app away.',
-              style: text.bodySmall,
-            ),
+            Text(l.backupCardOffHelp, style: text.bodySmall),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 6),
@@ -443,14 +449,14 @@ class _AlbumPickerState extends State<AlbumPicker> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                child: Text('Which album?', style: text.titleLarge),
+                child: Text(l.backupCardWhichAlbum, style: text.titleLarge),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(
                   controller: _name,
                   autocorrect: false,
-                  decoration: const InputDecoration(labelText: 'Album name'),
+                  decoration: InputDecoration(labelText: l.backupCardAlbumName),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -461,10 +467,8 @@ class _AlbumPickerState extends State<AlbumPicker> {
                     if (typed.isNotEmpty && !exact)
                       ListTile(
                         leading: const Icon(Icons.edit_outlined),
-                        title: Text('Use the name "$typed"'),
-                        subtitle: const Text(
-                          'Starts when an album with this name exists',
-                        ),
+                        title: Text(l.backupCardUseName(typed)),
+                        subtitle: Text(l.backupCardStartsWhenExists),
                         onTap: () => Navigator.pop(
                           context,
                           AlbumChoice(id: null, name: typed),
@@ -481,11 +485,9 @@ class _AlbumPickerState extends State<AlbumPicker> {
                         ),
                       ),
                     if (widget.albums.isEmpty && typed.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Text(
-                          'No albums on this device yet. Create one in Photos.',
-                        ),
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Text(l.backupCardNoAlbums),
                       ),
                   ],
                 ),
@@ -551,7 +553,7 @@ class _AlbumListsSheetState extends State<AlbumListsSheet> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              'A photo in a "Never" album is not sent, even if it is also in another album.',
+              l.backupCardNeverHelp,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
@@ -564,18 +566,18 @@ class _AlbumListsSheetState extends State<AlbumListsSheet> {
                     subtitle: Text('${album.count}'),
                     trailing: DropdownButton<AlbumRole>(
                       value: _roles[album.id] ?? AlbumRole.none,
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: AlbumRole.none,
-                          child: Text('Not added'),
+                          child: Text(l.backupCardNotAdded),
                         ),
                         DropdownMenuItem(
                           value: AlbumRole.send,
-                          child: Text('Back up'),
+                          child: Text(l.backupCardBackUp),
                         ),
                         DropdownMenuItem(
                           value: AlbumRole.never,
-                          child: Text('Never'),
+                          child: Text(l.backupCardNever),
                         ),
                       ],
                       onChanged: (role) => setState(
@@ -589,7 +591,7 @@ class _AlbumListsSheetState extends State<AlbumListsSheet> {
           Padding(
             padding: const EdgeInsets.all(12),
             child: GoldButton(
-              label: 'Save',
+              label: l.backupCardSave,
               onPressed: () => Navigator.pop(context, albumListsFrom(_roles)),
             ),
           ),

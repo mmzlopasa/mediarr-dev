@@ -1,3 +1,4 @@
+import { t } from '#lib/i18n.svelte.ts';
 import type { SearchResult } from '#lib/api.ts';
 
 type Filters = SearchResult['filters'];
@@ -33,13 +34,10 @@ export type Chip = {
 	found: boolean;
 };
 
-type Words = (hr: string, en: string) => string;
-
 /** The filters a search used, as chips, marked by whether they were chosen or found in the words. */
 export function chipsFor(
 	filters: Filters,
 	params: URLSearchParams,
-	tr: Words,
 	day: (iso: string) => string
 ): Chip[] {
 	const chips: Chip[] = [];
@@ -53,12 +51,12 @@ export function chipsFor(
 		chips.push({
 			key: 'person',
 			value: person.id,
-			label: person.name || tr('Bez imena', 'No name'),
+			label: person.name || t('common.noName'),
 			found: !chosen('person', person.id)
 		});
 	}
 	if ((filters.people?.length ?? 0) > 1 && filters.peopleMatch === 'any') {
-		chips.push({ key: 'people', label: tr('bilo koja osoba', 'any of them'), found: false });
+		chips.push({ key: 'people', label: t('filters.anyOfThem'), found: false });
 	}
 	for (const [key, value] of [
 		['place', filters.place],
@@ -70,7 +68,7 @@ export function chipsFor(
 	if (filters.type) {
 		chips.push({
 			key: 'type',
-			label: filters.type === 'video' ? tr('Videi', 'Videos') : tr('Fotke', 'Photos'),
+			label: filters.type === 'video' ? t('common.videos') : t('common.photos'),
 			found: false
 		});
 	}
@@ -81,13 +79,13 @@ export function chipsFor(
 	if (filters.album)
 		chips.push({
 			key: 'album',
-			label: tr(`U albumu: ${filters.album.title}`, `In album: ${filters.album.title}`),
+			label: t('filters.inAlbumTitle', { title: filters.album.title }),
 			found: false
 		});
 	if (filters.notInAlbum)
-		chips.push({ key: 'notInAlbum', label: tr('Nije u albumu', 'In no album'), found: false });
+		chips.push({ key: 'notInAlbum', label: t('filters.inNoAlbum'), found: false });
 	if (filters.favorite)
-		chips.push({ key: 'favorite', label: tr('Favoriti', 'Favourites'), found: false });
+		chips.push({ key: 'favorite', label: t('filters.favourites'), found: false });
 	return chips;
 }
 

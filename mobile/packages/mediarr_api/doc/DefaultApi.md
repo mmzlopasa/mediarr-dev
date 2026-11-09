@@ -243,7 +243,7 @@ Method | HTTP request | Description
 [**updateAlbum**](DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
 [**updateKeepGuest**](DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 [**updatePerson**](DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
-[**updateProfile**](DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, or email address with the current password
+[**updateProfile**](DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, language, or email address with the current password
 [**waitQRSignIn**](DefaultApi.md#waitqrsignin) | **POST** /api/auth/qr/wait | Waits up to 25 seconds for the answer; when allowed, this device is signed in
 
 
@@ -9676,7 +9676,7 @@ No authorization required
 # **updateProfile**
 > User updateProfile(profileUpdate)
 
-Change one's own name, or email address with the current password
+Change one's own name, language, or email address with the current password
 
 ### Example
 ```dart

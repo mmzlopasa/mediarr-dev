@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../brand.dart';
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'qr_sign_in.dart';
@@ -138,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _typeCode() async {
     if (_server.text.trim().isEmpty) {
-      setState(() => _error = 'Enter the address of your server first.');
+      setState(() => _error = l.loginScreenEnterServerFirst);
       return;
     }
     final code = await showDialog<String>(
@@ -158,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       const Center(child: CircularProgressIndicator()),
       const SizedBox(height: 20),
       Text(
-        'Allow this sign-in on the screen that shows the code.',
+        l.loginScreenAllowOnCodeScreen,
         key: const ValueKey('qr-waiting'),
         textAlign: TextAlign.center,
         style: text.bodyMedium,
@@ -169,7 +170,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _cancelWait = true;
           _waiting = false;
         }),
-        child: const Text('Cancel'),
+        child: Text(l.loginScreenCancel),
       ),
     ],
   );
@@ -194,8 +195,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const SizedBox(height: 12),
                           Text(
                             _needsCode
-                                ? 'Enter the 6-digit code from your authenticator app.'
-                                : 'Sign in to your Mediarr server.',
+                                ? l.loginScreenEnterTotp
+                                : l.loginScreenSignInToServer,
                             textAlign: TextAlign.center,
                             style: text.bodyMedium,
                           ),
@@ -214,8 +215,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               controller: _code,
                               keyboardType: TextInputType.number,
                               autofillHints: const [AutofillHints.oneTimeCode],
-                              decoration: const InputDecoration(
-                                labelText: 'Code',
+                              decoration: InputDecoration(
+                                labelText: l.loginScreenCode,
                               ),
                             )
                           else ...[
@@ -223,8 +224,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               controller: _server,
                               keyboardType: TextInputType.url,
                               autocorrect: false,
-                              decoration: const InputDecoration(
-                                labelText: 'Server address',
+                              decoration: InputDecoration(
+                                labelText: l.loginScreenServerAddress,
                                 hintText: '192.168.1.10:9851',
                               ),
                             ),
@@ -238,8 +239,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               keyboardType: TextInputType.emailAddress,
                               autocorrect: false,
                               autofillHints: const [AutofillHints.username],
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
+                              decoration: InputDecoration(
+                                labelText: l.loginScreenEmail,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -247,15 +248,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               controller: _password,
                               obscureText: true,
                               autofillHints: const [AutofillHints.password],
-                              decoration: const InputDecoration(
-                                labelText: 'Password',
+                              decoration: InputDecoration(
+                                labelText: l.loginScreenPassword,
                               ),
                               onSubmitted: (_) => _submit(),
                             ),
                           ],
                           const SizedBox(height: 20),
                           GoldButton(
-                            label: _needsCode ? 'Verify' : 'Sign in',
+                            label: _needsCode
+                                ? l.loginScreenVerify
+                                : l.loginScreenSignIn,
                             busy: _busy,
                             onPressed: _submit,
                           ),
@@ -263,17 +266,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             const SizedBox(height: 8),
                             TextButton(
                               onPressed: _busy ? null : _singleSignOn,
-                              child: const Text('Use single sign-on'),
+                              child: Text(l.loginScreenSingleSignOn),
                             ),
                             const Divider(height: 28),
                             OutlinedButton.icon(
                               onPressed: _busy ? null : _scan,
                               icon: const Icon(Icons.qr_code_scanner),
-                              label: const Text('Scan QR code'),
+                              label: Text(l.loginScreenScanQr),
                             ),
                             TextButton(
                               onPressed: _busy ? null : _typeCode,
-                              child: const Text('Enter a sign-in code'),
+                              child: Text(l.loginScreenEnterSignInCode),
                             ),
                           ],
                         ],
@@ -306,14 +309,14 @@ class _CodeDialogState extends State<_CodeDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Sign-in code'),
+    title: Text(l.loginScreenSignInCode),
     content: TextField(
       controller: _field,
       autofocus: true,
       autocorrect: false,
       textCapitalization: TextCapitalization.characters,
-      decoration: const InputDecoration(
-        labelText: 'Code',
+      decoration: InputDecoration(
+        labelText: l.loginScreenCode,
         hintText: 'K7QM-2XPA',
       ),
       onSubmitted: (value) => Navigator.pop(context, value),
@@ -321,11 +324,11 @@ class _CodeDialogState extends State<_CodeDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(l.loginScreenCancel),
       ),
       TextButton(
         onPressed: () => Navigator.pop(context, _field.text),
-        child: const Text('Sign in'),
+        child: Text(l.loginScreenSignIn),
       ),
     ],
   );

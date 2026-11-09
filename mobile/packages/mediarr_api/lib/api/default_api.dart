@@ -13207,7 +13207,7 @@ class DefaultApi {
     }
   }
 
-  /// Change one's own name, or email address with the current password
+  /// Change one's own name, language, or email address with the current password
   ///
   /// Note: This method returns the HTTP [Response].
   ///
@@ -13240,7 +13240,7 @@ class DefaultApi {
     );
   }
 
-  /// Change one's own name, or email address with the current password
+  /// Change one's own name, language, or email address with the current password
   ///
   /// Parameters:
   ///

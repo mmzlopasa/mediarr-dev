@@ -9,7 +9,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
@@ -47,31 +47,20 @@
 			tag = await api.renameTag(tag.id, name);
 		} catch (cause) {
 			if (!(cause instanceof ApiError && cause.status === 409)) {
-				showToast(
-					'err',
-					cause instanceof Error ? cause.message : tr('Nije preimenovano.', 'Not renamed.')
-				);
+				showToast('err', cause instanceof Error ? cause.message : t('tags.id.notRenamed'));
 				return;
 			}
-			const join = confirm(
-				tr(
-					`Oznaka „${name}” već postoji. Spojiti ih? Sve fotke će imati oznaku „${name}”.`,
-					`The tag “${name}” already exists. Join them? All the photos will have “${name}”.`
-				)
-			);
+			const join = confirm(t('tags.id.theTagNameAlreadyExists', { name }));
 			if (!join) return;
 			try {
 				tag = await api.renameTag(tag.id, name, true);
 			} catch (again) {
-				showToast(
-					'err',
-					again instanceof Error ? again.message : tr('Nije spojeno.', 'Not joined.')
-				);
+				showToast('err', again instanceof Error ? again.message : t('tags.id.notJoined'));
 				return;
 			}
 		}
 		renaming = false;
-		showToast('ok', tr('Preimenovano.', 'Renamed.'));
+		showToast('ok', t('tags.id.renamed'));
 		if (tag.id !== id)
 			await goto(resolve('/(app)/tags/[id]', { id: tag.id }), { replaceState: true });
 	}
@@ -80,41 +69,32 @@
 		if (!tag) return;
 		try {
 			const { changed } = await api.changeTag(ids, tag.name, true);
-			showToast('ok', tr(`Oznaka uklonjena: ${changed}`, `Tag removed: ${changed}`));
+			showToast('ok', t('tags.id.tagRemovedChanged', { changed }));
 			clear();
 			await timeline?.reloadLoaded();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tag?.name ?? tr('Oznaka', 'Tag')} — Mediarr</title></svelte:head>
+<svelte:head><title>{tag?.name ?? t('tags.id.tag')} — Mediarr</title></svelte:head>
 
 {#if gone}
-	<Alert kind="err">{tr('Ova oznaka ne postoji.', 'This tag does not exist.')}</Alert>
+	<Alert kind="err">{t('tags.id.thisTagDoesNotExist')}</Alert>
 {:else if !tag}
 	<Skeleton height="220px" />
 {:else}
 	<div class="ph">
 		{#if renaming}
-			<form
-				class="tag-rename"
-				onsubmit={rename}
-				aria-label={tr('Preimenuj oznaku', 'Rename the tag')}
-			>
-				<input
-					class="in"
-					bind:value={newName}
-					maxlength="100"
-					aria-label={tr('Novo ime', 'New name')}
-				/>
-				<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
-				<Button small onclick={() => (renaming = false)}>{tr('Odustani', 'Cancel')}</Button>
+			<form class="tag-rename" onsubmit={rename} aria-label={t('tags.id.renameTheTag')}>
+				<input class="in" bind:value={newName} maxlength="100" aria-label={t('tags.id.newName')} />
+				<Button type="submit" variant="gold" small>{t('common.save')}</Button>
+				<Button small onclick={() => (renaming = false)}>{t('common.cancel')}</Button>
 			</form>
 		{:else}
 			<div><h1>{tag.name}</h1></div>
-			<Button small onclick={startRename}>{tr('Preimenuj', 'Rename')}</Button>
+			<Button small onclick={startRename}>{t('tags.id.rename')}</Button>
 		{/if}
 	</div>
 	<Timeline
@@ -127,8 +107,8 @@
 			<button
 				type="button"
 				class="icon-btn"
-				aria-label={tr('Ukloni oznaku', 'Remove the tag')}
-				title={tr('Ukloni oznaku', 'Remove the tag')}
+				aria-label={t('tags.id.removeTheTag')}
+				title={t('tags.id.removeTheTag')}
 				onclick={() => untag(ids, clear)}><Icon name="list" /></button
 			>
 		{/snippet}

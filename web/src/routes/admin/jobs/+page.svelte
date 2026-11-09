@@ -7,7 +7,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import Kv from '#lib/design/components/Kv.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { liveOverview } from '#lib/overview.svelte.ts';
 
 	const overview = liveOverview();
@@ -29,63 +29,63 @@
 			await action();
 			await loadJobs();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr('Poslovi', 'Jobs')} — Mediarr Admin</title></svelte:head>
+<svelte:head><title>{t('admin.jobs.jobs')} — Mediarr Admin</title></svelte:head>
 
 <div class="ph">
-	<div><h1>{tr('Poslovi', 'Jobs')}</h1></div>
+	<div><h1>{t('admin.jobs.jobs')}</h1></div>
 </div>
 
 {#if overview.failed}
-	<Alert kind="err">{tr('Podaci se nisu učitali.', 'The data could not be loaded.')}</Alert>
+	<Alert kind="err">{t('common.theDataCouldNotBe')}</Alert>
 {/if}
 {#if overview.data}
 	{@const data = overview.data}
-	<Card title={tr('Red poslova', 'Job queue')}>
-		<Kv label={tr('U redu', 'Queued')} value={String(data.jobs.queued)} />
-		<Kv label={tr('U obradi', 'Running')} value={String(data.jobs.running)} />
-		<Kv label={tr('Dovršeno', 'Completed')} value={String(data.jobs.completed)} />
-		<Kv label={tr('Neuspjelo', 'Failed')} value={String(data.jobs.failed)} />
+	<Card title={t('admin.jobs.jobQueue')}>
+		<Kv label={t('admin.jobs.queued')} value={String(data.jobs.queued)} />
+		<Kv label={t('admin.jobs.running')} value={String(data.jobs.running)} />
+		<Kv label={t('admin.jobs.completed')} value={String(data.jobs.completed)} />
+		<Kv label={t('admin.jobs.failed')} value={String(data.jobs.failed)} />
 	</Card>
 	{#if jobs}
-		<Card title={tr('Redovi', 'Queues')}>
+		<Card title={t('admin.jobs.queues')}>
 			{#each jobs.queues as queue (queue.name)}
 				<div class="alb-list" data-queue={queue.name}>
 					<b>{queue.name}</b>
 					<span class="alb-meta">
-						{queue.paused ? tr('Pauzirano', 'Paused') : tr('Radi', 'Running')} ·
-						{tr('u redu', 'queued')}
-						{queue.queued} · {tr('u obradi', 'running')}
+						{queue.paused ? t('admin.jobs.paused') : t('admin.jobs.running2')} ·
+						{t('admin.jobs.queued2')}
+						{queue.queued} · {t('admin.jobs.running3')}
 						{queue.running}
 					</span>
 					<Button small onclick={() => act(() => api.pauseQueue(queue.name, !queue.paused))}>
-						{queue.paused ? tr('Nastavi', 'Resume') : tr('Pauziraj', 'Pause')}
+						{queue.paused ? t('common.resume') : t('admin.jobs.pause')}
 					</Button>
 				</div>
 			{/each}
 		</Card>
-		<Card title={tr('Neuspjeli poslovi', 'Failed jobs')}>
+		<Card title={t('admin.jobs.failedJobs')}>
 			{#if jobs.failed.length === 0}
-				<p class="alb-meta">{tr('Nema neuspjelih poslova.', 'No failed jobs.')}</p>
+				<p class="alb-meta">{t('admin.jobs.noFailedJobs')}</p>
 			{/if}
 			{#each jobs.failed as job (job.id)}
 				<div class="alb-list">
 					<b>{job.kind}</b>
 					<span class="alb-meta">{job.error}</span>
 					<Button small onclick={() => act(() => api.retryJob(job.id))}
-						>{tr('Pokušaj opet', 'Try again')}</Button
+						>{t('admin.jobs.tryAgain')}</Button
 					>
 				</div>
 			{/each}
 		</Card>
 	{/if}
-	<Card title={tr('Datoteke', 'Files')}>
-		<Kv label={tr('Obrađuju se', 'Processing')} value={String(data.processing)} />
-		<Kv label={tr('S greškom', 'With errors')} value={String(data.failed)} />
+	<Card title={t('admin.jobs.files')}>
+		<Kv label={t('admin.jobs.processing')} value={String(data.processing)} />
+		<Kv label={t('admin.jobs.withErrors')} value={String(data.failed)} />
 	</Card>
 {:else if !overview.failed}
 	<Skeleton height="220px" />

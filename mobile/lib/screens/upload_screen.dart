@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../l10n/l10n.dart';
 import '../services/backup.dart';
 import '../services/uploads.dart';
 import '../theme.dart';
@@ -95,9 +96,9 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     if (permission == null) {
       gallery = EmptyMessage(
         icon: Icons.photo_library_outlined,
-        text: 'Choose photos and videos from this device to upload them.',
+        text: l.uploadScreenChoose,
         action: GoldButton(
-          label: 'Open photo library',
+          label: l.uploadScreenOpenLibrary,
           icon: Icons.photo_library_outlined,
           onPressed: _open,
         ),
@@ -105,17 +106,17 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
     } else if (!permission.hasAccess) {
       gallery = EmptyMessage(
         icon: Icons.lock_outline,
-        text: 'Mediarr needs access to your photos. Allow it in Settings.',
+        text: l.uploadScreenNeedsAccess,
         action: GoldButton(
-          label: 'Open Settings',
+          label: l.uploadScreenOpenSettings,
           onPressed: PhotoManager.openSetting,
         ),
       );
     } else if (_assets.isEmpty) {
       gallery = _reachedEnd
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.photo_outlined,
-              text: 'There are no photos on this device.',
+              text: l.uploadScreenNoPhotos,
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else {
@@ -171,7 +172,7 @@ class _UploadScreenState extends ConsumerState<UploadScreen> {
               bottom: 16,
               child: Center(
                 child: GoldButton(
-                  label: 'Upload ${_selected.length}',
+                  label: l.uploadScreenUploadCount(_selected.length.toString()),
                   icon: Icons.upload,
                   onPressed: _send,
                 ),
@@ -269,12 +270,12 @@ class _TaskList extends ConsumerWidget {
   final List<UploadTask> tasks;
 
   static String _label(UploadTask task) => switch (task.state) {
-    UploadState.queued => 'Queued',
-    UploadState.preparing => 'Preparing',
+    UploadState.queued => l.uploadScreenQueued,
+    UploadState.preparing => l.uploadScreenPreparing,
     UploadState.uploading => '${(task.progress * 100).round()} %',
-    UploadState.done => 'Uploaded',
-    UploadState.duplicate => 'Already on server',
-    UploadState.failed => 'Failed',
+    UploadState.done => l.uploadScreenUploaded,
+    UploadState.duplicate => l.uploadScreenAlreadyOnServer,
+    UploadState.failed => l.uploadScreenFailed,
   };
 
   @override
@@ -296,14 +297,17 @@ class _TaskList extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  '$done of ${tasks.length} finished',
+                  l.uploadScreenFinished(
+                    done.toString(),
+                    tasks.length.toString(),
+                  ),
                   style: text.titleMedium,
                 ),
               ),
               if (tasks.any((task) => task.state == UploadState.failed))
                 TextButton(
                   onPressed: ref.read(uploadsProvider.notifier).clearFinished,
-                  child: const Text('Clear failed'),
+                  child: Text(l.uploadScreenClearFailed),
                 ),
             ],
           ),
@@ -322,7 +326,9 @@ class _TaskList extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                task.name.isEmpty ? 'Photo' : task.name,
+                                task.name.isEmpty
+                                    ? l.uploadScreenPhoto
+                                    : task.name,
                                 overflow: TextOverflow.ellipsis,
                                 style: text.bodyMedium,
                               ),

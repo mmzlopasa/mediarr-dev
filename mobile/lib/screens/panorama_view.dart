@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../l10n/l10n.dart';
+
 /// How far one can look up or down, and zoom, in a panorama.
 const panoramaPitchLimit = 85 * math.pi / 180;
 const panoramaFovMin = 30 * math.pi / 180;
@@ -114,10 +116,10 @@ class _PanoramaViewState extends State<PanoramaView> {
     final image = _image;
     final program = _program;
     if (_failed) {
-      return const Center(
+      return Center(
         child: Text(
-          'The panorama cannot be shown.',
-          style: TextStyle(color: Colors.white70),
+          l.panoramaViewCannotBeShown,
+          style: const TextStyle(color: Colors.white70),
         ),
       );
     }
@@ -125,7 +127,7 @@ class _PanoramaViewState extends State<PanoramaView> {
       return const Center(child: CircularProgressIndicator());
     }
     return Semantics(
-      label: '360° panorama',
+      label: l.panoramaViewLabel,
       image: true,
       child: LayoutBuilder(
         builder: (context, box) => GestureDetector(

@@ -4,6 +4,7 @@ import 'package:mediarr_api/api.dart';
 import '../services/search_query.dart';
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 String _day(DateTime value) =>
     '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
@@ -124,14 +125,17 @@ class _FilterSheetState extends State<_FilterSheet> {
               controller: widget.scroll,
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               children: [
-                Text('Filters', style: Theme.of(context).textTheme.titleLarge),
-                _heading('Date'),
+                Text(
+                  l.searchFiltersSheetFilters,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                _heading(l.searchFiltersSheetDate),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => _pickDay(true),
-                        child: Text(_q.from ?? 'From'),
+                        child: Text(_q.from ?? l.searchFiltersSheetFrom),
                       ),
                     ),
                     const Padding(
@@ -141,18 +145,27 @@ class _FilterSheetState extends State<_FilterSheet> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => _pickDay(false),
-                        child: Text(_q.to ?? 'To'),
+                        child: Text(_q.to ?? l.searchFiltersSheetTo),
                       ),
                     ),
                   ],
                 ),
-                _heading('Type'),
+                _heading(l.searchFiltersSheetType),
                 SegmentedButton<String>(
                   showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(value: '', label: Text('All')),
-                    ButtonSegment(value: 'photo', label: Text('Photos')),
-                    ButtonSegment(value: 'video', label: Text('Videos')),
+                  segments: [
+                    ButtonSegment(
+                      value: '',
+                      label: Text(l.searchFiltersSheetAll),
+                    ),
+                    ButtonSegment(
+                      value: 'photo',
+                      label: Text(l.searchFiltersSheetPhotos),
+                    ),
+                    ButtonSegment(
+                      value: 'video',
+                      label: Text(l.searchFiltersSheetVideos),
+                    ),
                   ],
                   selected: {_q.type ?? ''},
                   onSelectionChanged: (choice) => setState(
@@ -162,7 +175,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                   ),
                 ),
                 if (_people.isNotEmpty) ...[
-                  _heading('People'),
+                  _heading(l.searchFiltersSheetPeople),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -187,38 +200,42 @@ class _FilterSheetState extends State<_FilterSheet> {
                   if (_q.people.length > 1)
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Any of them, not all together'),
+                      title: Text(l.searchFiltersSheetAnyOfThem),
                       value: _q.anyPerson,
                       onChanged: (on) =>
                           setState(() => _q = _q.copyWith(anyPerson: on)),
                     ),
                 ],
-                _heading('Where and with what'),
+                _heading(l.searchFiltersSheetWhereAndWith),
                 _suggest(
-                  'Place',
+                  l.searchFiltersSheetPlace,
                   _q.place,
                   options?.places ?? const [],
                   (value) => _q = _q.copyWith(place: () => value),
                 ),
                 _suggest(
-                  'Camera',
+                  l.searchFiltersSheetCamera,
                   _q.camera,
                   options?.cameras ?? const [],
                   (value) => _q = _q.copyWith(camera: () => value),
                 ),
                 _suggest(
-                  'Lens',
+                  l.searchFiltersSheetLens,
                   _q.lens,
                   options?.lenses ?? const [],
                   (value) => _q = _q.copyWith(lens: () => value),
                 ),
-                _heading('Rating'),
+                _heading(l.searchFiltersSheetRating),
                 Wrap(
                   spacing: 6,
                   children: [
                     for (final stars in [0, 1, 2, 3, 4, 5])
                       ChoiceChip(
-                        label: Text(stars == 0 ? 'Any' : '${'★' * stars}+'),
+                        label: Text(
+                          stars == 0
+                              ? l.searchFiltersSheetAnyRating
+                              : '${'★' * stars}+',
+                        ),
                         selected: (_q.minRating ?? 0) == stars,
                         onSelected: (_) => setState(
                           () => _q = _q.copyWith(
@@ -229,7 +246,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                   ],
                 ),
                 if ((options?.tags ?? const []).isNotEmpty) ...[
-                  _heading('Tags'),
+                  _heading(l.searchFiltersSheetTags),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -252,15 +269,18 @@ class _FilterSheetState extends State<_FilterSheet> {
                     ],
                   ),
                 ],
-                _heading('Album'),
+                _heading(l.searchFiltersSheetAlbum),
                 DropdownButtonFormField<String>(
                   initialValue: _q.notInAlbum ? 'none' : (_q.album ?? ''),
                   isExpanded: true,
                   items: [
-                    const DropdownMenuItem(value: '', child: Text('Any')),
-                    const DropdownMenuItem(
+                    DropdownMenuItem(
+                      value: '',
+                      child: Text(l.searchFiltersSheetAnyAlbum),
+                    ),
+                    DropdownMenuItem(
                       value: 'none',
-                      child: Text('In no album'),
+                      child: Text(l.searchFiltersSheetInNoAlbum),
                     ),
                     for (final album in _albums)
                       DropdownMenuItem(
@@ -285,7 +305,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Favourites only'),
+                  title: Text(l.searchFiltersSheetFavouritesOnly),
                   value: _q.favorite,
                   onChanged: (on) =>
                       setState(() => _q = _q.copyWith(favorite: on)),
@@ -304,7 +324,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                       context,
                       SearchQuery(words: widget.start.words),
                     ),
-                    child: const Text('Clear'),
+                    child: Text(l.searchFiltersSheetClear),
                   ),
                   const Spacer(),
                   FilledButton(
@@ -313,7 +333,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                       backgroundColor: Palette.buttonGold,
                       foregroundColor: Palette.onGold,
                     ),
-                    child: const Text('Apply'),
+                    child: Text(l.searchFiltersSheetApply),
                   ),
                 ],
               ),

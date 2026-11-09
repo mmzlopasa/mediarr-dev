@@ -1,5 +1,7 @@
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
+
 /// What a search asks for: the words, and every filter chosen. The same filters as on the web.
 class SearchQuery {
   const SearchQuery({
@@ -147,7 +149,7 @@ List<SearchChip> chipsFor(
     chips.add(
       SearchChip(
         'person',
-        person.name.isEmpty ? 'No name' : person.name,
+        person.name.isEmpty ? l.searchQueryNoName : person.name,
         value: person.id,
         found: !q.people.contains(person.id),
       ),
@@ -164,7 +166,9 @@ List<SearchChip> chipsFor(
     chips.add(
       SearchChip(
         'type',
-        f.type == SearchFiltersTypeEnum.video ? 'Videos' : 'Photos',
+        f.type == SearchFiltersTypeEnum.video
+            ? l.searchQueryVideos
+            : l.searchQueryPhotos,
       ),
     );
   }
@@ -175,12 +179,14 @@ List<SearchChip> chipsFor(
     chips.add(SearchChip('tag', '#$tag', value: tag));
   }
   if (f.album != null) {
-    chips.add(SearchChip('album', 'In album: ${f.album!.title}'));
+    chips.add(SearchChip('album', l.searchQueryInAlbum(f.album!.title)));
   }
   if (f.notInAlbum == true) {
-    chips.add(const SearchChip('notInAlbum', 'In no album'));
+    chips.add(SearchChip('notInAlbum', l.searchQueryInNoAlbum));
   }
-  if (f.favorite == true) chips.add(const SearchChip('favorite', 'Favourites'));
+  if (f.favorite == true) {
+    chips.add(SearchChip('favorite', l.searchQueryFavourites));
+  }
   return chips;
 }
 

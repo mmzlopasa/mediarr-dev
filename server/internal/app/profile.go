@@ -44,7 +44,14 @@ func (s *apiServer) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body) {
 		return
 	}
-	name, email := user.Name, user.Email
+	name, email, language := user.Name, user.Email, user.Language
+	if body.Language != nil {
+		if !body.Language.Valid() {
+			writeError(w, http.StatusBadRequest, "that language is not offered")
+			return
+		}
+		language = pgtype.Text{String: string(*body.Language), Valid: true}
+	}
 	if body.Name != nil {
 		name = strings.TrimSpace(*body.Name)
 		if name == "" || len(name) > maxNameLength {
@@ -67,7 +74,7 @@ func (s *apiServer) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		email = normalized
 	}
-	updated, err := s.queries.SetUserProfile(r.Context(), db.SetUserProfileParams{ID: user.ID, Name: name, Email: email})
+	updated, err := s.queries.SetUserProfile(r.Context(), db.SetUserProfileParams{ID: user.ID, Name: name, Email: email, Language: language})
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == uniqueViolated {
 		writeError(w, http.StatusConflict, "another account has this email address")

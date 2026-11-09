@@ -677,6 +677,30 @@ func (e KeepGuestUpdateStatus) Valid() bool {
 	}
 }
 
+// Defines values for Language.
+const (
+	De Language = "de"
+	En Language = "en"
+	Hr Language = "hr"
+	Sl Language = "sl"
+)
+
+// Valid indicates whether the value is a known member of the Language enum.
+func (e Language) Valid() bool {
+	switch e {
+	case De:
+		return true
+	case En:
+		return true
+	case Hr:
+		return true
+	case Sl:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for LocationFixAction.
 const (
 	LocationFixActionClear          LocationFixAction = "clear"
@@ -2602,6 +2626,9 @@ type KeepRestored struct {
 	Restored int `json:"restored"`
 }
 
+// Language English is the main language; de and sl are machine translated for now
+type Language string
+
 // LinkPassword defines model for LinkPassword.
 type LinkPassword struct {
 	Password string `json:"password"`
@@ -2828,7 +2855,10 @@ type ProfileUpdate struct {
 	// CurrentPassword Needed to change the email address
 	CurrentPassword *string `json:"currentPassword,omitempty"`
 	Email           *string `json:"email,omitempty"`
-	Name            *string `json:"name,omitempty"`
+
+	// Language English is the main language; de and sl are machine translated for now
+	Language *Language `json:"language,omitempty"`
+	Name     *string   `json:"name,omitempty"`
 }
 
 // PublicLink defines model for PublicLink.
@@ -3274,8 +3304,11 @@ type User struct {
 	Email         string             `json:"email"`
 	Id            openapi_types.UUID `json:"id"`
 	IsAdmin       bool               `json:"isAdmin"`
-	Name          string             `json:"name"`
-	TotpEnabled   bool               `json:"totpEnabled"`
+
+	// Language English is the main language; de and sl are machine translated for now
+	Language    *Language `json:"language,omitempty"`
+	Name        string    `json:"name"`
+	TotpEnabled bool      `json:"totpEnabled"`
 }
 
 // UserImport defines model for UserImport.
@@ -4319,7 +4352,7 @@ type ServerInterface interface {
 	// GetMapTrips Journeys found from the time and distance between photos
 	// (GET /api/map/trips)
 	GetMapTrips(w http.ResponseWriter, r *http.Request)
-	// UpdateProfile Change one's own name, or email address with the current password
+	// UpdateProfile Change one's own name, language, or email address with the current password
 	// (PATCH /api/me)
 	UpdateProfile(w http.ResponseWriter, r *http.Request)
 	// ListAPIKeys The current user's keys, without the keys themselves
@@ -5498,7 +5531,7 @@ func (_ Unimplemented) GetMapTrips(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// UpdateProfile Change one's own name, or email address with the current password
+// UpdateProfile Change one's own name, language, or email address with the current password
 // (PATCH /api/me)
 func (_ Unimplemented) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)

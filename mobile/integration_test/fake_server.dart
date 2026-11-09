@@ -46,6 +46,9 @@ class FakeServer {
 
   /// The person's name, which they can change.
   String name = 'Owner';
+
+  /// The account's language, as the app last saved it.
+  String? language;
   int quietDays = 3;
   String tagName = 'summer';
   String storageTemplate = '';
@@ -206,6 +209,7 @@ class FakeServer {
         await utf8.decoder.bind(request).join(),
       ) as Map<String, dynamic>;
       name = (body['name'] as String?) ?? name;
+      language = (body['language'] as String?) ?? language;
       await _json(request, 200, _user);
       return;
     }

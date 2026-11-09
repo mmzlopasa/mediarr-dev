@@ -18,6 +18,7 @@ import (
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/jobs"
+	"github.com/mediarr-app/mediarr/server/internal/words"
 )
 
 const (
@@ -579,8 +580,8 @@ func (s *apiServer) SetAlbumMember(w http.ResponseWriter, r *http.Request, id, u
 			slog.Warn("a notification was not saved", "error", err)
 		}
 		if person, err := s.queries.GetUserByID(ctx, pgUUID(userID)); err == nil {
-			s.sendLater(person.Email, "An album was shared with you: "+album.Title,
-				currentUser(r).Name+" shared the album \""+album.Title+"\" with you on Mediarr.")
+			s.sendLater(person.Email, words.Say(person.Language.String, words.SharedSubject, album.Title),
+				words.Say(person.Language.String, words.SharedBody, currentUser(r).Name, album.Title))
 		}
 	}
 	w.WriteHeader(http.StatusNoContent)

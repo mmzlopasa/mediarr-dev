@@ -3,14 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/dispose_later.dart';
 import '../services/session.dart';
 import '../theme.dart';
 
-const keyScopes = <ApiKeyCreateScopesEnum, String>{
-  ApiKeyCreateScopesEnum.read: 'Read',
-  ApiKeyCreateScopesEnum.upload: 'Upload',
-  ApiKeyCreateScopesEnum.write: 'Change and delete',
+Map<ApiKeyCreateScopesEnum, String> get keyScopes => {
+  ApiKeyCreateScopesEnum.read: l.apiKeysScreenRead,
+  ApiKeyCreateScopesEnum.upload: l.apiKeysScreenUpload,
+  ApiKeyCreateScopesEnum.write: l.apiKeysScreenChangeAndDelete,
 };
 
 /// What the list shows for a key, without the key itself.
@@ -19,7 +20,10 @@ String describeKey(ApiKey key) {
   final expires = key.expiresAt;
   return expires == null
       ? rights
-      : '$rights · expires ${expires.toLocal().toString().split(' ').first}';
+      : l.apiKeysScreenExpires(
+          rights,
+          expires.toLocal().toString().split(' ').first,
+        );
 }
 
 class ApiKeysScreen extends ConsumerStatefulWidget {
@@ -66,13 +70,13 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, update) => AlertDialog(
-          title: const Text('New key'),
+          title: Text(l.apiKeysScreenNewKey),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: name,
-                decoration: const InputDecoration(labelText: 'Key name'),
+                decoration: InputDecoration(labelText: l.apiKeysScreenKeyName),
               ),
               for (final scope in keyScopes.entries)
                 CheckboxListTile(
@@ -92,11 +96,11 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(l.apiKeysScreenCancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Create'),
+              child: Text(l.apiKeysScreenCreate),
             ),
           ],
         ),
@@ -112,23 +116,23 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
       await _load();
       if (mounted && made != null) await _show(made.key);
     } on ApiException catch (cause) {
-      _tell('The key could not be created. ${cause.message ?? ''}');
+      _tell(l.apiKeysScreenCreateFailed(cause.message ?? ''));
     }
   }
 
   Future<void> _show(String key) => showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Save it now'),
+      title: Text(l.apiKeysScreenSaveItNow),
       content: SelectableText(key),
       actions: [
         TextButton(
           onPressed: () => Clipboard.setData(ClipboardData(text: key)),
-          child: const Text('Copy'),
+          child: Text(l.apiKeysScreenCopy),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
+          child: Text(l.apiKeysScreenDone),
         ),
       ],
     ),
@@ -139,7 +143,7 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
       await _session.api.revokeDeviceKey(key.id);
       await _load();
     } on ApiException {
-      _tell('The key could not be revoked.');
+      _tell(l.apiKeysScreenRevokeFailed);
     }
   }
 
@@ -148,10 +152,10 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
     final keys = _keys;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('API keys'),
+        title: Text(l.apiKeysScreenTitle),
         actions: [
           IconButton(
-            tooltip: 'New key',
+            tooltip: l.apiKeysScreenNewKey,
             icon: const Icon(Icons.add),
             onPressed: _create,
           ),
@@ -159,17 +163,13 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
       ),
       body: keys == null
           ? _failed
-                ? const EmptyMessage(
+                ? EmptyMessage(
                     icon: Icons.cloud_off,
-                    text: 'The keys could not be loaded.',
+                    text: l.apiKeysScreenLoadFailed,
                   )
                 : Center(child: CircularProgressIndicator(color: Palette.gold))
           : keys.isEmpty
-          ? const EmptyMessage(
-              icon: Icons.key_outlined,
-              text:
-                  'No keys yet. A key gives a program only the chosen rights.',
-            )
+          ? EmptyMessage(icon: Icons.key_outlined, text: l.apiKeysScreenEmpty)
           : ListView(
               children: [
                 for (final key in keys)
@@ -177,7 +177,7 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
                     title: Text(key.name),
                     subtitle: Text(describeKey(key)),
                     trailing: IconButton(
-                      tooltip: 'Revoke',
+                      tooltip: l.apiKeysScreenRevoke,
                       icon: const Icon(Icons.close),
                       onPressed: () => _revoke(key),
                     ),

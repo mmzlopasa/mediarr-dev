@@ -330,8 +330,12 @@ export const api = {
 	imports: () => request<ImportEntry[]>(fetch, '/api/admin/imports'),
 	startImport: (body: ImportCreate) => request<{ id: string }>(fetch, '/api/admin/imports', body),
 	cancelImport: (id: string) => request<void>(fetch, `/api/admin/imports/${id}/cancel`, {}),
-	updateProfile: (body: { name?: string; email?: string; currentPassword?: string }) =>
-		request<User>(fetch, '/api/me', body, 'PATCH'),
+	updateProfile: (body: {
+		name?: string;
+		email?: string;
+		currentPassword?: string;
+		language?: User['language'];
+	}) => request<User>(fetch, '/api/me', body, 'PATCH'),
 	setAvatar: (file: Blob) => sendAvatar(file),
 	removeAvatar: () => request<User>(fetch, '/api/me/avatar', undefined, 'DELETE'),
 	myImports: () => request<UserImport[]>(fetch, '/api/imports'),

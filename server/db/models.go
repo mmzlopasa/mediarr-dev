@@ -502,6 +502,7 @@ type User struct {
 	QuotaBytes      pgtype.Int8
 	AvatarVersion   int32
 	BackupQuietDays int32
+	Language        pgtype.Text
 }
 
 type UserPreference struct {

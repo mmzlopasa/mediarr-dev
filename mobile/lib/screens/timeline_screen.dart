@@ -22,6 +22,7 @@ import 'asset_picture.dart';
 import 'organize_screens.dart';
 import 'viewer_screen.dart';
 import 'waiting_strip.dart';
+import '../l10n/l10n.dart';
 
 class TimelineScreen extends ConsumerStatefulWidget {
   const TimelineScreen({super.key});
@@ -70,7 +71,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     } on ApiException catch (cause) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('The action failed. ${cause.message ?? ''}')),
+          SnackBar(
+            content: Text(l.timelineScreenActionFailed(cause.message ?? '')),
+          ),
         );
       }
     }
@@ -98,11 +101,9 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         final status = await session.api.getVaultStatus();
         if (!mounted) return;
         if (status?.hasPin != true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Set a vault PIN first: Account > Vault.'),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l.timelineScreenSetVaultPin)));
           return;
         }
         await _act(BulkRequestActionEnum.vault);
@@ -113,20 +114,23 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete ${_selected.length}?'),
+        title: Text(l.timelineScreenDeleteTitle('${_selected.length}')),
         content: TrashSentence(
           (days) => days == null
-              ? 'They move to the trash, where they can be restored.'
-              : 'They move to the trash, where they stay for $days days and can be restored.',
+              ? l.timelineScreenTrashRestorable
+              : l.timelineScreenTrashDays(days),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.timelineScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Delete', style: TextStyle(color: Palette.err)),
+            child: Text(
+              l.timelineScreenDelete,
+              style: TextStyle(color: Palette.err),
+            ),
           ),
         ],
       ),
@@ -152,14 +156,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       body = store.failed
           ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'Your photos could not be loaded. Check the connection.',
-              action: GoldButton(label: 'Try again', onPressed: store.refresh),
+              text: l.timelineScreenLoadFailed,
+              action: GoldButton(
+                label: l.timelineScreenTryAgain,
+                onPressed: store.refresh,
+              ),
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (months.isEmpty) {
-      body = const EmptyMessage(
+      body = EmptyMessage(
         icon: Icons.photo_outlined,
-        text: 'No photos yet. Add your first ones in the Upload tab.',
+        text: l.timelineScreenEmpty,
       );
     } else {
       body = TimelineGrid(
@@ -185,17 +192,17 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
             child: Row(
               children: [
                 if (_selected.isEmpty) ...[
-                  const Expanded(child: AppHeader(title: 'Media')),
+                  Expanded(child: AppHeader(title: l.timelineScreenMedia)),
                 ] else ...[
                   IconButton(
-                    tooltip: 'Clear selection',
+                    tooltip: l.timelineScreenClearSelection,
                     icon: const Icon(Icons.close),
                     onPressed: () => setState(_selected.clear),
                   ),
                   Text('${_selected.length}', style: text.titleLarge),
                   const Spacer(),
                   IconButton(
-                    tooltip: 'Add to album',
+                    tooltip: l.timelineScreenAddToAlbum,
                     icon: const Icon(Icons.photo_album_outlined),
                     onPressed: () async {
                       final added = await showAddToAlbum(
@@ -207,38 +214,44 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     },
                   ),
                   IconButton(
-                    tooltip: 'Share',
+                    tooltip: l.timelineScreenShare,
                     icon: const Icon(Icons.share_outlined),
                     onPressed: () =>
                         shareAssets(context, ref, session, _selected.toList()),
                   ),
                   IconButton(
-                    tooltip: 'Add to favorites',
+                    tooltip: l.timelineScreenAddToFavorites,
                     icon: const Icon(Icons.star_border),
                     onPressed: () => _act(BulkRequestActionEnum.favorite),
                   ),
                   IconButton(
-                    tooltip: 'Delete',
+                    tooltip: l.timelineScreenDelete,
                     icon: const Icon(Icons.delete_outline),
                     onPressed: _confirmDelete,
                   ),
                   PopupMenuButton<String>(
-                    tooltip: 'More',
+                    tooltip: l.timelineScreenMore,
                     onSelected: (choice) => _more(choice, session),
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'archive', child: Text('Archive')),
-                      PopupMenuItem(value: 'tag', child: Text('Add a tag')),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'archive',
+                        child: Text(l.timelineScreenArchive),
+                      ),
+                      PopupMenuItem(
+                        value: 'tag',
+                        child: Text(l.timelineScreenAddTag),
+                      ),
                       PopupMenuItem(
                         value: 'dates',
-                        child: Text('Date and time…'),
+                        child: Text(l.timelineScreenDateTimeMenu),
                       ),
                       PopupMenuItem(
                         value: 'locations',
-                        child: Text('Location…'),
+                        child: Text(l.timelineScreenLocationMenu),
                       ),
                       PopupMenuItem(
                         value: 'vault',
-                        child: Text('Move to the vault'),
+                        child: Text(l.timelineScreenMoveToVault),
                       ),
                     ],
                   ),
@@ -354,7 +367,7 @@ class _MonthSliver extends ConsumerWidget {
                     ? TextButton(
                         onPressed: () => store.load(month),
                         child: Text(
-                          '${formatMonth(month.month)} could not be loaded. Try again.',
+                          l.timelineScreenMonthFailed(formatMonth(month.month)),
                         ),
                       )
                     : Text(

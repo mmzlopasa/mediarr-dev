@@ -18,6 +18,7 @@ class User {
     required this.name,
     required this.isAdmin,
     required this.totpEnabled,
+    this.language,
     this.avatarVersion,
   });
 
@@ -30,6 +31,14 @@ class User {
   bool isAdmin;
 
   bool totpEnabled;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  Language? language;
 
   /// Changes with each new picture of the person; 0 or missing when there is none
   ///
@@ -49,6 +58,7 @@ class User {
           other.name == name &&
           other.isAdmin == isAdmin &&
           other.totpEnabled == totpEnabled &&
+          other.language == language &&
           other.avatarVersion == avatarVersion;
 
   @override
@@ -59,11 +69,12 @@ class User {
       (name.hashCode) +
       (isAdmin.hashCode) +
       (totpEnabled.hashCode) +
+      (language == null ? 0 : language!.hashCode) +
       (avatarVersion == null ? 0 : avatarVersion!.hashCode);
 
   @override
   String toString() =>
-      'User[id=$id, email=$email, name=$name, isAdmin=$isAdmin, totpEnabled=$totpEnabled, avatarVersion=$avatarVersion]';
+      'User[id=$id, email=$email, name=$name, isAdmin=$isAdmin, totpEnabled=$totpEnabled, language=$language, avatarVersion=$avatarVersion]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -72,6 +83,11 @@ class User {
     json[r'name'] = this.name;
     json[r'isAdmin'] = this.isAdmin;
     json[r'totpEnabled'] = this.totpEnabled;
+    if (this.language != null) {
+      json[r'language'] = this.language;
+    } else {
+      json[r'language'] = null;
+    }
     if (this.avatarVersion != null) {
       json[r'avatarVersion'] = this.avatarVersion;
     } else {
@@ -106,6 +122,7 @@ class User {
         name: mapValueOfType<String>(json, r'name')!,
         isAdmin: mapValueOfType<bool>(json, r'isAdmin')!,
         totpEnabled: mapValueOfType<bool>(json, r'totpEnabled')!,
+        language: Language.fromJson(json[r'language']),
         avatarVersion: mapValueOfType<int>(json, r'avatarVersion'),
       );
     }

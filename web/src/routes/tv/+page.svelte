@@ -15,7 +15,7 @@
 	import Brand from '#lib/design/components/Brand.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { memoryTitle } from '#lib/organize/memories.ts';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t } from '#lib/i18n.svelte.ts';
 	import { thumbUrl } from '#lib/timeline/blur.ts';
 	import { itemCount } from '#lib/timeline/layout.ts';
 
@@ -100,18 +100,18 @@
 			]);
 			rows = [
 				{
-					title: tr('Uspomene', 'Memories'),
+					title: t('common.memories'),
 					cards: memories.filter((memory) => memory.items.length).map(memoryCard)
 				},
 				{
-					title: tr('Albumi', 'Albums'),
+					title: t('tv.albums'),
 					cards: albums
 						.filter((album) => album.assetCount > 0)
 						.slice(0, ROW_SIZE)
 						.map(albumCard)
 				},
 				{
-					title: tr('Ljudi', 'People'),
+					title: t('tv.people'),
 					cards: people.people
 						.filter((person) => person.name && !person.hidden)
 						.slice(0, ROW_SIZE)
@@ -176,7 +176,7 @@
 	}
 </script>
 
-<svelte:head><title>{tr('TV', 'TV')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('tv.tv')} — Mediarr</title></svelte:head>
 <svelte:window onkeydown={key} />
 
 <main class="tv">
@@ -191,17 +191,17 @@
 	</header>
 
 	{#if failed}
-		<p class="tv-note">{tr('Podaci se ne mogu učitati.', 'This could not be loaded.')}</p>
+		<p class="tv-note">{t('common.thisCouldNotBeLoaded')}</p>
 	{:else if !rows}
 		<div class="tv-wait"><Skeleton height="240px" /></div>
 	{:else if rows.length === 0}
 		<p class="tv-note">
-			{tr('Još nema ničega za pogledati. Dodajte fotke.', 'Nothing to watch yet. Add some photos.')}
+			{t('tv.nothingToWatchYetAdd')}
 		</p>
 	{:else}
 		<div class="tv-lead">
 			<h1>{focused?.title}</h1>
-			<p>{focused?.sub} · {tr('OK pušta, natrag izlazi', 'OK plays, back leaves')}</p>
+			<p>{focused?.sub} · {t('tv.okPlaysBackLeaves')}</p>
 		</div>
 		{#each rows as entry, r (entry.title)}
 			<section class="tv-row" aria-label={entry.title}>
@@ -229,7 +229,7 @@
 	{/if}
 
 	{#if show}
-		<div class="tv-show" role="dialog" aria-label={tr('Prikaz fotki', 'Slideshow')}>
+		<div class="tv-show" role="dialog" aria-label={t('tv.slideshow')}>
 			{#key show.ids[show.index]}
 				<img
 					src={thumbUrl('/api', show.ids[show.index], null, 'large')}
@@ -238,9 +238,7 @@
 				/>
 			{/key}
 			<p class="tv-show-n">
-				{show.index + 1} / {show.ids.length}{show.playing
-					? ''
-					: ` · ${tr('zaustavljeno', 'paused')}`}
+				{show.index + 1} / {show.ids.length}{show.playing ? '' : ` · ${t('tv.paused')}`}
 			</p>
 		</div>
 	{/if}

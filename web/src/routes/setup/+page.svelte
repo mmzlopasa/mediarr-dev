@@ -4,7 +4,7 @@
 	import { api, ApiError } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import AuthLayout from '#lib/design/components/AuthLayout.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let name = $state('');
 	let email = $state('');
@@ -20,31 +20,28 @@
 			await api.setup({ email, name, password });
 			await goto(resolve('/(app)'), { invalidateAll: true });
 		} catch (cause) {
-			error =
-				cause instanceof ApiError
-					? cause.message
-					: tr('Postavljanje nije uspjelo.', 'Setup failed. Please try again.');
+			error = cause instanceof ApiError ? cause.message : t('setup.setupFailedPleaseTryAgain');
 		} finally {
 			busy = false;
 		}
 	}
 </script>
 
-<svelte:head><title>{tr('Prvo postavljanje', 'First-time setup')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('setup.firstTimeSetup')} — Mediarr</title></svelte:head>
 
 <AuthLayout>
 	{#if error}<Alert kind="err">{error}</Alert>{/if}
-	<h1 class="as-h">{tr('Dobrodošli u Mediarr', 'Welcome to Mediarr')}</h1>
+	<h1 class="as-h">{t('setup.welcomeToMediarr')}</h1>
 	<p class="as-p">
-		{tr('Napravite administratorski račun.', 'Create the administrator account.')}
+		{t('setup.createTheAdministratorAccount')}
 	</p>
 	<form class="as-f" onsubmit={submit}>
 		<label class="as-fl">
-			<span>{tr('Ime', 'Name')}</span>
+			<span>{t('common.name2')}</span>
 			<input class="as-in" name="name" required autocomplete="name" bind:value={name} />
 		</label>
 		<label class="as-fl">
-			<span>{tr('E-adresa', 'Email')}</span>
+			<span>{t('common.email')}</span>
 			<input
 				class="as-in"
 				type="email"
@@ -55,7 +52,7 @@
 			/>
 		</label>
 		<label class="as-fl">
-			<span>{tr('Lozinka (najmanje 12 znakova)', 'Password (at least 12 characters)')}</span>
+			<span>{t('setup.passwordAtLeast12Characters')}</span>
 			<input
 				class="as-in"
 				type="password"
@@ -66,8 +63,6 @@
 				bind:value={password}
 			/>
 		</label>
-		<button class="as-btn" type="submit" disabled={busy}
-			>{tr('Napravi račun', 'Create account')}</button
-		>
+		<button class="as-btn" type="submit" disabled={busy}>{t('setup.createAccount')}</button>
 	</form>
 </AuthLayout>

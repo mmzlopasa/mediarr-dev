@@ -5,6 +5,7 @@
 
 	function pick(event: MouseEvent, code: Lang) {
 		event.preventDefault();
+		// The menu is on pages without an account, such as signing in.
 		setLang(code);
 		if (menu) menu.open = false;
 	}

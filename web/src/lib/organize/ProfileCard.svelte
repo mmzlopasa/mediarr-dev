@@ -5,7 +5,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	/** One's own name, email address and picture. */
 	let { user }: { user: User } = $props();
@@ -27,10 +27,7 @@
 	const changed = $derived(name.trim() !== user.name || emailChanged);
 
 	function fail(cause: unknown) {
-		showToast(
-			'err',
-			cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
-		);
+		showToast('err', cause instanceof Error ? cause.message : t('common.theActionFailed'));
 	}
 
 	async function save(event: SubmitEvent) {
@@ -43,7 +40,7 @@
 			});
 			password = '';
 			await invalidate('app:session');
-			showToast('ok', tr('Spremljeno.', 'Saved.'));
+			showToast('ok', t('common.saved'));
 		} catch (cause) {
 			fail(cause);
 		} finally {
@@ -77,7 +74,7 @@
 	}
 </script>
 
-<Card id="profile" title={tr('Profil', 'Profile')}>
+<Card id="profile" title={t('profileCard.profile')}>
 	<div class="prof">
 		<div class="prof-pic">
 			<span class="prof-av" aria-hidden="true">
@@ -90,30 +87,30 @@
 					accept="image/*"
 					class="sr"
 					onchange={choose}
-					aria-label={tr('Odaberite sliku profila', 'Choose a profile picture')}
+					aria-label={t('profileCard.chooseAProfilePicture')}
 				/>
 				<Button small disabled={sending} onclick={() => picker?.click()}
 					>{sending
-						? tr('Šaljem…', 'Sending…')
+						? t('profileCard.sending')
 						: avatarOf(user)
-							? tr('Promijeni sliku', 'Change picture')
-							: tr('Dodaj sliku', 'Add a picture')}</Button
+							? t('profileCard.changePicture')
+							: t('profileCard.addAPicture')}</Button
 				>
 				{#if avatarOf(user)}
-					<Button small variant="danger" onclick={remove}>{tr('Ukloni', 'Remove')}</Button>
+					<Button small variant="danger" onclick={remove}>{t('common.remove')}</Button>
 				{/if}
 			</div>
 		</div>
 		<form class="form" onsubmit={save}>
 			<Input
-				label={tr('Ime', 'Name')}
+				label={t('common.name2')}
 				bind:value={name}
 				required
 				maxlength={200}
 				autocomplete="name"
 			/>
 			<Input
-				label={tr('E-mail adresa', 'Email address')}
+				label={t('profileCard.emailAddress')}
 				type="email"
 				bind:value={email}
 				required
@@ -121,10 +118,7 @@
 			/>
 			{#if emailChanged}
 				<Input
-					label={tr(
-						'Trenutna lozinka, za promjenu e-maila',
-						'Current password, to change the email'
-					)}
+					label={t('profileCard.currentPasswordToChangeThe')}
 					type="password"
 					bind:value={password}
 					required
@@ -133,7 +127,7 @@
 			{/if}
 			<div class="set-foot">
 				<Button type="submit" variant="gold" small disabled={!changed || saving}
-					>{tr('Spremi', 'Save')}</Button
+					>{t('common.save')}</Button
 				>
 			</div>
 		</form>

@@ -9,7 +9,7 @@
 	import AuthLayout from '#lib/design/components/AuthLayout.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { magnet, revealTitle } from '#lib/motion/actions.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	const CODE_PATTERN = '[0-9 ]{6,7}';
 
@@ -31,10 +31,7 @@
 			// The form below still works.
 		}
 		if (page.url.searchParams.get('sso') === 'failed') {
-			error = tr(
-				'Jedinstvena prijava nije uspjela. Možda nemate račun na ovom serveru.',
-				'Single sign-on did not work. You may not have an account on this server.'
-			);
+			error = t('login.singleSignOnDidNot');
 		}
 	});
 
@@ -46,7 +43,7 @@
 			// eslint-disable-next-line svelte/no-navigation-without-resolve -- validated local path
 			await goto(nextPath(), { invalidateAll: true });
 		} catch {
-			error = tr('Prijava passkeyem nije uspjela.', 'Signing in with a passkey did not work.');
+			error = t('login.signingInWithAPasskey');
 		} finally {
 			busy = false;
 		}
@@ -82,15 +79,15 @@
 			await goto(nextPath(), { invalidateAll: true });
 		} catch (cause) {
 			if (cause instanceof ApiError && cause.totpRequired) {
-				if (needsCode) error = tr('Kod nije točan.', 'The code is wrong.');
+				if (needsCode) error = t('login.theCodeIsWrong');
 				needsCode = true;
 				code = '';
 			} else if (cause instanceof ApiError && cause.status === 429) {
-				error = tr('Previše pokušaja. Pokušajte kasnije.', 'Too many attempts. Try again later.');
+				error = t('common.tooManyAttemptsTryAgain');
 			} else if (cause instanceof ApiError && cause.status === 401) {
-				error = tr('Pogrešna e-adresa ili lozinka.', 'Wrong email or password.');
+				error = t('login.wrongEmailOrPassword');
 			} else {
-				error = tr('Prijava nije uspjela. Pokušajte ponovno.', 'Sign-in failed. Please try again.');
+				error = t('login.signInFailedPleaseTry');
 			}
 		} finally {
 			busy = false;
@@ -98,21 +95,18 @@
 	}
 </script>
 
-<svelte:head><title>{tr('Prijava', 'Sign in')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('login.signIn')} — Mediarr</title></svelte:head>
 
 <AuthLayout>
 	{#if error}<Alert kind="err">{error}</Alert>{/if}
 	{#if needsCode}
-		<h1 class="as-h">{tr('Dvofaktorska prijava', 'Two-factor sign-in')}</h1>
+		<h1 class="as-h">{t('login.twoFactorSignIn')}</h1>
 		<p class="as-p">
-			{tr(
-				'Unesite 6-znamenkasti kod iz aplikacije za autentifikaciju.',
-				'Enter the 6-digit code from your authenticator app.'
-			)}
+			{t('login.enterThe6DigitCode')}
 		</p>
 		<form class="as-f" autocomplete="off" onsubmit={submit}>
 			<label class="as-fl">
-				<span>{tr('Kod', 'Code')}</span>
+				<span>{t('login.code')}</span>
 				<input
 					class="as-in code-in"
 					name="code"
@@ -124,27 +118,24 @@
 					bind:value={code}
 				/>
 			</label>
-			<button class="as-btn" type="submit" disabled={busy}>{tr('Potvrdi', 'Verify')}</button>
+			<button class="as-btn" type="submit" disabled={busy}>{t('login.verify')}</button>
 		</form>
 		<p class="as-links">
-			<a href={resolve('/login')} onclick={() => (needsCode = false)}>{tr('← Natrag', '← Back')}</a>
+			<a href={resolve('/login')} onclick={() => (needsCode = false)}>{t('login.back')}</a>
 		</p>
 	{:else}
-		<h1 class="as-h" use:revealTitle>{tr('Dobrodošli', 'Welcome')}</h1>
+		<h1 class="as-h" use:revealTitle>{t('login.welcome')}</h1>
 		{#if methods && methods.serverName !== 'Mediarr'}<p class="as-p login-server">
 				{methods.serverName}
 			</p>{/if}
-		<p class="as-p">{tr('Prijavite se svojim računom.', 'Sign in with your account.')}</p>
+		<p class="as-p">{t('login.signInWithYourAccount')}</p>
 		{#if methods?.maintenance}<p class="as-p login-note">
-				{tr(
-					'Poslužitelj je na održavanju. Prijaviti se mogu samo administratori.',
-					'This server is being maintained. Only administrators can sign in.'
-				)}
+				{t('login.thisServerIsBeingMaintained')}
 			</p>{/if}
 		{#if methods?.loginMessage}<p class="as-p login-note">{methods.loginMessage}</p>{/if}
 		{#if methods?.passwordLogin !== false}<form class="as-f" autocomplete="on" onsubmit={submit}>
 				<label class="as-fl">
-					<span>{tr('E-adresa', 'Email')}</span>
+					<span>{t('common.email')}</span>
 					<input
 						class="as-in"
 						type="email"
@@ -156,7 +147,7 @@
 					/>
 				</label>
 				<label class="as-fl">
-					<span>{tr('Lozinka', 'Password')}</span>
+					<span>{t('common.password')}</span>
 					<span class="as-pw">
 						<input
 							class="as-in"
@@ -169,14 +160,14 @@
 						<button
 							type="button"
 							class="as-eye"
-							aria-label={tr('Prikaži lozinku', 'Show password')}
+							aria-label={t('login.showPassword')}
 							aria-pressed={visible}
 							onclick={() => (visible = !visible)}><Icon name="eye" /></button
 						>
 					</span>
 				</label>
 				<button class="as-btn" type="submit" disabled={busy} use:magnet={{ most: 5 }}
-					>{tr('Prijavi se', 'Sign in')}</button
+					>{t('login.signIn2')}</button
 				>
 			</form>{/if}
 		{#if methods?.ssoLabel}
@@ -188,7 +179,7 @@
 		{/if}
 		{#if methods?.passkeys}
 			<button class="as-btn" type="button" disabled={busy} onclick={passkey}
-				>{tr('Prijava passkeyem', 'Sign in with a passkey')}</button
+				>{t('login.signInWithAPasskey')}</button
 			>
 		{/if}
 		<p class="as-links">
@@ -197,28 +188,22 @@
 				onclick={(event) => {
 					event.preventDefault();
 					showForgot = true;
-				}}>{tr('Zaboravljena lozinka?', 'Forgot your password?')}</a
+				}}>{t('login.forgotYourPassword')}</a
 			>
 		</p>
 		{#if showForgot && methods?.passwordReset}
 			{#if forgotSent}
 				<p class="as-p" role="status">
-					{tr(
-						'Ako ta adresa ima račun, poslana je poveznica za novu lozinku.',
-						'If that address has an account, a link for a new password was sent.'
-					)}
+					{t('login.ifThatAddressHasAn')}
 				</p>
 			{:else}
 				<button class="as-btn" type="button" disabled={!email || busy} onclick={forgot}>
-					{tr('Pošalji poveznicu na gornju adresu', 'Send a link to the address above')}
+					{t('login.sendALinkToThe')}
 				</button>
 			{/if}
 		{:else if showForgot}
 			<p class="as-p">
-				{tr(
-					'Administrator poslužitelja može je postaviti naredbom: mediarr user upsert',
-					'The server administrator can reset it with the command: mediarr user upsert'
-				)}
+				{t('login.theServerAdministratorCanReset')}
 			</p>
 		{/if}
 	{/if}

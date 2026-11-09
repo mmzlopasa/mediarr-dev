@@ -4,7 +4,7 @@
 	import { api, type Notification } from '#lib/api.ts';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import type { IconName } from '#lib/design/icons.ts';
 	import { since } from './agent.ts';
 
@@ -94,27 +94,15 @@
 	function sentence(item: Notification): string {
 		switch (item.kind) {
 			case 'album_shared':
-				return tr(
-					`S vama je podijeljen album „${item.subject}”`,
-					`“${item.subject}” was shared with you`
-				);
+				return t('notificationBell.subjectWasSharedWithYou', { subject: item.subject });
 			case 'import_done':
-				return tr(
-					`Uvoz iz izvora ${item.subject} je završen`,
-					`The import from ${item.subject} finished`
-				);
+				return t('notificationBell.theImportFromSubjectFinished', { subject: item.subject });
 			case 'import_failed':
-				return tr(
-					`Uvoz iz izvora ${item.subject} nije uspio`,
-					`The import from ${item.subject} failed`
-				);
+				return t('notificationBell.theImportFromSubjectFailed', { subject: item.subject });
 			case 'backup_failed':
-				return tr('Sigurnosna kopija nije uspjela', 'A backup failed');
+				return t('notificationBell.aBackupFailed');
 			case 'device_quiet':
-				return tr(
-					`${item.subject} je prestao raditi backup`,
-					`${item.subject} has stopped backing up`
-				);
+				return t('notificationBell.subjectHasStoppedBackingUp', { subject: item.subject });
 			case 'backup_late': {
 				// "to:<name>" is our copy at another Mediarr; "from:<name>" is one kept here.
 				const [way, name] = [
@@ -122,14 +110,8 @@
 					item.subject.slice(item.subject.indexOf(':') + 1)
 				];
 				return way === 'to'
-					? tr(
-							`Kopija za ${name} nije poslana već tri dana`,
-							`The copy for ${name} has not gone out for three days`
-						)
-					: tr(
-							`Kopija od ${name} nije stigla već tri dana`,
-							`The copy from ${name} has not come in for three days`
-						);
+					? t('notificationBell.theCopyForNameHas', { name })
+					: t('notificationBell.theCopyFromNameHas', { name });
 			}
 		}
 	}
@@ -154,8 +136,8 @@
 		type="button"
 		class="icon-btn"
 		aria-expanded={open}
-		aria-label={tr('Obavijesti', 'Notifications')}
-		title={tr('Obavijesti', 'Notifications')}
+		aria-label={t('notificationBell.notifications')}
+		title={t('notificationBell.notifications')}
 		onclick={toggle}
 	>
 		<Icon name="bell" />
@@ -164,22 +146,22 @@
 	{#if open}
 		<div class="notify-panel lb-pop" data-lenis-prevent>
 			<header class="notify-h">
-				<b>{tr('Obavijesti', 'Notifications')}</b>
+				<b>{t('notificationBell.notifications')}</b>
 				{#if items?.length}
 					<button
 						type="button"
 						class="notify-clear"
 						onclick={() => remove((items ?? []).map((item) => item.id))}
-						>{tr('Očisti sve', 'Clear all')}</button
+						>{t('notificationBell.clearAll')}</button
 					>
 				{/if}
 			</header>
 			{#if failed}
-				<p class="notify-empty">{tr('Podaci se ne mogu učitati.', 'This could not be loaded.')}</p>
+				<p class="notify-empty">{t('common.thisCouldNotBeLoaded')}</p>
 			{:else if !items}
 				<div class="notify-list"><Skeleton height="56px" /><Skeleton height="56px" /></div>
 			{:else if groups.length === 0}
-				<p class="notify-empty">{tr('Nema obavijesti.', 'No notifications.')}</p>
+				<p class="notify-empty">{t('notificationBell.noNotifications')}</p>
 			{:else}
 				<ul class="notify-list">
 					{#each groups as group (group.first.id)}
@@ -213,13 +195,13 @@
 										>{since(new Date(item.createdAt))}</time
 									>
 									{#if group.ids.length > 1}
-										· {tr(`${group.ids.length} puta`, `${group.ids.length} times`)}{/if}
+										· {t('notificationBell.idscountTimes', { idsCount: group.ids.length })}{/if}
 								</small>
 							</div>
 							<button
 								type="button"
 								class="icon-btn sm notify-x"
-								aria-label={tr('Ukloni', 'Remove')}
+								aria-label={t('common.remove')}
 								onclick={() => remove(group.ids)}
 							>
 								<Icon name="x" size={14} />

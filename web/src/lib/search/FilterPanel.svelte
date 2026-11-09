@@ -2,7 +2,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { api, type Album, type Person, type SearchOptions } from '#lib/api.ts';
 	import Button from '#lib/design/components/Button.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	/** Every filter of a search, to choose from what this library has. */
 	let {
@@ -89,21 +89,21 @@
 	}
 </script>
 
-<form class="sf" onsubmit={apply} aria-label={tr('Filtri', 'Filters')}>
+<form class="sf" onsubmit={apply} aria-label={t('filterPanel.filters')}>
 	<div class="sf-grid">
 		<fieldset class="sf-field">
-			<legend>{tr('Datum', 'Date')}</legend>
+			<legend>{t('filterPanel.date')}</legend>
 			<div class="sf-row">
-				<input class="in" type="date" bind:value={from} aria-label={tr('Od', 'From')} />
+				<input class="in" type="date" bind:value={from} aria-label={t('filterPanel.from')} />
 				<span aria-hidden="true">–</span>
-				<input class="in" type="date" bind:value={to} aria-label={tr('Do', 'To')} />
+				<input class="in" type="date" bind:value={to} aria-label={t('filterPanel.to')} />
 			</div>
 		</fieldset>
 
 		<fieldset class="sf-field">
-			<legend>{tr('Vrsta', 'Type')}</legend>
+			<legend>{t('filterPanel.type')}</legend>
 			<div class="seg" role="radiogroup">
-				{#each [['', tr('Sve', 'All')], ['photo', tr('Fotke', 'Photos')], ['video', tr('Videi', 'Videos')]] as [value, label] (value)}
+				{#each [['', t('filterPanel.all')], ['photo', t('common.photos')], ['video', t('common.videos')]] as [value, label] (value)}
 					<label class:on={kind === value}
 						><input type="radio" bind:group={kind} {value} />{label}</label
 					>
@@ -113,7 +113,7 @@
 
 		{#if people.length}
 			<fieldset class="sf-field sf-wide">
-				<legend>{tr('Osobe', 'People')}</legend>
+				<legend>{t('filterPanel.people')}</legend>
 				<div class="sf-chips">
 					{#each people as person (person.id)}
 						<label class="sf-chip" class:on={chosenPeople.includes(person.id)}>
@@ -128,54 +128,54 @@
 				{#if chosenPeople.length > 1}
 					<label class="sf-check">
 						<input type="checkbox" bind:checked={anyPerson} />
-						{tr('Bilo koja od njih, ne sve zajedno', 'Any of them, not all together')}
+						{t('filterPanel.anyOfThemNotAll')}
 					</label>
 				{/if}
 			</fieldset>
 		{/if}
 
 		<label class="sf-field">
-			<span>{tr('Mjesto', 'Place')}</span>
+			<span>{t('common.place')}</span>
 			<input class="in" list="sf-places" bind:value={place} />
 			<datalist id="sf-places"
 				>{#each options.places as value (value)}<option {value}></option>{/each}</datalist
 			>
 		</label>
 		<label class="sf-field">
-			<span>{tr('Kamera', 'Camera')}</span>
+			<span>{t('common.camera')}</span>
 			<input class="in" list="sf-cameras" bind:value={camera} />
 			<datalist id="sf-cameras"
 				>{#each options.cameras as value (value)}<option {value}></option>{/each}</datalist
 			>
 		</label>
 		<label class="sf-field">
-			<span>{tr('Objektiv', 'Lens')}</span>
+			<span>{t('filterPanel.lens')}</span>
 			<input class="in" list="sf-lenses" bind:value={lens} />
 			<datalist id="sf-lenses"
 				>{#each options.lenses as value (value)}<option {value}></option>{/each}</datalist
 			>
 		</label>
 		<label class="sf-field">
-			<span>{tr('Ocjena', 'Rating')}</span>
+			<span>{t('filterPanel.rating')}</span>
 			<select class="in" bind:value={minRating}>
-				<option value="">{tr('Bilo koja', 'Any')}</option>
+				<option value="">{t('filterPanel.any')}</option>
 				{#each [1, 2, 3, 4, 5] as stars (stars)}
 					<option value={String(stars)}>{'★'.repeat(stars)}{stars < 5 ? '+' : ''}</option>
 				{/each}
 			</select>
 		</label>
 		<label class="sf-field">
-			<span>{tr('Album', 'Album')}</span>
+			<span>{t('filterPanel.album')}</span>
 			<select class="in" bind:value={album}>
-				<option value="">{tr('Svi', 'Any')}</option>
-				<option value="none">{tr('Nije ni u jednom albumu', 'In no album')}</option>
+				<option value="">{t('filterPanel.any2')}</option>
+				<option value="none">{t('filterPanel.inNoAlbum')}</option>
 				{#each albums as entry (entry.id)}<option value={entry.id}>{entry.title}</option>{/each}
 			</select>
 		</label>
 
 		{#if options.tags.length}
 			<fieldset class="sf-field sf-wide">
-				<legend>{tr('Oznake', 'Tags')}</legend>
+				<legend>{t('common.tags')}</legend>
 				<div class="sf-chips">
 					{#each options.tags as tag (tag)}
 						<label class="sf-chip" class:on={tags.includes(tag.toLowerCase())}>
@@ -192,12 +192,12 @@
 
 		<label class="sf-check sf-wide">
 			<input type="checkbox" bind:checked={favorite} />
-			{tr('Samo favoriti', 'Favourites only')}
+			{t('filterPanel.favouritesOnly')}
 		</label>
 	</div>
 	<div class="set-foot sf-foot">
-		<Button small onclick={clear}>{tr('Očisti', 'Clear')}</Button>
-		<Button small onclick={onClose}>{tr('Zatvori', 'Close')}</Button>
-		<Button type="submit" variant="gold" small>{tr('Primijeni', 'Apply')}</Button>
+		<Button small onclick={clear}>{t('filterPanel.clear')}</Button>
+		<Button small onclick={onClose}>{t('common.close')}</Button>
+		<Button type="submit" variant="gold" small>{t('filterPanel.apply')}</Button>
 	</div>
 </form>

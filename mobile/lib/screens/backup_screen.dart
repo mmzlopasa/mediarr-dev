@@ -9,6 +9,7 @@ import '../services/dispose_later.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
+import '../l10n/l10n.dart';
 
 const _gb = 1024 * 1024 * 1024;
 
@@ -23,24 +24,25 @@ bool isExposedAddress(String address) {
   ).hasMatch(host);
 }
 
-String _when(DateTime? value) =>
-    value == null ? 'not yet' : value.toLocal().toString().substring(0, 16);
+String _when(DateTime? value) => value == null
+    ? l.backupScreenNotYet
+    : value.toLocal().toString().substring(0, 16);
 
 /// One line about another Mediarr that keeps a copy of this server's backup.
 String describeDestination(BackupDestination destination) =>
-    '${destination.address} · last backup ${_when(destination.lastSuccessAt)} · up to ${formatBytes(destination.quotaBytes)}';
+    '${destination.address} · ${l.backupScreenLastBackup(_when(destination.lastSuccessAt))} · ${l.backupScreenUpTo(formatBytes(destination.quotaBytes))}';
 
 /// One line about a server whose backup this one keeps.
 String describeGuest(KeepGuest guest) {
   final status = switch (guest.status) {
-    KeepGuestStatusEnum.invited => 'Invited',
-    KeepGuestStatusEnum.stopped => 'Stopped',
-    _ => 'Active',
+    KeepGuestStatusEnum.invited => l.backupScreenInvited,
+    KeepGuestStatusEnum.stopped => l.backupScreenStopped,
+    _ => l.backupScreenActive,
   };
   final deleted = guest.deletedBytes > 0
-      ? ' · deleted, kept: ${formatBytes(guest.deletedBytes)}'
+      ? ' · ${l.backupScreenDeletedKept(formatBytes(guest.deletedBytes))}'
       : '';
-  return '$status · ${formatBytes(guest.usedBytes)} / ${formatBytes(guest.quotaBytes)} · last backup ${_when(guest.lastBackupAt)}$deleted';
+  return '$status · ${formatBytes(guest.usedBytes)} / ${formatBytes(guest.quotaBytes)} · ${l.backupScreenLastBackup(_when(guest.lastBackupAt))}$deleted';
 }
 
 /// Backup for administrators, as on the web: where it goes, copies at other Mediarr servers, and the
@@ -131,7 +133,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       await work();
       if (done != null) _tell(done);
     } on ApiException catch (cause) {
-      _tell(cause.message ?? 'The action failed.');
+      _tell(cause.message ?? l.backupScreenActionFailed);
     }
     await _load();
   }
@@ -149,7 +151,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     _password.clear();
     _s3Key.clear();
     _s3Secret.clear();
-  }, 'Saved.');
+  }, l.backupScreenSaved);
 
   Future<void> _run(BackupRunRequestKindEnum kind, [String? destination]) =>
       _act(
@@ -157,8 +159,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           BackupRunRequest(kind: kind, destinationId: destination),
         ),
         kind == BackupRunRequestKindEnum.backup
-            ? 'The backup has started.'
-            : 'The restore test has started.',
+            ? l.backupScreenBackupStarted
+            : l.backupScreenRestoreTestStarted,
       );
 
   Future<void> _scan() async {
@@ -175,7 +177,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         BackupDestinationCreate(code: _code.text),
       );
       _code.clear();
-    }, 'Paired. The next backup goes there too.');
+    }, l.backupScreenPaired);
     if (mounted) setState(() => _pairing = false);
   }
 
@@ -186,25 +188,25 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Keep a backup for someone'),
+        title: Text(l.backupScreenKeepForSomeone),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: name,
-                decoration: const InputDecoration(labelText: 'For whom'),
+                decoration: InputDecoration(labelText: l.backupScreenForWhom),
               ),
               TextField(
                 controller: size,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'At most (GB)'),
+                decoration: InputDecoration(labelText: l.backupScreenAtMostGb),
               ),
               TextField(
                 controller: address,
                 keyboardType: TextInputType.url,
-                decoration: const InputDecoration(
-                  labelText: 'The address the other server reaches you at',
+                decoration: InputDecoration(
+                  labelText: l.backupScreenOtherServerAddress,
                 ),
               ),
             ],
@@ -213,11 +215,11 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.backupScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Invite'),
+            child: Text(l.backupScreenInvite),
           ),
         ],
       ),
@@ -234,14 +236,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       await _load();
       if (invite != null && mounted) await _showInvite(invite);
     } on ApiException catch (cause) {
-      _tell(cause.message ?? 'The invitation failed.');
+      _tell(cause.message ?? l.backupScreenInvitationFailed);
     }
   }
 
   Future<void> _showInvite(KeepInvite invite) => showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('Code for ${invite.guest.name}'),
+      title: Text(l.backupScreenCodeFor(invite.guest.name)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -256,7 +258,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Send it to the administrator of the other server, who pastes or scans it. It works once, until ${_when(invite.expiresAt)}.',
+              l.backupScreenSendItToAdmin(_when(invite.expiresAt)),
               style: TextStyle(color: Palette.dim),
             ),
             const SizedBox(height: 8),
@@ -264,7 +266,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             if (isExposedAddress(invite.guest.address)) ...[
               const SizedBox(height: 8),
               Text(
-                'Over plain HTTP the key can be read on the way. Use HTTPS or a VPN.',
+                l.backupScreenPlainHttp,
                 style: TextStyle(color: Palette.err),
               ),
             ],
@@ -274,11 +276,11 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       actions: [
         TextButton(
           onPressed: () => Clipboard.setData(ClipboardData(text: invite.code)),
-          child: const Text('Copy'),
+          child: Text(l.backupScreenCopy),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
+          child: Text(l.backupScreenDone),
         ),
       ],
     ),
@@ -291,7 +293,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('How much for ${guest.name}'),
+        title: Text(l.backupScreenHowMuchFor(guest.name)),
         content: TextField(
           controller: size,
           keyboardType: TextInputType.number,
@@ -300,11 +302,11 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.backupScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
+            child: Text(l.backupScreenSave),
           ),
         ],
       ),
@@ -331,25 +333,25 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, update) => AlertDialog(
-          title: Text('Delete the copy of ${guest.name}?'),
+          title: Text(l.backupScreenDeleteCopyOf(guest.name)),
           content: TextField(
             controller: typed,
             onChanged: (_) => update(() {}),
             decoration: InputDecoration(
-              labelText: 'Type “${guest.name}” to delete it',
+              labelText: l.backupScreenTypeToDelete(guest.name),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(l.backupScreenCancel),
             ),
             TextButton(
               onPressed: typed.text == guest.name
                   ? () => Navigator.pop(context, true)
                   : null,
               child: Text(
-                'Delete the copy',
+                l.backupScreenDeleteTheCopy,
                 style: TextStyle(
                   color: typed.text == guest.name ? Palette.err : null,
                 ),
@@ -393,60 +395,62 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final settings = _settings;
     return [
       SwitchListTile(
-        title: const Text('Scheduled backup'),
-        subtitle: const Text('Once a day, at the hour below'),
+        title: Text(l.backupScreenScheduledBackup),
+        subtitle: Text(l.backupScreenOnceADay),
         value: _enabled ?? false,
         onChanged: (on) => _act(
           () => _session.api.setFeature('backup', FeatureUpdate(enabled: on)),
         ),
       ),
       _note(
-        'Originals and the database, encrypted. The destination is a folder inside ${settings?.localFolder ?? 'the backup folder'}, or an s3: or b2: address. Write the password down somewhere other than this server.',
+        l.backupScreenExplain(
+          settings?.localFolder ?? l.backupScreenBackupFolder,
+        ),
       ),
-      _field(_repository, 'Destination'),
+      _field(_repository, l.backupScreenDestination),
       _field(
         _password,
         settings?.hasPassword == true
-            ? 'Password (saved, type to change)'
-            : 'Backup password',
+            ? l.backupScreenPasswordSaved
+            : l.backupScreenBackupPassword,
         secret: true,
       ),
       _field(
         _s3Key,
         settings?.hasS3Key == true
-            ? 'Access key (saved)'
-            : 'Access key (S3, B2)',
+            ? l.backupScreenAccessKeySaved
+            : l.backupScreenAccessKey,
       ),
-      _field(_s3Secret, 'Secret key (S3, B2)', secret: true),
-      _field(_hour, 'Hour of the day (0-23)', keyboard: TextInputType.number),
+      _field(_s3Secret, l.backupScreenSecretKey, secret: true),
+      _field(_hour, l.backupScreenHourOfDay, keyboard: TextInputType.number),
       Padding(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
         child: Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            FilledButton(onPressed: _save, child: const Text('Save')),
+            FilledButton(onPressed: _save, child: Text(l.backupScreenSave)),
             OutlinedButton(
               onPressed: () => _run(BackupRunRequestKindEnum.backup),
-              child: const Text('Back up now'),
+              child: Text(l.backupScreenBackUpNow),
             ),
             OutlinedButton(
               onPressed: () => _run(BackupRunRequestKindEnum.restoreTest),
-              child: const Text('Test bringing it back'),
+              child: Text(l.backupScreenTestBringingBack),
             ),
           ],
         ),
       ),
       if (_runs.isNotEmpty) ...[
-        _heading('History'),
+        _heading(l.backupScreenHistory),
         for (final run in _runs.take(8))
           ListTile(
             dense: true,
             title: Text(
-              '${run.kind == BackupRunKindEnum.backup ? 'Backup' : 'Restore test'}${run.destinationName == null ? '' : ' → ${run.destinationName}'}',
+              '${run.kind == BackupRunKindEnum.backup ? l.backupScreenRunBackup : l.backupScreenRunRestoreTest}${run.destinationName == null ? '' : ' → ${run.destinationName}'}',
             ),
             subtitle: Text(
-              '${run.status.value} · ${_when(run.startedAt)} · files ${run.files}${run.message.isEmpty ? '' : '\n${run.message}'}',
+              '${run.status.value} · ${_when(run.startedAt)} · ${l.backupScreenFiles('${run.files}')}${run.message.isEmpty ? '' : '\n${run.message}'}',
             ),
           ),
       ],
@@ -456,10 +460,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   List<Widget> _destinationSection() {
     final destinations = _destinations ?? const [];
     return [
-      _heading('My copy at others'),
-      _note(
-        'Two Mediarr servers keep an encrypted copy of each other. The one that keeps it cannot read it, and what is deleted from it is kept for 90 more days.',
-      ),
+      _heading(l.backupScreenMyCopyAtOthers),
+      _note(l.backupScreenTwoServers),
       for (final destination in destinations)
         ListTile(
           title: Text(destination.name),
@@ -468,22 +470,24 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 (destination.lastError.isEmpty
                     ? ''
                     : '\n${destination.lastError}') +
-                (isExposedAddress(destination.address) ? '\nNo HTTPS' : ''),
+                (isExposedAddress(destination.address)
+                    ? '\n${l.backupScreenNoHttps}'
+                    : ''),
           ),
           isThreeLine: destination.lastError.isNotEmpty,
           trailing: PopupMenuButton<String>(
-            tooltip: 'More',
+            tooltip: l.backupScreenMore,
             onSelected: (choice) => choice == 'test'
                 ? _run(BackupRunRequestKindEnum.restoreTest, destination.id)
                 : _act(
                     () => _session.api.removeBackupDestination(destination.id),
                   ),
-            itemBuilder: (_) => const [
+            itemBuilder: (_) => [
               PopupMenuItem(
                 value: 'test',
-                child: Text('Test bringing it back'),
+                child: Text(l.backupScreenTestBringingBack),
               ),
-              PopupMenuItem(value: 'remove', child: Text('Remove')),
+              PopupMenuItem(value: 'remove', child: Text(l.backupScreenRemove)),
             ],
           ),
         ),
@@ -495,9 +499,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           maxLines: 4,
           style: monoData(13),
           decoration: InputDecoration(
-            labelText: 'Code from the other Mediarr',
+            labelText: l.backupScreenCodeFromOther,
             suffixIcon: IconButton(
-              tooltip: 'Scan the QR code',
+              tooltip: l.backupScreenScanQr,
               icon: const Icon(Icons.qr_code_scanner),
               onPressed: _scan,
             ),
@@ -510,7 +514,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           alignment: Alignment.centerLeft,
           child: FilledButton(
             onPressed: _pairing ? null : _pair,
-            child: Text(_pairing ? 'Pairing…' : 'Pair'),
+            child: Text(_pairing ? l.backupScreenPairing : l.backupScreenPair),
           ),
         ),
       ),
@@ -521,32 +525,23 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   List<Widget> _snapshotSection() {
     final text = Theme.of(context).textTheme;
     return [
-      _heading('Snapshots before upgrades'),
+      _heading(l.backupScreenSnapshots),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: Text(
-          'Before each upgrade that changes the database, Mediarr keeps a snapshot of it. '
-          'The last three are kept.',
-          style: text.bodySmall,
-        ),
+        child: Text(l.backupScreenSnapshotsExplain, style: text.bodySmall),
       ),
-      if (_snapshots.isEmpty)
-        const ListTile(
-          title: Text(
-            'No snapshots yet. The first is made at the next upgrade that changes the database.',
-          ),
-        ),
+      if (_snapshots.isEmpty) ListTile(title: Text(l.backupScreenNoSnapshots)),
       for (final snap in _snapshots)
         ListTile(
           title: Text(
-            '${snap.fromVersion.isEmpty ? 'Earlier version' : snap.fromVersion} → ${snap.toVersion}',
+            '${snap.fromVersion.isEmpty ? l.backupScreenEarlierVersion : snap.fromVersion} → ${snap.toVersion}',
           ),
           subtitle: Text(
             '${MaterialLocalizations.of(context).formatMediumDate(snap.createdAt.toLocal())} · '
             '${formatBytes(snap.sizeBytes)}',
           ),
           trailing: IconButton(
-            tooltip: 'Delete snapshot',
+            tooltip: l.backupScreenDeleteSnapshot,
             icon: Icon(Icons.delete_outline, color: Palette.err),
             onPressed: () => _deleteSnapshot(snap),
           ),
@@ -555,7 +550,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           child: SelectableText(
-            'To go back to the newest one, in the folder with docker-compose.yml:\n'
+            '${l.backupScreenGoBackHow}\n'
             'docker compose stop server worker\n'
             'docker compose run --rm server rollback',
             style: text.bodySmall,
@@ -568,16 +563,16 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this snapshot?'),
-        content: const Text('It will no longer be possible to go back to it.'),
+        title: Text(l.backupScreenDeleteThisSnapshot),
+        content: Text(l.backupScreenNoGoingBack),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.backupScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(l.backupScreenDelete),
           ),
         ],
       ),
@@ -587,14 +582,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       await _session.api.deleteUpgradeSnapshot(snap.name);
       await _load();
     } on ApiException catch (cause) {
-      _tell(cause.message ?? 'Not deleted.');
+      _tell(cause.message ?? l.backupScreenNotDeleted);
     }
   }
 
   List<Widget> _guestSection() {
     final guests = _guests ?? const [];
     return [
-      _heading('I keep for others'),
+      _heading(l.backupScreenIKeepForOthers),
       for (final guest in guests)
         ListTile(
           title: Text(guest.name),
@@ -611,7 +606,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             ],
           ),
           trailing: PopupMenuButton<String>(
-            tooltip: 'More',
+            tooltip: l.backupScreenMore,
             onSelected: (choice) async {
               switch (choice) {
                 case 'code':
@@ -622,7 +617,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     await _load();
                     if (invite != null && mounted) await _showInvite(invite);
                   } on ApiException catch (cause) {
-                    _tell(cause.message ?? 'No new code.');
+                    _tell(cause.message ?? l.backupScreenNoNewCode);
                   }
                 case 'pause':
                   await _act(
@@ -643,30 +638,34 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     final result = await _session.api.restoreKeepGuestDeleted(
                       guest.id,
                     );
-                    _tell('Files brought back: ${result?.restored ?? 0}.');
+                    _tell(
+                      l.backupScreenFilesBroughtBack(
+                        '${result?.restored ?? 0}',
+                      ),
+                    );
                   });
                 case 'remove':
                   await _remove(guest);
               }
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(value: 'code', child: Text('New code')),
+              PopupMenuItem(value: 'code', child: Text(l.backupScreenNewCode)),
               if (guest.status != KeepGuestStatusEnum.invited)
                 PopupMenuItem(
                   value: 'pause',
                   child: Text(
                     guest.status == KeepGuestStatusEnum.stopped
-                        ? 'Resume'
-                        : 'Stop',
+                        ? l.backupScreenResume
+                        : l.backupScreenStop,
                   ),
                 ),
-              const PopupMenuItem(value: 'size', child: Text('Size')),
+              PopupMenuItem(value: 'size', child: Text(l.backupScreenSize)),
               if (guest.deletedBytes > 0)
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'restore',
-                  child: Text('Bring back what was deleted'),
+                  child: Text(l.backupScreenBringBackDeleted),
                 ),
-              const PopupMenuItem(value: 'remove', child: Text('Remove')),
+              PopupMenuItem(value: 'remove', child: Text(l.backupScreenRemove)),
             ],
           ),
         ),
@@ -677,7 +676,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           child: OutlinedButton.icon(
             onPressed: _invite,
             icon: const Icon(Icons.person_add_alt),
-            label: const Text('Invite'),
+            label: Text(l.backupScreenInvite),
           ),
         ),
       ),
@@ -688,12 +687,12 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   Widget build(BuildContext context) {
     final ready = _destinations != null && _guests != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Backup')),
+      appBar: AppBar(title: Text(l.backupScreenTitle)),
       body: !ready
           ? _failed
-                ? const EmptyMessage(
+                ? EmptyMessage(
                     icon: Icons.cloud_off,
-                    text: 'The backup settings could not be loaded.',
+                    text: l.backupScreenLoadFailed,
                   )
                 : Center(child: CircularProgressIndicator(color: Palette.gold))
           : RefreshIndicator(
@@ -725,7 +724,7 @@ class _KeepCodeScannerState extends State<KeepCodeScanner> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Scan the code')),
+    appBar: AppBar(title: Text(l.backupScreenScanTheCode)),
     body: MobileScanner(
       onDetect: (capture) {
         if (_done) return;

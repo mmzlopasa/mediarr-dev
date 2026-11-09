@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../theme.dart';
 
@@ -118,9 +119,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
       if (user != null) ref.read(sessionProvider.notifier).updateUser(user);
       _password.clear();
-      _tell('Saved.');
+      _tell(l.settingsScreenSaved);
     } on ApiException catch (cause) {
-      _tell(cause.message ?? 'The profile could not be saved.');
+      _tell(cause.message ?? l.profileScreenNotSaved);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -154,7 +155,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final user = User.fromJson(jsonDecode(response.body));
       if (user != null) ref.read(sessionProvider.notifier).updateUser(user);
     } on FormatException {
-      _tell('The picture could not be sent.');
+      _tell(l.profileScreenPictureNotSent);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -165,7 +166,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final user = await _session.api.removeAvatar();
       if (user != null) ref.read(sessionProvider.notifier).updateUser(user);
     } on ApiException catch (cause) {
-      _tell(cause.message ?? 'The picture could not be removed.');
+      _tell(cause.message ?? l.profileScreenPictureNotRemoved);
     }
   }
 
@@ -174,7 +175,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final session = ref.watch(sessionProvider).value!;
     final hasPicture = avatarUrl(session, session.user) != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(l.profileScreenTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
         children: [
@@ -192,12 +193,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               OutlinedButton(
                 onPressed: _busy ? null : _choose,
-                child: Text(hasPicture ? 'Change picture' : 'Add a picture'),
+                child: Text(
+                  hasPicture
+                      ? l.profileScreenChangePicture
+                      : l.profileScreenAddPicture,
+                ),
               ),
               if (hasPicture)
                 TextButton(
                   onPressed: _busy ? null : _remove,
-                  child: Text('Remove', style: TextStyle(color: Palette.err)),
+                  child: Text(
+                    l.profileScreenRemove,
+                    style: TextStyle(color: Palette.err),
+                  ),
                 ),
             ],
           ),
@@ -207,7 +215,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             textCapitalization: TextCapitalization.words,
             autofillHints: const [AutofillHints.name],
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(labelText: l.adminUsersName),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -215,7 +223,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(labelText: 'Email address'),
+            decoration: InputDecoration(labelText: l.profileScreenEmailAddress),
           ),
           if (_emailChanged) ...[
             const SizedBox(height: 8),
@@ -223,8 +231,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               controller: _password,
               obscureText: true,
               autofillHints: const [AutofillHints.password],
-              decoration: const InputDecoration(
-                labelText: 'Current password, to change the email',
+              decoration: InputDecoration(
+                labelText: l.profileScreenCurrentPassword,
               ),
             ),
           ],
@@ -233,7 +241,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             alignment: Alignment.centerLeft,
             child: FilledButton(
               onPressed: _busy ? null : _save,
-              child: const Text('Save'),
+              child: Text(l.settingsScreenSave),
             ),
           ),
         ],

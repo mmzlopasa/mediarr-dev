@@ -7,12 +7,13 @@ import 'package:video_player/video_player.dart';
 
 import '../services/session.dart';
 import '../services/slideshow.dart';
+import '../l10n/l10n.dart';
 
 String transitionName(SlideChange transition) => switch (transition) {
-  SlideChange.fade => 'Crossfade',
-  SlideChange.slide => 'Slide',
-  SlideChange.zoom => 'Slow zoom',
-  SlideChange.none => 'None',
+  SlideChange.fade => l.slideshowScreenCrossfade,
+  SlideChange.slide => l.slideshowScreenSlide,
+  SlideChange.zoom => l.slideshowScreenSlowZoom,
+  SlideChange.none => l.slideshowScreenNone,
 };
 
 /// The photos of a list one after another, full screen, from the one that was open.
@@ -205,11 +206,11 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               children: [
                 Text(
-                  'Slideshow settings',
+                  l.slideshowScreenSettings,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
-                const Text('Pace'),
+                Text(l.slideshowScreenPace),
                 Wrap(
                   spacing: 6,
                   children: [
@@ -223,7 +224,7 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text('Transition'),
+                Text(l.slideshowScreenTransition),
                 Wrap(
                   spacing: 6,
                   children: [
@@ -238,19 +239,19 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Shuffle'),
+                  title: Text(l.slideshowScreenShuffle),
                   value: _settings.shuffle,
                   onChanged: (on) => update(_settings.copyWith(shuffle: on)),
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Loop'),
+                  title: Text(l.slideshowScreenLoop),
                   value: _settings.loop,
                   onChanged: (on) => update(_settings.copyWith(loop: on)),
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Date and place'),
+                  title: Text(l.slideshowScreenDateAndPlace),
                   value: _settings.caption,
                   onChanged: (on) => update(_settings.copyWith(caption: on)),
                 ),
@@ -340,11 +341,11 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
             if (_settings.caption && _caption.isNotEmpty)
               Positioned(left: 16, bottom: 96, child: _Pill(text: _caption)),
             if (_ended)
-              const Positioned(
+              Positioned(
                 top: 60,
                 left: 0,
                 right: 0,
-                child: Center(child: _Pill(text: 'The end.')),
+                child: Center(child: _Pill(text: l.slideshowScreenTheEnd)),
               ),
             AnimatedOpacity(
               opacity: _controls ? 1 : 0,
@@ -433,33 +434,35 @@ class _Controls extends StatelessWidget {
               Text(count, style: const TextStyle(color: Colors.white70)),
               const Spacer(),
               IconButton(
-                tooltip: 'Previous',
+                tooltip: l.slideshowScreenPrevious,
                 color: Colors.white,
                 icon: const Icon(Icons.skip_previous),
                 onPressed: onPrevious,
               ),
               IconButton(
-                tooltip: paused ? 'Play' : 'Pause',
+                tooltip: paused
+                    ? l.slideshowScreenPlay
+                    : l.slideshowScreenPause,
                 color: Colors.white,
                 iconSize: 34,
                 icon: Icon(paused ? Icons.play_arrow : Icons.pause),
                 onPressed: onPause,
               ),
               IconButton(
-                tooltip: 'Next',
+                tooltip: l.slideshowScreenNext,
                 color: Colors.white,
                 icon: const Icon(Icons.skip_next),
                 onPressed: onNext,
               ),
               const Spacer(),
               IconButton(
-                tooltip: 'Slideshow settings',
+                tooltip: l.slideshowScreenSettings,
                 color: Colors.white,
                 icon: const Icon(Icons.tune),
                 onPressed: onSettings,
               ),
               IconButton(
-                tooltip: 'Close',
+                tooltip: l.slideshowScreenClose,
                 color: Colors.white,
                 icon: const Icon(Icons.close),
                 onPressed: onClose,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../../l10n/l10n.dart';
 import '../../services/session.dart';
 import 'admin_common.dart';
 
@@ -48,7 +49,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Audit log')),
+    appBar: AppBar(title: Text(l.adminScreenAuditLog)),
     body: AdminBody(
       loading: _entries == null,
       error: _error,
@@ -56,8 +57,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
         onRefresh: _load,
         child: ListView(
           children: [
-            if (_entries!.isEmpty)
-              const ListTile(title: Text('Nothing was changed yet.')),
+            if (_entries!.isEmpty) ListTile(title: Text(l.adminAuditEmpty)),
             for (final entry in _entries!)
               ListTile(
                 dense: true,
@@ -76,7 +76,7 @@ class _AuditScreenState extends ConsumerState<AuditScreen> {
               Center(
                 child: TextButton(
                   onPressed: () => _load(more: true),
-                  child: const Text('Show older'),
+                  child: Text(l.adminAuditShowOlder),
                 ),
               ),
           ],

@@ -7,7 +7,7 @@
 	import Kv from '#lib/design/components/Kv.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import Stat from '#lib/design/components/Stat.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { diskUsedPercent, liveOverview } from '#lib/overview.svelte.ts';
 
 	const overview = liveOverview();
@@ -21,60 +21,54 @@
 	);
 </script>
 
-<svelte:head><title>{tr('Pregled', 'Overview')} — Mediarr Admin</title></svelte:head>
+<svelte:head><title>{t('admin.overview')} — Mediarr Admin</title></svelte:head>
 
 <div class="ph">
 	<div>
-		<h1>{tr('Dobrodošli', 'Welcome')}</h1>
+		<h1>{t('admin.welcome')}</h1>
 		<p>
-			{tr(
-				'Stanje biblioteke i poslužitelja na jednom mjestu.',
-				'Library and server status in one place.'
-			)}
+			{t('admin.libraryAndServerStatusIn')}
 		</p>
 	</div>
 </div>
 
 {#if overview.failed}
-	<Alert kind="err">{tr('Podaci se nisu učitali.', 'The data could not be loaded.')}</Alert>
+	<Alert kind="err">{t('common.theDataCouldNotBe')}</Alert>
 {/if}
 
 {#if overview.data}
 	{@const data = overview.data}
 	<div class="stats">
-		<Stat label={tr('Korisnici', 'Users')} value={String(data.users)} />
-		<Stat label={tr('Fotke', 'Photos')} value={String(data.photos)} />
-		<Stat label={tr('Videi', 'Videos')} value={String(data.videos)} />
+		<Stat label={t('admin.users')} value={String(data.users)} />
+		<Stat label={t('common.photos')} value={String(data.photos)} />
+		<Stat label={t('common.videos')} value={String(data.videos)} />
 		<Stat
-			label={tr('Pohrana', 'Storage')}
+			label={t('admin.storage')}
 			value={formatBytes(data.libraryBytes)}
 			pct={diskUsedPercent(data)}
 		/>
 	</div>
 	<div class="grid2">
-		<Card title={tr('Poslovi', 'Jobs')}>
+		<Card title={t('admin.jobs')}>
 			{#if jobsTotal === 0}
-				<EmptyState icon="list" text={tr('Nema poslova u redu.', 'There are no queued jobs.')} />
+				<EmptyState icon="list" text={t('admin.thereAreNoQueuedJobs')} />
 			{:else}
-				<Kv label={tr('U redu', 'Queued')} value={String(data.jobs.queued)} />
-				<Kv label={tr('U obradi', 'Running')} value={String(data.jobs.running)} />
-				<Kv label={tr('Dovršeno', 'Completed')} value={String(data.jobs.completed)} />
+				<Kv label={t('admin.queued')} value={String(data.jobs.queued)} />
+				<Kv label={t('admin.running')} value={String(data.jobs.running)} />
+				<Kv label={t('admin.completed')} value={String(data.jobs.completed)} />
 				{#if data.jobs.failed > 0}
 					<a class="kv kv-bad" href={resolve('/admin/jobs')}
-						><span>{tr('Neuspjelo', 'Failed')}</span><b>{data.jobs.failed} ›</b></a
+						><span>{t('admin.failed')}</span><b>{data.jobs.failed} ›</b></a
 					>
 				{:else}
-					<Kv label={tr('Neuspjelo', 'Failed')} value="0" />
+					<Kv label={t('admin.failed')} value="0" />
 				{/if}
 			{/if}
 		</Card>
-		<Card title={tr('Sustav', 'System')}>
-			<Kv label={tr('Verzija', 'Version')} value={data.version} />
-			<Kv label={tr('Baza', 'Database')} value="PostgreSQL {data.databaseVersion}" />
-			<Kv
-				label={tr('Slobodno na disku', 'Free disk space')}
-				value={formatBytes(data.diskFreeBytes)}
-			/>
+		<Card title={t('admin.system')}>
+			<Kv label={t('admin.version')} value={data.version} />
+			<Kv label={t('admin.database')} value="PostgreSQL {data.databaseVersion}" />
+			<Kv label={t('admin.freeDiskSpace')} value={formatBytes(data.diskFreeBytes)} />
 		</Card>
 	</div>
 {:else if !overview.failed}

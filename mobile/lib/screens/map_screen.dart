@@ -9,6 +9,7 @@ import '../services/session.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
 import 'viewer_screen.dart';
+import '../l10n/l10n.dart';
 
 /// The points as GeoJSON. Each photo keeps its id, which a tap on the map gives back.
 Map<String, dynamic> pointsToGeoJson(MapPoints points) => {
@@ -28,7 +29,7 @@ Map<String, dynamic> pointsToGeoJson(MapPoints points) => {
 };
 
 String tripTitle(Trip trip) =>
-    trip.places.isEmpty ? 'No place name' : trip.places.join(', ');
+    trip.places.isEmpty ? l.mapScreenNoPlaceName : trip.places.join(', ');
 
 typedef MapBuilder = Widget Function(
   String style,
@@ -146,15 +147,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       body = _failed
           ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'The map could not be loaded. Check the connection.',
-              action: GoldButton(label: 'Try again', onPressed: _loadAll),
+              text: l.mapScreenNotLoaded,
+              action: GoldButton(
+                label: l.mapScreenTryAgain,
+                onPressed: _loadAll,
+              ),
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (points.ids.isEmpty && _from == null && _to == null) {
-      body = const EmptyMessage(
-        icon: Icons.map_outlined,
-        text: 'No photos with a location yet.',
-      );
+      body = EmptyMessage(icon: Icons.map_outlined, text: l.mapScreenNoPhotos);
     } else {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -163,15 +164,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             children: [
               TextButton(
                 onPressed: () => _pick(true),
-                child: Text(_date(_from, 'From date')),
+                child: Text(_date(_from, l.mapScreenFromDate)),
               ),
               TextButton(
                 onPressed: () => _pick(false),
-                child: Text(_date(_to, 'To date')),
+                child: Text(_date(_to, l.mapScreenToDate)),
               ),
               if (_from != null || _to != null)
                 IconButton(
-                  tooltip: 'Clear',
+                  tooltip: l.mapScreenClear,
                   icon: const Icon(Icons.close),
                   onPressed: () {
                     setState(() {
@@ -185,7 +186,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Text(
-                  'Items: ${points.ids.length}',
+                  l.mapScreenItems('${points.ids.length}'),
                   style: text.bodySmall?.copyWith(color: Palette.dim),
                 ),
               ),
@@ -203,7 +204,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Text('Trips', style: text.titleMedium),
+                    child: Text(l.mapScreenTrips, style: text.titleMedium),
                   ),
                   for (final trip in _trips)
                     ListTile(
@@ -226,7 +227,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Map')),
+      appBar: AppBar(title: Text(l.mapScreenTitle)),
       body: body,
     );
   }

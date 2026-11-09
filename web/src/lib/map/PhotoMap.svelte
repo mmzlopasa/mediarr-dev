@@ -15,7 +15,7 @@
 	import { Protocol } from 'pmtiles';
 	import type { MapPoints } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	const FIT_PADDING = 48;
 	const FIT_MAX_ZOOM = 12;
@@ -204,15 +204,10 @@
 
 {#if noBackground}
 	<Alert kind="warn">
-		{tr(
-			'Podloga karte nije dostupna, ali fotke su prikazane. Administrator je može promijeniti u postavkama.',
-			'The map background is not available, but your photos are shown. An administrator can change it in the settings.'
-		)}
+		{t('photoMap.theMapBackgroundIsNot')}
 	</Alert>
 {/if}
 {#if noWebgl}
-	<Alert kind="err"
-		>{tr('Ovaj preglednik ne može prikazati kartu.', 'This browser cannot show the map.')}</Alert
-	>
+	<Alert kind="err">{t('photoMap.thisBrowserCannotShowThe')}</Alert>
 {/if}
 <div class="map-box"><div class="map-canvas" bind:this={container}></div></div>

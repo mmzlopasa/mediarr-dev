@@ -6,6 +6,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'session.dart';
 import 'shared_files.dart';
 import 'tus.dart';
+import '../l10n/l10n.dart';
 
 enum UploadState { queued, preparing, uploading, done, duplicate, failed }
 
@@ -96,7 +97,7 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
       // The untouched original. iOS may first download it from iCloud.
       final file = task.sharedFile ?? await asset?.originFile;
       if (file == null) {
-        throw UploadRejected('This photo could not be read from the device.');
+        throw UploadRejected(l.uploadsCouldNotRead);
       }
       task.state = UploadState.uploading;
       task.total = await file.length();

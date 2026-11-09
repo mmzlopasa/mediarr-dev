@@ -280,6 +280,37 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('the app is switched to Croatian, and the account learns it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byTooltip('Account').first);
+    await waitFor(tester, find.text('Settings'));
+    await tester.ensureVisible(find.text('Settings'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Settings'));
+    await waitFor(tester, find.text('Language'));
+    await tester.ensureVisible(find.text('Language'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Language'));
+    await waitFor(tester, find.text('Hrvatski'));
+    await tester.tap(find.text('Hrvatski'));
+    await waitFor(tester, find.text('Jezik'));
+    for (var i = 0; i < 50 && server.language != 'hr'; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(server.language, 'hr');
+    // Back to English, for the tests after this one.
+    await tester.tap(find.text('English'));
+    await waitFor(tester, find.text('Language'));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('the home screen widget is given an album', (tester) async {
     // On iOS only the signing at install lets the app share with its widget.
     if (!Platform.isAndroid) return;

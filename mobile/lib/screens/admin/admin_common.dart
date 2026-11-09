@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../../theme.dart';
+import '../../l10n/l10n.dart';
 
 /// What the server said went wrong, in its own words when it gave them.
 String apiProblem(ApiException cause) {
@@ -16,7 +17,7 @@ String apiProblem(ApiException cause) {
   } on FormatException {
     // Not JSON: the text itself.
   }
-  return body.isEmpty ? 'The server did not answer (${cause.code}).' : body;
+  return body.isEmpty ? l.adminCommonNoAnswer('${cause.code}') : body;
 }
 
 void tellAdmin(BuildContext context, String message) =>

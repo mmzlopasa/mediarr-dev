@@ -6,6 +6,7 @@ import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 const minCropSide = 0.05;
 
@@ -300,7 +301,9 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
       navigator.pop(true);
     } on ApiException catch (cause) {
       messenger.showSnackBar(
-        SnackBar(content: Text('The action failed. ${cause.message ?? ''}')),
+        SnackBar(
+          content: Text(l.photoEditorScreenActionFailed(cause.message ?? '')),
+        ),
       );
       if (mounted) setState(() => _busy = false);
     }
@@ -427,10 +430,10 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text('Edit'),
+        title: Text(l.photoEditorScreenEdit),
         actions: [
           IconButton(
-            tooltip: 'Rotate',
+            tooltip: l.photoEditorScreenRotate,
             icon: const Icon(Icons.rotate_right),
             onPressed: _busy
                 ? null
@@ -454,9 +457,21 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
                     : _stage(picture),
               ),
             ),
-            _slider('Brightness', _brightness, (v) => _brightness = v),
-            _slider('Contrast', _contrast, (v) => _contrast = v),
-            _slider('Saturation', _saturation, (v) => _saturation = v),
+            _slider(
+              l.photoEditorScreenBrightness,
+              _brightness,
+              (v) => _brightness = v,
+            ),
+            _slider(
+              l.photoEditorScreenContrast,
+              _contrast,
+              (v) => _contrast = v,
+            ),
+            _slider(
+              l.photoEditorScreenSaturation,
+              _saturation,
+              (v) => _saturation = v,
+            ),
             if (_filtersOn)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -464,27 +479,30 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
                   isExpanded: true,
                   value: _look,
                   dropdownColor: Palette.bg2,
-                  items: const [
-                    DropdownMenuItem(value: null, child: Text('No filter')),
+                  items: [
+                    DropdownMenuItem(
+                      value: null,
+                      child: Text(l.photoEditorScreenNoFilter),
+                    ),
                     DropdownMenuItem(
                       value: AssetEditsFilterEnum.mono,
-                      child: Text('Black and white'),
+                      child: Text(l.photoEditorScreenBlackAndWhite),
                     ),
                     DropdownMenuItem(
                       value: AssetEditsFilterEnum.warm,
-                      child: Text('Warm'),
+                      child: Text(l.photoEditorScreenWarm),
                     ),
                     DropdownMenuItem(
                       value: AssetEditsFilterEnum.cool,
-                      child: Text('Cool'),
+                      child: Text(l.photoEditorScreenCool),
                     ),
                     DropdownMenuItem(
                       value: AssetEditsFilterEnum.vintage,
-                      child: Text('Vintage'),
+                      child: Text(l.photoEditorScreenVintage),
                     ),
                     DropdownMenuItem(
                       value: AssetEditsFilterEnum.vivid,
-                      child: Text('Vivid'),
+                      child: Text(l.photoEditorScreenVivid),
                     ),
                   ],
                   onChanged: _busy
@@ -504,13 +522,13 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
                               () =>
                                   widget.session.api.clearAssetEdits(widget.id),
                             ),
-                      child: const Text('Back to the original'),
+                      child: Text(l.photoEditorScreenBackToOriginal),
                     ),
                   const Spacer(),
                   SizedBox(
                     width: 120,
                     child: GoldButton(
-                      label: 'Save',
+                      label: l.photoEditorScreenSave,
                       busy: _busy,
                       onPressed: _save,
                     ),

@@ -6,16 +6,21 @@ import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 /// What the last run over the files already here did, or would do, in one line.
 String describeStorageReport(StorageReport report) {
   if (report.running) {
-    return '${report.dryRun ? 'Dry run' : 'Moving'}… ${report.checked}';
+    return report.dryRun
+        ? l.storageTemplateScreenDryRunProgress('${report.checked}')
+        : l.storageTemplateScreenMovingProgress('${report.checked}');
   }
   final line = report.dryRun
-      ? 'Dry run: ${report.moved} of ${report.checked} would move.'
-      : 'Moved ${report.moved} of ${report.checked}.';
-  return report.failed > 0 ? '$line Failed: ${report.failed}.' : line;
+      ? l.storageTemplateScreenWouldMove('${report.moved}', '${report.checked}')
+      : l.storageTemplateScreenMoved('${report.moved}', '${report.checked}');
+  return report.failed > 0
+      ? l.storageTemplateScreenFailedCount(line, '${report.failed}')
+      : line;
 }
 
 /// Whether the files already here may move: only after a dry run of the template that is kept.
@@ -80,7 +85,7 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
         _poll = null;
       }
     } on ApiException catch (cause) {
-      _say(cause.message ?? 'Not loaded.');
+      _say(cause.message ?? l.storageTemplateScreenNotLoaded);
     }
   }
 
@@ -131,9 +136,9 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
       setState(() => _current = current);
       _field.text = current.template;
       _preview();
-      _say('Saved.');
+      _say(l.storageTemplateScreenSaved);
     } on ApiException catch (cause) {
-      _say(cause.message ?? 'Not saved.');
+      _say(cause.message ?? l.storageTemplateScreenNotSaved);
     }
   }
 
@@ -143,18 +148,16 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
       final sure = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Move $moved files?'),
-          content: const Text(
-            'The originals do not change, only where they are on the disk.',
-          ),
+          title: Text(l.storageTemplateScreenMoveFilesQuestion('$moved')),
+          content: Text(l.storageTemplateScreenOriginalsUnchanged),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(l.storageTemplateScreenCancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Move'),
+              child: Text(l.storageTemplateScreenMove),
             ),
           ],
         ),
@@ -170,7 +173,7 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
         (_) => _load(),
       );
     } on ApiException catch (cause) {
-      _say(cause.message ?? 'Not started.');
+      _say(cause.message ?? l.storageTemplateScreenNotStarted);
     }
   }
 
@@ -187,25 +190,20 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
     final saved = current != null && current.template == _field.text.trim();
     final report = current?.report;
     return Scaffold(
-      appBar: AppBar(title: const Text('Storage template')),
+      appBar: AppBar(title: Text(l.storageTemplateScreenTitle)),
       body: current == null
           ? Center(child: CircularProgressIndicator(color: Palette.gold))
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
-                Text(
-                  'How originals are laid out on the disk, inside each user’s folder. It applies '
-                  'to new files; the ones already here move only when you ask, after a dry run. '
-                  'An external library never moves.',
-                  style: text.bodyMedium,
-                ),
+                Text(l.storageTemplateScreenIntro, style: text.bodyMedium),
                 const SizedBox(height: 14),
                 TextField(
                   controller: _field,
                   maxLength: 200,
                   style: const TextStyle(fontFamily: 'JetBrains Mono'),
                   decoration: InputDecoration(
-                    labelText: 'Template',
+                    labelText: l.storageTemplateScreenTemplate,
                     hintText: current.defaultLayout,
                     errorText: _previewError,
                     errorMaxLines: 3,
@@ -234,7 +232,7 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
                 ),
                 if (_previews.isNotEmpty) ...[
                   const SizedBox(height: 14),
-                  Text('Examples', style: text.titleSmall),
+                  Text(l.storageTemplateScreenExamples, style: text.titleSmall),
                   for (final example in _previews)
                     ListTile(
                       dense: true,
@@ -249,7 +247,7 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
                     if (current.template.isNotEmpty)
                       TextButton(
                         onPressed: () => _save(''),
-                        child: const Text('Back to the usual layout'),
+                        child: Text(l.storageTemplateScreenBackToUsual),
                       ),
                     const Spacer(),
                     FilledButton(
@@ -260,13 +258,16 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
                         backgroundColor: Palette.buttonGold,
                         foregroundColor: Palette.onGold,
                       ),
-                      child: const Text('Save'),
+                      child: Text(l.storageTemplateScreenSave),
                     ),
                   ],
                 ),
                 if (current.template.isNotEmpty) ...[
                   const Divider(height: 32),
-                  Text('Files already here', style: text.titleMedium),
+                  Text(
+                    l.storageTemplateScreenFilesAlreadyHere,
+                    style: text.titleMedium,
+                  ),
                   if (report != null &&
                       (report.running ||
                           report.template == current.template)) ...[
@@ -289,7 +290,7 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
                         onPressed: report?.running == true || !saved
                             ? null
                             : () => _apply(true),
-                        child: const Text('Dry run'),
+                        child: Text(l.storageTemplateScreenDryRun),
                       ),
                       const Spacer(),
                       FilledButton(
@@ -300,7 +301,7 @@ class _StorageTemplateScreenState extends ConsumerState<StorageTemplateScreen> {
                           backgroundColor: Palette.buttonGold,
                           foregroundColor: Palette.onGold,
                         ),
-                        child: const Text('Move the files'),
+                        child: Text(l.storageTemplateScreenMoveTheFiles),
                       ),
                     ],
                   ),

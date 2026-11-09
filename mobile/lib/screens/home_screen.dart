@@ -18,6 +18,7 @@ import 'timeline_screen.dart';
 import 'app_header.dart';
 import 'library_screen.dart';
 import 'people_screens.dart';
+import '../l10n/l10n.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -131,11 +132,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 class _FloatingNav extends ConsumerWidget {
   const _FloatingNav({required this.selected, required this.onSelected});
 
-  static const _items = [
-    (Icons.photo_outlined, 'Media'),
-    (Icons.search, 'Search'),
-    (Icons.photo_album_outlined, 'Albums'),
-    (Icons.grid_view_outlined, 'Library'),
+  static List<(IconData, String)> get _items => [
+    (Icons.photo_outlined, l.homeScreenMedia),
+    (Icons.search, l.homeScreenSearch),
+    (Icons.photo_album_outlined, l.homeScreenAlbums),
+    (Icons.grid_view_outlined, l.homeScreenLibrary),
   ];
 
   final int selected;
@@ -202,10 +203,12 @@ class _FloatingNav extends ConsumerWidget {
             if (!readOnly) ...[
               const SizedBox(width: 6),
               Tooltip(
-                message: 'Add',
+                message: l.homeScreenAdd,
                 child: Semantics(
                   button: true,
-                  label: working > 0 ? 'Add, $working uploading' : 'Add',
+                  label: working > 0
+                      ? l.homeScreenAddUploading('$working')
+                      : l.homeScreenAdd,
                   child: GestureDetector(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(

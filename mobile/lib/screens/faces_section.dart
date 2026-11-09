@@ -7,6 +7,7 @@ import 'package:mediarr_api/api.dart';
 import '../services/dispose_later.dart';
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 const _cropSize = 48.0;
 const _newPerson = 'new';
@@ -61,7 +62,9 @@ class _FacesSectionState extends State<FacesSection> {
     } on ApiException catch (cause) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('The action failed. ${cause.message ?? ''}')),
+          SnackBar(
+            content: Text(l.facesSectionActionFailed(cause.message ?? '')),
+          ),
         );
       }
     }
@@ -72,16 +75,16 @@ class _FacesSectionState extends State<FacesSection> {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('New person'),
+        title: Text(l.facesSectionNewPerson),
         content: TextField(controller: field, autofocus: true, maxLength: 100),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l.facesSectionCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, field.text.trim()),
-            child: const Text('Save'),
+            child: Text(l.facesSectionSave),
           ),
         ],
       ),
@@ -112,7 +115,7 @@ class _FacesSectionState extends State<FacesSection> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 10),
-        Text('People', style: text.titleMedium),
+        Text(l.facesSectionPeople, style: text.titleMedium),
         for (final face in _faces)
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -122,21 +125,23 @@ class _FacesSectionState extends State<FacesSection> {
               face: face,
             ),
             title: Text(
-              (face.person?.name ?? '').isEmpty ? 'No name' : face.person!.name,
+              (face.person?.name ?? '').isEmpty
+                  ? l.facesSectionNoName
+                  : face.person!.name,
             ),
             trailing: PopupMenuButton<String>(
-              tooltip: 'Who this is',
+              tooltip: l.facesSectionWhoThisIs,
               onSelected: (choice) => _choose(face, choice),
               itemBuilder: (_) => [
                 for (final person in _people)
                   PopupMenuItem(value: person.id, child: Text(person.name)),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: _newPerson,
-                  child: Text('New person…'),
+                  child: Text(l.facesSectionNewPersonMenu),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: _notAPerson,
-                  child: Text('Not a person'),
+                  child: Text(l.facesSectionNotAPerson),
                 ),
               ],
             ),

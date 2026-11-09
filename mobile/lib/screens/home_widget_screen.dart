@@ -7,19 +7,18 @@ import 'package:mediarr_api/api.dart';
 import '../services/home_widget.dart';
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 /// How to put the widget on the home screen, for this phone.
 String widgetHowTo() => Platform.isIOS
-    ? 'Then touch and hold an empty spot on the home screen, tap + (or Edit, Add Widget), '
-          'and choose Mediarr.'
-    : 'Then touch and hold an empty spot on the home screen, tap Widgets, and drag Mediarr to it.';
+    ? l.homeWidgetScreenHowToIos
+    : l.homeWidgetScreenHowToAndroid;
 
 /// How many pictures the widget keeps, where the phone says: on iOS the widget fetches them itself.
 String widgetPicturesLine(int pictures) => switch (pictures) {
-  < 0 => 'The widget fetches its photos itself, and keeps a few.',
-  0 => 'Fetching its photos…',
-  1 => '1 photo kept on this phone for it',
-  _ => '$pictures photos kept on this phone for it',
+  < 0 => l.homeWidgetScreenFetchesItself,
+  0 => l.homeWidgetScreenFetching,
+  _ => l.homeWidgetScreenPicturesKept(pictures),
 };
 
 /// Chooses the album the home screen widget shows.
@@ -67,7 +66,7 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
       await _load();
       _say(done);
     } on ApiException catch (cause) {
-      _say(cause.message ?? 'It did not work.');
+      _say(cause.message ?? l.homeWidgetScreenDidNotWork);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -85,7 +84,7 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
     final choice = _choice;
     final albums = _albums;
     return Scaffold(
-      appBar: AppBar(title: const Text('Home screen widget')),
+      appBar: AppBar(title: Text(l.homeWidgetScreenTitle)),
       body: choice == null || albums == null
           ? Center(child: CircularProgressIndicator(color: Palette.gold))
           : ListView(
@@ -94,32 +93,31 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                   child: Text(
-                    'The widget shows a photo from the album you choose here, a different one '
-                    'every hour, also without a connection. ${widgetHowTo()}',
+                    l.homeWidgetScreenIntro(widgetHowTo()),
                     style: text.bodyMedium,
                   ),
                 ),
                 if (choice.chosen)
                   ListTile(
                     leading: Icon(Icons.widgets_outlined, color: Palette.gold),
-                    title: Text('Showing ${choice.albumTitle}'),
+                    title: Text(l.homeWidgetScreenShowing(choice.albumTitle)),
                     subtitle: Text(widgetPicturesLine(choice.pictures)),
                     trailing: TextButton(
                       onPressed: _busy
                           ? null
                           : () => _run(
                               () => _widget.clear(_session),
-                              'The widget shows nothing now.',
+                              l.homeWidgetScreenShowsNothing,
                             ),
-                      child: const Text('Turn off'),
+                      child: Text(l.homeWidgetScreenTurnOff),
                     ),
                   ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                  child: Text('Album', style: text.titleSmall),
+                  child: Text(l.homeWidgetScreenAlbum, style: text.titleSmall),
                 ),
                 if (albums.isEmpty)
-                  const ListTile(title: Text('There are no albums yet.')),
+                  ListTile(title: Text(l.homeWidgetScreenNoAlbums)),
                 for (final album in albums)
                   ListTile(
                     leading: Icon(
@@ -133,7 +131,7 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
                     enabled: !_busy,
                     onTap: () => _run(
                       () => _widget.choose(_session, album),
-                      'The widget shows ${album.title}.',
+                      l.homeWidgetScreenShows(album.title),
                     ),
                   ),
               ],

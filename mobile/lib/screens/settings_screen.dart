@@ -9,7 +9,9 @@ import 'package:mediarr_api/api.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../l10n/l10n.dart';
 import '../services/account_preferences.dart';
+import '../services/language.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
 import '../services/agent.dart';
@@ -67,97 +69,97 @@ class SettingsScreen extends StatelessWidget {
       ],
     );
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l.settingsScreenTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 30),
         children: [
-          group('Viewing', [
+          group(l.settingsScreenViewing, [
             row(
               Icons.image_outlined,
-              'Asset viewer',
-              'How photos and videos open',
+              l.settingsScreenAssetViewer,
+              l.settingsScreenAssetViewerHint,
               const ViewerSettings(),
             ),
             row(
               Icons.dashboard_outlined,
-              'Photo grid',
-              'How the timeline is laid out',
+              l.settingsScreenPhotoGrid,
+              l.settingsScreenPhotoGridHint,
               const GridSettings(),
             ),
             row(
               Icons.interests_outlined,
-              'Preferences',
-              'Theme, color and feedback',
+              l.settingsScreenPreferences,
+              l.settingsScreenPreferencesHint,
               const PreferenceSettings(),
             ),
             row(
               Icons.language,
-              'Language',
-              "The app's language",
+              l.languageTitle,
+              l.settingsScreenLanguageHint,
               const LanguageSettings(),
             ),
           ]),
-          group('This phone', [
+          group(l.settingsScreenThisPhone, [
             row(
               Icons.cloud_upload_outlined,
-              'Backup',
-              'What this phone sends to the server',
+              l.settingsScreenBackup,
+              l.settingsScreenBackupHint,
               const UploadPage(),
             ),
             row(
               Icons.cleaning_services_outlined,
-              'Free up space',
-              'Remove what is safe on the server',
+              l.settingsScreenFreeUpSpace,
+              l.settingsScreenFreeUpSpaceHint,
               const FreeSpaceScreen(),
             ),
             row(
               Icons.sync,
-              'Sync status',
-              'What is on this phone and on the server',
+              l.settingsScreenSyncStatus,
+              l.settingsScreenSyncStatusHint,
               const SyncStatusScreen(),
             ),
             row(
               Icons.widgets_outlined,
-              'Home screen widget',
-              'An album on the home screen',
+              l.settingsScreenHomeWidget,
+              l.settingsScreenHomeWidgetHint,
               const HomeWidgetScreen(),
             ),
             row(
               Icons.notifications_outlined,
-              'Notifications',
-              'What the app tells you about',
+              l.settingsScreenNotifications,
+              l.settingsScreenNotificationsHint,
               const NotificationSettings(),
             ),
           ]),
-          group('Server', [
+          group(l.settingsScreenServer, [
             row(
               Icons.devices_outlined,
-              'Devices',
-              'Where this account is signed in',
+              l.settingsScreenDevices,
+              l.settingsScreenDevicesHint,
               const DevicesScreen(),
             ),
             row(
               Icons.bar_chart_outlined,
-              'Your library',
-              'How much this account holds',
+              l.settingsScreenYourLibrary,
+              l.settingsScreenYourLibraryHint,
               const StatsScreen(),
             ),
             row(
               Icons.wifi,
-              'Networking',
-              'The addresses of your server',
+              l.settingsScreenNetworking,
+              l.settingsScreenNetworkingHint,
               const NetworkSettings(),
             ),
             row(
               Icons.build_outlined,
-              'Advanced',
-              'Read-only mode and the image cache',
+              l.settingsScreenAdvanced,
+              l.settingsScreenAdvancedHint,
               const AdvancedSettings(),
             ),
             row(
               Icons.auto_awesome_outlined,
-              "What's new",
-              'The versions of Mediarr',
+              l.settingsScreenWhatsNew,
+              l.settingsScreenWhatsNewHint,
               null,
               onTap: () => launchUrl(
                 Uri.parse('https://github.com/mediarr-app/mediarr/tags'),
@@ -217,7 +219,7 @@ class AdvancedSettings extends ConsumerWidget {
     try {
       if (!await auth.isDeviceSupported()) return true;
       return await auth.authenticate(
-        localizedReason: 'Turn off read-only mode',
+        localizedReason: l.settingsScreenReadOnlyOff,
       );
     } on MissingPluginException {
       return true;
@@ -233,12 +235,12 @@ class AdvancedSettings extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     return Scaffold(
-      appBar: AppBar(title: const Text('Advanced')),
+      appBar: AppBar(title: Text(l.settingsScreenAdvanced)),
       body: ListView(
         children: [
           _Toggle(
-            'Read-only mode',
-            'Only look: no uploading, editing or deleting from this app',
+            l.settingsScreenReadOnly,
+            l.settingsScreenReadOnlyHint,
             settings.readOnly,
             (value) async {
               if (!value && !await _mayLeaveReadOnly()) return;
@@ -246,20 +248,20 @@ class AdvancedSettings extends ConsumerWidget {
             },
           ),
           _Toggle(
-            'Copy albums to the server',
-            'Backed-up albums get an album of the same name on the server. Photos are only added, never removed',
+            l.settingsScreenCopyAlbums,
+            l.settingsScreenCopyAlbumsHint,
             settings.mirrorAlbums,
             (value) => notifier.change(settings.copyWith(mirrorAlbums: value)),
           ),
           ListTile(
             leading: const Icon(Icons.playlist_remove),
-            title: const Text('Clear image cache'),
+            title: Text(l.settingsScreenClearCache),
             onTap: () async {
               final messenger = ScaffoldMessenger.of(context);
               await DefaultCacheManager().emptyCache();
               PaintingBinding.instance.imageCache.clear();
               messenger.showSnackBar(
-                const SnackBar(content: Text('The image cache is empty.')),
+                SnackBar(content: Text(l.settingsScreenCacheEmpty)),
               );
             },
           ),
@@ -277,39 +279,39 @@ class ViewerSettings extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     return Scaffold(
-      appBar: AppBar(title: const Text('Asset viewer')),
+      appBar: AppBar(title: Text(l.settingsScreenAssetViewer)),
       body: ListView(
         children: [
-          const _Heading(Icons.image_outlined, 'Photos'),
+          _Heading(Icons.image_outlined, l.settingsScreenPhotos),
           _Toggle(
-            'Load the full photo',
-            'Opens photos at full resolution. This uses more data and is slower',
+            l.settingsScreenLoadFull,
+            l.settingsScreenLoadFullHint,
             settings.loadOriginal,
             (value) => notifier.change(settings.copyWith(loadOriginal: value)),
           ),
           _Toggle(
-            'Tap to navigate',
-            'Tapping the left or right quarter of the screen goes to the previous or next photo',
+            l.settingsScreenTapToNavigate,
+            l.settingsScreenTapToNavigateHint,
             settings.tapToNavigate,
             (value) => notifier.change(settings.copyWith(tapToNavigate: value)),
           ),
           const Divider(),
-          const _Heading(Icons.videocam_outlined, 'Videos'),
+          _Heading(Icons.videocam_outlined, l.settingsScreenVideos),
           _Toggle(
-            'Auto play videos',
-            'Videos start when they are opened',
+            l.settingsScreenAutoPlay,
+            l.settingsScreenAutoPlayHint,
             settings.autoPlay,
             (value) => notifier.change(settings.copyWith(autoPlay: value)),
           ),
           _Toggle(
-            'Looping',
-            'Videos start again when they end',
+            l.settingsScreenLooping,
+            l.settingsScreenLoopingHint,
             settings.loopVideos,
             (value) => notifier.change(settings.copyWith(loopVideos: value)),
           ),
           _Toggle(
-            'Play the original video',
-            'Plays the original even when a converted version exists. It may have to buffer',
+            l.settingsScreenPlayOriginal,
+            l.settingsScreenPlayOriginalHint,
             settings.forceOriginalVideo,
             (value) =>
                 notifier.change(settings.copyWith(forceOriginalVideo: value)),
@@ -328,13 +330,13 @@ class GridSettings extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     return Scaffold(
-      appBar: AppBar(title: const Text('Photo grid')),
+      appBar: AppBar(title: Text(l.settingsScreenPhotoGrid)),
       body: ListView(
         children: [
-          const _Heading(Icons.grid_on, 'Layout'),
+          _Heading(Icons.grid_on, l.settingsScreenLayout),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Photos per row (${settings.perRow})'),
+            child: Text(l.settingsScreenPerRow('${settings.perRow}')),
           ),
           Slider(
             value: settings.perRow.toDouble(),
@@ -347,15 +349,21 @@ class GridSettings extends ConsumerWidget {
                 notifier.change(settings.copyWith(perRow: value.round())),
           ),
           const Divider(),
-          const _Heading(Icons.workspaces_outline, 'Group by'),
+          _Heading(Icons.workspaces_outline, l.settingsScreenGroupBy),
           RadioGroup<bool>(
             groupValue: settings.groupByDay,
             onChanged: (value) =>
                 notifier.change(settings.copyWith(groupByDay: value ?? true)),
-            child: const Column(
+            child: Column(
               children: [
-                RadioListTile<bool>(title: Text('Month + day'), value: true),
-                RadioListTile<bool>(title: Text('Month'), value: false),
+                RadioListTile<bool>(
+                  title: Text(l.settingsScreenMonthDay),
+                  value: true,
+                ),
+                RadioListTile<bool>(
+                  title: Text(l.settingsScreenMonth),
+                  value: false,
+                ),
               ],
             ),
           ),
@@ -373,10 +381,10 @@ class PreferenceSettings extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     return Scaffold(
-      appBar: AppBar(title: const Text('Preferences')),
+      appBar: AppBar(title: Text(l.settingsScreenPreferences)),
       body: ListView(
         children: [
-          const _Heading(Icons.palette_outlined, 'Theme'),
+          _Heading(Icons.palette_outlined, l.settingsScreenTheme),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SegmentedButton<AppTheme>(
@@ -390,7 +398,7 @@ class PreferenceSettings extends ConsumerWidget {
                   notifier.change(settings.copyWith(theme: chosen.first)),
             ),
           ),
-          const _Heading(Icons.colorize_outlined, 'Primary color'),
+          _Heading(Icons.colorize_outlined, l.settingsScreenPrimaryColor),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Wrap(
@@ -421,9 +429,9 @@ class PreferenceSettings extends ConsumerWidget {
           ),
           const _AccountChoices(),
           const Divider(height: 34),
-          const _Heading(Icons.vibration, 'Haptic feedback'),
+          _Heading(Icons.vibration, l.settingsScreenHaptics),
           _Toggle(
-            'Enabled',
+            l.settingsScreenEnabled,
             null,
             settings.haptics,
             (value) => notifier.change(settings.copyWith(haptics: value)),
@@ -434,17 +442,41 @@ class PreferenceSettings extends ConsumerWidget {
   }
 }
 
-class LanguageSettings extends StatelessWidget {
+class LanguageSettings extends ConsumerWidget {
   const LanguageSettings({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Language')),
-    body: const EmptyMessage(
-      icon: Icons.language,
-      text: 'The app is in English for now. Other languages are not available yet.',
-    ),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(languageProvider);
+    final session = ref.watch(sessionProvider).value;
+    return Scaffold(
+      appBar: AppBar(title: Text(l.languageTitle)),
+      body: RadioGroup<String>(
+        groupValue: current,
+        onChanged: (code) {
+          if (code != null) {
+            ref.read(languageProvider.notifier).choose(code, api: session?.api);
+          }
+        },
+        child: ListView(
+          children: [
+            for (final entry in appLanguages.entries)
+              RadioListTile<String>(
+                value: entry.key,
+                title: Text(entry.value),
+                subtitle: unreviewedLanguages.contains(entry.key)
+                    ? Text(l.languageMachine)
+                    : null,
+              ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l.languageFollowsAccount),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class NotificationSettings extends StatelessWidget {
@@ -452,10 +484,10 @@ class NotificationSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Notifications')),
-    body: const EmptyMessage(
+    appBar: AppBar(title: Text(l.settingsScreenNotifications)),
+    body: EmptyMessage(
       icon: Icons.notifications_outlined,
-      text: 'Notifications are not available yet.',
+      text: l.settingsScreenNotificationsNotYet,
     ),
   );
 }
@@ -465,7 +497,7 @@ class NetworkSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Networking')),
+    appBar: AppBar(title: Text(l.settingsScreenNetworking)),
     body: ListView(
       padding: const EdgeInsets.only(top: 16),
       children: const [_SecondAddress()],
@@ -597,35 +629,43 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
     );
     final readOnly = ref.watch(settingsProvider).readOnly;
     return Scaffold(
-      appBar: AppBar(title: const Text('Sync status')),
+      appBar: AppBar(title: Text(l.settingsScreenSyncStatus)),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         children: [
-          label('Photos and videos'),
+          label(l.settingsScreenPhotosAndVideos),
           Row(
             children: [
-              _tile(Icons.smartphone, 'Phone', _localAssets),
-              _tile(Icons.cloud, 'Server', _remoteAssets),
+              _tile(Icons.smartphone, l.settingsScreenPhone, _localAssets),
+              _tile(Icons.cloud, l.settingsScreenServer, _remoteAssets),
             ],
           ),
-          label('Albums'),
+          label(l.settingsScreenAlbums),
           Row(
             children: [
-              _tile(Icons.smartphone, 'Phone', _localAlbums),
-              _tile(Icons.cloud, 'Server', _remoteAlbums),
+              _tile(Icons.smartphone, l.settingsScreenPhone, _localAlbums),
+              _tile(Icons.cloud, l.settingsScreenServer, _remoteAlbums),
             ],
           ),
-          label('Other'),
+          label(l.settingsScreenOther),
           Row(
             children: [
-              _tile(Icons.calendar_today_outlined, 'Memories', _memories),
-              _tile(Icons.verified_outlined, 'Backed up', _verified),
+              _tile(
+                Icons.calendar_today_outlined,
+                l.settingsScreenMemories,
+                _memories,
+              ),
+              _tile(
+                Icons.verified_outlined,
+                l.settingsScreenBackedUp,
+                _verified,
+              ),
             ],
           ),
           const Divider(height: 30),
           ListTile(
             leading: const Icon(Icons.refresh),
-            title: const Text('Check again'),
+            title: Text(l.settingsScreenCheckAgain),
             trailing: _busy
                 ? SizedBox(
                     width: 22,
@@ -641,7 +681,7 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
           if (!readOnly && _failed > 0)
             ListTile(
               leading: const Icon(Icons.replay),
-              title: Text('Send the $_failed that failed again'),
+              title: Text(l.settingsScreenRetryFailed('$_failed')),
               onTap: () async {
                 await ref.read(backupProvider).retryFailed();
                 await _load();
@@ -697,7 +737,9 @@ class _SecondAddressState extends ConsumerState<_SecondAddress> {
     String message;
     try {
       await ref.read(sessionProvider.notifier).setSecondServer(_field.text);
-      message = _field.text.trim().isEmpty ? 'Removed.' : 'Saved.';
+      message = _field.text.trim().isEmpty
+          ? l.settingsScreenRemoved
+          : l.settingsScreenSaved;
     } on LoginFailure catch (cause) {
       message = cause.message;
     }
@@ -715,15 +757,15 @@ class _SecondAddressState extends ConsumerState<_SecondAddress> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_main != null) Text('Main address: $_main'),
+        if (_main != null) Text(l.settingsScreenMainAddress('$_main')),
         const SizedBox(height: 10),
         TextField(
           controller: _field,
           keyboardType: TextInputType.url,
           autocorrect: false,
-          decoration: const InputDecoration(
-            labelText: 'Second address',
-            helperText: 'Used when the main one does not answer, such as away from home',
+          decoration: InputDecoration(
+            labelText: l.settingsScreenSecondAddress,
+            helperText: l.settingsScreenSecondAddressHint,
             helperMaxLines: 2,
           ),
         ),
@@ -732,7 +774,7 @@ class _SecondAddressState extends ConsumerState<_SecondAddress> {
           children: [
             TextButton(
               onPressed: _busy ? null : _save,
-              child: const Text('Save'),
+              child: Text(l.settingsScreenSave),
             ),
             if (_message != null) Expanded(child: Text(_message!)),
           ],
@@ -792,9 +834,9 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
     final Widget body;
     if (sessions == null) {
       body = _failed
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'This could not be loaded.',
+              text: l.settingsScreenCouldNotLoad,
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else {
@@ -819,7 +861,7 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
                     ),
                     subtitle: Text(
                       [
-                        if (item.current) 'This device',
+                        if (item.current) l.settingsScreenThisDevice,
                         if (item.ip.isNotEmpty) item.ip,
                         since(item.lastSeenAt.toLocal()),
                       ].join(' · '),
@@ -831,7 +873,7 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
                         : TextButton(
                             onPressed: () =>
                                 _act((api) => api.endSession(item.id)),
-                            child: const Text('Sign out'),
+                            child: Text(l.settingsScreenSignOut),
                           ),
                   ),
               ],
@@ -842,14 +884,14 @@ class _DevicesScreenState extends ConsumerState<DevicesScreen> {
               padding: const EdgeInsets.only(top: 12),
               child: TextButton(
                 onPressed: () => _act((api) => api.endOtherSessions()),
-                child: const Text('Sign out all the others'),
+                child: Text(l.settingsScreenSignOutOthers),
               ),
             ),
         ],
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Devices')),
+      appBar: AppBar(title: Text(l.settingsScreenDevices)),
       body: body,
     );
   }
@@ -889,9 +931,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final Widget body;
     if (stats == null) {
       body = _failed
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'This could not be loaded.',
+              text: l.settingsScreenCouldNotLoad,
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else {
@@ -910,13 +952,17 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
           GlassCard(
             child: Column(
               children: [
-                row('Photos', stats.photos),
-                row('Videos', stats.videos),
-                row('Albums', stats.albums),
-                row('Favorites', stats.favorites),
-                row('Archive', stats.archived),
-                row('Trash', stats.trashed),
-                row('Used', stats.bytes, (v) => formatBytes(v.round())),
+                row(l.settingsScreenPhotos, stats.photos),
+                row(l.settingsScreenVideos, stats.videos),
+                row(l.settingsScreenAlbums, stats.albums),
+                row(l.settingsScreenFavorites, stats.favorites),
+                row(l.settingsScreenArchive, stats.archived),
+                row(l.settingsScreenTrash, stats.trashed),
+                row(
+                  l.settingsScreenUsed,
+                  stats.bytes,
+                  (v) => formatBytes(v.round()),
+                ),
               ],
             ),
           ),
@@ -924,7 +970,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Your library')),
+      appBar: AppBar(title: Text(l.settingsScreenYourLibrary)),
       body: body,
     );
   }
@@ -943,12 +989,10 @@ class _AccountChoices extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Divider(height: 34),
-        const _Heading(Icons.person_outline, 'Your account'),
+        _Heading(Icons.person_outline, l.settingsScreenYourAccount),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Seconds for each picture in memories (${prefs.memorySeconds})',
-          ),
+          child: Text(l.settingsScreenMemorySeconds('${prefs.memorySeconds}')),
         ),
         Slider(
           value: prefs.memorySeconds.toDouble().clamp(1, 20),
@@ -963,9 +1007,7 @@ class _AccountChoices extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Fewest photos for a person to be listed (${prefs.minFaces})',
-          ),
+          child: Text(l.settingsScreenMinFaces('${prefs.minFaces}')),
         ),
         Slider(
           value: prefs.minFaces.toDouble().clamp(1, 20),
@@ -979,17 +1021,17 @@ class _AccountChoices extends ConsumerWidget {
           },
         ),
         ListTile(
-          title: const Text('Order in a new album'),
+          title: Text(l.settingsScreenAlbumOrder),
           trailing: DropdownButton<UserPreferencesAlbumOrderEnum>(
             value: prefs.albumOrder,
-            items: const [
+            items: [
               DropdownMenuItem(
                 value: UserPreferencesAlbumOrderEnum.newest,
-                child: Text('Newest first'),
+                child: Text(l.settingsScreenNewestFirst),
               ),
               DropdownMenuItem(
                 value: UserPreferencesAlbumOrderEnum.oldest,
-                child: Text('Oldest first'),
+                child: Text(l.settingsScreenOldestFirst),
               ),
             ],
             onChanged: (value) {

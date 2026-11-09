@@ -2,7 +2,7 @@
 	import { api } from '#lib/api.ts';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import CollectionView from '#lib/organize/CollectionView.svelte';
 
@@ -12,26 +12,26 @@
 	async function unfavorite(ids: string[], clear: () => void) {
 		try {
 			const { changed } = await api.bulk(ids, 'unfavorite');
-			showToast('ok', tr(`Maknuto iz favorita: ${changed}`, `Removed from favorites: ${changed}`));
+			showToast('ok', t('favorites.removedFromFavoritesChanged', { changed }));
 			clear();
 			await view?.reload();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr(item.hr, item.en)}</h1></div></div>
+<div class="ph"><div><h1>{t(item.label)}</h1></div></div>
 
 <CollectionView bind:this={view} scope="favorites" {item}>
 	{#snippet selectionActions(ids, clear)}
 		<button
 			type="button"
 			class="icon-btn"
-			aria-label={tr('Makni iz favorita', 'Remove from favorites')}
-			title={tr('Makni iz favorita', 'Remove from favorites')}
+			aria-label={t('favorites.removeFromFavorites')}
+			title={t('favorites.removeFromFavorites')}
 			onclick={() => unfavorite(ids, clear)}><Icon name="star" /></button
 		>
 	{/snippet}

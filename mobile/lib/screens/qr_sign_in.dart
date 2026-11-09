@@ -7,6 +7,7 @@ import 'package:mediarr_api/api.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../l10n/l10n.dart';
 import '../services/backup.dart';
 import '../services/discovery.dart';
 import '../services/session.dart';
@@ -36,7 +37,7 @@ class _SignInScannerState extends State<SignInScanner> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Scan the sign-in code')),
+    appBar: AppBar(title: Text(l.qrSignInScanTitle)),
     body: Stack(
       children: [
         MobileScanner(
@@ -52,15 +53,14 @@ class _SignInScannerState extends State<SignInScanner> {
             }
           },
         ),
-        const Positioned(
+        Positioned(
           left: 24,
           right: 24,
           bottom: 40,
           child: Text(
-            'On a screen where you are signed in, open the account menu and choose '
-            '"Sign in on a phone".',
+            l.qrSignInScanHelp,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white, fontSize: 15),
+            style: const TextStyle(color: Colors.white, fontSize: 15),
           ),
         ),
       ],
@@ -120,10 +120,10 @@ class _FoundServersState extends State<FoundServers> {
             Expanded(
               child: Text(
                 _searching
-                    ? 'Looking for servers on this network…'
+                    ? l.qrSignInLooking
                     : _found.isEmpty
-                    ? 'No server found on this network.'
-                    : 'On this network',
+                    ? l.qrSignInNoneFound
+                    : l.qrSignInOnThisNetwork,
                 style: text.bodySmall,
               ),
             ),
@@ -133,7 +133,7 @@ class _FoundServersState extends State<FoundServers> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             else
-              TextButton(onPressed: _start, child: const Text('Look again')),
+              TextButton(onPressed: _start, child: Text(l.qrSignInLookAgain)),
           ],
         ),
         for (final server in _found)
@@ -205,7 +205,7 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
       if (mounted) setState(() => _code = code);
     } on ApiException catch (cause) {
       if (mounted) {
-        setState(() => _error = cause.message ?? 'Could not make a code.');
+        setState(() => _error = cause.message ?? l.qrSignInMakeCodeFailed);
       }
     }
   }
@@ -247,9 +247,9 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final code = _code;
-    final device = _state?.device ?? 'the device';
+    final device = _state?.device ?? l.qrSignInTheDevice;
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in on another device')),
+      appBar: AppBar(title: Text(l.qrSignInTitle)),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -261,7 +261,7 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
             const Center(child: CircularProgressIndicator())
           else if (code != null && _status == 'waiting') ...[
             Text(
-              'In the Mediarr app on the other device, tap "Scan QR code" on the sign-in screen.',
+              l.qrSignInHowTo,
               textAlign: TextAlign.center,
               style: text.bodyMedium,
             ),
@@ -276,13 +276,13 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
                 child: QrImageView(
                   data: code.link,
                   size: 220,
-                  semanticsLabel: 'Sign-in QR code',
+                  semanticsLabel: l.qrSignInQrLabel,
                 ),
               ),
             ),
             const SizedBox(height: 18),
             Text(
-              'Or type the code',
+              l.qrSignInOrType,
               textAlign: TextAlign.center,
               style: text.bodySmall,
             ),
@@ -296,19 +296,19 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
               ),
             ),
             Text(
-              'Valid for ${_left(code.expiresAt)}',
+              l.qrSignInValidFor(_left(code.expiresAt)),
               textAlign: TextAlign.center,
               style: text.bodySmall,
             ),
           ] else if (_status == 'requested') ...[
             Text(
-              'Allow sign-in on $device?',
+              l.qrSignInAllowOn(device),
               textAlign: TextAlign.center,
               style: text.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Allow only if you just scanned the code on your own device.',
+              l.qrSignInAllowOnlyIf,
               textAlign: TextAlign.center,
               style: text.bodyMedium,
             ),
@@ -318,7 +318,7 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
               children: [
                 OutlinedButton(
                   onPressed: _answering ? null : () => _answer(false),
-                  child: const Text('Deny'),
+                  child: Text(l.qrSignInDeny),
                 ),
                 const SizedBox(width: 12),
                 FilledButton(
@@ -327,13 +327,13 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
                     backgroundColor: Palette.buttonGold,
                     foregroundColor: Palette.onGold,
                   ),
-                  child: const Text('Allow'),
+                  child: Text(l.qrSignInAllow),
                 ),
               ],
             ),
           ] else if (_status == 'allowed' || _status == 'used') ...[
             Text(
-              '$device is signed in. It shows under Account → Devices.',
+              l.qrSignInSignedIn(device),
               textAlign: TextAlign.center,
               style: text.bodyMedium,
             ),
@@ -341,14 +341,12 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
             Center(
               child: FilledButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Done'),
+                child: Text(l.qrSignInDone),
               ),
             ),
           ] else ...[
             Text(
-              _status == 'denied'
-                  ? 'The sign-in was denied.'
-                  : 'The code has expired.',
+              _status == 'denied' ? l.qrSignInDenied : l.qrSignInExpired,
               textAlign: TextAlign.center,
               style: text.bodyMedium,
             ),
@@ -356,7 +354,7 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
             Center(
               child: FilledButton(
                 onPressed: _fresh,
-                child: const Text('New code'),
+                child: Text(l.qrSignInNewCode),
               ),
             ),
           ],

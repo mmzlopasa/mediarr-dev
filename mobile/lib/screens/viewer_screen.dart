@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 import 'package:video_player/video_player.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../services/trash.dart';
 import '../services/settings.dart';
@@ -89,20 +90,23 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete this photo?'),
+        title: Text(l.viewerScreenDeleteTitle),
         content: TrashSentence(
           (days) => days == null
-              ? 'It moves to the trash, where it can be restored.'
-              : 'It moves to the trash, where it stays for $days days and can be restored.',
+              ? l.viewerScreenTrashNoDays
+              : l.viewerScreenTrashDays(days),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.viewerScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Delete', style: TextStyle(color: Palette.err)),
+            child: Text(
+              l.viewerScreenDelete,
+              style: TextStyle(color: Palette.err),
+            ),
           ),
         ],
       ),
@@ -121,7 +125,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     } on ApiException {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('The action failed.')));
+            .showSnackBar(SnackBar(content: Text(l.viewerScreenActionFailed)));
       }
       return false;
     }
@@ -144,9 +148,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
             : session.originalUrl(liveId);
       }
       if (url == null) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('This photo has no video.')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l.viewerScreenNoVideo)));
         return;
       }
       await navigator.push(
@@ -156,7 +158,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
       );
     } on ApiException {
       messenger.showSnackBar(
-        const SnackBar(content: Text('The video could not be loaded.')),
+        SnackBar(content: Text(l.viewerScreenVideoFailed)),
       );
     }
   }
@@ -217,7 +219,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
         actions: [
           if (mine && current.stackSize != null)
             IconButton(
-              tooltip: 'Shots in this stack',
+              tooltip: l.viewerScreenStackShots,
               icon: const Icon(Icons.burst_mode),
               onPressed: () => showStackSheet(
                 context,
@@ -227,7 +229,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
               ),
             ),
           IconButton(
-            tooltip: 'Slideshow',
+            tooltip: l.viewerScreenSlideshow,
             icon: const Icon(Icons.slideshow_outlined),
             onPressed: () async {
               final navigator = Navigator.of(context);
@@ -252,20 +254,20 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
           ),
           if (current.isPanorama == true)
             IconButton(
-              tooltip: _flat ? '360° view' : 'Flat view',
+              tooltip: _flat ? l.viewerScreen360View : l.viewerScreenFlatView,
               isSelected: !_flat,
               icon: const Icon(Icons.threesixty),
               onPressed: () => setState(() => _flat = !_flat),
             ),
           if (current.isLive == true)
             IconButton(
-              tooltip: 'Play Live Photo',
+              tooltip: l.viewerScreenPlayLive,
               icon: const Icon(Icons.motion_photos_on_outlined),
               onPressed: () => _playLive(session, current),
             ),
           if (widget.albumId != null)
             IconButton(
-              tooltip: 'Comments and hearts',
+              tooltip: l.viewerScreenCommentsAndHearts,
               icon: const Icon(Icons.favorite_border),
               onPressed: () => showModalBottomSheet<void>(
                 context: context,
@@ -279,7 +281,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
             ),
           if (mine)
             IconButton(
-              tooltip: 'Favorite',
+              tooltip: l.viewerScreenFavorite,
               icon: Pulse(
                 on: current.isFavorite,
                 child: Icon(
@@ -291,7 +293,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
             ),
           if (mine && current.kind == TimelineItemKindEnum.photo)
             IconButton(
-              tooltip: 'Edit',
+              tooltip: l.viewerScreenEdit,
               icon: const Icon(Icons.tune),
               onPressed: () async {
                 final changed = await Navigator.of(context).push<bool>(
@@ -306,18 +308,18 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
               },
             ),
           IconButton(
-            tooltip: 'Share',
+            tooltip: l.viewerScreenShare,
             icon: Icon(Platform.isIOS ? Icons.ios_share : Icons.share_outlined),
             onPressed: () => shareAssets(context, ref, session, [current.id]),
           ),
           IconButton(
-            tooltip: 'Details',
+            tooltip: l.viewerScreenDetails,
             icon: const Icon(Icons.info_outline),
             onPressed: () => _info(session, current),
           ),
           if (mine)
             IconButton(
-              tooltip: 'Delete',
+              tooltip: l.viewerScreenDelete,
               icon: const Icon(Icons.delete_outline),
               onPressed: () => _delete(current),
             ),
@@ -457,9 +459,9 @@ class _PhotoPageState extends State<_PhotoPage> {
           large: true,
           full: widget.full,
           fit: BoxFit.contain,
-          error: const EmptyMessage(
+          error: EmptyMessage(
             icon: Icons.broken_image_outlined,
-            text: 'This photo could not be loaded.',
+            text: l.viewerScreenPhotoFailed,
           ),
         ),
       ),
@@ -585,9 +587,9 @@ class _VideoPageState extends State<_VideoPage> {
   Widget build(BuildContext context) {
     final controller = _controller;
     if (_failed) {
-      return const EmptyMessage(
+      return EmptyMessage(
         icon: Icons.videocam_off_outlined,
-        text: 'This video cannot be played on this device.',
+        text: l.viewerScreenCannotPlay,
       );
     }
     if (controller == null || !controller.value.isInitialized) {
@@ -692,9 +694,9 @@ class _LivePlayerState extends State<_LivePlayer> {
     ),
     body: Center(
       child: _failed
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.videocam_off_outlined,
-              text: 'This video cannot be played on this device.',
+              text: l.viewerScreenCannotPlay,
             )
           : _controller.value.isInitialized
           ? AspectRatio(
@@ -739,11 +741,11 @@ class _InfoSheetState extends State<_InfoSheet> {
         future: _detail,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const SizedBox(
+            return SizedBox(
               height: 200,
               child: EmptyMessage(
                 icon: Icons.cloud_off,
-                text: 'The details could not be loaded.',
+                text: l.viewerScreenDetailsFailed,
               ),
             );
           }
@@ -765,33 +767,37 @@ class _InfoSheetState extends State<_InfoSheet> {
           ].join(' · ');
           final rows = <(String, String)>[
             if (detail.isMissing == true)
-              (
-                'Unavailable',
-                'The file was not found on the last scan of the external library. The original is available again once the file is back.',
-              ),
-            ('Name', detail.originalName),
+              (l.viewerScreenUnavailable, l.viewerScreenMissingFile),
+            (l.viewerScreenName, detail.originalName),
             if (detail.description != null)
-              ('Description', detail.description!),
+              (l.viewerScreenDescription, detail.description!),
             (
-              detail.hasCaptureTime == true ? 'Taken' : 'Added',
+              detail.hasCaptureTime == true
+                  ? l.viewerScreenTaken
+                  : l.viewerScreenAdded,
               formatDateTime(detail.localAt),
             ),
             if (detail.width != null && detail.height != null)
-              ('Dimensions', '${detail.width} × ${detail.height}'),
-            ('Size', formatBytes(detail.sizeBytes)),
+              (l.viewerScreenDimensions, '${detail.width} × ${detail.height}'),
+            (l.viewerScreenSize, formatBytes(detail.sizeBytes)),
             if (detail.durationMs != null)
-              ('Duration', formatDuration(detail.durationMs!)),
-            if (detail.camera != null) ('Camera', detail.camera!),
-            if (detail.lens != null) ('Lens', detail.lens!),
-            if (settings.isNotEmpty) ('Settings', settings),
+              (l.viewerScreenDuration, formatDuration(detail.durationMs!)),
+            if (detail.camera != null) (l.viewerScreenCamera, detail.camera!),
+            if (detail.lens != null) (l.viewerScreenLens, detail.lens!),
+            if (settings.isNotEmpty) (l.viewerScreenSettings, settings),
             if (detail.latitude != null && detail.longitude != null)
               (
-                'Location',
+                l.viewerScreenLocation,
                 '${detail.latitude!.toStringAsFixed(5)}, ${detail.longitude!.toStringAsFixed(5)}',
               ),
           ];
           // Data from the camera and the file is set in mono; words are not.
-          const data = {'Name', 'Dimensions', 'Settings', 'Location'};
+          final data = {
+            l.viewerScreenName,
+            l.viewerScreenDimensions,
+            l.viewerScreenSettings,
+            l.viewerScreenLocation,
+          };
           Future<void> rate(int stars) async {
             try {
               await session.api.setAssetFacts(id, AssetFacts(rating: stars));
@@ -799,7 +805,9 @@ class _InfoSheetState extends State<_InfoSheet> {
             } on ApiException catch (cause) {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Not saved. ${cause.message ?? ''}')),
+                  SnackBar(
+                    content: Text(l.viewerScreenNotSaved(cause.message ?? '')),
+                  ),
                 );
               }
             }
@@ -857,7 +865,7 @@ class _InfoSheetState extends State<_InfoSheet> {
                   OutlinedButton.icon(
                     onPressed: () => _editFacts(detail),
                     icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('Edit details'),
+                    label: Text(l.viewerScreenEditDetails),
                   ),
                 ],
               ],

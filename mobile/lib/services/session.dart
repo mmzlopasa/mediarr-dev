@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -9,6 +10,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http show get;
 import 'package:http/http.dart' show Response;
 import 'package:mediarr_api/api.dart';
+
+import '../l10n/l10n.dart';
+import 'language.dart';
 
 /// A signed-in connection to one Mediarr server.
 class Session {
@@ -98,8 +102,7 @@ class CollectionSession extends Session {
   Future<AssetDetail?> detail(String id) => api.getCollectionAsset(scope, id);
 }
 
-const deviceNotApprovedMessage =
-    'An administrator has to approve this device before it can sign in.';
+String get deviceNotApprovedMessage => l.sessionDeviceNotApproved;
 
 /// A user-facing sign-in failure.
 class LoginFailure implements Exception {
@@ -115,11 +118,11 @@ class LoginFailure implements Exception {
 /// Accepts what people type: an IP address and port, or a full URL.
 String normalizeServerUrl(String input) {
   var url = input.trim();
-  if (url.isEmpty) throw LoginFailure('Enter the address of your server.');
+  if (url.isEmpty) throw LoginFailure(l.sessionEnterAddress);
   if (!url.contains('://')) url = 'http://$url';
   final parsed = Uri.tryParse(url);
   if (parsed == null || parsed.host.isEmpty) {
-    throw LoginFailure('That server address is not valid.');
+    throw LoginFailure(l.sessionAddressInvalid);
   }
   return url.replaceAll(RegExp(r'/+$'), '');
 }
@@ -246,7 +249,13 @@ class SessionNotifier extends AsyncNotifier<Session?> {
         await _storage.delete(key: _cookieKey);
         return null;
       }
-      return Session(serverUrl: reachable, cookie: cookie, user: user);
+      final restored = Session(
+        serverUrl: reachable,
+        cookie: cookie,
+        user: user,
+      );
+      unawaited(_followLanguage(restored));
+      return restored;
     } on ApiException {
       // The server is unreachable right now. Keep the cookie and ask again on the login screen.
       return null;
@@ -268,7 +277,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     }
     final url = normalizeServerUrl(text);
     if (!await serverAnswers(url)) {
-      throw LoginFailure('No Mediarr server answered at that address.');
+      throw LoginFailure(l.sessionNoServer);
     }
     await _storage.write(key: _secondKey, value: url);
   }
@@ -302,18 +311,14 @@ class SessionNotifier extends AsyncNotifier<Session?> {
         LoginRequest(email: email.trim(), password: password, totpCode: code),
       );
     } on ApiException catch (cause) {
-      throw LoginFailure(
-        'Could not reach the server. Check the address. (${cause.message})',
-      );
+      throw LoginFailure(l.sessionUnreachableCheck('${cause.message}'));
     }
 
     if (response.statusCode == 401) {
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final totp = body['totpRequired'] == true;
       throw LoginFailure(
-        totp && code != null
-            ? 'The code is wrong.'
-            : 'Wrong email or password.',
+        totp && code != null ? l.sessionCodeWrong : l.sessionWrongPassword,
         totpRequired: totp,
       );
     }
@@ -326,20 +331,20 @@ class SessionNotifier extends AsyncNotifier<Session?> {
       );
     }
     if (response.statusCode == 429) {
-      throw LoginFailure('Too many attempts. Try again later.');
+      throw LoginFailure(l.sessionTooManyAttempts);
     }
     if (response.statusCode != 200) {
-      throw LoginFailure('Sign-in failed (${response.statusCode}).');
+      throw LoginFailure(l.sessionSignInFailed('${response.statusCode}'));
     }
 
     final cookie = sessionCookieFrom(response.headers['set-cookie']);
     final user = User.fromJson(jsonDecode(response.body));
     if (cookie == null || user == null) {
-      throw LoginFailure('The server did not start a session.');
+      throw LoginFailure(l.sessionNoSession);
     }
     await _storage.write(key: _serverKey, value: url);
     await _storage.write(key: _cookieKey, value: cookie);
-    state = AsyncData(Session(serverUrl: url, cookie: cookie, user: user));
+    _signedIn(Session(serverUrl: url, cookie: cookie, user: user));
   }
 
   /// Signs in through the server's identity provider, in the system's browser.
@@ -354,15 +359,13 @@ class SessionNotifier extends AsyncNotifier<Session?> {
       );
     } on PlatformException catch (cause) {
       if (cause.code == 'CANCELED') {
-        throw LoginFailure('Signing in was cancelled.');
+        throw LoginFailure(l.sessionCancelled);
       }
-      throw LoginFailure('Single sign-on is not turned on for this server.');
+      throw LoginFailure(l.sessionSsoOff);
     }
     final code = ssoCodeFrom(answer);
     if (code == null) {
-      throw LoginFailure(
-        'Single sign-on did not work. You may not have an account on this server.',
-      );
+      throw LoginFailure(l.sessionSsoFailed);
     }
     final Response response;
     try {
@@ -370,18 +373,18 @@ class SessionNotifier extends AsyncNotifier<Session?> {
         await _signInClient(url),
       ).exchangeOIDCWithHttpInfo(OIDCExchange(code: code, verifier: verifier));
     } on ApiException catch (cause) {
-      throw LoginFailure('Could not reach the server. (${cause.message})');
+      throw LoginFailure(l.sessionUnreachable('${cause.message}'));
     }
     final cookie = sessionCookieFrom(response.headers['set-cookie']);
     final user = response.statusCode == 200
         ? User.fromJson(jsonDecode(response.body))
         : null;
     if (cookie == null || user == null) {
-      throw LoginFailure('The server did not start a session.');
+      throw LoginFailure(l.sessionNoSession);
     }
     await _storage.write(key: _serverKey, value: url);
     await _storage.write(key: _cookieKey, value: cookie);
-    state = AsyncData(Session(serverUrl: url, cookie: cookie, user: user));
+    _signedIn(Session(serverUrl: url, cookie: cookie, user: user));
   }
 
   /// Signs in with a code from a signed-in screen. That screen has to allow it, so this waits.
@@ -399,24 +402,20 @@ class SessionNotifier extends AsyncNotifier<Session?> {
         QRRedeem(code: code.trim(), device: device),
       );
     } on ApiException catch (cause) {
-      throw LoginFailure(
-        'Could not reach the server. Check the address. (${cause.message})',
-      );
+      throw LoginFailure(l.sessionUnreachableCheck('${cause.message}'));
     }
     if (redeemed.statusCode == 429) {
-      throw LoginFailure('Too many attempts. Try again later.');
+      throw LoginFailure(l.sessionTooManyAttempts);
     }
     if (redeemed.statusCode != 200) {
-      throw LoginFailure(
-        'This code has expired or was already used. Make a new one.',
-      );
+      throw LoginFailure(l.sessionCodeExpired);
     }
     final ticket = QRTicket.fromJson(jsonDecode(redeemed.body))?.ticket;
-    if (ticket == null) throw LoginFailure('The server did not answer.');
+    if (ticket == null) throw LoginFailure(l.sessionNoAnswer);
     final until = DateTime.now().add(qrAnswerWait);
     while (DateTime.now().isBefore(until)) {
       if (cancelled?.call() ?? false) {
-        throw LoginFailure('Signing in was cancelled.');
+        throw LoginFailure(l.sessionCancelled);
       }
       final Response response;
       try {
@@ -431,24 +430,34 @@ class SessionNotifier extends AsyncNotifier<Session?> {
         throw LoginFailure(
           answer is Map && answer['message'] is String
               ? '${answer['message']}'
-              : 'The sign-in was not allowed.',
+              : l.sessionNotAllowed,
         );
       }
       if (response.statusCode != 200) {
-        throw LoginFailure('This sign-in has expired. Make a new code.');
+        throw LoginFailure(l.sessionSignInExpired);
       }
       final cookie = sessionCookieFrom(response.headers['set-cookie']);
       final user = User.fromJson(jsonDecode(response.body));
       if (cookie == null || user == null) {
-        throw LoginFailure('The server did not start a session.');
+        throw LoginFailure(l.sessionNoSession);
       }
       await _storage.write(key: _serverKey, value: url);
       await _storage.write(key: _cookieKey, value: cookie);
-      state = AsyncData(Session(serverUrl: url, cookie: cookie, user: user));
+      _signedIn(Session(serverUrl: url, cookie: cookie, user: user));
       return;
     }
-    throw LoginFailure('Nobody answered in time. Make a new code.');
+    throw LoginFailure(l.sessionNobodyAnswered);
   }
+
+  void _signedIn(Session session) {
+    state = AsyncData(session);
+    unawaited(_followLanguage(session));
+  }
+
+  /// The account's language, for a phone that has not chosen one.
+  Future<void> _followLanguage(Session session) => ref
+      .read(languageProvider.notifier)
+      .followAccount(session.api, session.user.language);
 
   /// After the person changes their name, email address or picture.
   void updateUser(User user) {

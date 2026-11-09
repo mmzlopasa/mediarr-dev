@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
@@ -123,25 +124,27 @@ class _FoldersScreenState extends ConsumerState<FoldersScreen> {
   @override
   Widget build(BuildContext context) {
     final folder = _folder;
-    final title = widget.path.isEmpty ? 'Folders' : widget.path.split('/').last;
+    final title = widget.path.isEmpty
+        ? l.foldersScreenFolders
+        : widget.path.split('/').last;
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: folder == null
           ? _failed
-                ? const EmptyMessage(
+                ? EmptyMessage(
                     icon: Icons.cloud_off,
-                    text: 'The folder could not be loaded.',
+                    text: l.foldersScreenLoadFailed,
                   )
                 : Center(child: CircularProgressIndicator(color: Palette.gold))
           : !folder.available
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.folder_outlined,
-              text: 'You have no external library. An administrator sets it up in Settings.',
+              text: l.foldersScreenNoExternalLibrary,
             )
           : folder.folders.isEmpty && folder.items.isEmpty
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.folder_outlined,
-              text: 'This folder is empty.',
+              text: l.foldersScreenEmpty,
             )
           : _grid(folder),
     );

@@ -7,7 +7,7 @@
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let { ids, onDone }: { ids: string[]; onDone: () => void } = $props();
 
@@ -33,11 +33,11 @@
 		busy = true;
 		try {
 			const { changed } = await api.addToAlbum(id, ids);
-			showToast('ok', tr(`Dodano u „${name}”: ${changed}`, `Added to "${name}": ${changed}`));
+			showToast('ok', t('addToAlbum.addedToNameChanged', { name, changed }));
 			open = false;
 			onDone();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		} finally {
 			busy = false;
 		}
@@ -51,7 +51,7 @@
 			await add(album.id, album.title);
 			title = '';
 		} catch {
-			showToast('err', tr('Album nije stvoren.', 'The album was not created.'));
+			showToast('err', t('common.theAlbumWasNotCreated'));
 		} finally {
 			busy = false;
 		}
@@ -61,14 +61,14 @@
 <button
 	type="button"
 	class="icon-btn"
-	aria-label={tr('Dodaj u album', 'Add to album')}
-	title={tr('Dodaj u album', 'Add to album')}
+	aria-label={t('addToAlbum.addToAlbum')}
+	title={t('addToAlbum.addToAlbum')}
 	onclick={show}><Icon name="album" /></button
 >
 
-<Dialog title={tr('Dodaj u album', 'Add to album')} bind:open>
+<Dialog title={t('addToAlbum.addToAlbum')} bind:open>
 	{#if failed}
-		<Alert kind="err">{tr('Albumi se nisu učitali.', 'Albums could not be loaded.')}</Alert>
+		<Alert kind="err">{t('addToAlbum.albumsCouldNotBeLoaded')}</Alert>
 	{:else if !albums}
 		<Skeleton height="60px" />
 	{:else}
@@ -76,15 +76,15 @@
 			<div class="alb-list">
 				<b>{album.title}</b>
 				<Button small disabled={busy} onclick={() => add(album.id, album.title)}
-					>{tr('Dodaj', 'Add')}</Button
+					>{t('common.add')}</Button
 				>
 			</div>
 		{/each}
 	{/if}
 	<form class="form" onsubmit={create}>
-		<Input label={tr('Novi album', 'New album')} bind:value={title} maxlength={200} />
+		<Input label={t('addToAlbum.newAlbum')} bind:value={title} maxlength={200} />
 		<Button type="submit" small disabled={busy || !title.trim()}
-			>{tr('Stvori i dodaj', 'Create and add')}</Button
+			>{t('addToAlbum.createAndAdd')}</Button
 		>
 	</form>
 </Dialog>

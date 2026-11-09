@@ -4,7 +4,7 @@
 	import AppShell from '#lib/design/components/AppShell.svelte';
 	import Dropzone from '#lib/design/components/Dropzone.svelte';
 	import ServerStatus from '#lib/design/components/ServerStatus.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import { loadPreferences, preferences } from '#lib/preferences.svelte.ts';
 	import { onMount } from 'svelte';
@@ -21,21 +21,21 @@
 <AppShell
 	nav={shownNav}
 	user={data.user}
-	roleLabel={tr('Korisnik', 'User')}
+	roleLabel={t('common.user')}
 	footLinks={[
-		{ href: resolve('/(app)/account'), icon: 'user', label: tr('Račun', 'Account') },
+		{ href: resolve('/(app)/account'), icon: 'user', label: t('common.account') },
 		{
 			href: resolve('/(app)/account/devices'),
 			icon: 'phone',
-			label: tr('Uređaji za backup', 'Backup devices')
+			label: t('common.backupDevices')
 		},
-		{ href: resolve('/(app)/account/import'), icon: 'download', label: tr('Uvoz', 'Import') },
+		{ href: resolve('/(app)/account/import'), icon: 'download', label: t('common.import') },
 		...(data.user.isAdmin
 			? [
 					{
 						href: resolve('/admin'),
 						icon: 'shield' as const,
-						label: tr('Administracija', 'Administration')
+						label: t('home.administration')
 					}
 				]
 			: [])

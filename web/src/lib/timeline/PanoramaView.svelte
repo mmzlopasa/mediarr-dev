@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	/** A 360° panorama, turned with a finger or the mouse. The viewer loads only when one opens. */
 	let { src, alt }: { src: string; alt: string } = $props();
@@ -43,14 +43,14 @@
 	class="viewer-pano"
 	bind:this={host}
 	role="img"
-	aria-label={tr(`360° panorama: ${alt}`, `360° panorama: ${alt}`)}
+	aria-label={t('panoramaView.360PanoramaAlt', { alt })}
 	onpointerdown={(event) => event.stopPropagation()}
 	onwheel={(event) => event.stopPropagation()}
 	ontouchstart={(event) => event.stopPropagation()}
 >
 	{#if failed}
 		<p class="viewer-pano-msg">
-			{tr('Panorama se ne može prikazati.', 'The panorama cannot be shown.')}
+			{t('panoramaView.thePanoramaCannotBeShown')}
 		</p>
 	{/if}
 </div>

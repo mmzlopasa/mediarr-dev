@@ -68,6 +68,9 @@ String parameterToString(dynamic value) {
   if (value is CleanupCategoryId) {
     return CleanupCategoryIdTypeTransformer().encode(value).toString();
   }
+  if (value is Language) {
+    return LanguageTypeTransformer().encode(value).toString();
+  }
   return value.toString();
 }
 

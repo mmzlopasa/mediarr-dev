@@ -3,7 +3,7 @@
 	import { api, type AlbumRules, type Person, type Tag } from '#lib/api.ts';
 	import Input from '#lib/design/components/Input.svelte';
 	import Select from '#lib/design/components/Select.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let { rules = $bindable({}) }: { rules?: AlbumRules } = $props();
 
@@ -39,44 +39,40 @@
 	});
 </script>
 
-<Input label={tr('Od datuma', 'From date')} type="date" bind:value={from} />
-<Input label={tr('Do datuma', 'To date')} type="date" bind:value={to} />
+<Input label={t('common.fromDate')} type="date" bind:value={from} />
+<Input label={t('common.toDate')} type="date" bind:value={to} />
 <Select
-	label={tr('Vrsta', 'Kind')}
+	label={t('rulesForm.kind')}
 	bind:value={kind}
 	options={[
-		{ value: '', label: tr('Sve', 'All') },
-		{ value: 'photo', label: tr('Fotke', 'Photos') },
-		{ value: 'video', label: tr('Videi', 'Videos') },
+		{ value: '', label: t('rulesForm.all') },
+		{ value: 'photo', label: t('common.photos') },
+		{ value: 'video', label: t('common.videos') },
 		{ value: 'live', label: 'Live Photo' }
 	]}
 />
 <Select
-	label={tr('Kamera', 'Camera')}
+	label={t('common.camera')}
 	bind:value={camera}
 	options={[
-		{ value: '', label: tr('Sve', 'All') },
+		{ value: '', label: t('rulesForm.all') },
 		...cameras.map((name) => ({ value: name, label: name }))
 	]}
 />
 <Select
-	label={tr('Osoba', 'Person')}
+	label={t('rulesForm.person')}
 	bind:value={person}
 	options={[
-		{ value: '', label: tr('Sve', 'All') },
+		{ value: '', label: t('rulesForm.all') },
 		...people.map((entry) => ({ value: entry.id, label: entry.name }))
 	]}
 />
 <Select
-	label={tr('Oznaka', 'Tag')}
+	label={t('rulesForm.tag')}
 	bind:value={tag}
 	options={[
-		{ value: '', label: tr('Sve', 'All') },
+		{ value: '', label: t('rulesForm.all') },
 		...tags.map((entry) => ({ value: entry.id, label: entry.name }))
 	]}
 />
-<Input
-	label={tr('Mjesto', 'Place')}
-	hint={tr('Grad, regija ili država', 'A city, region or country')}
-	bind:value={place}
-/>
+<Input label={t('common.place')} hint={t('rulesForm.aCityRegionOrCountry')} bind:value={place} />

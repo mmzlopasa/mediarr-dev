@@ -4,7 +4,7 @@
 	import Button from '#lib/design/components/Button.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t, k, type Key } from '#lib/i18n.svelte.ts';
 
 	type DateAction = 'shift' | 'anchor' | 'set' | 'zoneFromPlace' | 'travel' | 'useFile';
 	type PlaceAction = 'set' | 'clear' | 'fromNeighbours' | 'fromTrack' | 'useFile';
@@ -163,60 +163,55 @@
 		busy = true;
 		try {
 			const done = await send(payload);
-			showToast('ok', tr(`Promijenjeno: ${done.changed}`, `Changed: ${done.changed}`));
+			showToast('ok', t('fixDialog.changedChanged', { changed: done.changed }));
 			open = false;
 			onDone();
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Nije spremljeno.', 'Not saved.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.notSaved'));
 		} finally {
 			busy = false;
 		}
 	}
 
-	const dateChoices: [DateAction, string, string][] = [
-		['shift', 'Pomakni', 'Shift'],
-		['anchor', 'Ova je snimljena u…', 'This one was taken at…'],
-		['set', 'Postavi datum', 'Set a date'],
-		['zoneFromPlace', 'Zona s lokacije', 'Zone from the place'],
-		['travel', 'Putovanje', 'A trip'],
-		['useFile', 'Iz datoteke', 'From the file']
+	const dateChoices: [DateAction, Key][] = [
+		['shift', k('fixDialog.date.shift')],
+		['anchor', k('fixDialog.date.anchor')],
+		['set', k('fixDialog.date.set')],
+		['zoneFromPlace', k('fixDialog.date.zoneFromPlace')],
+		['travel', k('fixDialog.date.travel')],
+		['useFile', k('fixDialog.date.useFile')]
 	];
-	const placeChoices: [PlaceAction, string, string][] = [
-		['fromNeighbours', 'Od susjednih fotki', 'From nearby photos'],
-		['fromTrack', 'Iz GPX traga', 'From a GPX track'],
-		['set', 'Postavi mjesto', 'Set a place'],
-		['clear', 'Makni lokaciju', 'Take the location away'],
-		['useFile', 'Iz datoteke', 'From the file']
+	const placeChoices: [PlaceAction, Key][] = [
+		['fromNeighbours', k('fixDialog.place.fromNeighbours')],
+		['fromTrack', k('fixDialog.place.fromTrack')],
+		['set', k('fixDialog.place.set')],
+		['clear', k('fixDialog.place.clear')],
+		['useFile', k('fixDialog.place.useFile')]
 	];
 </script>
 
 <Dialog
 	title={kind === 'dates'
-		? tr(`Datum i vrijeme · ${ids.length}`, `Date and time · ${ids.length}`)
-		: tr(`Lokacija · ${ids.length}`, `Location · ${ids.length}`)}
+		? t('fixDialog.dateAndTimeIdscount', { idsCount: ids.length })
+		: t('fixDialog.locationIdscount', { idsCount: ids.length })}
 	bind:open
 >
 	<form
 		class="form fix"
 		onsubmit={(event) => event.preventDefault()}
-		aria-label={kind === 'dates'
-			? tr('Datum i vrijeme', 'Date and time')
-			: tr('Lokacija', 'Location')}
+		aria-label={kind === 'dates' ? t('common.dateAndTime') : t('common.location')}
 	>
 		<div class="fix-choices" role="radiogroup">
 			{#if kind === 'dates'}
-				{#each dateChoices as [value, hr, en] (value)}
+				{#each dateChoices as [value, label] (value)}
 					<label class="sf-chip" class:on={dateAction === value}
-						><input type="radio" bind:group={dateAction} {value} />{tr(hr, en)}</label
+						><input type="radio" bind:group={dateAction} {value} />{t(label)}</label
 					>
 				{/each}
 			{:else}
-				{#each placeChoices as [value, hr, en] (value)}
+				{#each placeChoices as [value, label] (value)}
 					<label class="sf-chip" class:on={placeAction === value}
-						><input type="radio" bind:group={placeAction} {value} />{tr(hr, en)}</label
+						><input type="radio" bind:group={placeAction} {value} />{t(label)}</label
 					>
 				{/each}
 			{/if}
@@ -224,35 +219,33 @@
 
 		{#if kind === 'dates' && dateAction === 'shift'}
 			<p class="alb-meta">
-				{tr('Kad je sat fotoaparata bio kriv.', "When the camera's clock was wrong.")}
+				{t('fixDialog.whenTheCameraSClock')}
 			</p>
 			<div class="fix-row">
-				<select class="in" bind:value={later} aria-label={tr('Smjer', 'Direction')}>
-					<option value={false}>{tr('Ranije', 'Earlier')}</option>
-					<option value={true}>{tr('Kasnije', 'Later')}</option>
+				<select class="in" bind:value={later} aria-label={t('fixDialog.direction')}>
+					<option value={false}>{t('fixDialog.earlier')}</option>
+					<option value={true}>{t('fixDialog.later')}</option>
 				</select>
 				<label
-					><input class="in" type="number" min="0" bind:value={days} />{tr('dana', 'days')}</label
+					><input class="in" type="number" min="0" bind:value={days} />{t('fixDialog.days')}</label
 				>
 				<label
-					><input class="in" type="number" min="0" bind:value={hours} />{tr('sati', 'hours')}</label
+					><input class="in" type="number" min="0" bind:value={hours} />{t(
+						'fixDialog.hours'
+					)}</label
 				>
 				<label
-					><input class="in" type="number" min="0" bind:value={minutes} />{tr(
-						'minuta',
-						'minutes'
+					><input class="in" type="number" min="0" bind:value={minutes} />{t(
+						'fixDialog.minutes'
 					)}</label
 				>
 			</div>
 		{:else if kind === 'dates' && dateAction === 'anchor'}
 			<p class="alb-meta">
-				{tr(
-					'Upišite kad je prva odabrana fotka stvarno snimljena; sve se pomaknu za istu razliku.',
-					'Type when the first selected photo was really taken; all move by the same.'
-				)}
+				{t('fixDialog.typeWhenTheFirstSelected')}
 			</p>
 			<label class="fix-field"
-				><span>{tr('Sad piše', 'It says now')}</span><input
+				><span>{t('fixDialog.itSaysNow')}</span><input
 					class="in"
 					type="datetime-local"
 					value={anchorBefore}
@@ -260,7 +253,7 @@
 				/></label
 			>
 			<label class="fix-field"
-				><span>{tr('Stvarno', 'Really')}</span><input
+				><span>{t('fixDialog.really')}</span><input
 					class="in"
 					type="datetime-local"
 					bind:value={anchorAfter}
@@ -268,13 +261,10 @@
 			>
 		{:else if kind === 'dates' && dateAction === 'set'}
 			<p class="alb-meta">
-				{tr(
-					'Isti datum svima, minutu razmaka, da ostanu u svom redu. Za skenirane fotke.',
-					'One date for all, a minute apart so they keep their order. For scanned photos.'
-				)}
+				{t('fixDialog.oneDateForAllA')}
 			</p>
 			<label class="fix-field"
-				><span>{tr('Datum i vrijeme', 'Date and time')}</span><input
+				><span>{t('common.dateAndTime')}</span><input
 					class="in"
 					type="datetime-local"
 					bind:value={setAt}
@@ -282,30 +272,24 @@
 			>
 		{:else if kind === 'dates' && dateAction === 'zoneFromPlace'}
 			<p class="alb-meta">
-				{tr(
-					'Fotke s lokacijom dobiju vremensku zonu mjesta (s ljetnim vremenom); sat ostaje kakav je bio.',
-					'Photos with a location get the time zone of the place, summer time included; the clock stays as it was.'
-				)}
+				{t('fixDialog.photosWithALocationGet')}
 			</p>
 		{:else if kind === 'dates' && dateAction === 'travel'}
 			<p class="alb-meta">
-				{tr(
-					'Kad je fotoaparat na putu ostao na domaćem vremenu.',
-					"When the camera kept home's time on a trip."
-				)}
+				{t('fixDialog.whenTheCameraKeptHome')}
 			</p>
 			<datalist id="fix-zones"
 				>{#each zones as zone (zone)}<option value={zone}></option>{/each}</datalist
 			>
 			<label class="fix-field"
-				><span>{tr('Sat fotoaparata bio je na', "The camera's clock was on")}</span><input
+				><span>{t('fixDialog.theCameraSClockWas')}</span><input
 					class="in"
 					list="fix-zones"
 					bind:value={cameraZone}
 				/></label
 			>
 			<label class="fix-field"
-				><span>{tr('Snimljene su u', 'They were taken in')}</span><input
+				><span>{t('fixDialog.theyWereTakenIn')}</span><input
 					class="in"
 					list="fix-zones"
 					bind:value={placeZone}
@@ -314,17 +298,14 @@
 			>
 		{:else if kind === 'dates'}
 			<p class="alb-meta">
-				{tr('Ručno postavljeni datumi se brišu.', 'Dates set by hand are taken away.')}
+				{t('fixDialog.datesSetByHandAre')}
 			</p>
 		{:else if placeAction === 'fromNeighbours'}
 			<p class="alb-meta">
-				{tr(
-					'Fotke bez lokacije dobiju mjesto fotke s lokacijom snimljene najbliže njima, npr. fotoaparat uz mobitel.',
-					'Photos without a location get the place of the photo with one taken closest to them, such as a camera beside a phone.'
-				)}
+				{t('fixDialog.photosWithoutALocationGet')}
 			</p>
 			<label class="fix-field"
-				><span>{tr('Najviše minuta razmaka', 'At most minutes apart')}</span><input
+				><span>{t('fixDialog.atMostMinutesApart')}</span><input
 					class="in"
 					type="number"
 					min="1"
@@ -334,13 +315,10 @@
 			>
 		{:else if placeAction === 'fromTrack'}
 			<p class="alb-meta">
-				{tr(
-					'Fotke bez lokacije dobiju mjesto iz traga u trenutku snimanja. Najprije neka datum bude točan.',
-					'Photos without a location get the place from the track at the moment they were taken. Get the date right first.'
-				)}
+				{t('fixDialog.photosWithoutALocationGet2')}
 			</p>
 			<label class="fix-field"
-				><span>{trackName || tr('GPX datoteka', 'GPX file')}</span><input
+				><span>{trackName || t('fixDialog.gpxFile')}</span><input
 					type="file"
 					accept=".gpx,application/gpx+xml"
 					onchange={readTrack}
@@ -348,7 +326,7 @@
 			>
 		{:else if placeAction === 'set'}
 			<label class="fix-field"
-				><span>{tr('Pronađi mjesto', 'Find a place')}</span><input
+				><span>{t('fixDialog.findAPlace')}</span><input
 					class="in"
 					bind:value={search}
 					oninput={findPlaces}
@@ -370,7 +348,7 @@
 			</div>
 			<div class="fix-row">
 				<label
-					><span>{tr('Širina', 'Latitude')}</span><input
+					><span>{t('fixDialog.latitude')}</span><input
 						class="in"
 						type="number"
 						step="any"
@@ -378,7 +356,7 @@
 					/></label
 				>
 				<label
-					><span>{tr('Dužina', 'Longitude')}</span><input
+					><span>{t('fixDialog.longitude')}</span><input
 						class="in"
 						type="number"
 						step="any"
@@ -389,28 +367,25 @@
 		{:else}
 			<p class="alb-meta">
 				{placeAction === 'clear'
-					? tr('Lokacija se makne i ostaje maknuta.', 'The location goes, and stays gone.')
-					: tr('Ručno postavljene lokacije se brišu.', 'Locations set by hand are taken away.')}
+					? t('fixDialog.theLocationGoesAndStays')
+					: t('fixDialog.locationsSetByHandAre')}
 			</p>
 		{/if}
 
-		<section class="fix-preview" aria-label={tr('Pregled', 'Preview')} aria-live="polite">
+		<section class="fix-preview" aria-label={t('fixDialog.preview')} aria-live="polite">
 			{#if problem}
 				<p class="st-error" role="alert">{problem}</p>
 			{:else if preview}
 				<p>
-					<b>{tr(`Promijenit će se: ${preview.changed}`, `Will change: ${preview.changed}`)}</b>
+					<b>{t('fixDialog.willChangeChanged', { changed: preview.changed })}</b>
 					{#if preview.skipped}
-						· {tr(
-							`bez podataka za to: ${preview.skipped}`,
-							`nothing to go by: ${preview.skipped}`
-						)}{/if}
+						· {t('fixDialog.nothingToGoBySkipped', { skipped: preview.skipped })}{/if}
 				</p>
 				<ul class="st-previews">
 					{#each preview.changes as change (change.id)}
 						<li>
 							<span>{change.name}</span><b class="mono"
-								>{change.before || '—'} → {change.after || tr('bez lokacije', 'no location')}</b
+								>{change.before || '—'} → {change.after || t('fixDialog.noLocation')}</b
 							>
 						</li>
 					{/each}
@@ -419,9 +394,9 @@
 		</section>
 	</form>
 	{#snippet footer()}
-		<Button onclick={() => (open = false)}>{tr('Odustani', 'Cancel')}</Button>
+		<Button onclick={() => (open = false)}>{t('common.cancel')}</Button>
 		<Button variant="gold" disabled={busy || !preview?.changed} onclick={apply}
-			>{tr('Spremi', 'Save')}</Button
+			>{t('common.save')}</Button
 		>
 	{/snippet}
 </Dialog>

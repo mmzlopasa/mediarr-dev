@@ -6,7 +6,7 @@
 	import { api, partnerSource, type PartnerEntry } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
@@ -42,12 +42,12 @@
 	});
 </script>
 
-<svelte:head><title>{partner?.name ?? tr('Partner', 'Partner')} — Mediarr</title></svelte:head>
+<svelte:head><title>{partner?.name ?? t('partners.id.partner')} — Mediarr</title></svelte:head>
 
 {#if gone}
 	<Alert kind="err">
-		{tr('Ova biblioteka nije podijeljena s vama.', 'This library is not shared with you.')}
-		<a href={resolve('/(app)/shared')}>{tr('Natrag', 'Back')}</a>
+		{t('partners.id.thisLibraryIsNotShared')}
+		<a href={resolve('/(app)/shared')}>{t('partners.id.back')}</a>
 	</Alert>
 {:else if !partner}
 	<Skeleton height="220px" />

@@ -2,7 +2,7 @@
 	import { api } from '#lib/api.ts';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import CollectionView from '#lib/organize/CollectionView.svelte';
 
@@ -12,26 +12,26 @@
 	async function unarchive(ids: string[], clear: () => void) {
 		try {
 			const { changed } = await api.bulk(ids, 'unarchive');
-			showToast('ok', tr(`Vraćeno u Medije: ${changed}`, `Back in Media: ${changed}`));
+			showToast('ok', t('archive.backInMediaChanged', { changed }));
 			clear();
 			await view?.reload();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr(item.hr, item.en)}</h1></div></div>
+<div class="ph"><div><h1>{t(item.label)}</h1></div></div>
 
 <CollectionView bind:this={view} scope="archive" {item}>
 	{#snippet selectionActions(ids, clear)}
 		<button
 			type="button"
 			class="icon-btn"
-			aria-label={tr('Vrati u Medije', 'Back to Media')}
-			title={tr('Vrati u Medije', 'Back to Media')}
+			aria-label={t('archive.backToMedia')}
+			title={t('archive.backToMedia')}
 			onclick={() => unarchive(ids, clear)}><Icon name="archive" /></button
 		>
 	{/snippet}

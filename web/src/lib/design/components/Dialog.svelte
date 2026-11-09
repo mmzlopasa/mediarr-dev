@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let {
 		title,
@@ -36,7 +36,7 @@
 		<button
 			type="button"
 			class="icon-btn sm"
-			aria-label={tr('Zatvori', 'Close')}
+			aria-label={t('common.close')}
 			onclick={() => (open = false)}>✕</button
 		>
 	</header>

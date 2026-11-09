@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { api } from '#lib/api.ts';
 	import AuthLayout from '#lib/design/components/AuthLayout.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let password = $state('');
 	let done = $state(false);
@@ -21,29 +21,26 @@
 			});
 			done = true;
 		} catch (cause) {
-			error = cause instanceof Error ? cause.message : tr('Nije uspjelo.', 'That did not work.');
+			error = cause instanceof Error ? cause.message : t('login.reset.thatDidNotWork');
 		}
 		busy = false;
 	}
 </script>
 
-<svelte:head><title>{tr('Nova lozinka', 'New password')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('common.newPassword')} — Mediarr</title></svelte:head>
 
 <AuthLayout>
-	<h1 class="as-h">{tr('Nova lozinka', 'New password')}</h1>
+	<h1 class="as-h">{t('common.newPassword')}</h1>
 	{#if done}
 		<p class="as-p">
-			{tr(
-				'Lozinka je promijenjena, a ostali uređaji su odjavljeni.',
-				'Your password was changed, and other devices were signed out.'
-			)}
+			{t('login.reset.yourPasswordWasChangedAnd')}
 		</p>
-		<p class="as-links"><a href={resolve('/login')}>{tr('Prijava', 'Sign in')}</a></p>
+		<p class="as-links"><a href={resolve('/login')}>{t('login.reset.signIn')}</a></p>
 	{:else}
 		{#if error}<p class="as-p" role="alert">{error}</p>{/if}
 		<form class="as-f" onsubmit={submit}>
 			<label class="as-fl">
-				<span>{tr('Nova lozinka', 'New password')}</span>
+				<span>{t('common.newPassword')}</span>
 				<input
 					class="as-in"
 					type="password"
@@ -54,7 +51,7 @@
 				/>
 			</label>
 			<button class="as-btn" type="submit" disabled={busy}>
-				{tr('Spremi', 'Save')}
+				{t('common.save')}
 			</button>
 		</form>
 	{/if}

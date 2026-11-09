@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/account_preferences.dart';
 import '../services/session.dart';
 import 'asset_picture.dart';
@@ -9,9 +10,9 @@ import 'memories_screen.dart';
 
 String storyLabel(Memory memory, int thisYear) {
   final year = memory.year;
-  if (year == null) return 'The last week';
+  if (year == null) return l.storiesStripLastWeek;
   final years = thisYear - year;
-  return years == 1 ? '1 year ago' : '$years years ago';
+  return l.storiesStripYearsAgo(years);
 }
 
 /// Memories above the timeline as stories: a row of tall cards, each playing as a story when
@@ -92,7 +93,7 @@ class _StoriesStripState extends ConsumerState<StoriesStrip> {
                   session: widget.session,
                   memory: memory,
                   title: storyLabel(memory, thisYear),
-                  subtitle: count == 1 ? '1 item' : '$count items',
+                  subtitle: l.storiesStripItems(count),
                 ),
               ),
             ),

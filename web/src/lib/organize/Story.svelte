@@ -6,7 +6,7 @@
 	import Button from '#lib/design/components/Button.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	const pictureMs = (preferences()?.memorySeconds ?? 4) * 1000;
 	const EXPORT_POLL_MS = 2000;
@@ -50,11 +50,11 @@
 				exported = await api.story(exported.id);
 			}
 			if (exported.status === 'failed') {
-				showToast('err', tr('Video nije napravljen.', 'The video could not be made.'));
+				showToast('err', t('story.theVideoCouldNotBe'));
 			}
 		} catch {
 			exported = undefined;
-			showToast('err', tr('Video nije napravljen.', 'The video could not be made.'));
+			showToast('err', t('story.theVideoCouldNotBe'));
 		}
 	}
 </script>
@@ -74,7 +74,7 @@
 		<span style="width:{((index + 1) / items.length) * 100}%"></span>
 	</div>
 	<div class="story-top">
-		<button type="button" class="icon-btn" aria-label={tr('Zatvori', 'Close')} onclick={onClose}
+		<button type="button" class="icon-btn" aria-label={t('common.close')} onclick={onClose}
 			><Icon name="back" /></button
 		>
 		<b>{title}</b>
@@ -82,18 +82,18 @@
 			type="button"
 			class="icon-btn"
 			aria-pressed={paused}
-			aria-label={paused ? tr('Nastavi', 'Resume') : tr('Pauziraj', 'Pause')}
+			aria-label={paused ? t('common.resume') : t('story.pause')}
 			onclick={() => (paused = !paused)}><Icon name="play" /></button
 		>
 		{#if exported?.status === 'ready'}
 			<a class="btn gold sm" href="/api/stories/{exported.id}/video" download data-sveltekit-reload>
 				<Icon name="download" size={14} />
-				{tr('Preuzmi video', 'Download the video')}
+				{t('story.downloadTheVideo')}
 			</a>
 		{:else if exported?.status === 'working'}
-			<Button small disabled>{tr('Video se radi…', 'Making the video…')}</Button>
+			<Button small disabled>{t('story.makingTheVideo')}</Button>
 		{:else}
-			<Button small onclick={exportVideo}>{tr('Napravi video', 'Make a video')}</Button>
+			<Button small onclick={exportVideo}>{t('story.makeAVideo')}</Button>
 		{/if}
 	</div>
 	<div class="story-stage">
@@ -107,13 +107,13 @@
 		<button
 			type="button"
 			class="icon-btn viewer-nav viewer-prev"
-			aria-label={tr('Prethodna', 'Previous')}
+			aria-label={t('story.previous')}
 			onclick={() => move(-1)}><Icon name="back" /></button
 		>
 		<button
 			type="button"
 			class="icon-btn viewer-nav viewer-next"
-			aria-label={tr('Sljedeća', 'Next')}
+			aria-label={t('story.next')}
 			onclick={() => move(1)}><Icon name="forward" /></button
 		>
 	</div>

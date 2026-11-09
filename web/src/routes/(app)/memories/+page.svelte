@@ -5,7 +5,7 @@
 	import Alert from '#lib/design/components/Alert.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import Story from '#lib/organize/Story.svelte';
 
@@ -34,19 +34,19 @@
 	const titleOf = (memory: Memory) => memoryTitle(memory);
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr(item.hr, item.en)}</h1></div></div>
+<div class="ph"><div><h1>{t(item.label)}</h1></div></div>
 
 {#if failed}
-	<Alert kind="err">{tr('Uspomene se nisu učitale.', 'Memories could not be loaded.')}</Alert>
+	<Alert kind="err">{t('memories.memoriesCouldNotBeLoaded')}</Alert>
 {:else if !memories}
 	<div class="alb-grid" aria-hidden="true">
 		<Skeleton height="220px" /><Skeleton height="220px" />
 	</div>
 {:else if memories.length === 0}
 	<section class="card glass">
-		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
+		<div class="card-b"><EmptyState icon={item.icon} text={item.empty ? t(item.empty) : ''} /></div>
 	</section>
 {:else}
 	<div class="stories stories-page">

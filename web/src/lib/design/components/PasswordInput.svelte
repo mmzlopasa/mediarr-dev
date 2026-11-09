@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Icon from './Icon.svelte';
 
 	let { label, name = 'password' }: { label: string; name?: string } = $props();
@@ -13,7 +13,7 @@
 		<button
 			type="button"
 			class="pw-t"
-			aria-label={tr('Prikaži lozinku', 'Show password')}
+			aria-label={t('passwordInput.showPassword')}
 			aria-pressed={visible}
 			onclick={() => (visible = !visible)}><Icon name="eye" /></button
 		>

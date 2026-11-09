@@ -8,7 +8,7 @@
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import { blurUrl } from '#lib/timeline/blur.ts';
 	import FilterPanel from '#lib/search/FilterPanel.svelte';
@@ -107,7 +107,7 @@
 			month: 'short',
 			year: 'numeric'
 		});
-	const chips = $derived(result ? chipsFor(result.filters, params, tr, day) : []);
+	const chips = $derived(result ? chipsFor(result.filters, params, day) : []);
 
 	function neighbours(id: string) {
 		const items = result?.items ?? [];
@@ -116,25 +116,25 @@
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr(item.hr, item.en)}</h1></div></div>
+<div class="ph"><div><h1>{t(item.label)}</h1></div></div>
 
 <form class="search-bar" onsubmit={submit}>
 	<Input
-		label={tr('Što tražite?', 'What are you looking for?')}
-		placeholder={tr('pas na plaži, Hvar 2024, račun…', 'dog on a beach, Hvar 2024, receipt…')}
+		label={t('search.whatAreYouLookingFor')}
+		placeholder={t('search.dogOnABeachHvar')}
 		bind:value={typed}
 	/>
 	<Button type="submit" variant="gold" disabled={!typed.trim() && !chosenCount}
-		>{tr('Traži', 'Search')}</Button
+		>{t('search.search')}</Button
 	>
 	<Button onclick={() => (panel = !panel)} aria-expanded={panel}
-		>{tr('Filtri', 'Filters')}{chosenCount ? ` · ${chosenCount}` : ''}</Button
+		>{t('search.filters')}{chosenCount ? ` · ${chosenCount}` : ''}</Button
 	>
 	{#if askOn}
 		<Button disabled={!typed.trim() || asking} onclick={ask}>
-			{asking ? tr('Razmišljam…', 'Thinking…') : tr('Pitaj', 'Ask')}
+			{asking ? t('search.thinking') : t('search.ask')}
 		</Button>
 	{/if}
 </form>
@@ -150,49 +150,35 @@
 {/if}
 {#if asked && query}
 	<p class="alb-meta" data-testid="asked">
-		{tr('Za pitanje', 'For the question')} „{asked}”: {query}
+		{t('search.forTheQuestion')} „{asked}”: {query}
 	</p>
 {/if}
 
 {#if failed}
-	<Alert kind="err">{tr('Pretraga nije uspjela.', 'The search failed.')}</Alert>
+	<Alert kind="err">{t('search.theSearchFailed')}</Alert>
 {:else if loading}
 	<Skeleton height="220px" />
 {:else if !searching}
 	<section class="card glass">
 		<div class="card-b">
-			<EmptyState
-				icon={item.icon}
-				text={tr(
-					'Opišite što tražite, na hrvatskom ili engleskom, ili odaberite filtre.',
-					'Describe what you are looking for, in English or Croatian, or choose filters.'
-				)}
-			/>
+			<EmptyState icon={item.icon} text={t('search.describeWhatYouAreLooking')} />
 		</div>
 	</section>
 {:else if result}
 	{#if !result.smart}
 		<Alert kind="warn">
-			{tr(
-				'Pametna pretraga nije uključena ili nije dostupna, pa se traži samo tekst na slikama, nazivi datoteka i filtri.',
-				'Smart search is off or not available, so only text on pictures, file names and filters are searched.'
-			)}
+			{t('search.smartSearchIsOffOr')}
 		</Alert>
 	{/if}
 	{#if chips.length}
-		<ul class="sf-on" aria-label={tr('Filtri u pretrazi', 'Filters in this search')}>
+		<ul class="sf-on" aria-label={t('search.filtersInThisSearch')}>
 			{#each chips as chip (chip.key + (chip.value ?? ''))}
 				<li class:found={chip.found}>
 					<span>{chip.label}</span>
 					<button
 						type="button"
-						aria-label={tr(`Makni ${chip.label}`, `Remove ${chip.label}`)}
-						title={chip.found
-							? tr(
-									'Pronađeno u riječima; makni i traži kao riječ',
-									'Found in the words; remove to search it as a word'
-								)
-							: tr('Makni', 'Remove')}
+						aria-label={t('search.removeLabel', { label: chip.label })}
+						title={chip.found ? t('search.foundInTheWordsRemove') : t('common.remove2')}
 						onclick={() => go(withoutChip(params, chip, result!.filters))}>×</button
 					>
 				</li>
@@ -202,7 +188,7 @@
 	{#if result.items.length === 0}
 		<section class="card glass">
 			<div class="card-b">
-				<EmptyState icon={item.icon} text={tr('Ništa nije pronađeno.', 'Nothing was found.')} />
+				<EmptyState icon={item.icon} text={t('search.nothingWasFound')} />
 			</div>
 		</section>
 	{:else}
@@ -211,7 +197,7 @@
 				{@const blur = blurUrl(found.blurhash)}
 				<button
 					type="button"
-					aria-label={tr('Otvori', 'Open')}
+					aria-label={t('common.open')}
 					style={blur ? `background-image:url(${blur});background-size:cover` : ''}
 					onclick={() => pushState('', { viewer: found.id })}
 				>

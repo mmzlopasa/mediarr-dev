@@ -3,19 +3,18 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t, k, type Key } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import { preferences, savePreferences } from '#lib/preferences.svelte.ts';
 
-	const toggles: { key: keyof UserPreferences; hr: string; en: string }[] = [
-		{ key: 'videoAutoplay', hr: 'Video se pokreće sam', en: 'Videos start by themselves' },
-		{ key: 'videoLoop', hr: 'Video se ponavlja', en: 'Videos start again when they end' },
-		{ key: 'videoOriginal', hr: 'Pusti originalni video', en: 'Play the original video' },
-		{ key: 'photoFull', hr: 'Otvori fotku u punoj veličini', en: 'Open photos at full size' },
+	const toggles: { key: keyof UserPreferences; label: Key }[] = [
+		{ key: 'videoAutoplay', label: k('preferencesCard.videosStartByThemselves') },
+		{ key: 'videoLoop', label: k('preferencesCard.videosStartAgainWhenThey') },
+		{ key: 'videoOriginal', label: k('preferencesCard.playTheOriginalVideo') },
+		{ key: 'photoFull', label: k('preferencesCard.openPhotosAtFullSize') },
 		{
 			key: 'confirmDelete',
-			hr: 'Pitaj prije brisanja iz pregleda',
-			en: 'Ask before deleting from the viewer'
+			label: k('preferencesCard.askBeforeDeletingFromThe')
 		}
 	];
 	const sections = appNav.filter((item) => item.path !== '/');
@@ -26,10 +25,7 @@
 		try {
 			await savePreferences({ ...now, ...update });
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Nije spremljeno.', 'Not saved.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.notSaved'));
 		}
 	}
 
@@ -41,14 +37,14 @@
 	}
 </script>
 
-<Card id="preferences" title={tr('Postavke', 'Preferences')}>
+<Card id="preferences" title={t('preferencesCard.preferences')}>
 	{#if preferences()}
 		{@const now = preferences()!}
 		<div class="set-group">
-			<h3>{tr('Gledanje', 'Viewing')}</h3>
+			<h3>{t('preferencesCard.viewing')}</h3>
 			{#each toggles as toggle (toggle.key)}
 				<label class="set-row">
-					<span>{tr(toggle.hr, toggle.en)}</span>
+					<span>{t(toggle.label)}</span>
 					<input
 						type="checkbox"
 						class="switch"
@@ -59,9 +55,9 @@
 			{/each}
 		</div>
 		<div class="set-group">
-			<h3>{tr('Uspomene, osobe i albumi', 'Memories, people and albums')}</h3>
+			<h3>{t('preferencesCard.memoriesPeopleAndAlbums')}</h3>
 			<label class="set-row">
-				<span>{tr('Sekundi po slici u uspomenama', 'Seconds for each picture in memories')}</span>
+				<span>{t('preferencesCard.secondsForEachPictureIn')}</span>
 				<input
 					class="in num"
 					type="number"
@@ -72,12 +68,7 @@
 				/>
 			</label>
 			<label class="set-row">
-				<span
-					>{tr(
-						'Najmanje fotki da se osoba prikaže',
-						'Fewest photos for a person to be listed'
-					)}</span
-				>
+				<span>{t('preferencesCard.fewestPhotosForAPerson')}</span>
 				<input
 					class="in num"
 					type="number"
@@ -88,24 +79,24 @@
 				/>
 			</label>
 			<label class="set-row">
-				<span>{tr('Poredak u novom albumu', 'Order in a new album')}</span>
+				<span>{t('preferencesCard.orderInANewAlbum')}</span>
 				<select
 					class="in"
 					value={now.albumOrder}
 					onchange={(event) =>
 						change({ albumOrder: event.currentTarget.value as UserPreferences['albumOrder'] })}
 				>
-					<option value="newest">{tr('Najnovije prvo', 'Newest first')}</option>
-					<option value="oldest">{tr('Najstarije prvo', 'Oldest first')}</option>
+					<option value="newest">{t('preferencesCard.newestFirst')}</option>
+					<option value="oldest">{t('preferencesCard.oldestFirst')}</option>
 				</select>
 			</label>
 		</div>
 		<div class="set-group">
-			<h3>{tr('Prikaži u izborniku', 'Show in the menu')}</h3>
+			<h3>{t('preferencesCard.showInTheMenu')}</h3>
 			<div class="set-tiles">
 				{#each sections as section (section.path)}
 					<label class="set-tile">
-						<span>{tr(section.hr, section.en)}</span>
+						<span>{t(section.label)}</span>
 						<input
 							type="checkbox"
 							class="switch"

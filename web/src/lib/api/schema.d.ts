@@ -102,7 +102,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Change one's own name, or email address with the current password */
+        /** Change one's own name, language, or email address with the current password */
         patch: operations["updateProfile"];
         trace?: never;
     };
@@ -4442,10 +4442,17 @@ export interface components {
             name: string;
             isAdmin: boolean;
             totpEnabled: boolean;
+            language?: components["schemas"]["Language"];
             /** @description Changes with each new picture of the person; 0 or missing when there is none */
             avatarVersion?: number;
         };
+        /**
+         * @description English is the main language; de and sl are machine translated for now
+         * @enum {string}
+         */
+        Language: "en" | "hr" | "de" | "sl";
         ProfileUpdate: {
+            language?: components["schemas"]["Language"];
             name?: string;
             email?: string;
             /** @description Needed to change the email address */

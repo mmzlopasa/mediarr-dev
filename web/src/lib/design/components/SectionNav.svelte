@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	// The parts of a long settings page, to jump between them; the one in view is marked.
 	let { items }: { items: { id: string; label: string }[] } = $props();
@@ -43,7 +43,7 @@
 	});
 </script>
 
-<nav class="set-nav" aria-label={tr('Odjeljci', 'Sections')}>
+<nav class="set-nav" aria-label={t('sectionNav.sections')}>
 	{#each items as item (item.id)}
 		<a
 			href="#{item.id}"

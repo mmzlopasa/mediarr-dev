@@ -15,7 +15,7 @@
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t, k, type Key } from '#lib/i18n.svelte.ts';
 
 	/**
 	 * Copies of the backup at other Mediarr servers, and the backups this server keeps for others.
@@ -54,10 +54,7 @@
 	});
 
 	function fail(cause: unknown) {
-		showToast(
-			'err',
-			cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
-		);
+		showToast('err', cause instanceof Error ? cause.message : t('common.theActionFailed'));
 	}
 
 	async function act(work: () => Promise<unknown>, done?: string) {
@@ -92,13 +89,10 @@
 	async function pair(event: SubmitEvent) {
 		event.preventDefault();
 		pairing = true;
-		await act(
-			async () => {
-				await api.addBackupDestination(code);
-				code = '';
-			},
-			tr('Upareno. Sljedeći backup ide i tamo.', 'Paired. The next backup goes there too.')
-		);
+		await act(async () => {
+			await api.addBackupDestination(code);
+			code = '';
+		}, t('keepCard.pairedTheNextBackupGoes'));
 		pairing = false;
 	}
 
@@ -124,47 +118,44 @@
 	async function copyCode() {
 		if (!invite) return;
 		await navigator.clipboard.writeText(invite.code);
-		showToast('ok', tr('Kod je kopiran.', 'The code is copied.'));
+		showToast('ok', t('keepCard.theCodeIsCopied'));
 	}
 
 	const when = (value?: string) =>
 		value
 			? new Date(value).toLocaleString(lang(), { dateStyle: 'medium', timeStyle: 'short' })
-			: tr('još nije', 'not yet');
-	const GUEST_STATUS: Record<KeepGuest['status'], { hr: string; en: string; tone: string }> = {
-		invited: { hr: 'Pozvan', en: 'Invited', tone: '' },
-		active: { hr: 'Aktivan', en: 'Active', tone: 'ok' },
-		stopped: { hr: 'Zaustavljen', en: 'Stopped', tone: 'err' }
+			: t('keepCard.notYet');
+	const GUEST_STATUS: Record<KeepGuest['status'], { label: Key; tone: string }> = {
+		invited: { label: k('keepCard.invited'), tone: '' },
+		active: { label: k('keepCard.active'), tone: 'ok' },
+		stopped: { label: k('keepCard.stopped'), tone: 'err' }
 	};
 </script>
 
-<Card id="keep" title={tr('Kopija kod rođaka', 'A copy at a relative’s')}>
+<Card id="keep" title={t('keepCard.aCopyAtARelative')}>
 	<p class="alb-meta">
-		{tr(
-			'Dva Mediarra čuvaju šifriranu kopiju jedan drugoga. Onaj tko čuva ne može je pročitati, a što se obriše, čuva još 90 dana.',
-			'Two Mediarr servers keep an encrypted copy of each other. The one that keeps it cannot read it, and what is deleted from it is kept for 90 more days.'
-		)}
+		{t('keepCard.twoMediarrServersKeepAn')}
 	</p>
 
 	<div class="set-group">
-		<h3>{tr('Moja kopija kod drugih', 'My copy at others')}</h3>
+		<h3>{t('keepCard.myCopyAtOthers')}</h3>
 		{#if destinations === undefined}
 			<Skeleton height="48px" />
 		{:else}
 			{#if destinations.length}
-				<ul class="set-list" aria-label={tr('Moja kopija kod drugih', 'My copy at others')}>
+				<ul class="set-list" aria-label={t('keepCard.myCopyAtOthers')}>
 					{#each destinations as destination (destination.id)}
 						<li data-destination={destination.name}>
 							<span class="set-list-t">
 								<b>{destination.name}</b>
 								<small>
 									<span class="mono">{destination.address}</span> ·
-									{tr('zadnji backup', 'last backup')}
+									{t('keepCard.lastBackup')}
 									{when(destination.lastSuccessAt)} ·
-									{tr('do', 'up to')}
+									{t('keepCard.upTo')}
 									{formatBytes(destination.quotaBytes)}
 									{#if exposed(destination.address)}
-										· <em class="set-chip err">{tr('bez HTTPS-a', 'no HTTPS')}</em>
+										· <em class="set-chip err">{t('keepCard.noHttps')}</em>
 									{/if}
 								</small>
 								{#if destination.lastError}
@@ -177,14 +168,14 @@
 									onclick={() =>
 										act(
 											() => api.startBackupRun('restore_test', destination.id),
-											tr('Test vraćanja je pokrenut.', 'The restore test has started.')
-										)}>{tr('Testiraj vraćanje', 'Test bringing it back')}</Button
+											t('keepCard.theRestoreTestHasStarted')
+										)}>{t('keepCard.testBringingItBack')}</Button
 								>
 								<Button
 									small
 									variant="danger"
 									onclick={() => act(() => api.removeBackupDestination(destination.id))}
-									>{tr('Ukloni', 'Remove')}</Button
+									>{t('common.remove')}</Button
 								>
 							</span>
 						</li>
@@ -193,7 +184,7 @@
 			{/if}
 			<form class="form" onsubmit={pair}>
 				<label class="keep-code">
-					<span>{tr('Kod od drugog Mediarra', 'Code from the other Mediarr')}</span>
+					<span>{t('keepCard.codeFromTheOtherMediarr')}</span>
 					<textarea
 						class="in mono"
 						rows="3"
@@ -204,7 +195,7 @@
 				</label>
 				<div class="set-foot">
 					<Button type="submit" variant="gold" small disabled={pairing}
-						>{pairing ? tr('Uparujem…', 'Pairing…') : tr('Upari', 'Pair')}</Button
+						>{pairing ? t('keepCard.pairing') : t('keepCard.pair')}</Button
 					>
 				</div>
 			</form>
@@ -212,25 +203,25 @@
 	</div>
 
 	<div class="set-group">
-		<h3>{tr('Čuvam za druge', 'I keep for others')}</h3>
+		<h3>{t('keepCard.iKeepForOthers')}</h3>
 		{#if guests === undefined}
 			<Skeleton height="48px" />
 		{:else}
 			{#if guests.length}
-				<ul class="set-list" aria-label={tr('Čuvam za druge', 'I keep for others')}>
+				<ul class="set-list" aria-label={t('keepCard.iKeepForOthers')}>
 					{#each guests as guest (guest.id)}
 						<li data-guest={guest.status}>
 							<span class="set-list-t">
 								<b>{guest.name}</b>
 								<small>
 									<em class="set-chip {GUEST_STATUS[guest.status].tone}"
-										>{tr(GUEST_STATUS[guest.status].hr, GUEST_STATUS[guest.status].en)}</em
+										>{t(GUEST_STATUS[guest.status].label)}</em
 									>
 									{formatBytes(guest.usedBytes)} / {formatBytes(guest.quotaBytes)} ·
-									{tr('zadnji backup', 'last backup')}
+									{t('keepCard.lastBackup')}
 									{when(guest.lastBackupAt)}
 									{#if guest.deletedBytes > 0}
-										· {tr('obrisano se čuva', 'deleted, kept')}: {formatBytes(guest.deletedBytes)}
+										· {t('keepCard.deletedKept')}: {formatBytes(guest.deletedBytes)}
 									{/if}
 								</small>
 								<Bar pct={(guest.usedBytes / guest.quotaBytes) * 100} />
@@ -249,7 +240,7 @@
 										}}
 									>
 										<Input label="GB" type="number" min="1" bind:value={resizeGb} />
-										<Button type="submit" small variant="gold">{tr('Spremi', 'Save')}</Button>
+										<Button type="submit" small variant="gold">{t('common.save')}</Button>
 									</form>
 								{/if}
 								{#if removing === guest.id}
@@ -263,25 +254,21 @@
 										}}
 									>
 										<Input
-											label={tr(
-												`Upišite „${guest.name}“ za brisanje kopije`,
-												`Type “${guest.name}” to delete the copy`
-											)}
+											label={t('keepCard.typeNameToDeleteThe', { name: guest.name })}
 											bind:value={confirmName}
 										/>
 										<Button
 											type="submit"
 											small
 											variant="danger"
-											disabled={confirmName !== guest.name}
-											>{tr('Obriši kopiju', 'Delete the copy')}</Button
+											disabled={confirmName !== guest.name}>{t('keepCard.deleteTheCopy')}</Button
 										>
 									</form>
 								{/if}
 							</span>
 							<span class="imp-acts">
 								<Button small onclick={async () => show(await api.reinviteKeepGuest(guest.id))}
-									>{tr('Novi kod', 'New code')}</Button
+									>{t('keepCard.newCode')}</Button
 								>
 								{#if guest.status !== 'invited'}
 									<Button
@@ -293,9 +280,7 @@
 													status: guest.status === 'stopped' ? 'active' : 'stopped'
 												})
 											)}
-										>{guest.status === 'stopped'
-											? tr('Nastavi', 'Resume')
-											: tr('Zaustavi', 'Stop')}</Button
+										>{guest.status === 'stopped' ? t('common.resume') : t('common.stop')}</Button
 									>
 								{/if}
 								<Button
@@ -303,7 +288,7 @@
 									onclick={() => {
 										resizing = resizing === guest.id ? undefined : guest.id;
 										resizeGb = String(Math.round(guest.quotaBytes / GB));
-									}}>{tr('Veličina', 'Size')}</Button
+									}}>{t('keepCard.size')}</Button
 								>
 								{#if guest.deletedBytes > 0}
 									<Button
@@ -311,11 +296,8 @@
 										onclick={() =>
 											act(async () => {
 												const { restored } = await api.restoreKeepDeleted(guest.id);
-												showToast(
-													'ok',
-													tr(`Vraćeno datoteka: ${restored}.`, `Files brought back: ${restored}.`)
-												);
-											})}>{tr('Vrati obrisano', 'Bring back what was deleted')}</Button
+												showToast('ok', t('keepCard.filesBroughtBackRestored', { restored }));
+											})}>{t('keepCard.bringBackWhatWasDeleted')}</Button
 									>
 								{/if}
 								<Button
@@ -324,7 +306,7 @@
 									onclick={() => {
 										removing = removing === guest.id ? undefined : guest.id;
 										confirmName = '';
-									}}>{tr('Ukloni', 'Remove')}</Button
+									}}>{t('common.remove')}</Button
 								>
 							</span>
 						</li>
@@ -337,50 +319,29 @@
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -- an SVG drawn by the QR library from the code -->
 					<div class="keep-qr" aria-hidden="true">{@html qr}</div>
 					<div class="keep-invite-t">
-						<b>{tr(`Kod za ${invite.guest.name}`, `Code for ${invite.guest.name}`)}</b>
+						<b>{t('keepCard.codeForName', { name: invite.guest.name })}</b>
 						<p class="alb-meta">
-							{tr(
-								'Pošaljite ga adminu drugog servera: u Backup → Kopija kod rođaka ga zalijepi ili skenira. Vrijedi jednom, do',
-								'Send it to the administrator of the other server, who pastes or scans it under Backup → A copy at a relative’s. It works once, until'
-							)}
+							{t('keepCard.sendItToTheAdministrator')}
 							{when(invite.expiresAt)}.
 						</p>
 						<code class="keep-codebox">{invite.code}</code>
 						<div class="set-foot">
-							<Button small onclick={copyCode}>{tr('Kopiraj', 'Copy')}</Button>
-							<Button small onclick={() => (invite = undefined)}>{tr('Gotovo', 'Done')}</Button>
+							<Button small onclick={copyCode}>{t('keepCard.copy')}</Button>
+							<Button small onclick={() => (invite = undefined)}>{t('keepCard.done')}</Button>
 						</div>
 					</div>
 				</div>
 			{/if}
 
 			<form class="form" onsubmit={inviteGuest}>
-				<Input label={tr('Za koga', 'For whom')} bind:value={name} required maxlength={100} />
-				<Input
-					label={tr('Najviše (GB)', 'At most (GB)')}
-					type="number"
-					min="1"
-					bind:value={sizeGb}
-					required
-				/>
-				<Input
-					label={tr(
-						'Adresa na kojoj vas drugi server vidi',
-						'The address the other server reaches you at'
-					)}
-					bind:value={address}
-					required
-				/>
+				<Input label={t('keepCard.forWhom')} bind:value={name} required maxlength={100} />
+				<Input label={t('keepCard.atMostGb')} type="number" min="1" bind:value={sizeGb} required />
+				<Input label={t('keepCard.theAddressTheOtherServer')} bind:value={address} required />
 				{#if exposed(address)}
-					<Alert kind="warn"
-						>{tr(
-							'Preko običnog HTTP-a ključ se može presresti. Sadržaj je i dalje šifriran, ali koristite HTTPS ili VPN (npr. Tailscale).',
-							'Over plain HTTP the key can be read on the way. The contents stay encrypted, but use HTTPS or a VPN (such as Tailscale).'
-						)}</Alert
-					>
+					<Alert kind="warn">{t('keepCard.overPlainHttpTheKey')}</Alert>
 				{/if}
 				<div class="set-foot">
-					<Button type="submit" variant="gold" small>{tr('Pozovi', 'Invite')}</Button>
+					<Button type="submit" variant="gold" small>{t('keepCard.invite')}</Button>
 				</div>
 			</form>
 		{/if}

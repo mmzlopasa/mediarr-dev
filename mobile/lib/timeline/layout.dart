@@ -1,5 +1,7 @@
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
+
 const gap = 3.0;
 const monthHeaderHeight = 60.0;
 const dayHeaderHeight = 40.0;
@@ -143,25 +145,51 @@ double estimateMonthHeight(int count, double width, [int perRow = 0]) {
       rows * (target + gap);
 }
 
-const _months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+/// Month names on their own, as in a heading.
+List<String> get _months => [
+  l.layoutJanuary,
+  l.layoutFebruary,
+  l.layoutMarch,
+  l.layoutApril,
+  l.layoutMay,
+  l.layoutJune,
+  l.layoutJuly,
+  l.layoutAugust,
+  l.layoutSeptember,
+  l.layoutOctober,
+  l.layoutNovember,
+  l.layoutDecember,
 ];
-const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/// Month names inside a date, which some languages decline.
+List<String> get _monthsOf => [
+  l.layoutJanuaryOf,
+  l.layoutFebruaryOf,
+  l.layoutMarchOf,
+  l.layoutAprilOf,
+  l.layoutMayOf,
+  l.layoutJuneOf,
+  l.layoutJulyOf,
+  l.layoutAugustOf,
+  l.layoutSeptemberOf,
+  l.layoutOctoberOf,
+  l.layoutNovemberOf,
+  l.layoutDecemberOf,
+];
+
+List<String> get _weekdays => [
+  l.layoutWeekdayMon,
+  l.layoutWeekdayTue,
+  l.layoutWeekdayWed,
+  l.layoutWeekdayThu,
+  l.layoutWeekdayFri,
+  l.layoutWeekdaySat,
+  l.layoutWeekdaySun,
+];
 
 String formatMonth(String month) {
   final parts = month.split('-');
-  return '${_months[int.parse(parts[1]) - 1]} ${parts[0]}';
+  return l.layoutMonthYear(_months[int.parse(parts[1]) - 1], parts[0]);
 }
 
 // Local capture times have no zone. UTC keeps the wall clock of where the photo was taken.
@@ -169,13 +197,23 @@ DateTime parseLocal(String localAt) => DateTime.parse('${localAt}Z');
 
 String formatDay(String localAt) {
   final date = parseLocal(localAt);
-  return '${_weekdays[date.weekday - 1]} ${date.day} ${_months[date.month - 1]}';
+  return l.layoutDayLabel(
+    _weekdays[date.weekday - 1],
+    '${date.day}',
+    _monthsOf[date.month - 1],
+  );
 }
 
 String formatDateTime(String localAt) {
   final date = parseLocal(localAt);
   final minute = date.minute.toString().padLeft(2, '0');
-  return '${date.day} ${_months[date.month - 1]} ${date.year}, ${date.hour}:$minute';
+  return l.layoutDateTime(
+    '${date.day}',
+    _monthsOf[date.month - 1],
+    '${date.year}',
+    '${date.hour}',
+    minute,
+  );
 }
 
 String formatBytes(int bytes) {

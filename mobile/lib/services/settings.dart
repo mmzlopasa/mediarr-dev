@@ -4,32 +4,43 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../l10n/l10n.dart';
+
 const minPerRow = 2;
 const maxPerRow = 6;
 
 enum AppAccent {
   // Midnight blue, the default; buttons stay gold whatever is chosen here.
-  blue('Midnight blue', 0xFF8FB0FF, 0xFF23358F),
-  gold('Gold', 0xFFFFD76A, 0xFF8A6500),
-  violet('Violet', 0xFF8B7CFF, 0xFF5A49E6),
-  mint('Mint', 0xFF8EF0C8, 0xFF0B8F69),
-  rose('Rose', 0xFFFF9AC8, 0xFFD6489C);
+  blue(0xFF8FB0FF, 0xFF23358F),
+  gold(0xFFFFD76A, 0xFF8A6500),
+  violet(0xFF8B7CFF, 0xFF5A49E6),
+  mint(0xFF8EF0C8, 0xFF0B8F69),
+  rose(0xFFFF9AC8, 0xFFD6489C);
 
-  const AppAccent(this.label, this.onDark, this.onLight);
+  const AppAccent(this.onDark, this.onLight);
 
-  final String label;
+  String get label => switch (this) {
+    blue => l.settingsAccentMidnightBlue,
+    gold => l.settingsAccentGold,
+    violet => l.settingsAccentViolet,
+    mint => l.settingsAccentMint,
+    rose => l.settingsAccentRose,
+  };
+
   final int onDark;
   final int onLight;
 }
 
 enum AppTheme {
-  system('Auto'),
-  light('Light'),
-  dark('Dark');
+  system,
+  light,
+  dark;
 
-  const AppTheme(this.label);
-
-  final String label;
+  String get label => switch (this) {
+    system => l.settingsThemeAuto,
+    light => l.settingsThemeLight,
+    dark => l.settingsThemeDark,
+  };
 }
 
 /// What Free up space must leave on the phone, whatever the server holds.

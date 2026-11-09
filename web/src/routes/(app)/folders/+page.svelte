@@ -5,7 +5,7 @@
 	import Alert from '#lib/design/components/Alert.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
 	const current = $derived(page.url.searchParams.get('path') ?? '');
@@ -46,14 +46,14 @@
 	}
 </script>
 
-<svelte:head><title>{tr('Mape', 'Folders')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('folders.folders')} — Mediarr</title></svelte:head>
 
 <div class="ph">
 	<div>
-		<h1>{tr('Mape', 'Folders')}</h1>
+		<h1>{t('folders.folders')}</h1>
 		{#if parts.length}
-			<nav class="folder-path" aria-label={tr('Putanja', 'Path')}>
-				<button type="button" onclick={() => open('')}>{tr('Vrh', 'Top')}</button>
+			<nav class="folder-path" aria-label={t('folders.path')}>
+				<button type="button" onclick={() => open('')}>{t('folders.top')}</button>
 				{#each parts as part, index (index)}
 					<span>/</span>
 					<button type="button" onclick={() => open(parts.slice(0, index + 1).join('/'))}
@@ -66,25 +66,19 @@
 </div>
 
 {#if failed}
-	<Alert kind="err">{tr('Mapa se nije učitala.', 'The folder could not be loaded.')}</Alert>
+	<Alert kind="err">{t('folders.theFolderCouldNotBe')}</Alert>
 {:else if !data}
 	<Skeleton height="200px" />
 {:else if !data.available}
 	<section class="card glass">
 		<div class="card-b">
-			<EmptyState
-				icon="folder"
-				text={tr(
-					'Nemate vanjsku biblioteku. Administrator je postavlja u Postavkama.',
-					'You have no external library. An administrator sets it up in Settings.'
-				)}
-			/>
+			<EmptyState icon="folder" text={t('folders.youHaveNoExternalLibrary')} />
 		</div>
 	</section>
 {:else if data.folders.length === 0 && data.items.length === 0}
 	<section class="card glass">
 		<div class="card-b">
-			<EmptyState icon="folder" text={tr('Ova mapa je prazna.', 'This folder is empty.')} />
+			<EmptyState icon="folder" text={t('folders.thisFolderIsEmpty')} />
 		</div>
 	</section>
 {:else}
@@ -100,7 +94,7 @@
 			<button
 				type="button"
 				class="folder-tile folder-photo"
-				aria-label={tr('Otvori', 'Open')}
+				aria-label={t('common.open')}
 				onclick={() => pushState('', { viewer: item.id })}
 			>
 				<img src="/api/assets/{item.id}/thumbnail" alt="" />

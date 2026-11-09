@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import { collectionBase, collectionSource } from '#lib/api.ts';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import type { NavItem } from '#lib/nav.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
@@ -36,7 +36,7 @@
 
 {#if total === 0}
 	<section class="card glass">
-		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
+		<div class="card-b"><EmptyState icon={item.icon} text={item.empty ? t(item.empty) : ''} /></div>
 	</section>
 {/if}
 

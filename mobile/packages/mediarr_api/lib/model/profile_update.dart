@@ -13,10 +13,19 @@ part of openapi.api;
 class ProfileUpdate {
   /// Returns a new [ProfileUpdate] instance.
   ProfileUpdate({
+    this.language,
     this.name,
     this.email,
     this.currentPassword,
   });
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  Language? language;
 
   ///
   /// Please note: This property should have been non-nullable! Since the specification file
@@ -47,6 +56,7 @@ class ProfileUpdate {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is ProfileUpdate &&
+          other.language == language &&
           other.name == name &&
           other.email == email &&
           other.currentPassword == currentPassword;
@@ -54,16 +64,22 @@ class ProfileUpdate {
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
+      (language == null ? 0 : language!.hashCode) +
       (name == null ? 0 : name!.hashCode) +
       (email == null ? 0 : email!.hashCode) +
       (currentPassword == null ? 0 : currentPassword!.hashCode);
 
   @override
   String toString() =>
-      'ProfileUpdate[name=$name, email=$email, currentPassword=$currentPassword]';
+      'ProfileUpdate[language=$language, name=$name, email=$email, currentPassword=$currentPassword]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
+    if (this.language != null) {
+      json[r'language'] = this.language;
+    } else {
+      json[r'language'] = null;
+    }
     if (this.name != null) {
       json[r'name'] = this.name;
     } else {
@@ -103,6 +119,7 @@ class ProfileUpdate {
       }());
 
       return ProfileUpdate(
+        language: Language.fromJson(json[r'language']),
         name: mapValueOfType<String>(json, r'name'),
         email: mapValueOfType<String>(json, r'email'),
         currentPassword: mapValueOfType<String>(json, r'currentPassword'),

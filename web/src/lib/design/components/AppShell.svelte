@@ -7,7 +7,7 @@
 	import { api, avatarOf, initialsOf, type User } from '#lib/api.ts';
 	import NotificationBell from '#lib/organize/NotificationBell.svelte';
 	import type { IconName } from '../icons.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import type { NavItem } from '#lib/nav.ts';
 	import AccountCard from './AccountCard.svelte';
 	import QRSignInDialog from '#lib/devices/QRSignInDialog.svelte';
@@ -124,7 +124,7 @@
 
 <svelte:window onkeydown={onKey} onpointerdown={onPointer} />
 
-<a class="skip" href="#main">{tr('Preskoči na sadržaj', 'Skip to content')}</a>
+<a class="skip" href="#main">{t('appShell.skipToContent')}</a>
 <div class="lb-shell" class:lb-admin={admin}>
 	<header class="lb-top">
 		<Logo {tag} />
@@ -135,7 +135,7 @@
 					type="button"
 					class="lb-me-b"
 					aria-expanded={meOpen}
-					aria-label={tr('Račun', 'Account')}
+					aria-label={t('common.account')}
 					onclick={() => (meOpen = !meOpen)}
 				>
 					<Avatar initials={initialsOf(user.name)} src={avatarOf(user)} />
@@ -159,7 +159,7 @@
 	</header>
 
 	{#if admin}
-		<nav class="lb-side" aria-label={tr('Navigacija', 'Navigation')}>
+		<nav class="lb-side" aria-label={t('appShell.navigation')}>
 			{#each nav as item (item.path)}
 				<!-- eslint-disable svelte/no-navigation-without-resolve -- paths come from the static nav list -->
 				<a
@@ -168,17 +168,17 @@
 					class:on={current(item.path)}
 					aria-current={current(item.path) ? 'page' : undefined}
 				>
-					<Icon name={item.icon} /><span>{tr(item.hr, item.en)}</span>
+					<Icon name={item.icon} /><span>{t(item.label)}</span>
 				</a>
 				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/each}
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a fixed route -->
 			<a href="/" class="lb-side-i lb-side-back"
-				><Icon name="photo" /><span>{tr('Natrag na medije', 'Back to media')}</span></a
+				><Icon name="photo" /><span>{t('appShell.backToMedia')}</span></a
 			>
 		</nav>
 	{:else}
-		<nav class="lb-dock" aria-label={tr('Navigacija', 'Navigation')}>
+		<nav class="lb-dock" aria-label={t('appShell.navigation')}>
 			{#each docked as item (item.path)}
 				<!-- eslint-disable svelte/no-navigation-without-resolve -- paths come from the static nav list -->
 				<a
@@ -187,7 +187,7 @@
 					class:on={current(item.path)}
 					aria-current={current(item.path) ? 'page' : undefined}
 				>
-					<Icon name={item.icon} /><span>{tr(item.hr, item.en)}</span>
+					<Icon name={item.icon} /><span>{t(item.label)}</span>
 				</a>
 				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/each}
@@ -199,23 +199,23 @@
 					aria-expanded={moreOpen}
 					onclick={() => (moreOpen = !moreOpen)}
 				>
-					<Icon name="grid" /><span>{tr('Više', 'More')}</span>
+					<Icon name="grid" /><span>{t('appShell.more')}</span>
 				</button>
 			{/if}
 			<form class="lb-ask" role="search" onsubmit={search}>
-				<label class="sr" for="gs-q">{tr('Traži', 'Search')}</label>
+				<label class="sr" for="gs-q">{t('appShell.search')}</label>
 				<Icon name="search" size={18} />
 				<input
 					id="gs-q"
 					name="q"
 					type="search"
-					placeholder={tr('Pitaj svoje fotke', 'Ask your photos')}
+					placeholder={t('appShell.askYourPhotos')}
 					autocomplete="off"
 				/>
 				<button type="button" class="lb-kbd" onclick={() => palette?.open()}>⌘K</button>
 			</form>
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a fixed route -->
-			<a href="/search" class="lb-dock-i lb-ask-m" aria-label={tr('Traži', 'Search')}
+			<a href="/search" class="lb-dock-i lb-ask-m" aria-label={t('appShell.search')}
 				><Icon name="search" /></a
 			>
 			<span class="lb-add"><UploadButton compact /></span>
@@ -230,7 +230,7 @@
 								class:on={current(item.path)}
 								aria-current={current(item.path) ? 'page' : undefined}
 							>
-								<Icon name={item.icon} /><span>{tr(item.hr, item.en)}</span>
+								<Icon name={item.icon} /><span>{t(item.label)}</span>
 							</a>
 							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/each}
@@ -244,10 +244,7 @@
 	<main id="main" class="main" tabindex="-1" bind:this={main}>
 		{#if maintained}
 			<p class="maintenance" role="status">
-				{tr(
-					'Poslužitelj je na održavanju. Pokušajte ponovo kasnije.',
-					'This server is being maintained. Try again later.'
-				)}
+				{t('appShell.thisServerIsBeingMaintained')}
 			</p>
 		{/if}
 		{@render children()}

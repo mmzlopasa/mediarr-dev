@@ -133,6 +133,7 @@ part 'model/keep_invite.dart';
 part 'model/keep_pair_request.dart';
 part 'model/keep_pairing.dart';
 part 'model/keep_restored.dart';
+part 'model/language.dart';
 part 'model/link_password.dart';
 part 'model/location_fix.dart';
 part 'model/login_error.dart';

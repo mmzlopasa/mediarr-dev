@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../../l10n/l10n.dart';
 import '../../services/session.dart';
 import '../../theme.dart';
 import 'admin_common.dart';
@@ -12,37 +13,37 @@ const videoHeights = [720, 1080, 1440, 2160];
 String? serverSettingsProblem(ServerSettings s) {
   bool within(num value, num low, num high) => value >= low && value <= high;
   if (!within(s.trashDays, 1, 3650)) {
-    return 'The trash keeps photos for 1 to 3650 days.';
+    return l.adminServerSettingsTrashDaysProblem;
   }
   if (!within(s.imageQuality, 40, 100)) {
-    return 'Image quality must be between 40 and 100.';
+    return l.adminServerSettingsImageQualityProblem;
   }
   if (!within(s.previewSize, 720, 4096)) {
-    return 'The preview size must be between 720 and 4096.';
+    return l.adminServerSettingsPreviewSizeProblem;
   }
   if (!within(s.videoQuality, 18, 40)) {
-    return 'Video quality must be between 18 and 40, where lower is better.';
+    return l.adminServerSettingsVideoQualityProblem;
   }
   if (!videoHeights.contains(s.videoMaxHeight)) {
-    return 'The largest video must be 720, 1080, 1440 or 2160.';
+    return l.adminServerSettingsVideoHeightProblem;
   }
   if (!within(s.faceMinScore, 0.1, 1)) {
-    return 'How sure a face must be is between 0.1 and 1.';
+    return l.adminServerSettingsFaceScoreProblem;
   }
   if (!within(s.faceMaxDistance, 0.1, 2)) {
-    return 'How alike two faces must be is between 0.1 and 2.';
+    return l.adminServerSettingsFaceDistanceProblem;
   }
   if (!within(s.workerConcurrency, 0, 64)) {
-    return 'Background jobs must be between 0 and 64.';
+    return l.adminServerSettingsJobsProblem;
   }
   if (!within(s.videoWorkers, 1, 16) || !within(s.analysisWorkers, 1, 16)) {
-    return 'Video and analysis jobs must be between 1 and 16.';
+    return l.adminServerSettingsWorkersProblem;
   }
   if (!within(s.externalScanHours, 1, 720)) {
-    return 'The scan interval must be between 1 and 720 hours.';
+    return l.adminServerSettingsScanProblem;
   }
   if (s.loginMessage.trim().length > 1000) {
-    return 'The sign-in message is too long.';
+    return l.adminServerSettingsMessageProblem;
   }
   return null;
 }
@@ -152,7 +153,7 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
   Future<void> _save() async {
     final next = _read();
     if (next == null) {
-      setState(() => _problem = 'Every number field needs a number.');
+      setState(() => _problem = l.adminServerSettingsNeedNumbers);
       return;
     }
     final problem = serverSettingsProblem(next);
@@ -168,7 +169,7 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
       final saved = await _session.api.setServerSettings(next);
       if (!mounted) return;
       setState(() => _settings = saved ?? next);
-      tellAdmin(context, 'The settings are saved.');
+      tellAdmin(context, l.adminServerSettingsSaved);
     } on ApiException catch (cause) {
       if (mounted) setState(() => _problem = apiProblem(cause));
     } finally {
@@ -195,14 +196,14 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
   Widget build(BuildContext context) {
     final s = _settings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Server settings')),
+      appBar: AppBar(title: Text(l.adminServerSettingsTitle)),
       bottomNavigationBar: s == null
           ? null
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
                 child: GoldButton(
-                  label: 'Save',
+                  label: l.albumScreenSave,
                   busy: _saving,
                   onPressed: _saving ? null : _save,
                 ),
@@ -219,29 +220,35 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Text(_problem!, style: TextStyle(color: Palette.err)),
               ),
-            const AdminHeading('Trash'),
+            AdminHeading(l.adminServerSettingsTrash),
             _number(
               'trashDays',
-              'Days photos stay in the trash',
-              help: '1 to 3650',
+              l.adminServerSettingsTrashDays,
+              help: l.adminServerSettingsRange('1', '3650'),
             ),
-            const AdminHeading('Pictures and videos'),
-            _number('imageQuality', 'Image quality', help: '40 to 100'),
+            AdminHeading(l.adminServerSettingsPicturesAndVideos),
+            _number(
+              'imageQuality',
+              l.adminServerSettingsImageQuality,
+              help: l.adminServerSettingsRange('40', '100'),
+            ),
             _number(
               'previewSize',
-              'Preview size in pixels',
-              help: '720 to 4096',
+              l.adminServerSettingsPreviewSize,
+              help: l.adminServerSettingsRange('720', '4096'),
             ),
             _number(
               'videoQuality',
-              'Video quality',
-              help: '18 to 40, lower is better and larger',
+              l.adminServerSettingsVideoQuality,
+              help: l.adminServerSettingsVideoQualityHelp,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
               child: DropdownButtonFormField<int>(
                 initialValue: s!.videoMaxHeight,
-                decoration: const InputDecoration(labelText: 'Largest video'),
+                decoration: InputDecoration(
+                  labelText: l.adminServerSettingsLargestVideo,
+                ),
                 items: [
                   for (final height in videoHeights)
                     DropdownMenuItem(value: height, child: Text('${height}p')),
@@ -251,58 +258,56 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
                 ),
               ),
             ),
-            const AdminHeading('Faces'),
+            AdminHeading(l.adminServerSettingsFaces),
             _number(
               'faceMinScore',
-              'How sure a face must be',
-              help: '0.1 to 1',
+              l.adminServerSettingsFaceScore,
+              help: l.adminServerSettingsRange('0.1', '1'),
               decimal: true,
             ),
             _number(
               'faceMaxDistance',
-              'How alike two faces must be to be one person',
-              help: '0.1 to 2',
+              l.adminServerSettingsFaceDistance,
+              help: l.adminServerSettingsRange('0.1', '2'),
               decimal: true,
             ),
-            const AdminHeading('Background jobs'),
+            AdminHeading(l.adminServerSettingsBackgroundJobs),
             _number(
               'workerConcurrency',
-              'Jobs at once',
-              help: '0 uses WORKER_CONCURRENCY; applies after the worker restarts',
+              l.adminServerSettingsJobsAtOnce,
+              help: l.adminServerSettingsJobsAtOnceHelp,
             ),
             _number(
               'videoWorkers',
-              'Videos at once',
-              help: '1 to 16; applies after the worker restarts',
+              l.adminServerSettingsVideosAtOnce,
+              help: l.adminServerSettingsWorkersHelp,
             ),
             _number(
               'analysisWorkers',
-              'Analyses at once',
-              help: '1 to 16; applies after the worker restarts',
+              l.adminServerSettingsAnalysesAtOnce,
+              help: l.adminServerSettingsWorkersHelp,
             ),
             _number(
               'externalScanHours',
-              'Scan external folders every … hours',
-              help: '1 to 720',
+              l.adminServerSettingsScanHours,
+              help: l.adminServerSettingsRange('1', '720'),
             ),
-            const AdminHeading('Signing in'),
+            AdminHeading(l.adminServerSettingsSigningIn),
             SwitchListTile(
-              title: const Text('Allow signing in with a password'),
+              title: Text(l.adminServerSettingsPasswordLogin),
               value: s.passwordLogin,
               onChanged: (value) => setState(() => s.passwordLogin = value),
             ),
             SwitchListTile(
-              title: const Text('Maintenance mode'),
-              subtitle: const Text('Only administrators can use the server'),
+              title: Text(l.adminServerSettingsMaintenance),
+              subtitle: Text(l.adminServerSettingsMaintenanceHelp),
               value: s.maintenance,
               onChanged: (value) => setState(() => s.maintenance = value),
             ),
             SwitchListTile(
               key: const ValueKey('setting-visibleOnNetwork'),
-              title: const Text(
-                'Apps on the same network can find this server',
-              ),
-              subtitle: const Text('Signing in still needs an account.'),
+              title: Text(l.adminServerSettingsVisibleOnNetwork),
+              subtitle: Text(l.adminServerSettingsVisibleOnNetworkHelp),
               value: s.visibleOnNetwork ?? true,
               onChanged: (value) => setState(() => s.visibleOnNetwork = value),
             ),
@@ -311,8 +316,8 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
               child: TextField(
                 controller: _field('serverName'),
                 maxLength: 60,
-                decoration: const InputDecoration(
-                  labelText: "The server's name",
+                decoration: InputDecoration(
+                  labelText: l.adminServerSettingsServerName,
                   hintText: 'Mediarr',
                 ),
               ),
@@ -322,8 +327,8 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
               child: TextField(
                 controller: _field('loginMessage'),
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Message on the sign-in page',
+                decoration: InputDecoration(
+                  labelText: l.adminServerSettingsLoginMessage,
                 ),
               ),
             ),

@@ -10,7 +10,7 @@
 	import Select from '#lib/design/components/Select.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 
 	const POLL_MS = 10000;
@@ -53,7 +53,7 @@
 			await action();
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -65,35 +65,35 @@
 
 	const sinceLabel = (value: string | undefined) =>
 		value
-			? tr('od ', 'from ') + new Date(value).toLocaleDateString(locale)
-			: tr('cijela biblioteka', 'whole library');
+			? t('shared.from') + new Date(value).toLocaleDateString(locale)
+			: t('shared.wholeLibrary');
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
 <div class="ph">
-	<div><h1>{tr(item.hr, item.en)}</h1></div>
+	<div><h1>{t(item.label)}</h1></div>
 </div>
 
 {#if failed}
-	<Alert kind="err">{tr('Podaci se nisu učitali.', 'The data could not be loaded.')}</Alert>
+	<Alert kind="err">{t('common.theDataCouldNotBe')}</Alert>
 {/if}
 
 {#if !albums || !partners}
 	{#if !failed}<Skeleton height="200px" />{/if}
 {:else}
-	<Card title={tr('Albumi podijeljeni sa mnom', 'Albums shared with me')}>
+	<Card title={t('shared.albumsSharedWithMe')}>
 		{#each withMe as album (album.id)}
 			<div class="alb-list">
 				<b><a href={resolve('/(app)/albums/[id]', { id: album.id })}>{album.title}</a></b>
 				<span class="alb-meta">{album.ownerName} · {album.assetCount}</span>
 			</div>
 		{:else}
-			<EmptyState icon="album" text={tr(item.emptyHr, item.emptyEn)} />
+			<EmptyState icon="album" text={item.empty ? t(item.empty) : ''} />
 		{/each}
 	</Card>
 
-	<Card title={tr('Biblioteke podijeljene sa mnom', 'Libraries shared with me')}>
+	<Card title={t('shared.librariesSharedWithMe')}>
 		{#each partners.received as entry (entry.userId)}
 			<div class="alb-list">
 				<b><a href={resolve('/(app)/partners/[id]', { id: entry.userId })}>{entry.name}</a></b>
@@ -101,51 +101,46 @@
 				<Button
 					small
 					onclick={() => run(() => api.setPartnerTimeline(entry.userId, !entry.inTimeline))}
-					>{entry.inTimeline
-						? tr('Makni iz mojih Medija', 'Remove from my Media')
-						: tr('Prikaži u mojim Medijima', 'Show in my Media')}</Button
+					>{entry.inTimeline ? t('shared.removeFromMyMedia') : t('shared.showInMyMedia')}</Button
 				>
 			</div>
 		{:else}
 			<p class="alb-meta">
-				{tr('Nitko s vama ne dijeli svoju biblioteku.', 'Nobody shares their library with you.')}
+				{t('shared.nobodySharesTheirLibraryWith')}
 			</p>
 		{/each}
 	</Card>
 
-	<Card title={tr('Moja biblioteka je podijeljena s', 'My library is shared with')}>
+	<Card title={t('shared.myLibraryIsSharedWith')}>
 		{#each partners.given as entry (entry.userId)}
 			<div class="alb-list">
 				<b>{entry.name}</b>
 				<span class="alb-meta">{sinceLabel(entry.since)}</span>
 				<Button small onclick={() => run(() => api.removePartner(entry.userId))}
-					>{tr('Prekini', 'Stop')}</Button
+					>{t('shared.stop')}</Button
 				>
 			</div>
 		{:else}
-			<p class="alb-meta">{tr('Još ni s kim.', 'Nobody yet.')}</p>
+			<p class="alb-meta">{t('shared.nobodyYet')}</p>
 		{/each}
 		{#if free.length > 0}
 			<div class="form">
 				<Select
-					label={tr('Korisnik', 'User')}
+					label={t('common.user')}
 					bind:value={userId}
 					options={[
-						{ value: '', label: tr('Odaberi', 'Choose') },
+						{ value: '', label: t('shared.choose') },
 						...free.map((user) => ({ value: user.id, label: user.name }))
 					]}
 				/>
 				<Input
-					label={tr('Od datuma', 'From date')}
-					hint={tr(
-						'Prazno znači cijela biblioteka. Arhiva, smeće i trezor se nikad ne dijele.',
-						'Empty means the whole library. The archive, trash and vault are never shared.'
-					)}
+					label={t('common.fromDate')}
+					hint={t('shared.emptyMeansTheWholeLibrary')}
 					type="date"
 					bind:value={since}
 				/>
 				<Button small variant="gold" disabled={!userId} onclick={start}
-					>{tr('Podijeli biblioteku', 'Share my library')}</Button
+					>{t('shared.shareMyLibrary')}</Button
 				>
 			</div>
 		{/if}

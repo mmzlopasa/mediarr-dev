@@ -1,6 +1,6 @@
 import { Upload } from 'tus-js-client';
 import { showToast } from '#lib/design/components/toast.svelte.ts';
-import { tr } from '#lib/i18n.svelte.ts';
+import { t } from '#lib/i18n.svelte.ts';
 
 export type UploadStatus = 'queued' | 'uploading' | 'done' | 'duplicate' | 'failed';
 
@@ -56,8 +56,8 @@ export function clearFinishedUploads() {
 function finishRound() {
 	if (items.some((item) => item.status === 'queued' || item.status === 'uploading')) return;
 	if (sent + existed === 0) return;
-	const parts = [tr(`Poslano: ${sent}`, `Uploaded: ${sent}`)];
-	if (existed) parts.push(tr(`već postoji: ${existed}`, `already existed: ${existed}`));
+	const parts = [t('uploads.uploadedSent', { sent })];
+	if (existed) parts.push(t('uploads.alreadyExistedExisted', { existed }));
 	showToast('ok', parts.join(' · '));
 	sent = 0;
 	existed = 0;

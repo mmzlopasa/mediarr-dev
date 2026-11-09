@@ -29,6 +29,7 @@ import 'memories_screen.dart';
 import 'people_screens.dart';
 import 'timeline_screen.dart';
 import 'viewer_screen.dart';
+import '../l10n/l10n.dart';
 
 const _vaultPinKey = 'vault_pin';
 const _storage = FlutterSecureStorage();
@@ -61,30 +62,65 @@ class OrganizeLinks extends ConsumerWidget {
     final places = <(IconData, String, Widget)>[
       ...leading,
       if (!hidden.contains('/recent'))
-        (Icons.schedule_outlined, 'Recently added', const RecentScreen()),
+        (
+          Icons.schedule_outlined,
+          l.organizeScreensRecentlyAdded,
+          const RecentScreen(),
+        ),
       if (!hidden.contains('/favorites'))
-        (Icons.star_outline, 'Favorites', const FavoritesScreen()),
+        (
+          Icons.star_outline,
+          l.organizeScreensFavorites,
+          const FavoritesScreen(),
+        ),
       if (!hidden.contains('/memories'))
-        (Icons.auto_awesome_outlined, 'Memories', const MemoriesScreen()),
+        (
+          Icons.auto_awesome_outlined,
+          l.organizeScreensMemories,
+          const MemoriesScreen(),
+        ),
       if (!hidden.contains('/people'))
-        (Icons.people_outline, 'People', const PeopleScreen()),
+        (Icons.people_outline, l.organizeScreensPeople, const PeopleScreen()),
       if (!hidden.contains('/map'))
-        (Icons.map_outlined, 'Map', const MapScreen()),
+        (Icons.map_outlined, l.organizeScreensMap, const MapScreen()),
       if (!hidden.contains('/folders'))
-        (Icons.folder_outlined, 'Folders', const FoldersScreen()),
+        (
+          Icons.folder_outlined,
+          l.organizeScreensFolders,
+          const FoldersScreen(),
+        ),
       if (!hidden.contains('/family'))
-        (Icons.family_restroom, 'Family', const FamilyScreen()),
+        (Icons.family_restroom, l.organizeScreensFamily, const FamilyScreen()),
       if (!hidden.contains('/documents'))
-        (Icons.description_outlined, 'Documents', const DocumentsScreen()),
+        (
+          Icons.description_outlined,
+          l.organizeScreensDocuments,
+          const DocumentsScreen(),
+        ),
       if (!readOnly && !hidden.contains('/duplicates'))
-        (Icons.copy_all_outlined, 'Duplicates', const DuplicatesScreen()),
+        (
+          Icons.copy_all_outlined,
+          l.organizeScreensDuplicates,
+          const DuplicatesScreen(),
+        ),
       if (!readOnly && !hidden.contains('/cleanup'))
-        (Icons.cleaning_services_outlined, 'Clean up', const CleanupScreen()),
-      if (!readOnly) (Icons.archive_outlined, 'Archive', const ArchiveScreen()),
-      if (!readOnly) (Icons.delete_outline, 'Trash', const TrashScreen()),
-      if (!readOnly) (Icons.lock_outline, 'Vault', const VaultScreen()),
-      (Icons.key_outlined, 'API keys', const ApiKeysScreen()),
-      (Icons.sell_outlined, 'Tags', const TagsScreen()),
+        (
+          Icons.cleaning_services_outlined,
+          l.organizeScreensCleanUp,
+          const CleanupScreen(),
+        ),
+      if (!readOnly)
+        (
+          Icons.archive_outlined,
+          l.organizeScreensArchive,
+          const ArchiveScreen(),
+        ),
+      if (!readOnly)
+        (Icons.delete_outline, l.organizeScreensTrash, const TrashScreen()),
+      if (!readOnly)
+        (Icons.lock_outline, l.organizeScreensVault, const VaultScreen()),
+      (Icons.key_outlined, l.organizeScreensApiKeys, const ApiKeysScreen()),
+      (Icons.sell_outlined, l.organizeScreensTags, const TagsScreen()),
     ];
     return GridView.builder(
       shrinkWrap: true,
@@ -194,9 +230,9 @@ class _PhotoGridState extends State<_PhotoGrid> {
       final months = widget.store.months;
       if (months == null) {
         return widget.store.failed
-            ? const EmptyMessage(
+            ? EmptyMessage(
                 icon: Icons.cloud_off,
-                text: 'This could not be loaded. Check the connection.',
+                text: l.organizeScreensCouldNotLoad,
               )
             : Center(child: CircularProgressIndicator(color: Palette.gold));
       }
@@ -209,7 +245,7 @@ class _PhotoGridState extends State<_PhotoGrid> {
             Row(
               children: [
                 IconButton(
-                  tooltip: 'Clear selection',
+                  tooltip: l.organizeScreensClearSelection,
                   icon: const Icon(Icons.close),
                   onPressed: () => setState(_selected.clear),
                 ),
@@ -217,7 +253,7 @@ class _PhotoGridState extends State<_PhotoGrid> {
                 const Spacer(),
                 Consumer(
                   builder: (context, ref, _) => IconButton(
-                    tooltip: 'Share',
+                    tooltip: l.organizeScreensShare,
                     icon: const Icon(Icons.share_outlined),
                     onPressed: () => shareAssets(
                       context,
@@ -263,21 +299,16 @@ Future<bool> _confirmPermanent(
     context: context,
     builder: (context) => AlertDialog(
       title: Text(title),
-      content: Text(
-        [
-          ?detail,
-          'The originals are removed from the disk. This cannot be undone.',
-        ].join(' '),
-      ),
+      content: Text([?detail, l.organizeScreensOriginalsRemoved].join(' ')),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(l.organizeScreensCancel),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
           child: Text(
-            'Delete permanently',
+            l.organizeScreensDeletePermanently,
             style: TextStyle(color: Palette.err),
           ),
         ),
@@ -313,7 +344,7 @@ Future<void> _bulk(
     }
   } on ApiException catch (cause) {
     if (context.mounted) {
-      _tell(context, 'The action failed. ${cause.message ?? ''}');
+      _tell(context, l.organizeScreensActionFailedDetail(cause.message ?? ''));
     }
   }
 }
@@ -341,14 +372,14 @@ class _RecentScreenState extends ConsumerState<RecentScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Recently added')),
+    appBar: AppBar(title: Text(l.organizeScreensRecentlyAdded)),
     body: _PhotoGrid(
       store: _store,
       session: _session,
-      emptyText: 'Nothing has been added yet.',
+      emptyText: l.organizeScreensNothingAdded,
       actions: (selected, clear) => [
         IconButton(
-          tooltip: 'Add to favorites',
+          tooltip: l.organizeScreensAddToFavorites,
           icon: const Icon(Icons.star_outline),
           onPressed: () => _bulk(
             context,
@@ -357,11 +388,11 @@ class _RecentScreenState extends ConsumerState<RecentScreen> {
             selected,
             clear,
             BulkRequestActionEnum.favorite,
-            'Added to favorites',
+            l.organizeScreensAddedToFavorites,
           ),
         ),
         IconButton(
-          tooltip: 'Archive',
+          tooltip: l.organizeScreensArchiveAction,
           icon: const Icon(Icons.archive_outlined),
           onPressed: () => _bulk(
             context,
@@ -370,7 +401,7 @@ class _RecentScreenState extends ConsumerState<RecentScreen> {
             selected,
             clear,
             BulkRequestActionEnum.archive,
-            'Archived',
+            l.organizeScreensArchived,
           ),
         ),
       ],
@@ -400,14 +431,14 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Favorites')),
+    appBar: AppBar(title: Text(l.organizeScreensFavorites)),
     body: _PhotoGrid(
       store: _store,
       session: _session,
-      emptyText: 'No favorites yet. Mark a photo with the star.',
+      emptyText: l.organizeScreensNoFavorites,
       actions: (selected, clear) => [
         IconButton(
-          tooltip: 'Remove from favorites',
+          tooltip: l.organizeScreensRemoveFromFavorites,
           icon: const Icon(Icons.star_outline),
           onPressed: () => _bulk(
             context,
@@ -416,7 +447,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             selected,
             clear,
             BulkRequestActionEnum.unfavorite,
-            'Removed from favorites',
+            l.organizeScreensRemovedFromFavorites,
           ),
         ),
       ],
@@ -446,14 +477,14 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Archive')),
+    appBar: AppBar(title: Text(l.organizeScreensArchive)),
     body: _PhotoGrid(
       store: _store,
       session: _session,
-      emptyText: 'The archive is empty.',
+      emptyText: l.organizeScreensArchiveEmpty,
       actions: (selected, clear) => [
         IconButton(
-          tooltip: 'Back to Media',
+          tooltip: l.organizeScreensBackToMedia,
           icon: const Icon(Icons.unarchive_outlined),
           onPressed: () => _bulk(
             context,
@@ -462,7 +493,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
             selected,
             clear,
             BulkRequestActionEnum.unarchive,
-            'Back in Media',
+            l.organizeScreensBackInMedia,
           ),
         ),
       ],
@@ -496,32 +527,48 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
     try {
       final summary = await _session.api.getTrashSummary();
       if (summary != null) {
-        detail =
-            'This removes ${summary.assets} files, ${formatBytes(summary.bytes)}.';
+        detail = l.organizeScreensTrashRemoves(
+          '${summary.assets}',
+          formatBytes(summary.bytes),
+        );
       }
     } on ApiException {
       // The question can still be asked without the numbers.
     }
     if (!mounted) return;
-    if (!await _confirmPermanent(context, 'Empty the trash?', detail: detail)) {
+    if (!await _confirmPermanent(
+      context,
+      l.organizeScreensEmptyTrashQuestion,
+      detail: detail,
+    )) {
       return;
     }
     try {
       final result = await _session.api.emptyTrash();
       await _store.refresh(reloadLoaded: true);
       if (mounted) {
-        _tell(context, 'Permanently deleted: ${result?.changed ?? 0}');
+        _tell(
+          context,
+          l.organizeScreensPermanentlyDeletedCount('${result?.changed ?? 0}'),
+        );
       }
     } on ApiException catch (cause) {
-      if (mounted) _tell(context, 'The action failed. ${cause.message ?? ''}');
+      if (mounted) {
+        _tell(
+          context,
+          l.organizeScreensActionFailedDetail(cause.message ?? ''),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('Trash'),
-      actions: [TextButton(onPressed: _empty, child: const Text('Empty'))],
+      title: Text(l.organizeScreensTrash),
+      actions: [
+        TextButton(onPressed: _empty, child: Text(l.organizeScreensEmpty)),
+      ],
     ),
     body: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -530,18 +577,18 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: TrashSentence(
             (days) => days == null
-                ? 'Items here are deleted permanently after a while.'
-                : 'Items are permanently deleted after $days days.',
+                ? l.organizeScreensTrashAfterAWhile
+                : l.organizeScreensTrashAfterDays('$days'),
           ),
         ),
         Expanded(
           child: _PhotoGrid(
             store: _store,
             session: _session,
-            emptyText: 'The trash is empty.',
+            emptyText: l.organizeScreensTrashEmpty,
             actions: (selected, clear) => [
               IconButton(
-                tooltip: 'Restore',
+                tooltip: l.organizeScreensRestore,
                 icon: const Icon(Icons.restore),
                 onPressed: () => _bulk(
                   context,
@@ -550,16 +597,16 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                   selected,
                   clear,
                   BulkRequestActionEnum.restore,
-                  'Restored',
+                  l.organizeScreensRestored,
                 ),
               ),
               IconButton(
-                tooltip: 'Delete permanently',
+                tooltip: l.organizeScreensDeletePermanently,
                 icon: const Icon(Icons.delete_forever_outlined),
                 onPressed: () async {
                   if (!await _confirmPermanent(
                     context,
-                    'Delete permanently?',
+                    l.organizeScreensDeletePermanentlyQuestion,
                   )) {
                     return;
                   }
@@ -571,7 +618,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                     selected,
                     clear,
                     BulkRequestActionEnum.purge,
-                    'Permanently deleted',
+                    l.organizeScreensPermanentlyDeleted,
                   );
                 },
               ),
@@ -643,7 +690,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
       final saved = await _storage.read(key: _vaultPinKey);
       if (!supported || saved == null || _status?.hasPin != true) return;
       final passed = await _biometrics.authenticate(
-        localizedReason: 'Open your vault',
+        localizedReason: l.organizeScreensOpenYourVault,
       );
       if (passed) await _unlock(saved, keep: false);
     } on PlatformException {
@@ -681,8 +728,8 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
       if (mounted) {
         setState(() {
           _error = cause.code == 429
-              ? 'Too many attempts. Try again later.'
-              : 'Wrong PIN.';
+              ? l.organizeScreensTooManyAttempts
+              : l.organizeScreensWrongPin;
         });
       }
     } finally {
@@ -706,7 +753,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
       await _unlock(pin, keep: true);
     } on ApiException {
       if (mounted) {
-        setState(() => _error = 'The PIN must have between 4 and 12 digits.');
+        setState(() => _error = l.organizeScreensPinLength);
       }
     }
   }
@@ -718,7 +765,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
       _store?.dispose();
       _store = null;
       _open = null;
-      _error = 'The vault locked itself. Unlock it again.';
+      _error = l.organizeScreensVaultLockedItself;
     });
   }
 
@@ -728,16 +775,16 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
     final store = _store;
     final status = _status;
     return Scaffold(
-      appBar: AppBar(title: const Text('Vault')),
+      appBar: AppBar(title: Text(l.organizeScreensVault)),
       body: open != null && store != null
           ? _PhotoGrid(
               store: store,
               session: open,
-              emptyText: 'The vault is empty.',
+              emptyText: l.organizeScreensVaultEmpty,
               onUnauthorized: _relock,
               actions: (selected, clear) => [
                 IconButton(
-                  tooltip: 'Back to Media',
+                  tooltip: l.organizeScreensBackToMedia,
                   icon: const Icon(Icons.photo_outlined),
                   onPressed: () => _bulk(
                     context,
@@ -746,16 +793,16 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
                     selected,
                     clear,
                     BulkRequestActionEnum.unvault,
-                    'Back in Media',
+                    l.organizeScreensBackInMedia,
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Delete permanently',
+                  tooltip: l.organizeScreensDeletePermanently,
                   icon: const Icon(Icons.delete_forever_outlined),
                   onPressed: () async {
                     if (!await _confirmPermanent(
                       context,
-                      'Delete permanently?',
+                      l.organizeScreensDeletePermanentlyQuestion,
                     )) {
                       return;
                     }
@@ -767,7 +814,7 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
                       selected,
                       clear,
                       BulkRequestActionEnum.purge,
-                      'Permanently deleted',
+                      l.organizeScreensPermanentlyDeleted,
                     );
                   },
                 ),
@@ -776,26 +823,30 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
           : _failed
           ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'The vault could not be loaded. Check the connection.',
-              action: GoldButton(label: 'Try again', onPressed: _load),
+              text: l.organizeScreensVaultNotLoaded,
+              action: GoldButton(
+                label: l.organizeScreensTryAgain,
+                onPressed: _load,
+              ),
             )
           : status == null
           ? Center(child: CircularProgressIndicator(color: Palette.gold))
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                const Text(
-                  'Hidden from every other view and from sharing. '
-                  'The files on the server are not encrypted.',
-                ),
+                Text(l.organizeScreensVaultIntro),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _pin,
                   obscureText: true,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: status.hasPin ? 'PIN' : 'New PIN',
-                    helperText: status.hasPin ? null : 'From 4 to 12 digits. Only the server administrator can reset a lost PIN.',
+                    labelText: status.hasPin
+                        ? l.organizeScreensPin
+                        : l.organizeScreensNewPin,
+                    helperText: status.hasPin
+                        ? null
+                        : l.organizeScreensPinHelper,
                     helperMaxLines: 2,
                   ),
                 ),
@@ -807,14 +858,16 @@ class _VaultScreenState extends ConsumerState<VaultScreen> {
                 if (_canUseBiometrics)
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Use Face ID next time'),
+                    title: Text(l.organizeScreensUseFaceId),
                     value: _useBiometrics,
                     onChanged: (value) =>
                         setState(() => _useBiometrics = value),
                   ),
                 const SizedBox(height: 12),
                 GoldButton(
-                  label: status.hasPin ? 'Unlock' : 'Set PIN',
+                  label: status.hasPin
+                      ? l.organizeScreensUnlock
+                      : l.organizeScreensSetPin,
                   onPressed: _busy ? () {} : _submit,
                 ),
               ],
@@ -874,13 +927,18 @@ class _AddTagSheetState extends State<_AddTagSheet> {
       );
       navigator.pop(true);
     } on ApiException catch (cause) {
-      if (mounted) _tell(context, 'The action failed. ${cause.message ?? ''}');
+      if (mounted) {
+        _tell(
+          context,
+          l.organizeScreensActionFailedDetail(cause.message ?? ''),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) => SheetFrame(
-    title: 'Add a tag',
+    title: l.organizeScreensAddATag,
     children: [
       for (final tag in _tags)
         ListTile(
@@ -892,13 +950,13 @@ class _AddTagSheetState extends State<_AddTagSheet> {
       TextField(
         controller: _name,
         maxLength: 100,
-        decoration: const InputDecoration(labelText: 'New tag'),
+        decoration: InputDecoration(labelText: l.organizeScreensNewTag),
       ),
       Align(
         alignment: Alignment.centerRight,
         child: TextButton(
           onPressed: () => _add(_name.text),
-          child: const Text('Create and add'),
+          child: Text(l.organizeScreensCreateAndAdd),
         ),
       ),
     ],
@@ -941,18 +999,18 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
   Widget build(BuildContext context) {
     final tags = _tags;
     return Scaffold(
-      appBar: AppBar(title: const Text('Tags')),
+      appBar: AppBar(title: Text(l.organizeScreensTags)),
       body: tags == null
           ? _failed
-                ? const EmptyMessage(
+                ? EmptyMessage(
                     icon: Icons.cloud_off,
-                    text: 'Tags could not be loaded.',
+                    text: l.organizeScreensTagsNotLoaded,
                   )
                 : Center(child: CircularProgressIndicator(color: Palette.gold))
           : tags.isEmpty
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.sell_outlined,
-              text: 'No tags yet. Select photos and add a tag.',
+              text: l.organizeScreensNoTags,
             )
           : ListView(
               children: [
@@ -961,7 +1019,7 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                     title: Text(tag.name),
                     subtitle: Text('${tag.assetCount}'),
                     trailing: IconButton(
-                      tooltip: 'Delete tag',
+                      tooltip: l.organizeScreensDeleteTag,
                       icon: const Icon(Icons.close),
                       onPressed: () async {
                         try {
@@ -971,7 +1029,9 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
                           if (context.mounted) {
                             _tell(
                               context,
-                              'The action failed. ${cause.message ?? ''}',
+                              l.organizeScreensActionFailedDetail(
+                                cause.message ?? '',
+                              ),
                             );
                           }
                         }
@@ -1012,22 +1072,22 @@ class _RenameDialogState extends State<_RenameDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Rename the tag'),
+    title: Text(l.organizeScreensRenameTheTag),
     content: TextField(
       controller: _field,
       autofocus: true,
       maxLength: 100,
-      decoration: const InputDecoration(labelText: 'New name'),
+      decoration: InputDecoration(labelText: l.organizeScreensNewName),
       onSubmitted: (value) => Navigator.pop(context, value),
     ),
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(l.organizeScreensCancel),
       ),
       TextButton(
         onPressed: () => Navigator.pop(context, _field.text),
-        child: const Text('Save'),
+        child: Text(l.organizeScreensSave),
       ),
     ],
   );
@@ -1062,16 +1122,16 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
       await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('"$name" already exists'),
-          content: Text('Join them? All the photos will have "$name".'),
+          title: Text(l.organizeScreensAlreadyExists(name)),
+          content: Text(l.organizeScreensJoinThem(name)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(l.organizeScreensCancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Join'),
+              child: Text(l.organizeScreensJoin),
             ),
           ],
         ),
@@ -1090,7 +1150,9 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
       );
     } on ApiException catch (cause) {
       if (cause.code != 409) {
-        if (mounted) _tell(context, 'Not renamed. ${cause.message ?? ''}');
+        if (mounted) {
+          _tell(context, l.organizeScreensNotRenamed(cause.message ?? ''));
+        }
         return;
       }
       if (!mounted || !await _askJoin(name)) return;
@@ -1100,7 +1162,9 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
           TagRename(name: name, merge: true),
         );
       } on ApiException catch (again) {
-        if (mounted) _tell(context, 'Not joined. ${again.message ?? ''}');
+        if (mounted) {
+          _tell(context, l.organizeScreensNotJoined(again.message ?? ''));
+        }
         return;
       }
     }
@@ -1118,7 +1182,7 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
       title: Text(_name),
       actions: [
         IconButton(
-          tooltip: 'Rename',
+          tooltip: l.organizeScreensRename,
           icon: const Icon(Icons.edit_outlined),
           onPressed: _rename,
         ),
@@ -1127,11 +1191,11 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
     body: _PhotoGrid(
       store: _store,
       session: _session,
-      emptyText: 'No photos carry this tag.',
+      emptyText: l.organizeScreensNoPhotosWithTag,
       readOnly: false,
       actions: (selected, clear) => [
         IconButton(
-          tooltip: 'Remove the tag',
+          tooltip: l.organizeScreensRemoveTheTag,
           icon: const Icon(Icons.label_off_outlined),
           onPressed: () async {
             try {
@@ -1146,7 +1210,10 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
               await _store.refresh(reloadLoaded: true);
             } on ApiException catch (cause) {
               if (context.mounted) {
-                _tell(context, 'The action failed. ${cause.message ?? ''}');
+                _tell(
+                  context,
+                  l.organizeScreensActionFailedDetail(cause.message ?? ''),
+                );
               }
             }
           },
@@ -1158,8 +1225,8 @@ class _TagScreenState extends ConsumerState<_TagScreen> {
 
 /// Why there is nothing to show, for someone who cannot see the family library.
 String? familyClosedText(Family family) {
-  if (!family.enabled) return 'An administrator has not turned this on.';
-  if (!family.member) return 'You are not in the family library yet.';
+  if (!family.enabled) return l.organizeScreensFamilyNotOn;
+  if (!family.member) return l.organizeScreensFamilyNotMember;
   return null;
 }
 
@@ -1220,11 +1287,11 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
     final closed = family == null ? null : familyClosedText(family);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Family'),
+        title: Text(l.organizeScreensFamily),
         actions: [
           if (family != null && closed == null)
             IconButton(
-              tooltip: 'What I share',
+              tooltip: l.organizeScreensWhatIShare,
               icon: const Icon(Icons.tune),
               onPressed: _rules,
             ),
@@ -1232,9 +1299,9 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
       ),
       body: family == null
           ? _failed
-                ? const EmptyMessage(
+                ? EmptyMessage(
                     icon: Icons.cloud_off,
-                    text: 'The family library could not be loaded.',
+                    text: l.organizeScreensFamilyNotLoaded,
                   )
                 : Center(child: CircularProgressIndicator(color: Palette.gold))
           : closed != null
@@ -1242,7 +1309,7 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen> {
           : _PhotoGrid(
               store: _store,
               session: _session,
-              emptyText: 'Nobody has shared anything with the family yet.',
+              emptyText: l.organizeScreensFamilyNothingShared,
               actions: (selected, clear) => const [],
             ),
     );
@@ -1274,34 +1341,34 @@ class _FamilyRulesScreenState extends ConsumerState<_FamilyRulesScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Share with the family'),
+        title: Text(l.organizeScreensShareWithFamily),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: title,
-              decoration: const InputDecoration(labelText: 'Rule name'),
+              decoration: InputDecoration(labelText: l.organizeScreensRuleName),
             ),
             TextField(
               controller: from,
-              decoration: const InputDecoration(
-                labelText: 'From date (2024-06-01)',
+              decoration: InputDecoration(
+                labelText: l.organizeScreensFromDateExample,
               ),
             ),
             TextField(
               controller: place,
-              decoration: const InputDecoration(labelText: 'Place'),
+              decoration: InputDecoration(labelText: l.organizeScreensPlace),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.organizeScreensCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Share'),
+            child: Text(l.organizeScreensShare),
           ),
         ],
       ),
@@ -1323,26 +1390,28 @@ class _FamilyRulesScreenState extends ConsumerState<_FamilyRulesScreen> {
       );
       await _reload();
     } on ApiException catch (cause) {
-      if (mounted) _tell(context, 'It was not saved. ${cause.message ?? ''}');
+      if (mounted) {
+        _tell(context, l.organizeScreensNotSaved(cause.message ?? ''));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('What I share'),
+      title: Text(l.organizeScreensWhatIShare),
       actions: [
         IconButton(
-          tooltip: 'New rule',
+          tooltip: l.organizeScreensNewRule,
           icon: const Icon(Icons.add),
           onPressed: _add,
         ),
       ],
     ),
     body: _rules.isEmpty
-        ? const EmptyMessage(
+        ? EmptyMessage(
             icon: Icons.family_restroom,
-            text: 'You share nothing with the family yet.',
+            text: l.organizeScreensShareNothing,
           )
         : ListView(
             children: [
@@ -1350,7 +1419,7 @@ class _FamilyRulesScreenState extends ConsumerState<_FamilyRulesScreen> {
                 ListTile(
                   title: Text(rule.title),
                   trailing: IconButton(
-                    tooltip: 'Stop sharing',
+                    tooltip: l.organizeScreensStopSharing,
                     icon: const Icon(Icons.close),
                     onPressed: () async {
                       try {
@@ -1358,7 +1427,7 @@ class _FamilyRulesScreenState extends ConsumerState<_FamilyRulesScreen> {
                         await _reload();
                       } on ApiException {
                         if (context.mounted) {
-                          _tell(context, 'The action failed.');
+                          _tell(context, l.organizeScreensActionFailed);
                         }
                       }
                     },

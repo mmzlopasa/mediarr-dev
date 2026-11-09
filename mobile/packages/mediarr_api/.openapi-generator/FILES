@@ -106,6 +106,7 @@ doc/KeepInvite.md
 doc/KeepPairRequest.md
 doc/KeepPairing.md
 doc/KeepRestored.md
+doc/Language.md
 doc/LinkPassword.md
 doc/LocationFix.md
 doc/LoginError.md
@@ -304,6 +305,7 @@ lib/model/keep_invite.dart
 lib/model/keep_pair_request.dart
 lib/model/keep_pairing.dart
 lib/model/keep_restored.dart
+lib/model/language.dart
 lib/model/link_password.dart
 lib/model/location_fix.dart
 lib/model/login_error.dart

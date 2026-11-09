@@ -21,6 +21,7 @@ import 'qr_sign_in.dart';
 import 'organize_screens.dart';
 import 'settings_screen.dart';
 import 'storage_template_screen.dart';
+import '../l10n/l10n.dart';
 
 Future<void> showAccountSheet(BuildContext context) =>
     showModalBottomSheet<void>(
@@ -63,7 +64,10 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
       final info = await PackageInfo.fromPlatform();
       if (mounted) {
         setState(
-          () => _appVersion = '${info.version} build ${info.buildNumber}',
+          () => _appVersion = l.accountSheetVersionBuild(
+            info.version,
+            info.buildNumber,
+          ),
         );
       }
     } on MissingPluginException {
@@ -192,7 +196,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                   onTap: () => _push(const ProfileScreen()),
                   child: Semantics(
                     button: true,
-                    label: 'Edit profile',
+                    label: l.accountSheetEditProfile,
                     child: PersonAvatar(
                       session: session,
                       user: session.user,
@@ -221,7 +225,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Close',
+                  tooltip: l.accountSheetClose,
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -238,12 +242,14 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                     children: [
                       Expanded(
                         child: Text(
-                          '${_stats!.photos + _stats!.videos} photos and videos',
+                          l.accountSheetPhotosAndVideos(
+                            '${_stats!.photos + _stats!.videos}',
+                          ),
                           style: text.bodySmall?.copyWith(color: Palette.ink),
                         ),
                       ),
                       Text(
-                        '${formatBytes(_stats!.bytes)} used',
+                        l.accountSheetUsed(formatBytes(_stats!.bytes)),
                         style: text.bodySmall?.copyWith(color: Palette.ink),
                       ),
                     ],
@@ -252,9 +258,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
           if ((_problems?.failed ?? 0) > 0)
             ListTile(
               leading: Icon(Icons.error_outline, color: Palette.err),
-              title: Text(
-                '${_problems!.failed} ${_problems!.failed == 1 ? 'file' : 'files'} could not be processed',
-              ),
+              title: Text(l.accountSheetFilesFailed(_problems!.failed)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => showModalBottomSheet<void>(
                 context: context,
@@ -277,20 +281,23 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             const SizedBox(height: 6),
             Row(
               children: [
-                Text('Appearance', style: text.bodySmall),
+                Text(l.accountSheetAppearance, style: text.bodySmall),
                 const SizedBox(width: 16),
                 Expanded(
                   child: SegmentedButton<AppTheme>(
                     showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(value: AppTheme.dark, label: Text('Dark')),
+                    segments: [
+                      ButtonSegment(
+                        value: AppTheme.dark,
+                        label: Text(l.accountSheetDark),
+                      ),
                       ButtonSegment(
                         value: AppTheme.light,
-                        label: Text('Light'),
+                        label: Text(l.accountSheetLight),
                       ),
                       ButtonSegment(
                         value: AppTheme.system,
-                        label: Text('System'),
+                        label: Text(l.accountSheetSystem),
                       ),
                     ],
                     selected: {ref.watch(settingsProvider).theme},
@@ -309,7 +316,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
           Divider(color: Palette.line, height: 1),
           _section([
             const SizedBox(height: 6),
-            Text('Server disk', style: text.titleMedium),
+            Text(l.accountSheetServerDisk, style: text.titleMedium),
             const SizedBox(height: 10),
             LinearProgressIndicator(
               value: total > 0 ? used / total : 0,
@@ -321,45 +328,57 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             const SizedBox(height: 8),
             Text(
               status == null
-                  ? (_online ? 'Loading…' : 'The server does not answer.')
-                  : '${formatBytes(used)} of ${formatBytes(total)} used',
+                  ? (_online
+                        ? l.accountSheetLoading
+                        : l.accountSheetServerNoAnswer)
+                  : l.accountSheetDiskUsed(
+                      formatBytes(used),
+                      formatBytes(total),
+                    ),
               style: text.bodySmall,
             ),
           ]),
           _section([
-            if (_appVersion != null) _row('App version', _appVersion!),
-            _row('Server version', status?.version ?? (_online ? '…' : '—')),
+            if (_appVersion != null)
+              _row(l.accountSheetAppVersion, _appVersion!),
+            _row(
+              l.accountSheetServerVersion,
+              status?.version ?? (_online ? '…' : '—'),
+            ),
             if (status?.updateAvailable == true)
-              _row('New version', '${status?.latestVersion} is available'),
+              _row(
+                l.accountSheetNewVersion,
+                l.accountSheetIsAvailable('${status?.latestVersion}'),
+              ),
             if (_serverName != null && _serverName != 'Mediarr')
-              _row('Server', _serverName!),
-            _row('Server address', session.serverUrl),
+              _row(l.accountSheetServer, _serverName!),
+            _row(l.accountSheetServerAddress, session.serverUrl),
           ]),
           Divider(color: Palette.line, height: 1),
           const SizedBox(height: 6),
           ListTile(
             leading: Icon(Icons.cleaning_services_outlined, color: Palette.dim),
-            title: const Text('Free up space'),
+            title: Text(l.accountSheetFreeUpSpace),
             onTap: () => _push(const FreeSpaceScreen()),
           ),
           ListTile(
             leading: Icon(Icons.person_outline, color: Palette.dim),
-            title: const Text('Profile'),
+            title: Text(l.accountSheetProfile),
             onTap: () => _push(const ProfileScreen()),
           ),
           ListTile(
             leading: Icon(Icons.qr_code_2, color: Palette.dim),
-            title: const Text('Sign in on another device'),
+            title: Text(l.accountSheetSignInOnAnotherDevice),
             onTap: () => _push(const ShowSignInCodeScreen()),
           ),
           ListTile(
             leading: Icon(Icons.phone_iphone, color: Palette.dim),
-            title: const Text('Backup devices'),
+            title: Text(l.accountSheetBackupDevices),
             onTap: () => _push(const BackupDevicesScreen()),
           ),
           ListTile(
             leading: Icon(Icons.download_outlined, color: Palette.dim),
-            title: const Text('Import'),
+            title: Text(l.accountSheetImport),
             onTap: () => _push(const ImportsScreen()),
           ),
           if (session.user.isAdmin)
@@ -368,35 +387,35 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                 Icons.admin_panel_settings_outlined,
                 color: Palette.dim,
               ),
-              title: const Text('Administration'),
+              title: Text(l.accountSheetAdministration),
               onTap: () => _push(const AdminScreen()),
             ),
           if (session.user.isAdmin)
             ListTile(
               leading: Icon(Icons.backup_outlined, color: Palette.dim),
-              title: const Text('Backup'),
+              title: Text(l.accountSheetBackup),
               onTap: () => _push(const BackupScreen()),
             ),
           if (session.user.isAdmin)
             ListTile(
               leading: Icon(Icons.devices_other_outlined, color: Palette.dim),
-              title: const Text('All backup devices'),
+              title: Text(l.accountSheetAllBackupDevices),
               onTap: () => _push(const BackupDevicesScreen(all: true)),
             ),
           if (session.user.isAdmin)
             ListTile(
               leading: Icon(Icons.drive_file_move_outline, color: Palette.dim),
-              title: const Text('Storage template'),
+              title: Text(l.accountSheetStorageTemplate),
               onTap: () => _push(const StorageTemplateScreen()),
             ),
           ListTile(
             leading: Icon(Icons.settings_outlined, color: Palette.dim),
-            title: const Text('Settings'),
+            title: Text(l.accountSheetSettings),
             onTap: () => _push(const SettingsScreen()),
           ),
           ListTile(
             leading: Icon(Icons.logout, color: Palette.dim),
-            title: const Text('Sign out'),
+            title: Text(l.accountSheetSignOut),
             onTap: () => _signOut(session),
           ),
           const SizedBox(height: 12),
@@ -404,7 +423,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
           Wrap(
             alignment: WrapAlignment.center,
             children: [
-              _link('Documentation', 'https://docs.mediarr.app'),
+              _link(l.accountSheetDocumentation, 'https://docs.mediarr.app'),
               _link('GitHub', 'https://github.com/mediarr-app/mediarr'),
               TextButton(
                 onPressed: () => showLicensePage(
@@ -412,7 +431,10 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
                   applicationName: 'Mediarr',
                   applicationIcon: const BrandMark(size: 40),
                 ),
-                child: Text('Licenses', style: TextStyle(color: Palette.haze)),
+                child: Text(
+                  l.accountSheetLicenses,
+                  style: TextStyle(color: Palette.haze),
+                ),
               ),
             ],
           ),

@@ -63,7 +63,7 @@ SELECT backup_quiet_days FROM users WHERE id = $1;
 
 -- name: QuietBackupDevices :many
 -- Devices past their owner's threshold that nobody was told about yet.
-SELECT d.id, d.user_id, d.name, d.reported_at, u.email, u.name AS owner_name
+SELECT d.id, d.user_id, d.name, d.reported_at, u.email, u.name AS owner_name, u.language
 FROM backup_devices d
 JOIN users u ON u.id = d.user_id
 WHERE d.quiet_told_at IS NULL AND u.backup_quiet_days > 0

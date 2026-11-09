@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { api, type Memory, type PeopleList } from '#lib/api.ts';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 
 	const PEOPLE_SHOWN = 12;
@@ -47,20 +47,20 @@
 	});
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
 <div class="ph">
-	<div><h1>{tr(item.hr, item.en)}</h1></div>
+	<div><h1>{t(item.label)}</h1></div>
 </div>
 
 <section class="explore-part">
-	<h2><a href={resolve('/(app)/people')}>{tr('Ljudi', 'People')}</a></h2>
+	<h2><a href={resolve('/(app)/people')}>{t('explore.people')}</a></h2>
 	{#if peopleFailed}
-		<p class="alb-meta">{tr('Osobe se nisu učitale.', 'People could not be loaded.')}</p>
+		<p class="alb-meta">{t('explore.peopleCouldNotBeLoaded')}</p>
 	{:else if !people}
 		<Skeleton height="160px" />
 	{:else if shownPeople.length === 0}
-		<p class="alb-meta">{tr('Još nema osoba s imenom.', 'No named people yet.')}</p>
+		<p class="alb-meta">{t('explore.noNamedPeopleYet')}</p>
 	{:else}
 		<div class="alb-grid">
 			{#each shownPeople as person (person.id)}
@@ -77,13 +77,13 @@
 </section>
 
 <section class="explore-part">
-	<h2><a href={resolve('/(app)/map')}>{tr('Mjesta', 'Places')}</a></h2>
+	<h2><a href={resolve('/(app)/map')}>{t('explore.places')}</a></h2>
 	{#if placesFailed}
-		<p class="alb-meta">{tr('Mjesta se nisu učitala.', 'Places could not be loaded.')}</p>
+		<p class="alb-meta">{t('explore.placesCouldNotBeLoaded')}</p>
 	{:else if !places}
 		<Skeleton height="160px" />
 	{:else if places.length === 0}
-		<p class="alb-meta">{tr('Još nema fotki s mjestom.', 'No photos with a place yet.')}</p>
+		<p class="alb-meta">{t('explore.noPhotosWithAPlace')}</p>
 	{:else}
 		<div class="alb-grid">
 			{#each places as place (`${place.name}${place.country}`)}
@@ -100,13 +100,13 @@
 </section>
 
 <section class="explore-part">
-	<h2><a href={resolve('/(app)/memories')}>{tr('Uspomene', 'Memories')}</a></h2>
+	<h2><a href={resolve('/(app)/memories')}>{t('common.memories')}</a></h2>
 	{#if memoriesFailed}
-		<p class="alb-meta">{tr('Uspomene se nisu učitale.', 'Memories could not be loaded.')}</p>
+		<p class="alb-meta">{t('explore.memoriesCouldNotBeLoaded')}</p>
 	{:else if !memories}
 		<Skeleton height="160px" />
 	{:else if memories.length === 0}
-		<p class="alb-meta">{tr('Danas nema uspomena.', 'No memories today.')}</p>
+		<p class="alb-meta">{t('explore.noMemoriesToday')}</p>
 	{:else}
 		<div class="alb-grid">
 			{#each memories as memory (memory.kind + memory.title)}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../../l10n/l10n.dart';
 import '../../services/session.dart';
 import '../../theme.dart';
 import 'admin_common.dart';
@@ -57,7 +58,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       builder: (_) => _NewUserDialog(session: _session),
     );
     if (created != null) {
-      if (mounted) tellAdmin(context, '${created.email} was added.');
+      if (mounted) tellAdmin(context, l.adminUsersAdded(created.email));
       await _load();
     }
   }
@@ -76,11 +77,11 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Users')),
+    appBar: AppBar(title: Text(l.adminScreenUsers)),
     floatingActionButton: FloatingActionButton.extended(
       onPressed: _create,
       icon: const Icon(Icons.person_add_alt),
-      label: const Text('Add a user'),
+      label: Text(l.adminUsersAddUser),
     ),
     body: AdminBody(
       loading: _users == null,
@@ -101,14 +102,18 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                 subtitle: Text(
                   [
                     user.email,
-                    if (user.isAdmin) 'Administrator',
+                    if (user.isAdmin) l.adminUsersAdministrator,
                     if (_storage[user.id] case final row?)
-                      '${adminBytes(row.storedBytes)} of '
-                          '${row.quotaBytes == null ? 'no limit' : adminBytes(row.quotaBytes!)}',
+                      l.adminUsersStoredOf(
+                        adminBytes(row.storedBytes),
+                        row.quotaBytes == null
+                            ? l.adminUsersNoLimit
+                            : adminBytes(row.quotaBytes!),
+                      ),
                   ].join(' · '),
                 ),
                 trailing: IconButton(
-                  tooltip: 'How much ${user.email} may store',
+                  tooltip: l.adminUsersQuotaTooltip(user.email),
                   icon: const Icon(Icons.data_usage),
                   onPressed: () => _quota(user),
                 ),
@@ -169,7 +174,7 @@ class _NewUserDialogState extends State<_NewUserDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Add a user'),
+    title: Text(l.adminUsersAddUser),
     content: SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -180,20 +185,20 @@ class _NewUserDialogState extends State<_NewUserDialog> {
             controller: _email,
             keyboardType: TextInputType.emailAddress,
             autocorrect: false,
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(labelText: l.adminUsersEmail),
           ),
           TextField(
             controller: _name,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(labelText: l.adminUsersName),
           ),
           TextField(
             controller: _password,
             obscureText: true,
-            decoration: const InputDecoration(labelText: 'Password'),
+            decoration: InputDecoration(labelText: l.adminUsersPassword),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Administrator'),
+            title: Text(l.adminUsersAdministrator),
             value: _admin,
             onChanged: (value) => setState(() => _admin = value),
           ),
@@ -203,9 +208,9 @@ class _NewUserDialogState extends State<_NewUserDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(l.adminUsersCancel),
       ),
-      TextButton(onPressed: _busy ? null : _save, child: const Text('Add')),
+      TextButton(onPressed: _busy ? null : _save, child: Text(l.adminUsersAdd)),
     ],
   );
 }
@@ -243,9 +248,7 @@ class _QuotaDialogState extends State<_QuotaDialog> {
   Future<void> _save() async {
     final parsed = parseQuotaGb(_field.text);
     if (!parsed.ok) {
-      setState(
-        () => _problem = 'Type a number of gigabytes, or nothing for no limit.',
-      );
+      setState(() => _problem = l.adminUsersQuotaInvalid);
       return;
     }
     setState(() => _busy = true);
@@ -264,7 +267,7 @@ class _QuotaDialogState extends State<_QuotaDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text('Storage for ${widget.user.email}'),
+    title: Text(l.adminUsersStorageFor(widget.user.email)),
     content: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -273,9 +276,9 @@ class _QuotaDialogState extends State<_QuotaDialog> {
         TextField(
           controller: _field,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'Limit in GB',
-            helperText: 'Empty means no limit.',
+          decoration: InputDecoration(
+            labelText: l.adminUsersLimitGb,
+            helperText: l.adminUsersEmptyNoLimit,
           ),
         ),
       ],
@@ -283,9 +286,12 @@ class _QuotaDialogState extends State<_QuotaDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(l.adminUsersCancel),
       ),
-      TextButton(onPressed: _busy ? null : _save, child: const Text('Save')),
+      TextButton(
+        onPressed: _busy ? null : _save,
+        child: Text(l.settingsScreenSave),
+      ),
     ],
   );
 }

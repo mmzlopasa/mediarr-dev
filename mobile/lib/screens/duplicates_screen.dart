@@ -8,6 +8,7 @@ import '../services/session.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
 import 'asset_picture.dart';
+import '../l10n/l10n.dart';
 
 /// What goes to the trash: whatever is not kept. Keeping none is not offered, so a group can never
 /// disappear as a whole by accident.
@@ -40,12 +41,12 @@ DuplicateChoice? duplicateChoice(
 
 /// Short facts about one copy, for telling the copies apart.
 List<String> duplicateNotes(DuplicateItem item) => [
-  if (item.favorite) 'Favorite',
-  if (item.original) 'Original',
-  if (item.resaved) 'Saved again by an app',
-  if (item.hasLocation) 'Has a location',
-  if (item.hasCaption) 'Has a description',
-  if (!item.hasDate) 'No date',
+  if (item.favorite) l.duplicatesScreenFavorite,
+  if (item.original) l.duplicatesScreenOriginal,
+  if (item.resaved) l.duplicatesScreenSavedAgain,
+  if (item.hasLocation) l.duplicatesScreenHasLocation,
+  if (item.hasCaption) l.duplicatesScreenHasDescription,
+  if (!item.hasDate) l.duplicatesScreenNoDate,
 ];
 
 /// Why the proposed one is kept: the first way it is better than the others.
@@ -55,26 +56,26 @@ String duplicateReason(DuplicateGroup group) {
   final others = group.items.where((item) => item != keep);
   int pixels(DuplicateItem item) => (item.width ?? 0) * (item.height ?? 0);
   if (keep.favorite && others.any((item) => !item.favorite)) {
-    return 'a favorite';
+    return l.duplicatesScreenReasonFavorite;
   }
   if (keep.original && others.any((item) => !item.original)) {
-    return "the camera's original";
+    return l.duplicatesScreenReasonCameraOriginal;
   }
   if (!keep.resaved && others.any((item) => item.resaved)) {
-    return 'the others were saved again by apps';
+    return l.duplicatesScreenReasonOthersSaved;
   }
   if (others.every((item) => pixels(item) < pixels(keep))) {
-    return 'the highest resolution';
+    return l.duplicatesScreenReasonHighestResolution;
   }
   if (others.every((item) => item.sizeBytes < keep.sizeBytes)) {
-    return 'the largest file';
+    return l.duplicatesScreenReasonLargestFile;
   }
   if (others.every(
     (item) => item.sizeBytes == keep.sizeBytes && pixels(item) == pixels(keep),
   )) {
-    return 'they are equal, so any one can stay';
+    return l.duplicatesScreenReasonEqual;
   }
-  return 'the sharpest';
+  return l.duplicatesScreenReasonSharpest;
 }
 
 class DuplicatesScreen extends ConsumerStatefulWidget {
@@ -137,7 +138,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(l.duplicatesScreenCancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
@@ -150,19 +151,18 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
 
   Future<void> _resolve(DuplicateChoice choice) async {
     final confirmed = await _confirm(
-      'Resolve this group?',
-      'The kept photo takes over the albums, tags, favorite, description, rating, '
-          'location and names of people from the others. They go to the trash and can be restored.',
-      'Resolve',
+      l.duplicatesScreenResolveThisGroup,
+      l.duplicatesScreenKeptTakesOver,
+      l.duplicatesScreenResolve,
     );
     if (!confirmed) return;
     setState(() => _working = true);
     try {
       await _session.api.resolveDuplicates(DuplicateResolve(groups: [choice]));
-      _tell('Resolved. The copies are in the trash.');
+      _tell(l.duplicatesScreenResolved);
       await _load();
     } on ApiException {
-      _tell('The action failed.');
+      _tell(l.duplicatesScreenActionFailed);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -176,12 +176,14 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       if (preview == null || !mounted) return;
       final confirmed = await _confirm(
         exactOnly
-            ? 'Resolve every identical picture?'
-            : 'Resolve all duplicates?',
-        'Groups: ${preview.groups}. ${preview.trashed} photos go to the trash, which frees '
-            '${formatBytes(preview.freedBytes)} once it is emptied. In each group the proposed '
-            'photo stays and takes over what the others had.',
-        'Resolve all',
+            ? l.duplicatesScreenResolveEveryIdentical
+            : l.duplicatesScreenResolveAllDuplicates,
+        l.duplicatesScreenResolveAllBody(
+          '${preview.groups}',
+          '${preview.trashed}',
+          formatBytes(preview.freedBytes),
+        ),
+        l.duplicatesScreenResolveAll,
       );
       if (!confirmed) return;
       await _session.api.resolveDuplicates(
@@ -189,7 +191,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       );
       await _load();
     } on ApiException {
-      _tell('The action failed.');
+      _tell(l.duplicatesScreenActionFailed);
     }
   }
 
@@ -200,7 +202,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       );
       await _load();
     } on ApiException {
-      _tell('The action failed.');
+      _tell(l.duplicatesScreenActionFailed);
     }
   }
 
@@ -221,11 +223,18 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Chip(
-                  label: Text(group.exact ? 'Same picture' : 'Alike'),
+                  label: Text(
+                    group.exact
+                        ? l.duplicatesScreenSamePicture
+                        : l.duplicatesScreenAlike,
+                  ),
                   visualDensity: VisualDensity.compact,
                 ),
                 Text(
-                  'Proposed to keep: ${duplicateReason(group)} · frees ${formatBytes(group.freedBytes)}',
+                  l.duplicatesScreenProposedToKeep(
+                    duplicateReason(group),
+                    formatBytes(group.freedBytes),
+                  ),
                   style: text.bodySmall,
                 ),
               ],
@@ -269,13 +278,15 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
               children: [
                 TextButton(
                   onPressed: () => _dismiss(group),
-                  child: const Text('Not duplicates'),
+                  child: Text(l.duplicatesScreenNotDuplicates),
                 ),
                 TextButton(
                   onPressed: choice == null || _working
                       ? null
                       : () => _resolve(choice),
-                  child: Text('Resolve (${trash.length} to the trash)'),
+                  child: Text(
+                    l.duplicatesScreenResolveToTrash('${trash.length}'),
+                  ),
                 ),
               ],
             ),
@@ -289,12 +300,12 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
   Widget build(BuildContext context) {
     final data = _data;
     return Scaffold(
-      appBar: AppBar(title: const Text('Duplicates')),
+      appBar: AppBar(title: Text(l.duplicatesScreenTitle)),
       body: data == null
           ? _failed
-                ? const EmptyMessage(
+                ? EmptyMessage(
                     icon: Icons.cloud_off,
-                    text: 'Duplicates could not be loaded.',
+                    text: l.duplicatesScreenLoadFailed,
                   )
                 : Center(child: CircularProgressIndicator(color: Palette.gold))
           : RefreshIndicator(
@@ -306,13 +317,16 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                     child: Text(
                       [
                         if (data.pending > 0)
-                          'Photos still being compared: ${data.pending}.',
+                          l.duplicatesScreenPending('${data.pending}'),
                         if (data.groups.isEmpty)
-                          'No similar photos were found.'
+                          l.duplicatesScreenNoneFound
                         else
-                          'Tick what to keep. These are only proposals, and nothing is removed without your confirmation.',
+                          l.duplicatesScreenTickWhatToKeep,
                         if (data.total > data.groups.length)
-                          'Showing ${data.groups.length} of ${data.total}.',
+                          l.duplicatesScreenShowing(
+                            '${data.groups.length}',
+                            '${data.total}',
+                          ),
                       ].join(' '),
                     ),
                   ),
@@ -323,7 +337,10 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Resolving duplicates: ${progress.done} of ${progress.total}',
+                            l.duplicatesScreenResolving(
+                              '${progress.done}',
+                              '${progress.total}',
+                            ),
                           ),
                           const SizedBox(height: 6),
                           LinearProgressIndicator(
@@ -345,7 +362,9 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                             OutlinedButton(
                               onPressed: () => _resolveAll(exactOnly: true),
                               child: Text(
-                                'Resolve the identical (${data.exactTotal})',
+                                l.duplicatesScreenResolveIdentical(
+                                  '${data.exactTotal}',
+                                ),
                               ),
                             ),
                           FilledButton(
@@ -355,7 +374,9 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                               foregroundColor: Palette.onGold,
                             ),
                             child: Text(
-                              'Resolve all as proposed (${data.total})',
+                              l.duplicatesScreenResolveAllAsProposed(
+                                '${data.total}',
+                              ),
                             ),
                           ),
                         ],
@@ -423,7 +444,7 @@ class _StackSheetState extends State<_StackSheet> {
       navigator.pop();
     } on ApiException {
       messenger.showSnackBar(
-        const SnackBar(content: Text('The action failed.')),
+        SnackBar(content: Text(l.duplicatesScreenActionFailed)),
       );
     }
   }
@@ -435,9 +456,9 @@ class _StackSheetState extends State<_StackSheet> {
       return SizedBox(
         height: 200,
         child: _failed
-            ? const EmptyMessage(
+            ? EmptyMessage(
                 icon: Icons.cloud_off,
-                text: 'This stack could not be loaded.',
+                text: l.duplicatesScreenStackLoadFailed,
               )
             : Center(child: CircularProgressIndicator(color: Palette.gold)),
       );
@@ -496,12 +517,12 @@ class _StackSheetState extends State<_StackSheet> {
             children: [
               TextButton(
                 onPressed: () => _change(() => api.dissolveStack(_shown)),
-                child: const Text('Split the stack'),
+                child: Text(l.duplicatesScreenSplitStack),
               ),
               if (shots.isNotEmpty && shots.first != _shown)
                 TextButton(
                   onPressed: () => _change(() => api.setStackMain(_shown)),
-                  child: const Text('Make it the main shot'),
+                  child: Text(l.duplicatesScreenMakeMain),
                 ),
             ],
           ),

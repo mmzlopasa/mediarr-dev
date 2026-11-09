@@ -5,6 +5,7 @@ import 'package:mediarr_api/api.dart';
 import '../../services/session.dart';
 import '../../theme.dart';
 import 'admin_common.dart';
+import '../../l10n/l10n.dart';
 
 /// Addresses one per line or separated by commas, without empty ones.
 List<String> parseAddresses(String text) => [
@@ -98,7 +99,7 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
         deviceApprovalEnabled: _approval,
       ),
     ),
-    'The rules are saved.',
+    l.adminSecurityRulesSaved,
   );
 
   Future<void> _saveOidc() => _run(
@@ -112,23 +113,26 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
         secret: _secret.text.isEmpty ? null : _secret.text,
       ),
     ),
-    'Single sign-on is saved.',
+    l.adminSecuritySsoSaved,
   );
 
   Future<void> _forget(SecurityDevice device) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Forget this device?'),
-        content: Text('${device.email} on it has to be approved again.'),
+        title: Text(l.adminSecurityForgetTitle),
+        content: Text(l.adminSecurityApproveAgain(device.email)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.adminSecurityCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Forget', style: TextStyle(color: Palette.err)),
+            child: Text(
+              l.adminSecurityForget,
+              style: TextStyle(color: Palette.err),
+            ),
           ),
         ],
       ),
@@ -136,7 +140,7 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
     if (confirmed == true) {
       await _run(
         () => _session.api.deleteDevice(device.id),
-        'The device is forgotten.',
+        l.adminSecurityDeviceForgotten,
       );
     }
   }
@@ -163,7 +167,7 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
     final rules = _rules;
     final oidc = _oidc;
     return Scaffold(
-      appBar: AppBar(title: const Text('Security')),
+      appBar: AppBar(title: Text(l.adminSecurityTitle)),
       body: AdminBody(
         loading: rules == null || oidc == null,
         error: _error,
@@ -175,25 +179,27 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Text(_problem!, style: TextStyle(color: Palette.err)),
               ),
-            const AdminHeading('Single sign-on'),
-            _text(_issuer, 'Issuer', help: 'Empty turns single sign-on off'),
-            _text(_clientId, 'Client ID'),
+            AdminHeading(l.adminSecuritySingleSignOn),
+            _text(
+              _issuer,
+              l.adminSecurityIssuer,
+              help: l.adminSecurityIssuerHelp,
+            ),
+            _text(_clientId, l.adminSecurityClientId),
             _text(
               _secret,
-              'Client secret',
+              l.adminSecurityClientSecret,
               secret: true,
-              help: oidc!.hasSecret
-                  ? 'A secret is saved. Empty keeps it.'
-                  : null,
+              help: oidc!.hasSecret ? l.adminSecuritySecretSaved : null,
             ),
-            _text(_label, 'Button label'),
+            _text(_label, l.adminSecurityButtonLabel),
             SwitchListTile(
-              title: const Text('Create an account on first sign-in'),
+              title: Text(l.adminSecurityAutoCreate),
               value: _autoCreate,
               onChanged: (value) => setState(() => _autoCreate = value),
             ),
             SwitchListTile(
-              title: const Text('Administrators may sign in this way'),
+              title: Text(l.adminSecurityLinkAdmins),
               value: _linkAdmins,
               onChanged: (value) => setState(() => _linkAdmins = value),
             ),
@@ -203,26 +209,26 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton(
                   onPressed: _busy ? null : _saveOidc,
-                  child: const Text('Save single sign-on'),
+                  child: Text(l.adminSecuritySaveSso),
                 ),
               ),
             ),
-            const AdminHeading('Rules'),
+            AdminHeading(l.adminSecurityRules),
             SwitchListTile(
-              title: const Text('New devices must be approved'),
+              title: Text(l.adminSecurityApprovalRequired),
               value: _approval,
               onChanged: (value) => setState(() => _approval = value),
             ),
             SwitchListTile(
-              title: const Text('Only these addresses may reach the server'),
-              subtitle: Text('Your address now: ${rules!.yourAddress}'),
+              title: Text(l.adminSecurityAllowlist),
+              subtitle: Text(l.adminSecurityYourAddress(rules!.yourAddress)),
               value: _allowlist,
               onChanged: (value) => setState(() => _allowlist = value),
             ),
             _text(
               _addresses,
-              'Addresses and networks',
-              help: 'One per line, such as 192.168.1.0/24',
+              l.adminSecurityAddresses,
+              help: l.adminSecurityAddressesHelp,
               lines: 4,
             ),
             Padding(
@@ -231,21 +237,19 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton(
                   onPressed: _busy ? null : _saveRules,
-                  child: const Text('Save the rules'),
+                  child: Text(l.adminSecuritySaveRules),
                 ),
               ),
             ),
-            const AdminHeading('Devices'),
+            AdminHeading(l.adminSecurityDevices),
             if (rules.devices.isEmpty)
-              const ListTile(
-                title: Text('No device has tried to sign in yet.'),
-              ),
+              ListTile(title: Text(l.adminSecurityNoDevices)),
             for (final device in rules.devices)
               ListTile(
                 isThreeLine: true,
                 title: Text(device.email),
                 subtitle: Text(
-                  '${device.userAgent}\n${device.ip} · last ${adminTime(device.lastSeen)}',
+                  '${device.userAgent}\n${device.ip} · ${l.adminSecurityLastSeen(adminTime(device.lastSeen))}',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -258,12 +262,12 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
                             ? null
                             : () => _run(
                                 () => _session.api.approveDevice(device.id),
-                                'The device may sign in.',
+                                l.adminSecurityDeviceApproved,
                               ),
-                        child: const Text('Approve'),
+                        child: Text(l.adminSecurityApprove),
                       ),
                     IconButton(
-                      tooltip: 'Forget',
+                      tooltip: l.adminSecurityForget,
                       icon: const Icon(Icons.delete_outline),
                       onPressed: _busy ? null : () => _forget(device),
                     ),
@@ -272,7 +276,7 @@ class _SecurityScreenState extends ConsumerState<SecurityScreen> {
               ),
             ListTile(
               leading: const Icon(Icons.manage_search),
-              title: const Text('Attempts to get in'),
+              title: Text(l.adminSecurityAttempts),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -327,18 +331,18 @@ class _SecurityEventsScreenState extends ConsumerState<SecurityEventsScreen> {
   }
 
   static String _kind(SecurityEventKindEnum kind) => switch (kind) {
-    SecurityEventKindEnum.loginOk => 'Signed in',
-    SecurityEventKindEnum.loginFailed => 'Wrong sign-in',
-    SecurityEventKindEnum.loginLocked => 'Too many attempts',
-    SecurityEventKindEnum.ipBlocked => 'Address blocked',
-    SecurityEventKindEnum.deviceBlocked => 'Device not approved',
-    SecurityEventKindEnum.passwordReset => 'Password reset',
+    SecurityEventKindEnum.loginOk => l.adminSecuritySignedIn,
+    SecurityEventKindEnum.loginFailed => l.adminSecurityWrongSignIn,
+    SecurityEventKindEnum.loginLocked => l.adminSecurityTooManyAttempts,
+    SecurityEventKindEnum.ipBlocked => l.adminSecurityAddressBlocked,
+    SecurityEventKindEnum.deviceBlocked => l.adminSecurityDeviceNotApproved,
+    SecurityEventKindEnum.passwordReset => l.adminSecurityPasswordReset,
     _ => kind.value,
   };
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Attempts to get in')),
+    appBar: AppBar(title: Text(l.adminSecurityAttempts)),
     body: AdminBody(
       loading: _events == null,
       error: _error,
@@ -347,7 +351,7 @@ class _SecurityEventsScreenState extends ConsumerState<SecurityEventsScreen> {
         child: ListView(
           children: [
             if (_events!.isEmpty)
-              const ListTile(title: Text('No attempts yet.')),
+              ListTile(title: Text(l.adminSecurityNoAttempts)),
             for (final event in _events!)
               ListTile(
                 dense: true,
@@ -369,7 +373,7 @@ class _SecurityEventsScreenState extends ConsumerState<SecurityEventsScreen> {
               Center(
                 child: TextButton(
                   onPressed: () => _load(more: true),
-                  child: const Text('Show older'),
+                  child: Text(l.adminSecurityShowOlder),
                 ),
               ),
           ],

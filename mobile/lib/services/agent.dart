@@ -1,3 +1,5 @@
+import '../l10n/l10n.dart';
+
 /// A browser's user agent in words a person knows, as on the web (lib/organize/agent.ts).
 class Agent {
   const Agent(this.program, this.system, this.phone);
@@ -8,14 +10,16 @@ class Agent {
 
   /// "Chrome on Windows", or what can be told of it.
   String get title {
-    if (program.isNotEmpty && system.isNotEmpty) return '$program on $system';
+    if (program.isNotEmpty && system.isNotEmpty) {
+      return l.agentProgramOnSystem(program, system);
+    }
     if (program.isNotEmpty) return program;
     if (system.isNotEmpty) return system;
-    return 'Unknown device';
+    return l.agentUnknownDevice;
   }
 }
 
-const _programs = [
+List<(String, String)> get _programs => [
   ('HeadlessChrome', 'Headless Chrome'),
   ('Edg/', 'Edge'),
   ('OPR/', 'Opera'),
@@ -23,7 +27,7 @@ const _programs = [
   ('Firefox/', 'Firefox'),
   ('Chrome/', 'Chrome'),
   ('CriOS', 'Chrome'),
-  ('Dart/', 'Mediarr app'),
+  ('Dart/', l.agentMediarrApp),
   ('curl/', 'curl'),
 ];
 
@@ -66,12 +70,11 @@ Agent describeAgent(String userAgent) {
 /// How long ago, in plain words: "3 hours ago".
 String since(DateTime at, [DateTime? now]) {
   final gap = (now ?? DateTime.now()).difference(at);
-  String unit(int n, String word) => n == 1 ? '1 $word ago' : '$n ${word}s ago';
-  if (gap.inSeconds < 60) return 'now';
-  if (gap.inMinutes < 60) return unit(gap.inMinutes, 'minute');
-  if (gap.inHours < 24) return unit(gap.inHours, 'hour');
-  if (gap.inDays < 7) return unit(gap.inDays, 'day');
-  if (gap.inDays < 30) return unit(gap.inDays ~/ 7, 'week');
-  if (gap.inDays < 365) return unit(gap.inDays ~/ 30, 'month');
-  return unit(gap.inDays ~/ 365, 'year');
+  if (gap.inSeconds < 60) return l.agentNow;
+  if (gap.inMinutes < 60) return l.agentMinutesAgo(gap.inMinutes);
+  if (gap.inHours < 24) return l.agentHoursAgo(gap.inHours);
+  if (gap.inDays < 7) return l.agentDaysAgo(gap.inDays);
+  if (gap.inDays < 30) return l.agentWeeksAgo(gap.inDays ~/ 7);
+  if (gap.inDays < 365) return l.agentMonthsAgo(gap.inDays ~/ 30);
+  return l.agentYearsAgo(gap.inDays ~/ 365);
 }

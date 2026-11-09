@@ -8,31 +8,32 @@ import '../services/backup.dart';
 import '../services/devices.dart';
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 /// The state of a device in a word or two.
 String deviceState(BackupDevice device) {
-  if (device.quiet) return 'Quiet';
+  if (device.quiet) return l.devicesScreenQuiet;
   if (device.failed > 0 || device.gone + device.trashed > 0) {
-    return 'Needs a look';
+    return l.devicesScreenNeedsALook;
   }
-  return 'All good';
+  return l.devicesScreenAllGood;
 }
 
 /// What the server counts as safe from a device, in one line.
 String describeSafe(BackupDevice device) {
-  final line = '${device.confirmed} files confirmed by the server';
+  final line = l.devicesScreenConfirmed('${device.confirmed}');
   return device.files > device.confirmed
-      ? '$line, of ${device.files} the device sent'
+      ? l.devicesScreenOfSent(line, '${device.files}')
       : line;
 }
 
 /// The phone's own counts, and what is no longer safe on the server.
 String describeCounts(BackupDevice device) {
   final parts = [
-    'waiting ${device.pending + device.working}',
-    'not sent ${device.failed}',
-    if (device.trashed > 0) 'in the trash ${device.trashed}',
-    if (device.gone > 0) 'no longer on the server ${device.gone}',
+    l.devicesScreenWaiting('${device.pending + device.working}'),
+    l.devicesScreenNotSent('${device.failed}'),
+    if (device.trashed > 0) l.devicesScreenInTrash('${device.trashed}'),
+    if (device.gone > 0) l.devicesScreenGone('${device.gone}'),
   ];
   return parts.join(' · ');
 }
@@ -40,9 +41,8 @@ String describeCounts(BackupDevice device) {
 const quietChoices = [1, 3, 7, 14, 0];
 
 String quietLabel(int days) => switch (days) {
-  0 => 'Never',
-  1 => '1 day',
-  _ => '$days days',
+  0 => l.devicesScreenNever,
+  _ => l.devicesScreenDays(days),
 };
 
 /// Phones that back up, and how much from each is safe on the server, as on the web. With [all],
@@ -118,7 +118,7 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
         setState(() => _missing[device.id] = found);
       }
     } on ApiException catch (cause) {
-      _say(cause.message ?? 'Not loaded.');
+      _say(cause.message ?? l.devicesScreenNotLoaded);
     }
   }
 
@@ -126,18 +126,16 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Remove ${device.name}?'),
-        content: const Text(
-          'Its photos stay on the server. If it reports again, it comes back.',
-        ),
+        title: Text(l.devicesScreenRemoveTitle(device.name)),
+        content: Text(l.devicesScreenRemoveBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.devicesScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove'),
+            child: Text(l.devicesScreenRemove),
           ),
         ],
       ),
@@ -147,7 +145,7 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
       await _session.api.deleteBackupDevice(device.id);
       await _load();
     } on ApiException catch (cause) {
-      _say(cause.message ?? 'Not removed.');
+      _say(cause.message ?? l.devicesScreenNotRemoved);
     }
   }
 
@@ -155,9 +153,9 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
     try {
       await _session.api.setBackupQuietDays(BackupQuietDays(days: days));
       await _load();
-      _say('Saved.');
+      _say(l.devicesScreenSaved);
     } on ApiException catch (cause) {
-      _say(cause.message ?? 'Not saved.');
+      _say(cause.message ?? l.devicesScreenNotSaved);
     }
   }
 
@@ -174,7 +172,7 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
     final state = deviceState(device);
     final color = device.quiet
         ? Palette.err
-        : state == 'All good'
+        : state == l.devicesScreenAllGood
         ? Palette.ok
         : Palette.warn;
     final missing = _missing[device.id];
@@ -200,7 +198,7 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
               Expanded(
                 child: Text(
                   device.id == _thisDevice
-                      ? '${device.name} · This phone'
+                      ? l.devicesScreenThisPhone(device.name)
                       : device.name,
                   style: text.titleMedium,
                   overflow: TextOverflow.ellipsis,
@@ -215,7 +213,7 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
               if (widget.all) owner,
               device.platform == 'ios' ? 'iOS' : 'Android',
               if (device.appVersion.isNotEmpty) 'Mediarr ${device.appVersion}',
-              'last report ${since(device.reportedAt.toLocal())}',
+              l.devicesScreenLastReport(since(device.reportedAt.toLocal())),
             ].join(' · '),
             style: text.bodySmall,
           ),
@@ -231,7 +229,7 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${device.verified} of $total on the device',
+              l.devicesScreenOnDevice('${device.verified}', '$total'),
               style: text.bodySmall,
             ),
           ],
@@ -240,21 +238,20 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
-                'It has not reported for longer than you allow. Open Mediarr on it and '
-                'check that backup is on.',
+                l.devicesScreenQuietWarning,
                 style: text.bodySmall?.copyWith(color: Palette.err),
               ),
             ),
           if (missing != null) ...[
             const SizedBox(height: 6),
             if (missing.failures.isEmpty && missing.gone.isEmpty)
-              Text('Nothing is missing.', style: text.bodySmall),
+              Text(l.devicesScreenNothingMissing, style: text.bodySmall),
             for (final failure in missing.failures)
               Text('${failure.name}: ${failure.reason}', style: text.bodySmall),
             for (final gone in missing.gone)
               Text(
                 '${gone.name.isEmpty ? gone.checksum.substring(0, 12) : gone.name}: '
-                '${gone.inTrash ? 'in the trash on the server' : 'deleted from the server'}',
+                '${gone.inTrash ? l.devicesScreenInTrashOnServer : l.devicesScreenDeletedFromServer}',
                 style: text.bodySmall,
               ),
           ],
@@ -264,20 +261,27 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
                 if (device.failed > 0 || device.gone + device.trashed > 0)
                   TextButton(
                     onPressed: () => _toggleMissing(device),
-                    child: Text(missing == null ? 'What is missing' : 'Hide'),
+                    child: Text(
+                      missing == null
+                          ? l.devicesScreenWhatIsMissing
+                          : l.devicesScreenHide,
+                    ),
                   ),
                 if (device.id == _thisDevice && device.failed > 0)
                   TextButton(
                     onPressed: () async {
                       await ref.read(backupProvider).retryFailed();
-                      _say('Trying again.');
+                      _say(l.devicesScreenTryingAgain);
                     },
-                    child: const Text('Try again'),
+                    child: Text(l.devicesScreenTryAgain),
                   ),
                 const Spacer(),
                 TextButton(
                   onPressed: () => _remove(device),
-                  child: Text('Remove', style: TextStyle(color: Palette.err)),
+                  child: Text(
+                    l.devicesScreenRemove,
+                    style: TextStyle(color: Palette.err),
+                  ),
                 ),
               ],
             ),
@@ -292,7 +296,11 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
     final list = _list;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.all ? 'All backup devices' : 'Backup devices'),
+        title: Text(
+          widget.all
+              ? l.devicesScreenAllBackupDevices
+              : l.devicesScreenBackupDevices,
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () => _load(report: !widget.all),
@@ -302,10 +310,7 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Text(
-                widget.all
-                    ? 'Every user’s devices that back up. When one goes quiet, its owner is warned.'
-                    : 'Phones that back up, and how much from each is safe on the server. '
-                          'The server counts, from its own files.',
+                widget.all ? l.devicesScreenAllIntro : l.devicesScreenIntro,
                 style: text.bodyMedium,
               ),
             ),
@@ -315,25 +320,24 @@ class _BackupDevicesScreenState extends ConsumerState<BackupDevicesScreen> {
                 child: Center(child: CircularProgressIndicator()),
               ),
             if (_failed)
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('The devices did not load. Pull to try again.'),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(l.devicesScreenDidNotLoad),
               ),
             if (list != null && list.devices.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  widget.all ? 'No device has reported yet.' : 'No device has reported yet. Turn on automatic backup in Upload.',
+                  widget.all
+                      ? l.devicesScreenNoneReported
+                      : l.devicesScreenNoneReportedTurnOn,
                 ),
               ),
             if (list != null) ...list.devices.map(_device),
             if (list != null && !widget.all)
               ListTile(
-                title: const Text('Warn me after'),
-                subtitle: const Text(
-                  'A notice here and on the web, and by e-mail if it is set up. Once, '
-                  'until the device reports again.',
-                ),
+                title: Text(l.devicesScreenWarnMeAfter),
+                subtitle: Text(l.devicesScreenWarnHelp),
                 trailing: DropdownButton<int>(
                   value: quietChoices.contains(list.quietDays)
                       ? list.quietDays

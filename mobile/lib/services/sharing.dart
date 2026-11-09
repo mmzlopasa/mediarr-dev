@@ -8,6 +8,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'session.dart';
+import '../l10n/l10n.dart';
 
 /// The address of the file the server gives to send or save an asset: its original, or a smaller
 /// JPEG for messages.
@@ -88,7 +89,7 @@ Future<void> saveToPhone(List<File> files) async {
     ),
   );
   if (!permission.hasAccess) {
-    throw const FileSystemException('Mediarr may not add photos to this phone');
+    throw FileSystemException(l.sharingNoPhotoAccess);
   }
   for (final file in files) {
     final name = p.basename(file.path);

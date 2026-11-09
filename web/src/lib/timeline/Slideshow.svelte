@@ -2,7 +2,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { api } from '#lib/api.ts';
 	import Icon from '#lib/design/components/Icon.svelte';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t, k, type Key } from '#lib/i18n.svelte.ts';
 	import { formatDay } from './layout.ts';
 	import {
 		loadSettings,
@@ -195,11 +195,11 @@
 		};
 	});
 
-	const transitionNames: Record<Transition, [string, string]> = {
-		fade: ['Pretapanje', 'Crossfade'],
-		slide: ['Klizanje', 'Slide'],
-		zoom: ['Polagani zoom', 'Slow zoom'],
-		none: ['Bez prijelaza', 'None']
+	const transitionNames: Record<Transition, Key> = {
+		fade: k('slideshow.transition.fade'),
+		slide: k('slideshow.transition.slide'),
+		zoom: k('slideshow.transition.zoom'),
+		none: k('slideshow.transition.none')
 	};
 </script>
 
@@ -209,7 +209,7 @@
 	bind:this={root}
 	role="dialog"
 	aria-modal="true"
-	aria-label={tr('Slideshow', 'Slideshow')}
+	aria-label={t('common.slideshow')}
 	tabindex="-1"
 	onkeydown={key}
 	onpointermove={wake}
@@ -252,7 +252,7 @@
 		<p class="ss-caption">{caption}</p>
 	{/if}
 	{#if ended}
-		<p class="ss-end" role="status">{tr('Kraj.', 'The end.')}</p>
+		<p class="ss-end" role="status">{t('slideshow.theEnd')}</p>
 	{/if}
 
 	<div class="ss-bar" aria-hidden={!controls}>
@@ -261,13 +261,13 @@
 			<button
 				type="button"
 				class="icon-btn"
-				aria-label={tr('Prethodna', 'Previous')}
+				aria-label={t('slideshow.previous')}
 				onclick={() => go(-1)}><Icon name="back" /></button
 			>
 			<button
 				type="button"
 				class="icon-btn ss-play"
-				aria-label={paused ? tr('Pokreni', 'Play') : tr('Pauza', 'Pause')}
+				aria-label={paused ? t('slideshow.play') : t('slideshow.pause')}
 				onclick={() => {
 					if (ended) {
 						index = 0;
@@ -284,11 +284,8 @@
 						><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor" /></svg
 					>{/if}
 			</button>
-			<button
-				type="button"
-				class="icon-btn"
-				aria-label={tr('Sljedeća', 'Next')}
-				onclick={() => go(1)}><Icon name="forward" /></button
+			<button type="button" class="icon-btn" aria-label={t('slideshow.next')} onclick={() => go(1)}
+				><Icon name="forward" /></button
 			>
 		</div>
 		<div class="ss-buttons">
@@ -297,19 +294,19 @@
 				class="icon-btn"
 				class:viewer-on={choosing}
 				aria-expanded={choosing}
-				aria-label={tr('Postavke slideshowa', 'Slideshow settings')}
+				aria-label={t('slideshow.slideshowSettings')}
 				onclick={() => (choosing = !choosing)}><Icon name="cog" /></button
 			>
-			<button type="button" class="icon-btn" aria-label={tr('Zatvori', 'Close')} onclick={close}
+			<button type="button" class="icon-btn" aria-label={t('common.close')} onclick={close}
 				><Icon name="x" /></button
 			>
 		</div>
 	</div>
 
 	{#if choosing}
-		<form class="ss-settings" aria-label={tr('Postavke slideshowa', 'Slideshow settings')}>
+		<form class="ss-settings" aria-label={t('slideshow.slideshowSettings')}>
 			<label
-				><span>{tr('Tempo', 'Pace')}</span>
+				><span>{t('slideshow.pace')}</span>
 				<select class="in" bind:value={settings.seconds}>
 					{#each PACES as seconds (seconds)}
 						<option value={seconds}>{seconds} s</option>
@@ -317,10 +314,10 @@
 				</select>
 			</label>
 			<label
-				><span>{tr('Prijelaz', 'Transition')}</span>
+				><span>{t('slideshow.transition')}</span>
 				<select class="in" bind:value={settings.transition}>
 					{#each TRANSITIONS as name (name)}
-						<option value={name}>{tr(...transitionNames[name])}</option>
+						<option value={name}>{t(transitionNames[name])}</option>
 					{/each}
 				</select>
 			</label>
@@ -329,23 +326,19 @@
 					type="checkbox"
 					checked={settings.shuffle}
 					onchange={(event) => setShuffle(event.currentTarget.checked)}
-				/>{tr('Nasumično', 'Shuffle')}</label
+				/>{t('slideshow.shuffle')}</label
 			>
 			<label class="ss-check"
-				><input type="checkbox" bind:checked={settings.loop} />{tr('Ponavljaj', 'Loop')}</label
+				><input type="checkbox" bind:checked={settings.loop} />{t('slideshow.loop')}</label
 			>
 			<label class="ss-check"
-				><input type="checkbox" bind:checked={settings.caption} />{tr(
-					'Datum i mjesto',
-					'Date and place'
+				><input type="checkbox" bind:checked={settings.caption} />{t(
+					'slideshow.dateAndPlace'
 				)}</label
 			>
 			{#if reduceMotion}
 				<p class="ss-note">
-					{tr(
-						'Sustav traži manje pokreta, pa se slike samo pretapaju.',
-						'The system asks for less motion, so slides only fade.'
-					)}
+					{t('slideshow.theSystemAsksForLess')}
 				</p>
 			{/if}
 		</form>

@@ -7,7 +7,7 @@
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 
 	const POLL_MS = 10000;
@@ -42,45 +42,37 @@
 			await api.updatePerson(id, { hidden });
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
 <div class="ph">
-	<div><h1>{tr(item.hr, item.en)}</h1></div>
+	<div><h1>{t(item.label)}</h1></div>
 	{#if hiddenCount > 0}
 		<div class="ph-a">
 			<Button small onclick={() => (showHidden = !showHidden)}>
-				{showHidden
-					? tr('Prikaži ostale', 'Show the others')
-					: tr('Skrivene osobe', 'Hidden people')}
+				{showHidden ? t('people.showTheOthers') : t('people.hiddenPeople')}
 			</Button>
 		</div>
 	{/if}
 </div>
 
 {#if failed}
-	<Alert kind="err">{tr('Osobe se nisu učitale.', 'People could not be loaded.')}</Alert>
+	<Alert kind="err">{t('people.peopleCouldNotBeLoaded')}</Alert>
 {:else if !list}
 	<Skeleton height="220px" />
 {:else if !list.enabled && list.people.length === 0}
 	<section class="card glass">
 		<div class="card-b">
-			<EmptyState
-				icon={item.icon}
-				text={tr(
-					'Prepoznavanje lica nije uključeno na ovom serveru.',
-					'Face recognition is not turned on for this server.'
-				)}
-			/>
+			<EmptyState icon={item.icon} text={t('people.faceRecognitionIsNotTurned')} />
 		</div>
 	</section>
 {:else if shown.length === 0}
 	<section class="card glass">
-		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
+		<div class="card-b"><EmptyState icon={item.icon} text={item.empty ? t(item.empty) : ''} /></div>
 	</section>
 {:else}
 	<div class="alb-grid">
@@ -91,10 +83,10 @@
 						><img src="/api/people/{person.id}/thumbnail" alt="" loading="lazy" /></span
 					>
 				</a>
-				<span class="alb-name">{person.name || tr('Bez imena', 'No name')}</span>
+				<span class="alb-name">{person.name || t('common.noName')}</span>
 				<span class="alb-meta">{person.assetCount}</span>
 				{#if showHidden}
-					<Button small onclick={() => setHidden(person.id, false)}>{tr('Prikaži', 'Show')}</Button>
+					<Button small onclick={() => setHidden(person.id, false)}>{t('common.show')}</Button>
 				{/if}
 			</div>
 		{/each}

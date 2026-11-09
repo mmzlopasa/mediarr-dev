@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	$effect.pre(() => {
 		document.body.classList.add('plain-view');
@@ -8,5 +8,5 @@
 </script>
 
 <main class="plain-stage" id="main">
-	<h1>{tr('Prikaz jedne fotke', 'Single photo view')}</h1>
+	<h1>{t('dev.plain.singlePhotoView')}</h1>
 </main>

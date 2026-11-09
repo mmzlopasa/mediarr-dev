@@ -7,7 +7,7 @@
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t } from '#lib/i18n.svelte.ts';
 
 	const POLL_MS = 10000;
 
@@ -48,7 +48,7 @@
 			text = '';
 			await load();
 		} catch {
-			showToast('err', tr('Komentar nije poslan.', 'The comment was not sent.'));
+			showToast('err', t('albumActivity.theCommentWasNotSent'));
 		} finally {
 			busy = false;
 		}
@@ -59,7 +59,7 @@
 			await api.deleteComment(albumId, id);
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -70,13 +70,13 @@
 			await api.setHeart(albumId, assetId, !activity.hearted);
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
 {#if failed && !activity}
-	<Alert kind="err">{tr('Komentari se nisu učitali.', 'Comments could not be loaded.')}</Alert>
+	<Alert kind="err">{t('albumActivity.commentsCouldNotBeLoaded')}</Alert>
 {:else if !activity}
 	<Skeleton height="60px" />
 {:else}
@@ -87,7 +87,7 @@
 				class="icon-btn"
 				class:on={activity.hearted}
 				aria-pressed={activity.hearted}
-				aria-label={tr('Srce', 'Heart')}
+				aria-label={t('albumActivity.heart')}
 				onclick={heart}><Icon name="heart" /></button
 			>
 			<span>{activity.hearts}</span>
@@ -102,7 +102,7 @@
 					<button
 						type="button"
 						class="icon-btn sm"
-						aria-label={tr('Obriši komentar', 'Delete comment')}
+						aria-label={t('albumActivity.deleteComment')}
 						onclick={() => remove(comment.id)}>✕</button
 					>
 				{/if}
@@ -110,10 +110,10 @@
 			<p>{comment.body}</p>
 		</div>
 	{:else}
-		<p class="alb-meta">{tr('Još nema komentara.', 'No comments yet.')}</p>
+		<p class="alb-meta">{t('albumActivity.noCommentsYet')}</p>
 	{/each}
 	<form class="form" onsubmit={send}>
-		<Input label={tr('Komentar', 'Comment')} bind:value={text} maxlength={2000} />
-		<Button type="submit" small disabled={busy || !text.trim()}>{tr('Pošalji', 'Send')}</Button>
+		<Input label={t('albumActivity.comment')} bind:value={text} maxlength={2000} />
+		<Button type="submit" small disabled={busy || !text.trim()}>{t('albumActivity.send')}</Button>
 	</form>
 {/if}

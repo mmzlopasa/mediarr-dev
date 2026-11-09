@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { magnet } from '#lib/motion/actions.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { addUploads, setPreparingUpload } from '#lib/uploads.svelte.ts';
 	import Icon from './Icon.svelte';
 
@@ -43,8 +43,8 @@
 		role="button"
 		tabindex="0"
 		use:magnet
-		aria-label={tr('Dodaj', 'Add')}
-		title={tr('Dodaj fotke i videe', 'Add photos and videos')}
+		aria-label={t('common.add')}
+		title={t('uploadButton.addPhotosAndVideos')}
 		onclick={opening}
 		onkeydown={key}
 	>
@@ -60,7 +60,7 @@
 		onkeydown={key}
 	>
 		<Icon name="upload" size={14} />
-		{tr('Upload', 'Upload')}
+		{t('uploadButton.upload')}
 	</label>
 {/if}
 {#each inputs as id (id)}
@@ -71,7 +71,7 @@
 		multiple
 		accept={ACCEPT}
 		tabindex="-1"
-		aria-label={tr('Odaberi datoteke', 'Choose files')}
+		aria-label={t('uploadButton.chooseFiles')}
 		onchange={chosen}
 		oncancel={() => setPreparingUpload(false)}
 	/>

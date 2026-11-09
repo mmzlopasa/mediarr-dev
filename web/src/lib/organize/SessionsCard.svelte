@@ -6,7 +6,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { describeAgent, since } from './agent.ts';
 
 	// The most recent few are what people look for; the rest are one click away.
@@ -37,15 +37,15 @@
 			await work();
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
 	function title(session: UserSession) {
 		const agent = describeAgent(session.userAgent);
 		if (agent.program && agent.system)
-			return tr(`${agent.program} na ${agent.system}`, `${agent.program} on ${agent.system}`);
-		return agent.program || agent.system || tr('Nepoznat uređaj', 'Unknown device');
+			return t('sessionsCard.programOnSystem', { program: agent.program, system: agent.system });
+		return agent.program || agent.system || t('sessionsCard.unknownDevice');
 	}
 
 	onMount(load);
@@ -53,18 +53,13 @@
 
 <Card
 	id="devices"
-	title={tr('Prijavljeni uređaji', 'Signed-in devices')}
-	note={sessions
-		? tr(
-				`${sessions.length} prijava`,
-				sessions.length === 1 ? '1 session' : `${sessions.length} sessions`
-			)
-		: undefined}
+	title={t('sessionsCard.signedInDevices')}
+	note={sessions ? t('sessionsCard.count', { count: sessions.length }) : undefined}
 >
 	{#snippet actions()}
 		{#if sessions && sessions.length > 1}
 			<Button small onclick={() => act(() => api.endOtherSessions())}>
-				{tr('Odjavi sve ostale', 'Sign out all the others')}
+				{t('sessionsCard.signOutAllTheOthers')}
 			</Button>
 		{/if}
 	{/snippet}
@@ -78,8 +73,7 @@
 					<span class="set-list-t">
 						<b title={session.userAgent}>{title(session)}</b>
 						<small>
-							{#if session.current}<em class="set-chip ok">{tr('Ovaj uređaj', 'This device')}</em
-								>{/if}
+							{#if session.current}<em class="set-chip ok">{t('sessionsCard.thisDevice')}</em>{/if}
 							{#if session.ip}<span class="mono">{session.ip}</span> ·{/if}
 							<time
 								datetime={session.lastSeenAt}
@@ -90,7 +84,7 @@
 					</span>
 					{#if !session.current}
 						<Button small onclick={() => act(() => api.endSession(session.id))}>
-							{tr('Odjavi', 'Sign out')}
+							{t('sessionsCard.signOut')}
 						</Button>
 					{/if}
 				</li>
@@ -99,12 +93,12 @@
 		{#if sorted.length > FIRST}
 			<button type="button" class="set-more" onclick={() => (all = !all)}>
 				{all
-					? tr('Prikaži manje', 'Show fewer')
-					: tr(`Prikaži sve (${sorted.length})`, `Show all ${sorted.length}`)}
+					? t('sessionsCard.showFewer')
+					: t('sessionsCard.showAllSortedcount', { sortedCount: sorted.length })}
 			</button>
 		{/if}
 	{:else if failed}
-		<p class="alb-meta">{tr('Podaci se ne mogu učitati.', 'This could not be loaded.')}</p>
+		<p class="alb-meta">{t('common.thisCouldNotBeLoaded')}</p>
 	{:else}
 		<Skeleton height="72px" />
 	{/if}

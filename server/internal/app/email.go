@@ -16,6 +16,7 @@ import (
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/auth"
 	"github.com/mediarr-app/mediarr/server/internal/mail"
+	"github.com/mediarr-app/mediarr/server/internal/words"
 )
 
 const (
@@ -137,7 +138,7 @@ func (s *apiServer) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusConflict, "turn email on and save it first")
 		return
 	}
-	if err := mail.Send(ctx, settings.transport(), user.Email, "Mediarr test message", "Email from your Mediarr server works."); err != nil {
+	if err := mail.Send(ctx, settings.transport(), user.Email, words.Say(user.Language.String, words.TestSubject), words.Say(user.Language.String, words.TestBody)); err != nil {
 		slog.Warn("a test email failed", "error", err)
 		writeError(w, http.StatusBadGateway, "the mail server refused it: "+err.Error())
 		return
@@ -196,9 +197,7 @@ func (s *apiServer) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		link := settings.PublicURL + "/login/reset?token=" + url.QueryEscape(token)
-		s.sendLater(user.Email, "Set a new Mediarr password",
-			"Someone asked to set a new password for this account.\n\n"+link+
-				"\n\nThe link works once, for one hour. If this was not you, you can ignore this message.")
+		s.sendLater(user.Email, words.Say(user.Language.String, words.ResetSubject), words.Say(user.Language.String, words.ResetBody, link))
 		s.recordSecurity(r, eventPasswordReset, email, "asked for a link")
 	}
 	w.WriteHeader(http.StatusNoContent)

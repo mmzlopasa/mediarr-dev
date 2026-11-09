@@ -6,7 +6,7 @@
 	import Alert from '#lib/design/components/Alert.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
 	let data = $state<Documents>();
@@ -30,12 +30,12 @@
 	}
 </script>
 
-<svelte:head><title>{tr('Dokumenti', 'Documents')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('documents.documents')} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr('Dokumenti', 'Documents')}</h1></div></div>
+<div class="ph"><div><h1>{t('documents.documents')}</h1></div></div>
 
 {#if failed}
-	<Alert kind="err">{tr('Dokumenti se nisu učitali.', 'Documents could not be loaded.')}</Alert>
+	<Alert kind="err">{t('documents.documentsCouldNotBeLoaded')}</Alert>
 {:else if !data}
 	<Skeleton height="200px" />
 {:else if !data.enabled || !data.analysisOn || data.items.length === 0}
@@ -44,13 +44,10 @@
 			<EmptyState
 				icon="list"
 				text={!data.enabled
-					? tr(
-							'Administrator nije uključio ovaj album.',
-							'An administrator has not turned this album on.'
-						)
+					? t('documents.anAdministratorHasNotTurned')
 					: !data.analysisOn
-						? tr('Za ovo treba uključiti analizu slika.', 'This needs picture analysis to be on.')
-						: tr('Još nema fotki s tekstom.', 'No photos with text yet.')}
+						? t('documents.thisNeedsPictureAnalysisTo')
+						: t('documents.noPhotosWithTextYet')}
 			/>
 		</div>
 	</section>
@@ -60,7 +57,7 @@
 			<button
 				type="button"
 				class="folder-tile folder-photo"
-				aria-label={tr('Otvori', 'Open')}
+				aria-label={t('common.open')}
 				onclick={() => pushState('', { viewer: item.id })}
 			>
 				<img src="/api/assets/{item.id}/thumbnail" alt="" />

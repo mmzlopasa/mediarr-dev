@@ -7,12 +7,13 @@ import '../services/timeline.dart';
 import '../theme.dart';
 import 'asset_picture.dart';
 import 'viewer_screen.dart';
+import '../l10n/l10n.dart';
 
 /// Why the album is empty, in the order that matters to the person looking at it.
 String documentsEmptyText(Documents data) {
-  if (!data.enabled) return 'An administrator has not turned this album on.';
-  if (!data.analysisOn) return 'This needs picture analysis to be on.';
-  return 'No photos with text yet.';
+  if (!data.enabled) return l.documentsScreenNotEnabled;
+  if (!data.analysisOn) return l.documentsScreenNeedsAnalysis;
+  return l.documentsScreenNoText;
 }
 
 class DocumentsScreen extends ConsumerStatefulWidget {
@@ -53,9 +54,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     final Widget body;
     if (data == null) {
       body = _failed
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'Documents could not be loaded.',
+              text: l.documentsScreenLoadFailed,
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (data.items.isEmpty) {
@@ -96,7 +97,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Documents')),
+      appBar: AppBar(title: Text(l.documentsScreenTitle)),
       body: body,
     );
   }

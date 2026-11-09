@@ -5,6 +5,7 @@ import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 String _two(int value) => value.toString().padLeft(2, '0');
 
@@ -101,7 +102,7 @@ class _AssetFactsDialogState extends State<AssetFactsDialog> {
     } on ApiException catch (cause) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Not saved. ${cause.message ?? ''}')),
+          SnackBar(content: Text(l.assetFactsNotSaved(cause.message ?? ''))),
         );
       }
     }
@@ -127,7 +128,7 @@ class _AssetFactsDialogState extends State<AssetFactsDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Edit details'),
+    title: Text(l.assetFactsEditDetails),
     content: SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -135,7 +136,7 @@ class _AssetFactsDialogState extends State<AssetFactsDialog> {
         children: [
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Date and time'),
+            title: Text(l.assetFactsDateAndTime),
             subtitle: Text(
               takenAtText(_when, 0).substring(0, 16).replaceAll('T', ' '),
             ),
@@ -144,7 +145,7 @@ class _AssetFactsDialogState extends State<AssetFactsDialog> {
           ),
           TextField(
             controller: _search,
-            decoration: const InputDecoration(labelText: 'Find a place'),
+            decoration: InputDecoration(labelText: l.assetFactsFindPlace),
             onChanged: _find,
           ),
           for (final place in _places)
@@ -170,7 +171,7 @@ class _AssetFactsDialogState extends State<AssetFactsDialog> {
               signed: true,
               decimal: true,
             ),
-            decoration: const InputDecoration(labelText: 'Latitude'),
+            decoration: InputDecoration(labelText: l.assetFactsLatitude),
           ),
           TextField(
             controller: _longitude,
@@ -178,18 +179,18 @@ class _AssetFactsDialogState extends State<AssetFactsDialog> {
               signed: true,
               decimal: true,
             ),
-            decoration: const InputDecoration(labelText: 'Longitude'),
+            decoration: InputDecoration(labelText: l.assetFactsLongitude),
           ),
           TextField(
             controller: _caption,
             maxLength: 2000,
             maxLines: 3,
             minLines: 1,
-            decoration: const InputDecoration(labelText: 'Description'),
+            decoration: InputDecoration(labelText: l.assetFactsDescription),
           ),
           TextButton(
             onPressed: () => _send(AssetFacts(useFile: true)),
-            child: const Text('Use what the file says'),
+            child: Text(l.assetFactsUseFile),
           ),
         ],
       ),
@@ -197,9 +198,9 @@ class _AssetFactsDialogState extends State<AssetFactsDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(l.assetFactsCancel),
       ),
-      TextButton(onPressed: _save, child: const Text('Save')),
+      TextButton(onPressed: _save, child: Text(l.assetFactsSave)),
     ],
   );
 }
@@ -216,7 +217,7 @@ class RatingRow extends StatelessWidget {
     children: [
       for (var stars = 1; stars <= 5; stars++)
         IconButton(
-          tooltip: '$stars of 5 stars',
+          tooltip: l.assetFactsStars('$stars'),
           isSelected: stars == rating,
           icon: Icon(
             stars <= rating ? Icons.star : Icons.star_border,

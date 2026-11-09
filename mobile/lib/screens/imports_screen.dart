@@ -6,6 +6,7 @@ import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 /// Where a Google Takeout or iCloud export came from, by name.
 String importSourceName(UserImport entry) => switch (entry.source_.value) {
@@ -16,21 +17,23 @@ String importSourceName(UserImport entry) => switch (entry.source_.value) {
 
 /// The state of an import in words.
 String importStatus(UserImport entry) => switch (entry.status) {
-  UserImportStatusEnum.uploading => 'Waiting for files',
-  UserImportStatusEnum.running => 'Running',
-  UserImportStatusEnum.done => 'Done',
-  UserImportStatusEnum.failed => 'Failed',
-  _ => 'Stopped',
+  UserImportStatusEnum.uploading => l.importsScreenWaitingForFiles,
+  UserImportStatusEnum.running => l.importsScreenRunning,
+  UserImportStatusEnum.done => l.importsScreenDone,
+  UserImportStatusEnum.failed => l.importsScreenFailed,
+  _ => l.importsScreenStopped,
 };
 
 /// What an import has done so far, in one line.
 String describeImport(UserImport entry) {
   if (entry.status == UserImportStatusEnum.uploading) {
-    final count = entry.parts.length;
-    return '$count ZIP ${count == 1 ? 'file' : 'files'} uploaded';
+    return l.importsScreenZipUploaded(entry.parts.length);
   }
-  final line =
-      'added ${entry.added} · already here or deleted ${entry.skipped} · failed ${entry.failed}';
+  final line = l.importsScreenCounts(
+    '${entry.added}',
+    '${entry.skipped}',
+    '${entry.failed}',
+  );
   final done = entry.added + entry.skipped + entry.failed;
   return entry.total > 0 ? '$line · $done / ${entry.total}' : line;
 }
@@ -109,7 +112,7 @@ class _ImportsScreenState extends ConsumerState<ImportsScreen> {
     try {
       detail = await _session.api.getImport(entry.id);
     } on ApiException {
-      _tell('The report could not be loaded.');
+      _tell(l.importsScreenReportNotLoaded);
       return;
     }
     if (!mounted || detail == null) return;
@@ -119,9 +122,9 @@ class _ImportsScreenState extends ConsumerState<ImportsScreen> {
       showDragHandle: true,
       builder: (context) => SafeArea(
         child: problems.isEmpty
-            ? const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No files failed.'),
+            ? Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(l.importsScreenNoFilesFailed),
               )
             : ListView(
                 shrinkWrap: true,
@@ -176,26 +179,26 @@ class _ImportsScreenState extends ConsumerState<ImportsScreen> {
                 TextButton(
                   onPressed: () => _act(
                     () => _session.api.stopImport(entry.id),
-                    'The import could not be stopped.',
+                    l.importsScreenCouldNotStop,
                   ),
-                  child: const Text('Stop'),
+                  child: Text(l.importsScreenStop),
                 ),
               if (canContinue)
                 TextButton(
                   onPressed: () => _act(
                     () => _session.api.startImport(entry.id),
-                    'The import could not go on.',
+                    l.importsScreenCouldNotContinue,
                   ),
                   child: Text(
                     entry.status == UserImportStatusEnum.uploading
-                        ? 'Bring in'
-                        : 'Continue',
+                        ? l.importsScreenBringIn
+                        : l.importsScreenContinue,
                   ),
                 ),
               if (entry.failed > 0)
                 TextButton(
                   onPressed: () => _report(entry),
-                  child: const Text('Report'),
+                  child: Text(l.importsScreenReport),
                 ),
             ],
           ),
@@ -209,14 +212,14 @@ class _ImportsScreenState extends ConsumerState<ImportsScreen> {
     final imports = _imports;
     final web = '${_session.serverUrl}/account/import';
     return Scaffold(
-      appBar: AppBar(title: const Text('Import')),
+      appBar: AppBar(title: Text(l.importsScreenTitle)),
       body: RefreshIndicator(
         onRefresh: _load,
         child: imports == null
             ? _failed
-                  ? const EmptyMessage(
+                  ? EmptyMessage(
                       icon: Icons.cloud_off,
-                      text: 'The imports could not be loaded.',
+                      text: l.importsScreenNotLoaded,
                     )
                   : Center(
                       child: CircularProgressIndicator(color: Palette.gold),
@@ -226,14 +229,14 @@ class _ImportsScreenState extends ConsumerState<ImportsScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                     child: Text(
-                      'To bring in photos from Google Photos or iCloud, upload the ZIP files of the export on a computer, at $web.',
+                      l.importsScreenHowTo(web),
                       style: TextStyle(color: Palette.dim),
                     ),
                   ),
                   if (imports.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text('You have not imported anything yet.'),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text(l.importsScreenNothingYet),
                     )
                   else
                     for (final entry in imports) ...[

@@ -21,7 +21,7 @@ describe('clean up', () => {
 		expect(ticked(item({ inAlbum: true }))).toBe(false);
 	});
 	it('names the kinds', () => {
-		expect(titleOf('largeVideos', (_hr, en) => en)).toBe('Large videos');
+		expect(titleOf('largeVideos')).toBe('Large videos');
 	});
 	it('says how long a video is', () => {
 		expect(lengthOf(65_000)).toBe('1:05');

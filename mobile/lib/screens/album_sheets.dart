@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../theme.dart';
 
@@ -26,20 +27,22 @@ class AlbumRights {
 String publicLinkUrl(String serverUrl, String token) => '$serverUrl/s/$token';
 
 String roleLabel(Object? role) => switch (role?.toString()) {
-  'owner' => 'Owner',
-  'editor' => 'Editor',
-  'contributor' => 'Contributor',
-  _ => 'Viewer',
+  'owner' => l.albumSheetsOwner,
+  'editor' => l.albumSheetsEditor,
+  'contributor' => l.albumSheetsContributor,
+  _ => l.albumSheetsViewer,
 };
 
 String linkSummary(ShareLink link) => [
-  if (link.uploadOnly) 'upload only',
-  if (link.hasPassword) 'password',
-  if (link.watermark != null) 'watermark',
-  if (link.expiresAt != null) 'expires ${_day(link.expiresAt!)}',
+  if (link.uploadOnly) l.albumSheetsUploadOnly,
+  if (link.hasPassword) l.albumSheetsPassword,
+  if (link.watermark != null) l.albumSheetsWatermarkFact,
+  if (link.expiresAt != null) l.albumSheetsExpiresFact(_day(link.expiresAt!)),
   if (!link.uploadOnly)
-    'downloads: ${link.downloadCount}'
-        '${link.downloadLimit != null ? ' / ${link.downloadLimit}' : ''}',
+    l.albumSheetsDownloadsFact(
+      '${link.downloadCount}'
+      '${link.downloadLimit != null ? ' / ${link.downloadLimit}' : ''}',
+    ),
 ].join(' · ');
 
 String _day(DateTime value) {
@@ -53,7 +56,9 @@ void _failed(BuildContext context, [Object? cause]) {
   final detail = cause is ApiException ? cause.message : null;
   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
     SnackBar(
-      content: Text('The action failed.${detail != null ? ' $detail' : ''}'),
+      content: Text(
+        '${l.albumSheetsActionFailed}${detail != null ? ' $detail' : ''}',
+      ),
     ),
   );
 }
@@ -153,18 +158,20 @@ class _ActivitySheetState extends State<ActivitySheet> {
     final activity = _activity;
     final text = Theme.of(context).textTheme;
     return SheetFrame(
-      title: widget.assetId == null ? 'Comments' : 'Comments and hearts',
+      title: widget.assetId == null
+          ? l.albumSheetsComments
+          : l.albumSheetsCommentsAndHearts,
       children: [
         if (activity == null)
           _failedLoad
-              ? const Text('Comments could not be loaded.')
+              ? Text(l.albumSheetsCommentsFailed)
               : Center(child: CircularProgressIndicator(color: Palette.gold))
         else ...[
           if (widget.assetId != null)
             Row(
               children: [
                 IconButton(
-                  tooltip: 'Heart',
+                  tooltip: l.albumSheetsHeart,
                   icon: Pulse(
                     on: activity.hearted,
                     child: Icon(
@@ -183,7 +190,7 @@ class _ActivitySheetState extends State<ActivitySheet> {
             ),
           if (activity.comments.isEmpty)
             Text(
-              'No comments yet.',
+              l.albumSheetsNoComments,
               style: text.bodyMedium?.copyWith(color: Palette.dim),
             ),
           for (final comment in activity.comments)
@@ -193,7 +200,7 @@ class _ActivitySheetState extends State<ActivitySheet> {
               subtitle: Text(comment.body),
               trailing: comment.canDelete
                   ? IconButton(
-                      tooltip: 'Delete comment',
+                      tooltip: l.albumSheetsDeleteComment,
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: () => _run(
                         () =>
@@ -205,7 +212,7 @@ class _ActivitySheetState extends State<ActivitySheet> {
           TextField(
             controller: _text,
             maxLength: 2000,
-            decoration: const InputDecoration(labelText: 'Comment'),
+            decoration: InputDecoration(labelText: l.albumSheetsComment),
           ),
           Align(
             alignment: Alignment.centerRight,
@@ -219,7 +226,7 @@ class _ActivitySheetState extends State<ActivitySheet> {
                 );
                 _text.clear();
               }),
-              child: const Text('Send'),
+              child: Text(l.albumSheetsSend),
             ),
           ),
         ],
@@ -310,9 +317,9 @@ class _AddToAlbumSheetState extends State<_AddToAlbumSheet> {
 
   @override
   Widget build(BuildContext context) => SheetFrame(
-    title: 'Add to album',
+    title: l.albumSheetsAddToAlbum,
     children: [
-      if (_failedLoad) const Text('Albums could not be loaded.'),
+      if (_failedLoad) Text(l.albumSheetsAlbumsFailed),
       if (_albums == null && !_failedLoad)
         Center(child: CircularProgressIndicator(color: Palette.gold)),
       for (final album in _albums ?? const <Album>[])
@@ -326,13 +333,13 @@ class _AddToAlbumSheetState extends State<_AddToAlbumSheet> {
       TextField(
         controller: _title,
         maxLength: 200,
-        decoration: const InputDecoration(labelText: 'New album'),
+        decoration: InputDecoration(labelText: l.albumSheetsNewAlbum),
       ),
       Align(
         alignment: Alignment.centerRight,
         child: TextButton(
           onPressed: _create,
-          child: const Text('Create and add'),
+          child: Text(l.albumSheetsCreateAndAdd),
         ),
       ),
     ],
@@ -402,13 +409,12 @@ class _ShareSheetState extends State<ShareSheet> {
         .where((user) => !(members ?? const []).any((m) => m.userId == user.id))
         .toList();
     return SheetFrame(
-      title: 'Share with users',
+      title: l.albumSheetsShareWithUsers,
       children: [
-        if (_failedLoad) const Text('Sharing could not be loaded.'),
+        if (_failedLoad) Text(l.albumSheetsSharingFailed),
         if (members == null && !_failedLoad)
           Center(child: CircularProgressIndicator(color: Palette.gold)),
-        if (members != null && members.isEmpty)
-          const Text('This album is not shared yet.'),
+        if (members != null && members.isEmpty) Text(l.albumSheetsNotShared),
         for (final member in members ?? const <AlbumMember>[])
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -435,16 +441,15 @@ class _ShareSheetState extends State<ShareSheet> {
               onPressed: () => _run(
                 () => _api.removeAlbumMember(widget.albumId, member.userId),
               ),
-              child: const Text('Remove'),
+              child: Text(l.albumSheetsRemove),
             ),
           ),
         const SizedBox(height: 16),
-        if (members != null && _users.isEmpty)
-          const Text('There are no other users on this server.'),
+        if (members != null && _users.isEmpty) Text(l.albumSheetsNoOtherUsers),
         if (free.isNotEmpty) ...[
           DropdownButtonFormField<String>(
             initialValue: _userId,
-            decoration: const InputDecoration(labelText: 'User'),
+            decoration: InputDecoration(labelText: l.albumSheetsUser),
             items: [
               for (final user in free)
                 DropdownMenuItem(value: user.id, child: Text(user.name)),
@@ -454,7 +459,7 @@ class _ShareSheetState extends State<ShareSheet> {
           const SizedBox(height: 8),
           DropdownButtonFormField<MemberRoleRoleEnum>(
             initialValue: _role,
-            decoration: const InputDecoration(labelText: 'Role'),
+            decoration: InputDecoration(labelText: l.albumSheetsRole),
             items: [
               for (final role in MemberRoleRoleEnum.values)
                 DropdownMenuItem(value: role, child: Text(roleLabel(role))),
@@ -474,7 +479,7 @@ class _ShareSheetState extends State<ShareSheet> {
                       );
                       _userId = null;
                     }),
-              child: const Text('Add'),
+              child: Text(l.albumSheetsAdd),
             ),
           ),
         ],
@@ -595,26 +600,28 @@ class _LinksSheetState extends State<LinksSheet> {
     final dim = Theme.of(context).textTheme.bodySmall
         ?.copyWith(color: Palette.dim);
     return SheetFrame(
-      title: 'Public links',
+      title: l.albumSheetsPublicLinks,
       children: [
         if (created != null) ...[
-          const Text('Copy the address now: it cannot be shown again later.'),
+          Text(l.albumSheetsCopyNow),
           SelectableText(created),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: () => Clipboard.setData(ClipboardData(text: created)),
-              child: const Text('Copy'),
+              child: Text(l.albumSheetsCopy),
             ),
           ),
         ],
-        if (_failedLoad) const Text('Links could not be loaded.'),
+        if (_failedLoad) Text(l.albumSheetsLinksFailed),
         if (_links == null && !_failedLoad)
           Center(child: CircularProgressIndicator(color: Palette.gold)),
         for (final link in _links ?? const <ShareLink>[])
           ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(link.label.isEmpty ? 'Unnamed link' : link.label),
+            title: Text(
+              link.label.isEmpty ? l.albumSheetsUnnamedLink : link.label,
+            ),
             subtitle: Text(linkSummary(link)),
             trailing: TextButton(
               onPressed: () async {
@@ -625,53 +632,55 @@ class _LinksSheetState extends State<LinksSheet> {
                   if (context.mounted) _failed(context, cause);
                 }
               },
-              child: Text('Revoke', style: TextStyle(color: Palette.err)),
+              child: Text(
+                l.albumSheetsRevoke,
+                style: TextStyle(color: Palette.err),
+              ),
             ),
           ),
         Divider(color: Palette.line),
         TextField(
           controller: _label,
-          decoration: const InputDecoration(labelText: 'Name'),
+          decoration: InputDecoration(labelText: l.albumSheetsName),
         ),
         TextField(
           controller: _password,
           obscureText: true,
-          decoration: const InputDecoration(labelText: 'Password (optional)'),
+          decoration: InputDecoration(labelText: l.albumSheetsPasswordOptional),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(
-            _expires == null ? 'No expiry' : 'Expires ${_day(_expires!)}',
+            _expires == null
+                ? l.albumSheetsNoExpiry
+                : l.albumSheetsExpires(_day(_expires!)),
           ),
           trailing: TextButton(
             onPressed: _pickExpiry,
-            child: const Text('Choose'),
+            child: Text(l.albumSheetsChoose),
           ),
         ),
         if (!_uploadOnly) ...[
           TextField(
             controller: _limit,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Download limit'),
+            decoration: InputDecoration(labelText: l.albumSheetsDownloadLimit),
           ),
           TextField(
             controller: _watermark,
             maxLength: 100,
-            decoration: const InputDecoration(labelText: 'Watermark'),
+            decoration: InputDecoration(labelText: l.albumSheetsWatermark),
           ),
-          Text(
-            'A watermark turns off original downloads and video playback.',
-            style: dim,
-          ),
+          Text(l.albumSheetsWatermarkHelp, style: dim),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Allow downloads'),
+            title: Text(l.albumSheetsAllowDownloads),
             value: _allowDownload,
             onChanged: (value) => setState(() => _allowDownload = value),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Show location'),
+            title: Text(l.albumSheetsShowLocation),
             value: _showLocation,
             onChanged: (value) => setState(() => _showLocation = value),
           ),
@@ -679,19 +688,19 @@ class _LinksSheetState extends State<LinksSheet> {
         if (!widget.isSmart) ...[
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Guests can add photos'),
+            title: Text(l.albumSheetsGuestsCanAdd),
             value: _allowUpload,
             onChanged: (value) => setState(() => _allowUpload = value),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Upload only (guests do not see the album)'),
+            title: Text(l.albumSheetsUploadOnlyLong),
             value: _uploadOnly,
             onChanged: (value) => setState(() => _uploadOnly = value),
           ),
         ],
         const SizedBox(height: 8),
-        GoldButton(label: 'Create link', onPressed: _create),
+        GoldButton(label: l.albumSheetsCreateLink, onPressed: _create),
       ],
     );
   }
@@ -780,9 +789,13 @@ class _RulesEditorState extends State<RulesEditor> {
     children: [
       ListTile(
         contentPadding: EdgeInsets.zero,
-        title: Text(_from == null ? 'From any date' : 'From ${_day(_from!)}'),
+        title: Text(
+          _from == null
+              ? l.albumSheetsFromAnyDate
+              : l.albumSheetsFrom(_day(_from!)),
+        ),
         trailing: TextButton(
-          child: const Text('Choose'),
+          child: Text(l.albumSheetsChoose),
           onPressed: () async {
             final picked = await _date(_from);
             if (picked != null) {
@@ -794,9 +807,11 @@ class _RulesEditorState extends State<RulesEditor> {
       ),
       ListTile(
         contentPadding: EdgeInsets.zero,
-        title: Text(_to == null ? 'To any date' : 'To ${_day(_to!)}'),
+        title: Text(
+          _to == null ? l.albumSheetsToAnyDate : l.albumSheetsTo(_day(_to!)),
+        ),
         trailing: TextButton(
-          child: const Text('Choose'),
+          child: Text(l.albumSheetsChoose),
           onPressed: () async {
             final picked = await _date(_to);
             if (picked != null) {
@@ -808,20 +823,20 @@ class _RulesEditorState extends State<RulesEditor> {
       ),
       DropdownButtonFormField<AlbumRulesKindEnum?>(
         initialValue: _kind,
-        decoration: const InputDecoration(labelText: 'Kind'),
-        items: const [
-          DropdownMenuItem(child: Text('All')),
+        decoration: InputDecoration(labelText: l.albumSheetsKind),
+        items: [
+          DropdownMenuItem(child: Text(l.albumSheetsAll)),
           DropdownMenuItem(
             value: AlbumRulesKindEnum.photo,
-            child: Text('Photos'),
+            child: Text(l.albumSheetsPhotos),
           ),
           DropdownMenuItem(
             value: AlbumRulesKindEnum.video,
-            child: Text('Videos'),
+            child: Text(l.albumSheetsVideos),
           ),
           DropdownMenuItem(
             value: AlbumRulesKindEnum.live,
-            child: Text('Live Photo'),
+            child: Text(l.albumSheetsLivePhoto),
           ),
         ],
         onChanged: (value) {
@@ -832,9 +847,9 @@ class _RulesEditorState extends State<RulesEditor> {
       DropdownButtonFormField<String?>(
         key: ValueKey(_cameras.length),
         initialValue: _cameras.contains(_camera) ? _camera : null,
-        decoration: const InputDecoration(labelText: 'Camera'),
+        decoration: InputDecoration(labelText: l.albumSheetsCamera),
         items: [
-          const DropdownMenuItem(child: Text('All')),
+          DropdownMenuItem(child: Text(l.albumSheetsAll)),
           for (final camera in _cameras)
             DropdownMenuItem(value: camera, child: Text(camera)),
         ],
@@ -848,9 +863,9 @@ class _RulesEditorState extends State<RulesEditor> {
         initialValue: _people.any((person) => person.id == _person)
             ? _person
             : null,
-        decoration: const InputDecoration(labelText: 'Person'),
+        decoration: InputDecoration(labelText: l.albumSheetsPerson),
         items: [
-          const DropdownMenuItem(child: Text('All')),
+          DropdownMenuItem(child: Text(l.albumSheetsAll)),
           for (final person in _people)
             DropdownMenuItem(value: person.id, child: Text(person.name)),
         ],
@@ -862,9 +877,9 @@ class _RulesEditorState extends State<RulesEditor> {
       DropdownButtonFormField<String?>(
         key: ValueKey('tags${_tags.length}'),
         initialValue: _tags.any((tag) => tag.id == _tag) ? _tag : null,
-        decoration: const InputDecoration(labelText: 'Tag'),
+        decoration: InputDecoration(labelText: l.albumSheetsTag),
         items: [
-          const DropdownMenuItem(child: Text('All')),
+          DropdownMenuItem(child: Text(l.albumSheetsAll)),
           for (final tag in _tags)
             DropdownMenuItem(value: tag.id, child: Text(tag.name)),
         ],
@@ -875,7 +890,7 @@ class _RulesEditorState extends State<RulesEditor> {
       ),
       TextField(
         controller: _place,
-        decoration: const InputDecoration(labelText: 'Place'),
+        decoration: InputDecoration(labelText: l.albumSheetsPlace),
         onChanged: (_) => _notify(),
       ),
     ],

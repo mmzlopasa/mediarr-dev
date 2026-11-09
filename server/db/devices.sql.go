@@ -228,7 +228,7 @@ func (q *Queries) MissingBackupDeviceFiles(ctx context.Context, deviceID pgtype.
 }
 
 const quietBackupDevices = `-- name: QuietBackupDevices :many
-SELECT d.id, d.user_id, d.name, d.reported_at, u.email, u.name AS owner_name
+SELECT d.id, d.user_id, d.name, d.reported_at, u.email, u.name AS owner_name, u.language
 FROM backup_devices d
 JOIN users u ON u.id = d.user_id
 WHERE d.quiet_told_at IS NULL AND u.backup_quiet_days > 0
@@ -243,6 +243,7 @@ type QuietBackupDevicesRow struct {
 	ReportedAt pgtype.Timestamptz
 	Email      string
 	OwnerName  string
+	Language   pgtype.Text
 }
 
 // Devices past their owner's threshold that nobody was told about yet.
@@ -262,6 +263,7 @@ func (q *Queries) QuietBackupDevices(ctx context.Context) ([]QuietBackupDevicesR
 			&i.ReportedAt,
 			&i.Email,
 			&i.OwnerName,
+			&i.Language,
 		); err != nil {
 			return nil, err
 		}

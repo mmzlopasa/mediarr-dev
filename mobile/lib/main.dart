@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'l10n/l10n.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'services/language.dart';
 import 'services/session.dart';
 import 'services/settings.dart';
 import 'theme.dart';
@@ -21,6 +25,10 @@ class MediarrApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider);
     final settings = ref.watch(settingsProvider);
+    final language = ref.watch(languageProvider);
+    final languageChanged =
+        _shownLanguage != null && _shownLanguage != language;
+    _shownLanguage = language;
     final theme = settings.theme;
     final accentChanged = Palette.accentDark != settings.accent.onDark;
     Palette.accentDark = settings.accent.onDark;
@@ -30,6 +38,14 @@ class MediarrApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: buildTheme(light: true),
       darkTheme: buildTheme(),
+      locale: Locale(language),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       themeMode: switch (theme) {
         AppTheme.system => ThemeMode.system,
         AppTheme.light => ThemeMode.light,
@@ -37,7 +53,7 @@ class MediarrApp extends ConsumerWidget {
       },
       builder: (context, child) {
         final light = Theme.of(context).brightness == Brightness.light;
-        if (accentChanged) {
+        if (accentChanged || languageChanged) {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => _redrawAll(context),
           );
@@ -81,6 +97,9 @@ class MediarrApp extends ConsumerWidget {
     );
   }
 }
+
+/// The language last shown; texts are read from a global, so a change redraws everything.
+String? _shownLanguage;
 
 /// Colors come from Palette, not from an inherited theme, so everything has to be told.
 void _redrawAll(BuildContext context) {

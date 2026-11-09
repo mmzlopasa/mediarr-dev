@@ -435,6 +435,8 @@ class ApiClient {
           return KeepPairing.fromJson(value);
         case 'KeepRestored':
           return KeepRestored.fromJson(value);
+        case 'Language':
+          return LanguageTypeTransformer().decode(value);
         case 'LinkPassword':
           return LinkPassword.fromJson(value);
         case 'LocationFix':

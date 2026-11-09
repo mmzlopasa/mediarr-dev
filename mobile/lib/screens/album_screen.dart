@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
 import '../services/timeline.dart';
@@ -103,7 +104,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
     try {
       await action();
     } on ApiException catch (cause) {
-      if (mounted) _message('The action failed. ${cause.message ?? ''}');
+      if (mounted) _message(l.albumScreenActionFailed(cause.message ?? ''));
     }
   }
 
@@ -117,8 +118,8 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
     if (mounted) {
       _message(
         changed == ids.length
-            ? 'Removed from the album: $changed'
-            : 'Removed: $changed of ${ids.length}. You can remove only photos you added yourself.',
+            ? l.albumScreenRemovedAll('$changed')
+            : l.albumScreenRemovedSome('$changed', '${ids.length}'),
       );
       setState(_selected.clear);
     }
@@ -132,7 +133,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
       AlbumUpdate(coverAssetId: _selected.first),
     );
     if (mounted) {
-      _message('The cover is set.');
+      _message(l.albumScreenCoverSet);
       setState(_selected.clear);
     }
   });
@@ -158,7 +159,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.albumScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -243,10 +244,10 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         child: ListView(
           shrinkWrap: true,
           children: [
-            const ListTile(title: Text('Move the album')),
+            ListTile(title: Text(l.albumScreenMoveTitle)),
             ListTile(
               leading: const Icon(Icons.vertical_align_top),
-              title: const Text('The top, among all albums'),
+              title: Text(l.albumScreenMoveTop),
               onTap: () => Navigator.pop(context, ''),
             ),
             for (final other in choices)
@@ -265,7 +266,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         widget.albumId,
         AlbumParent(parentId: chosen.isEmpty ? null : chosen),
       );
-      if (mounted) _message('The album was moved.');
+      if (mounted) _message(l.albumScreenMoved);
       await _load();
     });
   }
@@ -290,7 +291,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => Scaffold(
-              appBar: AppBar(title: const Text('Upload to album')),
+              appBar: AppBar(title: Text(l.albumScreenUploadToAlbum)),
               body: UploadScreen(albumId: widget.albumId),
             ),
           ),
@@ -319,19 +320,18 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         ).then((_) => _store.refresh(reloadLoaded: true)).then((_) => _load());
       case 'delete':
         _confirm(
-          title: 'Delete this album?',
+          title: l.albumScreenDeleteTitle,
           body: _children.isEmpty
-              ? 'The photos stay in the library. Public links stop working.'
-              : 'The photos stay in the library. Public links stop working. '
-                    'The albums inside move to the top.',
-          action: 'Delete',
+              ? l.albumScreenDeleteBody
+              : l.albumScreenDeleteBodyInside,
+          action: l.albumScreenDelete,
           run: () => _session.api.deleteAlbum(widget.albumId),
         );
       case 'leave':
         _confirm(
-          title: 'Leave this album?',
-          body: 'You will no longer see it, unless the owner shares it again.',
-          action: 'Leave',
+          title: l.albumScreenLeaveTitle,
+          body: l.albumScreenLeaveBody,
+          action: l.albumScreenLeave,
           run: () =>
               _session.api.removeAlbumMember(widget.albumId, _session.user.id),
         );
@@ -351,7 +351,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
       appBar: AppBar(
         leading: selecting
             ? IconButton(
-                tooltip: 'Clear selection',
+                tooltip: l.albumScreenClearSelection,
                 icon: const Icon(Icons.close),
                 onPressed: () => setState(_selected.clear),
               )
@@ -362,26 +362,26 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         actions: [
           if (selecting) ...[
             IconButton(
-              tooltip: 'Share',
+              tooltip: l.albumScreenShare,
               icon: const Icon(Icons.share_outlined),
               onPressed: () =>
                   shareAssets(context, ref, _session, _selected.toList()),
             ),
             if (rights?.canEdit == true && _selected.length == 1)
               IconButton(
-                tooltip: 'Set as cover',
+                tooltip: l.albumScreenSetAsCover,
                 icon: const Icon(Icons.image_outlined),
                 onPressed: _setCover,
               ),
             if (rights?.canAdd == true)
               IconButton(
-                tooltip: 'Remove from album',
+                tooltip: l.albumScreenRemoveFromAlbum,
                 icon: const Icon(Icons.delete_outline),
                 onPressed: _removeSelected,
               ),
           ] else if (album != null && rights != null && !readOnly) ...[
             IconButton(
-              tooltip: 'Search in album',
+              tooltip: l.albumScreenSearchInAlbum,
               icon: const Icon(Icons.search),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -393,46 +393,61 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
               ),
             ),
             IconButton(
-              tooltip: 'Comments',
+              tooltip: l.albumScreenComments,
               icon: const Icon(Icons.mode_comment_outlined),
               onPressed: () => _sheet(
                 ActivitySheet(session: _session, albumId: widget.albumId),
               ),
             ),
             PopupMenuButton<String>(
-              tooltip: 'More',
+              tooltip: l.albumScreenMore,
               onSelected: (choice) => _menu(choice, album),
               itemBuilder: (_) => [
                 if (album.assetCount > 0)
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'slideshow',
-                    child: Text('Slideshow'),
+                    child: Text(l.albumScreenSlideshow),
                   ),
-                if (rights.canAdd) ...const [
+                if (rights.canAdd) ...[
                   PopupMenuItem(
                     value: 'library',
-                    child: Text('Add from library'),
+                    child: Text(l.albumScreenAddFromLibrary),
                   ),
                   PopupMenuItem(
                     value: 'upload',
-                    child: Text('Upload from this phone'),
+                    child: Text(l.albumScreenUploadFromPhone),
                   ),
                 ],
-                if (rights.isOwner) ...const [
-                  PopupMenuItem(value: 'inside', child: Text('Album inside')),
-                  PopupMenuItem(value: 'move', child: Text('Move to…')),
+                if (rights.isOwner) ...[
+                  PopupMenuItem(
+                    value: 'inside',
+                    child: Text(l.albumScreenAlbumInside),
+                  ),
+                  PopupMenuItem(
+                    value: 'move',
+                    child: Text(l.albumScreenMoveTo),
+                  ),
                   PopupMenuItem(
                     value: 'share',
-                    child: Text('Share with users'),
+                    child: Text(l.albumScreenShareWithUsers),
                   ),
-                  PopupMenuItem(value: 'links', child: Text('Public links')),
+                  PopupMenuItem(
+                    value: 'links',
+                    child: Text(l.albumScreenPublicLinks),
+                  ),
                 ],
                 if (rights.canEdit)
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'edit', child: Text(l.albumScreenEdit)),
                 if (rights.isOwner)
-                  const PopupMenuItem(value: 'delete', child: Text('Delete'))
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l.albumScreenDelete),
+                  )
                 else
-                  const PopupMenuItem(value: 'leave', child: Text('Leave')),
+                  PopupMenuItem(
+                    value: 'leave',
+                    child: Text(l.albumScreenLeave),
+                  ),
               ],
             ),
           ],
@@ -444,9 +459,9 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
 
   Widget _body(Album? album, AlbumRights? rights) {
     if (_gone) {
-      return const EmptyMessage(
+      return EmptyMessage(
         icon: Icons.lock_outline,
-        text: 'This album is not available.',
+        text: l.albumScreenNotAvailable,
       );
     }
     if (album == null || rights == null) {
@@ -467,10 +482,10 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
           return EmptyMessage(
             icon: Icons.photo_album_outlined,
             text: album.isSmart
-                ? 'No photos match the rules.'
+                ? l.albumScreenNoMatch
                 : rights.canAdd
-                ? 'This album is empty. Add photos from the menu.'
-                : 'This album is empty.',
+                ? l.albumScreenEmptyCanAdd
+                : l.albumScreenEmpty,
           );
         }
         final canSelect = rights.canAdd || rights.canEdit;
@@ -515,7 +530,7 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         if (children.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-            child: Text('Albums inside', style: text.titleSmall),
+            child: Text(l.albumScreenAlbumsInside, style: text.titleSmall),
           ),
           SizedBox(
             height: 132,
@@ -605,22 +620,22 @@ class _TitleDialogState extends State<_TitleDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('New album inside'),
+    title: Text(l.albumScreenNewAlbumInside),
     content: TextField(
       controller: _field,
       autofocus: true,
       maxLength: 200,
-      decoration: const InputDecoration(labelText: 'Name'),
+      decoration: InputDecoration(labelText: l.albumScreenName),
       onSubmitted: (value) => Navigator.pop(context, value),
     ),
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
+        child: Text(l.albumScreenCancel),
       ),
       TextButton(
         onPressed: () => Navigator.pop(context, _field.text),
-        child: const Text('Create'),
+        child: Text(l.albumScreenCreate),
       ),
     ],
   );
@@ -660,12 +675,12 @@ class _LibraryPickerState extends ConsumerState<_LibraryPicker> {
         AssetIds(ids: _selected.toList()),
       );
       messenger.showSnackBar(
-        SnackBar(content: Text('Added: ${result?.changed ?? 0}')),
+        SnackBar(content: Text(l.albumScreenAdded('${result?.changed ?? 0}'))),
       );
       navigator.pop();
     } on ApiException catch (cause) {
       messenger.showSnackBar(
-        SnackBar(content: Text('The action failed. ${cause.message ?? ''}')),
+        SnackBar(content: Text(l.albumScreenActionFailed(cause.message ?? ''))),
       );
     }
   }
@@ -678,21 +693,21 @@ class _LibraryPickerState extends ConsumerState<_LibraryPicker> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _selected.isEmpty ? 'Choose photos' : '${_selected.length}',
+          _selected.isEmpty ? l.albumScreenChoosePhotos : '${_selected.length}',
         ),
         actions: [
           TextButton(
             onPressed: _selected.isEmpty ? null : () => _add(session),
-            child: const Text('Add'),
+            child: Text(l.albumScreenAdd),
           ),
         ],
       ),
       body: store.months == null
           ? Center(child: CircularProgressIndicator(color: Palette.gold))
           : store.months!.isEmpty
-          ? const EmptyMessage(
+          ? EmptyMessage(
               icon: Icons.photo_outlined,
-              text: 'No photos yet.',
+              text: l.albumScreenNoPhotosYet,
             )
           : TimelineGrid(
               store: store,
@@ -747,34 +762,34 @@ class _EditSheetState extends State<_EditSheet> {
       );
       navigator.pop();
     } on ApiException catch (cause) {
-      setState(() => _error = cause.message ?? 'The album was not saved.');
+      setState(() => _error = cause.message ?? l.albumScreenNotSaved);
     }
   }
 
   @override
   Widget build(BuildContext context) => SheetFrame(
-    title: 'Edit album',
+    title: l.albumScreenEditAlbum,
     children: [
       TextField(
         controller: _title,
         maxLength: 200,
-        decoration: const InputDecoration(labelText: 'Name'),
+        decoration: InputDecoration(labelText: l.albumScreenName),
       ),
       TextField(
         controller: _description,
-        decoration: const InputDecoration(labelText: 'Description'),
+        decoration: InputDecoration(labelText: l.albumScreenDescription),
       ),
       DropdownButtonFormField<AlbumUpdateOrderEnum>(
         initialValue: _order,
-        decoration: const InputDecoration(labelText: 'Order'),
-        items: const [
+        decoration: InputDecoration(labelText: l.albumScreenOrder),
+        items: [
           DropdownMenuItem(
             value: AlbumUpdateOrderEnum.newest,
-            child: Text('Newest first'),
+            child: Text(l.albumScreenNewestFirst),
           ),
           DropdownMenuItem(
             value: AlbumUpdateOrderEnum.oldest,
-            child: Text('Oldest first'),
+            child: Text(l.albumScreenOldestFirst),
           ),
         ],
         onChanged: (value) => setState(() => _order = value ?? _order),
@@ -791,7 +806,7 @@ class _EditSheetState extends State<_EditSheet> {
           child: Text(_error!, style: TextStyle(color: Palette.err)),
         ),
       const SizedBox(height: 12),
-      GoldButton(label: 'Save', onPressed: _save),
+      GoldButton(label: l.albumScreenSave, onPressed: _save),
     ],
   );
 }

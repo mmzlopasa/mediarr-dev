@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mediarr_api/api.dart';
 
 import 'session.dart';
+import '../l10n/l10n.dart';
 
 class BackupAlbum {
   BackupAlbum({required this.id, required this.title, required this.count});
@@ -186,7 +187,7 @@ class BackupService {
       CreateDeviceKeyRequest(name: Platform.isIOS ? 'iPhone' : 'Android'),
     );
     if (key == null) {
-      throw ApiException(500, 'The server did not create a device key.');
+      throw ApiException(500, l.backupNoDeviceKey);
     }
     await _storage.write(key: _keyIdKey, value: key.id);
     await _channel.invokeMethod<void>('enable', {

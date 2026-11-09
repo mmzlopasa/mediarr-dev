@@ -9,7 +9,7 @@
 	import Dialog from '#lib/design/components/Dialog.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import PhotoMap from '#lib/map/PhotoMap.svelte';
 	import { appNav } from '#lib/nav.ts';
 	import Viewer from '#lib/timeline/Viewer.svelte';
@@ -71,26 +71,26 @@
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
 <div class="ph">
 	<div>
-		<h1>{tr(item.hr, item.en)}</h1>
+		<h1>{t(item.label)}</h1>
 		{#if points}
-			<p>{tr(`S lokacijom: ${points.ids.length}`, `With a location: ${points.ids.length}`)}</p>
+			<p>{t('map.withALocationIdscount', { idsCount: points.ids.length })}</p>
 		{/if}
 	</div>
 	<div class="ph-a">
 		<label class="sel-inline">
-			<span>{tr('Od datuma', 'From date')}</span>
+			<span>{t('common.fromDate')}</span>
 			<input class="in" type="date" bind:value={from} />
 		</label>
 		<label class="sel-inline">
-			<span>{tr('Do datuma', 'To date')}</span>
+			<span>{t('common.toDate')}</span>
 			<input class="in" type="date" bind:value={to} />
 		</label>
 		<label class="tb-switch">
-			<span>{tr('Toplinska karta', 'Heatmap')}</span>
+			<span>{t('map.heatmap')}</span>
 			<input type="checkbox" class="switch" bind:checked={heatmap} />
 		</label>
 		{#if from || to}
@@ -99,21 +99,21 @@
 				onclick={() => {
 					from = '';
 					to = '';
-				}}>{tr('Očisti', 'Clear')}</Button
+				}}>{t('map.clear')}</Button
 			>
 		{/if}
 	</div>
 </div>
 
 {#if failed}
-	<Alert kind="err">{tr('Karta se nije učitala.', 'The map could not be loaded.')}</Alert>
+	<Alert kind="err">{t('map.theMapCouldNotBe')}</Alert>
 {/if}
 
 {#if !points || !style}
 	{#if !failed}<Skeleton height="420px" />{/if}
 {:else if !everHadPoints && points.ids.length === 0 && !from && !to}
 	<section class="card glass">
-		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
+		<div class="card-b"><EmptyState icon={item.icon} text={item.empty ? t(item.empty) : ''} /></div>
 	</section>
 {:else}
 	<PhotoMap
@@ -130,25 +130,24 @@
 {/if}
 
 {#if trips.length > 0}
-	<Card title={tr('Putovanja', 'Trips')}>
+	<Card title={t('map.trips')}>
 		{#each trips as trip (trip.coverId)}
 			<div class="alb-list">
-				<b>{trip.places.join(', ') || tr('Bez naziva mjesta', 'No place name')}</b>
+				<b>{trip.places.join(', ') || t('map.noPlaceName')}</b>
 				<span class="alb-meta">{trip.from} – {trip.to} · {trip.count}</span>
-				<Button small onclick={() => chooseTrip(trip)}>{tr('Prikaži', 'Show')}</Button>
+				<Button small onclick={() => chooseTrip(trip)}>{t('common.show')}</Button>
 			</div>
 		{/each}
 	</Card>
 {/if}
 
-<Dialog title={tr(`Stavke: ${cluster.length}`, `Items: ${cluster.length}`)} bind:open={showCluster}>
+<Dialog
+	title={t('map.itemsClustercount', { clusterCount: cluster.length })}
+	bind:open={showCluster}
+>
 	<div class="map-grid">
 		{#each cluster as id (id)}
-			<button
-				type="button"
-				aria-label={tr('Otvori fotku', 'Open the photo')}
-				onclick={() => open(id, cluster)}
-			>
+			<button type="button" aria-label={t('map.openThePhoto')} onclick={() => open(id, cluster)}>
 				<img src="/api/assets/{id}/thumbnail" alt="" loading="lazy" />
 			</button>
 		{/each}

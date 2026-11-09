@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../l10n/l10n.dart';
+
 /// Thrown when the server rejects an upload, which a retry would not fix.
 class UploadRejected implements Exception {
   UploadRejected(this.message);
@@ -113,8 +115,8 @@ class TusClient {
     if (code >= 400) {
       throw UploadRejected(
         code == 401
-            ? 'You are signed out. Sign in again.'
-            : 'The server rejected this file ($code). ${body.trim()}'.trim(),
+            ? l.tusSignedOut
+            : l.tusRejected('$code', body.trim()).trim(),
       );
     }
   }

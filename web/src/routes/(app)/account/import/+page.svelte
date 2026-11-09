@@ -9,7 +9,7 @@
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t, k, type Key } from '#lib/i18n.svelte.ts';
 
 	type Source = 'takeout' | 'icloud';
 	type Picked = {
@@ -27,12 +27,12 @@
 	let reports = $state<Record<string, ImportDetail>>({});
 	let timer: ReturnType<typeof setInterval> | undefined;
 
-	const STATUS: Record<UserImport['status'], { hr: string; en: string; tone: string }> = {
-		uploading: { hr: 'Čeka datoteke', en: 'Waiting for files', tone: '' },
-		running: { hr: 'U tijeku', en: 'Running', tone: 'run' },
-		done: { hr: 'Gotovo', en: 'Done', tone: 'ok' },
-		failed: { hr: 'Neuspjelo', en: 'Failed', tone: 'err' },
-		cancelled: { hr: 'Zaustavljeno', en: 'Stopped', tone: '' }
+	const STATUS: Record<UserImport['status'], { label: Key; tone: string }> = {
+		uploading: { label: k('account.import.waitingForFiles'), tone: '' },
+		running: { label: k('account.import.running'), tone: 'run' },
+		done: { label: k('qRSignInDialog.done'), tone: 'ok' },
+		failed: { label: k('admin.jobs.failed'), tone: 'err' },
+		cancelled: { label: k('account.import.stopped'), tone: '' }
 	};
 	const SOURCE: Record<Source, string> = { takeout: 'Google Takeout', icloud: 'iCloud' };
 
@@ -106,7 +106,7 @@
 				current = undefined;
 				picked = [];
 			}
-			showToast('ok', tr('Uvoz je pokrenut.', 'The import has started.'));
+			showToast('ok', t('account.import.theImportHasStarted'));
 		} catch (cause) {
 			showToast('err', (cause as Error).message);
 		}
@@ -136,39 +136,30 @@
 		new Date(value).toLocaleString(lang(), { dateStyle: 'medium', timeStyle: 'short' });
 </script>
 
-<svelte:head><title>{tr('Uvoz', 'Import')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('common.import')} — Mediarr</title></svelte:head>
 
 <div class="ph">
 	<div>
-		<h1>{tr('Uvoz', 'Import')}</h1>
+		<h1>{t('common.import')}</h1>
 		<p>
-			{tr(
-				'Donesite svoje fotke iz Google Photosa ili iClouda, s datumima, mjestima, opisima i albumima.',
-				'Bring your photos in from Google Photos or iCloud, with their dates, places, descriptions and albums.'
-			)}
+			{t('account.import.bringYourPhotosInFrom')}
 		</p>
 	</div>
 </div>
 
 <div class="imp">
-	<Card id="new" title={tr('Novi uvoz', 'New import')}>
+	<Card id="new" title={t('account.import.newImport')}>
 		<fieldset class="imp-source" disabled={Boolean(current)}>
-			<legend class="sr">{tr('Odakle', 'From where')}</legend>
+			<legend class="sr">{t('account.import.fromWhere')}</legend>
 			{#each ['takeout', 'icloud'] as const as option (option)}
 				<label class="imp-option" class:on={source === option}>
 					<input type="radio" name="source" value={option} bind:group={source} />
 					<b>{SOURCE[option]}</b>
 					<small>
 						{#if option === 'takeout'}
-							{tr(
-								'Na takeout.google.com odaberite samo Google Photos i preuzmite ZIP datoteke.',
-								'At takeout.google.com, choose only Google Photos and download the ZIP files.'
-							)}
+							{t('account.import.atTakeoutGoogleComChoose')}
 						{:else}
-							{tr(
-								'Na privacy.apple.com zatražite kopiju podataka, odaberite iCloud Photos i preuzmite ZIP datoteke.',
-								'At privacy.apple.com, ask for a copy of your data, choose iCloud Photos and download the ZIP files.'
-							)}
+							{t('account.import.atPrivacyAppleComAsk')}
 						{/if}
 					</small>
 				</label>
@@ -185,18 +176,13 @@
 			/>
 			<Icon name="upload" size={22} />
 			<span>
-				<b>{tr('Odaberite sve ZIP datoteke izvoza', 'Choose all the ZIP files of the export')}</b>
-				<small
-					>{tr(
-						'Onako kako ste ih preuzeli, bez raspakiravanja. Prekinut upload nastavlja se kad iste datoteke odaberete ponovno.',
-						'As you downloaded them, without unpacking. An interrupted upload goes on when you choose the same files again.'
-					)}</small
-				>
+				<b>{t('account.import.chooseAllTheZipFiles')}</b>
+				<small>{t('account.import.asYouDownloadedThemWithout')}</small>
 			</span>
 		</label>
 
 		{#if picked.length}
-			<ul class="set-list imp-parts" aria-label={tr('Odabrane datoteke', 'Chosen files')}>
+			<ul class="set-list imp-parts" aria-label={t('account.import.chosenFiles')}>
 				{#each picked as part, index (part.file.name + part.file.size)}
 					<li data-part={part.state}>
 						<span class="set-list-t">
@@ -204,9 +190,9 @@
 							<small>
 								{formatBytes(part.file.size)}
 								{#if part.state === 'in'}
-									· <em class="set-chip ok">{tr('Učitano', 'Uploaded')}</em>
+									· <em class="set-chip ok">{t('account.import.uploaded')}</em>
 								{:else if part.state === 'failed'}
-									· <em class="set-chip err">{tr('Nije uspjelo', 'Failed')}</em> {part.error}
+									· <em class="set-chip err">{t('account.import.failed')}</em> {part.error}
 								{/if}
 							</small>
 							{#if part.state === 'sending'}
@@ -214,7 +200,7 @@
 							{/if}
 						</span>
 						{#if part.state !== 'in' && !sending}
-							<Button small onclick={() => drop(index)}>{tr('Makni', 'Remove')}</Button>
+							<Button small onclick={() => drop(index)}>{t('common.remove2')}</Button>
 						{/if}
 					</li>
 				{/each}
@@ -223,41 +209,40 @@
 				<span class="imp-sum">{formatBytes(sentBytes)} / {formatBytes(totalBytes)}</span>
 				{#if allIn && current}
 					<Button variant="gold" small onclick={() => bringIn(current!.id)}
-						>{tr('Uvezi', 'Bring in')}</Button
+						>{t('account.import.bringIn')}</Button
 					>
 				{:else}
 					<Button variant="gold" small disabled={sending} onclick={send}
-						>{sending ? tr('Učitavam…', 'Uploading…') : tr('Učitaj', 'Upload')}</Button
+						>{sending ? t('account.import.uploading') : t('account.import.upload')}</Button
 					>
 				{/if}
 			</div>
 		{/if}
 	</Card>
 
-	<Card id="imports" title={tr('Vaši uvozi', 'Your imports')}>
+	<Card id="imports" title={t('account.import.yourImports')}>
 		{#if imports === undefined}
 			<Skeleton height="56px" />
 		{:else if imports.length === 0}
 			<p class="alb-meta">
-				{tr('Još niste ništa uvezli.', 'You have not imported anything yet.')}
+				{t('account.import.youHaveNotImportedAnything')}
 			</p>
 		{:else}
-			<ul class="set-list" aria-label={tr('Vaši uvozi', 'Your imports')}>
+			<ul class="set-list" aria-label={t('account.import.yourImports')}>
 				{#each imports as entry (entry.id)}
 					<li data-import={entry.status}>
 						<span class="set-list-t">
 							<b>{SOURCE[entry.source as Source] ?? entry.source} · {when(entry.createdAt)}</b>
 							<small>
-								<em class="set-chip {STATUS[entry.status].tone}"
-									>{tr(STATUS[entry.status].hr, STATUS[entry.status].en)}</em
+								<em class="set-chip {STATUS[entry.status].tone}">{t(STATUS[entry.status].label)}</em
 								>
 								{#if entry.status === 'uploading'}
 									{entry.parts.length}
-									{tr('ZIP datoteka učitano', 'ZIP files uploaded')}
+									{t('account.import.zipFilesUploaded')}
 								{:else}
-									{tr('dodano', 'added')}
-									{entry.added} · {tr('već postoji ili obrisano', 'already here or deleted')}
-									{entry.skipped} · {tr('nije uspjelo', 'failed')}
+									{t('account.import.added')}
+									{entry.added} · {t('account.import.alreadyHereOrDeleted')}
+									{entry.skipped} · {t('account.import.failed2')}
 									{entry.failed}{#if entry.total}
 										· {done(entry)} / {entry.total}{/if}
 								{/if}
@@ -268,7 +253,7 @@
 							{#if reports[entry.id]}
 								<div class="imp-report">
 									{#if reports[entry.id].problems.length === 0}
-										<p>{tr('Sve je stiglo.', 'Everything came in.')}</p>
+										<p>{t('account.import.everythingCameIn')}</p>
 									{:else}
 										<ul>
 											{#each reports[entry.id].problems as problem, n (n)}
@@ -282,25 +267,27 @@
 						<span class="imp-acts">
 							{#if entry.status === 'uploading' && entry.parts.length}
 								<Button variant="gold" small onclick={() => bringIn(entry.id)}
-									>{tr('Uvezi', 'Bring in')}</Button
+									>{t('account.import.bringIn')}</Button
 								>
 							{/if}
 							{#if entry.status === 'running'}
 								<Button small onclick={() => act(() => api.stopImport(entry.id))}
-									>{tr('Zaustavi', 'Stop')}</Button
+									>{t('common.stop')}</Button
 								>
 							{/if}
 							{#if entry.fromZip && (entry.status === 'cancelled' || entry.status === 'failed') && entry.parts.length}
-								<Button small onclick={() => bringIn(entry.id)}>{tr('Nastavi', 'Continue')}</Button>
+								<Button small onclick={() => bringIn(entry.id)}
+									>{t('account.import.continue')}</Button
+								>
 							{/if}
 							{#if entry.failed > 0}
 								<Button small onclick={() => toggleReport(entry.id)}
-									>{reports[entry.id] ? tr('Sakrij', 'Hide') : tr('Izvještaj', 'Report')}</Button
+									>{reports[entry.id] ? t('common.hide') : t('account.import.report')}</Button
 								>
 							{/if}
 							{#if entry.status !== 'running'}
 								<Button small variant="danger" onclick={() => act(() => api.removeImport(entry.id))}
-									>{tr('Ukloni', 'Remove')}</Button
+									>{t('common.remove')}</Button
 								>
 							{/if}
 						</span>
@@ -308,10 +295,7 @@
 				{/each}
 			</ul>
 			<p class="alb-meta">
-				{tr(
-					'Uklanjanje uvoza briše njegove ZIP datoteke. Uvezene fotke ostaju.',
-					'Removing an import deletes its ZIP files. The photos it brought in stay.'
-				)}
+				{t('account.import.removingAnImportDeletesIts')}
 			</p>
 		{/if}
 	</Card>

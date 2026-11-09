@@ -3,7 +3,7 @@
 	import { api, formatBytes, type ServerStatus } from '#lib/api.ts';
 	import Button from '#lib/design/components/Button.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	const CHECK_EVERY_MS = 60000;
 	const DISMISSED_KEY = 'mediarr_update_seen';
@@ -46,47 +46,40 @@
 <div class="srv">
 	{#if status}
 		<div class="srv-card">
-			<b>{tr('Prostor', 'Storage')}</b>
+			<b>{t('serverStatus.storage')}</b>
 			<small>
-				{tr(
-					`${formatBytes(status.diskUsedBytes)} od ${formatBytes(status.diskTotalBytes)} zauzeto`,
-					`${formatBytes(status.diskUsedBytes)} of ${formatBytes(status.diskTotalBytes)} used`
-				)}
+				{t('serverStatus.formatbytesOfFormatbytes2Used', {
+					formatBytes: formatBytes(status.diskUsedBytes),
+					formatBytes2: formatBytes(status.diskTotalBytes)
+				})}
 			</small>
 			<span class="srv-bar"><span style="width:{percent}%"></span></span>
 		</div>
 	{/if}
 	<div class="srv-line">
 		<span class="srv-dot" class:off={!online}></span>
-		<span
-			>{online
-				? tr('Server radi', 'Server online')
-				: tr('Server ne odgovara', 'Server offline')}</span
-		>
+		<span>{online ? t('serverStatus.serverOnline') : t('serverStatus.serverOffline')}</span>
 		{#if status}<span class="srv-v">{status.version}</span>{/if}
 	</div>
 	{#if status?.updateAvailable}
 		<button type="button" class="srv-new" onclick={() => (dialogOpen = true)}>
-			{tr(
-				`Dostupna verzija ${status.latestVersion}`,
-				`Version ${status.latestVersion} is available`
-			)}
+			{t('serverStatus.versionLatestversionIsAvailable', { latestVersion: status.latestVersion })}
 		</button>
 	{/if}
 </div>
 
-<Dialog title={tr('Dostupna je nova verzija', 'A new version is available')} bind:open={dialogOpen}>
+<Dialog title={t('serverStatus.aNewVersionIsAvailable')} bind:open={dialogOpen}>
 	<p>
-		{tr(
-			`Mediarr ${status?.latestVersion} je dostupan. Ovaj server koristi ${status?.version}.`,
-			`Mediarr ${status?.latestVersion} is available. This server runs ${status?.version}.`
-		)}
+		{t('serverStatus.mediarrLatestversionIsAvailableThis', {
+			latestVersion: status?.latestVersion,
+			version: status?.version
+		})}
 	</p>
 	<p>
-		{tr('Nadogradnju radi administrator servera:', 'The server administrator updates it with:')}
+		{t('serverStatus.theServerAdministratorUpdatesIt')}
 	</p>
 	<pre class="srv-cmd">docker compose pull && docker compose up -d</pre>
 	{#snippet footer()}
-		<Button variant="gold" small onclick={dismiss}>{tr('U redu', 'OK')}</Button>
+		<Button variant="gold" small onclick={dismiss}>{t('serverStatus.ok')}</Button>
 	{/snippet}
 </Dialog>

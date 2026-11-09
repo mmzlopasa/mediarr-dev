@@ -9,7 +9,7 @@
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import CollectionView from '#lib/organize/CollectionView.svelte';
 
@@ -57,13 +57,10 @@
 		} catch (cause) {
 			formError =
 				cause instanceof ApiError && cause.status === 429
-					? tr('Previše pokušaja. Pokušajte kasnije.', 'Too many attempts. Try again later.')
+					? t('common.tooManyAttemptsTryAgain')
 					: cause instanceof ApiError && cause.status === 401
-						? tr('Pogrešan PIN.', 'Wrong PIN.')
-						: tr(
-								'PIN mora imati od 4 do 12 znamenki.',
-								'The PIN must have between 4 and 12 digits.'
-							);
+						? t('vault.wrongPin')
+						: t('vault.thePinMustHaveBetween');
 		} finally {
 			busy = false;
 		}
@@ -77,11 +74,11 @@
 	async function moveOut(ids: string[], clear: () => void) {
 		try {
 			const { changed } = await api.bulk(ids, 'unvault');
-			showToast('ok', tr(`Vraćeno u Medije: ${changed}`, `Back in Media: ${changed}`));
+			showToast('ok', t('vault.backInMediaChanged', { changed }));
 			clear();
 			await view?.reload();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -89,37 +86,34 @@
 		if (!toPurge) return;
 		try {
 			const { changed } = await api.bulk(toPurge.ids, 'purge');
-			showToast('ok', tr(`Trajno obrisano: ${changed}`, `Permanently deleted: ${changed}`));
+			showToast('ok', t('vault.permanentlyDeletedChanged', { changed }));
 			toPurge.clear();
 			confirmPurge = false;
 			await view?.reload();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
 <div class="ph">
 	<div>
-		<h1>{tr(item.hr, item.en)}</h1>
+		<h1>{t(item.label)}</h1>
 		<p>
-			{tr(
-				'Skriveno od svih drugih prikaza i dijeljenja. Datoteke na serveru nisu šifrirane.',
-				'Hidden from every other view and from sharing. The files on the server are not encrypted.'
-			)}
+			{t('vault.hiddenFromEveryOtherView')}
 		</p>
 	</div>
 	{#if status?.unlocked}
 		<div class="ph-a">
-			<Button small onclick={lock}><Icon name="lock" size={14} /> {tr('Zaključaj', 'Lock')}</Button>
+			<Button small onclick={lock}><Icon name="lock" size={14} /> {t('vault.lock')}</Button>
 		</div>
 	{/if}
 </div>
 
 {#if failed}
-	<Alert kind="err">{tr('Trezor se nije učitao.', 'The vault could not be loaded.')}</Alert>
+	<Alert kind="err">{t('vault.theVaultCouldNotBe')}</Alert>
 {:else if !status}
 	<Skeleton height="200px" />
 {:else if status.unlocked}
@@ -128,15 +122,15 @@
 			<button
 				type="button"
 				class="icon-btn"
-				aria-label={tr('Vrati u Medije', 'Back to Media')}
-				title={tr('Vrati u Medije', 'Back to Media')}
+				aria-label={t('vault.backToMedia')}
+				title={t('vault.backToMedia')}
 				onclick={() => moveOut(ids, clear)}><Icon name="photo" /></button
 			>
 			<button
 				type="button"
 				class="icon-btn"
-				aria-label={tr('Obriši trajno', 'Delete permanently')}
-				title={tr('Obriši trajno', 'Delete permanently')}
+				aria-label={t('vault.deletePermanently')}
+				title={t('vault.deletePermanently')}
 				onclick={() => {
 					toPurge = { ids, clear };
 					confirmPurge = true;
@@ -146,11 +140,7 @@
 	</CollectionView>
 {:else}
 	<div class="org-box">
-		<Card
-			title={status.hasPin
-				? tr('Otključaj trezor', 'Unlock the vault')
-				: tr('Postavi PIN trezora', 'Set a vault PIN')}
-		>
+		<Card title={status.hasPin ? t('vault.unlockTheVault') : t('vault.setAVaultPin')}>
 			<form class="form" onsubmit={submit}>
 				{#if formError}<Alert kind="err">{formError}</Alert>{/if}
 				<Input
@@ -158,31 +148,23 @@
 					type="password"
 					inputmode="numeric"
 					autocomplete="off"
-					hint={status.hasPin
-						? undefined
-						: tr(
-								'Od 4 do 12 znamenki. Izgubljeni PIN može resetirati samo administrator servera.',
-								'From 4 to 12 digits. Only the server administrator can reset a lost PIN.'
-							)}
+					hint={status.hasPin ? undefined : t('vault.from4To12Digits')}
 					bind:value={pin}
 				/>
 				<Button type="submit" variant="gold" disabled={busy || !pin}
-					>{status.hasPin ? tr('Otključaj', 'Unlock') : tr('Postavi PIN', 'Set PIN')}</Button
+					>{status.hasPin ? t('vault.unlock') : t('vault.setPin')}</Button
 				>
 			</form>
 		</Card>
 	</div>
 {/if}
 
-<Dialog title={tr('Obrisati trajno?', 'Delete permanently?')} bind:open={confirmPurge}>
+<Dialog title={t('vault.deletePermanently2')} bind:open={confirmPurge}>
 	<p>
-		{tr(
-			'Originali se brišu s diska. To se ne može poništiti.',
-			'The originals are removed from the disk. This cannot be undone.'
-		)}
+		{t('vault.theOriginalsAreRemovedFrom')}
 	</p>
 	{#snippet footer()}
-		<Button onclick={() => (confirmPurge = false)}>{tr('Odustani', 'Cancel')}</Button>
-		<Button variant="danger" onclick={purge}>{tr('Obriši trajno', 'Delete permanently')}</Button>
+		<Button onclick={() => (confirmPurge = false)}>{t('common.cancel')}</Button>
+		<Button variant="danger" onclick={purge}>{t('vault.deletePermanently')}</Button>
 	{/snippet}
 </Dialog>

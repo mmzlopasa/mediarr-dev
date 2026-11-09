@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/dispose_later.dart';
 import '../services/search_query.dart';
 import '../services/session.dart';
@@ -17,7 +18,7 @@ import 'search_filters_sheet.dart';
 import 'timeline_screen.dart';
 import 'viewer_screen.dart';
 
-const _noName = 'No name';
+String get _noName => l.peopleScreensNoName;
 
 void _tell(BuildContext context, String message) {
   ScaffoldMessenger.maybeOf(context)
@@ -138,15 +139,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (_busy) {
       body = Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (_failed) {
-      body = const EmptyMessage(
+      body = EmptyMessage(
         icon: Icons.cloud_off,
-        text: 'The search failed. Check the connection.',
+        text: l.peopleScreensSearchFailed,
       );
     } else if (result == null) {
-      body = const EmptyMessage(
-        icon: Icons.search,
-        text: 'Describe what you are looking for, in English or Croatian, or choose filters.',
-      );
+      body = EmptyMessage(icon: Icons.search, text: l.peopleScreensDescribe);
     } else {
       final chips = chipsFor(result.filters, _q, _dayLabel);
       body = Column(
@@ -156,8 +154,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Text(
-                'Smart search is off or not available, so only text on pictures, '
-                'file names and filters are searched.',
+                l.peopleScreensSmartOff,
                 style: text.bodySmall?.copyWith(color: Palette.warn),
               ),
             ),
@@ -176,7 +173,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       side: chip.found
                           ? BorderSide(color: Palette.gold)
                           : BorderSide.none,
-                      deleteButtonTooltipMessage: 'Remove ${chip.label}',
+                      deleteButtonTooltipMessage: l.peopleScreensRemoveChip(
+                        chip.label,
+                      ),
                       onDeleted: () {
                         _q = withoutChip(_q, chip, result.filters);
                         if (_q.isEmpty) {
@@ -191,9 +190,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           Expanded(
             child: result.items.isEmpty
-                ? const EmptyMessage(
+                ? EmptyMessage(
                     icon: Icons.search_off,
-                    text: 'Nothing was found.',
+                    text: l.peopleScreensNothingFound,
                   )
                 : GridView.builder(
                     padding: const EdgeInsets.all(8),
@@ -227,8 +226,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           controller: _query,
           autofocus: true,
           textInputAction: TextInputAction.search,
-          decoration: const InputDecoration(
-            hintText: 'dog on a beach, Hvar 2024, receipt…',
+          decoration: InputDecoration(
+            hintText: l.peopleScreensSearchHint,
             border: InputBorder.none,
           ),
           onSubmitted: (_) => _search(),
@@ -236,12 +235,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         actions: [
           if (_askOn)
             IconButton(
-              tooltip: 'Ask',
+              tooltip: l.peopleScreensAsk,
               icon: const Icon(Icons.auto_awesome_outlined),
               onPressed: _busy ? null : _ask,
             ),
           IconButton(
-            tooltip: 'Filters',
+            tooltip: l.peopleScreensFilters,
             icon: Badge(
               isLabelVisible: _q.chosen > 0,
               label: Text('${_q.chosen}'),
@@ -259,7 +258,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             },
           ),
           IconButton(
-            tooltip: 'Search',
+            tooltip: l.peopleScreensSearch,
             icon: const Icon(Icons.search),
             onPressed: _search,
           ),
@@ -337,20 +336,17 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
     Widget body;
     if (list == null) {
       body = _failed
-          ? const EmptyMessage(
-              icon: Icons.cloud_off,
-              text: 'People could not be loaded. Check the connection.',
-            )
+          ? EmptyMessage(icon: Icons.cloud_off, text: l.peopleScreensLoadFailed)
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (!list.enabled && list.people.isEmpty) {
-      body = const EmptyMessage(
+      body = EmptyMessage(
         icon: Icons.people_outline,
-        text: 'Face recognition is not turned on for this server.',
+        text: l.peopleScreensFacesOff,
       );
     } else if (shown.isEmpty) {
-      body = const EmptyMessage(
+      body = EmptyMessage(
         icon: Icons.people_outline,
-        text: 'No people recognised yet.',
+        text: l.peopleScreensNoneYet,
       );
     } else {
       body = GridView.builder(
@@ -405,12 +401,16 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('People'),
+        title: Text(l.peopleScreensPeople),
         actions: [
           if (hidden.isNotEmpty)
             TextButton(
               onPressed: () => setState(() => _showHidden = !_showHidden),
-              child: Text(_showHidden ? 'Show the others' : 'Hidden people'),
+              child: Text(
+                _showHidden
+                    ? l.peopleScreensShowOthers
+                    : l.peopleScreensHiddenPeople,
+              ),
             ),
         ],
       ),
@@ -453,16 +453,16 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Name'),
+        title: Text(l.peopleScreensName),
         content: TextField(controller: field, autofocus: true, maxLength: 100),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l.albumScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, field.text.trim()),
-            child: const Text('Save'),
+            child: Text(l.albumScreenSave),
           ),
         ],
       ),
@@ -476,7 +476,9 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
       );
       if (mounted) setState(() => _name = name);
     } on ApiException catch (cause) {
-      if (mounted) _tell(context, 'The action failed. ${cause.message ?? ''}');
+      if (mounted) {
+        _tell(context, l.albumScreenActionFailed(cause.message ?? ''));
+      }
     }
   }
 
@@ -488,7 +490,7 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
       firstDate: DateTime(1880),
       lastDate: now,
       initialDate: known ?? DateTime(now.year - 30),
-      helpText: 'Date of birth',
+      helpText: l.peopleScreensDateOfBirth,
     );
     if (picked == null) return;
     final date = picked.toIso8601String().substring(0, 10);
@@ -499,7 +501,9 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
       );
       if (mounted) setState(() => _birthDate = date);
     } on ApiException catch (cause) {
-      if (mounted) _tell(context, 'The action failed. ${cause.message ?? ''}');
+      if (mounted) {
+        _tell(context, l.albumScreenActionFailed(cause.message ?? ''));
+      }
     }
   }
 
@@ -516,7 +520,9 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
         setState(() => _hidden = false);
       }
     } on ApiException catch (cause) {
-      if (mounted) _tell(context, 'The action failed. ${cause.message ?? ''}');
+      if (mounted) {
+        _tell(context, l.albumScreenActionFailed(cause.message ?? ''));
+      }
     }
   }
 
@@ -530,9 +536,9 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) => SheetFrame(
-        title: 'Merge with…',
+        title: l.peopleScreensMergeWith,
         children: [
-          if (others.isEmpty) const Text('There is nobody else.'),
+          if (others.isEmpty) Text(l.peopleScreensNobodyElse),
           for (final person in others)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -550,9 +556,11 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
         AssetIds(ids: [chosen.id]),
       );
       await _store.refresh(reloadLoaded: true);
-      if (mounted) _tell(context, 'Merged.');
+      if (mounted) _tell(context, l.peopleScreensMerged);
     } on ApiException catch (cause) {
-      if (mounted) _tell(context, 'The action failed. ${cause.message ?? ''}');
+      if (mounted) {
+        _tell(context, l.albumScreenActionFailed(cause.message ?? ''));
+      }
     }
   }
 
@@ -562,7 +570,7 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
       title: Text(_name.isEmpty ? _noName : _name),
       actions: [
         PopupMenuButton<String>(
-          tooltip: 'More',
+          tooltip: l.albumScreenMore,
           onSelected: (choice) => switch (choice) {
             'name' => _rename(),
             'born' => _setBirthDate(),
@@ -571,17 +579,22 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
             _ => _setHidden(true),
           },
           itemBuilder: (_) => [
-            const PopupMenuItem(value: 'name', child: Text('Name')),
+            PopupMenuItem(value: 'name', child: Text(l.peopleScreensName)),
             PopupMenuItem(
               value: 'born',
               child: Text(
-                _birthDate == null ? 'Date of birth' : 'Born $_birthDate',
+                _birthDate == null
+                    ? l.peopleScreensDateOfBirth
+                    : l.peopleScreensBorn(_birthDate!),
               ),
             ),
-            const PopupMenuItem(value: 'merge', child: Text('Merge with…')),
+            PopupMenuItem(
+              value: 'merge',
+              child: Text(l.peopleScreensMergeWith),
+            ),
             PopupMenuItem(
               value: _hidden ? 'show' : 'hide',
-              child: Text(_hidden ? 'Show' : 'Hide'),
+              child: Text(_hidden ? l.peopleScreensShow : l.peopleScreensHide),
             ),
           ],
         ),
@@ -593,16 +606,16 @@ class _PersonScreenState extends ConsumerState<_PersonScreen> {
         final months = _store.months;
         if (months == null) {
           return _store.failed
-              ? const EmptyMessage(
+              ? EmptyMessage(
                   icon: Icons.cloud_off,
-                  text: 'This could not be loaded. Check the connection.',
+                  text: l.peopleScreensThisLoadFailed,
                 )
               : Center(child: CircularProgressIndicator(color: Palette.gold));
         }
         if (months.isEmpty) {
-          return const EmptyMessage(
+          return EmptyMessage(
             icon: Icons.photo_outlined,
-            text: 'No photos yet.',
+            text: l.albumScreenNoPhotosYet,
           );
         }
         return TimelineGrid(

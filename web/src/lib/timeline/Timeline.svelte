@@ -11,7 +11,7 @@
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import FixDialog from '#lib/organize/FixDialog.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t } from '#lib/i18n.svelte.ts';
 	import { blurUrl, thumbUrl } from './blur.ts';
 	import {
 		estimateMonthHeight,
@@ -399,12 +399,12 @@
 			lastIndex = null;
 			await reloadLoaded();
 			if (action === 'delete') {
-				showToast('ok', tr(`Obrisano: ${ids.length}`, `Deleted: ${ids.length}`));
+				showToast('ok', t('timeline.deletedIdscount', { idsCount: ids.length }));
 			} else if (action === 'archive') {
-				showToast('ok', tr(`Arhivirano: ${ids.length}`, `Archived: ${ids.length}`));
+				showToast('ok', t('timeline.archivedIdscount', { idsCount: ids.length }));
 			}
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		} finally {
 			busy = false;
 			confirmDelete = false;
@@ -428,7 +428,7 @@
 <svelte:window onkeydown={onKey} />
 
 {#if loadFailed}
-	<Alert kind="err">{tr('Fotke se nisu učitale.', 'Photos could not be loaded.')}</Alert>
+	<Alert kind="err">{t('timeline.photosCouldNotBeLoaded')}</Alert>
 {/if}
 
 {#if months === undefined && !loadFailed}
@@ -493,7 +493,7 @@
 									</span>
 								{/if}
 								{#if tile.item.stackSize}
-									<span class="tl-badge tl-video" title={tr('Niz snimki', 'Stack of shots')}>
+									<span class="tl-badge tl-video" title={t('timeline.stackOfShots')}>
 										<small>{tile.item.stackSize}</small>
 										<Icon name="copy" size={14} />
 									</span>
@@ -511,7 +511,7 @@
 									<button
 										type="button"
 										class="tl-check"
-										aria-label={tr('Odaberi', 'Select')}
+										aria-label={t('timeline.select')}
 										aria-pressed={selected.has(tile.item.id)}
 										onclick={(event) => checkClick(event, tile.item.id, entry.month, tile.index)}
 									>
@@ -524,12 +524,8 @@
 				{/each}
 			{:else if entry.failed}
 				<div class="tl-fail">
-					<Alert kind="err"
-						>{tr('Ovaj mjesec se nije učitao.', 'This month could not be loaded.')}</Alert
-					>
-					<Button small onclick={() => loadMonth(entry.month)}
-						>{tr('Pokušaj ponovno', 'Try again')}</Button
-					>
+					<Alert kind="err">{t('timeline.thisMonthCouldNotBe')}</Alert>
+					<Button small onclick={() => loadMonth(entry.month)}>{t('timeline.tryAgain')}</Button>
 				</div>
 			{:else}
 				<div class="tl-wait"><Skeleton height="100%" /></div>
@@ -558,11 +554,11 @@
 {/if}
 
 {#if selecting}
-	<div class="selbar glass" role="toolbar" aria-label={tr('Odabrane fotke', 'Selected photos')}>
+	<div class="selbar glass" role="toolbar" aria-label={t('timeline.selectedPhotos')}>
 		<button
 			type="button"
 			class="icon-btn sm"
-			aria-label={tr('Poništi odabir', 'Clear selection')}
+			aria-label={t('timeline.clearSelection')}
 			onclick={() => selected.clear()}>✕</button
 		>
 		<b class="selbar-n">{selected.size}</b>
@@ -573,11 +569,9 @@
 					class="icon-btn"
 					disabled={busy}
 					aria-label={allFavorite
-						? tr('Makni iz favorita', 'Remove from favorites')
-						: tr('Dodaj u favorite', 'Add to favorites')}
-					title={allFavorite
-						? tr('Makni iz favorita', 'Remove from favorites')
-						: tr('Dodaj u favorite', 'Add to favorites')}
+						? t('timeline.removeFromFavorites')
+						: t('timeline.addToFavorites')}
+					title={allFavorite ? t('timeline.removeFromFavorites') : t('timeline.addToFavorites')}
 					onclick={() => act(allFavorite ? 'unfavorite' : 'favorite')}><Icon name="star" /></button
 				>{/if}
 			{#if !downloads}
@@ -587,54 +581,48 @@
 					class="icon-btn"
 					href={downloadUrl}
 					download
-					aria-label={tr('Preuzmi', 'Download')}
-					title={tr('Preuzmi', 'Download')}
+					aria-label={t('timeline.download')}
+					title={t('timeline.download')}
 					data-sveltekit-reload><Icon name="download" /></a
 				>
 			{:else}
 				<button
 					type="button"
 					class="icon-btn"
-					aria-label={tr('Preuzmi', 'Download')}
-					title={tr('Preuzmi', 'Download')}
-					onclick={() =>
-						showToast(
-							'warn',
-							tr(
-								`Odjednom se može preuzeti najviše ${ZIP_LIMIT} datoteka.`,
-								`You can download at most ${ZIP_LIMIT} files at once.`
-							)
-						)}><Icon name="download" /></button
+					aria-label={t('timeline.download')}
+					title={t('timeline.download')}
+					onclick={() => showToast('warn', t('timeline.youCanDownloadAtMost', { ZIP_LIMIT }))}
+					><Icon name="download" /></button
 				>
 			{/if}
 			{#if ownActions}<button
 					type="button"
 					class="icon-btn"
-					aria-label={tr('Datum i vrijeme', 'Date and time')}
-					title={tr('Datum i vrijeme', 'Date and time')}
+					aria-label={t('common.dateAndTime')}
+					title={t('common.dateAndTime')}
 					onclick={() => (fixing = 'dates')}><Icon name="clock" /></button
 				>
 				<button
 					type="button"
 					class="icon-btn"
-					aria-label={tr('Lokacija', 'Location')}
-					title={tr('Lokacija', 'Location')}
+					aria-label={t('common.location')}
+					title={t('common.location')}
 					onclick={() => (fixing = 'locations')}><Icon name="map" /></button
 				>{/if}
 			{#if ownActions}<button
 					type="button"
 					class="icon-btn"
 					disabled={busy}
-					aria-label={tr('Arhiviraj', 'Archive')}
-					title={tr('Arhiviraj', 'Archive')}
+					aria-label={t('timeline.archive')}
+					title={t('timeline.archive')}
 					onclick={() => act('archive')}><Icon name="archive" /></button
 				>
 				<button
 					type="button"
 					class="icon-btn"
 					disabled={busy}
-					aria-label={tr('Obriši', 'Delete')}
-					title={tr('Obriši', 'Delete')}
+					aria-label={t('common.delete')}
+					title={t('common.delete')}
 					onclick={() => (confirmDelete = true)}><Icon name="trash" /></button
 				>{/if}
 		</div>
@@ -659,17 +647,14 @@
 	/>
 {/if}
 
-<Dialog title={tr('Obrisati odabrano?', 'Delete the selection?')} bind:open={confirmDelete}>
+<Dialog title={t('timeline.deleteTheSelection')} bind:open={confirmDelete}>
 	<p>
-		{tr(
-			`Odabrano: ${selected.size}. Premještaju se u smeće, gdje ostaju ${trashDays()} dana i mogu se vratiti.`,
-			`Selected: ${selected.size}. They move to the trash, where they stay for ${trashDays()} days and can be restored.`
-		)}
+		{t('timeline.selectedSizeTheyMoveTo', { size: selected.size, trashDays: trashDays() })}
 	</p>
 	{#snippet footer()}
-		<Button onclick={() => (confirmDelete = false)}>{tr('Odustani', 'Cancel')}</Button>
+		<Button onclick={() => (confirmDelete = false)}>{t('common.cancel')}</Button>
 		<Button variant="danger" disabled={busy} onclick={() => act('delete')}
-			>{tr('Obriši', 'Delete')}</Button
+			>{t('common.delete')}</Button
 		>
 	{/snippet}
 </Dialog>

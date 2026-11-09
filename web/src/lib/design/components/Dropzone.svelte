@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { addUploads } from '#lib/uploads.svelte.ts';
 	import Icon from './Icon.svelte';
 
@@ -31,7 +31,6 @@
 
 {#if depth > 0}
 	<div class="drop" role="status">
-		<span class="btn-row"><Icon name="upload" /> {tr('Ispustite za upload', 'Drop to upload')}</span
-		>
+		<span class="btn-row"><Icon name="upload" /> {t('dropzone.dropToUpload')}</span>
 	</div>
 {/if}

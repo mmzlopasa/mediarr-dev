@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../services/timeline.dart';
 import '../theme.dart';
@@ -71,15 +72,19 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
     } on ApiException catch (cause) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('The action failed. ${cause.message ?? ''}')),
+          SnackBar(
+            content: Text(l.sharedScreenActionFailed(cause.message ?? '')),
+          ),
         );
       }
     }
   }
 
   String _sinceLabel(DateTime? since) => since == null
-      ? 'Whole library'
-      : 'From ${since.year}-${since.month.toString().padLeft(2, '0')}-${since.day.toString().padLeft(2, '0')}';
+      ? l.sharedScreenWholeLibrary
+      : l.sharedScreenFrom(
+          '${since.year}-${since.month.toString().padLeft(2, '0')}-${since.day.toString().padLeft(2, '0')}',
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -101,8 +106,11 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
       body = _failed
           ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'This could not be loaded. Check the connection.',
-              action: GoldButton(label: 'Try again', onPressed: _load),
+              text: l.sharedScreenLoadFailed,
+              action: GoldButton(
+                label: l.sharedScreenTryAgain,
+                onPressed: _load,
+              ),
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else {
@@ -117,8 +125,8 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
       body = ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
         children: [
-          heading('Albums shared with me'),
-          if (withMe.isEmpty) none('Nothing has been shared yet.'),
+          heading(l.sharedScreenAlbumsWithMe),
+          if (withMe.isEmpty) none(l.sharedScreenNothingShared),
           for (final album in withMe)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -132,9 +140,8 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
                 ),
               ),
             ),
-          heading('Libraries shared with me'),
-          if (partners.received.isEmpty)
-            none('Nobody shares their library with you.'),
+          heading(l.sharedScreenLibrariesWithMe),
+          if (partners.received.isEmpty) none(l.sharedScreenNobodyShares),
           for (final entry in partners.received)
             Column(
               children: [
@@ -151,7 +158,7 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Show in my Media'),
+                  title: Text(l.sharedScreenShowInMyMedia),
                   value: entry.inTimeline,
                   onChanged: (value) => _run(
                     () => session.api.setPartnerTimeline(
@@ -162,8 +169,8 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
                 ),
               ],
             ),
-          heading('My library is shared with'),
-          if (partners.given.isEmpty) none('Nobody yet.'),
+          heading(l.sharedScreenMyLibrarySharedWith),
+          if (partners.given.isEmpty) none(l.sharedScreenNobodyYet),
           for (final entry in partners.given)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -172,14 +179,14 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
               trailing: TextButton(
                 onPressed: () =>
                     _run(() => session.api.removePartner(entry.userId)),
-                child: const Text('Stop'),
+                child: Text(l.sharedScreenStop),
               ),
             ),
           if (free.isNotEmpty) ...[
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _userId,
-              decoration: const InputDecoration(labelText: 'User'),
+              decoration: InputDecoration(labelText: l.sharedScreenUser),
               items: [
                 for (final user in free)
                   DropdownMenuItem(value: user.id, child: Text(user.name)),
@@ -190,7 +197,7 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
               contentPadding: EdgeInsets.zero,
               title: Text(_sinceLabel(_since)),
               trailing: TextButton(
-                child: const Text('Choose date'),
+                child: Text(l.sharedScreenChooseDate),
                 onPressed: () async {
                   final picked = await showDatePicker(
                     context: context,
@@ -202,10 +209,10 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
                 },
               ),
             ),
-            none('The archive, trash and vault are never shared.'),
+            none(l.sharedScreenNeverShared),
             const SizedBox(height: 10),
             GoldButton(
-              label: 'Share my library',
+              label: l.sharedScreenShareMyLibrary,
               onPressed: () {
                 final user = _userId;
                 if (user == null) return;
@@ -227,7 +234,7 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Shared')),
+      appBar: AppBar(title: Text(l.sharedScreenShared)),
       body: body,
     );
   }
@@ -276,16 +283,16 @@ class _PartnerLibraryState extends ConsumerState<_PartnerLibrary> {
         final months = _store.months;
         if (months == null) {
           return _store.failed
-              ? const EmptyMessage(
+              ? EmptyMessage(
                   icon: Icons.lock_outline,
-                  text: 'This library is not available.',
+                  text: l.sharedScreenLibraryNotAvailable,
                 )
               : Center(child: CircularProgressIndicator(color: Palette.gold));
         }
         if (months.isEmpty) {
-          return const EmptyMessage(
+          return EmptyMessage(
             icon: Icons.photo_outlined,
-            text: 'No photos yet.',
+            text: l.sharedScreenNoPhotos,
           );
         }
         return TimelineGrid(

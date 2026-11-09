@@ -4,7 +4,7 @@
 	import Button from '#lib/design/components/Button.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { moveCrop, turnCrop, wholePicture, type Crop, type Corner } from './crop.ts';
 
 	const WAIT_MS = 500;
@@ -109,10 +109,7 @@
 			await refreshPreviews();
 			onSaved();
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.theActionFailed'));
 			busy = false;
 		}
 	}
@@ -151,13 +148,13 @@
 	role="dialog"
 	tabindex="-1"
 	aria-modal="true"
-	aria-label={tr('Uredi fotku', 'Edit the photo')}
+	aria-label={t('photoEditor.editThePhoto')}
 	onpointermove={drag}
 	onpointerup={() => (dragging = null)}
 >
 	<div class="editor-stage">
 		{#if failed}
-			<p>{tr('Fotka se ne može učitati.', 'The photo cannot be loaded.')}</p>
+			<p>{t('photoEditor.thePhotoCannotBeLoaded')}</p>
 		{:else}
 			<div class="editor-frame">
 				<canvas bind:this={canvas} style="filter:{filter}"></canvas>
@@ -171,7 +168,7 @@
 							<button
 								type="button"
 								class="editor-handle {corner}"
-								aria-label={tr('Obrezivanje', 'Crop')}
+								aria-label={t('photoEditor.crop')}
 								onpointerdown={(event) => start(event, corner)}
 							></button>
 						{/each}
@@ -181,47 +178,42 @@
 		{/if}
 	</div>
 	<aside class="editor-tools">
-		<h2>{tr('Uredi fotku', 'Edit the photo')}</h2>
+		<h2>{t('photoEditor.editThePhoto')}</h2>
 		<p class="alb-meta">
-			{tr(
-				'Original ostaje netaknut, a izmjene možete uvijek poništiti.',
-				'The original stays untouched, and you can always undo the edits.'
-			)}
+			{t('photoEditor.theOriginalStaysUntouchedAnd')}
 		</p>
-		<Button onclick={turn}><Icon name="sync" size={14} /> {tr('Okreni', 'Rotate')}</Button>
+		<Button onclick={turn}><Icon name="sync" size={14} /> {t('photoEditor.rotate')}</Button>
 		<label
-			>{tr('Svjetlina', 'Brightness')}
+			>{t('photoEditor.brightness')}
 			<input type="range" min="-100" max="100" bind:value={brightness} /></label
 		>
 		<label
-			>{tr('Kontrast', 'Contrast')}
+			>{t('photoEditor.contrast')}
 			<input type="range" min="-100" max="100" bind:value={contrast} /></label
 		>
 		<label
-			>{tr('Zasićenost', 'Saturation')}
+			>{t('photoEditor.saturation')}
 			<input type="range" min="-100" max="100" bind:value={saturation} /></label
 		>
 		{#if filtersOn}
 			<label
-				>{tr('Filter', 'Filter')}
+				>{t('photoEditor.filter')}
 				<select bind:value={look}>
-					<option value="">{tr('Bez filtera', 'None')}</option>
-					<option value="mono">{tr('Crno-bijelo', 'Black and white')}</option>
-					<option value="warm">{tr('Toplo', 'Warm')}</option>
-					<option value="cool">{tr('Hladno', 'Cool')}</option>
-					<option value="vintage">{tr('Staro', 'Vintage')}</option>
-					<option value="vivid">{tr('Živo', 'Vivid')}</option>
+					<option value="">{t('photoEditor.none')}</option>
+					<option value="mono">{t('photoEditor.blackAndWhite')}</option>
+					<option value="warm">{t('photoEditor.warm')}</option>
+					<option value="cool">{t('photoEditor.cool')}</option>
+					<option value="vintage">{t('photoEditor.vintage')}</option>
+					<option value="vivid">{t('photoEditor.vivid')}</option>
 				</select></label
 			>
 		{/if}
 		<div class="editor-acts">
-			<Button variant="gold" disabled={busy} onclick={save}>{tr('Spremi', 'Save')}</Button>
+			<Button variant="gold" disabled={busy} onclick={save}>{t('common.save')}</Button>
 			{#if detail.edits}
-				<Button disabled={busy} onclick={reset}
-					>{tr('Vrati original', 'Back to the original')}</Button
-				>
+				<Button disabled={busy} onclick={reset}>{t('photoEditor.backToTheOriginal')}</Button>
 			{/if}
-			<Button disabled={busy} onclick={onClose}>{tr('Odustani', 'Cancel')}</Button>
+			<Button disabled={busy} onclick={onClose}>{t('common.cancel')}</Button>
 		</div>
 	</aside>
 </div>

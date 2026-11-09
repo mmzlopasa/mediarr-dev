@@ -3,7 +3,7 @@
 	import { memoryTitle } from '#lib/organize/memories.ts';
 	import Story from '#lib/organize/Story.svelte';
 	import { api, type Memory } from '#lib/api.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { yearsAgo } from '#lib/organize/stories.ts';
 
 	let memories = $state<Memory[]>([]);
@@ -21,26 +21,21 @@
 	});
 
 	function label(memory: Memory) {
-		if (memory.kind === 'week') return tr('Protekli tjedan', 'The last week');
+		if (memory.kind === 'week') return t('stories.theLastWeek');
 		const years = yearsAgo(memory.year ?? 0, new Date().getFullYear());
-		return tr(`Prije ${years} god.`, years === 1 ? '1 year ago' : `${years} years ago`);
+		return t('stories.yearsAgo', { years });
 	}
 </script>
 
 {#if memories.length > 0}
 	<!-- Memories as stories: a row of tall cards, each plays as a story where it is. -->
-	<div class="stories" aria-label={tr('Uspomene', 'Memories')} role="group">
+	<div class="stories" aria-label={t('common.memories')} role="group">
 		{#each memories as memory (memory.kind + memory.title)}
 			<button type="button" class="story-tile" onclick={() => (open = memory)}>
 				<img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" />
 				<span class="story-tile-t">
 					<b>{label(memory)}</b>
-					<small
-						>{tr(
-							`${memory.items.length} stavki`,
-							memory.items.length === 1 ? '1 item' : `${memory.items.length} items`
-						)}</small
-					>
+					<small>{t('stories.items', { count: memory.items.length })}</small>
 				</span>
 			</button>
 		{/each}

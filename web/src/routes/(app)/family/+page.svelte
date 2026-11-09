@@ -11,7 +11,7 @@
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
@@ -55,10 +55,7 @@
 			title = from = to = place = '';
 			await load();
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.theActionFailed'));
 		}
 	}
 
@@ -67,22 +64,17 @@
 			await api.deleteFamilyRule(id);
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr('Obitelj', 'Family')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('family.family')} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr('Obitelj', 'Family')}</h1></div></div>
+<div class="ph"><div><h1>{t('family.family')}</h1></div></div>
 
 {#if failed}
-	<Alert kind="err"
-		>{tr(
-			'Obiteljska biblioteka se nije učitala.',
-			'The family library could not be loaded.'
-		)}</Alert
-	>
+	<Alert kind="err">{t('family.theFamilyLibraryCouldNot')}</Alert>
 {:else if !family}
 	<Skeleton height="200px" />
 {:else if !open}
@@ -91,39 +83,29 @@
 			<EmptyState
 				icon="users"
 				text={!family.enabled
-					? tr(
-							'Administrator nije uključio ovu značajku.',
-							'An administrator has not turned this on.'
-						)
-					: tr('Još niste u obiteljskoj biblioteci.', 'You are not in the family library yet.')}
+					? t('family.anAdministratorHasNotTurned')
+					: t('family.youAreNotInThe')}
 			/>
 		</div>
 	</section>
 {:else}
-	<Card title={tr('Što dijelim', 'What I share')}>
+	<Card title={t('family.whatIShare')}>
 		<p class="alb-meta">
-			{tr('Članovi: ', 'Members: ')}{family.members.map((member) => member.name).join(', ')}.
-			{tr(
-				'Ništa se ne dijeli dok ne postavite pravilo. Trezor se nikad ne dijeli.',
-				'Nothing is shared until you set a rule. The vault is never shared.'
-			)}
+			{t('family.members')}{family.members.map((member) => member.name).join(', ')}.
+			{t('family.nothingIsSharedUntilYou')}
 		</p>
 		{#each family.rules as rule (rule.id)}
 			<div class="alb-list">
 				<b>{rule.title}</b>
-				<Button small onclick={() => remove(rule.id)}
-					>{tr('Prestani dijeliti', 'Stop sharing')}</Button
-				>
+				<Button small onclick={() => remove(rule.id)}>{t('family.stopSharing')}</Button>
 			</div>
 		{/each}
 		<form class="form" onsubmit={add}>
-			<Input label={tr('Naziv pravila', 'Rule name')} bind:value={title} />
-			<Input label={tr('Od datuma', 'From date')} type="date" bind:value={from} />
-			<Input label={tr('Do datuma', 'To date')} type="date" bind:value={to} />
-			<Input label={tr('Mjesto', 'Place')} bind:value={place} />
-			<Button type="submit" variant="gold" small
-				>{tr('Dijeli s obitelji', 'Share with the family')}</Button
-			>
+			<Input label={t('family.ruleName')} bind:value={title} />
+			<Input label={t('common.fromDate')} type="date" bind:value={from} />
+			<Input label={t('common.toDate')} type="date" bind:value={to} />
+			<Input label={t('common.place')} bind:value={place} />
+			<Button type="submit" variant="gold" small>{t('family.shareWithTheFamily')}</Button>
 		</form>
 	</Card>
 	<Timeline

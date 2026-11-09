@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import type { AssetDetail } from '#lib/api.ts';
 
 	let {
@@ -120,7 +120,7 @@
 			class="vp-scrub"
 			role="slider"
 			tabindex="-1"
-			aria-label={tr('Pregled videa', 'Video preview')}
+			aria-label={t('videoPlayer.videoPreview')}
 			aria-valuemin="0"
 			aria-valuemax="100"
 			aria-valuenow={Math.round((hover ?? 0) * 100)}

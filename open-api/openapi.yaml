@@ -75,7 +75,7 @@ paths:
   /api/me:
     patch:
       operationId: updateProfile
-      summary: Change one's own name, or email address with the current password
+      summary: Change one's own name, language, or email address with the current password
       requestBody:
         required: true
         content:
@@ -4264,10 +4264,16 @@ components:
         name: { type: string }
         isAdmin: { type: boolean }
         totpEnabled: { type: boolean }
+        language: { $ref: "#/components/schemas/Language" }
         avatarVersion: { type: integer, description: "Changes with each new picture of the person; 0 or missing when there is none" }
+    Language:
+      type: string
+      enum: [en, hr, de, sl]
+      description: "English is the main language; de and sl are machine translated for now"
     ProfileUpdate:
       type: object
       properties:
+        language: { $ref: "#/components/schemas/Language" }
         name: { type: string }
         email: { type: string }
         currentPassword: { type: string, description: "Needed to change the email address" }

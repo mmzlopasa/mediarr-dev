@@ -3,7 +3,7 @@
 	import type { Album } from '#lib/api.ts';
 	import Badge from '#lib/design/components/Badge.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let { album }: { album: Album } = $props();
 	const inside = $derived(album.childCount ?? 0);
@@ -17,7 +17,7 @@
 			<Icon name="album" size={32} />
 		{/if}
 		{#if inside}
-			<span class="alb-inside" title={tr('Albumi unutra', 'Albums inside')}
+			<span class="alb-inside" title={t('albumCard.albumsInside')}
 				><Icon name="folder" size={12} />{inside}</span
 			>
 		{/if}
@@ -26,9 +26,9 @@
 	<span class="alb-meta">
 		{album.assetCount}
 		{#if inside}· {inside === 1
-				? tr('1 album', '1 album')
-				: tr(`${inside} albuma`, `${inside} albums`)}{/if}
-		{#if album.isSmart}· <Badge kind="acc">{tr('Pametni', 'Smart')}</Badge>{/if}
+				? t('albumCard.1Album')
+				: t('albumCard.insideAlbums', { inside })}{/if}
+		{#if album.isSmart}· <Badge kind="acc">{t('albumCard.smart')}</Badge>{/if}
 		{#if album.role !== 'owner'}· {album.ownerName}{/if}
 	</span>
 </a>

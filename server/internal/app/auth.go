@@ -113,6 +113,13 @@ func toAPIUser(user *db.User) api.User {
 		Name:        user.Name,
 		IsAdmin:     user.IsAdmin,
 		TotpEnabled: user.TotpEnabled,
+		Language: func() *api.Language {
+			if !user.Language.Valid {
+				return nil
+			}
+			language := api.Language(user.Language.String)
+			return &language
+		}(),
 		AvatarVersion: func() *int {
 			if user.AvatarVersion == 0 {
 				return nil

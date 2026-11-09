@@ -4,7 +4,7 @@
 	import Button from '#lib/design/components/Button.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t } from '#lib/i18n.svelte.ts';
 	import { since } from '#lib/organize/agent.ts';
 
 	/** Phones that back up, with what the server itself counts as safe from each. */
@@ -29,42 +29,36 @@
 		try {
 			missing[id] = await api.backupDeviceMissing(id);
 		} catch (cause) {
-			showToast('err', cause instanceof Error ? cause.message : tr('Nije učitano.', 'Not loaded.'));
+			showToast('err', cause instanceof Error ? cause.message : t('deviceList.notLoaded'));
 		}
 	}
 
 	async function remove(device: BackupDevice) {
-		const ask = tr(
-			`Maknuti „${device.name}” s popisa? Fotke ostaju na serveru. Ako uređaj opet javi, vratit će se.`,
-			`Take “${device.name}” off the list? Its photos stay on the server. If it reports again, it comes back.`
-		);
+		const ask = t('deviceList.takeNameOffTheList', { name: device.name });
 		if (!confirm(ask)) return;
 		try {
 			await api.removeBackupDevice(device.id);
 			onRemoved?.(device.id);
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Nije maknuto.', 'Not removed.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('deviceList.notRemoved'));
 		}
 	}
 </script>
 
-<ul class="set-list dev-list" aria-label={tr('Uređaji', 'Devices')}>
+<ul class="set-list dev-list" aria-label={t('common.devices')}>
 	{#each devices as device (device.id)}
 		{@const unsafe = device.gone + device.trashed}
 		<li class="dev" class:quiet={device.quiet} data-device={device.name}>
 			<span class="dev-ic"><Icon name="phone" size={18} /></span>
 			<span class="set-list-t">
 				<b>
-					{device.name || tr('Uređaj', 'Device')}
+					{device.name || t('deviceList.device')}
 					{#if device.quiet}
-						<em class="set-chip err">{tr('Šuti', 'Quiet')}</em>
+						<em class="set-chip err">{t('deviceList.quiet')}</em>
 					{:else if device.failed > 0 || unsafe > 0}
-						<em class="set-chip">{tr('Treba pogledati', 'Needs a look')}</em>
+						<em class="set-chip">{t('deviceList.needsALook')}</em>
 					{:else}
-						<em class="set-chip ok">{tr('U redu', 'All good')}</em>
+						<em class="set-chip ok">{t('deviceList.allGood')}</em>
 					{/if}
 				</b>
 				<small>
@@ -72,52 +66,49 @@
 							? `${device.ownerName} (${device.ownerEmail})`
 							: device.ownerEmail} ·
 					{/if}{system(device.platform)}{device.appVersion ? ` · Mediarr ${device.appVersion}` : ''} ·
-					{tr('zadnje javljanje', 'last report')}
+					{t('deviceList.lastReport')}
 					<time datetime={device.reportedAt} title={new Date(device.reportedAt).toLocaleString()}
 						>{since(new Date(device.reportedAt))}</time
 					>
 				</small>
 				<span class="dev-safe">
 					<strong>{number(device.confirmed)}</strong>
-					{tr('datoteka potvrdio je server', 'files confirmed by the server')}
+					{t('deviceList.filesConfirmedByTheServer')}
 					{#if device.files > device.confirmed}
 						<span class="dev-of">
-							{tr('od', 'of')}
+							{t('deviceList.of')}
 							{number(device.files)}
-							{tr('koje je uređaj poslao', 'the device sent')}</span
+							{t('deviceList.theDeviceSent')}</span
 						>
 					{/if}
 				</span>
 				<Bar
 					pct={pct(device)}
 					progress
-					label={tr(
-						`${number(device.verified)} od ${number(total(device))} na uređaju`,
-						`${number(device.verified)} of ${number(total(device))} on the device`
-					)}
+					label={t('deviceList.numberOfNumber2OnThe', {
+						number: number(device.verified),
+						number2: number(total(device))
+					})}
 				/>
 				<small class="dev-counts">
-					{tr('čeka', 'waiting')}
-					{number(device.pending + device.working)} · {tr('nije poslano', 'not sent')}
+					{t('deviceList.waiting')}
+					{number(device.pending + device.working)} · {t('deviceList.notSent')}
 					{number(device.failed)}
 					{#if device.trashed}
-						· {tr('u smeću', 'in the trash')} {number(device.trashed)}{/if}
+						· {t('deviceList.inTheTrash')} {number(device.trashed)}{/if}
 					{#if device.gone}
-						· {tr('više nije na serveru', 'no longer on the server')} {number(device.gone)}{/if}
+						· {t('deviceList.noLongerOnTheServer')} {number(device.gone)}{/if}
 				</small>
 				{#if device.quiet}
 					<p class="dev-warn">
-						{tr(
-							'Uređaj se nije javio dulje nego što ste odredili. Otvorite Mediarr na njemu i provjerite je li backup uključen.',
-							'The device has not reported for longer than you allow. Open Mediarr on it and check that backup is on.'
-						)}
+						{t('deviceList.theDeviceHasNotReported')}
 					</p>
 				{/if}
 				{#if missing[device.id]}
 					{@const m = missing[device.id]}
 					<div class="imp-report">
 						{#if m.failures.length === 0 && m.gone.length === 0}
-							<p>{tr('Ništa ne nedostaje.', 'Nothing is missing.')}</p>
+							<p>{t('deviceList.nothingIsMissing')}</p>
 						{:else}
 							<ul>
 								{#each m.failures as failure, n (n)}
@@ -127,8 +118,8 @@
 									<li>
 										<b class="mono">{gone.name || gone.checksum.slice(0, 12)}</b>
 										{gone.inTrash
-											? tr('je u smeću na serveru.', 'is in the trash on the server.')
-											: tr('je obrisana sa servera.', 'was deleted from the server.')}
+											? t('deviceList.isInTheTrashOn')
+											: t('deviceList.wasDeletedFromTheServer')}
 									</li>
 								{/each}
 							</ul>
@@ -140,13 +131,11 @@
 				<span class="imp-acts">
 					{#if device.failed > 0 || unsafe > 0}
 						<Button small onclick={() => toggleMissing(device.id)}
-							>{missing[device.id]
-								? tr('Sakrij', 'Hide')
-								: tr('Što nedostaje', 'What is missing')}</Button
+							>{missing[device.id] ? t('common.hide') : t('deviceList.whatIsMissing')}</Button
 						>
 					{/if}
 					<Button small variant="danger" onclick={() => remove(device)}
-						>{tr('Makni', 'Remove')}</Button
+						>{t('common.remove2')}</Button
 					>
 				</span>
 			{/if}

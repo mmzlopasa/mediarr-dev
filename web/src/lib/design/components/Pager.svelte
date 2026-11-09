@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Button from './Button.svelte';
 
 	let {
@@ -17,7 +17,7 @@
 </script>
 
 {#if pages > 1}
-	<nav class="pager" aria-label={tr('Stranice', 'Pages')}>
+	<nav class="pager" aria-label={t('pager.pages')}>
 		{#if page > 1}<Button small aria-label="←" onclick={() => (page -= 1)}>←</Button>{/if}
 		{#each visible as number (number)}
 			<Button
@@ -28,6 +28,6 @@
 			>
 		{/each}
 		{#if page < pages}<Button small aria-label="→" onclick={() => (page += 1)}>→</Button>{/if}
-		<span class="mute sm-t">{tr(`ukupno ${total}`, `${total} total`)}</span>
+		<span class="mute sm-t">{t('pager.totalTotal', { total })}</span>
 	</nav>
 {/if}

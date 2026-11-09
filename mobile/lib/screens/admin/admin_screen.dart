@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../../theme.dart';
 import '../backup_screen.dart';
 import '../devices_screen.dart';
@@ -21,62 +22,67 @@ class AdminScreen extends StatelessWidget {
     final sections = <(IconData, String, String, Widget)>[
       (
         Icons.insights_outlined,
-        'Overview',
-        'Users, photos, disk and versions',
+        l.adminScreenOverview,
+        l.adminScreenOverviewHint,
         const AdminOverviewScreen(),
       ),
       (
         Icons.group_outlined,
-        'Users',
-        'Add users and set how much they may store',
+        l.adminScreenUsers,
+        l.adminScreenUsersHint,
         const AdminUsersScreen(),
       ),
       (
         Icons.tune,
-        'Server settings',
-        'Trash, quality, faces, jobs, sign-in',
+        l.adminScreenServerSettings,
+        l.adminScreenServerSettingsHint,
         const ServerSettingsScreen(),
       ),
       (
         Icons.mail_outline,
-        'Email',
-        'Where messages are sent from',
+        l.adminScreenEmail,
+        l.adminScreenEmailHint,
         const EmailSettingsScreen(),
       ),
       (
         Icons.shield_outlined,
-        'Security',
-        'Single sign-on, devices, addresses, attempts',
+        l.adminScreenSecurity,
+        l.adminScreenSecurityHint,
         const SecurityScreen(),
       ),
       (
         Icons.work_history_outlined,
-        'Jobs',
-        'Queues and jobs that failed',
+        l.adminScreenJobs,
+        l.adminScreenJobsHint,
         const JobsScreen(),
       ),
-      (Icons.history, 'Audit log', 'Who changed what', const AuditScreen()),
+      (
+        Icons.history,
+        l.adminScreenAuditLog,
+        l.adminScreenAuditLogHint,
+        const AuditScreen(),
+      ),
       (
         Icons.backup_outlined,
-        'Backup',
-        'Copies of the library',
+        l.settingsScreenBackup,
+        l.adminScreenBackupHint,
         const BackupScreen(),
       ),
       (
         Icons.devices_other_outlined,
-        'All backup devices',
-        'Every phone that backs up',
+        l.adminScreenBackupDevices,
+        l.adminScreenBackupDevicesHint,
         const BackupDevicesScreen(all: true),
       ),
       (
         Icons.drive_file_move_outline,
-        'Storage template',
-        'How originals are laid out on the disk',
+        l.adminScreenStorageTemplate,
+        l.adminScreenStorageTemplateHint,
         const StorageTemplateScreen(),
       ),
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('Administration')),
+      appBar: AppBar(title: Text(l.adminScreenTitle)),
       body: ListView(
         children: [
           for (final (icon, title, subtitle, screen) in sections)

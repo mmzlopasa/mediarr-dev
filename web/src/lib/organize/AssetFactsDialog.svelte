@@ -4,7 +4,7 @@
 	import Dialog from '#lib/design/components/Dialog.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	type Place = {
 		name: string;
@@ -72,10 +72,7 @@
 			await api.setAssetFacts(detail.id, body);
 			await onSaved();
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Nije spremljeno.', 'Not saved.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.notSaved'));
 		}
 	}
 
@@ -90,11 +87,11 @@
 	}
 </script>
 
-<Dialog title={tr('Uredi podatke', 'Edit details')} bind:open>
+<Dialog title={t('assetFactsDialog.editDetails')} bind:open>
 	<form class="form" onsubmit={save}>
-		<Input label={tr('Datum i vrijeme', 'Date and time')} type="datetime-local" bind:value={when} />
+		<Input label={t('common.dateAndTime')} type="datetime-local" bind:value={when} />
 		<Input
-			label={tr('Pronađi mjesto', 'Find a place')}
+			label={t('assetFactsDialog.findAPlace')}
 			bind:value={search}
 			oninput={findPlaces}
 			autocomplete="off"
@@ -105,7 +102,7 @@
 			</Button>
 		{/each}
 		<Input
-			label={tr('Geografska širina', 'Latitude')}
+			label={t('assetFactsDialog.latitude')}
 			type="number"
 			step="any"
 			min="-90"
@@ -113,7 +110,7 @@
 			bind:value={latitude}
 		/>
 		<Input
-			label={tr('Geografska dužina', 'Longitude')}
+			label={t('assetFactsDialog.longitude')}
 			type="number"
 			step="any"
 			min="-180"
@@ -121,13 +118,13 @@
 			bind:value={longitude}
 		/>
 		<label>
-			{tr('Opis', 'Description')}
+			{t('common.description')}
 			<textarea class="in" rows="3" maxlength="2000" bind:value={caption}></textarea>
 		</label>
 		<div class="integrity-run">
-			<Button type="submit" variant="gold" small>{tr('Spremi', 'Save')}</Button>
+			<Button type="submit" variant="gold" small>{t('common.save')}</Button>
 			<Button small onclick={() => send({ useFile: true })}>
-				{tr('Koristi podatke iz datoteke', 'Use what the file says')}
+				{t('assetFactsDialog.useWhatTheFileSays')}
 			</Button>
 		</div>
 	</form>

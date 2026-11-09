@@ -1,6 +1,5 @@
+import { t } from '#lib/i18n.svelte.ts';
 import type { CleanupCategoryId, CleanupItem } from '#lib/api.ts';
-
-type Say = (hr: string, en: string) => string;
 
 export const CATEGORIES: CleanupCategoryId[] = ['blurry', 'screenshots', 'largeVideos', 'bursts'];
 export const VIDEO_SIZES = [250, 500, 1000, 2000] as const;
@@ -8,38 +7,29 @@ export const VIDEO_SIZES = [250, 500, 1000, 2000] as const;
 /** Favorites and photos in albums are shown, but not ticked: someone chose them once. */
 export const ticked = (item: CleanupItem) => !item.favorite && !item.inAlbum;
 
-export function titleOf(category: CleanupCategoryId, tr: Say): string {
+export function titleOf(category: CleanupCategoryId): string {
 	switch (category) {
 		case 'blurry':
-			return tr('Mutne fotke', 'Blurry photos');
+			return t('cleanup.blurryPhotos');
 		case 'screenshots':
-			return tr('Screenshotovi', 'Screenshots');
+			return t('cleanup.screenshots');
 		case 'largeVideos':
-			return tr('Veliki videi', 'Large videos');
+			return t('cleanup.largeVideos');
 		case 'bursts':
-			return tr('Nizovi', 'Bursts');
+			return t('cleanup.bursts');
 	}
 }
 
-export function hintOf(category: CleanupCategoryId, tr: Say): string {
+export function hintOf(category: CleanupCategoryId): string {
 	switch (category) {
 		case 'blurry':
-			return tr(
-				'Fotke s vrlo malo oštrih rubova. Klizač određuje koliko strogo.',
-				'Photos with very few sharp edges. The slider sets how strict.'
-			);
+			return t('cleanup.photosWithVeryFewSharp');
 		case 'screenshots':
-			return tr(
-				'Prepoznati po imenu, oznaci s iPhonea ili obliku ekrana.',
-				"Found by their name, an iPhone's mark, or the shape of a screen."
-			);
+			return t('cleanup.foundByTheirNameAn');
 		case 'largeVideos':
-			return tr('Najveći prvi.', 'The largest first.');
+			return t('cleanup.theLargestFirst');
 		case 'bursts':
-			return tr(
-				'Ostali kadrovi niza. Najbolji kadar ostaje.',
-				'The other shots of a burst. The best shot stays.'
-			);
+			return t('cleanup.theOtherShotsOfA');
 	}
 }
 

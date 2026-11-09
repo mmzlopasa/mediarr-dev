@@ -10,7 +10,7 @@
 	import Logo from '#lib/design/components/Logo.svelte';
 	import PasswordInput from '#lib/design/components/PasswordInput.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
@@ -64,8 +64,8 @@
 		} catch (cause) {
 			unlockError =
 				cause instanceof ApiError && cause.status === 429
-					? tr('Previše pokušaja. Pokušajte kasnije.', 'Too many attempts. Try again later.')
-					: tr('Pogrešna lozinka.', 'Wrong password.');
+					? t('common.tooManyAttemptsTryAgain')
+					: t('s.token.wrongPassword');
 		} finally {
 			busy = false;
 		}
@@ -119,17 +119,17 @@
 
 	{#if gone}
 		<div class="pub-box">
-			<Alert kind="err">{tr('Ovaj link nije dostupan.', 'This link is not available.')}</Alert>
+			<Alert kind="err">{t('s.token.thisLinkIsNotAvailable')}</Alert>
 		</div>
 	{:else if !link}
 		<Skeleton height="220px" />
 	{:else if link.locked}
 		<div class="pub-box">
-			<Card title={tr('Potrebna je lozinka', 'A password is needed')}>
+			<Card title={t('s.token.aPasswordIsNeeded')}>
 				<form class="form" onsubmit={unlock}>
 					{#if unlockError}<Alert kind="err">{unlockError}</Alert>{/if}
-					<PasswordInput label={tr('Lozinka', 'Password')} />
-					<Button type="submit" variant="gold" disabled={busy}>{tr('Otvori', 'Open')}</Button>
+					<PasswordInput label={t('common.password')} />
+					<Button type="submit" variant="gold" disabled={busy}>{t('common.open')}</Button>
 				</form>
 			</Card>
 		</div>
@@ -142,31 +142,25 @@
 			{#if link.allowUpload}
 				<div class="ph-a">
 					<label class="btn gold sm">
-						{tr('Dodaj fotke', 'Add photos')}
+						{t('s.token.addPhotos')}
 						<input class="sr" type="file" multiple accept="image/*,video/*" onchange={send} />
 					</label>
 				</div>
 			{/if}
 		</div>
 
-		{#if sending > 0}<Alert kind="ok">{tr(`Šalje se: ${sending}`, `Sending: ${sending}`)}</Alert
-			>{/if}
-		{#if sent > 0}<Alert kind="ok"
-				>{tr(`Poslano: ${sent}. Hvala!`, `Sent: ${sent}. Thank you!`)}</Alert
-			>{/if}
+		{#if sending > 0}<Alert kind="ok">{t('s.token.sendingSending', { sending })}</Alert>{/if}
+		{#if sent > 0}<Alert kind="ok">{t('s.token.sentSentThankYou', { sent })}</Alert>{/if}
 		{#if failedFiles.length > 0}
-			<Alert kind="err">{tr('Nisu poslane: ', 'Not sent: ')}{failedFiles.join(', ')}</Alert>
+			<Alert kind="err">{t('s.token.notSent')}{failedFiles.join(', ')}</Alert>
 		{/if}
 
 		{#if link.uploadOnly}
 			<p class="alb-meta">
-				{tr(
-					'Fotke idu izravno vlasniku albuma. Sadržaj albuma ovdje se ne prikazuje.',
-					'Photos go straight to the album owner. The album itself is not shown here.'
-				)}
+				{t('s.token.photosGoStraightToThe')}
 			</p>
 		{:else}
-			{#if total === 0}<p class="alb-meta">{tr('Album je prazan.', 'This album is empty.')}</p>{/if}
+			{#if total === 0}<p class="alb-meta">{t('s.token.thisAlbumIsEmpty')}</p>{/if}
 			<Timeline
 				bind:this={timeline}
 				{source}

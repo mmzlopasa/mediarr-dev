@@ -4,7 +4,7 @@
 	import Dialog from '#lib/design/components/Dialog.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import CollectionView from '#lib/organize/CollectionView.svelte';
 
@@ -17,11 +17,11 @@
 	async function restore(ids: string[], clear: () => void) {
 		try {
 			const { changed } = await api.bulk(ids, 'restore');
-			showToast('ok', tr(`Vraćeno: ${changed}`, `Restored: ${changed}`));
+			showToast('ok', t('trash.restoredChanged', { changed }));
 			clear();
 			await view?.reload();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -29,12 +29,12 @@
 		if (!toPurge) return;
 		try {
 			const { changed } = await api.bulk(toPurge.ids, 'purge');
-			showToast('ok', tr(`Trajno obrisano: ${changed}`, `Permanently deleted: ${changed}`));
+			showToast('ok', t('trash.permanentlyDeletedChanged', { changed }));
 			toPurge.clear();
 			confirmPurge = false;
 			await view?.reload();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -52,27 +52,27 @@
 	async function empty() {
 		try {
 			const { changed } = await api.emptyTrash();
-			showToast('ok', tr(`Trajno obrisano: ${changed}`, `Permanently deleted: ${changed}`));
+			showToast('ok', t('trash.permanentlyDeletedChanged', { changed }));
 			confirmEmpty = false;
 			await view?.reload();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
 <div class="ph">
 	<div>
-		<h1>{tr(item.hr, item.en)}</h1>
+		<h1>{t(item.label)}</h1>
 		<p>
-			{tr('Stavke se trajno brišu nakon 30 dana.', 'Items are permanently deleted after 30 days.')}
+			{t('trash.itemsArePermanentlyDeletedAfter')}
 		</p>
 	</div>
 	<div class="ph-a">
 		<Button small variant="danger" onclick={() => (confirmEmpty = true)}
-			>{tr('Isprazni smeće', 'Empty the trash')}</Button
+			>{t('trash.emptyTheTrash')}</Button
 		>
 	</div>
 </div>
@@ -82,15 +82,15 @@
 		<button
 			type="button"
 			class="icon-btn"
-			aria-label={tr('Vrati', 'Restore')}
-			title={tr('Vrati', 'Restore')}
+			aria-label={t('trash.restore')}
+			title={t('trash.restore')}
 			onclick={() => restore(ids, clear)}><Icon name="sync" /></button
 		>
 		<button
 			type="button"
 			class="icon-btn"
-			aria-label={tr('Obriši trajno', 'Delete permanently')}
-			title={tr('Obriši trajno', 'Delete permanently')}
+			aria-label={t('trash.deletePermanently')}
+			title={t('trash.deletePermanently')}
 			onclick={() => {
 				toPurge = { ids, clear };
 				confirmPurge = true;
@@ -99,36 +99,30 @@
 	{/snippet}
 </CollectionView>
 
-<Dialog title={tr('Obrisati trajno?', 'Delete permanently?')} bind:open={confirmPurge}>
+<Dialog title={t('trash.deletePermanently2')} bind:open={confirmPurge}>
 	<p>
-		{tr(
-			'Originali se brišu s diska. To se ne može poništiti.',
-			'The originals are removed from the disk. This cannot be undone.'
-		)}
+		{t('trash.theOriginalsAreRemovedFrom')}
 	</p>
 	{#snippet footer()}
-		<Button onclick={() => (confirmPurge = false)}>{tr('Odustani', 'Cancel')}</Button>
-		<Button variant="danger" onclick={purge}>{tr('Obriši trajno', 'Delete permanently')}</Button>
+		<Button onclick={() => (confirmPurge = false)}>{t('common.cancel')}</Button>
+		<Button variant="danger" onclick={purge}>{t('trash.deletePermanently')}</Button>
 	{/snippet}
 </Dialog>
 
-<Dialog title={tr('Isprazniti smeće?', 'Empty the trash?')} bind:open={confirmEmpty}>
+<Dialog title={t('trash.emptyTheTrash2')} bind:open={confirmEmpty}>
 	<p>
-		{tr(
-			'Svi originali iz smeća brišu se s diska. To se ne može poništiti.',
-			'All originals in the trash are removed from the disk. This cannot be undone.'
-		)}
+		{t('trash.allOriginalsInTheTrash')}
 	</p>
 	{#if summary}
 		<p data-testid="trash-summary">
-			{tr(
-				`Briše se: ${summary.assets} datoteka, ${formatBytes(summary.bytes)}.`,
-				`This removes ${summary.assets} files, ${formatBytes(summary.bytes)}.`
-			)}
+			{t('trash.thisRemovesAssetsFilesFormatbytes', {
+				assets: summary.assets,
+				formatBytes: formatBytes(summary.bytes)
+			})}
 		</p>
 	{/if}
 	{#snippet footer()}
-		<Button onclick={() => (confirmEmpty = false)}>{tr('Odustani', 'Cancel')}</Button>
-		<Button variant="danger" onclick={empty}>{tr('Isprazni smeće', 'Empty the trash')}</Button>
+		<Button onclick={() => (confirmEmpty = false)}>{t('common.cancel')}</Button>
+		<Button variant="danger" onclick={empty}>{t('trash.emptyTheTrash')}</Button>
 	{/snippet}
 </Dialog>

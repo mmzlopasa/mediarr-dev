@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import type { NavItem } from '#lib/nav.ts';
 	import Icon from './Icon.svelte';
 
@@ -12,7 +12,7 @@
 	let selected = $state(0);
 
 	const results = $derived(
-		items.filter((item) => tr(item.hr, item.en).toLowerCase().includes(query.trim().toLowerCase()))
+		items.filter((item) => t(item.label).toLowerCase().includes(query.trim().toLowerCase()))
 	);
 
 	export function open() {
@@ -55,14 +55,14 @@
 	bind:this={dialog}
 	data-lenis-prevent
 	class="cmd glass"
-	aria-label={tr('Brze naredbe', 'Command palette')}
+	aria-label={t('commandPalette.commandPalette')}
 >
 	<div class="cmd-in">
 		<input
 			class="in"
 			type="search"
-			aria-label={tr('Traži naredbu', 'Search commands')}
-			placeholder={tr('Idi na…', 'Go to…')}
+			aria-label={t('commandPalette.searchCommands')}
+			placeholder={t('commandPalette.goTo')}
 			bind:value={query}
 			oninput={() => (selected = 0)}
 			onkeydown={onInputKey}
@@ -78,11 +78,11 @@
 					onclick={() => run(item)}
 				>
 					<span class="ic"><Icon name={item.icon} /></span>
-					<span>{tr(item.hr, item.en)}</span>
+					<span>{t(item.label)}</span>
 				</button>
 			</li>
 		{:else}
-			<li class="empty"><p>{tr('Nema rezultata.', 'No results.')}</p></li>
+			<li class="empty"><p>{t('commandPalette.noResults')}</p></li>
 		{/each}
 	</ul>
 </dialog>

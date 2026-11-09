@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'asset_picture.dart';
@@ -119,6 +120,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   Widget _part(
     String title, {
+    required String all,
     required bool failed,
     required String failure,
     required bool loading,
@@ -161,7 +163,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 ),
               ),
               IconButton(
-                tooltip: 'All $title',
+                tooltip: all,
                 icon: const Icon(Icons.chevron_right),
                 onPressed: onAll,
               ),
@@ -178,16 +180,17 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   Widget build(BuildContext context) {
     final broken = Icon(Icons.broken_image_outlined, color: Palette.dim);
     return Scaffold(
-      appBar: AppBar(title: const Text('Explore')),
+      appBar: AppBar(title: Text(l.exploreScreenExplore)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 40),
         children: [
           _part(
-            'People',
+            l.exploreScreenPeople,
+            all: l.exploreScreenAllPeople,
             failed: _peopleFailed,
-            failure: 'People could not be loaded.',
+            failure: l.exploreScreenPeopleFailed,
             loading: _people == null,
-            empty: 'No named people yet.',
+            empty: l.exploreScreenNoNamedPeople,
             onAll: () => _open(const PeopleScreen()),
             covers: [
               for (final person in _people ?? const <Person>[])
@@ -205,11 +208,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             ],
           ),
           _part(
-            'Places',
+            l.exploreScreenPlaces,
+            all: l.exploreScreenAllPlaces,
             failed: _placesFailed,
-            failure: 'Places could not be loaded.',
+            failure: l.exploreScreenPlacesFailed,
             loading: _places == null,
-            empty: 'No photos with a place yet.',
+            empty: l.exploreScreenNoPlaces,
             onAll: () => _open(const SearchScreen()),
             covers: [
               for (final place in _places ?? const <ExplorePlace>[])
@@ -227,11 +231,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             ],
           ),
           _part(
-            'Memories',
+            l.exploreScreenMemories,
+            all: l.exploreScreenAllMemories,
             failed: _memoriesFailed,
-            failure: 'Memories could not be loaded.',
+            failure: l.exploreScreenMemoriesFailed,
             loading: _memories == null,
-            empty: 'No memories today.',
+            empty: l.exploreScreenNoMemories,
             onAll: () => _open(const MemoriesScreen()),
             covers: [
               for (final memory in _memories ?? const <Memory>[])

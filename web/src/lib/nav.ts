@@ -1,158 +1,122 @@
+import { k, type Key } from '#lib/i18n.svelte.ts';
 import type { IconName } from './design/icons';
 
 export type NavItem = {
 	path: string;
 	icon: IconName;
-	hr: string;
-	en: string;
-	emptyHr: string;
-	emptyEn: string;
+	label: Key;
+	/** What an empty page says; admin pages have none. */
+	empty?: Key;
 };
 
 export const appNav: NavItem[] = [
 	{
 		path: '/',
 		icon: 'photo',
-		hr: 'Mediji',
-		en: 'Media',
-		emptyHr: 'Još nema fotki. Dodajte prve gumbom Upload.',
-		emptyEn: 'No photos yet. Add your first ones with the Upload button.'
+		label: k('admin.media'),
+		empty: k('nav.noPhotosYetAddYour')
 	},
 	{
 		path: '/search',
 		icon: 'search',
-		hr: 'Pretraga',
-		en: 'Search',
-		emptyHr: 'Pretraga će biti dostupna kad dodate fotke.',
-		emptyEn: 'Search becomes available once you add photos.'
+		label: k('nav.search'),
+		empty: k('nav.searchBecomesAvailableOnceYou')
 	},
 	{
 		path: '/explore',
 		icon: 'spark',
-		hr: 'Istraži',
-		en: 'Explore',
-		emptyHr: 'Još nema ničega za istraživanje. Dodajte fotke.',
-		emptyEn: 'Nothing to explore yet. Add some photos.'
+		label: k('nav.explore'),
+		empty: k('nav.nothingToExploreYetAdd')
 	},
 	{
 		path: '/map',
 		icon: 'map',
-		hr: 'Karta',
-		en: 'Map',
-		emptyHr: 'Još nema fotki s lokacijom.',
-		emptyEn: 'No photos with a location yet.'
+		label: k('admin.settings.map'),
+		empty: k('nav.noPhotosWithALocation')
 	},
 	{
 		path: '/people',
 		icon: 'users',
-		hr: 'Ljudi',
-		en: 'People',
-		emptyHr: 'Još nema prepoznatih osoba.',
-		emptyEn: 'No people recognised yet.'
+		label: k('tv.people'),
+		empty: k('nav.noPeopleRecognisedYet')
 	},
 	{
 		path: '/recent',
 		icon: 'upload',
-		hr: 'Nedavno dodano',
-		en: 'Recently added',
-		emptyHr: 'Još ništa nije dodano.',
-		emptyEn: 'Nothing has been added yet.'
+		label: k('nav.recentlyAdded'),
+		empty: k('nav.nothingHasBeenAddedYet')
 	},
 	{
 		path: '/favorites',
 		icon: 'star',
-		hr: 'Favoriti',
-		en: 'Favorites',
-		emptyHr: 'Još nema favorita. Označite fotku zvjezdicom.',
-		emptyEn: 'No favorites yet. Mark a photo with the star.'
+		label: k('accountOverview.favorites'),
+		empty: k('nav.noFavoritesYetMarkA')
 	},
 	{
 		path: '/albums',
 		icon: 'album',
-		hr: 'Albumi',
-		en: 'Albums',
-		emptyHr: 'Još nema albuma.',
-		emptyEn: 'No albums yet.'
+		label: k('tv.albums'),
+		empty: k('nav.noAlbumsYet')
 	},
 	{
 		path: '/shared',
 		icon: 'share',
-		hr: 'Dijeljeno',
-		en: 'Shared',
-		emptyHr: 'Još ništa nije podijeljeno.',
-		emptyEn: 'Nothing has been shared yet.'
+		label: k('nav.shared'),
+		empty: k('nav.nothingHasBeenSharedYet')
 	},
 	{
 		path: '/family',
 		icon: 'users',
-		hr: 'Obitelj',
-		en: 'Family',
-		emptyHr: 'Obiteljska biblioteka je prazna.',
-		emptyEn: 'The family library is empty.'
+		label: k('family.family'),
+		empty: k('nav.theFamilyLibraryIsEmpty')
 	},
 	{
 		path: '/memories',
 		icon: 'spark',
-		hr: 'Memories',
-		en: 'Memories',
-		emptyHr: 'Još nema uspomena.',
-		emptyEn: 'No memories yet.'
+		label: k('nav.memories'),
+		empty: k('nav.noMemoriesYet')
 	},
 	{
 		path: '/folders',
 		icon: 'folder',
-		hr: 'Mape',
-		en: 'Folders',
-		emptyHr: 'Ova mapa je prazna.',
-		emptyEn: 'This folder is empty.'
+		label: k('folders.folders'),
+		empty: k('folders.thisFolderIsEmpty')
 	},
 	{
 		path: '/documents',
 		icon: 'list',
-		hr: 'Dokumenti',
-		en: 'Documents',
-		emptyHr: 'Još nema dokumenata.',
-		emptyEn: 'No documents yet.'
+		label: k('documents.documents'),
+		empty: k('nav.noDocumentsYet')
 	},
 	{
 		path: '/duplicates',
 		icon: 'copy',
-		hr: 'Duplikati',
-		en: 'Duplicates',
-		emptyHr: 'Nisu pronađene slične fotke.',
-		emptyEn: 'No similar photos were found.'
+		label: k('duplicates.duplicates'),
+		empty: k('duplicates.noSimilarPhotosWereFound')
 	},
 	{
 		path: '/cleanup',
 		icon: 'spark',
-		hr: 'Čišćenje',
-		en: 'Clean up',
-		emptyHr: 'Ovdje nema ničega za čišćenje.',
-		emptyEn: 'Nothing to clean up here.'
+		label: k('cleanup.cleanUp'),
+		empty: k('cleanup.nothingToCleanUpHere')
 	},
 	{
 		path: '/archive',
 		icon: 'archive',
-		hr: 'Arhiva',
-		en: 'Archive',
-		emptyHr: 'Arhiva je prazna.',
-		emptyEn: 'The archive is empty.'
+		label: k('accountOverview.archive'),
+		empty: k('nav.theArchiveIsEmpty')
 	},
 	{
 		path: '/trash',
 		icon: 'trash',
-		hr: 'Smeće',
-		en: 'Trash',
-		emptyHr: 'Smeće je prazno.',
-		emptyEn: 'The trash is empty.'
+		label: k('accountOverview.trash'),
+		empty: k('nav.theTrashIsEmpty')
 	},
 	{
 		path: '/vault',
 		icon: 'lock',
-		hr: 'Trezor',
-		en: 'Vault',
-		emptyHr: 'Trezor je prazan.',
-		emptyEn: 'The vault is empty.'
+		label: k('nav.vault'),
+		empty: k('nav.theVaultIsEmpty')
 	}
 ];
 
@@ -160,73 +124,49 @@ export const adminNav: NavItem[] = [
 	{
 		path: '/admin',
 		icon: 'grid',
-		hr: 'Pregled',
-		en: 'Overview',
-		emptyHr: '',
-		emptyEn: ''
+		label: k('admin.overview')
 	},
 	{
 		path: '/admin/users',
 		icon: 'users',
-		hr: 'Korisnici',
-		en: 'Users',
-		emptyHr: '',
-		emptyEn: ''
+		label: k('admin.users.users')
 	},
 	{
 		path: '/admin/jobs',
 		icon: 'list',
-		hr: 'Poslovi',
-		en: 'Jobs',
-		emptyHr: '',
-		emptyEn: ''
+		label: k('admin.jobs.jobs')
 	},
 	{
 		path: '/admin/storage',
 		icon: 'db',
-		hr: 'Pohrana',
-		en: 'Storage',
-		emptyHr: '',
-		emptyEn: ''
+		label: k('admin.storage.storage')
 	},
 	{
 		path: '/admin/settings',
 		icon: 'cog',
-		hr: 'Postavke',
-		en: 'Settings',
-		emptyHr: 'Postavke stižu u kasnijoj fazi.',
-		emptyEn: 'Settings arrive in a later phase.'
+		label: k('viewer.settings'),
+		empty: k('nav.settingsArriveInALater')
 	},
 	{
 		path: '/admin/security',
 		icon: 'lock',
-		hr: 'Sigurnost',
-		en: 'Security',
-		emptyHr: 'Još nema zapisa.',
-		emptyEn: 'Nothing recorded yet.'
+		label: k('admin.security.security'),
+		empty: k('admin.security.nothingRecordedYet')
 	},
 	{
 		path: '/admin/audit',
 		icon: 'shield',
-		hr: 'Dnevnik aktivnosti',
-		en: 'Activity log',
-		emptyHr: 'Još nema zapisa.',
-		emptyEn: 'Nothing recorded yet.'
+		label: k('admin.audit.activityLog'),
+		empty: k('admin.security.nothingRecordedYet')
 	},
 	{
 		path: '/admin/devices',
 		icon: 'phone',
-		hr: 'Uređaji za backup',
-		en: 'Backup devices',
-		emptyHr: '',
-		emptyEn: ''
+		label: k('common.backupDevices')
 	},
 	{
 		path: '/admin/health',
 		icon: 'pulse',
-		hr: 'Zdravlje',
-		en: 'Health',
-		emptyHr: '',
-		emptyEn: ''
+		label: k('admin.health.health')
 	}
 ];

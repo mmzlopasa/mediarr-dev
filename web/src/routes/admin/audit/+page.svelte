@@ -6,7 +6,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let entries = $state<AuditEntry[]>();
 	let failed = $state(false);
@@ -28,35 +28,32 @@
 	onMount(() => load());
 </script>
 
-<svelte:head><title>{tr('Dnevnik aktivnosti', 'Activity log')} — Mediarr Admin</title></svelte:head>
+<svelte:head><title>{t('admin.audit.activityLog')} — Mediarr Admin</title></svelte:head>
 
 <div class="ph">
-	<div><h1>{tr('Dnevnik aktivnosti', 'Activity log')}</h1></div>
+	<div><h1>{t('admin.audit.activityLog')}</h1></div>
 </div>
 
 {#if failed}
-	<Alert kind="err">{tr('Dnevnik se nije učitao.', 'The activity log could not be loaded.')}</Alert>
+	<Alert kind="err">{t('admin.audit.theActivityLogCouldNot')}</Alert>
 {:else if !entries}
 	<Skeleton height="220px" />
 {:else if entries.length === 0}
 	<section class="card glass">
 		<div class="card-b">
-			<EmptyState icon="list" text={tr('Još nema zapisa.', 'Nothing recorded yet.')} />
+			<EmptyState icon="list" text={t('admin.audit.nothingRecordedYet')} />
 		</div>
 	</section>
 {:else}
-	<Card title={tr('Promjene, od najnovije', 'Changes, newest first')}>
+	<Card title={t('admin.audit.changesNewestFirst')}>
 		<p class="alb-meta">
-			{tr(
-				'Bilježi se tko je što promijenio, a ne sadržaj zahtjeva. Zapisi se čuvaju godinu dana.',
-				'This records who changed what, not the content of a request. Entries are kept for a year.'
-			)}
+			{t('admin.audit.thisRecordsWhoChangedWhat')}
 		</p>
 		<div class="audit-list">
 			{#each entries as entry (entry.id)}
 				<div class="audit-row" class:audit-failed={entry.status >= 400}>
 					<small>{new Date(entry.at).toLocaleString()}</small>
-					<b>{entry.userEmail || tr('nepoznato', 'unknown')}</b>
+					<b>{entry.userEmail || t('admin.audit.unknown')}</b>
 					<span>{entry.method} {entry.route}</span>
 					<small>{entry.target}</small>
 					<small>{entry.status} · {entry.ip}</small>
@@ -64,9 +61,7 @@
 			{/each}
 		</div>
 		{#if more}
-			<Button small onclick={() => load(entries?.at(-1)?.id)}
-				>{tr('Učitaj starije', 'Load older')}</Button
-			>
+			<Button small onclick={() => load(entries?.at(-1)?.id)}>{t('admin.audit.loadOlder')}</Button>
 		{/if}
 	</Card>
 {/if}

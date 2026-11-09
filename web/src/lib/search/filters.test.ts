@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { chipsFor, hasSearch, withoutChip } from './filters.ts';
 
-const tr = (_hr: string, en: string) => en;
 const day = (iso: string) => iso;
 
 describe('search filters', () => {
@@ -17,7 +16,6 @@ describe('search filters', () => {
 		const chips = chipsFor(
 			{ people: [{ id: 'p1', name: 'Ana' }], place: 'Hvar', camera: 'X-T5', words: 'dog' },
 			params,
-			tr,
 			day
 		);
 		expect(chips.map((chip) => [chip.label, chip.found])).toEqual([
@@ -30,7 +28,7 @@ describe('search filters', () => {
 	it('drops a chosen filter, and searches a found one as a word', () => {
 		const filters = { people: [{ id: 'p1', name: 'Ana' }], place: 'Hvar', camera: 'X-T5' };
 		const params = new URLSearchParams('q=Ana%20Hvar&camera=X-T5');
-		const [ana, hvar, camera] = chipsFor(filters, params, tr, day);
+		const [ana, hvar, camera] = chipsFor(filters, params, day);
 		expect(withoutChip(params, camera, filters).has('camera')).toBe(false);
 		const plain = withoutChip(params, hvar, filters);
 		expect(plain.get('plain')).toBe('true');

@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:mediarr_api/api.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../l10n/l10n.dart';
 import '../services/account_preferences.dart';
 import '../services/session.dart';
 import '../theme.dart';
@@ -21,8 +22,8 @@ String localToday(DateTime now) => dayString(now);
 
 String memoryTitle(Memory memory, DateTime now) =>
     memory.kind == MemoryKindEnum.week
-    ? 'The last week'
-    : 'On this day, ${now.year - (memory.year ?? now.year)} years ago';
+    ? l.memoriesScreenLastWeek
+    : l.memoriesScreenOnThisDay(now.year - (memory.year ?? now.year));
 
 class MemoriesScreen extends ConsumerStatefulWidget {
   const MemoriesScreen({super.key});
@@ -67,14 +68,17 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
       body = _failed
           ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'Memories could not be loaded. Check the connection.',
-              action: GoldButton(label: 'Try again', onPressed: _load),
+              text: l.memoriesScreenLoadFailed,
+              action: GoldButton(
+                label: l.memoriesScreenTryAgain,
+                onPressed: _load,
+              ),
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (memories.isEmpty) {
-      body = const EmptyMessage(
+      body = EmptyMessage(
         icon: Icons.auto_awesome_outlined,
-        text: 'No memories yet.',
+        text: l.memoriesScreenNoneYet,
       );
     } else {
       body = GridView.builder(
@@ -108,14 +112,14 @@ class _MemoriesScreenState extends ConsumerState<MemoriesScreen> {
               session: _session,
               memory: memory,
               title: memoryTitle(memory, now),
-              subtitle: '${memory.items.length} items',
+              subtitle: l.memoriesScreenItems(memory.items.length),
             ),
           );
         },
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Memories')),
+      appBar: AppBar(title: Text(l.memoriesScreenTitle)),
       body: body,
     );
   }
@@ -188,15 +192,15 @@ class _StoryScreenState extends State<StoryScreen> {
         story = await api.getStoryExport(story!.id);
       }
       if (story?.status != StoryExportStatusEnum.ready) {
-        _tell('The video could not be made.');
+        _tell(l.memoriesScreenVideoFailed);
         return;
       }
       await _saveToPhone(story!.id);
-      _tell('The video is saved in your Photos.');
+      _tell(l.memoriesScreenVideoSaved);
     } on ApiException {
-      _tell('The video could not be made.');
+      _tell(l.memoriesScreenVideoFailed);
     } on IOException {
-      _tell('The video could not be saved.');
+      _tell(l.memoriesScreenVideoNotSaved);
     } finally {
       if (mounted) setState(() => _exporting = false);
     }
@@ -242,7 +246,7 @@ class _StoryScreenState extends State<StoryScreen> {
                 )
               : TextButton(
                   onPressed: _export,
-                  child: const Text('Make a video'),
+                  child: Text(l.memoriesScreenMakeVideo),
                 ),
         ],
       ),

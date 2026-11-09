@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { DuplicateGroup } from '#lib/api.ts';
 import { choiceOf, notesOf, reasonOf } from './duplicates.ts';
 
-const en = (_hr: string, en: string) => en;
-
 function item(id: string, extra: Partial<DuplicateGroup['items'][number]> = {}) {
 	return {
 		id,
@@ -42,11 +40,8 @@ describe('resolving duplicates', () => {
 		expect(choiceOf(group, () => true)).toBeUndefined();
 	});
 	it('says why one is proposed and how the copies differ', () => {
-		expect(reasonOf(group, en)).toBe("the camera's original");
-		expect(notesOf(group.items[1], en)).toEqual(['Saved again by an app']);
-		expect(notesOf(item('d', { favorite: true, hasDate: false }), en)).toEqual([
-			'Favorite',
-			'No date'
-		]);
+		expect(reasonOf(group)).toBe("the camera's original");
+		expect(notesOf(group.items[1])).toEqual(['Saved again by an app']);
+		expect(notesOf(item('d', { favorite: true, hasDate: false }))).toEqual(['Favorite', 'No date']);
 	});
 });

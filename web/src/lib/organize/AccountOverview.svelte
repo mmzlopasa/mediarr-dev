@@ -4,7 +4,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import { countUp } from '#lib/motion/actions.ts';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let stats = $state<AccountStats>();
 	let failed = $state(false);
@@ -25,35 +25,35 @@
 	});
 </script>
 
-<Card id="library" title={tr('Vaša biblioteka', 'Your library')}>
+<Card id="library" title={t('accountOverview.yourLibrary')}>
 	{#if stats}
 		<dl class="acct-stats">
 			<div>
-				<dt>{tr('Fotke', 'Photos')}</dt>
+				<dt>{t('common.photos')}</dt>
 				<dd use:countUp={{ value: stats.photos }}></dd>
 			</div>
 			<div>
-				<dt>{tr('Videi', 'Videos')}</dt>
+				<dt>{t('common.videos')}</dt>
 				<dd use:countUp={{ value: stats.videos }}></dd>
 			</div>
 			<div>
-				<dt>{tr('Albumi', 'Albums')}</dt>
+				<dt>{t('accountOverview.albums')}</dt>
 				<dd use:countUp={{ value: stats.albums }}></dd>
 			</div>
 			<div>
-				<dt>{tr('Favoriti', 'Favorites')}</dt>
+				<dt>{t('accountOverview.favorites')}</dt>
 				<dd use:countUp={{ value: stats.favorites }}></dd>
 			</div>
 			<div>
-				<dt>{tr('Arhiva', 'Archive')}</dt>
+				<dt>{t('accountOverview.archive')}</dt>
 				<dd use:countUp={{ value: stats.archived }}></dd>
 			</div>
 			<div>
-				<dt>{tr('Smeće', 'Trash')}</dt>
+				<dt>{t('accountOverview.trash')}</dt>
 				<dd use:countUp={{ value: stats.trashed }}></dd>
 			</div>
 			<div>
-				<dt>{tr('Zauzeto', 'Used')}</dt>
+				<dt>{t('accountOverview.used')}</dt>
 				<dd
 					use:countUp={{ value: stats.bytes, format: (value) => formatBytes(Math.round(value)) }}
 				></dd>
@@ -62,9 +62,9 @@
 		{#if problems && problems.failed > 0}
 			<p class="set-line acct-problems">
 				<em class="set-chip err">{problems.failed}</em>
-				{tr('datoteka se nije moglo obraditi.', 'files could not be processed.')}
+				{t('accountOverview.filesCouldNotBeProcessed')}
 				<button type="button" class="linkish" onclick={() => (showProblems = !showProblems)}>
-					{showProblems ? tr('Sakrij', 'Hide') : tr('Prikaži', 'Show')}
+					{showProblems ? t('common.hide') : t('common.show')}
 				</button>
 			</p>
 			{#if showProblems}
@@ -73,8 +73,8 @@
 						<tbody>
 							{#each problems.items as asset (asset.id)}
 								<tr>
-									<td data-l={tr('Naziv', 'Name')}><b>{asset.originalName}</b></td>
-									<td data-l={tr('Greška', 'Error')}>{asset.error ?? ''}</td>
+									<td data-l={t('common.name')}><b>{asset.originalName}</b></td>
+									<td data-l={t('accountOverview.error')}>{asset.error ?? ''}</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -83,7 +83,7 @@
 			{/if}
 		{/if}
 	{:else if failed}
-		<p class="alb-meta">{tr('Podaci se ne mogu učitati.', 'This could not be loaded.')}</p>
+		<p class="alb-meta">{t('common.thisCouldNotBeLoaded')}</p>
 	{:else}
 		<Skeleton height="64px" />
 	{/if}

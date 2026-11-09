@@ -5,7 +5,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	/** How originals are laid out on the disk, inside each user's folder. */
 	let current = $state<StorageTemplate>();
@@ -45,7 +45,7 @@
 				draft = current?.template ?? '';
 				preview();
 			})
-			.catch(() => showToast('err', tr('Nije učitano.', 'Not loaded.')));
+			.catch(() => showToast('err', t('storageTemplateCard.notLoaded')));
 		return () => {
 			clearTimeout(timer);
 			clearInterval(poll);
@@ -77,24 +77,16 @@
 			current = await api.setStorageTemplate(template);
 			draft = current.template;
 			preview();
-			showToast('ok', tr('Spremljeno.', 'Saved.'));
+			showToast('ok', t('common.saved'));
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Nije spremljeno.', 'Not saved.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.notSaved'));
 		}
 	}
 
 	async function apply(dryRun: boolean) {
 		if (
 			!dryRun &&
-			!confirm(
-				tr(
-					`Premjestiti ${report?.moved ?? 0} datoteka na nova mjesta? Originali se ne mijenjaju, samo mjesto na disku.`,
-					`Move ${report?.moved ?? 0} files to their new places? The originals do not change, only where they are on the disk.`
-				)
-			)
+			!confirm(t('storageTemplateCard.moveValueFilesToTheir', { value: report?.moved ?? 0 }))
 		)
 			return;
 		try {
@@ -104,35 +96,32 @@
 		} catch (cause) {
 			showToast(
 				'err',
-				cause instanceof Error ? cause.message : tr('Nije pokrenuto.', 'Not started.')
+				cause instanceof Error ? cause.message : t('storageTemplateCard.notStarted')
 			);
 		}
 	}
 </script>
 
-<Card id="storage-template" title={tr('Predložak pohrane', 'Storage template')}>
+<Card id="storage-template" title={t('storageTemplateCard.storageTemplate')}>
 	{#if !current}
 		<Skeleton height="140px" />
 	{:else}
 		<p class="alb-meta">
-			{tr(
-				'Kako se originali slažu na disku, unutar mape svakog korisnika. Vrijedi za nove datoteke; postojeće se premještaju tek kad to zatražite, nakon probnog prolaza. Vanjska biblioteka se nikad ne premješta.',
-				'How originals are laid out on the disk, inside each user’s folder. It applies to new files; the ones already here move only when you ask, after a dry run. An external library never moves.'
-			)}
+			{t('storageTemplateCard.howOriginalsAreLaidOut')}
 		</p>
 		<label class="st-field">
-			<span>{tr('Predložak', 'Template')}</span>
+			<span>{t('storageTemplateCard.template')}</span>
 			<input
 				class="in mono"
 				bind:this={field}
 				bind:value={draft}
 				oninput={preview}
 				placeholder={current.defaultLayout}
-				aria-label={tr('Predložak', 'Template')}
+				aria-label={t('storageTemplateCard.template')}
 				maxlength="200"
 			/>
 		</label>
-		<div class="st-tokens" role="group" aria-label={tr('Polja', 'Fields')}>
+		<div class="st-tokens" role="group" aria-label={t('storageTemplateCard.fields')}>
 			{#each current.tokens as token (token.token)}
 				<button
 					type="button"
@@ -145,7 +134,7 @@
 		{#if previewError}
 			<p class="st-error" role="alert">{previewError}</p>
 		{:else if previews.length}
-			<ul class="st-previews" aria-label={tr('Primjeri', 'Examples')}>
+			<ul class="st-previews" aria-label={t('storageTemplateCard.examples')}>
 				{#each previews as example, n (n)}
 					<li><span>{example.name}</span><b class="mono">{example.path}</b></li>
 				{/each}
@@ -153,44 +142,45 @@
 		{/if}
 		<div class="set-foot st-foot">
 			{#if current.template}
-				<Button small onclick={() => save('')}>{tr('Kao prije', 'Back to the usual layout')}</Button
+				<Button small onclick={() => save('')}
+					>{t('storageTemplateCard.backToTheUsualLayout')}</Button
 				>
 			{/if}
 			<Button
 				variant="gold"
 				small
 				disabled={saved || Boolean(previewError)}
-				onclick={() => save(draft)}>{tr('Spremi', 'Save')}</Button
+				onclick={() => save(draft)}>{t('common.save')}</Button
 			>
 		</div>
 
 		{#if current.template}
 			<div class="st-apply">
-				<h3>{tr('Datoteke koje su već ovdje', 'Files already here')}</h3>
+				<h3>{t('storageTemplateCard.filesAlreadyHere')}</h3>
 				{#if report?.running}
 					<p role="status">
-						{report.dryRun ? tr('Probni prolaz…', 'Dry run…') : tr('Premještam…', 'Moving…')}
+						{report.dryRun ? t('storageTemplateCard.dryRun') : t('storageTemplateCard.moving')}
 						{report.checked}
 					</p>
 				{:else if report && report.template === current.template}
 					<p role="status">
 						{#if report.dryRun}
-							{tr(
-								`Probni prolaz: premjestilo bi se ${report.moved} od ${report.checked}.`,
-								`Dry run: ${report.moved} of ${report.checked} would move.`
-							)}
+							{t('storageTemplateCard.dryRunMovedOfChecked', {
+								moved: report.moved,
+								checked: report.checked
+							})}
 						{:else}
-							{tr(
-								`Premješteno ${report.moved} od ${report.checked}.`,
-								`Moved ${report.moved} of ${report.checked}.`
-							)}
+							{t('storageTemplateCard.movedMovedOfChecked', {
+								moved: report.moved,
+								checked: report.checked
+							})}
 						{/if}
 						{#if report.failed}
-							{tr(`Nije uspjelo: ${report.failed}.`, `Failed: ${report.failed}.`)}
+							{t('storageTemplateCard.failedFailed', { failed: report.failed })}
 						{/if}
 					</p>
 					{#if report.samples.length}
-						<ul class="st-previews" aria-label={tr('Što se premješta', 'What moves')}>
+						<ul class="st-previews" aria-label={t('storageTemplateCard.whatMoves')}>
 							{#each report.samples.slice(0, 10) as move, n (n)}
 								<li><span class="mono">{move.from}</span><b class="mono">{move.to}</b></li>
 							{/each}
@@ -200,13 +190,13 @@
 				{/if}
 				<div class="set-foot st-foot">
 					<Button small disabled={report?.running || !saved} onclick={() => apply(true)}
-						>{tr('Probni prolaz', 'Dry run')}</Button
+						>{t('storageTemplateCard.dryRun2')}</Button
 					>
 					<Button
 						variant="gold"
 						small
 						disabled={!tried || report?.running || !report?.moved}
-						onclick={() => apply(false)}>{tr('Premjesti datoteke', 'Move the files')}</Button
+						onclick={() => apply(false)}>{t('storageTemplateCard.moveTheFiles')}</Button
 					>
 				</div>
 			</div>

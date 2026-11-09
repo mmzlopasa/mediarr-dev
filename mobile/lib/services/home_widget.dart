@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mediarr_api/api.dart';
 
 import 'session.dart';
+import '../l10n/l10n.dart';
 
 /// What the home screen widget shows now.
 class WidgetChoice {
@@ -50,7 +51,7 @@ class HomeWidgetService {
       ),
     );
     if (key == null) {
-      throw ApiException(500, 'The server did not make a key for the widget.');
+      throw ApiException(500, l.homeWidgetNoKey);
     }
     await _storage.write(key: _keyId, value: key.id);
     await _channel.invokeMethod<void>('configure', {

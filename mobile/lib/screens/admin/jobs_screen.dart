@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../../l10n/l10n.dart';
 import '../../services/session.dart';
 import '../../theme.dart';
 import 'admin_common.dart';
@@ -54,7 +55,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     final jobs = _jobs;
     final text = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Jobs')),
+      appBar: AppBar(title: Text(l.adminJobsTitle)),
       body: AdminBody(
         loading: jobs == null,
         error: _error,
@@ -62,13 +63,20 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
           onRefresh: _load,
           child: ListView(
             children: [
-              const AdminHeading('Queues'),
+              AdminHeading(l.adminJobsQueues),
               for (final queue in jobs!.queues)
                 ListTile(
                   title: Text(queue.name),
                   subtitle: Text(
-                    '${queue.queued} waiting · ${queue.running} running'
-                    '${queue.paused ? ' · paused' : ''}',
+                    queue.paused
+                        ? l.adminJobsQueueStatePaused(
+                            '${queue.queued}',
+                            '${queue.running}',
+                          )
+                        : l.adminJobsQueueState(
+                            '${queue.queued}',
+                            '${queue.running}',
+                          ),
                   ),
                   trailing: TextButton(
                     onPressed: () => _act(
@@ -76,15 +84,17 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                           ? _session.api.resumeJobQueue(queue.name)
                           : _session.api.pauseJobQueue(queue.name),
                       queue.paused
-                          ? '${queue.name} continues.'
-                          : '${queue.name} is paused.',
+                          ? l.adminJobsContinues(queue.name)
+                          : l.adminJobsIsPaused(queue.name),
                     ),
-                    child: Text(queue.paused ? 'Resume' : 'Pause'),
+                    child: Text(
+                      queue.paused ? l.adminJobsResume : l.adminJobsPause,
+                    ),
                   ),
                 ),
-              const AdminHeading('Failed'),
+              AdminHeading(l.adminJobsFailed),
               if (jobs.failed.isEmpty)
-                const ListTile(title: Text('No job has failed.'))
+                ListTile(title: Text(l.adminJobsNoneFailed))
               else
                 for (final job in jobs.failed)
                   ListTile(
@@ -99,9 +109,9 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                     trailing: TextButton(
                       onPressed: () => _act(
                         () => _session.api.retryJob(job.id),
-                        'The job is queued again.',
+                        l.adminJobsQueuedAgain,
                       ),
-                      child: const Text('Try again'),
+                      child: Text(l.adminJobsTryAgain),
                     ),
                   ),
             ],

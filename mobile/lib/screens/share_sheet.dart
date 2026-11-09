@@ -7,6 +7,7 @@ import '../services/session.dart';
 import '../services/settings.dart';
 import '../services/sharing.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 /// Sends photos and videos to another app, or saves them on the phone. The person picks the original
 /// or a smaller file for messages, and the choice is kept for next time.
@@ -22,18 +23,16 @@ Future<void> shareAssets(
     final sure = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Take it out of the vault?'),
-        content: const Text(
-          'Once sent or saved, it is no longer protected by your PIN.',
-        ),
+        title: Text(l.shareSheetVaultTitle),
+        content: Text(l.shareSheetVaultBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.shareSheetCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Continue'),
+            child: Text(l.shareSheetContinue),
           ),
         ],
       ),
@@ -51,7 +50,9 @@ Future<void> shareAssets(
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
             child: Text(
-              ids.length == 1 ? 'Send this' : 'Send ${ids.length}',
+              ids.length == 1
+                  ? l.shareSheetSendThis
+                  : l.shareSheetSendCount('${ids.length}'),
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
@@ -61,11 +62,9 @@ Future<void> shareAssets(
                 option ? Icons.compress : Icons.photo_outlined,
                 color: Palette.dim,
               ),
-              title: Text(option ? 'Smaller, for messages' : 'Original'),
+              title: Text(option ? l.shareSheetSmaller : l.shareSheetOriginal),
               subtitle: Text(
-                option
-                    ? 'A JPEG of at most 2048 px, without location'
-                    : 'As it is, with everything in it',
+                option ? l.shareSheetSmallerDetail : l.shareSheetOriginalDetail,
               ),
               trailing: settings.shareSmall == option
                   ? Icon(Icons.check, color: Palette.gold)
@@ -76,8 +75,8 @@ Future<void> shareAssets(
           Divider(height: 1, color: Palette.line),
           ListTile(
             leading: Icon(Icons.download_outlined, color: Palette.dim),
-            title: const Text('Save to this phone'),
-            subtitle: const Text('The original, in the phone’s gallery'),
+            title: Text(l.shareSheetSaveToPhone),
+            subtitle: Text(l.shareSheetSaveDetail),
             onTap: () => Navigator.pop(context, 'save'),
           ),
         ],
@@ -122,8 +121,8 @@ Future<void> saveAssetsToPhone(
       SnackBar(
         content: Text(
           files.length == 1
-              ? 'Saved to this phone.'
-              : '${files.length} saved to this phone.',
+              ? l.shareSheetSavedOne
+              : l.shareSheetSavedMany('${files.length}'),
         ),
       ),
     );
@@ -145,7 +144,7 @@ Future<List<File>?> _fetch(
     context: context,
     barrierDismissible: false,
     builder: (context) => AlertDialog(
-      title: const Text('Getting it ready'),
+      title: Text(l.shareSheetGettingReady),
       content: ValueListenableBuilder<int>(
         valueListenable: progress,
         builder: (_, done, _) => Column(
@@ -157,7 +156,7 @@ Future<List<File>?> _fetch(
               backgroundColor: Palette.bg3,
             ),
             const SizedBox(height: 10),
-            Text('$done of ${ids.length}'),
+            Text(l.shareSheetProgress('$done', '${ids.length}')),
           ],
         ),
       ),
@@ -167,7 +166,7 @@ Future<List<File>?> _fetch(
             cancelled = true;
             Navigator.pop(context);
           },
-          child: const Text('Cancel'),
+          child: Text(l.shareSheetCancel),
         ),
       ],
     ),
@@ -189,9 +188,7 @@ Future<List<File>?> _fetch(
   } on Object catch (_) {
     if (!cancelled) {
       navigator.pop();
-      messenger?.showSnackBar(
-        const SnackBar(content: Text('The files could not be fetched.')),
-      );
+      messenger?.showSnackBar(SnackBar(content: Text(l.shareSheetFetchFailed)));
     }
     return null;
   } finally {

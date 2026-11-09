@@ -183,10 +183,18 @@ func TestNoResetWithoutTheServersOwnAddress(t *testing.T) {
 func TestSharingAnAlbumTellsThePerson(t *testing.T) {
 	s := newStack(t)
 	admin := s.admin()
-	s.user(admin, "person@example.com")
+	person := s.user(admin, "person@example.com")
 	fake := startFakeSMTP(t)
 	turnOnEmail(t, admin, fake)
-	resp, body := admin.post("/api/albums", api.AlbumCreate{Title: "Holiday"})
+	// The person reads Croatian, and the message is in it.
+	resp, body := person.send(http.MethodPatch, "/api/me", map[string]string{"language": "hr"})
+	expect(t, resp, body, http.StatusOK)
+	if user := decode[api.User](t, body); user.Language == nil || *user.Language != api.Hr {
+		t.Fatalf("%s", body)
+	}
+	resp, body = person.send(http.MethodPatch, "/api/me", map[string]string{"language": "xx"})
+	expect(t, resp, body, http.StatusBadRequest)
+	resp, body = admin.post("/api/albums", api.AlbumCreate{Title: "Holiday"})
 	expect(t, resp, body, http.StatusCreated)
 	album := decode[api.Album](t, body).Id.String()
 	resp, body = admin.send(http.MethodPut, "/api/albums/"+album+"/members/"+s.userID("person@example.com"), map[string]string{"role": "viewer"})
@@ -194,7 +202,7 @@ func TestSharingAnAlbumTellsThePerson(t *testing.T) {
 		t.Fatalf("%s", body)
 	}
 	got := fake.waitFor(t, 1)[0]
-	if !strings.Contains(got, "To: person@example.com") || !strings.Contains(got, "Holiday") {
+	if !strings.Contains(got, "To: person@example.com") || !strings.Contains(got, "Holiday") || !strings.Contains(got, "podijelio") {
 		t.Fatalf("%s", got)
 	}
 }

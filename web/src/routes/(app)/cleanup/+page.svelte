@@ -13,7 +13,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import {
 		CATEGORIES,
 		VIDEO_SIZES,
@@ -78,11 +78,11 @@
 				await api.bulk(ids.slice(at, at + 1000), 'delete');
 			}
 			confirming = false;
-			showToast('ok', tr('Premješteno u smeće.', 'Moved to the trash.'));
+			showToast('ok', t('cleanup.movedToTheTrash'));
 			choices = {};
 			await Promise.all([loadSummary(), loadItems()]);
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		} finally {
 			working = false;
 		}
@@ -92,14 +92,11 @@
 		working = true;
 		try {
 			await api.keepFromCleanup(chosen.map((item) => item.id));
-			showToast(
-				'ok',
-				tr('Zadržano. Više se neće nuditi.', 'Kept. They will not be offered again.')
-			);
+			showToast('ok', t('cleanup.keptTheyWillNotBe'));
 			choices = {};
 			await Promise.all([loadSummary(), loadItems()]);
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		} finally {
 			working = false;
 		}
@@ -108,23 +105,22 @@
 	const countOf = (id: CleanupCategoryId) => summary?.categories.find((c) => c.id === id);
 </script>
 
-<svelte:head><title>{tr('Čišćenje', 'Clean up')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('cleanup.cleanUp')} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr('Čišćenje', 'Clean up')}</h1></div></div>
+<div class="ph"><div><h1>{t('cleanup.cleanUp')}</h1></div></div>
 
 {#if failed}
-	<Alert kind="err">{tr('Čišćenje se nije učitalo.', 'Clean up could not be loaded.')}</Alert>
+	<Alert kind="err">{t('cleanup.cleanUpCouldNotBe')}</Alert>
 {/if}
 {#if summary && summary.pending > 0}
 	<Alert kind="warn"
-		>{tr(
-			`Još se analizira fotki: ${summary.pending.toLocaleString()}.`,
-			`Still being analysed: ${summary.pending.toLocaleString()} photos.`
-		)}</Alert
+		>{t('cleanup.stillBeingAnalysedSummaryPhotos', {
+			summary: summary.pending.toLocaleString()
+		})}</Alert
 	>
 {/if}
 
-<div class="cln-cats" role="tablist" aria-label={tr('Vrste', 'Kinds')}>
+<div class="cln-cats" role="tablist" aria-label={t('cleanup.kinds')}>
 	{#each CATEGORIES as id (id)}
 		<button
 			type="button"
@@ -134,7 +130,7 @@
 			class:on={category === id}
 			onclick={() => (category = id)}
 		>
-			<span>{titleOf(id, tr)}</span>
+			<span>{titleOf(id)}</span>
 			{#if countOf(id)}
 				<b>{countOf(id)?.count.toLocaleString()}</b>
 				<small>{formatBytes(countOf(id)?.bytes ?? 0)}</small>
@@ -148,23 +144,23 @@
 <section class="card glass cln">
 	<div class="card-b">
 		<div class="cln-bar">
-			<p>{hintOf(category, tr)}</p>
+			<p>{hintOf(category)}</p>
 			{#if category === 'blurry'}
 				<label class="cln-ctl">
-					<span>{tr('Strože', 'Stricter')}</span>
+					<span>{t('cleanup.stricter')}</span>
 					<input
 						type="range"
 						min="1"
 						max="5"
 						step="1"
 						bind:value={blur}
-						aria-label={tr('Koliko strogo', 'How strict')}
+						aria-label={t('cleanup.howStrict')}
 					/>
-					<span>{tr('Blaže', 'More')}</span>
+					<span>{t('cleanup.more')}</span>
 				</label>
 			{:else if category === 'largeVideos'}
 				<label class="cln-ctl">
-					<span>{tr('Veći od', 'Larger than')}</span>
+					<span>{t('cleanup.largerThan')}</span>
 					<select class="in" bind:value={videoMb}>
 						{#each VIDEO_SIZES as size (size)}
 							<option value={size}>{size >= 1000 ? `${size / 1000} GB` : `${size} MB`}</option>
@@ -177,10 +173,7 @@
 		{#if !items}
 			<Skeleton height="220px" />
 		{:else if items.length === 0}
-			<EmptyState
-				icon="check"
-				text={tr('Ovdje nema ničega za čišćenje.', 'Nothing to clean up here.')}
-			/>
+			<EmptyState icon="check" text={t('cleanup.nothingToCleanUpHere')} />
 		{:else}
 			<div class="cln-grid">
 				{#each items as item (item.id)}
@@ -198,8 +191,8 @@
 							>
 							{#if item.favorite || item.inAlbum}
 								<span class="cln-tags">
-									{#if item.favorite}<i>{tr('Favorit', 'Favorite')}</i>{/if}
-									{#if item.inAlbum}<i>{tr('U albumu', 'In an album')}</i>{/if}
+									{#if item.favorite}<i>{t('common.favorite')}</i>{/if}
+									{#if item.inAlbum}<i>{t('cleanup.inAnAlbum')}</i>{/if}
 								</span>
 							{/if}
 						</button>
@@ -209,7 +202,7 @@
 						</span>
 						{#if item.kind === 'video'}
 							<button type="button" class="cln-play" onclick={() => (playing = item)}
-								><Icon name="play" size={14} />{tr('Pogledaj', 'Watch')}</button
+								><Icon name="play" size={14} />{t('cleanup.watch')}</button
 							>
 						{/if}
 					</div>
@@ -217,7 +210,7 @@
 			</div>
 			{#if nextOffset !== undefined}
 				<div class="cln-more">
-					<Button onclick={() => loadItems(true)}>{tr('Prikaži još', 'Show more')}</Button>
+					<Button onclick={() => loadItems(true)}>{t('cleanup.showMore')}</Button>
 				</div>
 			{/if}
 		{/if}
@@ -227,36 +220,33 @@
 {#if items && items.length > 0}
 	<div class="cln-act" aria-live="polite">
 		<span
-			>{tr(
-				`Odabrano ${chosen.length} · ${formatBytes(chosenBytes)}`,
-				`${chosen.length} selected · ${formatBytes(chosenBytes)}`
-			)}</span
+			>{t('cleanup.chosencountSelectedFormatbytes', {
+				chosenCount: chosen.length,
+				formatBytes: formatBytes(chosenBytes)
+			})}</span
 		>
 		<Button disabled={chosen.length === 0 || working} onclick={keep}
-			>{tr('Zadrži odabrane', 'Keep the selected')}</Button
+			>{t('cleanup.keepTheSelected')}</Button
 		>
 		<Button
 			variant="danger"
 			disabled={chosen.length === 0 || working}
 			onclick={() => (confirming = true)}
-			>{tr(
-				`Premjesti u smeće (${chosen.length} · ${formatBytes(chosenBytes)})`,
-				`Move to the trash (${chosen.length} · ${formatBytes(chosenBytes)})`
-			)}</Button
+			>{t('cleanup.moveToTheTrashChosencount', {
+				chosenCount: chosen.length,
+				formatBytes: formatBytes(chosenBytes)
+			})}</Button
 		>
 	</div>
 {/if}
 
-<Dialog title={tr('Premjestiti u smeće?', 'Move to the trash?')} bind:open={confirming}>
+<Dialog title={t('cleanup.moveToTheTrash')} bind:open={confirming}>
 	<p>
-		{tr(
-			`${chosen.length} stavki ostaje u smeću ${trashDays()} dana i može se vratiti.`,
-			`${chosen.length} items stay in the trash for ${trashDays()} days and can be restored.`
-		)}
+		{t('cleanup.chosencountItemsStayInThe', { chosenCount: chosen.length, trashDays: trashDays() })}
 	</p>
 	{#snippet footer()}
-		<Button onclick={() => (confirming = false)}>{tr('Odustani', 'Cancel')}</Button>
-		<Button variant="danger" disabled={working} onclick={trash}>{tr('Premjesti', 'Move')}</Button>
+		<Button onclick={() => (confirming = false)}>{t('common.cancel')}</Button>
+		<Button variant="danger" disabled={working} onclick={trash}>{t('cleanup.move')}</Button>
 	{/snippet}
 </Dialog>
 

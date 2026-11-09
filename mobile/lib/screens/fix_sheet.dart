@@ -7,6 +7,7 @@ import 'package:mediarr_api/api.dart';
 
 import '../services/session.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 /// Time zones offered for a trip; any other can be typed.
 const commonZones = [
@@ -283,9 +284,9 @@ class _FixSheetState extends State<_FixSheet> {
     try {
       final done = await _send(false);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Changed: ${done?.changed ?? 0}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.fixSheetChanged(done?.changed ?? 0))),
+      );
       Navigator.pop(context, true);
     } on ApiException catch (cause) {
       if (mounted) setState(() => _problem = cause.message);
@@ -379,7 +380,7 @@ class _FixSheetState extends State<_FixSheet> {
 
   List<Widget> _dateFields(TextTheme text) => switch (_dateAction) {
     'shift' => [
-      Text("When the camera's clock was wrong.", style: text.bodySmall),
+      Text(l.fixSheetCameraClockWrong, style: text.bodySmall),
       Wrap(
         spacing: 6,
         runSpacing: 6,
@@ -387,50 +388,41 @@ class _FixSheetState extends State<_FixSheet> {
         children: [
           DropdownButton<bool>(
             value: _later,
-            items: const [
-              DropdownMenuItem(value: false, child: Text('Earlier')),
-              DropdownMenuItem(value: true, child: Text('Later')),
+            items: [
+              DropdownMenuItem(value: false, child: Text(l.fixSheetEarlier)),
+              DropdownMenuItem(value: true, child: Text(l.fixSheetLater)),
             ],
             onChanged: (value) {
               setState(() => _later = value ?? false);
               _refresh();
             },
           ),
-          _number3('Days', _days),
-          _number3('Hours', _hours),
-          _number3('Minutes', _minutes),
+          _number3(l.fixSheetDays, _days),
+          _number3(l.fixSheetHours, _hours),
+          _number3(l.fixSheetMinutes, _minutes),
         ],
       ),
     ],
     'set' => [
-      Text(
-        'One date for all, a minute apart so they keep their order.',
-        style: text.bodySmall,
-      ),
+      Text(l.fixSheetOneDateForAll, style: text.bodySmall),
       OutlinedButton(
         onPressed: _pickDate,
         child: Text(
           _setAt == null
-              ? 'Choose the date and time'
+              ? l.fixSheetChooseDateTime
               : withOffset(_setAt!).substring(0, 16).replaceFirst('T', ' '),
         ),
       ),
     ],
     'travel' => [
-      Text(
-        "When the camera kept home's time on a trip.",
-        style: text.bodySmall,
-      ),
-      _zoneField("The camera's clock was on", _cameraZone),
-      _zoneField('They were taken in', _placeZone),
+      Text(l.fixSheetTripHint, style: text.bodySmall),
+      _zoneField(l.fixSheetCameraClockWasOn, _cameraZone),
+      _zoneField(l.fixSheetTheyWereTakenIn, _placeZone),
     ],
     'zoneFromPlace' => [
-      Text(
-        'Photos with a location get the time zone of the place, summer time included; the clock stays as it was.',
-        style: text.bodySmall,
-      ),
+      Text(l.fixSheetZoneFromPlaceHint, style: text.bodySmall),
     ],
-    _ => [Text('Dates set by hand are taken away.', style: text.bodySmall)],
+    _ => [Text(l.fixSheetDatesByHandRemoved, style: text.bodySmall)],
   };
 
   Widget _zoneField(String label, TextEditingController field) =>
@@ -456,26 +448,23 @@ class _FixSheetState extends State<_FixSheet> {
 
   List<Widget> _placeFields(TextTheme text) => switch (_placeAction) {
     'fromNeighbours' => [
-      Text(
-        'Photos without a location get the place of the photo with one taken closest to them.',
-        style: text.bodySmall,
+      Text(l.fixSheetNeighboursHint, style: text.bodySmall),
+      SizedBox(
+        width: 180,
+        child: _number3(l.fixSheetAtMostMinutesApart, _near),
       ),
-      SizedBox(width: 180, child: _number3('At most minutes apart', _near)),
     ],
     'fromTrack' => [
-      Text(
-        'Photos without a location get the place from the track at the moment they were taken. Get the date right first.',
-        style: text.bodySmall,
-      ),
+      Text(l.fixSheetTrackHint, style: text.bodySmall),
       OutlinedButton(
         onPressed: _pickTrack,
-        child: Text(_trackName.isEmpty ? 'Choose a GPX file' : _trackName),
+        child: Text(_trackName.isEmpty ? l.fixSheetChooseGpx : _trackName),
       ),
     ],
     'set' => [
       TextField(
         controller: _search,
-        decoration: const InputDecoration(labelText: 'Find a place'),
+        decoration: InputDecoration(labelText: l.fixSheetFindPlace),
         onChanged: _findPlaces,
       ),
       for (final place in _places.take(5))
@@ -504,7 +493,7 @@ class _FixSheetState extends State<_FixSheet> {
                 decimal: true,
                 signed: true,
               ),
-              decoration: const InputDecoration(labelText: 'Latitude'),
+              decoration: InputDecoration(labelText: l.fixSheetLatitude),
               onChanged: (_) => _refresh(),
             ),
           ),
@@ -516,17 +505,15 @@ class _FixSheetState extends State<_FixSheet> {
                 decimal: true,
                 signed: true,
               ),
-              decoration: const InputDecoration(labelText: 'Longitude'),
+              decoration: InputDecoration(labelText: l.fixSheetLongitude),
               onChanged: (_) => _refresh(),
             ),
           ),
         ],
       ),
     ],
-    'clear' => [
-      Text('The location goes, and stays gone.', style: text.bodySmall),
-    ],
-    _ => [Text('Locations set by hand are taken away.', style: text.bodySmall)],
+    'clear' => [Text(l.fixSheetLocationGoes, style: text.bodySmall)],
+    _ => [Text(l.fixSheetLocationsByHandRemoved, style: text.bodySmall)],
   };
 
   @override
@@ -544,31 +531,31 @@ class _FixSheetState extends State<_FixSheet> {
               children: [
                 Text(
                   widget.dates
-                      ? 'Date and time · ${widget.ids.length}'
-                      : 'Location · ${widget.ids.length}',
+                      ? l.fixSheetDateTitle(widget.ids.length)
+                      : l.fixSheetLocationTitle(widget.ids.length),
                   style: text.titleLarge,
                 ),
                 const SizedBox(height: 12),
                 if (widget.dates)
                   _choices(
-                    const [
-                      ('shift', 'Shift'),
-                      ('set', 'Set a date'),
-                      ('zoneFromPlace', 'Zone from the place'),
-                      ('travel', 'A trip'),
-                      ('useFile', 'From the file'),
+                    [
+                      ('shift', l.fixSheetShift),
+                      ('set', l.fixSheetSetDate),
+                      ('zoneFromPlace', l.fixSheetZoneFromPlace),
+                      ('travel', l.fixSheetTrip),
+                      ('useFile', l.fixSheetFromFile),
                     ],
                     _dateAction,
                     (value) => _dateAction = value,
                   )
                 else
                   _choices(
-                    const [
-                      ('fromNeighbours', 'From nearby photos'),
-                      ('fromTrack', 'From a GPX track'),
-                      ('set', 'Set a place'),
-                      ('clear', 'Take the location away'),
-                      ('useFile', 'From the file'),
+                    [
+                      ('fromNeighbours', l.fixSheetFromNearby),
+                      ('fromTrack', l.fixSheetFromTrack),
+                      ('set', l.fixSheetSetPlace),
+                      ('clear', l.fixSheetClearLocation),
+                      ('useFile', l.fixSheetFromFile),
                     ],
                     _placeAction,
                     (value) => _placeAction = value,
@@ -580,8 +567,8 @@ class _FixSheetState extends State<_FixSheet> {
                   Text(_problem!, style: TextStyle(color: Palette.err))
                 else if (preview != null) ...[
                   Text(
-                    'Will change: ${preview.changed}'
-                    '${preview.skipped > 0 ? ' · nothing to go by: ${preview.skipped}' : ''}',
+                    '${l.fixSheetWillChange(preview.changed)}'
+                    '${preview.skipped > 0 ? ' · ${l.fixSheetNothingToGoBy(preview.skipped)}' : ''}',
                     style: text.titleSmall,
                   ),
                   for (final change in preview.changes)
@@ -591,7 +578,7 @@ class _FixSheetState extends State<_FixSheet> {
                       title: Text(change.name),
                       subtitle: Text(
                         '${change.before.isEmpty ? '—' : change.before} → '
-                        '${change.after.isEmpty ? 'no location' : change.after}',
+                        '${change.after.isEmpty ? l.fixSheetNoLocation : change.after}',
                       ),
                     ),
                 ],
@@ -606,7 +593,7 @@ class _FixSheetState extends State<_FixSheet> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
+                    child: Text(l.fixSheetCancel),
                   ),
                   const Spacer(),
                   FilledButton(
@@ -617,7 +604,7 @@ class _FixSheetState extends State<_FixSheet> {
                       backgroundColor: Palette.buttonGold,
                       foregroundColor: Palette.onGold,
                     ),
-                    child: const Text('Save'),
+                    child: Text(l.fixSheetSave),
                   ),
                 ],
               ),

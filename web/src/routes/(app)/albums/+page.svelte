@@ -12,7 +12,7 @@
 	import Select from '#lib/design/components/Select.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import AlbumCard from '#lib/albums/AlbumCard.svelte';
 	import RulesForm from '#lib/albums/RulesForm.svelte';
 	import { appNav } from '#lib/nav.ts';
@@ -61,45 +61,40 @@
 			smart = false;
 			await load();
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error
-					? cause.message
-					: tr('Album nije stvoren.', 'The album was not created.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.theAlbumWasNotCreated'));
 		} finally {
 			busy = false;
 		}
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
 <div class="ph">
-	<div><h1>{tr(item.hr, item.en)}</h1></div>
+	<div><h1>{t(item.label)}</h1></div>
 	<div class="ph-a">
 		<Select
 			inline
-			label={tr('Poredak', 'Sort')}
+			label={t('albums.sort')}
 			bind:value={sort}
 			options={[
-				{ value: 'updated', label: tr('Zadnja promjena', 'Last change') },
-				{ value: 'title', label: tr('Naziv', 'Name') },
-				{ value: 'date', label: tr('Datum fotki', 'Photo date') }
+				{ value: 'updated', label: t('albums.lastChange') },
+				{ value: 'title', label: t('common.name') },
+				{ value: 'date', label: t('albums.photoDate') }
 			]}
 		/>
 		<Button small href={resolve('/(app)/tags')}
-			><Icon name="tag" size={15} />{tr('Oznake', 'Tags')}</Button
+			><Icon name="tag" size={15} />{t('common.tags')}</Button
 		>
 		<Button small variant="gold" onclick={() => (creating = true)}>
 			<Icon name="plus" size={15} />
-			{tr('Novi album', 'New album')}
+			{t('albums.newAlbum')}
 		</Button>
 	</div>
 </div>
 
 {#if failed}
-	<Alert kind="err">{tr('Albumi se nisu učitali.', 'Albums could not be loaded.')}</Alert>
+	<Alert kind="err">{t('albums.albumsCouldNotBeLoaded')}</Alert>
 {/if}
 
 {#if !albums && !failed}
@@ -108,7 +103,7 @@
 	</div>
 {:else if top?.length === 0}
 	<section class="card glass">
-		<div class="card-b"><EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)} /></div>
+		<div class="card-b"><EmptyState icon={item.icon} text={item.empty ? t(item.empty) : ''} /></div>
 	</section>
 {:else if top}
 	<div class="alb-grid">
@@ -118,20 +113,17 @@
 	</div>
 {/if}
 
-<Dialog title={tr('Novi album', 'New album')} bind:open={creating}>
+<Dialog title={t('albums.newAlbum')} bind:open={creating}>
 	<form id="new-album" class="form" onsubmit={create}>
-		<Input label={tr('Naziv', 'Name')} required maxlength={200} bind:value={title} />
-		<Input label={tr('Opis', 'Description')} bind:value={description} />
-		<Checkbox
-			label={tr('Pametni album: puni se sam po pravilima', 'Smart album: fills itself from rules')}
-			bind:checked={smart}
-		/>
+		<Input label={t('common.name')} required maxlength={200} bind:value={title} />
+		<Input label={t('common.description')} bind:value={description} />
+		<Checkbox label={t('albums.smartAlbumFillsItselfFrom')} bind:checked={smart} />
 		{#if smart}<RulesForm bind:rules />{/if}
 	</form>
 	{#snippet footer()}
-		<Button onclick={() => (creating = false)}>{tr('Odustani', 'Cancel')}</Button>
+		<Button onclick={() => (creating = false)}>{t('common.cancel')}</Button>
 		<Button type="submit" form="new-album" variant="gold" disabled={busy || !title.trim()}
-			>{tr('Stvori', 'Create')}</Button
+			>{t('albums.create')}</Button
 		>
 	{/snippet}
 </Dialog>

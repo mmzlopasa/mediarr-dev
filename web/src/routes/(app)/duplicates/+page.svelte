@@ -15,7 +15,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	const POLL_MS = 10000;
 	const BUSY_POLL_MS = 1500;
@@ -57,10 +57,10 @@
 		try {
 			await api.resolveDuplicates({ groups: [choice] });
 			confirming = undefined;
-			showToast('ok', tr('Riješeno. Kopije su u smeću.', 'Resolved. The copies are in the trash.'));
+			showToast('ok', t('duplicates.resolvedTheCopiesAreIn'));
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		} finally {
 			working = false;
 		}
@@ -71,7 +71,7 @@
 			const result = await api.resolveDuplicates({ all: true, exactOnly, dryRun: true });
 			all = { exactOnly, result };
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -83,7 +83,7 @@
 			all = undefined;
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		} finally {
 			working = false;
 		}
@@ -94,36 +94,33 @@
 			await api.dismissDuplicates(group.items.map((item) => item.id));
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr('Duplikati', 'Duplicates')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('duplicates.duplicates')} — Mediarr</title></svelte:head>
 
-<div class="ph"><div><h1>{tr('Duplikati', 'Duplicates')}</h1></div></div>
+<div class="ph"><div><h1>{t('duplicates.duplicates')}</h1></div></div>
 
 {#if failed}
-	<Alert kind="err">{tr('Duplikati se nisu učitali.', 'Duplicates could not be loaded.')}</Alert>
+	<Alert kind="err">{t('duplicates.duplicatesCouldNotBeLoaded')}</Alert>
 {:else if !data}
 	<Skeleton height="200px" />
 {:else}
 	{#if data.pending > 0}
 		<Alert kind="warn"
-			>{tr(
-				`Još se uspoređuje fotki: ${data.pending}.`,
-				`Photos still being compared: ${data.pending}.`
-			)}</Alert
+			>{t('duplicates.photosStillBeingComparedPending', { pending: data.pending })}</Alert
 		>
 	{/if}
 	{#if data.resolving}
 		<section class="card glass dup-progress" aria-live="polite">
 			<div class="card-b">
 				<b
-					>{tr(
-						`Rješavam duplikate: ${data.resolving.done} od ${data.resolving.total}`,
-						`Resolving duplicates: ${data.resolving.done} of ${data.resolving.total}`
-					)}</b
+					>{t('duplicates.resolvingDuplicatesDoneOfTotal', {
+						done: data.resolving.done,
+						total: data.resolving.total
+					})}</b
 				>
 				<progress max={data.resolving.total} value={data.resolving.done}></progress>
 			</div>
@@ -132,40 +129,30 @@
 	{#if data.groups.length === 0}
 		<section class="card glass">
 			<div class="card-b">
-				<EmptyState
-					icon="copy"
-					text={tr('Nisu pronađene slične fotke.', 'No similar photos were found.')}
-				/>
+				<EmptyState icon="copy" text={t('duplicates.noSimilarPhotosWereFound')} />
 			</div>
 		</section>
 	{:else}
 		<p class="dup-note">
-			{tr(
-				`Ovo su samo prijedlozi. Ništa se ne briše bez vaše potvrde, a obrisano ostaje ${trashDays()} dana u smeću.`,
-				`These are only proposals. Nothing is removed without your confirmation, and what is removed stays in the trash for ${trashDays()} days.`
-			)}
+			{t('duplicates.theseAreOnlyProposalsNothing', { trashDays: trashDays() })}
 			{#if data.total > data.groups.length}
-				{tr(
-					`Prikazano ${data.groups.length} od ${data.total}.`,
-					`Showing ${data.groups.length} of ${data.total}.`
-				)}
+				{t('duplicates.showingGroupscountOfTotal', {
+					groupsCount: data.groups.length,
+					total: data.total
+				})}
 			{/if}
 		</p>
 		{#if !data.resolving}
 			<div class="dup-all">
 				{#if (data.exactTotal ?? 0) > 0}
 					<Button onclick={() => previewAll(true)}
-						>{tr(
-							`Riješi iste (${data.exactTotal})`,
-							`Resolve the identical (${data.exactTotal})`
-						)}</Button
+						>{t('duplicates.resolveTheIdenticalExacttotal', {
+							exactTotal: data.exactTotal
+						})}</Button
 					>
 				{/if}
 				<Button variant="gold" onclick={() => previewAll(false)}
-					>{tr(
-						`Riješi sve po prijedlogu (${data.total})`,
-						`Resolve all as proposed (${data.total})`
-					)}</Button
+					>{t('duplicates.resolveAllAsProposedTotal', { total: data.total })}</Button
 				>
 			</div>
 		{/if}
@@ -174,13 +161,10 @@
 				<div class="card-b">
 					<p class="dup-head">
 						<span class="dup-kind" class:exact={group.exact}
-							>{group.exact ? tr('Ista slika', 'Same picture') : tr('Slične', 'Alike')}</span
+							>{group.exact ? t('duplicates.samePicture') : t('duplicates.alike')}</span
 						>
 						<span
-							>{tr('Predlažem zadržati', 'Proposed to keep')}: {reasonOf(group, tr)} · {tr(
-								'oslobađa',
-								'frees'
-							)}
+							>{t('duplicates.proposedToKeep')}: {reasonOf(group)} · {t('duplicates.frees')}
 							{formatBytes(group.freedBytes)}</span
 						>
 					</p>
@@ -196,33 +180,30 @@
 								<img src="/api/assets/{item.id}/thumbnail" alt={item.originalName} />
 								<span class="dup-state">
 									{#if keeps(group, item.id)}<Icon name="check" size={14} />
-										{tr('Zadrži', 'Keep')}{:else}<Icon name="trash" size={14} />
-										{tr('U smeće', 'To trash')}{/if}
+										{t('duplicates.keep')}{:else}<Icon name="trash" size={14} />
+										{t('duplicates.toTrash')}{/if}
 								</span>
 								<b>{item.originalName}</b>
 								<small>
 									{#if item.width && item.height}{item.width} × {item.height} ·
 									{/if}{formatBytes(item.sizeBytes)}
 								</small>
-								{#if notesOf(item, tr).length}
+								{#if notesOf(item).length}
 									<span class="dup-notes">
-										{#each notesOf(item, tr) as note (note)}<i>{note}</i>{/each}
+										{#each notesOf(item) as note (note)}<i>{note}</i>{/each}
 									</span>
 								{/if}
 							</button>
 						{/each}
 					</div>
 					<div class="dup-actions">
-						<Button onclick={() => dismiss(group)}>{tr('Nisu duplikati', 'Not duplicates')}</Button>
+						<Button onclick={() => dismiss(group)}>{t('duplicates.notDuplicates')}</Button>
 						<Button
 							variant="danger"
 							disabled={toTrash(group).length === 0 || toTrash(group).length === group.items.length}
 							onclick={() => (confirming = group)}
 						>
-							{tr(
-								`Riješi (${toTrash(group).length} u smeće)`,
-								`Resolve (${toTrash(group).length} to the trash)`
-							)}
+							{t('duplicates.resolveTotrashToTheTrash', { toTrash: toTrash(group).length })}
 						</Button>
 					</div>
 				</div>
@@ -232,45 +213,40 @@
 {/if}
 
 <Dialog
-	title={tr('Riješiti ovu grupu?', 'Resolve this group?')}
+	title={t('duplicates.resolveThisGroup')}
 	bind:open={() => confirming !== undefined, (open) => !open && (confirming = undefined)}
 >
 	<p>
-		{tr(
-			`Zadržana fotka preuzima albume, oznake, favorit, opis, ocjenu, lokaciju i imena osoba od ostalih. One idu u smeće na ${trashDays()} dana i mogu se vratiti.`,
-			`The kept photo takes over the albums, tags, favorite, description, rating, location and names of people from the others. They go to the trash for ${trashDays()} days and can be restored.`
-		)}
+		{t('duplicates.theKeptPhotoTakesOver', { trashDays: trashDays() })}
 	</p>
 	{#snippet footer()}
-		<Button onclick={() => (confirming = undefined)}>{tr('Odustani', 'Cancel')}</Button>
-		<Button variant="danger" disabled={working} onclick={resolve}>{tr('Riješi', 'Resolve')}</Button>
+		<Button onclick={() => (confirming = undefined)}>{t('common.cancel')}</Button>
+		<Button variant="danger" disabled={working} onclick={resolve}>{t('duplicates.resolve')}</Button>
 	{/snippet}
 </Dialog>
 
 <Dialog
 	title={all?.exactOnly
-		? tr('Riješiti sve iste slike?', 'Resolve every identical picture?')
-		: tr('Riješiti sve duplikate?', 'Resolve all duplicates?')}
+		? t('duplicates.resolveEveryIdenticalPicture')
+		: t('duplicates.resolveAllDuplicates')}
 	bind:open={() => all !== undefined, (open) => !open && (all = undefined)}
 >
 	{#if all}
 		<p>
-			{tr(
-				`Grupa: ${all.result.groups}. U smeće ide ${all.result.trashed} fotki, što oslobađa ${formatBytes(all.result.freedBytes)} kad se smeće isprazni.`,
-				`Groups: ${all.result.groups}. ${all.result.trashed} photos go to the trash, which frees ${formatBytes(all.result.freedBytes)} once it is emptied.`
-			)}
+			{t('duplicates.groupsGroupsTrashedPhotosGo', {
+				groups: all.result.groups,
+				trashed: all.result.trashed,
+				formatBytes: formatBytes(all.result.freedBytes)
+			})}
 		</p>
 		<p>
-			{tr(
-				`U svakoj grupi ostaje predložena fotka i preuzima ono što su imale ostale. Sve ostaje u smeću ${trashDays()} dana i može se vratiti.`,
-				`In each group the proposed photo stays and takes over what the others had. Everything stays in the trash for ${trashDays()} days and can be restored.`
-			)}
+			{t('duplicates.inEachGroupTheProposed', { trashDays: trashDays() })}
 		</p>
 	{/if}
 	{#snippet footer()}
-		<Button onclick={() => (all = undefined)}>{tr('Odustani', 'Cancel')}</Button>
+		<Button onclick={() => (all = undefined)}>{t('common.cancel')}</Button>
 		<Button variant="danger" disabled={working} onclick={resolveAll}
-			>{tr('Riješi sve', 'Resolve all')}</Button
+			>{t('duplicates.resolveAll')}</Button
 		>
 	{/snippet}
 </Dialog>

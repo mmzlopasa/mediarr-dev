@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../../l10n/l10n.dart';
 import '../../services/session.dart';
 import 'admin_common.dart';
 
@@ -53,7 +54,7 @@ class _AdminOverviewScreenState extends ConsumerState<AdminOverviewScreen> {
     final overview = _overview;
     final health = _health;
     return Scaffold(
-      appBar: AppBar(title: const Text('Overview')),
+      appBar: AppBar(title: Text(l.adminOverviewTitle)),
       body: AdminBody(
         loading: overview == null,
         error: _error,
@@ -61,40 +62,48 @@ class _AdminOverviewScreenState extends ConsumerState<AdminOverviewScreen> {
           onRefresh: _load,
           child: ListView(
             children: [
-              const AdminHeading('Library'),
-              _row('Users', '${overview!.users}'),
-              _row('Photos', '${overview.photos}'),
-              _row('Videos', '${overview.videos}'),
-              _row('Being processed', '${overview.processing}'),
-              _row('Failed', '${overview.failed}'),
-              _row('Library size', adminBytes(overview.libraryBytes)),
-              const AdminHeading('Disk'),
-              _row('Free', adminBytes(overview.diskFreeBytes)),
-              _row('Total', adminBytes(overview.diskTotalBytes)),
-              const AdminHeading('Jobs'),
-              _row('Waiting', '${overview.jobs.queued}'),
-              _row('Running', '${overview.jobs.running}'),
-              _row('Done', '${overview.jobs.completed}'),
-              _row('Failed', '${overview.jobs.failed}'),
+              AdminHeading(l.adminOverviewLibrary),
+              _row(l.adminOverviewUsers, '${overview!.users}'),
+              _row(l.adminOverviewPhotos, '${overview.photos}'),
+              _row(l.adminOverviewVideos, '${overview.videos}'),
+              _row(l.adminOverviewProcessing, '${overview.processing}'),
+              _row(l.adminOverviewFailed, '${overview.failed}'),
+              _row(
+                l.adminOverviewLibrarySize,
+                adminBytes(overview.libraryBytes),
+              ),
+              AdminHeading(l.adminOverviewDisk),
+              _row(l.adminOverviewFree, adminBytes(overview.diskFreeBytes)),
+              _row(l.adminOverviewTotal, adminBytes(overview.diskTotalBytes)),
+              AdminHeading(l.adminOverviewJobs),
+              _row(l.adminOverviewWaiting, '${overview.jobs.queued}'),
+              _row(l.adminOverviewRunning, '${overview.jobs.running}'),
+              _row(l.adminOverviewDone, '${overview.jobs.completed}'),
+              _row(l.adminOverviewFailed, '${overview.jobs.failed}'),
               if (health != null) ...[
-                const AdminHeading('Services'),
+                AdminHeading(l.adminOverviewServices),
                 _row(
-                  'Worker',
-                  health.workerRunning ? 'Running' : 'Not running',
+                  l.adminOverviewWorker,
+                  health.workerRunning
+                      ? l.adminOverviewRunning
+                      : l.adminOverviewNotRunning,
                 ),
                 _row(
-                  'Analysis (ML)',
+                  l.adminOverviewAnalysis,
                   !health.mlEnabled
-                      ? 'Turned off'
+                      ? l.adminOverviewTurnedOff
                       : health.mlRunning == true
-                      ? 'Running'
-                      : 'Not running',
+                      ? l.adminOverviewRunning
+                      : l.adminOverviewNotRunning,
                 ),
-                _row('Database size', adminBytes(health.databaseBytes)),
+                _row(
+                  l.adminOverviewDatabaseSize,
+                  adminBytes(health.databaseBytes),
+                ),
               ],
-              const AdminHeading('Versions'),
+              AdminHeading(l.adminOverviewVersions),
               _row('Mediarr', overview.version),
-              _row('Database', overview.databaseVersion),
+              _row(l.adminOverviewDatabase, overview.databaseVersion),
             ],
           ),
         ),

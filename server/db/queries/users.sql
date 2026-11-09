@@ -157,7 +157,7 @@ DELETE FROM password_resets WHERE user_id = $1;
 DELETE FROM sessions WHERE user_id = $1;
 
 -- name: SetUserProfile :one
-UPDATE users SET name = $2, email = $3, updated_at = now() WHERE id = $1 RETURNING *;
+UPDATE users SET name = $2, email = $3, language = $4, updated_at = now() WHERE id = $1 RETURNING *;
 
 -- name: SetUserAvatar :one
 -- A new picture, or none when the version is 0.

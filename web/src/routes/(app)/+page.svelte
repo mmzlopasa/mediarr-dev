@@ -13,7 +13,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import UploadButton from '#lib/design/components/UploadButton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t, k, type Key } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
@@ -74,12 +74,12 @@
 		if (finished > 0) refresh();
 	});
 
-	const uploadLabels: Record<UploadStatus, [string, string]> = {
-		queued: ['Čeka', 'Queued'],
-		uploading: ['Šalje se', 'Uploading'],
-		done: ['Poslano', 'Uploaded'],
-		duplicate: ['Već postoji', 'Already exists'],
-		failed: ['Nije uspjelo', 'Failed']
+	const uploadLabels: Record<UploadStatus, Key> = {
+		queued: k('home.upload.queued'),
+		uploading: k('home.upload.uploading'),
+		done: k('home.upload.done'),
+		duplicate: k('home.upload.duplicate'),
+		failed: k('home.upload.failed')
 	};
 
 	// The viewer opens over the timeline as shallow routing, so the scroll position survives.
@@ -88,39 +88,35 @@
 	}
 </script>
 
-<svelte:head><title>{tr(item.hr, item.en)} — Mediarr</title></svelte:head>
+<svelte:head><title>{t(item.label)} — Mediarr</title></svelte:head>
 
 <!-- The month is the title on screen; the page name stays for screen readers. -->
 <div class="ph lib-head">
-	<div><h1>{tr(item.hr, item.en)}</h1></div>
+	<div><h1>{t(item.label)}</h1></div>
 	<div class="ph-a">
 		{#if processing > 0}
-			<Badge kind="warn">{tr(`Obrađuje se: ${processing}`, `Processing: ${processing}`)}</Badge>
+			<Badge kind="warn">{t('home.processingProcessing', { processing })}</Badge>
 		{/if}
 	</div>
 </div>
 
 {#if isPreparingUpload()}
 	<Alert kind="ok">
-		{tr(
-			'Mobitel priprema odabrane datoteke. Kod većih fotki i videa to može potrajati.',
-			'Your device is preparing the selected files. With larger photos and videos this can take a while.'
-		)}
+		{t('home.yourDeviceIsPreparingThe')}
 	</Alert>
 {/if}
 
 {#if uploads().length > 0}
-	<Card title={tr('Upload', 'Upload')}>
+	<Card title={t('home.upload')}>
 		{#snippet actions()}
 			{#if uploads().some((upload) => upload.status === 'failed')}
-				<Button small onclick={clearFinishedUploads}>{tr('Makni neuspjele', 'Clear failed')}</Button
-				>
+				<Button small onclick={clearFinishedUploads}>{t('home.clearFailed')}</Button>
 			{/if}
 		{/snippet}
 		{#each uploads() as upload (upload.id)}
 			<div class="kv">
 				<span>{upload.name}</span>
-				<b>{tr(...uploadLabels[upload.status])}</b>
+				<b>{t(uploadLabels[upload.status])}</b>
 			</div>
 			{#if upload.status === 'uploading'}
 				<Bar
@@ -137,7 +133,7 @@
 {#if total === 0 && uploads().length === 0 && processing === 0}
 	<section class="card glass">
 		<div class="card-b">
-			<EmptyState icon={item.icon} text={tr(item.emptyHr, item.emptyEn)}>
+			<EmptyState icon={item.icon} text={item.empty ? t(item.empty) : ''}>
 				{#snippet cta()}<UploadButton />{/snippet}
 			</EmptyState>
 		</div>

@@ -9,6 +9,7 @@ import '../services/session.dart';
 import '../theme.dart';
 import 'album_screen.dart';
 import 'devices_screen.dart';
+import '../l10n/l10n.dart';
 
 /// Null when the server has no answer, as an older server does not. The app can be newer than the
 /// server it talks to, and that must not get in the way of anything else on the screen.
@@ -22,26 +23,26 @@ Future<NotificationList?> _fetchNotifications(DefaultApi api) async {
 String notificationSentence(Notification item) {
   final kind = item.kind;
   if (kind == NotificationKindEnum.albumShared) {
-    return '"${item.subject}" was shared with you';
+    return l.notificationsAlbumShared(item.subject);
   }
   if (kind == NotificationKindEnum.importDone) {
-    return 'The import from ${item.subject} finished';
+    return l.notificationsImportDone(item.subject);
   }
   if (kind == NotificationKindEnum.importFailed) {
-    return 'The import from ${item.subject} failed';
+    return l.notificationsImportFailed(item.subject);
   }
   if (kind == NotificationKindEnum.deviceQuiet) {
-    return '${item.subject} has stopped backing up';
+    return l.notificationsDeviceQuiet(item.subject);
   }
   if (kind == NotificationKindEnum.backupLate) {
     // "to:<name>" is our copy at another Mediarr; "from:<name>" is one kept here.
     final at = item.subject.indexOf(':');
     final name = item.subject.substring(at + 1);
     return item.subject.startsWith('to:')
-        ? 'The copy for $name has not gone out for three days'
-        : 'The copy from $name has not come in for three days';
+        ? l.notificationsCopyForLate(name)
+        : l.notificationsCopyFromLate(name);
   }
-  return 'A backup failed: ${item.subject}';
+  return l.notificationsBackupFailed(item.subject);
 }
 
 /// The bell in the header, with how many are new.
@@ -100,7 +101,7 @@ class _NotificationBellState extends ConsumerState<NotificationBell> {
 
   @override
   Widget build(BuildContext context) => IconButton(
-    tooltip: 'Notifications',
+    tooltip: l.notificationsTitle,
     onPressed: _open,
     icon: Badge(
       isLabelVisible: _unread > 0,
@@ -158,9 +159,8 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
       if (mounted) setState(() => _items?.remove(item));
     } on ApiException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This could not be removed.')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l.notificationsNotRemoved)));
       }
     }
   }
@@ -191,11 +191,11 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
     final text = Theme.of(context).textTheme;
     final Widget body;
     if (_failed) {
-      body = const Text('This could not be loaded.');
+      body = Text(l.notificationsNotLoaded);
     } else if (items == null) {
       body = const Center(child: CircularProgressIndicator());
     } else if (items.isEmpty) {
-      body = const Text('No notifications.');
+      body = Text(l.notificationsNone);
     } else {
       body = ListView(
         shrinkWrap: true,
@@ -220,7 +220,7 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
                 _ => null,
               },
               trailing: IconButton(
-                tooltip: 'Remove',
+                tooltip: l.notificationsRemove,
                 icon: const Icon(Icons.close, size: 18),
                 onPressed: () => _remove(item),
               ),
@@ -234,7 +234,7 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Notifications', style: text.titleLarge),
+          Text(l.notificationsTitle, style: text.titleLarge),
           const SizedBox(height: 12),
           Flexible(child: body),
         ],

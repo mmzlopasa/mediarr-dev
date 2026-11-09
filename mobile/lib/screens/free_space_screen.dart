@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 import 'package:photo_manager/photo_manager.dart';
 
+import '../l10n/l10n.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
@@ -71,13 +72,11 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
       if (mounted) setState(() => _assets = assets);
     } on ApiException {
       if (mounted) {
-        setState(
-          () => _error = 'The server could not be asked, so nothing is offered for removal.',
-        );
+        setState(() => _error = l.freeSpaceScreenServerUnreachable);
       }
     } on PlatformException {
       if (mounted) {
-        setState(() => _error = 'The backup state could not be read.');
+        setState(() => _error = l.freeSpaceScreenBackupUnreadable);
       }
     }
   }
@@ -109,18 +108,19 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Remove ${assets.length} from this phone?'),
-        content: const Text(
-          'They stay on your server. iPhone asks once more, and keeps them for 30 days in Recently Deleted.',
-        ),
+        title: Text(l.freeSpaceScreenRemoveTitle('${assets.length}')),
+        content: Text(l.freeSpaceScreenRemoveBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.freeSpaceScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Remove', style: TextStyle(color: Palette.err)),
+            child: Text(
+              l.freeSpaceScreenRemove,
+              style: TextStyle(color: Palette.err),
+            ),
           ),
         ],
       ),
@@ -133,9 +133,8 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
       ]);
     } on PlatformException {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('The photos could not be removed.')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l.freeSpaceScreenNotRemoved)));
       }
     }
     if (mounted) setState(() => _busy = false);
@@ -151,9 +150,9 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
     } else if (assets == null) {
       body = Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (assets.isEmpty) {
-      body = const EmptyMessage(
+      body = EmptyMessage(
         icon: Icons.cleaning_services_outlined,
-        text: 'Nothing to remove. Only photos sent by the automatic backup are offered here.',
+        text: l.freeSpaceScreenNothingToRemove,
       );
     } else {
       body = Column(
@@ -161,9 +160,7 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(14),
-            child: Text(
-              '${assets.length} are safely on your server, as it just confirmed by their checksums.',
-            ),
+            child: Text(l.freeSpaceScreenSafe('${assets.length}')),
           ),
           Expanded(
             child: GridView.builder(
@@ -182,7 +179,7 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: GoldButton(
-                label: 'Remove ${assets.length} from this phone',
+                label: l.freeSpaceScreenRemoveButton('${assets.length}'),
                 busy: _busy,
                 onPressed: () => _remove(assets),
               ),
@@ -193,10 +190,10 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Free up space'),
+        title: Text(l.freeSpaceScreenTitle),
         actions: [
           IconButton(
-            tooltip: 'What to keep',
+            tooltip: l.freeSpaceScreenWhatToKeep,
             icon: const Icon(Icons.tune),
             onPressed: _editRules,
           ),
@@ -215,11 +212,11 @@ class _RulesSheet extends ConsumerStatefulWidget {
 }
 
 class _RulesSheetState extends ConsumerState<_RulesSheet> {
-  static const _ages = {
-    0: 'Any age',
-    30: 'Older than a month',
-    90: 'Older than 3 months',
-    365: 'Older than a year',
+  static Map<int, String> get _ages => {
+    0: l.freeSpaceScreenAnyAge,
+    30: l.freeSpaceScreenOlderThanMonth,
+    90: l.freeSpaceScreenOlderThan3Months,
+    365: l.freeSpaceScreenOlderThanYear,
   };
 
   List<AssetPathEntity> _albums = const [];
@@ -252,7 +249,7 @@ class _RulesSheetState extends ConsumerState<_RulesSheet> {
         shrinkWrap: true,
         children: [
           ListTile(
-            title: const Text('Remove only'),
+            title: Text(l.freeSpaceScreenRemoveOnly),
             trailing: DropdownButton<int>(
               value: _ages.containsKey(rules.olderThanDays)
                   ? rules.olderThanDays
@@ -266,27 +263,27 @@ class _RulesSheetState extends ConsumerState<_RulesSheet> {
             ),
           ),
           SwitchListTile(
-            title: const Text('Keep favorites'),
+            title: Text(l.freeSpaceScreenKeepFavorites),
             value: rules.keepFavorites,
             activeThumbColor: Palette.gold,
             onChanged: (value) => change(rules.copyWith(keepFavorites: value)),
           ),
           SwitchListTile(
-            title: const Text('Keep all photos'),
+            title: Text(l.freeSpaceScreenKeepPhotos),
             value: rules.keepPhotos,
             activeThumbColor: Palette.gold,
             onChanged: (value) => change(rules.copyWith(keepPhotos: value)),
           ),
           SwitchListTile(
-            title: const Text('Keep all videos'),
+            title: Text(l.freeSpaceScreenKeepVideos),
             value: rules.keepVideos,
             activeThumbColor: Palette.gold,
             onChanged: (value) => change(rules.copyWith(keepVideos: value)),
           ),
           if (_albums.isNotEmpty)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
-              child: Text('Keep these albums on the phone'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+              child: Text(l.freeSpaceScreenKeepAlbums),
             ),
           for (final album in _albums)
             CheckboxListTile(

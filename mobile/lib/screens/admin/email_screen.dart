@@ -5,6 +5,7 @@ import 'package:mediarr_api/api.dart';
 import '../../services/session.dart';
 import '../../theme.dart';
 import 'admin_common.dart';
+import '../../l10n/l10n.dart';
 
 /// Where the server sends messages from: password resets, quiet phones, shared albums.
 class EmailSettingsScreen extends ConsumerStatefulWidget {
@@ -76,7 +77,7 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
   Future<void> _save() async {
     final port = int.tryParse(_port.text.trim());
     if (port == null) {
-      setState(() => _problem = 'The port must be a number.');
+      setState(() => _problem = l.adminEmailPortNumber);
       return;
     }
     setState(() {
@@ -102,7 +103,7 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
         _settings = saved ?? _settings;
         _password.clear();
       });
-      tellAdmin(context, 'Email settings are saved.');
+      tellAdmin(context, l.adminEmailSaved);
     } on ApiException catch (cause) {
       if (mounted) setState(() => _problem = apiProblem(cause));
     } finally {
@@ -114,7 +115,7 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
     setState(() => _busy = true);
     try {
       await _session.api.sendTestEmail();
-      if (mounted) tellAdmin(context, 'A test message was sent to you.');
+      if (mounted) tellAdmin(context, l.adminEmailTestSent);
     } on ApiException catch (cause) {
       if (mounted) setState(() => _problem = apiProblem(cause));
     } finally {
@@ -143,7 +144,7 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
   Widget build(BuildContext context) {
     final settings = _settings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Email')),
+      appBar: AppBar(title: Text(l.adminEmailTitle)),
       body: AdminBody(
         loading: settings == null,
         error: _error,
@@ -156,49 +157,47 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
                 child: Text(_problem!, style: TextStyle(color: Palette.err)),
               ),
             SwitchListTile(
-              title: const Text('Send email'),
+              title: Text(l.adminEmailSendEmail),
               value: _enabled,
               onChanged: (value) => setState(() => _enabled = value),
             ),
-            _text(_host, 'SMTP server'),
-            _text(_port, 'Port', type: TextInputType.number),
+            _text(_host, l.adminEmailSmtpServer),
+            _text(_port, l.adminEmailPort, type: TextInputType.number),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
               child: DropdownButtonFormField<EmailSettingsUpdateSecurityEnum>(
                 initialValue: _security,
-                decoration: const InputDecoration(labelText: 'Encryption'),
-                items: const [
+                decoration: InputDecoration(labelText: l.adminEmailEncryption),
+                items: [
                   DropdownMenuItem(
                     value: EmailSettingsUpdateSecurityEnum.starttls,
-                    child: Text('STARTTLS'),
+                    child: const Text('STARTTLS'),
                   ),
                   DropdownMenuItem(
                     value: EmailSettingsUpdateSecurityEnum.tls,
-                    child: Text('TLS'),
+                    child: const Text('TLS'),
                   ),
                   DropdownMenuItem(
                     value: EmailSettingsUpdateSecurityEnum.none,
-                    child: Text('None'),
+                    child: Text(l.adminEmailNone),
                   ),
                 ],
                 onChanged: (value) =>
                     setState(() => _security = value ?? _security),
               ),
             ),
-            _text(_username, 'User name'),
+            _text(_username, l.adminEmailUserName),
             _text(
               _password,
-              'Password',
+              l.adminEmailPassword,
               secret: true,
-              help: settings!.hasPassword
-                  ? 'A password is saved. Empty keeps it.'
-                  : null,
+              help: settings!.hasPassword ? l.adminEmailPasswordSaved : null,
             ),
-            _text(_from, 'From', type: TextInputType.emailAddress),
+            _text(_from, l.adminEmailFrom, type: TextInputType.emailAddress),
             _text(
               _publicUrl,
-              'Address of this server',
-              help: 'For links in messages',
+              l.adminEmailServerAddress,
+              help: l.adminEmailForLinks,
               type: TextInputType.url,
             ),
             Padding(
@@ -208,13 +207,13 @@ class _EmailSettingsScreenState extends ConsumerState<EmailSettingsScreen> {
                 runSpacing: 8,
                 children: [
                   GoldButton(
-                    label: 'Save',
+                    label: l.adminEmailSave,
                     busy: _busy,
                     onPressed: _busy ? null : _save,
                   ),
                   OutlinedButton(
                     onPressed: _busy || !settings.enabled ? null : _test,
-                    child: const Text('Send a test message'),
+                    child: Text(l.adminEmailSendTest),
                   ),
                 ],
               ),

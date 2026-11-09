@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'album_screen.dart';
@@ -33,7 +34,7 @@ List<Album> visibleAlbums(
 }
 
 /// How many albums are inside one, in words.
-String albumsInside(int count) => count == 1 ? '1 album' : '$count albums';
+String albumsInside(int count) => l.albumsScreenInside(count);
 
 class AlbumsScreen extends ConsumerStatefulWidget {
   const AlbumsScreen({super.key});
@@ -113,14 +114,17 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
       body = _failed
           ? EmptyMessage(
               icon: Icons.cloud_off,
-              text: 'Albums could not be loaded. Check the connection.',
-              action: GoldButton(label: 'Try again', onPressed: _load),
+              text: l.albumsScreenLoadFailed,
+              action: GoldButton(
+                label: l.albumsScreenTryAgain,
+                onPressed: _load,
+              ),
             )
           : Center(child: CircularProgressIndicator(color: Palette.gold));
     } else if (albums.isEmpty) {
       body = EmptyMessage(
         icon: Icons.photo_album_outlined,
-        text: all!.isEmpty ? 'No albums yet.' : 'No album matches this.',
+        text: all!.isEmpty ? l.albumsScreenNoAlbums : l.albumsScreenNoMatch,
       );
     } else {
       body = RefreshIndicator(
@@ -158,10 +162,10 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
       );
     }
 
-    const sortNames = {
-      'updated': 'Last change',
-      'title': 'Name',
-      'date': 'Photo date',
+    final sortNames = {
+      'updated': l.albumsScreenSortUpdated,
+      'title': l.albumsScreenName,
+      'date': l.albumsScreenSortDate,
     };
     Widget chip(String label, _Owner value) => Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -182,8 +186,8 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AppHeader(
-            title: 'Albums',
-            actionLabel: 'New',
+            title: l.albumsScreenTitle,
+            actionLabel: l.albumsScreenNew,
             onAction: () => _create(session),
           ),
           Row(
@@ -192,7 +196,7 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: PopupMenuButton<String>(
-                    tooltip: 'Sort',
+                    tooltip: l.albumsScreenSort,
                     onSelected: (value) {
                       setState(() => _sort = value);
                       _load();
@@ -219,7 +223,7 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                 ),
               ),
               IconButton(
-                tooltip: 'Search and filter',
+                tooltip: l.albumsScreenSearchFilter,
                 icon: Icon(
                   Icons.tune,
                   color: _filtersOpen ? Palette.gold : null,
@@ -233,7 +237,9 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
                 }),
               ),
               IconButton(
-                tooltip: _grid ? 'Show as a list' : 'Show as a grid',
+                tooltip: _grid
+                    ? l.albumsScreenShowList
+                    : l.albumsScreenShowGrid,
                 icon: Icon(_grid ? Icons.view_list : Icons.grid_view),
                 onPressed: () => setState(() => _grid = !_grid),
               ),
@@ -244,8 +250,8 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
               padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
               child: TextField(
                 onChanged: (value) => setState(() => _search = value),
-                decoration: const InputDecoration(
-                  hintText: 'Search albums',
+                decoration: InputDecoration(
+                  hintText: l.albumsScreenSearchAlbums,
                   prefixIcon: Icon(Icons.search),
                 ),
               ),
@@ -255,9 +261,9 @@ class _AlbumsScreenState extends ConsumerState<AlbumsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 children: [
-                  chip('All', _Owner.all),
-                  chip('Shared with me', _Owner.shared),
-                  chip('My albums', _Owner.mine),
+                  chip(l.albumsScreenAll, _Owner.all),
+                  chip(l.albumsScreenSharedWithMe, _Owner.shared),
+                  chip(l.albumsScreenMine, _Owner.mine),
                 ],
               ),
             ),
@@ -286,10 +292,13 @@ class _AlbumRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final cover = album.coverAssetId;
     final details = [
-      '${album.assetCount} items',
+      l.albumsScreenItems(album.assetCount),
       if ((album.childCount ?? 0) > 0) albumsInside(album.childCount!),
-      if (album.isSmart) 'Smart',
-      if (album.role == AlbumRoleEnum.owner) 'Owned' else album.ownerName,
+      if (album.isSmart) l.albumsScreenSmart,
+      if (album.role == AlbumRoleEnum.owner)
+        l.albumsScreenOwned
+      else
+        album.ownerName,
     ].join(' • ');
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -371,7 +380,7 @@ class _AlbumTile extends StatelessWidget {
     final details = [
       '${album.assetCount}',
       if ((album.childCount ?? 0) > 0) albumsInside(album.childCount!),
-      if (album.isSmart) 'Smart',
+      if (album.isSmart) l.albumsScreenSmart,
       if (album.role != AlbumRoleEnum.owner) album.ownerName,
     ].join(' · ');
     return GestureDetector(
@@ -465,26 +474,26 @@ class _NewAlbumSheetState extends State<_NewAlbumSheet> {
       );
       navigator.pop(true);
     } on ApiException catch (cause) {
-      setState(() => _error = cause.message ?? 'The album was not created.');
+      setState(() => _error = cause.message ?? l.albumsScreenNotCreated);
     }
   }
 
   @override
   Widget build(BuildContext context) => SheetFrame(
-    title: 'New album',
+    title: l.albumsScreenNewAlbum,
     children: [
       TextField(
         controller: _title,
         maxLength: 200,
-        decoration: const InputDecoration(labelText: 'Name'),
+        decoration: InputDecoration(labelText: l.albumsScreenName),
       ),
       TextField(
         controller: _description,
-        decoration: const InputDecoration(labelText: 'Description'),
+        decoration: InputDecoration(labelText: l.albumsScreenDescription),
       ),
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: const Text('Smart album: fills itself from rules'),
+        title: Text(l.albumsScreenSmartAlbum),
         value: _smart,
         onChanged: (value) => setState(() => _smart = value),
       ),
@@ -500,7 +509,7 @@ class _NewAlbumSheetState extends State<_NewAlbumSheet> {
           child: Text(_error!, style: TextStyle(color: Palette.err)),
         ),
       const SizedBox(height: 12),
-      GoldButton(label: 'Create', onPressed: _create),
+      GoldButton(label: l.albumsScreenCreate, onPressed: _create),
     ],
   );
 }

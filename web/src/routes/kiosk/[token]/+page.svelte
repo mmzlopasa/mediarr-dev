@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { api, ApiError, publicSource, type PublicLink } from '#lib/api.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	const SHOW_MS = 10000;
 	const REFRESH_MS = 10 * 60000;
@@ -47,19 +47,13 @@
 
 	const message = $derived(
 		gone
-			? tr('Ovaj link više ne radi.', 'This link no longer works.')
+			? t('kiosk.token.thisLinkNoLongerWorks')
 			: link && !link.kiosk
-				? tr(
-						'Administrator nije uključio slideshow.',
-						'An administrator has not turned the slideshow on.'
-					)
+				? t('kiosk.token.anAdministratorHasNotTurned')
 				: link?.locked
-					? tr(
-							'Slideshow ne radi s linkom pod lozinkom.',
-							'A slideshow does not work with a password-protected link.'
-						)
+					? t('kiosk.token.aSlideshowDoesNotWork')
 					: link && photos.length === 0
-						? tr('Ovaj album je prazan.', 'This album is empty.')
+						? t('kiosk.token.thisAlbumIsEmpty')
 						: ''
 	);
 </script>

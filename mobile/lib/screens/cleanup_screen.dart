@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../timeline/layout.dart';
 import 'asset_picture.dart';
 import 'viewer_screen.dart';
+import '../l10n/l10n.dart';
 
 const cleanupCategories = [
   CleanupCategoryId.blurry,
@@ -21,19 +22,17 @@ const cleanupVideoSizes = [250, 500, 1000, 2000];
 bool cleanupTicked(CleanupItem item) => !item.favorite && !item.inAlbum;
 
 String cleanupTitle(CleanupCategoryId id) => switch (id) {
-  CleanupCategoryId.blurry => 'Blurry photos',
-  CleanupCategoryId.screenshots => 'Screenshots',
-  CleanupCategoryId.largeVideos => 'Large videos',
-  _ => 'Bursts',
+  CleanupCategoryId.blurry => l.cleanupScreenBlurry,
+  CleanupCategoryId.screenshots => l.cleanupScreenScreenshots,
+  CleanupCategoryId.largeVideos => l.cleanupScreenLargeVideos,
+  _ => l.cleanupScreenBursts,
 };
 
 String cleanupHint(CleanupCategoryId id) => switch (id) {
-  CleanupCategoryId.blurry =>
-    'Photos with very few sharp edges. The slider sets how strict.',
-  CleanupCategoryId.screenshots =>
-    "Found by their name, an iPhone's mark, or the shape of a screen.",
-  CleanupCategoryId.largeVideos => 'The largest first.',
-  _ => 'The other shots of a burst. The best shot stays.',
+  CleanupCategoryId.blurry => l.cleanupScreenBlurryHint,
+  CleanupCategoryId.screenshots => l.cleanupScreenScreenshotsHint,
+  CleanupCategoryId.largeVideos => l.cleanupScreenLargeVideosHint,
+  _ => l.cleanupScreenBurstsHint,
 };
 
 /// A video's length as m:ss, or h:mm:ss when it is long.
@@ -128,18 +127,21 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Move to the trash?'),
+        title: Text(l.cleanupScreenMoveToTrashQuestion),
         content: Text(
-          '${chosen.length} items (${formatBytes(bytes)}) stay in the trash for a while and can be restored.',
+          l.cleanupScreenTrashBody('${chosen.length}', formatBytes(bytes)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l.cleanupScreenCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Move', style: TextStyle(color: Palette.err)),
+            child: Text(
+              l.cleanupScreenMove,
+              style: TextStyle(color: Palette.err),
+            ),
           ),
         ],
       ),
@@ -156,10 +158,10 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
           ),
         );
       }
-      _tell('Moved to the trash.');
+      _tell(l.cleanupScreenMovedToTrash);
       _reload();
     } on ApiException {
-      _tell('The action failed.');
+      _tell(l.cleanupScreenActionFailed);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -171,10 +173,10 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
       await _session.api.keepFromCleanup(
         AssetIds(ids: [for (final item in _chosen) item.id]),
       );
-      _tell('Kept. They will not be offered again.');
+      _tell(l.cleanupScreenKept);
       _reload();
     } on ApiException {
-      _tell('The action failed.');
+      _tell(l.cleanupScreenActionFailed);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -255,7 +257,7 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
   Widget _controls() => switch (_category) {
     CleanupCategoryId.blurry => Row(
       children: [
-        const Text('Stricter'),
+        Text(l.cleanupScreenStricter),
         Expanded(
           child: Slider(
             value: _blur.toDouble(),
@@ -267,12 +269,12 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
             onChangeEnd: (_) => _reload(),
           ),
         ),
-        const Text('More'),
+        Text(l.cleanupScreenMore),
       ],
     ),
     CleanupCategoryId.largeVideos => Row(
       children: [
-        const Text('Larger than '),
+        Text(l.cleanupScreenLargerThan),
         DropdownButton<int>(
           value: _videoMb,
           items: [
@@ -326,7 +328,9 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
             child: Icon(
               ticked ? Icons.check_circle : Icons.radio_button_unchecked,
               color: ticked ? Palette.err : Colors.white,
-              semanticLabel: ticked ? 'To the trash' : 'Stays',
+              semanticLabel: ticked
+                  ? l.cleanupScreenToTheTrash
+                  : l.cleanupScreenStays,
             ),
           ),
           Positioned(
@@ -337,8 +341,8 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
               [
                 formatBytes(item.sizeBytes),
                 if (item.durationMs != null) videoLength(item.durationMs!),
-                if (item.favorite) 'Favorite',
-                if (item.inAlbum) 'In an album',
+                if (item.favorite) l.cleanupScreenFavorite,
+                if (item.inAlbum) l.cleanupScreenInAnAlbum,
               ].join(' · '),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -361,7 +365,7 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
     final chosen = _chosen;
     final bytes = chosen.fold<int>(0, (sum, item) => sum + item.sizeBytes);
     return Scaffold(
-      appBar: AppBar(title: const Text('Clean up')),
+      appBar: AppBar(title: Text(l.cleanupScreenTitle)),
       bottomNavigationBar: items == null || items.isEmpty
           ? null
           : SafeArea(
@@ -372,7 +376,7 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: chosen.isEmpty || _working ? null : _keep,
-                        child: const Text('Keep'),
+                        child: Text(l.cleanupScreenKeep),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -384,7 +388,10 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
                           backgroundColor: Palette.err,
                         ),
                         child: Text(
-                          'To the trash (${chosen.length} · ${formatBytes(bytes)})',
+                          l.cleanupScreenToTheTrashButton(
+                            '${chosen.length}',
+                            formatBytes(bytes),
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -398,14 +405,14 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
         padding: const EdgeInsets.all(12),
         children: [
           if (_failed)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Text('Clean up could not be loaded.'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(l.cleanupScreenNotLoaded),
             ),
           if (summary != null && summary.pending > 0)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text('Still being analysed: ${summary.pending} photos.'),
+              child: Text(l.cleanupScreenStillAnalysed('${summary.pending}')),
             ),
           // A fixed height, not a ratio: on a narrow phone a ratio leaves too little room for the
           // count, and the font can be enlarged.
@@ -430,12 +437,12 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
               child: Center(child: CircularProgressIndicator()),
             )
           else if (items.isEmpty)
-            const EmptyMessage(
+            EmptyMessage(
               icon: Icons.check_circle_outline,
-              text: 'Nothing to clean up here.',
+              text: l.cleanupScreenNothing,
             )
           else ...[
-            const Text('Tap to tick or untick. Hold to look at it.'),
+            Text(l.cleanupScreenTapToTick),
             const SizedBox(height: 8),
             GridView.builder(
               shrinkWrap: true,
@@ -452,7 +459,7 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
               Center(
                 child: TextButton(
                   onPressed: () => _loadItems(more: true),
-                  child: const Text('Show more'),
+                  child: Text(l.cleanupScreenShowMore),
                 ),
               ),
           ],

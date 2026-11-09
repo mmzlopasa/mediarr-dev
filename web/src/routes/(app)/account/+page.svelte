@@ -22,7 +22,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t, k, type Key } from '#lib/i18n.svelte.ts';
 
 	let { data }: PageProps = $props();
 
@@ -35,11 +35,11 @@
 	let disablePassword = $state('');
 	let totpError = $state('');
 
-	const SCOPES: { id: ApiKey['scopes'][number]; hr: string; en: string }[] = [
-		{ id: 'read', hr: 'Čitanje', en: 'Read' },
-		{ id: 'upload', hr: 'Slanje datoteka', en: 'Upload' },
-		{ id: 'write', hr: 'Izmjene i brisanje', en: 'Change and delete' },
-		{ id: 'admin', hr: 'Administracija', en: 'Administration' }
+	const SCOPES: { id: ApiKey['scopes'][number]; label: Key }[] = [
+		{ id: 'read', label: k('account.read') },
+		{ id: 'upload', label: k('account.upload') },
+		{ id: 'write', label: k('account.changeAndDelete') },
+		{ id: 'admin', label: k('home.administration') }
 	];
 	let keys = $state<ApiKey[]>();
 	let keyName = $state('');
@@ -126,7 +126,7 @@
 	}
 
 	const message = (cause: unknown) =>
-		cause instanceof ApiError ? cause.message : tr('Nešto nije u redu.', 'Something went wrong.');
+		cause instanceof ApiError ? cause.message : t('account.somethingWentWrong');
 
 	async function changePassword(event: SubmitEvent) {
 		event.preventDefault();
@@ -135,7 +135,7 @@
 			await api.changePassword({ currentPassword, newPassword });
 			currentPassword = '';
 			newPassword = '';
-			showToast('ok', tr('Lozinka je promijenjena.', 'The password was changed.'));
+			showToast('ok', t('account.thePasswordWasChanged'));
 		} catch (cause) {
 			passwordError = message(cause);
 		}
@@ -158,7 +158,7 @@
 			totp = undefined;
 			code = '';
 			await invalidate('app:session');
-			showToast('ok', tr('Dvofaktorska prijava je uključena.', 'Two-factor sign-in is on.'));
+			showToast('ok', t('account.twoFactorSignInIs'));
 		} catch (cause) {
 			totpError = message(cause);
 		}
@@ -171,18 +171,18 @@
 			await api.disableTotp(disablePassword);
 			disablePassword = '';
 			await invalidate('app:session');
-			showToast('ok', tr('Dvofaktorska prijava je isključena.', 'Two-factor sign-in is off.'));
+			showToast('ok', t('account.twoFactorSignInIs2'));
 		} catch (cause) {
 			totpError = message(cause);
 		}
 	}
 </script>
 
-<svelte:head><title>{tr('Račun', 'Account')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('common.account')} — Mediarr</title></svelte:head>
 
 <div class="ph">
 	<div>
-		<h1>{tr('Račun', 'Account')}</h1>
+		<h1>{t('common.account')}</h1>
 		<p>{data.user.name} · {data.user.email}</p>
 	</div>
 </div>
@@ -190,12 +190,12 @@
 <div class="set">
 	<SectionNav
 		items={[
-			{ id: 'profile', label: tr('Profil', 'Profile') },
-			{ id: 'library', label: tr('Biblioteka', 'Library') },
-			{ id: 'preferences', label: tr('Postavke', 'Preferences') },
-			{ id: 'security', label: tr('Lozinka i prijava', 'Password and sign-in') },
-			{ id: 'devices', label: tr('Uređaji', 'Devices') },
-			{ id: 'keys', label: tr('API ključevi', 'API keys') }
+			{ id: 'profile', label: t('account.profile') },
+			{ id: 'library', label: t('account.library') },
+			{ id: 'preferences', label: t('account.preferences') },
+			{ id: 'security', label: t('account.passwordAndSignIn') },
+			{ id: 'devices', label: t('common.devices') },
+			{ id: 'keys', label: t('account.apiKeys') }
 		]}
 	/>
 	<div class="set-body">
@@ -205,21 +205,21 @@
 
 		<PreferencesCard />
 
-		<Card id="security" title={tr('Lozinka i prijava', 'Password and sign-in')}>
+		<Card id="security" title={t('account.passwordAndSignIn')}>
 			<div class="set-group">
-				<h3>{tr('Lozinka', 'Password')}</h3>
+				<h3>{t('common.password')}</h3>
 				{#if passwordError}<Alert kind="err">{passwordError}</Alert>{/if}
 				<form class="form" onsubmit={changePassword}>
 					<Input
-						label={tr('Trenutna lozinka', 'Current password')}
+						label={t('account.currentPassword')}
 						type="password"
 						autocomplete="current-password"
 						required
 						bind:value={currentPassword}
 					/>
 					<Input
-						label={tr('Nova lozinka', 'New password')}
-						hint={tr('Najmanje 12 znakova.', 'At least 12 characters.')}
+						label={t('common.newPassword')}
+						hint={t('account.atLeast12Characters')}
 						type="password"
 						autocomplete="new-password"
 						minlength={12}
@@ -227,65 +227,54 @@
 						bind:value={newPassword}
 					/>
 					<div class="set-foot">
-						<Button type="submit" variant="gold" small
-							>{tr('Promijeni lozinku', 'Change password')}</Button
-						>
+						<Button type="submit" variant="gold" small>{t('account.changePassword')}</Button>
 					</div>
 				</form>
 			</div>
 
 			<div class="set-group">
-				<h3>{tr('Dvofaktorska prijava', 'Two-factor sign-in')}</h3>
+				<h3>{t('account.twoFactorSignIn')}</h3>
 				{#if totpError}<Alert kind="err">{totpError}</Alert>{/if}
 				{#if data.user.totpEnabled}
 					<form class="form" onsubmit={disableTotp}>
 						<p class="set-line">
-							<em class="set-chip ok">{tr('Uključena', 'On')}</em>
-							{tr(
-								'Uz lozinku se traži i kod iz aplikacije.',
-								'A code from your app is asked for as well as the password.'
-							)}
+							<em class="set-chip ok">{t('account.on')}</em>
+							{t('account.aCodeFromYourApp')}
 						</p>
 						<Input
-							label={tr('Lozinka za potvrdu', 'Password to confirm')}
+							label={t('account.passwordToConfirm')}
 							type="password"
 							autocomplete="current-password"
 							required
 							bind:value={disablePassword}
 						/>
 						<div class="set-foot">
-							<Button type="submit" variant="danger" small>{tr('Isključi', 'Turn off')}</Button>
+							<Button type="submit" variant="danger" small>{t('account.turnOff')}</Button>
 						</div>
 					</form>
 				{:else if totp}
 					<form class="form" onsubmit={enableTotp}>
 						<p class="set-line">
-							{tr(
-								'Dodajte ovaj ključ u aplikaciju za autentifikaciju, pa unesite kod.',
-								'Add this key to your authenticator app, then enter the code.'
-							)}
+							{t('account.addThisKeyToYour')}
 						</p>
 						<code class="block">{totp.secret}</code>
 						<Input
-							label={tr('Kod', 'Code')}
+							label={t('account.code')}
 							inputmode="numeric"
 							autocomplete="one-time-code"
 							required
 							bind:value={code}
 						/>
 						<div class="set-foot">
-							<Button type="submit" variant="gold" small>{tr('Uključi', 'Turn on')}</Button>
+							<Button type="submit" variant="gold" small>{t('account.turnOn')}</Button>
 						</div>
 					</form>
 				{:else}
 					<div class="set-row">
 						<span>
-							{tr(
-								'Uz lozinku traži i kod iz aplikacije za autentifikaciju.',
-								'Asks for a code from an authenticator app as well as your password.'
-							)}
+							{t('account.asksForACodeFrom')}
 						</span>
-						<Button small onclick={startTotp}>{tr('Postavi', 'Set up')}</Button>
+						<Button small onclick={startTotp}>{t('account.setUp')}</Button>
 					</div>
 				{/if}
 			</div>
@@ -300,25 +289,21 @@
 								<li>
 									<span class="set-list-ic"><Icon name="key" /></span>
 									<span class="set-list-t"><b>{key.name}</b></span>
-									<Button small onclick={() => removePasskey(key.id)}
-										>{tr('Ukloni', 'Remove')}</Button
-									>
+									<Button small onclick={() => removePasskey(key.id)}>{t('common.remove')}</Button>
 								</li>
 							{/each}
 						</ul>
 					{/if}
 					<form class="form" onsubmit={addPasskey}>
-						<Input label={tr('Naziv passkeya', 'Passkey name')} bind:value={passkeyName} />
+						<Input label={t('account.passkeyName')} bind:value={passkeyName} />
 						<Input
-							label={tr('Vaša lozinka', 'Your password')}
+							label={t('account.yourPassword')}
 							type="password"
 							autocomplete="current-password"
 							bind:value={passkeyPassword}
 						/>
 						<div class="set-foot">
-							<Button type="submit" variant="gold" small
-								>{tr('Dodaj passkey', 'Add a passkey')}</Button
-							>
+							<Button type="submit" variant="gold" small>{t('account.addAPasskey')}</Button>
 						</div>
 					</form>
 				</div>
@@ -327,21 +312,11 @@
 
 		<SessionsCard />
 
-		<Card
-			id="keys"
-			title={tr('API ključevi', 'API keys')}
-			note={tr(
-				'Ključ daje programu samo odabrana prava i ne može upravljati računom. Promjena lozinke opoziva sve ključeve.',
-				'A key gives a program only the chosen rights, and cannot manage the account. Changing the password revokes all keys.'
-			)}
-		>
+		<Card id="keys" title={t('account.apiKeys')} note={t('account.aKeyGivesAProgram')}>
 			{#if keyError}<Alert kind="err">{keyError}</Alert>{/if}
 			{#if newKey}
 				<Alert kind="ok"
-					>{tr(
-						'Spremite ga sada, jer se više neće prikazati:',
-						'Save it now, because it will not be shown again:'
-					)} <code data-testid="new-key">{newKey}</code></Alert
+					>{t('account.saveItNowBecauseIt')} <code data-testid="new-key">{newKey}</code></Alert
 				>
 			{/if}
 			{#if keys?.length}
@@ -355,42 +330,42 @@
 									{key.scopes
 										.map((id) => {
 											const scope = SCOPES.find((one) => one.id === id);
-											return scope ? tr(scope.hr, scope.en) : id;
+											return scope ? t(scope.label) : id;
 										})
 										.join(', ')}
-									{#if key.expiresAt}· {tr('istječe', 'expires')}
+									{#if key.expiresAt}· {t('account.expires')}
 										{new Date(key.expiresAt).toLocaleDateString()}{/if}
 								</small>
 							</span>
-							<Button small onclick={() => revokeKey(key.id)}>{tr('Opozovi', 'Revoke')}</Button>
+							<Button small onclick={() => revokeKey(key.id)}>{t('account.revoke')}</Button>
 						</li>
 					{/each}
 				</ul>
 			{/if}
 			<div class="set-group">
-				<h3>{tr('Novi ključ', 'New key')}</h3>
+				<h3>{t('account.newKey')}</h3>
 				<form class="form" onsubmit={createKey}>
-					<Input label={tr('Naziv ključa', 'Key name')} bind:value={keyName} />
+					<Input label={t('account.keyName')} bind:value={keyName} />
 					<fieldset class="set-row set-field">
-						<legend>{tr('Prava', 'Rights')}</legend>
+						<legend>{t('account.rights')}</legend>
 						<div class="set-checks">
 							{#each SCOPES as scope (scope.id)}
 								{#if scope.id !== 'admin' || data.user.isAdmin}
 									<label class="set-check">
 										<input type="checkbox" bind:group={keyScopes} value={scope.id} />
-										{tr(scope.hr, scope.en)}
+										{t(scope.label)}
 									</label>
 								{/if}
 							{/each}
 						</div>
 					</fieldset>
 					<Input
-						label={tr('Istječe za dana (po želji)', 'Expires in days (optional)')}
+						label={t('account.expiresInDaysOptional')}
 						inputmode="numeric"
 						bind:value={keyDays}
 					/>
 					<div class="set-foot">
-						<Button type="submit" variant="gold" small>{tr('Stvori ključ', 'Create a key')}</Button>
+						<Button type="submit" variant="gold" small>{t('account.createAKey')}</Button>
 					</div>
 				</form>
 			</div>

@@ -10,7 +10,7 @@
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
@@ -44,10 +44,10 @@
 		event.preventDefault();
 		try {
 			await api.updatePerson(id, { name, birthDate: born });
-			showToast('ok', tr('Spremljeno.', 'Saved.'));
+			showToast('ok', t('common.saved'));
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -56,7 +56,7 @@
 			await api.updatePerson(id, { hidden: true });
 			await goto(resolve('/(app)/people'));
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -64,36 +64,36 @@
 		try {
 			await api.mergePeople(id, [other.id]);
 			merging = false;
-			showToast('ok', tr('Spojeno.', 'Merged.'));
+			showToast('ok', t('people.id.merged'));
 			await load();
 			await timeline?.reloadLoaded();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 </script>
 
-<svelte:head><title>{person?.name || tr('Osoba', 'Person')} — Mediarr</title></svelte:head>
+<svelte:head><title>{person?.name || t('people.id.person')} — Mediarr</title></svelte:head>
 
 {#if gone}
-	<Alert kind="err">{tr('Ova osoba nije dostupna.', 'This person is not available.')}</Alert>
+	<Alert kind="err">{t('people.id.thisPersonIsNotAvailable')}</Alert>
 {:else if !person}
 	<Skeleton height="220px" />
 {:else}
 	<div class="ph">
 		<div>
-			<h1>{person.name || tr('Bez imena', 'No name')}</h1>
+			<h1>{person.name || t('common.noName')}</h1>
 			<p>{person.assetCount}</p>
 		</div>
 		<div class="ph-a">
-			<Button small onclick={() => (merging = true)}>{tr('Spoji s…', 'Merge with…')}</Button>
-			<Button small onclick={hide}>{tr('Sakrij', 'Hide')}</Button>
+			<Button small onclick={() => (merging = true)}>{t('people.id.mergeWith')}</Button>
+			<Button small onclick={hide}>{t('common.hide')}</Button>
 		</div>
 	</div>
 	<form class="map-bar" onsubmit={save}>
-		<Input label={tr('Ime', 'Name')} maxlength={100} bind:value={name} />
-		<Input label={tr('Datum rođenja', 'Date of birth')} type="date" bind:value={born} />
-		<Button type="submit" small variant="gold">{tr('Spremi', 'Save')}</Button>
+		<Input label={t('common.name2')} maxlength={100} bind:value={name} />
+		<Input label={t('people.id.dateOfBirth')} type="date" bind:value={born} />
+		<Button type="submit" small variant="gold">{t('common.save')}</Button>
 	</form>
 	<Timeline
 		bind:this={timeline}
@@ -112,14 +112,14 @@
 			playlist={(photo) => timeline?.playlist(photo) ?? Promise.resolve([])}
 		/>
 	{/if}
-	<Dialog title={tr('Spoji s…', 'Merge with…')} bind:open={merging}>
+	<Dialog title={t('people.id.mergeWith')} bind:open={merging}>
 		{#each others as other (other.id)}
 			<div class="alb-list">
-				<b>{other.name || tr('Bez imena', 'No name')} · {other.assetCount}</b>
-				<Button small onclick={() => merge(other)}>{tr('Spoji', 'Merge')}</Button>
+				<b>{other.name || t('common.noName')} · {other.assetCount}</b>
+				<Button small onclick={() => merge(other)}>{t('people.id.merge')}</Button>
 			</div>
 		{:else}
-			<p class="alb-meta">{tr('Nema drugih osoba.', 'There is nobody else.')}</p>
+			<p class="alb-meta">{t('people.id.thereIsNobodyElse')}</p>
 		{/each}
 	</Dialog>
 {/if}

@@ -17,7 +17,7 @@
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import UploadButton from '#lib/design/components/UploadButton.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 	import LinksDialog from '#lib/albums/LinksDialog.svelte';
 	import AlbumCard from '#lib/albums/AlbumCard.svelte';
 	import RulesForm from '#lib/albums/RulesForm.svelte';
@@ -85,10 +85,10 @@
 	const isOwner = $derived(role === 'owner');
 
 	const roleLabels = $derived({
-		owner: tr('Vlasnik', 'Owner'),
-		editor: tr('Urednik', 'Editor'),
-		contributor: tr('Suradnik', 'Contributor'),
-		viewer: tr('Gledatelj', 'Viewer')
+		owner: t('albums.id.owner'),
+		editor: t('albums.id.editor'),
+		contributor: t('albums.id.contributor'),
+		viewer: t('albums.id.viewer')
 	});
 
 	async function load() {
@@ -142,10 +142,7 @@
 			editing = false;
 			await timeline?.reloadLoaded();
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Radnja nije uspjela.', 'The action failed.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.theActionFailed'));
 		}
 	}
 
@@ -157,12 +154,7 @@
 			childTitle = '';
 			await load();
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error
-					? cause.message
-					: tr('Album nije stvoren.', 'The album was not created.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.theAlbumWasNotCreated'));
 		}
 	}
 
@@ -177,12 +169,9 @@
 			album = await api.moveAlbum(id, moveTo || null);
 			moving = false;
 			await load();
-			showToast('ok', tr('Album je premješten.', 'The album was moved.'));
+			showToast('ok', t('albums.id.theAlbumWasMoved'));
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Nije premješteno.', 'Not moved.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('albums.id.notMoved'));
 		}
 	}
 
@@ -191,7 +180,7 @@
 			await api.deleteAlbum(id);
 			await goto(resolve('/(app)/albums'));
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -202,7 +191,7 @@
 			await api.removeMember(id, me);
 			await goto(resolve('/(app)/albums'));
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -212,27 +201,24 @@
 			showToast(
 				changed === ids.length ? 'ok' : 'warn',
 				changed === ids.length
-					? tr(`Uklonjeno iz albuma: ${changed}`, `Removed from the album: ${changed}`)
-					: tr(
-							`Uklonjeno: ${changed} od ${ids.length}. Možete ukloniti samo fotke koje ste sami dodali.`,
-							`Removed: ${changed} of ${ids.length}. You can remove only photos you added yourself.`
-						)
+					? t('albums.id.removedFromTheAlbumChanged', { changed })
+					: t('albums.id.removedChangedOfIdscountYou', { changed, idsCount: ids.length })
 			);
 			clear();
 			await load();
 			await timeline?.reloadLoaded();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
 	async function setCover(assetId: string, clear: () => void) {
 		try {
 			album = await api.updateAlbum(id, { coverAssetId: assetId });
-			showToast('ok', tr('Naslovnica je postavljena.', 'The cover is set.'));
+			showToast('ok', t('albums.id.theCoverIsSet'));
 			clear();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -241,10 +227,10 @@
 	}
 </script>
 
-<svelte:head><title>{album?.title ?? tr('Album', 'Album')} — Mediarr</title></svelte:head>
+<svelte:head><title>{album?.title ?? t('albums.id.album')} — Mediarr</title></svelte:head>
 
 {#if gone && !album}
-	<Alert kind="err">{tr('Ovaj album nije dostupan.', 'This album is not available.')}</Alert>
+	<Alert kind="err">{t('albums.id.thisAlbumIsNotAvailable')}</Alert>
 {:else if !album}
 	<div class="form" aria-hidden="true">
 		<Skeleton height="44px" width="40%" /><Skeleton height="220px" />
@@ -270,7 +256,7 @@
 			<h1>{album.title}</h1>
 			<p>
 				{album.assetCount} ·
-				{#if album.isSmart}<Badge kind="acc">{tr('Pametni', 'Smart')}</Badge> ·{/if}
+				{#if album.isSmart}<Badge kind="acc">{t('albums.id.smart')}</Badge> ·{/if}
 				{roleLabels[album.role]}{#if !isOwner}
 					· {album.ownerName}{/if}
 			</p>
@@ -283,61 +269,59 @@
 			{#if album.assetCount > 0}
 				<Button small onclick={startSlideshow}>
 					<Icon name="play" size={14} />
-					{tr('Slideshow', 'Slideshow')}
+					{t('common.slideshow')}
 				</Button>
 			{/if}
 			<Button small href={`${resolve('/(app)/search')}?album=${id}`}>
 				<Icon name="search" size={14} />
-				{tr('Traži u albumu', 'Search in album')}
+				{t('albums.id.searchInAlbum')}
 			</Button>
 			<Button small onclick={() => (showComments = !showComments)}>
 				<Icon name="comment" size={14} />
-				{tr('Komentari', 'Comments')}
+				{t('albums.id.comments')}
 			</Button>
 			{#if isOwner}
 				<Button small onclick={() => (sharing = true)}>
 					<Icon name="users" size={14} />
-					{tr('Dijeli', 'Share')}
+					{t('albums.id.share')}
 				</Button>
 				<Button small onclick={() => (linking = true)}>
 					<Icon name="share" size={14} />
-					{tr('Linkovi', 'Links')}
+					{t('albums.id.links')}
 				</Button>
 			{/if}
 			{#if canEdit}
-				<Button small onclick={startEdit}>{tr('Uredi', 'Edit')}</Button>
+				<Button small onclick={startEdit}>{t('albums.id.edit')}</Button>
 			{/if}
 			{#if isOwner}
 				<Button small onclick={() => (making = true)}>
 					<Icon name="plus" size={14} />
-					{tr('Album unutra', 'Album inside')}
+					{t('albums.id.albumInside')}
 				</Button>
-				<Button small onclick={startMove}>{tr('Premjesti u…', 'Move to…')}</Button>
+				<Button small onclick={startMove}>{t('albums.id.moveTo')}</Button>
 			{/if}
 			{#if isOwner}
 				<Button small variant="danger" onclick={() => (confirmDelete = true)}
-					>{tr('Obriši', 'Delete')}</Button
+					>{t('common.delete')}</Button
 				>
 			{:else}
-				<Button small onclick={leave}>{tr('Napusti', 'Leave')}</Button>
+				<Button small onclick={leave}>{t('albums.id.leave')}</Button>
 			{/if}
 		</div>
 	</div>
 
 	{#if gone}
-		<Alert kind="warn"
-			>{tr('Veza s albumom je prekinuta.', 'The connection to this album was lost.')}</Alert
-		>
+		<Alert kind="warn">{t('albums.id.theConnectionToThisAlbum')}</Alert>
 	{/if}
 
 	{#if showComments}
-		<Card title={tr('Komentari', 'Comments')}>
+		<Card title={t('albums.id.comments')}>
 			<AlbumActivity albumId={id} revision={album.updatedAt} />
 		</Card>
 	{/if}
 
 	{#if children.length}
-		<section class="alb-children" aria-label={tr('Albumi unutra', 'Albums inside')}>
+		<section class="alb-children" aria-label={t('albums.id.albumsInside')}>
 			<div class="alb-grid">
 				{#each children as child (child.id)}
 					<AlbumCard album={child} />
@@ -352,13 +336,10 @@
 				<EmptyState
 					icon="album"
 					text={album.isSmart
-						? tr('Nijedna fotka ne odgovara pravilima.', 'No photos match the rules.')
+						? t('albums.id.noPhotosMatchTheRules')
 						: canAdd
-							? tr(
-									'Album je prazan. Pošaljite ih ovdje ili ih odaberite među Medijima.',
-									'This album is empty. Upload here, or select items under Media.'
-								)
-							: tr('Album je prazan.', 'This album is empty.')}
+							? t('albums.id.thisAlbumIsEmptyUpload')
+							: t('albums.id.thisAlbumIsEmpty')}
 				/>
 			</div>
 		</section>
@@ -377,8 +358,8 @@
 				<button
 					type="button"
 					class="icon-btn"
-					aria-label={tr('Postavi kao naslovnicu', 'Set as cover')}
-					title={tr('Postavi kao naslovnicu', 'Set as cover')}
+					aria-label={t('albums.id.setAsCover')}
+					title={t('albums.id.setAsCover')}
 					onclick={() => setCover(ids[0], clear)}><Icon name="photo" /></button
 				>
 			{/if}
@@ -386,8 +367,8 @@
 				<button
 					type="button"
 					class="icon-btn"
-					aria-label={tr('Ukloni iz albuma', 'Remove from album')}
-					title={tr('Ukloni iz albuma', 'Remove from album')}
+					aria-label={t('albums.id.removeFromAlbum')}
+					title={t('albums.id.removeFromAlbum')}
 					onclick={() => removeSelected(ids, clear)}><Icon name="trash" /></button
 				>
 			{/if}
@@ -414,74 +395,68 @@
 	<ShareDialog {album} bind:open={sharing} onChanged={load} />
 	<LinksDialog {album} bind:open={linking} />
 
-	<Dialog title={tr('Uredi album', 'Edit album')} bind:open={editing}>
+	<Dialog title={t('albums.id.editAlbum')} bind:open={editing}>
 		<form id="edit-album" class="form" onsubmit={save}>
-			<Input label={tr('Naziv', 'Name')} required maxlength={200} bind:value={title} />
-			<Input label={tr('Opis', 'Description')} bind:value={description} />
+			<Input label={t('common.name')} required maxlength={200} bind:value={title} />
+			<Input label={t('common.description')} bind:value={description} />
 			<Select
-				label={tr('Redoslijed', 'Order')}
+				label={t('albums.id.order')}
 				bind:value={order}
 				options={[
-					{ value: 'newest', label: tr('Najnovije prvo', 'Newest first') },
-					{ value: 'oldest', label: tr('Najstarije prvo', 'Oldest first') }
+					{ value: 'newest', label: t('albums.id.newestFirst') },
+					{ value: 'oldest', label: t('albums.id.oldestFirst') }
 				]}
 			/>
 			{#if album.isSmart}<RulesForm bind:rules />{/if}
 		</form>
 		{#snippet footer()}
-			<Button onclick={() => (editing = false)}>{tr('Odustani', 'Cancel')}</Button>
-			<Button type="submit" form="edit-album" variant="gold">{tr('Spremi', 'Save')}</Button>
+			<Button onclick={() => (editing = false)}>{t('common.cancel')}</Button>
+			<Button type="submit" form="edit-album" variant="gold">{t('common.save')}</Button>
 		{/snippet}
 	</Dialog>
 
-	<Dialog title={tr('Novi album unutra', 'New album inside')} bind:open={making}>
+	<Dialog title={t('albums.id.newAlbumInside')} bind:open={making}>
 		<form id="child-album" class="form" onsubmit={makeChild}>
-			<Input label={tr('Naziv', 'Name')} required maxlength={200} bind:value={childTitle} />
+			<Input label={t('common.name')} required maxlength={200} bind:value={childTitle} />
 		</form>
 		{#snippet footer()}
-			<Button onclick={() => (making = false)}>{tr('Odustani', 'Cancel')}</Button>
+			<Button onclick={() => (making = false)}>{t('common.cancel')}</Button>
 			<Button type="submit" form="child-album" variant="gold" disabled={!childTitle.trim()}
-				>{tr('Stvori', 'Create')}</Button
+				>{t('albums.id.create')}</Button
 			>
 		{/snippet}
 	</Dialog>
 
-	<Dialog title={tr('Premjesti album', 'Move the album')} bind:open={moving}>
+	<Dialog title={t('albums.id.moveTheAlbum')} bind:open={moving}>
 		<form id="move-album" class="form" onsubmit={move}>
 			<Select
-				label={tr('U album', 'Into')}
+				label={t('albums.id.into')}
 				bind:value={moveTo}
 				options={[
-					{ value: '', label: tr('Na vrh, među sve albume', 'The top, among all albums') },
+					{ value: '', label: t('albums.id.theTopAmongAllAlbums') },
 					...destinations.map((entry) => ({ value: entry.id, label: entry.title }))
 				]}
 			/>
 			<p class="alb-meta">
-				{tr(
-					'Tko vidi album unutra ne vidi time i album oko njega: svaki se dijeli zasebno.',
-					'Seeing an album inside another does not show the one around it: each is shared on its own.'
-				)}
+				{t('albums.id.seeingAnAlbumInsideAnother')}
 			</p>
 		</form>
 		{#snippet footer()}
-			<Button onclick={() => (moving = false)}>{tr('Odustani', 'Cancel')}</Button>
-			<Button type="submit" form="move-album" variant="gold">{tr('Premjesti', 'Move')}</Button>
+			<Button onclick={() => (moving = false)}>{t('common.cancel')}</Button>
+			<Button type="submit" form="move-album" variant="gold">{t('albums.id.move')}</Button>
 		{/snippet}
 	</Dialog>
 
-	<Dialog title={tr('Obrisati album?', 'Delete this album?')} bind:open={confirmDelete}>
+	<Dialog title={t('albums.id.deleteThisAlbum')} bind:open={confirmDelete}>
 		<p>
-			{tr(
-				'Fotke ostaju u biblioteci. Javni linkovi prestaju raditi.',
-				'The photos stay in the library. Public links stop working.'
-			)}
+			{t('albums.id.thePhotosStayInThe')}
 			{#if children.length}
-				{tr('Albumi unutra idu na vrh.', 'The albums inside move to the top.')}
+				{t('albums.id.theAlbumsInsideMoveTo')}
 			{/if}
 		</p>
 		{#snippet footer()}
-			<Button onclick={() => (confirmDelete = false)}>{tr('Odustani', 'Cancel')}</Button>
-			<Button variant="danger" onclick={remove}>{tr('Obriši', 'Delete')}</Button>
+			<Button onclick={() => (confirmDelete = false)}>{t('common.cancel')}</Button>
+			<Button variant="danger" onclick={remove}>{t('common.delete')}</Button>
 		{/snippet}
 	</Dialog>
 {/if}

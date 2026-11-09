@@ -13,6 +13,7 @@ Name | Type | Description | Notes
 **name** | **String** |  | 
 **isAdmin** | **bool** |  | 
 **totpEnabled** | **bool** |  | 
+**language** | [**Language**](Language.md) |  | [optional] 
 **avatarVersion** | **int** | Changes with each new picture of the person; 0 or missing when there is none | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

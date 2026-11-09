@@ -294,7 +294,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**updateAlbum**](doc//DefaultApi.md#updatealbum) | **PATCH** /api/albums/{id} | Change an album. Needs the editor role.
 *DefaultApi* | [**updateKeepGuest**](doc//DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 *DefaultApi* | [**updatePerson**](doc//DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
-*DefaultApi* | [**updateProfile**](doc//DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, or email address with the current password
+*DefaultApi* | [**updateProfile**](doc//DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, language, or email address with the current password
 *DefaultApi* | [**waitQRSignIn**](doc//DefaultApi.md#waitqrsignin) | **POST** /api/auth/qr/wait | Waits up to 25 seconds for the answer; when allowed, this device is signed in
 
 
@@ -403,6 +403,7 @@ Class | Method | HTTP request | Description
  - [KeepPairRequest](doc//KeepPairRequest.md)
  - [KeepPairing](doc//KeepPairing.md)
  - [KeepRestored](doc//KeepRestored.md)
+ - [Language](doc//Language.md)
  - [LinkPassword](doc//LinkPassword.md)
  - [LocationFix](doc//LocationFix.md)
  - [LoginError](doc//LoginError.md)

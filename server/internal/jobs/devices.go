@@ -12,6 +12,7 @@ import (
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/mail"
+	"github.com/mediarr-app/mediarr/server/internal/words"
 )
 
 const (
@@ -46,7 +47,7 @@ func TellQuietDevices(ctx context.Context, q *db.Queries) error {
 	for _, row := range rows {
 		name := row.Name
 		if name == "" {
-			name = "A device"
+			name = words.Say(row.Language.String, words.QuietSomeone)
 		}
 		err := q.CreateNotification(ctx, db.CreateNotificationParams{UserID: row.UserID, Kind: notifyDeviceQuiet, Subject: name})
 		if err != nil {
@@ -56,8 +57,8 @@ func TellQuietDevices(ctx context.Context, q *db.Queries) error {
 			return fmt.Errorf("mark told: %w", err)
 		}
 		if settings != nil {
-			body := quietEmail(name, row.ReportedAt.Time, publicURL)
-			if err := mail.Send(ctx, settings, row.Email, name+" has stopped backing up to Mediarr", body); err != nil {
+			body := quietEmail(row.Language.String, name, row.ReportedAt.Time, publicURL)
+			if err := mail.Send(ctx, settings, row.Email, words.Say(row.Language.String, words.QuietSubject, name), body); err != nil {
 				// The notification is there in any case.
 				slog.Warn("a quiet device e-mail was not sent", "error", err)
 			}
@@ -66,15 +67,12 @@ func TellQuietDevices(ctx context.Context, q *db.Queries) error {
 	return nil
 }
 
-func quietEmail(name string, last time.Time, publicURL string) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "%s last reported on its backup on %s.\n\n", name, last.UTC().Format("2 January 2006 at 15:04 UTC"))
-	b.WriteString("New photos on it may not be safe on your Mediarr server yet. Open Mediarr on the device: " +
-		"it reports when it starts. If backup was turned off or the app was signed out, turn it on again in Backup.\n")
+func quietEmail(language, name string, last time.Time, publicURL string) string {
+	body := words.Say(language, words.QuietBody, name, last.UTC().Format(words.DateTime))
 	if publicURL != "" {
-		fmt.Fprintf(&b, "\nYour devices: %s/account/devices\n", strings.TrimRight(publicURL, "/"))
+		body += words.Say(language, words.QuietDevices, strings.TrimRight(publicURL, "/"))
 	}
-	return b.String()
+	return body
 }
 
 // emailSettings reads what the administrator set for e-mail, or nil when e-mail is off.

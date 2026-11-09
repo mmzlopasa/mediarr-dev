@@ -7,6 +7,7 @@ import 'package:photo_manager/photo_manager.dart';
 
 import '../services/backup.dart';
 import '../theme.dart';
+import '../l10n/l10n.dart';
 
 IconData waitingIcon(String status) => switch (status) {
   'failed' => Icons.error_outline,
@@ -62,7 +63,7 @@ class _WaitingStripState extends ConsumerState<WaitingStrip> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'On this phone, waiting to back up',
+            l.waitingStripTitle,
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 4),

@@ -1,0 +1,2566 @@
+{
+  "@@locale": "en",
+  "languageTitle": "Language",
+  "languageMachine": "Machine translated: a person has not read it yet.",
+  "languageFollowsAccount": "Your choice is saved to your account, so other devices follow it.",
+  "appHeaderNew": "New",
+  "appHeaderAdd": "Add",
+  "appHeaderAccount": "Account",
+  "appHeaderBackupAndUpload": "Backup and upload",
+  "uploadsCouldNotRead": "This photo could not be read from the device.",
+  "waitingStripTitle": "On this phone, waiting to back up",
+  "shareSheetVaultTitle": "Take it out of the vault?",
+  "shareSheetVaultBody": "Once sent or saved, it is no longer protected by your PIN.",
+  "shareSheetCancel": "Cancel",
+  "shareSheetContinue": "Continue",
+  "shareSheetSendThis": "Send this",
+  "shareSheetSendCount": "Send {count}",
+  "@shareSheetSendCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shareSheetSmaller": "Smaller, for messages",
+  "shareSheetOriginal": "Original",
+  "shareSheetSmallerDetail": "A JPEG of at most 2048 px, without location",
+  "shareSheetOriginalDetail": "As it is, with everything in it",
+  "shareSheetSaveToPhone": "Save to this phone",
+  "shareSheetSaveDetail": "The original, in the phone’s gallery",
+  "shareSheetSavedOne": "Saved to this phone.",
+  "shareSheetSavedMany": "{count} saved to this phone.",
+  "@shareSheetSavedMany": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "shareSheetGettingReady": "Getting it ready",
+  "shareSheetProgress": "{done} of {total}",
+  "@shareSheetProgress": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "shareSheetFetchFailed": "The files could not be fetched.",
+  "facesSectionActionFailed": "The action failed. {detail}",
+  "@facesSectionActionFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "facesSectionNewPerson": "New person",
+  "facesSectionCancel": "Cancel",
+  "facesSectionSave": "Save",
+  "facesSectionPeople": "People",
+  "facesSectionNoName": "No name",
+  "facesSectionWhoThisIs": "Who this is",
+  "facesSectionNewPersonMenu": "New person…",
+  "facesSectionNotAPerson": "Not a person",
+  "importsScreenWaitingForFiles": "Waiting for files",
+  "importsScreenRunning": "Running",
+  "importsScreenDone": "Done",
+  "importsScreenFailed": "Failed",
+  "importsScreenStopped": "Stopped",
+  "importsScreenZipUploaded": "{count, plural, =1{1 ZIP file uploaded} other{{count} ZIP files uploaded}}",
+  "@importsScreenZipUploaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importsScreenCounts": "added {added} · already here or deleted {skipped} · failed {failed}",
+  "@importsScreenCounts": {
+    "placeholders": {
+      "added": {
+        "type": "String"
+      },
+      "skipped": {
+        "type": "String"
+      },
+      "failed": {
+        "type": "String"
+      }
+    }
+  },
+  "importsScreenReportNotLoaded": "The report could not be loaded.",
+  "importsScreenNoFilesFailed": "No files failed.",
+  "importsScreenCouldNotStop": "The import could not be stopped.",
+  "importsScreenStop": "Stop",
+  "importsScreenCouldNotContinue": "The import could not go on.",
+  "importsScreenBringIn": "Bring in",
+  "importsScreenContinue": "Continue",
+  "importsScreenReport": "Report",
+  "importsScreenTitle": "Import",
+  "importsScreenNotLoaded": "The imports could not be loaded.",
+  "importsScreenHowTo": "To bring in photos from Google Photos or iCloud, upload the ZIP files of the export on a computer, at {address}.",
+  "@importsScreenHowTo": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "importsScreenNothingYet": "You have not imported anything yet.",
+  "storageTemplateScreenDryRun": "Dry run",
+  "storageTemplateScreenDryRunProgress": "Dry run… {checked}",
+  "@storageTemplateScreenDryRunProgress": {
+    "placeholders": {
+      "checked": {
+        "type": "String"
+      }
+    }
+  },
+  "storageTemplateScreenMovingProgress": "Moving… {checked}",
+  "@storageTemplateScreenMovingProgress": {
+    "placeholders": {
+      "checked": {
+        "type": "String"
+      }
+    }
+  },
+  "storageTemplateScreenWouldMove": "Dry run: {moved} of {checked} would move.",
+  "@storageTemplateScreenWouldMove": {
+    "placeholders": {
+      "moved": {
+        "type": "String"
+      },
+      "checked": {
+        "type": "String"
+      }
+    }
+  },
+  "storageTemplateScreenMoved": "Moved {moved} of {checked}.",
+  "@storageTemplateScreenMoved": {
+    "placeholders": {
+      "moved": {
+        "type": "String"
+      },
+      "checked": {
+        "type": "String"
+      }
+    }
+  },
+  "storageTemplateScreenFailedCount": "{line} Failed: {failed}.",
+  "@storageTemplateScreenFailedCount": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "failed": {
+        "type": "String"
+      }
+    }
+  },
+  "storageTemplateScreenNotLoaded": "Not loaded.",
+  "storageTemplateScreenSaved": "Saved.",
+  "storageTemplateScreenNotSaved": "Not saved.",
+  "storageTemplateScreenMoveFilesQuestion": "Move {count} files?",
+  "@storageTemplateScreenMoveFilesQuestion": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "storageTemplateScreenOriginalsUnchanged": "The originals do not change, only where they are on the disk.",
+  "storageTemplateScreenCancel": "Cancel",
+  "storageTemplateScreenMove": "Move",
+  "storageTemplateScreenNotStarted": "Not started.",
+  "storageTemplateScreenTitle": "Storage template",
+  "storageTemplateScreenIntro": "How originals are laid out on the disk, inside each user’s folder. It applies to new files; the ones already here move only when you ask, after a dry run. An external library never moves.",
+  "storageTemplateScreenTemplate": "Template",
+  "storageTemplateScreenExamples": "Examples",
+  "storageTemplateScreenBackToUsual": "Back to the usual layout",
+  "storageTemplateScreenSave": "Save",
+  "storageTemplateScreenFilesAlreadyHere": "Files already here",
+  "storageTemplateScreenMoveTheFiles": "Move the files",
+  "mapScreenNoPlaceName": "No place name",
+  "mapScreenNotLoaded": "The map could not be loaded. Check the connection.",
+  "mapScreenTryAgain": "Try again",
+  "mapScreenNoPhotos": "No photos with a location yet.",
+  "mapScreenFromDate": "From date",
+  "mapScreenToDate": "To date",
+  "mapScreenClear": "Clear",
+  "mapScreenItems": "Items: {count}",
+  "@mapScreenItems": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "mapScreenTrips": "Trips",
+  "mapScreenTitle": "Map",
+  "cleanupScreenBlurry": "Blurry photos",
+  "cleanupScreenScreenshots": "Screenshots",
+  "cleanupScreenLargeVideos": "Large videos",
+  "cleanupScreenBursts": "Bursts",
+  "cleanupScreenBlurryHint": "Photos with very few sharp edges. The slider sets how strict.",
+  "cleanupScreenScreenshotsHint": "Found by their name, an iPhone's mark, or the shape of a screen.",
+  "cleanupScreenLargeVideosHint": "The largest first.",
+  "cleanupScreenBurstsHint": "The other shots of a burst. The best shot stays.",
+  "cleanupScreenMoveToTrashQuestion": "Move to the trash?",
+  "cleanupScreenTrashBody": "{count} items ({size}) stay in the trash for a while and can be restored.",
+  "@cleanupScreenTrashBody": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "cleanupScreenCancel": "Cancel",
+  "cleanupScreenMove": "Move",
+  "cleanupScreenMovedToTrash": "Moved to the trash.",
+  "cleanupScreenActionFailed": "The action failed.",
+  "cleanupScreenKept": "Kept. They will not be offered again.",
+  "cleanupScreenStricter": "Stricter",
+  "cleanupScreenMore": "More",
+  "cleanupScreenLargerThan": "Larger than ",
+  "cleanupScreenToTheTrash": "To the trash",
+  "cleanupScreenStays": "Stays",
+  "cleanupScreenFavorite": "Favorite",
+  "cleanupScreenInAnAlbum": "In an album",
+  "cleanupScreenTitle": "Clean up",
+  "cleanupScreenKeep": "Keep",
+  "cleanupScreenToTheTrashButton": "To the trash ({count} · {size})",
+  "@cleanupScreenToTheTrashButton": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "cleanupScreenNotLoaded": "Clean up could not be loaded.",
+  "cleanupScreenStillAnalysed": "Still being analysed: {count} photos.",
+  "@cleanupScreenStillAnalysed": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "cleanupScreenNothing": "Nothing to clean up here.",
+  "cleanupScreenTapToTick": "Tap to tick or untick. Hold to look at it.",
+  "cleanupScreenShowMore": "Show more",
+  "organizeScreensRecentlyAdded": "Recently added",
+  "organizeScreensFavorites": "Favorites",
+  "organizeScreensMemories": "Memories",
+  "organizeScreensPeople": "People",
+  "organizeScreensMap": "Map",
+  "organizeScreensFolders": "Folders",
+  "organizeScreensFamily": "Family",
+  "organizeScreensDocuments": "Documents",
+  "organizeScreensDuplicates": "Duplicates",
+  "organizeScreensCleanUp": "Clean up",
+  "organizeScreensArchive": "Archive",
+  "organizeScreensTrash": "Trash",
+  "organizeScreensVault": "Vault",
+  "organizeScreensApiKeys": "API keys",
+  "organizeScreensTags": "Tags",
+  "organizeScreensCouldNotLoad": "This could not be loaded. Check the connection.",
+  "organizeScreensClearSelection": "Clear selection",
+  "organizeScreensShare": "Share",
+  "organizeScreensOriginalsRemoved": "The originals are removed from the disk. This cannot be undone.",
+  "organizeScreensCancel": "Cancel",
+  "organizeScreensDeletePermanently": "Delete permanently",
+  "organizeScreensActionFailedDetail": "The action failed. {detail}",
+  "@organizeScreensActionFailedDetail": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensNothingAdded": "Nothing has been added yet.",
+  "organizeScreensAddToFavorites": "Add to favorites",
+  "organizeScreensAddedToFavorites": "Added to favorites",
+  "organizeScreensArchiveAction": "Archive",
+  "organizeScreensArchived": "Archived",
+  "organizeScreensNoFavorites": "No favorites yet. Mark a photo with the star.",
+  "organizeScreensRemoveFromFavorites": "Remove from favorites",
+  "organizeScreensRemovedFromFavorites": "Removed from favorites",
+  "organizeScreensArchiveEmpty": "The archive is empty.",
+  "organizeScreensBackToMedia": "Back to Media",
+  "organizeScreensBackInMedia": "Back in Media",
+  "organizeScreensTrashRemoves": "This removes {count} files, {size}.",
+  "@organizeScreensTrashRemoves": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensEmptyTrashQuestion": "Empty the trash?",
+  "organizeScreensPermanentlyDeletedCount": "Permanently deleted: {count}",
+  "@organizeScreensPermanentlyDeletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensEmpty": "Empty",
+  "organizeScreensTrashAfterAWhile": "Items here are deleted permanently after a while.",
+  "organizeScreensTrashAfterDays": "Items are permanently deleted after {days} days.",
+  "@organizeScreensTrashAfterDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensTrashEmpty": "The trash is empty.",
+  "organizeScreensRestore": "Restore",
+  "organizeScreensRestored": "Restored",
+  "organizeScreensDeletePermanentlyQuestion": "Delete permanently?",
+  "organizeScreensPermanentlyDeleted": "Permanently deleted",
+  "organizeScreensOpenYourVault": "Open your vault",
+  "organizeScreensTooManyAttempts": "Too many attempts. Try again later.",
+  "organizeScreensWrongPin": "Wrong PIN.",
+  "organizeScreensPinLength": "The PIN must have between 4 and 12 digits.",
+  "organizeScreensVaultLockedItself": "The vault locked itself. Unlock it again.",
+  "organizeScreensVaultEmpty": "The vault is empty.",
+  "organizeScreensVaultNotLoaded": "The vault could not be loaded. Check the connection.",
+  "organizeScreensTryAgain": "Try again",
+  "organizeScreensVaultIntro": "Hidden from every other view and from sharing. The files on the server are not encrypted.",
+  "organizeScreensPin": "PIN",
+  "organizeScreensNewPin": "New PIN",
+  "organizeScreensPinHelper": "From 4 to 12 digits. Only the server administrator can reset a lost PIN.",
+  "organizeScreensUseFaceId": "Use Face ID next time",
+  "organizeScreensUnlock": "Unlock",
+  "organizeScreensSetPin": "Set PIN",
+  "organizeScreensAddATag": "Add a tag",
+  "organizeScreensNewTag": "New tag",
+  "organizeScreensCreateAndAdd": "Create and add",
+  "organizeScreensTagsNotLoaded": "Tags could not be loaded.",
+  "organizeScreensNoTags": "No tags yet. Select photos and add a tag.",
+  "organizeScreensDeleteTag": "Delete tag",
+  "organizeScreensRenameTheTag": "Rename the tag",
+  "organizeScreensNewName": "New name",
+  "organizeScreensSave": "Save",
+  "organizeScreensAlreadyExists": "\"{name}\" already exists",
+  "@organizeScreensAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensJoinThem": "Join them? All the photos will have \"{name}\".",
+  "@organizeScreensJoinThem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensJoin": "Join",
+  "organizeScreensNotRenamed": "Not renamed. {detail}",
+  "@organizeScreensNotRenamed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensNotJoined": "Not joined. {detail}",
+  "@organizeScreensNotJoined": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensRename": "Rename",
+  "organizeScreensNoPhotosWithTag": "No photos carry this tag.",
+  "organizeScreensRemoveTheTag": "Remove the tag",
+  "organizeScreensFamilyNotOn": "An administrator has not turned this on.",
+  "organizeScreensFamilyNotMember": "You are not in the family library yet.",
+  "organizeScreensWhatIShare": "What I share",
+  "organizeScreensFamilyNotLoaded": "The family library could not be loaded.",
+  "organizeScreensFamilyNothingShared": "Nobody has shared anything with the family yet.",
+  "organizeScreensShareWithFamily": "Share with the family",
+  "organizeScreensRuleName": "Rule name",
+  "organizeScreensFromDateExample": "From date (2024-06-01)",
+  "organizeScreensPlace": "Place",
+  "organizeScreensNotSaved": "It was not saved. {detail}",
+  "@organizeScreensNotSaved": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "organizeScreensNewRule": "New rule",
+  "organizeScreensShareNothing": "You share nothing with the family yet.",
+  "organizeScreensStopSharing": "Stop sharing",
+  "organizeScreensActionFailed": "The action failed.",
+  "settingsScreenTitle": "Settings",
+  "settingsScreenViewing": "Viewing",
+  "settingsScreenAssetViewer": "Asset viewer",
+  "settingsScreenAssetViewerHint": "How photos and videos open",
+  "settingsScreenPhotoGrid": "Photo grid",
+  "settingsScreenPhotoGridHint": "How the timeline is laid out",
+  "settingsScreenPreferences": "Preferences",
+  "settingsScreenPreferencesHint": "Theme, color and feedback",
+  "settingsScreenLanguageHint": "The app's language",
+  "settingsScreenThisPhone": "This phone",
+  "settingsScreenBackup": "Backup",
+  "settingsScreenBackupHint": "What this phone sends to the server",
+  "settingsScreenFreeUpSpace": "Free up space",
+  "settingsScreenFreeUpSpaceHint": "Remove what is safe on the server",
+  "settingsScreenSyncStatus": "Sync status",
+  "settingsScreenSyncStatusHint": "What is on this phone and on the server",
+  "settingsScreenHomeWidget": "Home screen widget",
+  "settingsScreenHomeWidgetHint": "An album on the home screen",
+  "settingsScreenNotifications": "Notifications",
+  "settingsScreenNotificationsHint": "What the app tells you about",
+  "settingsScreenServer": "Server",
+  "settingsScreenDevices": "Devices",
+  "settingsScreenDevicesHint": "Where this account is signed in",
+  "settingsScreenYourLibrary": "Your library",
+  "settingsScreenYourLibraryHint": "How much this account holds",
+  "settingsScreenNetworking": "Networking",
+  "settingsScreenNetworkingHint": "The addresses of your server",
+  "settingsScreenAdvanced": "Advanced",
+  "settingsScreenAdvancedHint": "Read-only mode and the image cache",
+  "settingsScreenWhatsNew": "What's new",
+  "settingsScreenWhatsNewHint": "The versions of Mediarr",
+  "settingsScreenReadOnlyOff": "Turn off read-only mode",
+  "settingsScreenReadOnly": "Read-only mode",
+  "settingsScreenReadOnlyHint": "Only look: no uploading, editing or deleting from this app",
+  "settingsScreenCopyAlbums": "Copy albums to the server",
+  "settingsScreenCopyAlbumsHint": "Backed-up albums get an album of the same name on the server. Photos are only added, never removed",
+  "settingsScreenClearCache": "Clear image cache",
+  "settingsScreenCacheEmpty": "The image cache is empty.",
+  "settingsScreenPhotos": "Photos",
+  "settingsScreenLoadFull": "Load the full photo",
+  "settingsScreenLoadFullHint": "Opens photos at full resolution. This uses more data and is slower",
+  "settingsScreenTapToNavigate": "Tap to navigate",
+  "settingsScreenTapToNavigateHint": "Tapping the left or right quarter of the screen goes to the previous or next photo",
+  "settingsScreenVideos": "Videos",
+  "settingsScreenAutoPlay": "Auto play videos",
+  "settingsScreenAutoPlayHint": "Videos start when they are opened",
+  "settingsScreenLooping": "Looping",
+  "settingsScreenLoopingHint": "Videos start again when they end",
+  "settingsScreenPlayOriginal": "Play the original video",
+  "settingsScreenPlayOriginalHint": "Plays the original even when a converted version exists. It may have to buffer",
+  "settingsScreenLayout": "Layout",
+  "settingsScreenPerRow": "Photos per row ({count})",
+  "@settingsScreenPerRow": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsScreenGroupBy": "Group by",
+  "settingsScreenMonthDay": "Month + day",
+  "settingsScreenMonth": "Month",
+  "settingsScreenTheme": "Theme",
+  "settingsScreenPrimaryColor": "Primary color",
+  "settingsScreenHaptics": "Haptic feedback",
+  "settingsScreenEnabled": "Enabled",
+  "settingsScreenNotificationsNotYet": "Notifications are not available yet.",
+  "settingsScreenPhotosAndVideos": "Photos and videos",
+  "settingsScreenPhone": "Phone",
+  "settingsScreenAlbums": "Albums",
+  "settingsScreenOther": "Other",
+  "settingsScreenMemories": "Memories",
+  "settingsScreenBackedUp": "Backed up",
+  "settingsScreenCheckAgain": "Check again",
+  "settingsScreenRetryFailed": "Send the {count} that failed again",
+  "@settingsScreenRetryFailed": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsScreenRemoved": "Removed.",
+  "settingsScreenSaved": "Saved.",
+  "settingsScreenMainAddress": "Main address: {address}",
+  "@settingsScreenMainAddress": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsScreenSecondAddress": "Second address",
+  "settingsScreenSecondAddressHint": "Used when the main one does not answer, such as away from home",
+  "settingsScreenSave": "Save",
+  "settingsScreenCouldNotLoad": "This could not be loaded.",
+  "settingsScreenThisDevice": "This device",
+  "settingsScreenSignOut": "Sign out",
+  "settingsScreenSignOutOthers": "Sign out all the others",
+  "settingsScreenFavorites": "Favorites",
+  "settingsScreenArchive": "Archive",
+  "settingsScreenTrash": "Trash",
+  "settingsScreenUsed": "Used",
+  "settingsScreenYourAccount": "Your account",
+  "settingsScreenMemorySeconds": "Seconds for each picture in memories ({seconds})",
+  "@settingsScreenMemorySeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsScreenMinFaces": "Fewest photos for a person to be listed ({count})",
+  "@settingsScreenMinFaces": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsScreenAlbumOrder": "Order in a new album",
+  "settingsScreenNewestFirst": "Newest first",
+  "settingsScreenOldestFirst": "Oldest first",
+  "sessionDeviceNotApproved": "An administrator has to approve this device before it can sign in.",
+  "sessionEnterAddress": "Enter the address of your server.",
+  "sessionAddressInvalid": "That server address is not valid.",
+  "sessionNoServer": "No Mediarr server answered at that address.",
+  "sessionUnreachableCheck": "Could not reach the server. Check the address. ({reason})",
+  "@sessionUnreachableCheck": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionUnreachable": "Could not reach the server. ({reason})",
+  "@sessionUnreachable": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionCodeWrong": "The code is wrong.",
+  "sessionWrongPassword": "Wrong email or password.",
+  "sessionTooManyAttempts": "Too many attempts. Try again later.",
+  "sessionSignInFailed": "Sign-in failed ({code}).",
+  "@sessionSignInFailed": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionNoSession": "The server did not start a session.",
+  "sessionCancelled": "Signing in was cancelled.",
+  "sessionSsoOff": "Single sign-on is not turned on for this server.",
+  "sessionSsoFailed": "Single sign-on did not work. You may not have an account on this server.",
+  "sessionCodeExpired": "This code has expired or was already used. Make a new one.",
+  "sessionNoAnswer": "The server did not answer.",
+  "sessionNotAllowed": "The sign-in was not allowed.",
+  "sessionSignInExpired": "This sign-in has expired. Make a new code.",
+  "sessionNobodyAnswered": "Nobody answered in time. Make a new code.",
+  "tusSignedOut": "You are signed out. Sign in again.",
+  "tusRejected": "The server rejected this file ({code}). {body}",
+  "@tusRejected": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      },
+      "body": {
+        "type": "String"
+      }
+    }
+  },
+  "albumsScreenInside": "{count, plural, =1{1 album} other{{count} albums}}",
+  "@albumsScreenInside": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumsScreenLoadFailed": "Albums could not be loaded. Check the connection.",
+  "albumsScreenTryAgain": "Try again",
+  "albumsScreenNoAlbums": "No albums yet.",
+  "albumsScreenNoMatch": "No album matches this.",
+  "albumsScreenSortUpdated": "Last change",
+  "albumsScreenName": "Name",
+  "albumsScreenSortDate": "Photo date",
+  "albumsScreenTitle": "Albums",
+  "albumsScreenNew": "New",
+  "albumsScreenSort": "Sort",
+  "albumsScreenSearchFilter": "Search and filter",
+  "albumsScreenShowList": "Show as a list",
+  "albumsScreenShowGrid": "Show as a grid",
+  "albumsScreenSearchAlbums": "Search albums",
+  "albumsScreenAll": "All",
+  "albumsScreenSharedWithMe": "Shared with me",
+  "albumsScreenMine": "My albums",
+  "albumsScreenItems": "{count, plural, other{{count} items}}",
+  "@albumsScreenItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumsScreenSmart": "Smart",
+  "albumsScreenOwned": "Owned",
+  "albumsScreenNotCreated": "The album was not created.",
+  "albumsScreenNewAlbum": "New album",
+  "albumsScreenDescription": "Description",
+  "albumsScreenSmartAlbum": "Smart album: fills itself from rules",
+  "albumsScreenCreate": "Create",
+  "adminScreenTitle": "Administration",
+  "adminScreenOverview": "Overview",
+  "adminScreenOverviewHint": "Users, photos, disk and versions",
+  "adminScreenUsers": "Users",
+  "adminScreenUsersHint": "Add users and set how much they may store",
+  "adminScreenServerSettings": "Server settings",
+  "adminScreenServerSettingsHint": "Trash, quality, faces, jobs, sign-in",
+  "adminScreenEmail": "Email",
+  "adminScreenEmailHint": "Where messages are sent from",
+  "adminScreenSecurity": "Security",
+  "adminScreenSecurityHint": "Single sign-on, devices, addresses, attempts",
+  "adminScreenJobs": "Jobs",
+  "adminScreenJobsHint": "Queues and jobs that failed",
+  "adminScreenAuditLog": "Audit log",
+  "adminScreenAuditLogHint": "Who changed what",
+  "adminScreenBackupHint": "Copies of the library",
+  "adminScreenBackupDevices": "All backup devices",
+  "adminScreenBackupDevicesHint": "Every phone that backs up",
+  "adminScreenStorageTemplate": "Storage template",
+  "adminScreenStorageTemplateHint": "How originals are laid out on the disk",
+  "adminAuditEmpty": "Nothing was changed yet.",
+  "adminAuditShowOlder": "Show older",
+  "adminUsersAdded": "{email} was added.",
+  "@adminUsersAdded": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "adminUsersAddUser": "Add a user",
+  "adminUsersAdministrator": "Administrator",
+  "adminUsersStoredOf": "{stored} of {quota}",
+  "@adminUsersStoredOf": {
+    "placeholders": {
+      "stored": {
+        "type": "String"
+      },
+      "quota": {
+        "type": "String"
+      }
+    }
+  },
+  "adminUsersNoLimit": "no limit",
+  "adminUsersQuotaTooltip": "How much {email} may store",
+  "@adminUsersQuotaTooltip": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "adminUsersEmail": "Email",
+  "adminUsersName": "Name",
+  "adminUsersPassword": "Password",
+  "adminUsersCancel": "Cancel",
+  "adminUsersAdd": "Add",
+  "adminUsersQuotaInvalid": "Type a number of gigabytes, or nothing for no limit.",
+  "adminUsersStorageFor": "Storage for {email}",
+  "@adminUsersStorageFor": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "adminUsersLimitGb": "Limit in GB",
+  "adminUsersEmptyNoLimit": "Empty means no limit.",
+  "profileScreenNotSaved": "The profile could not be saved.",
+  "profileScreenPictureNotSent": "The picture could not be sent.",
+  "profileScreenPictureNotRemoved": "The picture could not be removed.",
+  "profileScreenTitle": "Profile",
+  "profileScreenChangePicture": "Change picture",
+  "profileScreenAddPicture": "Add a picture",
+  "profileScreenRemove": "Remove",
+  "profileScreenEmailAddress": "Email address",
+  "profileScreenCurrentPassword": "Current password, to change the email",
+  "serverStatusStorage": "Storage",
+  "serverStatusUsedOf": "{used} of {total} used",
+  "@serverStatusUsedOf": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "serverStatusOnline": "Server online",
+  "serverStatusMaintained": "Server is being maintained",
+  "serverStatusOffline": "Server offline",
+  "serverStatusVersionAvailable": "Version {version} is available",
+  "@serverStatusVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "serverStatusNewVersion": "A new version is available",
+  "serverStatusUpdateBody": "Mediarr {latest} is available. This server runs {version}. The server administrator updates it with:\n\ndocker compose pull && docker compose up -d",
+  "@serverStatusUpdateBody": {
+    "placeholders": {
+      "latest": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "serverStatusOk": "OK",
+  "storiesStripLastWeek": "The last week",
+  "storiesStripYearsAgo": "{years, plural, =1{1 year ago} other{{years} years ago}}",
+  "@storiesStripYearsAgo": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "storiesStripItems": "{count, plural, =1{1 item} other{{count} items}}",
+  "@storiesStripItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupScreenNotYet": "not yet",
+  "backupScreenLastBackup": "last backup {when}",
+  "@backupScreenLastBackup": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenUpTo": "up to {size}",
+  "@backupScreenUpTo": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenInvited": "Invited",
+  "backupScreenStopped": "Stopped",
+  "backupScreenActive": "Active",
+  "backupScreenDeletedKept": "deleted, kept: {size}",
+  "@backupScreenDeletedKept": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenActionFailed": "The action failed.",
+  "backupScreenSaved": "Saved.",
+  "backupScreenBackupStarted": "The backup has started.",
+  "backupScreenRestoreTestStarted": "The restore test has started.",
+  "backupScreenPaired": "Paired. The next backup goes there too.",
+  "backupScreenKeepForSomeone": "Keep a backup for someone",
+  "backupScreenForWhom": "For whom",
+  "backupScreenAtMostGb": "At most (GB)",
+  "backupScreenOtherServerAddress": "The address the other server reaches you at",
+  "backupScreenCancel": "Cancel",
+  "backupScreenInvite": "Invite",
+  "backupScreenInvitationFailed": "The invitation failed.",
+  "backupScreenCodeFor": "Code for {name}",
+  "@backupScreenCodeFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenSendItToAdmin": "Send it to the administrator of the other server, who pastes or scans it. It works once, until {when}.",
+  "@backupScreenSendItToAdmin": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenPlainHttp": "Over plain HTTP the key can be read on the way. Use HTTPS or a VPN.",
+  "backupScreenCopy": "Copy",
+  "backupScreenDone": "Done",
+  "backupScreenHowMuchFor": "How much for {name}",
+  "@backupScreenHowMuchFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenSave": "Save",
+  "backupScreenDeleteCopyOf": "Delete the copy of {name}?",
+  "@backupScreenDeleteCopyOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenTypeToDelete": "Type “{name}” to delete it",
+  "@backupScreenTypeToDelete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenDeleteTheCopy": "Delete the copy",
+  "backupScreenScheduledBackup": "Scheduled backup",
+  "backupScreenOnceADay": "Once a day, at the hour below",
+  "backupScreenExplain": "Originals and the database, encrypted. The destination is a folder inside {folder}, or an s3: or b2: address. Write the password down somewhere other than this server.",
+  "@backupScreenExplain": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenBackupFolder": "the backup folder",
+  "backupScreenDestination": "Destination",
+  "backupScreenPasswordSaved": "Password (saved, type to change)",
+  "backupScreenBackupPassword": "Backup password",
+  "backupScreenAccessKeySaved": "Access key (saved)",
+  "backupScreenAccessKey": "Access key (S3, B2)",
+  "backupScreenSecretKey": "Secret key (S3, B2)",
+  "backupScreenHourOfDay": "Hour of the day (0-23)",
+  "backupScreenBackUpNow": "Back up now",
+  "backupScreenTestBringingBack": "Test bringing it back",
+  "backupScreenHistory": "History",
+  "backupScreenRunBackup": "Backup",
+  "backupScreenRunRestoreTest": "Restore test",
+  "backupScreenFiles": "files {count}",
+  "@backupScreenFiles": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenMyCopyAtOthers": "My copy at others",
+  "backupScreenTwoServers": "Two Mediarr servers keep an encrypted copy of each other. The one that keeps it cannot read it, and what is deleted from it is kept for 90 more days.",
+  "backupScreenNoHttps": "No HTTPS",
+  "backupScreenMore": "More",
+  "backupScreenRemove": "Remove",
+  "backupScreenCodeFromOther": "Code from the other Mediarr",
+  "backupScreenScanQr": "Scan the QR code",
+  "backupScreenPairing": "Pairing…",
+  "backupScreenPair": "Pair",
+  "backupScreenSnapshots": "Snapshots before upgrades",
+  "backupScreenSnapshotsExplain": "Before each upgrade that changes the database, Mediarr keeps a snapshot of it. The last three are kept.",
+  "backupScreenNoSnapshots": "No snapshots yet. The first is made at the next upgrade that changes the database.",
+  "backupScreenEarlierVersion": "Earlier version",
+  "backupScreenDeleteSnapshot": "Delete snapshot",
+  "backupScreenGoBackHow": "To go back to the newest one, in the folder with docker-compose.yml:",
+  "backupScreenDeleteThisSnapshot": "Delete this snapshot?",
+  "backupScreenNoGoingBack": "It will no longer be possible to go back to it.",
+  "backupScreenDelete": "Delete",
+  "backupScreenNotDeleted": "Not deleted.",
+  "backupScreenIKeepForOthers": "I keep for others",
+  "backupScreenNoNewCode": "No new code.",
+  "backupScreenFilesBroughtBack": "Files brought back: {count}.",
+  "@backupScreenFilesBroughtBack": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "backupScreenNewCode": "New code",
+  "backupScreenResume": "Resume",
+  "backupScreenStop": "Stop",
+  "backupScreenSize": "Size",
+  "backupScreenBringBackDeleted": "Bring back what was deleted",
+  "backupScreenTitle": "Backup",
+  "backupScreenLoadFailed": "The backup settings could not be loaded.",
+  "backupScreenScanTheCode": "Scan the code",
+  "duplicatesScreenFavorite": "Favorite",
+  "duplicatesScreenOriginal": "Original",
+  "duplicatesScreenSavedAgain": "Saved again by an app",
+  "duplicatesScreenHasLocation": "Has a location",
+  "duplicatesScreenHasDescription": "Has a description",
+  "duplicatesScreenNoDate": "No date",
+  "duplicatesScreenReasonFavorite": "a favorite",
+  "duplicatesScreenReasonCameraOriginal": "the camera's original",
+  "duplicatesScreenReasonOthersSaved": "the others were saved again by apps",
+  "duplicatesScreenReasonHighestResolution": "the highest resolution",
+  "duplicatesScreenReasonLargestFile": "the largest file",
+  "duplicatesScreenReasonEqual": "they are equal, so any one can stay",
+  "duplicatesScreenReasonSharpest": "the sharpest",
+  "duplicatesScreenCancel": "Cancel",
+  "duplicatesScreenResolveThisGroup": "Resolve this group?",
+  "duplicatesScreenKeptTakesOver": "The kept photo takes over the albums, tags, favorite, description, rating, location and names of people from the others. They go to the trash and can be restored.",
+  "duplicatesScreenResolve": "Resolve",
+  "duplicatesScreenResolved": "Resolved. The copies are in the trash.",
+  "duplicatesScreenActionFailed": "The action failed.",
+  "duplicatesScreenResolveEveryIdentical": "Resolve every identical picture?",
+  "duplicatesScreenResolveAllDuplicates": "Resolve all duplicates?",
+  "duplicatesScreenResolveAllBody": "Groups: {groups}. {trashed} photos go to the trash, which frees {size} once it is emptied. In each group the proposed photo stays and takes over what the others had.",
+  "@duplicatesScreenResolveAllBody": {
+    "placeholders": {
+      "groups": {
+        "type": "String"
+      },
+      "trashed": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesScreenResolveAll": "Resolve all",
+  "duplicatesScreenSamePicture": "Same picture",
+  "duplicatesScreenAlike": "Alike",
+  "duplicatesScreenProposedToKeep": "Proposed to keep: {reason} · frees {size}",
+  "@duplicatesScreenProposedToKeep": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesScreenNotDuplicates": "Not duplicates",
+  "duplicatesScreenResolveToTrash": "Resolve ({count} to the trash)",
+  "@duplicatesScreenResolveToTrash": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesScreenTitle": "Duplicates",
+  "duplicatesScreenLoadFailed": "Duplicates could not be loaded.",
+  "duplicatesScreenPending": "Photos still being compared: {count}.",
+  "@duplicatesScreenPending": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesScreenNoneFound": "No similar photos were found.",
+  "duplicatesScreenTickWhatToKeep": "Tick what to keep. These are only proposals, and nothing is removed without your confirmation.",
+  "duplicatesScreenShowing": "Showing {shown} of {total}.",
+  "@duplicatesScreenShowing": {
+    "placeholders": {
+      "shown": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesScreenResolving": "Resolving duplicates: {done} of {total}",
+  "@duplicatesScreenResolving": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesScreenResolveIdentical": "Resolve the identical ({count})",
+  "@duplicatesScreenResolveIdentical": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesScreenResolveAllAsProposed": "Resolve all as proposed ({count})",
+  "@duplicatesScreenResolveAllAsProposed": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesScreenStackLoadFailed": "This stack could not be loaded.",
+  "duplicatesScreenSplitStack": "Split the stack",
+  "duplicatesScreenMakeMain": "Make it the main shot",
+  "accountSheetVersionBuild": "{version} build {build}",
+  "@accountSheetVersionBuild": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "accountSheetEditProfile": "Edit profile",
+  "accountSheetClose": "Close",
+  "accountSheetPhotosAndVideos": "{count} photos and videos",
+  "@accountSheetPhotosAndVideos": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "accountSheetUsed": "{size} used",
+  "@accountSheetUsed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "accountSheetFilesFailed": "{count, plural, =1{1 file could not be processed} other{{count} files could not be processed}}",
+  "@accountSheetFilesFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountSheetAppearance": "Appearance",
+  "accountSheetDark": "Dark",
+  "accountSheetLight": "Light",
+  "accountSheetSystem": "System",
+  "accountSheetServerDisk": "Server disk",
+  "accountSheetLoading": "Loading…",
+  "accountSheetServerNoAnswer": "The server does not answer.",
+  "accountSheetDiskUsed": "{used} of {total} used",
+  "@accountSheetDiskUsed": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "accountSheetAppVersion": "App version",
+  "accountSheetServerVersion": "Server version",
+  "accountSheetNewVersion": "New version",
+  "accountSheetIsAvailable": "{version} is available",
+  "@accountSheetIsAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "accountSheetServer": "Server",
+  "accountSheetServerAddress": "Server address",
+  "accountSheetFreeUpSpace": "Free up space",
+  "accountSheetProfile": "Profile",
+  "accountSheetSignInOnAnotherDevice": "Sign in on another device",
+  "accountSheetBackupDevices": "Backup devices",
+  "accountSheetImport": "Import",
+  "accountSheetAdministration": "Administration",
+  "accountSheetBackup": "Backup",
+  "accountSheetAllBackupDevices": "All backup devices",
+  "accountSheetStorageTemplate": "Storage template",
+  "accountSheetSettings": "Settings",
+  "accountSheetSignOut": "Sign out",
+  "accountSheetDocumentation": "Documentation",
+  "accountSheetLicenses": "Licenses",
+  "searchFiltersSheetFilters": "Filters",
+  "searchFiltersSheetDate": "Date",
+  "searchFiltersSheetFrom": "From",
+  "searchFiltersSheetTo": "To",
+  "searchFiltersSheetType": "Type",
+  "searchFiltersSheetAll": "All",
+  "searchFiltersSheetPhotos": "Photos",
+  "searchFiltersSheetVideos": "Videos",
+  "searchFiltersSheetPeople": "People",
+  "searchFiltersSheetAnyOfThem": "Any of them, not all together",
+  "searchFiltersSheetWhereAndWith": "Where and with what",
+  "searchFiltersSheetPlace": "Place",
+  "searchFiltersSheetCamera": "Camera",
+  "searchFiltersSheetLens": "Lens",
+  "searchFiltersSheetRating": "Rating",
+  "searchFiltersSheetAnyRating": "Any",
+  "searchFiltersSheetTags": "Tags",
+  "searchFiltersSheetAlbum": "Album",
+  "searchFiltersSheetAnyAlbum": "Any",
+  "searchFiltersSheetInNoAlbum": "In no album",
+  "searchFiltersSheetFavouritesOnly": "Favourites only",
+  "searchFiltersSheetClear": "Clear",
+  "searchFiltersSheetApply": "Apply",
+  "adminEmailPortNumber": "The port must be a number.",
+  "adminEmailSaved": "Email settings are saved.",
+  "adminEmailTestSent": "A test message was sent to you.",
+  "adminEmailTitle": "Email",
+  "adminEmailSendEmail": "Send email",
+  "adminEmailSmtpServer": "SMTP server",
+  "adminEmailPort": "Port",
+  "adminEmailEncryption": "Encryption",
+  "adminEmailNone": "None",
+  "adminEmailUserName": "User name",
+  "adminEmailPassword": "Password",
+  "adminEmailPasswordSaved": "A password is saved. Empty keeps it.",
+  "adminEmailFrom": "From",
+  "adminEmailServerAddress": "Address of this server",
+  "adminEmailForLinks": "For links in messages",
+  "adminEmailSave": "Save",
+  "adminEmailSendTest": "Send a test message",
+  "photoEditorScreenActionFailed": "The action failed. {reason}",
+  "@photoEditorScreenActionFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "photoEditorScreenEdit": "Edit",
+  "photoEditorScreenRotate": "Rotate",
+  "photoEditorScreenBrightness": "Brightness",
+  "photoEditorScreenContrast": "Contrast",
+  "photoEditorScreenSaturation": "Saturation",
+  "photoEditorScreenNoFilter": "No filter",
+  "photoEditorScreenBlackAndWhite": "Black and white",
+  "photoEditorScreenWarm": "Warm",
+  "photoEditorScreenCool": "Cool",
+  "photoEditorScreenVintage": "Vintage",
+  "photoEditorScreenVivid": "Vivid",
+  "photoEditorScreenBackToOriginal": "Back to the original",
+  "photoEditorScreenSave": "Save",
+  "homeWidgetScreenHowToIos": "Then touch and hold an empty spot on the home screen, tap + (or Edit, Add Widget), and choose Mediarr.",
+  "homeWidgetScreenHowToAndroid": "Then touch and hold an empty spot on the home screen, tap Widgets, and drag Mediarr to it.",
+  "homeWidgetScreenFetchesItself": "The widget fetches its photos itself, and keeps a few.",
+  "homeWidgetScreenFetching": "Fetching its photos…",
+  "homeWidgetScreenPicturesKept": "{count, plural, =1{1 photo kept on this phone for it} other{{count} photos kept on this phone for it}}",
+  "@homeWidgetScreenPicturesKept": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWidgetScreenDidNotWork": "It did not work.",
+  "homeWidgetScreenTitle": "Home screen widget",
+  "homeWidgetScreenIntro": "The widget shows a photo from the album you choose here, a different one every hour, also without a connection. {howTo}",
+  "@homeWidgetScreenIntro": {
+    "placeholders": {
+      "howTo": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWidgetScreenShowing": "Showing {album}",
+  "@homeWidgetScreenShowing": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWidgetScreenShowsNothing": "The widget shows nothing now.",
+  "homeWidgetScreenTurnOff": "Turn off",
+  "homeWidgetScreenAlbum": "Album",
+  "homeWidgetScreenNoAlbums": "There are no albums yet.",
+  "homeWidgetScreenShows": "The widget shows {album}.",
+  "@homeWidgetScreenShows": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWidgetNoKey": "The server did not make a key for the widget.",
+  "settingsAccentMidnightBlue": "Midnight blue",
+  "settingsAccentGold": "Gold",
+  "settingsAccentViolet": "Violet",
+  "settingsAccentMint": "Mint",
+  "settingsAccentRose": "Rose",
+  "settingsThemeAuto": "Auto",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "homeScreenMedia": "Media",
+  "homeScreenSearch": "Search",
+  "homeScreenAlbums": "Albums",
+  "homeScreenLibrary": "Library",
+  "homeScreenAdd": "Add",
+  "homeScreenAddUploading": "Add, {count} uploading",
+  "@homeScreenAddUploading": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "panoramaViewCannotBeShown": "The panorama cannot be shown.",
+  "panoramaViewLabel": "360° panorama",
+  "fixSheetChanged": "Changed: {changed}",
+  "@fixSheetChanged": {
+    "placeholders": {
+      "changed": {
+        "type": "int"
+      }
+    }
+  },
+  "fixSheetCameraClockWrong": "When the camera's clock was wrong.",
+  "fixSheetEarlier": "Earlier",
+  "fixSheetLater": "Later",
+  "fixSheetDays": "Days",
+  "fixSheetHours": "Hours",
+  "fixSheetMinutes": "Minutes",
+  "fixSheetOneDateForAll": "One date for all, a minute apart so they keep their order.",
+  "fixSheetChooseDateTime": "Choose the date and time",
+  "fixSheetTripHint": "When the camera kept home's time on a trip.",
+  "fixSheetCameraClockWasOn": "The camera's clock was on",
+  "fixSheetTheyWereTakenIn": "They were taken in",
+  "fixSheetZoneFromPlaceHint": "Photos with a location get the time zone of the place, summer time included; the clock stays as it was.",
+  "fixSheetDatesByHandRemoved": "Dates set by hand are taken away.",
+  "fixSheetNeighboursHint": "Photos without a location get the place of the photo with one taken closest to them.",
+  "fixSheetAtMostMinutesApart": "At most minutes apart",
+  "fixSheetTrackHint": "Photos without a location get the place from the track at the moment they were taken. Get the date right first.",
+  "fixSheetChooseGpx": "Choose a GPX file",
+  "fixSheetFindPlace": "Find a place",
+  "fixSheetLatitude": "Latitude",
+  "fixSheetLongitude": "Longitude",
+  "fixSheetLocationGoes": "The location goes, and stays gone.",
+  "fixSheetLocationsByHandRemoved": "Locations set by hand are taken away.",
+  "fixSheetDateTitle": "Date and time · {count}",
+  "@fixSheetDateTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fixSheetLocationTitle": "Location · {count}",
+  "@fixSheetLocationTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fixSheetShift": "Shift",
+  "fixSheetSetDate": "Set a date",
+  "fixSheetZoneFromPlace": "Zone from the place",
+  "fixSheetTrip": "A trip",
+  "fixSheetFromFile": "From the file",
+  "fixSheetFromNearby": "From nearby photos",
+  "fixSheetFromTrack": "From a GPX track",
+  "fixSheetSetPlace": "Set a place",
+  "fixSheetClearLocation": "Take the location away",
+  "fixSheetWillChange": "Will change: {changed}",
+  "@fixSheetWillChange": {
+    "placeholders": {
+      "changed": {
+        "type": "int"
+      }
+    }
+  },
+  "fixSheetNothingToGoBy": "nothing to go by: {skipped}",
+  "@fixSheetNothingToGoBy": {
+    "placeholders": {
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "fixSheetNoLocation": "no location",
+  "fixSheetCancel": "Cancel",
+  "fixSheetSave": "Save",
+  "adminSecurityRulesSaved": "The rules are saved.",
+  "adminSecuritySsoSaved": "Single sign-on is saved.",
+  "adminSecurityForgetTitle": "Forget this device?",
+  "adminSecurityApproveAgain": "{email} on it has to be approved again.",
+  "@adminSecurityApproveAgain": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "adminSecurityCancel": "Cancel",
+  "adminSecurityForget": "Forget",
+  "adminSecurityDeviceForgotten": "The device is forgotten.",
+  "adminSecurityTitle": "Security",
+  "adminSecuritySingleSignOn": "Single sign-on",
+  "adminSecurityIssuer": "Issuer",
+  "adminSecurityIssuerHelp": "Empty turns single sign-on off",
+  "adminSecurityClientId": "Client ID",
+  "adminSecurityClientSecret": "Client secret",
+  "adminSecuritySecretSaved": "A secret is saved. Empty keeps it.",
+  "adminSecurityButtonLabel": "Button label",
+  "adminSecurityAutoCreate": "Create an account on first sign-in",
+  "adminSecurityLinkAdmins": "Administrators may sign in this way",
+  "adminSecuritySaveSso": "Save single sign-on",
+  "adminSecurityRules": "Rules",
+  "adminSecurityApprovalRequired": "New devices must be approved",
+  "adminSecurityAllowlist": "Only these addresses may reach the server",
+  "adminSecurityYourAddress": "Your address now: {address}",
+  "@adminSecurityYourAddress": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "adminSecurityAddresses": "Addresses and networks",
+  "adminSecurityAddressesHelp": "One per line, such as 192.168.1.0/24",
+  "adminSecuritySaveRules": "Save the rules",
+  "adminSecurityDevices": "Devices",
+  "adminSecurityNoDevices": "No device has tried to sign in yet.",
+  "adminSecurityLastSeen": "last {time}",
+  "@adminSecurityLastSeen": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "adminSecurityDeviceApproved": "The device may sign in.",
+  "adminSecurityApprove": "Approve",
+  "adminSecurityAttempts": "Attempts to get in",
+  "adminSecuritySignedIn": "Signed in",
+  "adminSecurityWrongSignIn": "Wrong sign-in",
+  "adminSecurityTooManyAttempts": "Too many attempts",
+  "adminSecurityAddressBlocked": "Address blocked",
+  "adminSecurityDeviceNotApproved": "Device not approved",
+  "adminSecurityPasswordReset": "Password reset",
+  "adminSecurityNoAttempts": "No attempts yet.",
+  "adminSecurityShowOlder": "Show older",
+  "adminCommonNoAnswer": "The server did not answer ({code}).",
+  "@adminCommonNoAnswer": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenQuiet": "Quiet",
+  "devicesScreenNeedsALook": "Needs a look",
+  "devicesScreenAllGood": "All good",
+  "devicesScreenConfirmed": "{count} files confirmed by the server",
+  "@devicesScreenConfirmed": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenOfSent": "{line}, of {files} the device sent",
+  "@devicesScreenOfSent": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      },
+      "files": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenWaiting": "waiting {count}",
+  "@devicesScreenWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenNotSent": "not sent {count}",
+  "@devicesScreenNotSent": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenInTrash": "in the trash {count}",
+  "@devicesScreenInTrash": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenGone": "no longer on the server {count}",
+  "@devicesScreenGone": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenNever": "Never",
+  "devicesScreenDays": "{days, plural, =1{1 day} other{{days} days}}",
+  "@devicesScreenDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "devicesScreenNotLoaded": "Not loaded.",
+  "devicesScreenRemoveTitle": "Remove {name}?",
+  "@devicesScreenRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenRemoveBody": "Its photos stay on the server. If it reports again, it comes back.",
+  "devicesScreenCancel": "Cancel",
+  "devicesScreenRemove": "Remove",
+  "devicesScreenNotRemoved": "Not removed.",
+  "devicesScreenSaved": "Saved.",
+  "devicesScreenNotSaved": "Not saved.",
+  "devicesScreenThisPhone": "{name} · This phone",
+  "@devicesScreenThisPhone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenLastReport": "last report {time}",
+  "@devicesScreenLastReport": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenOnDevice": "{verified} of {total} on the device",
+  "@devicesScreenOnDevice": {
+    "placeholders": {
+      "verified": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "devicesScreenQuietWarning": "It has not reported for longer than you allow. Open Mediarr on it and check that backup is on.",
+  "devicesScreenNothingMissing": "Nothing is missing.",
+  "devicesScreenInTrashOnServer": "in the trash on the server",
+  "devicesScreenDeletedFromServer": "deleted from the server",
+  "devicesScreenWhatIsMissing": "What is missing",
+  "devicesScreenHide": "Hide",
+  "devicesScreenTryingAgain": "Trying again.",
+  "devicesScreenTryAgain": "Try again",
+  "devicesScreenAllBackupDevices": "All backup devices",
+  "devicesScreenBackupDevices": "Backup devices",
+  "devicesScreenAllIntro": "Every user’s devices that back up. When one goes quiet, its owner is warned.",
+  "devicesScreenIntro": "Phones that back up, and how much from each is safe on the server. The server counts, from its own files.",
+  "devicesScreenDidNotLoad": "The devices did not load. Pull to try again.",
+  "devicesScreenNoneReported": "No device has reported yet.",
+  "devicesScreenNoneReportedTurnOn": "No device has reported yet. Turn on automatic backup in Upload.",
+  "devicesScreenWarnMeAfter": "Warn me after",
+  "devicesScreenWarnHelp": "A notice here and on the web, and by e-mail if it is set up. Once, until the device reports again.",
+  "timelineScreenActionFailed": "The action failed. {message}",
+  "@timelineScreenActionFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineScreenSetVaultPin": "Set a vault PIN first: Account > Vault.",
+  "timelineScreenDeleteTitle": "Delete {count}?",
+  "@timelineScreenDeleteTitle": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "timelineScreenTrashRestorable": "They move to the trash, where they can be restored.",
+  "timelineScreenTrashDays": "They move to the trash, where they stay for {days} days and can be restored.",
+  "@timelineScreenTrashDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "timelineScreenCancel": "Cancel",
+  "timelineScreenDelete": "Delete",
+  "timelineScreenLoadFailed": "Your photos could not be loaded. Check the connection.",
+  "timelineScreenTryAgain": "Try again",
+  "timelineScreenEmpty": "No photos yet. Add your first ones in the Upload tab.",
+  "timelineScreenMedia": "Media",
+  "timelineScreenClearSelection": "Clear selection",
+  "timelineScreenAddToAlbum": "Add to album",
+  "timelineScreenShare": "Share",
+  "timelineScreenAddToFavorites": "Add to favorites",
+  "timelineScreenMore": "More",
+  "timelineScreenArchive": "Archive",
+  "timelineScreenAddTag": "Add a tag",
+  "timelineScreenDateTimeMenu": "Date and time…",
+  "timelineScreenLocationMenu": "Location…",
+  "timelineScreenMoveToVault": "Move to the vault",
+  "timelineScreenMonthFailed": "{month} could not be loaded. Try again.",
+  "@timelineScreenMonthFailed": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "agentProgramOnSystem": "{program} on {system}",
+  "@agentProgramOnSystem": {
+    "placeholders": {
+      "program": {
+        "type": "String"
+      },
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "agentUnknownDevice": "Unknown device",
+  "agentMediarrApp": "Mediarr app",
+  "agentNow": "now",
+  "agentMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@agentMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@agentHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@agentDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentWeeksAgo": "{count, plural, =1{1 week ago} other{{count} weeks ago}}",
+  "@agentWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}",
+  "@agentMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "agentYearsAgo": "{count, plural, =1{1 year ago} other{{count} years ago}}",
+  "@agentYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "slideshowScreenCrossfade": "Crossfade",
+  "slideshowScreenSlide": "Slide",
+  "slideshowScreenSlowZoom": "Slow zoom",
+  "slideshowScreenNone": "None",
+  "slideshowScreenSettings": "Slideshow settings",
+  "slideshowScreenPace": "Pace",
+  "slideshowScreenTransition": "Transition",
+  "slideshowScreenShuffle": "Shuffle",
+  "slideshowScreenLoop": "Loop",
+  "slideshowScreenDateAndPlace": "Date and place",
+  "slideshowScreenTheEnd": "The end.",
+  "slideshowScreenPrevious": "Previous",
+  "slideshowScreenPlay": "Play",
+  "slideshowScreenPause": "Pause",
+  "slideshowScreenNext": "Next",
+  "slideshowScreenClose": "Close",
+  "notificationsAlbumShared": "\"{subject}\" was shared with you",
+  "@notificationsAlbumShared": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsImportDone": "The import from {subject} finished",
+  "@notificationsImportDone": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsImportFailed": "The import from {subject} failed",
+  "@notificationsImportFailed": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsDeviceQuiet": "{subject} has stopped backing up",
+  "@notificationsDeviceQuiet": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsCopyForLate": "The copy for {name} has not gone out for three days",
+  "@notificationsCopyForLate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsCopyFromLate": "The copy from {name} has not come in for three days",
+  "@notificationsCopyFromLate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsBackupFailed": "A backup failed: {subject}",
+  "@notificationsBackupFailed": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsTitle": "Notifications",
+  "notificationsNotRemoved": "This could not be removed.",
+  "notificationsNotLoaded": "This could not be loaded.",
+  "notificationsNone": "No notifications.",
+  "notificationsRemove": "Remove",
+  "assetFactsNotSaved": "Not saved. {message}",
+  "@assetFactsNotSaved": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "assetFactsEditDetails": "Edit details",
+  "assetFactsDateAndTime": "Date and time",
+  "assetFactsFindPlace": "Find a place",
+  "assetFactsLatitude": "Latitude",
+  "assetFactsLongitude": "Longitude",
+  "assetFactsDescription": "Description",
+  "assetFactsUseFile": "Use what the file says",
+  "assetFactsCancel": "Cancel",
+  "assetFactsSave": "Save",
+  "assetFactsStars": "{stars} of 5 stars",
+  "@assetFactsStars": {
+    "placeholders": {
+      "stars": {
+        "type": "String"
+      }
+    }
+  },
+  "documentsScreenNotEnabled": "An administrator has not turned this album on.",
+  "documentsScreenNeedsAnalysis": "This needs picture analysis to be on.",
+  "documentsScreenNoText": "No photos with text yet.",
+  "documentsScreenLoadFailed": "Documents could not be loaded.",
+  "documentsScreenTitle": "Documents",
+  "sharingNoPhotoAccess": "Mediarr may not add photos to this phone",
+  "backupNoDeviceKey": "The server did not create a device key.",
+  "foldersScreenFolders": "Folders",
+  "foldersScreenLoadFailed": "The folder could not be loaded.",
+  "foldersScreenNoExternalLibrary": "You have no external library. An administrator sets it up in Settings.",
+  "foldersScreenEmpty": "This folder is empty.",
+  "searchQueryNoName": "No name",
+  "searchQueryVideos": "Videos",
+  "searchQueryPhotos": "Photos",
+  "searchQueryInAlbum": "In album: {title}",
+  "@searchQueryInAlbum": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "searchQueryInNoAlbum": "In no album",
+  "searchQueryFavourites": "Favourites",
+  "exploreScreenExplore": "Explore",
+  "exploreScreenPeople": "People",
+  "exploreScreenPlaces": "Places",
+  "exploreScreenMemories": "Memories",
+  "exploreScreenPeopleFailed": "People could not be loaded.",
+  "exploreScreenNoNamedPeople": "No named people yet.",
+  "exploreScreenPlacesFailed": "Places could not be loaded.",
+  "exploreScreenNoPlaces": "No photos with a place yet.",
+  "exploreScreenMemoriesFailed": "Memories could not be loaded.",
+  "exploreScreenNoMemories": "No memories today.",
+  "exploreScreenAllPeople": "All People",
+  "exploreScreenAllPlaces": "All Places",
+  "exploreScreenAllMemories": "All Memories",
+  "sharedScreenActionFailed": "The action failed. {reason}",
+  "@sharedScreenActionFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedScreenWholeLibrary": "Whole library",
+  "sharedScreenFrom": "From {date}",
+  "@sharedScreenFrom": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "sharedScreenLoadFailed": "This could not be loaded. Check the connection.",
+  "sharedScreenTryAgain": "Try again",
+  "sharedScreenAlbumsWithMe": "Albums shared with me",
+  "sharedScreenNothingShared": "Nothing has been shared yet.",
+  "sharedScreenLibrariesWithMe": "Libraries shared with me",
+  "sharedScreenNobodyShares": "Nobody shares their library with you.",
+  "sharedScreenShowInMyMedia": "Show in my Media",
+  "sharedScreenMyLibrarySharedWith": "My library is shared with",
+  "sharedScreenNobodyYet": "Nobody yet.",
+  "sharedScreenStop": "Stop",
+  "sharedScreenUser": "User",
+  "sharedScreenChooseDate": "Choose date",
+  "sharedScreenNeverShared": "The archive, trash and vault are never shared.",
+  "sharedScreenShareMyLibrary": "Share my library",
+  "sharedScreenShared": "Shared",
+  "sharedScreenLibraryNotAvailable": "This library is not available.",
+  "sharedScreenNoPhotos": "No photos yet.",
+  "loginScreenEnterServerFirst": "Enter the address of your server first.",
+  "loginScreenAllowOnCodeScreen": "Allow this sign-in on the screen that shows the code.",
+  "loginScreenCancel": "Cancel",
+  "loginScreenEnterTotp": "Enter the 6-digit code from your authenticator app.",
+  "loginScreenSignInToServer": "Sign in to your Mediarr server.",
+  "loginScreenCode": "Code",
+  "loginScreenServerAddress": "Server address",
+  "loginScreenEmail": "Email",
+  "loginScreenPassword": "Password",
+  "loginScreenVerify": "Verify",
+  "loginScreenSignIn": "Sign in",
+  "loginScreenSingleSignOn": "Use single sign-on",
+  "loginScreenScanQr": "Scan QR code",
+  "loginScreenEnterSignInCode": "Enter a sign-in code",
+  "loginScreenSignInCode": "Sign-in code",
+  "qrSignInScanTitle": "Scan the sign-in code",
+  "qrSignInScanHelp": "On a screen where you are signed in, open the account menu and choose \"Sign in on a phone\".",
+  "qrSignInLooking": "Looking for servers on this network…",
+  "qrSignInNoneFound": "No server found on this network.",
+  "qrSignInOnThisNetwork": "On this network",
+  "qrSignInLookAgain": "Look again",
+  "qrSignInMakeCodeFailed": "Could not make a code.",
+  "qrSignInTheDevice": "the device",
+  "qrSignInTitle": "Sign in on another device",
+  "qrSignInHowTo": "In the Mediarr app on the other device, tap \"Scan QR code\" on the sign-in screen.",
+  "qrSignInQrLabel": "Sign-in QR code",
+  "qrSignInOrType": "Or type the code",
+  "qrSignInValidFor": "Valid for {time}",
+  "@qrSignInValidFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "qrSignInAllowOn": "Allow sign-in on {device}?",
+  "@qrSignInAllowOn": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "qrSignInAllowOnlyIf": "Allow only if you just scanned the code on your own device.",
+  "qrSignInDeny": "Deny",
+  "qrSignInAllow": "Allow",
+  "qrSignInSignedIn": "{device} is signed in. It shows under Account → Devices.",
+  "@qrSignInSignedIn": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "qrSignInDone": "Done",
+  "qrSignInDenied": "The sign-in was denied.",
+  "qrSignInExpired": "The code has expired.",
+  "qrSignInNewCode": "New code",
+  "uploadScreenChoose": "Choose photos and videos from this device to upload them.",
+  "uploadScreenOpenLibrary": "Open photo library",
+  "uploadScreenNeedsAccess": "Mediarr needs access to your photos. Allow it in Settings.",
+  "uploadScreenOpenSettings": "Open Settings",
+  "uploadScreenNoPhotos": "There are no photos on this device.",
+  "uploadScreenUploadCount": "Upload {count}",
+  "@uploadScreenUploadCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadScreenQueued": "Queued",
+  "uploadScreenPreparing": "Preparing",
+  "uploadScreenUploaded": "Uploaded",
+  "uploadScreenAlreadyOnServer": "Already on server",
+  "uploadScreenFailed": "Failed",
+  "uploadScreenFinished": "{done} of {total} finished",
+  "@uploadScreenFinished": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadScreenClearFailed": "Clear failed",
+  "uploadScreenPhoto": "Photo",
+  "backupCardNothingYet": "Nothing has been backed up yet.",
+  "backupCardLastJustNow": "Last file backed up just now.",
+  "backupCardLastMinutes": "Last file backed up {minutes} min ago.",
+  "@backupCardLastMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardLastHours": "Last file backed up {hours} h ago.",
+  "@backupCardLastHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardLastDays": "Last file backed up {days} d ago.",
+  "@backupCardLastDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardScopeTitle": "Back up \"{album}\"",
+  "@backupCardScopeTitle": {
+    "placeholders": {
+      "album": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardScopeBody": "Should photos already in this album be sent? Anything already on the server is never sent twice.",
+  "backupCardOnlyNew": "Only photos added from now",
+  "backupCardAlsoExisting": "Also the ones in it now",
+  "backupCardTheAddedAlbums": "the added albums",
+  "backupCardNeedsFullAccess": "Albums need access to all photos. Allow it in Settings: Mediarr > Photos > Full Access.",
+  "backupCardServerUnreachable": "The server could not be reached. {reason}",
+  "@backupCardServerUnreachable": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardAutomaticBackup": "Automatic backup",
+  "backupCardAlbum": "Album: {name}",
+  "@backupCardAlbum": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardChange": "Change",
+  "backupCardNeedsFullAccessNothingSent": "Albums need access to all photos. Allow it in Settings: Mediarr > Photos > Full Access. Nothing is being sent.",
+  "backupCardNoSuchAlbum": "No album with this name on the device. Nothing is being sent.",
+  "backupCardMoreAlbums": "More albums: {more}, never sent: {never}",
+  "@backupCardMoreAlbums": {
+    "placeholders": {
+      "more": {
+        "type": "String"
+      },
+      "never": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardOnlyWifi": "Only on Wi-Fi",
+  "backupCardOnlyCharging": "Only while charging",
+  "backupCardVerified": "{verified} of {total} verified on the server",
+  "@backupCardVerified": {
+    "placeholders": {
+      "verified": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardCounts": "{sending} sending · {waiting} waiting · {failed} failed",
+  "@backupCardCounts": {
+    "placeholders": {
+      "sending": {
+        "type": "String"
+      },
+      "waiting": {
+        "type": "String"
+      },
+      "failed": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardPerDevice": "What the server confirms, per device",
+  "backupCardRefused": "The server refused this device. Turn backup off and on again.",
+  "backupCardFreeUpSpace": "Free up space",
+  "backupCardRetryFailed": "Try the {count} failed again",
+  "@backupCardRetryFailed": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardOffHelp": "Sends one album of your choice, and nothing else. Checks for new photos every minute while the app is open. When it is closed, iOS decides when, often much later, and stops it if you swipe the app away.",
+  "backupCardWhichAlbum": "Which album?",
+  "backupCardAlbumName": "Album name",
+  "backupCardUseName": "Use the name \"{name}\"",
+  "@backupCardUseName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardStartsWhenExists": "Starts when an album with this name exists",
+  "backupCardNoAlbums": "No albums on this device yet. Create one in Photos.",
+  "backupCardNeverHelp": "A photo in a \"Never\" album is not sent, even if it is also in another album.",
+  "backupCardNotAdded": "Not added",
+  "backupCardBackUp": "Back up",
+  "backupCardNever": "Never",
+  "backupCardSave": "Save",
+  "albumSheetsOwner": "Owner",
+  "albumSheetsEditor": "Editor",
+  "albumSheetsContributor": "Contributor",
+  "albumSheetsViewer": "Viewer",
+  "albumSheetsUploadOnly": "upload only",
+  "albumSheetsPassword": "password",
+  "albumSheetsWatermarkFact": "watermark",
+  "albumSheetsExpiresFact": "expires {date}",
+  "@albumSheetsExpiresFact": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "albumSheetsDownloadsFact": "downloads: {count}",
+  "@albumSheetsDownloadsFact": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "albumSheetsActionFailed": "The action failed.",
+  "albumSheetsComments": "Comments",
+  "albumSheetsCommentsAndHearts": "Comments and hearts",
+  "albumSheetsCommentsFailed": "Comments could not be loaded.",
+  "albumSheetsHeart": "Heart",
+  "albumSheetsNoComments": "No comments yet.",
+  "albumSheetsDeleteComment": "Delete comment",
+  "albumSheetsComment": "Comment",
+  "albumSheetsSend": "Send",
+  "albumSheetsAddToAlbum": "Add to album",
+  "albumSheetsAlbumsFailed": "Albums could not be loaded.",
+  "albumSheetsNewAlbum": "New album",
+  "albumSheetsCreateAndAdd": "Create and add",
+  "albumSheetsShareWithUsers": "Share with users",
+  "albumSheetsSharingFailed": "Sharing could not be loaded.",
+  "albumSheetsNotShared": "This album is not shared yet.",
+  "albumSheetsRemove": "Remove",
+  "albumSheetsNoOtherUsers": "There are no other users on this server.",
+  "albumSheetsUser": "User",
+  "albumSheetsRole": "Role",
+  "albumSheetsAdd": "Add",
+  "albumSheetsPublicLinks": "Public links",
+  "albumSheetsCopyNow": "Copy the address now: it cannot be shown again later.",
+  "albumSheetsCopy": "Copy",
+  "albumSheetsLinksFailed": "Links could not be loaded.",
+  "albumSheetsUnnamedLink": "Unnamed link",
+  "albumSheetsRevoke": "Revoke",
+  "albumSheetsName": "Name",
+  "albumSheetsPasswordOptional": "Password (optional)",
+  "albumSheetsNoExpiry": "No expiry",
+  "albumSheetsExpires": "Expires {date}",
+  "@albumSheetsExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "albumSheetsChoose": "Choose",
+  "albumSheetsDownloadLimit": "Download limit",
+  "albumSheetsWatermark": "Watermark",
+  "albumSheetsWatermarkHelp": "A watermark turns off original downloads and video playback.",
+  "albumSheetsAllowDownloads": "Allow downloads",
+  "albumSheetsShowLocation": "Show location",
+  "albumSheetsGuestsCanAdd": "Guests can add photos",
+  "albumSheetsUploadOnlyLong": "Upload only (guests do not see the album)",
+  "albumSheetsCreateLink": "Create link",
+  "albumSheetsFromAnyDate": "From any date",
+  "albumSheetsFrom": "From {date}",
+  "@albumSheetsFrom": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "albumSheetsToAnyDate": "To any date",
+  "albumSheetsTo": "To {date}",
+  "@albumSheetsTo": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "albumSheetsKind": "Kind",
+  "albumSheetsAll": "All",
+  "albumSheetsPhotos": "Photos",
+  "albumSheetsVideos": "Videos",
+  "albumSheetsLivePhoto": "Live Photo",
+  "albumSheetsCamera": "Camera",
+  "albumSheetsPerson": "Person",
+  "albumSheetsTag": "Tag",
+  "albumSheetsPlace": "Place",
+  "viewerScreenDeleteTitle": "Delete this photo?",
+  "viewerScreenTrashNoDays": "It moves to the trash, where it can be restored.",
+  "viewerScreenTrashDays": "It moves to the trash, where it stays for {days} days and can be restored.",
+  "@viewerScreenTrashDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "viewerScreenCancel": "Cancel",
+  "viewerScreenDelete": "Delete",
+  "viewerScreenActionFailed": "The action failed.",
+  "viewerScreenNoVideo": "This photo has no video.",
+  "viewerScreenVideoFailed": "The video could not be loaded.",
+  "viewerScreenStackShots": "Shots in this stack",
+  "viewerScreenSlideshow": "Slideshow",
+  "viewerScreen360View": "360° view",
+  "viewerScreenFlatView": "Flat view",
+  "viewerScreenPlayLive": "Play Live Photo",
+  "viewerScreenCommentsAndHearts": "Comments and hearts",
+  "viewerScreenFavorite": "Favorite",
+  "viewerScreenEdit": "Edit",
+  "viewerScreenShare": "Share",
+  "viewerScreenDetails": "Details",
+  "viewerScreenPhotoFailed": "This photo could not be loaded.",
+  "viewerScreenCannotPlay": "This video cannot be played on this device.",
+  "viewerScreenDetailsFailed": "The details could not be loaded.",
+  "viewerScreenUnavailable": "Unavailable",
+  "viewerScreenMissingFile": "The file was not found on the last scan of the external library. The original is available again once the file is back.",
+  "viewerScreenName": "Name",
+  "viewerScreenDescription": "Description",
+  "viewerScreenTaken": "Taken",
+  "viewerScreenAdded": "Added",
+  "viewerScreenDimensions": "Dimensions",
+  "viewerScreenSize": "Size",
+  "viewerScreenDuration": "Duration",
+  "viewerScreenCamera": "Camera",
+  "viewerScreenLens": "Lens",
+  "viewerScreenSettings": "Settings",
+  "viewerScreenLocation": "Location",
+  "viewerScreenNotSaved": "Not saved. {reason}",
+  "@viewerScreenNotSaved": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "viewerScreenEditDetails": "Edit details",
+  "libraryScreenTitle": "Library",
+  "libraryScreenExplore": "Explore",
+  "libraryScreenShared": "Shared",
+  "albumScreenActionFailed": "The action failed. {message}",
+  "@albumScreenActionFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "albumScreenRemovedAll": "Removed from the album: {count}",
+  "@albumScreenRemovedAll": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "albumScreenRemovedSome": "Removed: {changed} of {total}. You can remove only photos you added yourself.",
+  "@albumScreenRemovedSome": {
+    "placeholders": {
+      "changed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "albumScreenCoverSet": "The cover is set.",
+  "albumScreenCancel": "Cancel",
+  "albumScreenMoveTitle": "Move the album",
+  "albumScreenMoveTop": "The top, among all albums",
+  "albumScreenMoved": "The album was moved.",
+  "albumScreenUploadToAlbum": "Upload to album",
+  "albumScreenDeleteTitle": "Delete this album?",
+  "albumScreenDeleteBody": "The photos stay in the library. Public links stop working.",
+  "albumScreenDeleteBodyInside": "The photos stay in the library. Public links stop working. The albums inside move to the top.",
+  "albumScreenDelete": "Delete",
+  "albumScreenLeaveTitle": "Leave this album?",
+  "albumScreenLeaveBody": "You will no longer see it, unless the owner shares it again.",
+  "albumScreenLeave": "Leave",
+  "albumScreenClearSelection": "Clear selection",
+  "albumScreenShare": "Share",
+  "albumScreenSetAsCover": "Set as cover",
+  "albumScreenRemoveFromAlbum": "Remove from album",
+  "albumScreenSearchInAlbum": "Search in album",
+  "albumScreenComments": "Comments",
+  "albumScreenMore": "More",
+  "albumScreenSlideshow": "Slideshow",
+  "albumScreenAddFromLibrary": "Add from library",
+  "albumScreenUploadFromPhone": "Upload from this phone",
+  "albumScreenAlbumInside": "Album inside",
+  "albumScreenMoveTo": "Move to…",
+  "albumScreenShareWithUsers": "Share with users",
+  "albumScreenPublicLinks": "Public links",
+  "albumScreenEdit": "Edit",
+  "albumScreenNotAvailable": "This album is not available.",
+  "albumScreenNoMatch": "No photos match the rules.",
+  "albumScreenEmptyCanAdd": "This album is empty. Add photos from the menu.",
+  "albumScreenEmpty": "This album is empty.",
+  "albumScreenAlbumsInside": "Albums inside",
+  "albumScreenNewAlbumInside": "New album inside",
+  "albumScreenName": "Name",
+  "albumScreenCreate": "Create",
+  "albumScreenAdded": "Added: {count}",
+  "@albumScreenAdded": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "albumScreenChoosePhotos": "Choose photos",
+  "albumScreenAdd": "Add",
+  "albumScreenNoPhotosYet": "No photos yet.",
+  "albumScreenNotSaved": "The album was not saved.",
+  "albumScreenEditAlbum": "Edit album",
+  "albumScreenDescription": "Description",
+  "albumScreenOrder": "Order",
+  "albumScreenNewestFirst": "Newest first",
+  "albumScreenOldestFirst": "Oldest first",
+  "albumScreenSave": "Save",
+  "peopleScreensNoName": "No name",
+  "peopleScreensSearchFailed": "The search failed. Check the connection.",
+  "peopleScreensDescribe": "Describe what you are looking for, in English or Croatian, or choose filters.",
+  "peopleScreensSmartOff": "Smart search is off or not available, so only text on pictures, file names and filters are searched.",
+  "peopleScreensRemoveChip": "Remove {label}",
+  "@peopleScreensRemoveChip": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "peopleScreensNothingFound": "Nothing was found.",
+  "peopleScreensSearchHint": "dog on a beach, Hvar 2024, receipt…",
+  "peopleScreensAsk": "Ask",
+  "peopleScreensFilters": "Filters",
+  "peopleScreensSearch": "Search",
+  "peopleScreensLoadFailed": "People could not be loaded. Check the connection.",
+  "peopleScreensFacesOff": "Face recognition is not turned on for this server.",
+  "peopleScreensNoneYet": "No people recognised yet.",
+  "peopleScreensPeople": "People",
+  "peopleScreensShowOthers": "Show the others",
+  "peopleScreensHiddenPeople": "Hidden people",
+  "peopleScreensName": "Name",
+  "peopleScreensDateOfBirth": "Date of birth",
+  "peopleScreensMergeWith": "Merge with…",
+  "peopleScreensNobodyElse": "There is nobody else.",
+  "peopleScreensMerged": "Merged.",
+  "peopleScreensBorn": "Born {date}",
+  "@peopleScreensBorn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "peopleScreensShow": "Show",
+  "peopleScreensHide": "Hide",
+  "peopleScreensThisLoadFailed": "This could not be loaded. Check the connection.",
+  "adminServerSettingsTrashDaysProblem": "The trash keeps photos for 1 to 3650 days.",
+  "adminServerSettingsImageQualityProblem": "Image quality must be between 40 and 100.",
+  "adminServerSettingsPreviewSizeProblem": "The preview size must be between 720 and 4096.",
+  "adminServerSettingsVideoQualityProblem": "Video quality must be between 18 and 40, where lower is better.",
+  "adminServerSettingsVideoHeightProblem": "The largest video must be 720, 1080, 1440 or 2160.",
+  "adminServerSettingsFaceScoreProblem": "How sure a face must be is between 0.1 and 1.",
+  "adminServerSettingsFaceDistanceProblem": "How alike two faces must be is between 0.1 and 2.",
+  "adminServerSettingsJobsProblem": "Background jobs must be between 0 and 64.",
+  "adminServerSettingsWorkersProblem": "Video and analysis jobs must be between 1 and 16.",
+  "adminServerSettingsScanProblem": "The scan interval must be between 1 and 720 hours.",
+  "adminServerSettingsMessageProblem": "The sign-in message is too long.",
+  "adminServerSettingsNeedNumbers": "Every number field needs a number.",
+  "adminServerSettingsSaved": "The settings are saved.",
+  "adminServerSettingsTitle": "Server settings",
+  "adminServerSettingsTrash": "Trash",
+  "adminServerSettingsTrashDays": "Days photos stay in the trash",
+  "adminServerSettingsRange": "{low} to {high}",
+  "@adminServerSettingsRange": {
+    "placeholders": {
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "adminServerSettingsPicturesAndVideos": "Pictures and videos",
+  "adminServerSettingsImageQuality": "Image quality",
+  "adminServerSettingsPreviewSize": "Preview size in pixels",
+  "adminServerSettingsVideoQuality": "Video quality",
+  "adminServerSettingsVideoQualityHelp": "18 to 40, lower is better and larger",
+  "adminServerSettingsLargestVideo": "Largest video",
+  "adminServerSettingsFaces": "Faces",
+  "adminServerSettingsFaceScore": "How sure a face must be",
+  "adminServerSettingsFaceDistance": "How alike two faces must be to be one person",
+  "adminServerSettingsBackgroundJobs": "Background jobs",
+  "adminServerSettingsJobsAtOnce": "Jobs at once",
+  "adminServerSettingsJobsAtOnceHelp": "0 uses WORKER_CONCURRENCY; applies after the worker restarts",
+  "adminServerSettingsVideosAtOnce": "Videos at once",
+  "adminServerSettingsWorkersHelp": "1 to 16; applies after the worker restarts",
+  "adminServerSettingsAnalysesAtOnce": "Analyses at once",
+  "adminServerSettingsScanHours": "Scan external folders every … hours",
+  "adminServerSettingsSigningIn": "Signing in",
+  "adminServerSettingsPasswordLogin": "Allow signing in with a password",
+  "adminServerSettingsMaintenance": "Maintenance mode",
+  "adminServerSettingsMaintenanceHelp": "Only administrators can use the server",
+  "adminServerSettingsVisibleOnNetwork": "Apps on the same network can find this server",
+  "adminServerSettingsVisibleOnNetworkHelp": "Signing in still needs an account.",
+  "adminServerSettingsServerName": "The server's name",
+  "adminServerSettingsLoginMessage": "Message on the sign-in page",
+  "adminOverviewTitle": "Overview",
+  "adminOverviewLibrary": "Library",
+  "adminOverviewUsers": "Users",
+  "adminOverviewPhotos": "Photos",
+  "adminOverviewVideos": "Videos",
+  "adminOverviewProcessing": "Being processed",
+  "adminOverviewFailed": "Failed",
+  "adminOverviewLibrarySize": "Library size",
+  "adminOverviewDisk": "Disk",
+  "adminOverviewFree": "Free",
+  "adminOverviewTotal": "Total",
+  "adminOverviewJobs": "Jobs",
+  "adminOverviewWaiting": "Waiting",
+  "adminOverviewRunning": "Running",
+  "adminOverviewDone": "Done",
+  "adminOverviewServices": "Services",
+  "adminOverviewWorker": "Worker",
+  "adminOverviewNotRunning": "Not running",
+  "adminOverviewAnalysis": "Analysis (ML)",
+  "adminOverviewTurnedOff": "Turned off",
+  "adminOverviewDatabaseSize": "Database size",
+  "adminOverviewVersions": "Versions",
+  "adminOverviewDatabase": "Database",
+  "adminJobsTitle": "Jobs",
+  "adminJobsQueues": "Queues",
+  "adminJobsQueueState": "{queued} waiting · {running} running",
+  "@adminJobsQueueState": {
+    "placeholders": {
+      "queued": {
+        "type": "String"
+      },
+      "running": {
+        "type": "String"
+      }
+    }
+  },
+  "adminJobsQueueStatePaused": "{queued} waiting · {running} running · paused",
+  "@adminJobsQueueStatePaused": {
+    "placeholders": {
+      "queued": {
+        "type": "String"
+      },
+      "running": {
+        "type": "String"
+      }
+    }
+  },
+  "adminJobsContinues": "{name} continues.",
+  "@adminJobsContinues": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminJobsIsPaused": "{name} is paused.",
+  "@adminJobsIsPaused": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminJobsResume": "Resume",
+  "adminJobsPause": "Pause",
+  "adminJobsFailed": "Failed",
+  "adminJobsNoneFailed": "No job has failed.",
+  "adminJobsQueuedAgain": "The job is queued again.",
+  "adminJobsTryAgain": "Try again",
+  "freeSpaceScreenServerUnreachable": "The server could not be asked, so nothing is offered for removal.",
+  "freeSpaceScreenBackupUnreadable": "The backup state could not be read.",
+  "freeSpaceScreenRemoveTitle": "Remove {count} from this phone?",
+  "@freeSpaceScreenRemoveTitle": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "freeSpaceScreenRemoveBody": "They stay on your server. iPhone asks once more, and keeps them for 30 days in Recently Deleted.",
+  "freeSpaceScreenCancel": "Cancel",
+  "freeSpaceScreenRemove": "Remove",
+  "freeSpaceScreenNotRemoved": "The photos could not be removed.",
+  "freeSpaceScreenNothingToRemove": "Nothing to remove. Only photos sent by the automatic backup are offered here.",
+  "freeSpaceScreenSafe": "{count} are safely on your server, as it just confirmed by their checksums.",
+  "@freeSpaceScreenSafe": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "freeSpaceScreenRemoveButton": "Remove {count} from this phone",
+  "@freeSpaceScreenRemoveButton": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "freeSpaceScreenTitle": "Free up space",
+  "freeSpaceScreenWhatToKeep": "What to keep",
+  "freeSpaceScreenAnyAge": "Any age",
+  "freeSpaceScreenOlderThanMonth": "Older than a month",
+  "freeSpaceScreenOlderThan3Months": "Older than 3 months",
+  "freeSpaceScreenOlderThanYear": "Older than a year",
+  "freeSpaceScreenRemoveOnly": "Remove only",
+  "freeSpaceScreenKeepFavorites": "Keep favorites",
+  "freeSpaceScreenKeepPhotos": "Keep all photos",
+  "freeSpaceScreenKeepVideos": "Keep all videos",
+  "freeSpaceScreenKeepAlbums": "Keep these albums on the phone",
+  "apiKeysScreenRead": "Read",
+  "apiKeysScreenUpload": "Upload",
+  "apiKeysScreenChangeAndDelete": "Change and delete",
+  "apiKeysScreenExpires": "{rights} · expires {date}",
+  "@apiKeysScreenExpires": {
+    "placeholders": {
+      "rights": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "apiKeysScreenNewKey": "New key",
+  "apiKeysScreenKeyName": "Key name",
+  "apiKeysScreenCancel": "Cancel",
+  "apiKeysScreenCreate": "Create",
+  "apiKeysScreenCreateFailed": "The key could not be created. {message}",
+  "@apiKeysScreenCreateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "apiKeysScreenSaveItNow": "Save it now",
+  "apiKeysScreenCopy": "Copy",
+  "apiKeysScreenDone": "Done",
+  "apiKeysScreenRevokeFailed": "The key could not be revoked.",
+  "apiKeysScreenTitle": "API keys",
+  "apiKeysScreenLoadFailed": "The keys could not be loaded.",
+  "apiKeysScreenEmpty": "No keys yet. A key gives a program only the chosen rights.",
+  "apiKeysScreenRevoke": "Revoke",
+  "memoriesScreenLastWeek": "The last week",
+  "memoriesScreenOnThisDay": "{years, plural, =1{On this day, 1 year ago} other{On this day, {years} years ago}}",
+  "@memoriesScreenOnThisDay": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "memoriesScreenLoadFailed": "Memories could not be loaded. Check the connection.",
+  "memoriesScreenTryAgain": "Try again",
+  "memoriesScreenNoneYet": "No memories yet.",
+  "memoriesScreenItems": "{count, plural, =1{1 item} other{{count} items}}",
+  "@memoriesScreenItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memoriesScreenTitle": "Memories",
+  "memoriesScreenVideoFailed": "The video could not be made.",
+  "memoriesScreenVideoSaved": "The video is saved in your Photos.",
+  "memoriesScreenVideoNotSaved": "The video could not be saved.",
+  "memoriesScreenMakeVideo": "Make a video",
+  "layoutJanuary": "January",
+  "layoutJanuaryOf": "January",
+  "layoutFebruary": "February",
+  "layoutFebruaryOf": "February",
+  "layoutMarch": "March",
+  "layoutMarchOf": "March",
+  "layoutApril": "April",
+  "layoutAprilOf": "April",
+  "layoutMay": "May",
+  "layoutMayOf": "May",
+  "layoutJune": "June",
+  "layoutJuneOf": "June",
+  "layoutJuly": "July",
+  "layoutJulyOf": "July",
+  "layoutAugust": "August",
+  "layoutAugustOf": "August",
+  "layoutSeptember": "September",
+  "layoutSeptemberOf": "September",
+  "layoutOctober": "October",
+  "layoutOctoberOf": "October",
+  "layoutNovember": "November",
+  "layoutNovemberOf": "November",
+  "layoutDecember": "December",
+  "layoutDecemberOf": "December",
+  "layoutWeekdayMon": "Mon",
+  "layoutWeekdayTue": "Tue",
+  "layoutWeekdayWed": "Wed",
+  "layoutWeekdayThu": "Thu",
+  "layoutWeekdayFri": "Fri",
+  "layoutWeekdaySat": "Sat",
+  "layoutWeekdaySun": "Sun",
+  "layoutMonthYear": "{month} {year}",
+  "@layoutMonthYear": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "layoutDayLabel": "{weekday} {day} {month}",
+  "@layoutDayLabel": {
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "layoutDateTime": "{day} {month} {year}, {hour}:{minute}",
+  "@layoutDateTime": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      },
+      "hour": {
+        "type": "String"
+      },
+      "minute": {
+        "type": "String"
+      }
+    }
+  }
+}

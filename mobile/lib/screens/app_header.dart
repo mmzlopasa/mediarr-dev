@@ -10,6 +10,7 @@ import 'profile_screen.dart';
 import 'account_sheet.dart';
 import 'notifications.dart';
 import 'upload_screen.dart';
+import '../l10n/l10n.dart';
 
 /// The top of every main screen: its title, its own gold action when it has one, notifications
 /// and the account, as on the web. Uploading lives in the dock's +.
@@ -17,12 +18,12 @@ class AppHeader extends ConsumerWidget {
   const AppHeader({
     super.key,
     required this.title,
-    this.actionLabel = 'New',
+    this.actionLabel,
     this.onAction,
   });
 
   final String title;
-  final String actionLabel;
+  final String? actionLabel;
 
   /// What the gold button does here; without it there is no button.
   final VoidCallback? onAction;
@@ -31,6 +32,7 @@ class AppHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider).value;
     final readOnly = ref.watch(settingsProvider).readOnly;
+    final actionLabel = this.actionLabel ?? l.appHeaderNew;
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 10, 12, 8),
       child: Row(
@@ -48,7 +50,7 @@ class AppHeader extends ConsumerWidget {
           ),
           if (!readOnly && onAction != null)
             Tooltip(
-              message: 'Add',
+              message: l.appHeaderAdd,
               child: Semantics(
                 button: true,
                 label: actionLabel,
@@ -85,7 +87,7 @@ class AppHeader extends ConsumerWidget {
             ),
           const NotificationBell(),
           Tooltip(
-            message: 'Account',
+            message: l.appHeaderAccount,
             child: GestureDetector(
               onTap: () => showAccountSheet(context),
               child: Container(
@@ -117,7 +119,7 @@ class UploadPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Backup and upload')),
+    appBar: AppBar(title: Text(l.appHeaderBackupAndUpload)),
     body: const UploadScreen(),
   );
 }

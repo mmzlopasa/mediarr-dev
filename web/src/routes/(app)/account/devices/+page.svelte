@@ -5,7 +5,7 @@
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import DeviceList from '#lib/devices/DeviceList.svelte';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let list = $state<BackupDeviceList>();
 
@@ -14,7 +14,7 @@
 			list = await api.backupDevices();
 		} catch {
 			list = { devices: [], quietDays: 3 };
-			showToast('err', tr('Uređaji nisu učitani.', 'The devices did not load.'));
+			showToast('err', t('account.devices.theDevicesDidNotLoad'));
 		}
 	});
 
@@ -22,40 +22,31 @@
 		try {
 			await api.setBackupQuietDays(days);
 			list = await api.backupDevices();
-			showToast('ok', tr('Spremljeno.', 'Saved.'));
+			showToast('ok', t('common.saved'));
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Nije spremljeno.', 'Not saved.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.notSaved'));
 		}
 	}
 </script>
 
-<svelte:head><title>{tr('Uređaji za backup', 'Backup devices')} — Mediarr</title></svelte:head>
+<svelte:head><title>{t('common.backupDevices')} — Mediarr</title></svelte:head>
 
 <div class="ph">
 	<div>
-		<h1>{tr('Uređaji za backup', 'Backup devices')}</h1>
+		<h1>{t('common.backupDevices')}</h1>
 		<p>
-			{tr(
-				'Mobiteli koji rade backup, i koliko je s njih sigurno na serveru. Broji server, prema vlastitim datotekama.',
-				'Phones that back up, and how much from each is safe on the server. The server counts, from its own files.'
-			)}
+			{t('account.devices.phonesThatBackUpAnd')}
 		</p>
 	</div>
 </div>
 
 <div class="imp">
-	<Card id="devices" title={tr('Vaši uređaji', 'Your devices')}>
+	<Card id="devices" title={t('account.devices.yourDevices')}>
 		{#if list === undefined}
 			<Skeleton height="96px" />
 		{:else if list.devices.length === 0}
 			<p class="alb-meta">
-				{tr(
-					'Još nijedan uređaj nije javio. Uključite backup u aplikaciji Mediarr na mobitelu.',
-					'No device has reported yet. Turn on backup in the Mediarr app on your phone.'
-				)}
+				{t('account.devices.noDeviceHasReportedYet')}
 			</p>
 		{:else}
 			<DeviceList
@@ -64,34 +55,28 @@
 			/>
 		{/if}
 	</Card>
-	<Card id="quiet" title={tr('Upozorenje', 'Warning')}>
+	<Card id="quiet" title={t('account.devices.warning')}>
 		<label class="set-row">
-			<span
-				>{tr(
-					'Upozori me kad se uređaj ne javi',
-					'Warn me when a device has not reported for'
-				)}</span
-			>
+			<span>{t('account.devices.warnMeWhenADevice')}</span>
 			<select
 				class="in"
-				aria-label={tr('Upozori nakon', 'Warn after')}
+				aria-label={t('account.devices.warnAfter')}
 				value={String(list?.quietDays ?? 3)}
 				disabled={list === undefined}
 				onchange={(event) => setDays(Number(event.currentTarget.value))}
 			>
 				{#each [1, 3, 7, 14] as days (days)}
 					<option value={String(days)}
-						>{days === 1 ? tr('1 dan', '1 day') : tr(`${days} dana`, `${days} days`)}</option
+						>{days === 1
+							? t('account.devices.1Day')
+							: t('account.devices.daysDays', { days })}</option
 					>
 				{/each}
-				<option value="0">{tr('Nikad', 'Never')}</option>
+				<option value="0">{t('account.devices.never')}</option>
 			</select>
 		</label>
 		<p class="alb-meta">
-			{tr(
-				'Obavijest stiže ovdje i u aplikaciji, i e-mailom ako ga je administrator postavio. Jednom, dok se uređaj opet ne javi.',
-				'The notice comes here and in the app, and by e-mail if the administrator set it up. Once, until the device reports again.'
-			)}
+			{t('account.devices.theNoticeComesHereAnd')}
 		</p>
 	</Card>
 </div>

@@ -7,7 +7,7 @@
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t } from '#lib/i18n.svelte.ts';
 
 	let { album, open = $bindable(false) }: { album: Album; open?: boolean } = $props();
 
@@ -70,9 +70,7 @@
 		} catch (cause) {
 			showToast(
 				'err',
-				cause instanceof Error
-					? cause.message
-					: tr('Link nije stvoren.', 'The link was not created.')
+				cause instanceof Error ? cause.message : t('linksDialog.theLinkWasNotCreated')
 			);
 		} finally {
 			busy = false;
@@ -84,7 +82,7 @@
 			await api.deleteLink(album.id, id);
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -94,21 +92,21 @@
 		// On plain HTTP the browser has no clipboard API, and the selected text can be copied by hand.
 		if (navigator.clipboard && created) {
 			await navigator.clipboard.writeText(created);
-			showToast('ok', tr('Kopirano.', 'Copied.'));
+			showToast('ok', t('linksDialog.copied'));
 		}
 	}
 
 	function summary(link: ShareLink) {
 		const parts = [
-			link.uploadOnly ? tr('samo upload', 'upload only') : '',
-			link.hasPassword ? tr('lozinka', 'password') : '',
-			link.watermark ? tr('watermark', 'watermark') : '',
+			link.uploadOnly ? t('linksDialog.uploadOnly') : '',
+			link.hasPassword ? t('linksDialog.password') : '',
+			link.watermark ? t('linksDialog.watermark') : '',
 			link.expiresAt
-				? tr('istječe ', 'expires ') + new Date(link.expiresAt).toLocaleDateString(locale)
+				? t('linksDialog.expires') + new Date(link.expiresAt).toLocaleDateString(locale)
 				: '',
 			link.uploadOnly
 				? ''
-				: tr('preuzimanja: ', 'downloads: ') +
+				: t('linksDialog.downloads') +
 					link.downloadCount +
 					(link.downloadLimit ? ` / ${link.downloadLimit}` : '')
 		];
@@ -116,90 +114,69 @@
 	}
 </script>
 
-<Dialog title={tr('Javni linkovi', 'Public links')} bind:open>
+<Dialog title={t('linksDialog.publicLinks')} bind:open>
 	{#if created}
 		<Alert kind="ok">
-			{tr(
-				'Kopirajte adresu sada: kasnije se više ne može prikazati.',
-				'Copy the address now: it cannot be shown again later.'
-			)}
+			{t('linksDialog.copyTheAddressNowIt')}
 		</Alert>
 		<div class="form">
-			<input class="in" readonly value={created} aria-label={tr('Adresa linka', 'Link address')} />
-			<Button small variant="gold" onclick={copy}>{tr('Kopiraj', 'Copy')}</Button>
+			<input class="in" readonly value={created} aria-label={t('linksDialog.linkAddress')} />
+			<Button small variant="gold" onclick={copy}>{t('linksDialog.copy')}</Button>
 		</div>
 		{#if kioskOn}
 			<p class="alb-meta">
-				{tr(
-					'Slideshow za TV ili tablet, bez prijave:',
-					'A slideshow for a TV or tablet, with no sign-in:'
-				)}
+				{t('linksDialog.aSlideshowForATv')}
 			</p>
 			<input
 				class="in"
 				readonly
 				value={createdKiosk}
-				aria-label={tr('Adresa slideshowa', 'Slideshow address')}
+				aria-label={t('linksDialog.slideshowAddress')}
 			/>
 		{/if}
 	{/if}
 	{#if failed}
-		<Alert kind="err">{tr('Linkovi se nisu učitali.', 'Links could not be loaded.')}</Alert>
+		<Alert kind="err">{t('linksDialog.linksCouldNotBeLoaded')}</Alert>
 	{:else if !links}
 		<Skeleton height="60px" />
 	{:else}
 		{#each links as link (link.id)}
 			<div class="alb-list">
 				<b>
-					{link.label || tr('Link bez naziva', 'Unnamed link')}
+					{link.label || t('linksDialog.unnamedLink')}
 					<span class="alb-meta">{summary(link)}</span>
 				</b>
 				<Button small variant="danger" onclick={() => revoke(link.id)}
-					>{tr('Opozovi', 'Revoke')}</Button
+					>{t('linksDialog.revoke')}</Button
 				>
 			</div>
 		{/each}
 	{/if}
 	<form class="form" onsubmit={create}>
-		<Input label={tr('Naziv', 'Name')} bind:value={label} />
+		<Input label={t('common.name')} bind:value={label} />
 		<Input
-			label={tr('Lozinka (nije obavezna)', 'Password (optional)')}
+			label={t('linksDialog.passwordOptional')}
 			type="password"
 			autocomplete="new-password"
 			bind:value={password}
 		/>
-		<Input label={tr('Istječe', 'Expires')} type="date" bind:value={expires} />
+		<Input label={t('linksDialog.expires2')} type="date" bind:value={expires} />
 		{#if !uploadOnly}
+			<Input label={t('linksDialog.downloadLimit')} type="number" min="1" bind:value={limit} />
 			<Input
-				label={tr('Limit preuzimanja', 'Download limit')}
-				type="number"
-				min="1"
-				bind:value={limit}
-			/>
-			<Input
-				label={tr('Watermark', 'Watermark')}
-				hint={tr(
-					'Isključuje preuzimanje originala i reprodukciju videa.',
-					'Turns off original downloads and video playback.'
-				)}
+				label={t('linksDialog.watermark2')}
+				hint={t('linksDialog.turnsOffOriginalDownloadsAnd')}
 				maxlength={100}
 				bind:value={watermark}
 			/>
-			<Checkbox label={tr('Dopusti preuzimanje', 'Allow downloads')} bind:checked={allowDownload} />
-			<Checkbox label={tr('Prikaži lokaciju', 'Show location')} bind:checked={showLocation} />
+			<Checkbox label={t('linksDialog.allowDownloads')} bind:checked={allowDownload} />
+			<Checkbox label={t('linksDialog.showLocation')} bind:checked={showLocation} />
 		{/if}
 		{#if !album.isSmart}
-			<Checkbox
-				label={tr('Gosti mogu dodavati', 'Guests can add photos')}
-				bind:checked={allowUpload}
-			/>
-			<Checkbox
-				label={tr('Samo upload (gosti ne vide album)', 'Upload only (guests do not see the album)')}
-				bind:checked={uploadOnly}
-			/>
+			<Checkbox label={t('linksDialog.guestsCanAddPhotos')} bind:checked={allowUpload} />
+			<Checkbox label={t('linksDialog.uploadOnlyGuestsDoNot')} bind:checked={uploadOnly} />
 		{/if}
-		<Button type="submit" small variant="gold" disabled={busy}
-			>{tr('Stvori link', 'Create link')}</Button
+		<Button type="submit" small variant="gold" disabled={busy}>{t('linksDialog.createLink')}</Button
 		>
 	</form>
 </Dialog>

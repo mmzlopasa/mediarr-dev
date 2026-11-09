@@ -15,7 +15,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Kv from '#lib/design/components/Kv.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, tr } from '#lib/i18n.svelte.ts';
+	import { lang, t } from '#lib/i18n.svelte.ts';
 	import { formatDateTime, formatDuration } from './layout.ts';
 	import PanoramaView from './PanoramaView.svelte';
 	import Slideshow from './Slideshow.svelte';
@@ -310,7 +310,7 @@
 			if (detail?.id === asked) detail = { ...detail, isFavorite: next };
 			onChanged();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -322,7 +322,7 @@
 			await reload();
 			onChanged();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -333,12 +333,12 @@
 			await api.bulk([removed], 'delete');
 			confirmDelete = false;
 			onChanged();
-			showToast('ok', tr('Obrisano.', 'Deleted.'));
+			showToast('ok', t('viewer.deleted'));
 			const next = olderId ?? newerId;
 			if (next) onNavigate(next);
 			else onClose();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -368,12 +368,12 @@
 	data-lenis-prevent
 	role="dialog"
 	aria-modal="true"
-	aria-label={detail?.originalName ?? tr('Fotka', 'Photo')}
+	aria-label={detail?.originalName ?? t('viewer.photo')}
 	tabindex="-1"
 >
 	<div class="viewer-main">
 		<div class="viewer-top">
-			<button type="button" class="icon-btn" aria-label={tr('Zatvori', 'Close')} onclick={onClose}
+			<button type="button" class="icon-btn" aria-label={t('common.close')} onclick={onClose}
 				><Icon name="back" /></button
 			>
 			<div class="viewer-acts">
@@ -382,8 +382,8 @@
 						<button
 							type="button"
 							class="icon-btn"
-							aria-label={tr('Slideshow', 'Slideshow')}
-							title={tr('Slideshow', 'Slideshow')}
+							aria-label={t('common.slideshow')}
+							title={t('common.slideshow')}
 							onclick={startSlideshow}><Icon name="play" /></button
 						>
 					{/if}
@@ -393,8 +393,8 @@
 							class="icon-btn"
 							class:viewer-on={!flat}
 							aria-pressed={!flat}
-							aria-label={tr('Prikaz 360°', '360° view')}
-							title={tr('Prikaz 360°', '360° view')}
+							aria-label={t('viewer.360View')}
+							title={t('viewer.360View')}
 							onclick={() => (flat = !flat)}><Icon name="globe" /></button
 						>
 					{/if}
@@ -404,8 +404,8 @@
 							class="icon-btn"
 							class:viewer-on={playingLive}
 							aria-pressed={playingLive}
-							aria-label={tr('Pusti Live', 'Play Live')}
-							title={tr('Pusti Live', 'Play Live')}
+							aria-label={t('viewer.playLive')}
+							title={t('viewer.playLive')}
 							onclick={toggleLive}><Icon name="live" /></button
 						>
 					{/if}
@@ -415,8 +415,8 @@
 							class="icon-btn"
 							class:viewer-on={showActivity}
 							aria-pressed={showActivity}
-							aria-label={tr('Komentari i srca', 'Comments and hearts')}
-							title={tr('Komentari i srca', 'Comments and hearts')}
+							aria-label={t('viewer.commentsAndHearts')}
+							title={t('viewer.commentsAndHearts')}
 							onclick={() => {
 								showActivity = !showActivity;
 								showInfo = false;
@@ -429,8 +429,8 @@
 							class:viewer-on={detail.isFavorite}
 							class:viewer-fav={detail.isFavorite}
 							aria-pressed={detail.isFavorite}
-							aria-label={tr('Favorit', 'Favorite')}
-							title={tr('Favorit', 'Favorite')}
+							aria-label={t('common.favorite')}
+							title={t('common.favorite')}
 							onclick={toggleFavorite}><Icon name="star" /></button
 						>{/if}
 					{#if detail.downloadAllowed !== false}<ShareButton ids={[detail.id]} />{/if}
@@ -438,8 +438,8 @@
 							class="icon-btn"
 							href="{base}/assets/{detail.id}/original?download=true"
 							download
-							aria-label={tr('Preuzmi original', 'Download the original')}
-							title={tr('Preuzmi original', 'Download the original')}
+							aria-label={t('viewer.downloadTheOriginal')}
+							title={t('viewer.downloadTheOriginal')}
 							data-sveltekit-reload><Icon name="download" /></a
 						>{/if}
 					<button
@@ -447,8 +447,8 @@
 						class="icon-btn"
 						class:viewer-on={showInfo}
 						aria-pressed={showInfo}
-						aria-label={tr('Podaci', 'Details')}
-						title={tr('Podaci', 'Details')}
+						aria-label={t('viewer.details')}
+						title={t('viewer.details')}
 						onclick={() => {
 							showInfo = !showInfo;
 							showActivity = false;
@@ -457,15 +457,15 @@
 					{#if detail.isOwner && detail.kind === 'photo' && base === '/api' && !previewOnly}<button
 							type="button"
 							class="icon-btn"
-							aria-label={tr('Uredi', 'Edit')}
-							title={tr('Uredi', 'Edit')}
+							aria-label={t('viewer.edit')}
+							title={t('viewer.edit')}
 							onclick={() => (editing = true)}><Icon name="cog" /></button
 						>{/if}
 					{#if detail.isOwner}<button
 							type="button"
 							class="icon-btn"
-							aria-label={tr('Obriši', 'Delete')}
-							title={tr('Obriši', 'Delete')}
+							aria-label={t('common.delete')}
+							title={t('common.delete')}
 							onclick={() =>
 								preferences()?.confirmDelete === false ? remove() : (confirmDelete = true)}
 							><Icon name="trash" /></button
@@ -486,7 +486,7 @@
 		>
 			{#if failed}
 				<div class="viewer-msg">
-					<Alert kind="err">{tr('Ova fotka nije dostupna.', 'This photo is not available.')}</Alert>
+					<Alert kind="err">{t('viewer.thisPhotoIsNotAvailable')}</Alert>
 				</div>
 			{:else if detail?.kind === 'video' && !videoFailed && !previewOnly}
 				<VideoPlayer
@@ -507,18 +507,12 @@
 				/>
 			{:else if detail?.kind === 'video' && !previewOnly}
 				<div class="viewer-msg">
-					<Alert kind="warn"
-						>{tr(
-							'Preglednik ne može pustiti ovaj video. Možete ga preuzeti.',
-							'This browser cannot play this video. You can download it.'
-						)}</Alert
-					>
+					<Alert kind="warn">{t('viewer.thisBrowserCannotPlayThis')}</Alert>
 					{#if detail.downloadAllowed !== false}<a
 							class="btn gold"
 							href="{base}/assets/{id}/original?download=true"
 							download
-							data-sveltekit-reload
-							><Icon name="download" size={14} /> {tr('Preuzmi', 'Download')}</a
+							data-sveltekit-reload><Icon name="download" size={14} /> {t('viewer.download')}</a
 						>{/if}
 				</div>
 			{:else if detail && isPanorama && !flat && !previewOnly}
@@ -552,7 +546,7 @@
 							autoplay
 							onFailed={() => {
 								playingLive = false;
-								showToast('err', tr('Video se ne može pustiti.', 'The video cannot be played.'));
+								showToast('err', t('viewer.theVideoCannotBePlayed'));
 							}}
 						/>
 					</div>
@@ -562,7 +556,7 @@
 				<div
 					class="viewer-stack"
 					role="group"
-					aria-label={tr('Niz snimki', 'Stack of shots')}
+					aria-label={t('viewer.stackOfShots')}
 					onpointerdown={(event) => event.stopPropagation()}
 				>
 					{#each detail.stack as shot, index (shot)}
@@ -571,7 +565,7 @@
 							class="viewer-stack-shot"
 							class:on={shot === id}
 							aria-current={shot === id}
-							aria-label={tr(`Snimka ${index + 1}`, `Shot ${index + 1}`)}
+							aria-label={t('viewer.shotValue', { value: index + 1 })}
 							onclick={() => go(shot)}
 						>
 							<img src="{base}/assets/{shot}/thumbnail" alt="" draggable="false" />
@@ -579,11 +573,11 @@
 					{/each}
 					{#if detail.stack[0] !== id}
 						<Button small onclick={() => changeStack(api.setStackMain)}
-							>{tr('Postavi kao glavnu', 'Make it the main shot')}</Button
+							>{t('viewer.makeItTheMainShot')}</Button
 						>
 					{/if}
 					<Button small onclick={() => changeStack(api.dissolveStack)}
-						>{tr('Razdvoji', 'Split the stack')}</Button
+						>{t('viewer.splitTheStack')}</Button
 					>
 				</div>
 			{/if}
@@ -593,7 +587,7 @@
 				{#if shots.length > 1}
 					<nav
 						class="viewer-strip"
-						aria-label={tr('Susjedne fotke', 'Nearby photos')}
+						aria-label={t('viewer.nearbyPhotos')}
 						onpointerdown={(event) => event.stopPropagation()}
 					>
 						{#each shots as shot (shot.id)}
@@ -601,7 +595,7 @@
 								type="button"
 								class:on={shot.id === id}
 								aria-current={shot.id === id}
-								aria-label={tr('Otvori fotku', 'Open photo')}
+								aria-label={t('viewer.openPhoto')}
 								onclick={() => go(shot.id)}
 							>
 								<img src={thumbUrl(base, shot.id, shot.blurhash)} alt="" draggable="false" />
@@ -614,7 +608,7 @@
 				<button
 					type="button"
 					class="icon-btn viewer-nav viewer-prev"
-					aria-label={tr('Novija', 'Newer')}
+					aria-label={t('viewer.newer')}
 					onpointerdown={(event) => event.stopPropagation()}
 					onclick={() => go(newerId)}><Icon name="back" /></button
 				>
@@ -623,7 +617,7 @@
 				<button
 					type="button"
 					class="icon-btn viewer-nav viewer-next"
-					aria-label={tr('Starija', 'Older')}
+					aria-label={t('viewer.older')}
 					onpointerdown={(event) => event.stopPropagation()}
 					onclick={() => go(olderId)}><Icon name="forward" /></button
 				>
@@ -632,13 +626,13 @@
 	</div>
 
 	{#if showActivity && albumId}
-		<aside class="viewer-info" aria-label={tr('Komentari i srca', 'Comments and hearts')}>
+		<aside class="viewer-info" aria-label={t('viewer.commentsAndHearts')}>
 			<div class="dlg-h">
-				<h2>{tr('Komentari i srca', 'Comments and hearts')}</h2>
+				<h2>{t('viewer.commentsAndHearts')}</h2>
 				<button
 					type="button"
 					class="icon-btn sm"
-					aria-label={tr('Zatvori', 'Close')}
+					aria-label={t('common.close')}
 					onclick={() => (showActivity = false)}>✕</button
 				>
 			</div>
@@ -647,7 +641,7 @@
 	{/if}
 
 	{#if showInfo && detail}
-		<aside class="viewer-info" aria-label={tr('Podaci', 'Details')}>
+		<aside class="viewer-info" aria-label={t('viewer.details')}>
 			<div class="dlg-h vw-head">
 				<div>
 					<!-- The owner's words first, then where, then when; a file name is not a title. -->
@@ -663,18 +657,13 @@
 				<button
 					type="button"
 					class="icon-btn sm"
-					aria-label={tr('Zatvori podatke', 'Close details')}
+					aria-label={t('viewer.closeDetails')}
 					onclick={() => (showInfo = false)}>✕</button
 				>
 			</div>
 			<div class="dlg-b">
 				{#if detail.isMissing}
-					<Alert kind="warn"
-						>{tr(
-							'Datoteka nije pronađena na zadnjem pregledu vanjske biblioteke. Pregled i dalje radi, a original će opet biti dostupan kad se datoteka vrati.',
-							'The file was not found on the last scan of the external library. The preview still works, and the original is available again once the file is back.'
-						)}</Alert
-					>
+					<Alert kind="warn">{t('viewer.theFileWasNotFound')}</Alert>
 				{/if}
 				{#if detail.isOwner}
 					<RatingStars
@@ -685,46 +674,46 @@
 						}}
 					/>
 				{/if}
-				<Kv label={tr('Naziv', 'Name')} value={breakable(detail.originalName)} mono />
+				<Kv label={t('common.name')} value={breakable(detail.originalName)} mono />
 				{#if detail.description}
-					<Kv label={tr('Opis', 'Description')} value={detail.description} />
+					<Kv label={t('common.description')} value={detail.description} />
 				{/if}
 				<Kv
-					label={detail.hasCaptureTime ? tr('Snimljeno', 'Taken') : tr('Dodano', 'Added')}
+					label={detail.hasCaptureTime ? t('viewer.taken') : t('viewer.added')}
 					value={formatDateTime(detail.localAt, locale)}
 				/>
 				{#if detail.width && detail.height}
-					<Kv label={tr('Dimenzije', 'Dimensions')} value="{detail.width} × {detail.height}" mono />
+					<Kv label={t('viewer.dimensions')} value="{detail.width} × {detail.height}" mono />
 				{/if}
-				<Kv label={tr('Veličina', 'Size')} value={formatBytes(detail.sizeBytes)} />
+				<Kv label={t('viewer.size')} value={formatBytes(detail.sizeBytes)} />
 				{#if detail.durationMs}
-					<Kv label={tr('Trajanje', 'Duration')} value={formatDuration(detail.durationMs)} />
+					<Kv label={t('viewer.duration')} value={formatDuration(detail.durationMs)} />
 				{/if}
-				{#if place}<Kv label={tr('Mjesto', 'Place')} value={place} />{/if}
+				{#if place}<Kv label={t('common.place')} value={place} />{/if}
 				{#if detail.people}<FacesEditor assetId={id} />{/if}
 				{#if detail.isOwner || detail.people}
 					<div class="vw-acts">
 						{#if detail.people}
 							<Button small onclick={() => (editingFacts = true)}>
-								{tr('Uredi podatke', 'Edit details')}
+								{t('viewer.editDetails')}
 							</Button>
 						{/if}
 						{#if detail.isOwner}
 							<a class="btn sm ghost" href="/api/assets/{id}/sidecar" download
-								><Icon name="download" size={14} />{tr('Preuzmi XMP', 'Download XMP')}</a
+								><Icon name="download" size={14} />{t('viewer.downloadXmp')}</a
 							>
 						{/if}
 					</div>
 				{/if}
 				{#if detail.tags?.length}
-					<Kv label={tr('Oznake', 'Tags')} value={detail.tags.join(', ')} />
+					<Kv label={t('common.tags')} value={detail.tags.join(', ')} />
 				{/if}
-				{#if detail.camera}<Kv label={tr('Kamera', 'Camera')} value={detail.camera} mono />{/if}
-				{#if detail.lens}<Kv label={tr('Objektiv', 'Lens')} value={detail.lens} mono />{/if}
-				{#if settings}<Kv label={tr('Postavke', 'Settings')} value={settings} mono />{/if}
+				{#if detail.camera}<Kv label={t('common.camera')} value={detail.camera} mono />{/if}
+				{#if detail.lens}<Kv label={t('viewer.lens')} value={detail.lens} mono />{/if}
+				{#if settings}<Kv label={t('viewer.settings')} value={settings} mono />{/if}
 				{#if detail.latitude !== undefined && detail.longitude !== undefined}
 					<Kv
-						label={tr('Lokacija', 'Location')}
+						label={t('common.location')}
 						mono
 						value="{detail.latitude.toFixed(5)}, {detail.longitude.toFixed(5)}"
 					/>
@@ -759,16 +748,13 @@
 	/>
 {/if}
 
-<Dialog title={tr('Obrisati fotku?', 'Delete this photo?')} bind:open={confirmDelete}>
+<Dialog title={t('viewer.deleteThisPhoto')} bind:open={confirmDelete}>
 	<p>
-		{tr(
-			`Premješta se u smeće, gdje ostaje ${trashDays()} dana i može se vratiti.`,
-			`It moves to the trash, where it stays for ${trashDays()} days and can be restored.`
-		)}
+		{t('viewer.itMovesToTheTrash', { trashDays: trashDays() })}
 	</p>
 	{#snippet footer()}
-		<Button onclick={() => (confirmDelete = false)}>{tr('Odustani', 'Cancel')}</Button>
-		<Button variant="danger" onclick={remove}>{tr('Obriši', 'Delete')}</Button>
+		<Button onclick={() => (confirmDelete = false)}>{t('common.cancel')}</Button>
+		<Button variant="danger" onclick={remove}>{t('common.delete')}</Button>
 	{/snippet}
 </Dialog>
 

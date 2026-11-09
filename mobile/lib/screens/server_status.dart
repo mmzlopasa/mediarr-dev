@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../l10n/l10n.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import '../timeline/layout.dart';
@@ -60,10 +61,10 @@ class _ServerStatusCardState extends ConsumerState<ServerStatusCard> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (status != null) ...[
-          Text('Storage', style: text.titleMedium),
+          Text(l.serverStatusStorage, style: text.titleMedium),
           const SizedBox(height: 4),
           Text(
-            '${formatBytes(used)} of ${formatBytes(total)} used',
+            l.serverStatusUsedOf(formatBytes(used), formatBytes(total)),
             style: text.bodySmall,
           ),
           const SizedBox(height: 8),
@@ -90,10 +91,10 @@ class _ServerStatusCardState extends ConsumerState<ServerStatusCard> {
             Expanded(
               child: Text(
                 _online
-                    ? 'Server online'
+                    ? l.serverStatusOnline
                     : _maintained
-                    ? 'Server is being maintained'
-                    : 'Server offline',
+                    ? l.serverStatusMaintained
+                    : l.serverStatusOffline,
                 style: text.bodyMedium,
               ),
             ),
@@ -104,7 +105,7 @@ class _ServerStatusCardState extends ConsumerState<ServerStatusCard> {
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              'Version ${status?.latestVersion} is available',
+              l.serverStatusVersionAvailable('${status?.latestVersion}'),
               style: text.bodyMedium?.copyWith(color: Palette.gold),
             ),
           ),
@@ -132,16 +133,12 @@ Future<void> showUpdateNoticeIfNew(
   await showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('A new version is available'),
-      content: Text(
-        'Mediarr $latest is available. This server runs $version. '
-        'The server administrator updates it with:\n\n'
-        'docker compose pull && docker compose up -d',
-      ),
+      title: Text(l.serverStatusNewVersion),
+      content: Text(l.serverStatusUpdateBody(latest, version)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
+          child: Text(l.serverStatusOk),
         ),
       ],
     ),

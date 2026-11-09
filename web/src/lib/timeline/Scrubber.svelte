@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	type Mark = { month: string; label: string; top: number; count: number };
 
@@ -94,7 +94,7 @@
 	class:on={dragging}
 	role="slider"
 	tabindex="0"
-	aria-label={tr('Vremenska crta', 'Timeline')}
+	aria-label={t('scrubber.timeline')}
 	aria-valuemin="0"
 	aria-valuemax="100"
 	aria-valuenow={Math.round(fraction * 100)}

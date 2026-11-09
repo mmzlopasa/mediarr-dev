@@ -1,8 +1,7 @@
+import { t } from '#lib/i18n.svelte.ts';
 import type { DuplicateGroup } from '#lib/api.ts';
 
 type Item = DuplicateGroup['items'][number];
-type Say = (hr: string, en: string) => string;
-
 /**
  * What resolving a group does with the person's ticks: one photo stays and takes over what the
  * others had; the unticked go to the trash. A second ticked photo is left as it is.
@@ -19,33 +18,33 @@ export function choiceOf(
 }
 
 /** Short facts about one copy, for telling the copies apart. */
-export function notesOf(item: Item, tr: Say): string[] {
+export function notesOf(item: Item): string[] {
 	const notes: string[] = [];
-	if (item.favorite) notes.push(tr('Favorit', 'Favorite'));
-	if (item.original) notes.push(tr('Original', 'Original'));
-	if (item.resaved) notes.push(tr('Kopija iz aplikacije', 'Saved again by an app'));
-	if (item.hasLocation) notes.push(tr('Ima lokaciju', 'Has a location'));
-	if (item.hasCaption) notes.push(tr('Ima opis', 'Has a description'));
-	if (!item.hasDate) notes.push(tr('Bez datuma', 'No date'));
+	if (item.favorite) notes.push(t('common.favorite'));
+	if (item.original) notes.push(t('duplicates.original'));
+	if (item.resaved) notes.push(t('duplicates.savedAgainByAnApp'));
+	if (item.hasLocation) notes.push(t('duplicates.hasALocation'));
+	if (item.hasCaption) notes.push(t('duplicates.hasADescription'));
+	if (!item.hasDate) notes.push(t('duplicates.noDate'));
 	return notes;
 }
 
 /** Why this one is proposed: the first way it is better than the others. */
-export function reasonOf(group: DuplicateGroup, tr: Say): string {
+export function reasonOf(group: DuplicateGroup): string {
 	const keep = group.items.find((item) => item.id === group.keepId);
 	if (!keep) return '';
 	const others = group.items.filter((item) => item !== keep);
 	const pixels = (item: Item) => (item.width ?? 0) * (item.height ?? 0);
-	if (keep.favorite && others.some((item) => !item.favorite)) return tr('favorit', 'a favorite');
+	if (keep.favorite && others.some((item) => !item.favorite)) return t('duplicates.aFavorite');
 	if (keep.original && others.some((item) => !item.original))
-		return tr('original iz kamere', "the camera's original");
+		return t('duplicates.theCameraSOriginal');
 	if (others.some((item) => item.resaved) && !keep.resaved)
-		return tr('ostale su kopije iz aplikacija', 'the others were saved again by apps');
+		return t('duplicates.theOthersWereSavedAgain');
 	if (others.every((item) => pixels(item) < pixels(keep)))
-		return tr('najveća razlučivost', 'the highest resolution');
+		return t('duplicates.theHighestResolution');
 	if (others.every((item) => item.sizeBytes < keep.sizeBytes))
-		return tr('najveća datoteka', 'the largest file');
+		return t('duplicates.theLargestFile');
 	if (others.every((item) => item.sizeBytes === keep.sizeBytes && pixels(item) === pixels(keep)))
-		return tr('jednake su, svejedno koja ostaje', 'they are equal, so any one can stay');
-	return tr('najoštrija', 'the sharpest');
+		return t('duplicates.theyAreEqualSoAny');
+	return t('duplicates.theSharpest');
 }

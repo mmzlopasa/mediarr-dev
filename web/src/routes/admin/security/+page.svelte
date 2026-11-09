@@ -6,7 +6,7 @@
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { tr } from '#lib/i18n.svelte.ts';
+	import { t } from '#lib/i18n.svelte.ts';
 
 	let settings = $state<SecuritySettings>();
 	let events = $state<SecurityEvent[]>();
@@ -27,7 +27,7 @@
 			use(await api.security());
 			events = await api.securityEvents();
 		} catch {
-			showToast('err', tr('Podaci se ne mogu učitati.', 'This could not be loaded.'));
+			showToast('err', t('common.thisCouldNotBeLoaded'));
 		}
 	}
 
@@ -42,12 +42,9 @@
 					deviceApprovalEnabled: deviceApproval
 				})
 			);
-			showToast('ok', tr('Spremljeno.', 'Saved.'));
+			showToast('ok', t('common.saved'));
 		} catch (cause) {
-			showToast(
-				'err',
-				cause instanceof Error ? cause.message : tr('Nije spremljeno.', 'Not saved.')
-			);
+			showToast('err', cause instanceof Error ? cause.message : t('common.notSaved'));
 		}
 		saving = false;
 	}
@@ -57,7 +54,7 @@
 			await work();
 			await load();
 		} catch {
-			showToast('err', tr('Radnja nije uspjela.', 'The action failed.'));
+			showToast('err', t('common.theActionFailed'));
 		}
 	}
 
@@ -67,68 +64,57 @@
 
 	const eventLabel = (kind: SecurityEvent['kind']) =>
 		({
-			login_ok: tr('Prijava uspjela', 'Signed in'),
-			login_failed: tr('Prijava nije uspjela', 'Failed sign-in'),
-			login_locked: tr('Previše pokušaja', 'Too many attempts'),
-			ip_blocked: tr('Adresa odbijena', 'Address refused'),
-			device_blocked: tr('Uređaj nije odobren', 'Device not approved'),
-			password_reset: tr('Nova lozinka', 'New password')
+			login_ok: t('admin.security.signedIn'),
+			login_failed: t('admin.security.failedSignIn'),
+			login_locked: t('admin.security.tooManyAttempts'),
+			ip_blocked: t('admin.security.addressRefused'),
+			device_blocked: t('admin.security.deviceNotApproved'),
+			password_reset: t('common.newPassword')
 		})[kind];
 
 	onMount(load);
 </script>
 
-<svelte:head><title>{tr('Sigurnost', 'Security')} — Mediarr Admin</title></svelte:head>
+<svelte:head><title>{t('admin.security.security')} — Mediarr Admin</title></svelte:head>
 
-<div class="ph"><div><h1>{tr('Sigurnost', 'Security')}</h1></div></div>
+<div class="ph"><div><h1>{t('admin.security.security')}</h1></div></div>
 
 {#if !settings}
 	<Skeleton height="220px" />
 {:else}
-	<Card title={tr('Tko smije pristupiti', 'Who may connect')}>
+	<Card title={t('admin.security.whoMayConnect')}>
 		<form class="form" onsubmit={save}>
 			<p class="alb-meta">
-				{tr('Server vas vidi s adrese', 'The server sees you at')} <b>{settings.yourAddress}</b>.
-				{tr(
-					'Ako je to adresa vašeg proxyja, a ne vaša, postavite TRUSTED_PROXY_HOPS.',
-					'If that is your proxy and not you, set TRUSTED_PROXY_HOPS.'
-				)}
+				{t('admin.security.theServerSeesYouAt')} <b>{settings.yourAddress}</b>.
+				{t('admin.security.ifThatIsYourProxy')}
 			</p>
 			<label>
 				<input type="checkbox" bind:checked={ipEnabled} />
-				{tr('Dopusti samo ove adrese i mreže', 'Allow only these addresses and networks')}
+				{t('admin.security.allowOnlyTheseAddressesAnd')}
 			</label>
-			<label for="ip-list"
-				>{tr('Jedna u retku, npr. 192.168.1.0/24', 'One a line, such as 192.168.1.0/24')}</label
-			>
+			<label for="ip-list">{t('admin.security.oneALineSuchAs')}</label>
 			<textarea id="ip-list" class="in" rows="5" bind:value={ipList}></textarea>
 			<div>
 				<Button small onclick={() => addAddress(settings?.yourAddress ?? '')}>
-					{tr('Dodaj moju adresu', 'Add my address')}
+					{t('admin.security.addMyAddress')}
 				</Button>
 			</div>
 			<label>
 				<input type="checkbox" bind:checked={deviceApproval} />
-				{tr(
-					'Novi uređaj se može prijaviti tek kad ga odobrim',
-					'A new device can sign in only after I approve it'
-				)}
+				{t('admin.security.aNewDeviceCanSign')}
 			</label>
 			<p class="alb-meta">
-				{tr(
-					'Ako se zaključate, na serveru pokrenite: docker compose exec server /mediarr security reset',
-					'If you lock yourself out, run this on the server: docker compose exec server /mediarr security reset'
-				)}
+				{t('admin.security.ifYouLockYourselfOut')}
 			</p>
 			<div>
-				<Button type="submit" variant="gold" small disabled={saving}>{tr('Spremi', 'Save')}</Button>
+				<Button type="submit" variant="gold" small disabled={saving}>{t('common.save')}</Button>
 			</div>
 		</form>
 	</Card>
 
-	<Card title={tr('Uređaji', 'Devices')}>
+	<Card title={t('common.devices')}>
 		{#if settings.devices.length === 0}
-			<EmptyState icon="shield" text={tr('Još nema uređaja.', 'No devices yet.')} />
+			<EmptyState icon="shield" text={t('admin.security.noDevicesYet')} />
 		{:else}
 			<div class="audit-list">
 				{#each settings.devices as device (device.id)}
@@ -143,11 +129,11 @@
 									variant="gold"
 									onclick={() => act(() => api.approveDevice(device.id))}
 								>
-									{tr('Odobri', 'Approve')}
+									{t('admin.security.approve')}
 								</Button>
 							{/if}
 							<Button small onclick={() => act(() => api.deleteDevice(device.id))}>
-								{tr('Zaboravi', 'Forget')}
+								{t('admin.security.forget')}
 							</Button>
 						</span>
 					</div>
@@ -156,11 +142,11 @@
 		{/if}
 	</Card>
 
-	<Card title={tr('Pokušaji pristupa, od najnovijeg', 'Attempts to connect, newest first')}>
+	<Card title={t('admin.security.attemptsToConnectNewestFirst')}>
 		{#if !events}
 			<Skeleton height="120px" />
 		{:else if events.length === 0}
-			<EmptyState icon="shield" text={tr('Još nema zapisa.', 'Nothing recorded yet.')} />
+			<EmptyState icon="shield" text={t('admin.security.nothingRecordedYet')} />
 		{:else}
 			<div class="audit-list">
 				{#each events as entry (entry.id)}
@@ -172,7 +158,7 @@
 							{entry.userAgent}
 							{#if entry.ip}
 								<Button small onclick={() => addAddress(entry.ip)}>
-									{tr('Dodaj na listu', 'Add to the list')}
+									{t('admin.security.addToTheList')}
 								</Button>
 							{/if}
 						</span>
