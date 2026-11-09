@@ -439,14 +439,10 @@ void main() {
     expect(find.textContaining('Unknown place'), findsOneWidget);
     expect(find.textContaining('DB-IP'), findsOneWidget);
 
-    await tester.pageBack();
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pageBack();
-    await tester.pump(const Duration(seconds: 1));
-    // The links sheet, then the album.
-    await tester.tapAt(const Offset(20, 40));
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pageBack();
+    // Back to the start at once: the screens behind keep their own back buttons on iOS.
+    tester
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .popUntil((route) => route.isFirst);
     await tester.pump(const Duration(seconds: 1));
     await tester.tap(find.text('Media').last);
     await tester.pump(const Duration(seconds: 1));
