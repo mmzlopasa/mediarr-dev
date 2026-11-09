@@ -100,6 +100,8 @@ void main() {
     debugPrint('setUp: clearing the keychain');
     await const FlutterSecureStorage().deleteAll();
     server.uploads.clear();
+    // A test that sends a photo to the trash must not empty another test's clean-up.
+    server.trashed = [];
     debugPrint('setUp: done');
   });
 
