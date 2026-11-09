@@ -16,6 +16,7 @@ import 'devices_screen.dart';
 import 'free_space_screen.dart';
 import 'imports_screen.dart';
 import 'profile_screen.dart';
+import 'qr_sign_in.dart';
 import 'organize_screens.dart';
 import 'settings_screen.dart';
 import 'storage_template_screen.dart';
@@ -335,6 +336,11 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             leading: Icon(Icons.person_outline, color: Palette.dim),
             title: const Text('Profile'),
             onTap: () => _push(const ProfileScreen()),
+          ),
+          ListTile(
+            leading: Icon(Icons.qr_code_2, color: Palette.dim),
+            title: const Text('Sign in on another device'),
+            onTap: () => _push(const ShowSignInCodeScreen()),
           ),
           ListTile(
             leading: Icon(Icons.phone_iphone, color: Palette.dim),

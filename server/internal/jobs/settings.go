@@ -28,6 +28,8 @@ type ServerSettings struct {
 	VideoWorkers      int     `json:"videoWorkers"`
 	AnalysisWorkers   int     `json:"analysisWorkers"`
 	ExternalScanHours int     `json:"externalScanHours"`
+	// HiddenOnNetwork stops apps on the same network from finding this server.
+	HiddenOnNetwork bool `json:"hiddenOnNetwork,omitempty"`
 }
 
 // DefaultServerSettings are what a new installation uses.

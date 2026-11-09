@@ -1,0 +1,35 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+// @dart=2.18
+
+// ignore_for_file: unused_element, unused_import
+// ignore_for_file: always_put_required_named_parameters_first
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: lines_longer_than_80_chars
+
+import 'package:mediarr_api/api.dart';
+import 'package:test/test.dart';
+
+// tests for QRSignInState
+void main() {
+  // final instance = QRSignInState();
+
+  group('test QRSignInState', () {
+    // String status
+    test('to test the property `status`', () async {
+      // TODO
+    });
+
+    // What the device that scanned the code calls itself
+    // String device
+    test('to test the property `device`', () async {
+      // TODO
+    });
+
+    // DateTime expiresAt
+    test('to test the property `expiresAt`', () async {
+      // TODO
+    });
+  });
+}

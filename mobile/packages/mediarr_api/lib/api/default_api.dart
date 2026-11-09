@@ -192,6 +192,62 @@ class DefaultApi {
     }
   }
 
+  /// Allow or deny the device that scanned my code
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [QRAnswer] qRAnswer (required):
+  Future<Response> answerQRSignInWithHttpInfo(
+    String id,
+    QRAnswer qRAnswer,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/qr/{id}/answer'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = qRAnswer;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Allow or deny the device that scanned my code
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [QRAnswer] qRAnswer (required):
+  Future<void> answerQRSignIn(
+    String id,
+    QRAnswer qRAnswer,
+  ) async {
+    final response = await answerQRSignInWithHttpInfo(
+      id,
+      qRAnswer,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1482,6 +1538,52 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// A one-time code that lets another device sign in to this account once I allow it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> createQRSignInWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/qr';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// A one-time code that lets another device sign in to this account once I allow it
+  Future<QRSignIn?> createQRSignIn() async {
+    final response = await createQRSignInWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'QRSignIn',
+      ) as QRSignIn;
+    }
+    return null;
   }
 
   /// Make a video of the chosen photos. Runs in the background.
@@ -6489,6 +6591,66 @@ class DefaultApi {
     return null;
   }
 
+  /// Whether a device has scanned my code and is waiting for an answer
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getQRSignInWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/qr/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Whether a device has scanned my code and is waiting for an answer
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<QRSignInState?> getQRSignIn(
+    String id,
+  ) async {
+    final response = await getQRSignInWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'QRSignInState',
+      ) as QRSignInState;
+    }
+    return null;
+  }
+
   /// The cameras, lenses, places and tags in the user's library, to choose from in the filters
   ///
   /// Note: This method returns the HTTP [Response].
@@ -6577,6 +6739,52 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'SecuritySettings',
       ) as SecuritySettings;
+    }
+    return null;
+  }
+
+  /// Lets an app on the same network recognise a Mediarr server; only its version
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getServerHelloWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/server/hello';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Lets an app on the same network recognise a Mediarr server; only its version
+  Future<ServerHello?> getServerHello() async {
+    final response = await getServerHelloWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'ServerHello',
+      ) as ServerHello;
     }
     return null;
   }
@@ -9363,6 +9571,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// A new device hands in a scanned code and gets a ticket to wait with
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [QRRedeem] qRRedeem (required):
+  Future<Response> redeemQRSignInWithHttpInfo(
+    QRRedeem qRRedeem,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/qr/redeem';
+
+    // ignore: prefer_final_locals
+    Object? postBody = qRRedeem;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// A new device hands in a scanned code and gets a ticket to wait with
+  ///
+  /// Parameters:
+  ///
+  /// * [QRRedeem] qRRedeem (required):
+  Future<QRTicket?> redeemQRSignIn(
+    QRRedeem qRRedeem,
+  ) async {
+    final response = await redeemQRSignInWithHttpInfo(
+      qRRedeem,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'QRTicket',
+      ) as QRTicket;
+    }
+    return null;
   }
 
   /// A new code for a guest that has not paired yet
@@ -12681,6 +12949,66 @@ class DefaultApi {
   ) async {
     final response = await updateProfileWithHttpInfo(
       profileUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'User',
+      ) as User;
+    }
+    return null;
+  }
+
+  /// Waits up to 25 seconds for the answer; when allowed, this device is signed in
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [QRTicket] qRTicket (required):
+  Future<Response> waitQRSignInWithHttpInfo(
+    QRTicket qRTicket,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/auth/qr/wait';
+
+    // ignore: prefer_final_locals
+    Object? postBody = qRTicket;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Waits up to 25 seconds for the answer; when allowed, this device is signed in
+  ///
+  /// Parameters:
+  ///
+  /// * [QRTicket] qRTicket (required):
+  Future<User?> waitQRSignIn(
+    QRTicket qRTicket,
+  ) async {
+    final response = await waitQRSignInWithHttpInfo(
+      qRTicket,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));

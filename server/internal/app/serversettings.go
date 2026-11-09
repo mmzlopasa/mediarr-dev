@@ -20,6 +20,7 @@ func settingsToAPI(in *jobs.ServerSettings) api.ServerSettings {
 		FaceMinScore: in.FaceMinScore, FaceMaxDistance: in.FaceMaxDistance,
 		WorkerConcurrency: in.WorkerConcurrency, VideoWorkers: in.VideoWorkers,
 		AnalysisWorkers: in.AnalysisWorkers, ExternalScanHours: in.ExternalScanHours,
+		VisibleOnNetwork: new(!in.HiddenOnNetwork),
 	}
 }
 
@@ -92,6 +93,7 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 		FaceMinScore: body.FaceMinScore, FaceMaxDistance: body.FaceMaxDistance,
 		WorkerConcurrency: body.WorkerConcurrency, VideoWorkers: body.VideoWorkers,
 		AnalysisWorkers: body.AnalysisWorkers, ExternalScanHours: body.ExternalScanHours,
+		HiddenOnNetwork: body.VisibleOnNetwork != nil && !*body.VisibleOnNetwork,
 	})
 	if err != nil {
 		internalError(w, r, err)

@@ -312,6 +312,33 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('a phone signs in with a code once the other screen allows it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await waitFor(tester, find.text('Sign in'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Server address'),
+      server.address,
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.ensureVisible(find.text('Enter a sign-in code'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Enter a sign-in code'));
+    await waitFor(tester, find.text('Sign-in code'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Code'),
+      FakeServer.qrCode.toLowerCase(),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.widgetWithText(TextButton, 'Sign in'));
+    await waitFor(tester, find.byType(AssetPicture));
+    expect(server.qrDevice, isNotEmpty);
+    expect(server.qrWaits, 2);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('the dates of selected photos are shifted after a preview', (
     tester,
   ) async {

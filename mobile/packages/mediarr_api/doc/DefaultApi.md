@@ -12,6 +12,7 @@ Method | HTTP request | Description
 [**addAlbumAssets**](DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
 [**addBackupDestination**](DefaultApi.md#addbackupdestination) | **POST** /api/admin/backup/destinations | Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
 [**addFamilyMember**](DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
+[**answerQRSignIn**](DefaultApi.md#answerqrsignin) | **POST** /api/auth/qr/{id}/answer | Allow or deny the device that scanned my code
 [**appendUpload**](DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 [**applyStorageTemplate**](DefaultApi.md#applystoragetemplate) | **POST** /api/admin/storage-template/apply | Put every uploaded original where the template says, or with dryRun only say what would move
 [**approveDevice**](DefaultApi.md#approvedevice) | **POST** /api/admin/security/devices/{id}/approve | Let this device sign in
@@ -35,6 +36,7 @@ Method | HTTP request | Description
 [**createImport**](DefaultApi.md#createimport) | **POST** /api/admin/imports | Bring a library in from Immich, Google Takeout or an iCloud export
 [**createMyImport**](DefaultApi.md#createmyimport) | **POST** /api/imports | Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
 [**createPublicUpload**](DefaultApi.md#createpublicupload) | **POST** /api/public/{token}/uploads | Send one whole file to a public album (tus 1.0 creation with upload)
+[**createQRSignIn**](DefaultApi.md#createqrsignin) | **POST** /api/auth/qr | A one-time code that lets another device sign in to this account once I allow it
 [**createStoryExport**](DefaultApi.md#createstoryexport) | **POST** /api/stories | Make a video of the chosen photos. Runs in the background.
 [**createUpload**](DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
 [**createUser**](DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
@@ -123,8 +125,10 @@ Method | HTTP request | Description
 [**getPublicOriginal**](DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 [**getPublicThumbnail**](DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 [**getPublicVideoFile**](DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+[**getQRSignIn**](DefaultApi.md#getqrsignin) | **GET** /api/auth/qr/{id} | Whether a device has scanned my code and is waiting for an answer
 [**getSearchOptions**](DefaultApi.md#getsearchoptions) | **GET** /api/search/options | The cameras, lenses, places and tags in the user's library, to choose from in the filters
 [**getSecurity**](DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
+[**getServerHello**](DefaultApi.md#getserverhello) | **GET** /api/server/hello | Lets an app on the same network recognise a Mediarr server; only its version
 [**getServerSettings**](DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 [**getServerStatus**](DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
 [**getStorageTemplate**](DefaultApi.md#getstoragetemplate) | **GET** /api/admin/storage-template | How originals are laid out in each user's folder, and what the last run over all of them did
@@ -178,6 +182,7 @@ Method | HTTP request | Description
 [**pauseJobQueue**](DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 [**previewStorageTemplate**](DefaultApi.md#previewstoragetemplate) | **POST** /api/admin/storage-template/preview | Where a template would put a few real originals, without moving anything
 [**readNotifications**](DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
+[**redeemQRSignIn**](DefaultApi.md#redeemqrsignin) | **POST** /api/auth/qr/redeem | A new device hands in a scanned code and gets a ticket to wait with
 [**reinviteKeepGuest**](DefaultApi.md#reinvitekeepguest) | **POST** /api/admin/keep/guests/{id}/invite | A new code for a guest that has not paired yet
 [**removeAlbumAssets**](DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 [**removeAlbumHeart**](DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
@@ -235,6 +240,7 @@ Method | HTTP request | Description
 [**updateKeepGuest**](DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 [**updatePerson**](DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 [**updateProfile**](DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, or email address with the current password
+[**waitQRSignIn**](DefaultApi.md#waitqrsignin) | **POST** /api/auth/qr/wait | Waits up to 25 seconds for the answer; when allowed, this device is signed in
 
 
 # **addAlbumAssets**
@@ -357,6 +363,48 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **answerQRSignIn**
+> answerQRSignIn(id, qRAnswer)
+
+Allow or deny the device that scanned my code
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = id_example; // String | 
+final qRAnswer = QRAnswer(); // QRAnswer | 
+
+try {
+    api_instance.answerQRSignIn(id, qRAnswer);
+} catch (e) {
+    print('Exception when calling DefaultApi->answerQRSignIn: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **qRAnswer** | [**QRAnswer**](QRAnswer.md)|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -1288,6 +1336,43 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **createQRSignIn**
+> QRSignIn createQRSignIn()
+
+A one-time code that lets another device sign in to this account once I allow it
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.createQRSignIn();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->createQRSignIn: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**QRSignIn**](QRSignIn.md)
 
 ### Authorization
 
@@ -4845,6 +4930,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getQRSignIn**
+> QRSignInState getQRSignIn(id)
+
+Whether a device has scanned my code and is waiting for an answer
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = id_example; // String | 
+
+try {
+    final result = api_instance.getQRSignIn(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getQRSignIn: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**QRSignInState**](QRSignInState.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getSearchOptions**
 > SearchOptions getSearchOptions()
 
@@ -4907,6 +5033,43 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**SecuritySettings**](SecuritySettings.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getServerHello**
+> ServerHello getServerHello()
+
+Lets an app on the same network recognise a Mediarr server; only its version
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getServerHello();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getServerHello: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**ServerHello**](ServerHello.md)
 
 ### Authorization
 
@@ -6970,6 +7133,47 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **redeemQRSignIn**
+> QRTicket redeemQRSignIn(qRRedeem)
+
+A new device hands in a scanned code and gets a ticket to wait with
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final qRRedeem = QRRedeem(); // QRRedeem | 
+
+try {
+    final result = api_instance.redeemQRSignIn(qRRedeem);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->redeemQRSignIn: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **qRRedeem** | [**QRRedeem**](QRRedeem.md)|  | 
+
+### Return type
+
+[**QRTicket**](QRTicket.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -9315,6 +9519,47 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **profileUpdate** | [**ProfileUpdate**](ProfileUpdate.md)|  | 
+
+### Return type
+
+[**User**](User.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **waitQRSignIn**
+> User waitQRSignIn(qRTicket)
+
+Waits up to 25 seconds for the answer; when allowed, this device is signed in
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final qRTicket = QRTicket(); // QRTicket | 
+
+try {
+    final result = api_instance.waitQRSignIn(qRTicket);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->waitQRSignIn: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **qRTicket** | [**QRTicket**](QRTicket.md)|  | 
 
 ### Return type
 

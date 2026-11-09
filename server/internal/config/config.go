@@ -23,6 +23,8 @@ type Config struct {
 	WorkerConcurrency int
 	VideoAccel        string
 	MLURL             string
+	// PublicPort is the port people reach the server on, announced on the network.
+	PublicPort int
 }
 
 // Load returns the settings, with defaults matching the Docker image.
@@ -42,6 +44,7 @@ func Load() Config {
 		WorkerConcurrency: concurrency(os.Getenv("WORKER_CONCURRENCY"), runtime.NumCPU()),
 		VideoAccel:        os.Getenv("VIDEO_ACCEL"),
 		MLURL:             os.Getenv("ML_URL"),
+		PublicPort:        envInt("HTTP_PORT", 9851),
 	}
 }
 

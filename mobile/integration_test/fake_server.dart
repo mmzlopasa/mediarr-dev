@@ -51,6 +51,11 @@ class FakeServer {
   String storageTemplate = '';
   Map<String, dynamic>? savedDates;
 
+  /// The code a signed-in screen showed, and the device that handed it in.
+  static const qrCode = 'K7QM-2XPA';
+  String? qrDevice;
+  int qrWaits = 0;
+
   Map<String, Object> get _user => {
     'id': userId,
     'email': email,
@@ -79,6 +84,36 @@ class FakeServer {
       final body = jsonDecode(await utf8.decoder.bind(request).join()) as Map;
       if (body['email'] != email || body['password'] != password) {
         await _json(request, 401, {'message': 'wrong', 'totpRequired': false});
+        return;
+      }
+      request.response.headers.add(
+        'set-cookie',
+        'mediarr_session=abc; Path=/; HttpOnly',
+      );
+      await _json(request, 200, _user);
+      return;
+    }
+    if (path == '/api/server/hello') {
+      await _json(request, 200, {'app': 'mediarr', 'version': '0.0.0-test'});
+      return;
+    }
+    if (path == '/api/auth/qr/redeem' && request.method == 'POST') {
+      final body = jsonDecode(await utf8.decoder.bind(request).join()) as Map;
+      if ('${body['code']}'.toUpperCase() != qrCode) {
+        await _json(request, 401, {'message': 'expired'});
+        return;
+      }
+      qrDevice = '${body['device']}';
+      qrWaits = 0;
+      await _json(request, 200, {'ticket': 'ticket-1'});
+      return;
+    }
+    if (path == '/api/auth/qr/wait' && request.method == 'POST') {
+      await utf8.decoder.bind(request).join();
+      // The first time nobody has answered yet; then the signed-in screen allows it.
+      if (qrWaits++ == 0) {
+        request.response.statusCode = 202;
+        await request.response.close();
         return;
       }
       request.response.headers.add(

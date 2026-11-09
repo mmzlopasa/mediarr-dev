@@ -731,6 +731,36 @@ func (e NotificationKind) Valid() bool {
 	}
 }
 
+// Defines values for QRSignInStateStatus.
+const (
+	Allowed   QRSignInStateStatus = "allowed"
+	Denied    QRSignInStateStatus = "denied"
+	Expired   QRSignInStateStatus = "expired"
+	Requested QRSignInStateStatus = "requested"
+	Used      QRSignInStateStatus = "used"
+	Waiting   QRSignInStateStatus = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the QRSignInStateStatus enum.
+func (e QRSignInStateStatus) Valid() bool {
+	switch e {
+	case Allowed:
+		return true
+	case Denied:
+		return true
+	case Expired:
+		return true
+	case Requested:
+		return true
+	case Used:
+		return true
+	case Waiting:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SearchFiltersPeopleMatch.
 const (
 	SearchFiltersPeopleMatchAll SearchFiltersPeopleMatch = "all"
@@ -791,6 +821,21 @@ func (e SecurityEventKind) Valid() bool {
 	case SecurityEventKindLoginOk:
 		return true
 	case SecurityEventKindPasswordReset:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ServerHelloApp.
+const (
+	Mediarr ServerHelloApp = "mediarr"
+)
+
+// Valid indicates whether the value is a known member of the ServerHelloApp enum.
+func (e ServerHelloApp) Valid() bool {
+	switch e {
+	case Mediarr:
 		return true
 	default:
 		return false
@@ -2608,6 +2653,47 @@ type PublicLink struct {
 	Watermarked bool    `json:"watermarked"`
 }
 
+// QRAnswer defines model for QRAnswer.
+type QRAnswer struct {
+	Allow bool `json:"allow"`
+}
+
+// QRRedeem defines model for QRRedeem.
+type QRRedeem struct {
+	Code   string `json:"code"`
+	Device string `json:"device"`
+}
+
+// QRSignIn defines model for QRSignIn.
+type QRSignIn struct {
+	// Code Eight characters, shown as XXXX-XXXX for typing by hand
+	Code      string    `json:"code"`
+	ExpiresAt time.Time `json:"expiresAt"`
+	Id        string    `json:"id"`
+
+	// Link mediarr://sign-in?server=...&code=..., the contents of the QR code
+	Link string `json:"link"`
+
+	// Server The address the code was made on
+	Server *string `json:"server,omitempty"`
+}
+
+// QRSignInState defines model for QRSignInState.
+type QRSignInState struct {
+	// Device What the device that scanned the code calls itself
+	Device    *string             `json:"device,omitempty"`
+	ExpiresAt time.Time           `json:"expiresAt"`
+	Status    QRSignInStateStatus `json:"status"`
+}
+
+// QRSignInStateStatus defines model for QRSignInState.Status.
+type QRSignInStateStatus string
+
+// QRTicket defines model for QRTicket.
+type QRTicket struct {
+	Ticket string `json:"ticket"`
+}
+
 // QuotaUpdate defines model for QuotaUpdate.
 type QuotaUpdate struct {
 	QuotaBytes *int64 `json:"quotaBytes,omitempty"`
@@ -2703,6 +2789,15 @@ type SecurityUpdate struct {
 	IpAllowlistEnabled    bool     `json:"ipAllowlistEnabled"`
 }
 
+// ServerHello defines model for ServerHello.
+type ServerHello struct {
+	App     ServerHelloApp `json:"app"`
+	Version string         `json:"version"`
+}
+
+// ServerHelloApp defines model for ServerHello.App.
+type ServerHelloApp string
+
 // ServerSettings defines model for ServerSettings.
 type ServerSettings struct {
 	// AnalysisWorkers Applies after a restart of the worker
@@ -2729,6 +2824,9 @@ type ServerSettings struct {
 
 	// VideoWorkers Applies after a restart of the worker
 	VideoWorkers int `json:"videoWorkers"`
+
+	// VisibleOnNetwork Apps on the same network can find this server. Left out keeps it on
+	VisibleOnNetwork *bool `json:"visibleOnNetwork,omitempty"`
 
 	// WorkerConcurrency 0 uses WORKER_CONCURRENCY. Applies after a restart of the worker
 	WorkerConcurrency int `json:"workerConcurrency"`
@@ -3422,6 +3520,15 @@ type ForgotPasswordJSONRequestBody = PasswordForgot
 // ResetPasswordJSONRequestBody defines body for ResetPassword for application/json ContentType.
 type ResetPasswordJSONRequestBody = PasswordReset
 
+// RedeemQRSignInJSONRequestBody defines body for RedeemQRSignIn for application/json ContentType.
+type RedeemQRSignInJSONRequestBody = QRRedeem
+
+// WaitQRSignInJSONRequestBody defines body for WaitQRSignIn for application/json ContentType.
+type WaitQRSignInJSONRequestBody = QRTicket
+
+// AnswerQRSignInJSONRequestBody defines body for AnswerQRSignIn for application/json ContentType.
+type AnswerQRSignInJSONRequestBody = QRAnswer
+
 // SetupJSONRequestBody defines body for Setup for application/json ContentType.
 type SetupJSONRequestBody = SetupRequest
 
@@ -3847,6 +3954,21 @@ type ServerInterface interface {
 	// ResetPassword Set a new password with a link from an email
 	// (POST /api/auth/password/reset)
 	ResetPassword(w http.ResponseWriter, r *http.Request)
+	// CreateQRSignIn A one-time code that lets another device sign in to this account once I allow it
+	// (POST /api/auth/qr)
+	CreateQRSignIn(w http.ResponseWriter, r *http.Request)
+	// RedeemQRSignIn A new device hands in a scanned code and gets a ticket to wait with
+	// (POST /api/auth/qr/redeem)
+	RedeemQRSignIn(w http.ResponseWriter, r *http.Request)
+	// WaitQRSignIn Waits up to 25 seconds for the answer; when allowed, this device is signed in
+	// (POST /api/auth/qr/wait)
+	WaitQRSignIn(w http.ResponseWriter, r *http.Request)
+	// GetQRSignIn Whether a device has scanned my code and is waiting for an answer
+	// (GET /api/auth/qr/{id})
+	GetQRSignIn(w http.ResponseWriter, r *http.Request, id string)
+	// AnswerQRSignIn Allow or deny the device that scanned my code
+	// (POST /api/auth/qr/{id}/answer)
+	AnswerQRSignIn(w http.ResponseWriter, r *http.Request, id string)
 	// Setup Create the first administrator. Closed once any user exists.
 	// (POST /api/auth/setup)
 	Setup(w http.ResponseWriter, r *http.Request)
@@ -4114,6 +4236,9 @@ type ServerInterface interface {
 	// GetSearchOptions The cameras, lenses, places and tags in the user's library, to choose from in the filters
 	// (GET /api/search/options)
 	GetSearchOptions(w http.ResponseWriter, r *http.Request)
+	// GetServerHello Lets an app on the same network recognise a Mediarr server; only its version
+	// (GET /api/server/hello)
+	GetServerHello(w http.ResponseWriter, r *http.Request)
 	// GetServerStatus The version of this server, whether a newer one exists, and its disk
 	// (GET /api/server/status)
 	GetServerStatus(w http.ResponseWriter, r *http.Request)
@@ -4870,6 +4995,36 @@ func (_ Unimplemented) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// CreateQRSignIn A one-time code that lets another device sign in to this account once I allow it
+// (POST /api/auth/qr)
+func (_ Unimplemented) CreateQRSignIn(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RedeemQRSignIn A new device hands in a scanned code and gets a ticket to wait with
+// (POST /api/auth/qr/redeem)
+func (_ Unimplemented) RedeemQRSignIn(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// WaitQRSignIn Waits up to 25 seconds for the answer; when allowed, this device is signed in
+// (POST /api/auth/qr/wait)
+func (_ Unimplemented) WaitQRSignIn(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetQRSignIn Whether a device has scanned my code and is waiting for an answer
+// (GET /api/auth/qr/{id})
+func (_ Unimplemented) GetQRSignIn(w http.ResponseWriter, r *http.Request, id string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AnswerQRSignIn Allow or deny the device that scanned my code
+// (POST /api/auth/qr/{id}/answer)
+func (_ Unimplemented) AnswerQRSignIn(w http.ResponseWriter, r *http.Request, id string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Setup Create the first administrator. Closed once any user exists.
 // (POST /api/auth/setup)
 func (_ Unimplemented) Setup(w http.ResponseWriter, r *http.Request) {
@@ -5401,6 +5556,12 @@ func (_ Unimplemented) AskSearch(w http.ResponseWriter, r *http.Request) {
 // GetSearchOptions The cameras, lenses, places and tags in the user's library, to choose from in the filters
 // (GET /api/search/options)
 func (_ Unimplemented) GetSearchOptions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetServerHello Lets an app on the same network recognise a Mediarr server; only its version
+// (GET /api/server/hello)
+func (_ Unimplemented) GetServerHello(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -8064,6 +8225,100 @@ func (siw *ServerInterfaceWrapper) ResetPassword(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// CreateQRSignIn operation middleware
+func (siw *ServerInterfaceWrapper) CreateQRSignIn(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateQRSignIn(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RedeemQRSignIn operation middleware
+func (siw *ServerInterfaceWrapper) RedeemQRSignIn(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RedeemQRSignIn(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// WaitQRSignIn operation middleware
+func (siw *ServerInterfaceWrapper) WaitQRSignIn(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.WaitQRSignIn(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetQRSignIn operation middleware
+func (siw *ServerInterfaceWrapper) GetQRSignIn(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetQRSignIn(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AnswerQRSignIn operation middleware
+func (siw *ServerInterfaceWrapper) AnswerQRSignIn(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AnswerQRSignIn(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // Setup operation middleware
 func (siw *ServerInterfaceWrapper) Setup(w http.ResponseWriter, r *http.Request) {
 
@@ -10312,6 +10567,20 @@ func (siw *ServerInterfaceWrapper) GetSearchOptions(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// GetServerHello operation middleware
+func (siw *ServerInterfaceWrapper) GetServerHello(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetServerHello(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetServerStatus operation middleware
 func (siw *ServerInterfaceWrapper) GetServerStatus(w http.ResponseWriter, r *http.Request) {
 
@@ -11414,6 +11683,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/auth/passkey/finish", wrapper.FinishPasskeyLogin)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/qr", wrapper.CreateQRSignIn)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/auth/qr/{id}", wrapper.GetQRSignIn)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/qr/{id}/answer", wrapper.AnswerQRSignIn)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/qr/redeem", wrapper.RedeemQRSignIn)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/auth/qr/wait", wrapper.WaitQRSignIn)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/server/hello", wrapper.GetServerHello)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/imports", wrapper.ListMyImports)

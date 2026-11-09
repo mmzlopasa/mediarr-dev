@@ -22,6 +22,7 @@ Name | Type | Description | Notes
 **videoWorkers** | **int** | Applies after a restart of the worker | 
 **analysisWorkers** | **int** | Applies after a restart of the worker | 
 **externalScanHours** | **int** |  | 
+**visibleOnNetwork** | **bool** | Apps on the same network can find this server. Left out keeps it on | [optional] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

@@ -21,12 +21,14 @@
 		user,
 		roleLabel,
 		links,
-		onSignOut
+		onSignOut,
+		onPhoneSignIn
 	}: {
 		user: User;
 		roleLabel: string;
 		links: { href: string; icon: IconName; label: string }[];
 		onSignOut: (event: SubmitEvent) => void;
+		onPhoneSignIn?: () => void;
 	} = $props();
 
 	let stats = $state<AccountStats>();
@@ -96,6 +98,13 @@
 		{/each}
 		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a fixed route -->
 		<a href="/tv"><Icon name="tv" size={18} /><span>{tr('TV način', 'TV mode')}</span></a>
+		{#if onPhoneSignIn}
+			<button type="button" onclick={onPhoneSignIn}
+				><Icon name="phone" size={18} /><span
+					>{tr('Prijava na mobitelu', 'Sign in on a phone')}</span
+				></button
+			>
+		{/if}
 	</nav>
 
 	<div class="me-set">

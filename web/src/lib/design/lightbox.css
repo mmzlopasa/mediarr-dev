@@ -2217,6 +2217,7 @@ html.lenis body {
 	padding: 6px 6px;
 }
 .me-go a,
+.me-go button,
 .me-out {
 	display: flex;
 	align-items: center;
@@ -2234,6 +2235,7 @@ html.lenis body {
 	cursor: pointer;
 }
 .me-go a:hover,
+.me-go button:hover,
 .me-out:hover {
 	background: var(--bg-3);
 }

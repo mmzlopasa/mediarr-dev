@@ -477,6 +477,16 @@ class ApiClient {
           return ProfileUpdate.fromJson(value);
         case 'PublicLink':
           return PublicLink.fromJson(value);
+        case 'QRAnswer':
+          return QRAnswer.fromJson(value);
+        case 'QRRedeem':
+          return QRRedeem.fromJson(value);
+        case 'QRSignIn':
+          return QRSignIn.fromJson(value);
+        case 'QRSignInState':
+          return QRSignInState.fromJson(value);
+        case 'QRTicket':
+          return QRTicket.fromJson(value);
         case 'QuotaUpdate':
           return QuotaUpdate.fromJson(value);
         case 'SearchFilters':
@@ -493,6 +503,8 @@ class ApiClient {
           return SecuritySettings.fromJson(value);
         case 'SecurityUpdate':
           return SecurityUpdate.fromJson(value);
+        case 'ServerHello':
+          return ServerHello.fromJson(value);
         case 'ServerSettings':
           return ServerSettings.fromJson(value);
         case 'ServerStatus':

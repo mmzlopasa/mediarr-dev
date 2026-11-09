@@ -2,6 +2,8 @@ import type { components } from './api/schema';
 
 export type User = components['schemas']['User'];
 export type FixResult = components['schemas']['FixResult'];
+export type QRSignIn = components['schemas']['QRSignIn'];
+export type QRSignInState = components['schemas']['QRSignInState'];
 export type Place = components['schemas']['Place'];
 export type BackupDevice = components['schemas']['BackupDevice'];
 export type UpgradeSnapshot = components['schemas']['UpgradeSnapshot'];
@@ -225,6 +227,10 @@ export const api = {
 		request<components['schemas']['ExplorePlaces']>(fetch, '/api/explore/places'),
 	setAssetFacts: (id: string, body: components['schemas']['AssetFacts']) =>
 		request<void>(fetch, `/api/assets/${id}/facts`, body, 'PATCH'),
+	createQRSignIn: () => request<QRSignIn>(fetch, '/api/auth/qr', {}),
+	qrSignIn: (id: string) => request<QRSignInState>(fetch, `/api/auth/qr/${encodeURIComponent(id)}`),
+	answerQRSignIn: (id: string, allow: boolean) =>
+		request<void>(fetch, `/api/auth/qr/${encodeURIComponent(id)}/answer`, { allow }),
 	searchPlaces: (q: string) =>
 		request<components['schemas']['PlaceList']>(fetch, `/api/places?q=${encodeURIComponent(q)}`),
 	assetFaces: (id: string) =>

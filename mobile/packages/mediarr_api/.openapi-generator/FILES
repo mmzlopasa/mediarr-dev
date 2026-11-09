@@ -127,6 +127,11 @@ doc/Place.md
 doc/PlaceList.md
 doc/ProfileUpdate.md
 doc/PublicLink.md
+doc/QRAnswer.md
+doc/QRRedeem.md
+doc/QRSignIn.md
+doc/QRSignInState.md
+doc/QRTicket.md
 doc/QuotaUpdate.md
 doc/SearchFilters.md
 doc/SearchOptions.md
@@ -135,6 +140,7 @@ doc/SecurityDevice.md
 doc/SecurityEvent.md
 doc/SecuritySettings.md
 doc/SecurityUpdate.md
+doc/ServerHello.md
 doc/ServerSettings.md
 doc/ServerStatus.md
 doc/SetupRequest.md
@@ -310,6 +316,11 @@ lib/model/place.dart
 lib/model/place_list.dart
 lib/model/profile_update.dart
 lib/model/public_link.dart
+lib/model/qr_answer.dart
+lib/model/qr_redeem.dart
+lib/model/qr_sign_in.dart
+lib/model/qr_sign_in_state.dart
+lib/model/qr_ticket.dart
 lib/model/quota_update.dart
 lib/model/search_filters.dart
 lib/model/search_options.dart
@@ -318,6 +329,7 @@ lib/model/security_device.dart
 lib/model/security_event.dart
 lib/model/security_settings.dart
 lib/model/security_update.dart
+lib/model/server_hello.dart
 lib/model/server_settings.dart
 lib/model/server_status.dart
 lib/model/setup_request.dart
@@ -359,7 +371,9 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/date_fix_test.dart
-test/fix_change_test.dart
-test/fix_result_test.dart
-test/location_fix_test.dart
+test/qr_answer_test.dart
+test/qr_redeem_test.dart
+test/qr_sign_in_state_test.dart
+test/qr_sign_in_test.dart
+test/qr_ticket_test.dart
+test/server_hello_test.dart

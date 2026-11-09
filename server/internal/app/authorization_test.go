@@ -16,6 +16,10 @@ var publicRoutes = []*regexp.Regexp{
 	regexp.MustCompile(`^/api/health$`),
 	regexp.MustCompile(`^/api/auth/(status|login|setup|logout|methods|oidc/.+|passkey/.+|password/.+)$`),
 	regexp.MustCompile(`^/api/public/`),
+	// A new device hands in a code from a signed-in screen, which must then allow it.
+	regexp.MustCompile(`^/api/auth/qr/(redeem|wait)$`),
+	// Apps on the same network recognise the server; only its version is told.
+	regexp.MustCompile(`^/api/server/hello$`),
 	// Another Mediarr pairs with the token of its invitation, which is the proof.
 	regexp.MustCompile(`^/api/keep/pair$`),
 }
@@ -185,13 +189,18 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 			t.Fatalf("%d %s", resp.StatusCode, body)
 		}
 	}
+	resp, body = owner.post("/api/auth/qr", nil)
+	expect(t, resp, body, http.StatusOK)
+	qrCode := decode[struct {
+		ID string `json:"id"`
+	}](t, body)
 	device := uuid.NewString()
 	resp, body = owner.send(http.MethodPut, "/api/me/backup-devices/"+device, report("Owner's phone", nil, true))
 	expect(t, resp, body, http.StatusOK)
 	ids := map[string]string{
 		"backup-devices/id": device,
 		"assets/id":         photo, "albums/id": album, "assetId": photo, "month": "2024-07", "file": "master.m3u8",
-		"scope": "archive", "userId": s.userID("admin@example.com"),
+		"scope": "archive", "userId": s.userID("admin@example.com"), "qr/id": qrCode.ID,
 	}
 	for name, query := range map[string]string{
 		"tags/id":        "SELECT id::text FROM tags LIMIT 1",

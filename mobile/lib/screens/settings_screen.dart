@@ -468,9 +468,83 @@ class NetworkSettings extends StatelessWidget {
     appBar: AppBar(title: const Text('Networking')),
     body: ListView(
       padding: const EdgeInsets.only(top: 16),
-      children: const [_SecondAddress()],
+      children: const [_SecondAddress(), _NetworkVisibility()],
     ),
   );
+}
+
+/// For an administrator: whether apps on the same network can find this server.
+class _NetworkVisibility extends ConsumerStatefulWidget {
+  const _NetworkVisibility();
+
+  @override
+  ConsumerState<_NetworkVisibility> createState() => _NetworkVisibilityState();
+}
+
+class _NetworkVisibilityState extends ConsumerState<_NetworkVisibility> {
+  ServerSettings? _settings;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final session = ref.read(sessionProvider).value;
+    if (session?.user.isAdmin ?? false) {
+      session!.api
+          .getServerSettings()
+          .then((value) {
+            if (mounted) setState(() => _settings = value);
+          })
+          .catchError((Object _) {
+            if (mounted) {
+              setState(() => _error = 'The server settings could not be read.');
+            }
+          });
+    }
+  }
+
+  Future<void> _set(bool visible) async {
+    final settings = _settings;
+    final session = ref.read(sessionProvider).value;
+    if (settings == null || session == null) return;
+    settings.visibleOnNetwork = visible;
+    setState(() {});
+    try {
+      await session.api.setServerSettings(settings);
+    } on ApiException catch (cause) {
+      settings.visibleOnNetwork = !visible;
+      if (mounted) setState(() => _error = cause.message);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final session = ref.watch(sessionProvider).value;
+    if (!(session?.user.isAdmin ?? false)) return const SizedBox.shrink();
+    final settings = _settings;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 16),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(_error!, style: TextStyle(color: Palette.err)),
+          ),
+        if (settings == null && _error == null)
+          const ListTile(title: LinearProgressIndicator())
+        else if (settings != null)
+          SwitchListTile(
+            title: const Text('Apps on the same network can find this server'),
+            subtitle: const Text(
+              'For the whole server. Signing in still needs an account.',
+            ),
+            value: settings.visibleOnNetwork ?? true,
+            onChanged: _set,
+          ),
+      ],
+    );
+  }
 }
 
 /// Real counts, from this phone and the server. What cannot be read says so.

@@ -10,6 +10,7 @@
 	import { tr } from '#lib/i18n.svelte.ts';
 	import type { NavItem } from '#lib/nav.ts';
 	import AccountCard from './AccountCard.svelte';
+	import QRSignInDialog from '#lib/devices/QRSignInDialog.svelte';
 	import Avatar from './Avatar.svelte';
 	import CommandPalette from './CommandPalette.svelte';
 	import Icon from './Icon.svelte';
@@ -51,6 +52,7 @@
 
 	let moreOpen = $state(false);
 	let meOpen = $state(false);
+	let qrOpen = $state(false);
 	let maintained = $state(false);
 	let palette = $state<CommandPalette>();
 
@@ -140,7 +142,16 @@
 				</button>
 				{#if meOpen}
 					<div class="lb-pop lb-me-m" data-lenis-prevent>
-						<AccountCard {user} {roleLabel} links={footLinks} onSignOut={signOut} />
+						<AccountCard
+							{user}
+							{roleLabel}
+							links={footLinks}
+							onSignOut={signOut}
+							onPhoneSignIn={() => {
+								meOpen = false;
+								qrOpen = true;
+							}}
+						/>
 					</div>
 				{/if}
 			</div>
@@ -243,3 +254,4 @@
 	</main>
 </div>
 <CommandPalette bind:this={palette} items={nav} />
+<QRSignInDialog bind:open={qrOpen} />

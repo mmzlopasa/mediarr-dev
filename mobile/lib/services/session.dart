@@ -175,6 +175,29 @@ String? sessionCookieFrom(String? setCookie) {
   return match == null ? null : 'mediarr_session=${match.group(1)}';
 }
 
+/// What a sign-in QR code carries: the server's address and a one-time code.
+class SignInLink {
+  const SignInLink(this.server, this.code);
+
+  final String server;
+  final String code;
+}
+
+/// Reads `mediarr://sign-in?server=…&code=…`, or nothing if the code is something else.
+SignInLink? parseSignInLink(String value) {
+  final uri = Uri.tryParse(value.trim());
+  if (uri == null || uri.scheme != 'mediarr' || uri.host != 'sign-in') {
+    return null;
+  }
+  final server = uri.queryParameters['server'] ?? '';
+  final code = uri.queryParameters['code'] ?? '';
+  if (server.isEmpty || code.isEmpty) return null;
+  return SignInLink(server, code);
+}
+
+/// How long this phone keeps waiting for the signed-in screen to answer.
+const qrAnswerWait = Duration(minutes: 3);
+
 final sessionProvider = AsyncNotifierProvider<SessionNotifier, Session?>(
   SessionNotifier.new,
 );
@@ -359,6 +382,72 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     await _storage.write(key: _serverKey, value: url);
     await _storage.write(key: _cookieKey, value: cookie);
     state = AsyncData(Session(serverUrl: url, cookie: cookie, user: user));
+  }
+
+  /// Signs in with a code from a signed-in screen. That screen has to allow it, so this waits.
+  Future<void> signInWithCode({
+    required String server,
+    required String code,
+    required String device,
+    bool Function()? cancelled,
+  }) async {
+    final url = normalizeServerUrl(server);
+    final api = DefaultApi(await _signInClient(url));
+    final Response redeemed;
+    try {
+      redeemed = await api.redeemQRSignInWithHttpInfo(
+        QRRedeem(code: code.trim(), device: device),
+      );
+    } on ApiException catch (cause) {
+      throw LoginFailure(
+        'Could not reach the server. Check the address. (${cause.message})',
+      );
+    }
+    if (redeemed.statusCode == 429) {
+      throw LoginFailure('Too many attempts. Try again later.');
+    }
+    if (redeemed.statusCode != 200) {
+      throw LoginFailure(
+        'This code has expired or was already used. Make a new one.',
+      );
+    }
+    final ticket = QRTicket.fromJson(jsonDecode(redeemed.body))?.ticket;
+    if (ticket == null) throw LoginFailure('The server did not answer.');
+    final until = DateTime.now().add(qrAnswerWait);
+    while (DateTime.now().isBefore(until)) {
+      if (cancelled?.call() ?? false) {
+        throw LoginFailure('Signing in was cancelled.');
+      }
+      final Response response;
+      try {
+        response = await api.waitQRSignInWithHttpInfo(QRTicket(ticket: ticket));
+      } on ApiException {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        continue;
+      }
+      if (response.statusCode == 202) continue;
+      if (response.statusCode == 403) {
+        final answer = jsonDecode(response.body);
+        throw LoginFailure(
+          answer is Map && answer['message'] is String
+              ? '${answer['message']}'
+              : 'The sign-in was not allowed.',
+        );
+      }
+      if (response.statusCode != 200) {
+        throw LoginFailure('This sign-in has expired. Make a new code.');
+      }
+      final cookie = sessionCookieFrom(response.headers['set-cookie']);
+      final user = User.fromJson(jsonDecode(response.body));
+      if (cookie == null || user == null) {
+        throw LoginFailure('The server did not start a session.');
+      }
+      await _storage.write(key: _serverKey, value: url);
+      await _storage.write(key: _cookieKey, value: cookie);
+      state = AsyncData(Session(serverUrl: url, cookie: cookie, user: user));
+      return;
+    }
+    throw LoginFailure('Nobody answered in time. Make a new code.');
   }
 
   /// After the person changes their name, email address or picture.

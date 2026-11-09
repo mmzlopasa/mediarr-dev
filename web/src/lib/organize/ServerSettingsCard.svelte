@@ -76,6 +76,19 @@
 				{tr('Dopusti prijavu lozinkom', 'Allow signing in with a password')}
 			</label>
 			<label>
+				<input
+					type="checkbox"
+					checked={settings.visibleOnNetwork ?? true}
+					onchange={(event) => {
+						if (settings) settings.visibleOnNetwork = event.currentTarget.checked;
+					}}
+				/>
+				{tr(
+					'Aplikacije u istoj mreži mogu pronaći ovaj poslužitelj',
+					'Apps on the same network can find this server'
+				)}
+			</label>
+			<label>
 				<input type="checkbox" bind:checked={settings.maintenance} />
 				{tr(
 					'Način održavanja: poslužitelj mogu koristiti samo administratori',

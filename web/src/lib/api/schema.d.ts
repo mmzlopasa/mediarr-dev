@@ -2527,6 +2527,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A one-time code that lets another device sign in to this account once I allow it */
+        post: operations["createQRSignIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/qr/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether a device has scanned my code and is waiting for an answer */
+        get: operations["getQRSignIn"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/qr/{id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Allow or deny the device that scanned my code */
+        post: operations["answerQRSignIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/qr/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A new device hands in a scanned code and gets a ticket to wait with */
+        post: operations["redeemQRSignIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/qr/wait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Waits up to 25 seconds for the answer; when allowed, this device is signed in */
+        post: operations["waitQRSignIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/server/hello": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lets an app on the same network recognise a Mediarr server; only its version */
+        get: operations["getServerHello"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/imports": {
         parameters: {
             query?: never;
@@ -3437,6 +3539,40 @@ export interface components {
             passkeys: boolean;
             /** @description The name of the single sign-on button, if it is turned on */
             ssoLabel?: string;
+        };
+        QRSignIn: {
+            id: string;
+            /** @description Eight characters, shown as XXXX-XXXX for typing by hand */
+            code: string;
+            /** @description mediarr://sign-in?server=...&code=..., the contents of the QR code */
+            link: string;
+            /** @description The address the code was made on */
+            server?: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        QRSignInState: {
+            /** @enum {string} */
+            status: "waiting" | "requested" | "allowed" | "denied" | "used" | "expired";
+            /** @description What the device that scanned the code calls itself */
+            device?: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        QRAnswer: {
+            allow: boolean;
+        };
+        QRRedeem: {
+            code: string;
+            device: string;
+        };
+        QRTicket: {
+            ticket: string;
+        };
+        ServerHello: {
+            /** @enum {string} */
+            app: "mediarr";
+            version: string;
         };
         OIDCExchange: {
             code: string;
@@ -4520,6 +4656,8 @@ export interface components {
             /** @description Applies after a restart of the worker */
             analysisWorkers: number;
             externalScanHours: number;
+            /** @description Apps on the same network can find this server. Left out keeps it on */
+            visibleOnNetwork?: boolean;
         };
         EmailSettings: {
             enabled: boolean;
@@ -9003,6 +9141,160 @@ export interface operations {
             400: components["responses"]["Error"];
             401: components["responses"]["Error"];
             409: components["responses"]["Error"];
+        };
+    };
+    createQRSignIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The code, valid for five minutes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QRSignIn"];
+                };
+            };
+            401: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    getQRSignIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QRSignInState"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    answerQRSignIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QRAnswer"];
+            };
+        };
+        responses: {
+            /** @description Answered */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    redeemQRSignIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QRRedeem"];
+            };
+        };
+        responses: {
+            /** @description Waiting for the signed-in device to answer */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QRTicket"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
+    waitQRSignIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QRTicket"];
+            };
+        };
+        responses: {
+            /** @description Allowed and signed in */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description Not answered yet; ask again */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    getServerHello: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description This is Mediarr */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerHello"];
+                };
+            };
+            404: components["responses"]["Error"];
         };
     };
     listMyImports: {

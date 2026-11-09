@@ -15,6 +15,22 @@ The app shows your library and backs up your phone in the background.
 
 Enter your server's address, such as `http://192.168.1.20:9851`, and your account. The phone must be able to reach that address.
 
+### Finding the server
+
+On the sign-in screen the app looks for Mediarr servers on the Wi-Fi the phone is on and lists them under **On this network**. Tap one to fill in its address. The app asks each address of the network on port 9851, which works with the standard `docker-compose.yml`, and also listens for servers that announce themselves over mDNS (`_mediarr._tcp`), which needs the server container on the host network. iPhone asks once for permission to use the local network.
+
+An administrator can turn this off under **Administration → Server → Apps on the same network can find this server**, or in the app under **Settings → Networking**. Finding a server never signs anyone in.
+
+### Sign in on a phone with a QR code
+
+Without typing a password on the phone:
+
+1. Where you are already signed in, on the web or in the app, open the account menu and choose **Sign in on a phone** (in the app, **Sign in on another device**). A QR code and an eight-character code appear. They work once and for five minutes.
+2. In the app on the new phone, tap **Scan QR code** on the sign-in screen and point the camera at the code. Or tap **Enter a sign-in code** and type it, after the server's address.
+3. The screen with the code asks **Allow sign-in on (phone)?** Choose **Allow** only if it is your phone. A photo of the code alone gives nobody access.
+
+The new phone shows under **Account → Devices**, where it can be signed out, and the security log records the sign-in. It also works for accounts that sign in only with single sign-on or a passkey. If you opened the web on the server itself (`localhost`), type the address the phone reaches into the dialog, so the QR code carries that address.
+
 ## Backup
 
 Choose which albums go to the server under **Backup** in the app. Uploads continue where they stopped after a lost connection, and files already on the server are not sent again.

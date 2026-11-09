@@ -161,7 +161,7 @@ const underMaintenance = "this server is being maintained; try again later"
 func (s *apiServer) enforceMaintenance(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
-		if !strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/api/auth/") || path == "/api/health" {
+		if !strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/api/auth/") || path == "/api/health" || path == serverHelloPath {
 			next.ServeHTTP(w, r)
 			return
 		}

@@ -178,6 +178,8 @@ func serve(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
+	go app.AdvertiseOnNetwork(ctx, queries, cfg.PublicPort)
+
 	srv := &http.Server{
 		Addr:              cfg.ListenAddr,
 		Handler:           handler,

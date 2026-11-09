@@ -92,8 +92,12 @@
 	<string>Mediarr shows your photos and videos here so you can choose which ones to upload to your own server.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Mediarr can save photos from your server to this device.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_mediarr._tcp</string>
+	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Mediarr connects to your own server on the local network.</string>
+	<string>Mediarr finds and connects to your own server on the local network.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

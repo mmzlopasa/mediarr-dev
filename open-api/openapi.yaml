@@ -2358,6 +2358,95 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/auth/qr:
+    post:
+      operationId: createQRSignIn
+      summary: A one-time code that lets another device sign in to this account once I allow it
+      responses:
+        "200":
+          description: The code, valid for five minutes
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QRSignIn" }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/auth/qr/{id}:
+    get:
+      operationId: getQRSignIn
+      summary: Whether a device has scanned my code and is waiting for an answer
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QRSignInState" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/auth/qr/{id}/answer:
+    post:
+      operationId: answerQRSignIn
+      summary: Allow or deny the device that scanned my code
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QRAnswer" }
+      responses:
+        "204": { description: Answered }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/auth/qr/redeem:
+    post:
+      operationId: redeemQRSignIn
+      summary: A new device hands in a scanned code and gets a ticket to wait with
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QRRedeem" }
+      responses:
+        "200":
+          description: Waiting for the signed-in device to answer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QRTicket" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/auth/qr/wait:
+    post:
+      operationId: waitQRSignIn
+      summary: Waits up to 25 seconds for the answer; when allowed, this device is signed in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QRTicket" }
+      responses:
+        "200":
+          description: Allowed and signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "202": { description: Not answered yet; ask again }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/server/hello:
+    get:
+      operationId: getServerHello
+      summary: Lets an app on the same network recognise a Mediarr server; only its version
+      responses:
+        "200":
+          description: This is Mediarr
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerHello" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/imports:
     get:
       operationId: listMyImports
@@ -3283,6 +3372,44 @@ components:
         loginMessage: { type: string }
         passkeys: { type: boolean, description: "This address can use passkeys: HTTPS and a domain name" }
         ssoLabel: { type: string, description: "The name of the single sign-on button, if it is turned on" }
+    QRSignIn:
+      type: object
+      required: [id, code, link, expiresAt]
+      properties:
+        id: { type: string }
+        code: { type: string, description: "Eight characters, shown as XXXX-XXXX for typing by hand" }
+        link: { type: string, description: "mediarr://sign-in?server=...&code=..., the contents of the QR code" }
+        server: { type: string, description: "The address the code was made on" }
+        expiresAt: { type: string, format: date-time }
+    QRSignInState:
+      type: object
+      required: [status, expiresAt]
+      properties:
+        status: { type: string, enum: [waiting, requested, allowed, denied, used, expired] }
+        device: { type: string, description: "What the device that scanned the code calls itself" }
+        expiresAt: { type: string, format: date-time }
+    QRAnswer:
+      type: object
+      required: [allow]
+      properties:
+        allow: { type: boolean }
+    QRRedeem:
+      type: object
+      required: [code, device]
+      properties:
+        code: { type: string }
+        device: { type: string, maxLength: 80 }
+    QRTicket:
+      type: object
+      required: [ticket]
+      properties:
+        ticket: { type: string }
+    ServerHello:
+      type: object
+      required: [app, version]
+      properties:
+        app: { type: string, enum: [mediarr] }
+        version: { type: string }
     OIDCExchange:
       type: object
       required: [code, verifier]
@@ -4354,6 +4481,7 @@ components:
         videoWorkers: { type: integer, description: "Applies after a restart of the worker" }
         analysisWorkers: { type: integer, description: "Applies after a restart of the worker" }
         externalScanHours: { type: integer }
+        visibleOnNetwork: { type: boolean, description: "Apps on the same network can find this server. Left out keeps it on" }
     EmailSettings:
       type: object
       required: [enabled, host, port, username, from, security, publicUrl, hasPassword]

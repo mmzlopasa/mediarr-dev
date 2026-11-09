@@ -63,6 +63,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**addAlbumAssets**](doc//DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
 *DefaultApi* | [**addBackupDestination**](doc//DefaultApi.md#addbackupdestination) | **POST** /api/admin/backup/destinations | Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
 *DefaultApi* | [**addFamilyMember**](doc//DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
+*DefaultApi* | [**answerQRSignIn**](doc//DefaultApi.md#answerqrsignin) | **POST** /api/auth/qr/{id}/answer | Allow or deny the device that scanned my code
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
 *DefaultApi* | [**applyStorageTemplate**](doc//DefaultApi.md#applystoragetemplate) | **POST** /api/admin/storage-template/apply | Put every uploaded original where the template says, or with dryRun only say what would move
 *DefaultApi* | [**approveDevice**](doc//DefaultApi.md#approvedevice) | **POST** /api/admin/security/devices/{id}/approve | Let this device sign in
@@ -86,6 +87,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**createImport**](doc//DefaultApi.md#createimport) | **POST** /api/admin/imports | Bring a library in from Immich, Google Takeout or an iCloud export
 *DefaultApi* | [**createMyImport**](doc//DefaultApi.md#createmyimport) | **POST** /api/imports | Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
 *DefaultApi* | [**createPublicUpload**](doc//DefaultApi.md#createpublicupload) | **POST** /api/public/{token}/uploads | Send one whole file to a public album (tus 1.0 creation with upload)
+*DefaultApi* | [**createQRSignIn**](doc//DefaultApi.md#createqrsignin) | **POST** /api/auth/qr | A one-time code that lets another device sign in to this account once I allow it
 *DefaultApi* | [**createStoryExport**](doc//DefaultApi.md#createstoryexport) | **POST** /api/stories | Make a video of the chosen photos. Runs in the background.
 *DefaultApi* | [**createUpload**](doc//DefaultApi.md#createupload) | **POST** /api/uploads | Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
 *DefaultApi* | [**createUser**](doc//DefaultApi.md#createuser) | **POST** /api/admin/users | Create a user
@@ -174,8 +176,10 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getPublicOriginal**](doc//DefaultApi.md#getpublicoriginal) | **GET** /api/public/{token}/assets/{id}/original | Download an original. Counts toward the link's limit.
 *DefaultApi* | [**getPublicThumbnail**](doc//DefaultApi.md#getpublicthumbnail) | **GET** /api/public/{token}/assets/{id}/thumbnail | A preview from a public album, with the link's watermark if it has one
 *DefaultApi* | [**getPublicVideoFile**](doc//DefaultApi.md#getpublicvideofile) | **GET** /api/public/{token}/assets/{id}/video/{file} | HLS files of a video in a public album
+*DefaultApi* | [**getQRSignIn**](doc//DefaultApi.md#getqrsignin) | **GET** /api/auth/qr/{id} | Whether a device has scanned my code and is waiting for an answer
 *DefaultApi* | [**getSearchOptions**](doc//DefaultApi.md#getsearchoptions) | **GET** /api/search/options | The cameras, lenses, places and tags in the user's library, to choose from in the filters
 *DefaultApi* | [**getSecurity**](doc//DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
+*DefaultApi* | [**getServerHello**](doc//DefaultApi.md#getserverhello) | **GET** /api/server/hello | Lets an app on the same network recognise a Mediarr server; only its version
 *DefaultApi* | [**getServerSettings**](doc//DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
 *DefaultApi* | [**getServerStatus**](doc//DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
 *DefaultApi* | [**getStorageTemplate**](doc//DefaultApi.md#getstoragetemplate) | **GET** /api/admin/storage-template | How originals are laid out in each user's folder, and what the last run over all of them did
@@ -229,6 +233,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**pauseJobQueue**](doc//DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 *DefaultApi* | [**previewStorageTemplate**](doc//DefaultApi.md#previewstoragetemplate) | **POST** /api/admin/storage-template/preview | Where a template would put a few real originals, without moving anything
 *DefaultApi* | [**readNotifications**](doc//DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
+*DefaultApi* | [**redeemQRSignIn**](doc//DefaultApi.md#redeemqrsignin) | **POST** /api/auth/qr/redeem | A new device hands in a scanned code and gets a ticket to wait with
 *DefaultApi* | [**reinviteKeepGuest**](doc//DefaultApi.md#reinvitekeepguest) | **POST** /api/admin/keep/guests/{id}/invite | A new code for a guest that has not paired yet
 *DefaultApi* | [**removeAlbumAssets**](doc//DefaultApi.md#removealbumassets) | **POST** /api/albums/{id}/assets/remove | Remove assets from an album. A contributor can remove only what they added.
 *DefaultApi* | [**removeAlbumHeart**](doc//DefaultApi.md#removealbumheart) | **DELETE** /api/albums/{id}/assets/{assetId}/heart | Take back your heart
@@ -286,6 +291,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**updateKeepGuest**](doc//DefaultApi.md#updatekeepguest) | **PATCH** /api/admin/keep/guests/{id} | Change how much a guest may keep here, or stop and start taking its backup
 *DefaultApi* | [**updatePerson**](doc//DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 *DefaultApi* | [**updateProfile**](doc//DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, or email address with the current password
+*DefaultApi* | [**waitQRSignIn**](doc//DefaultApi.md#waitqrsignin) | **POST** /api/auth/qr/wait | Waits up to 25 seconds for the answer; when allowed, this device is signed in
 
 
 ## Documentation For Models
@@ -414,6 +420,11 @@ Class | Method | HTTP request | Description
  - [PlaceList](doc//PlaceList.md)
  - [ProfileUpdate](doc//ProfileUpdate.md)
  - [PublicLink](doc//PublicLink.md)
+ - [QRAnswer](doc//QRAnswer.md)
+ - [QRRedeem](doc//QRRedeem.md)
+ - [QRSignIn](doc//QRSignIn.md)
+ - [QRSignInState](doc//QRSignInState.md)
+ - [QRTicket](doc//QRTicket.md)
  - [QuotaUpdate](doc//QuotaUpdate.md)
  - [SearchFilters](doc//SearchFilters.md)
  - [SearchOptions](doc//SearchOptions.md)
@@ -422,6 +433,7 @@ Class | Method | HTTP request | Description
  - [SecurityEvent](doc//SecurityEvent.md)
  - [SecuritySettings](doc//SecuritySettings.md)
  - [SecurityUpdate](doc//SecurityUpdate.md)
+ - [ServerHello](doc//ServerHello.md)
  - [ServerSettings](doc//ServerSettings.md)
  - [ServerStatus](doc//ServerStatus.md)
  - [SetupRequest](doc//SetupRequest.md)

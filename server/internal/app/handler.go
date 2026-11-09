@@ -86,6 +86,7 @@ type apiServer struct {
 	oidcFlows         *shortLived[oidcFlow]
 	oidcCodes         *shortLived[oidcAppCode]
 	passkeyChallenges *shortLived[passkeyChallenge]
+	qrSignIns         *qrSignIns
 	guestBytes        *byteBudget
 	uploads           *tusd.UnroutedHandler
 	// fullPreviews limits how many full resolution previews are made at once.
@@ -107,6 +108,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		oidcFlows:         newShortLived[oidcFlow](),
 		oidcCodes:         newShortLived[oidcAppCode](),
 		passkeyChallenges: newShortLived[passkeyChallenge](),
+		qrSignIns:         newQRSignIns(),
 		guestBytes:        newByteBudget(),
 		blockedLogged:     auth.NewLimiter(1, time.Minute),
 		resetLimiter:      auth.NewLimiter(5, time.Hour),
