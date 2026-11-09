@@ -4609,4 +4609,142 @@ class AppLocalizationsEn extends AppLocalizations {
   String notificationsLinkOpened(String subject) {
     return 'Your link “$subject” was opened for the first time.';
   }
+
+  @override
+  String get cullTitle => 'Cull';
+
+  @override
+  String get cullMark => 'Mark';
+
+  @override
+  String get cullPick => 'Pick';
+
+  @override
+  String get cullReject => 'Reject';
+
+  @override
+  String get cullNoMark => 'No mark';
+
+  @override
+  String get cullPicks => 'Picks';
+
+  @override
+  String get cullRejects => 'Rejects';
+
+  @override
+  String get cullUnmarked => 'Unmarked';
+
+  @override
+  String get cullAddToCompare => 'Compare';
+
+  @override
+  String get cullRemoveFromCompare => 'Take out of comparison';
+
+  @override
+  String get cullStopComparing => 'End comparison';
+
+  @override
+  String get cullPicksToAlbum => 'Picks to new album';
+
+  @override
+  String get cullRejectsToTrash => 'Rejects to trash';
+
+  @override
+  String get cullNothing => 'There are no photos of yours to go through here.';
+
+  @override
+  String get cullNoneWithMark => 'No photos have this mark.';
+
+  @override
+  String get cullNotSaved => 'Not saved';
+
+  @override
+  String get cullActionFailed => 'The action failed';
+
+  @override
+  String get cullLoadFailed => 'The marks could not be loaded.';
+
+  @override
+  String get cullAlbumName => 'Name';
+
+  @override
+  String get cullCreateAlbum => 'Create';
+
+  @override
+  String cullTally(int picks, int rejects) {
+    return '$picks picked · $rejects rejected';
+  }
+
+  @override
+  String cullConfirmTrash(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rejected photos move to the trash and can be restored.',
+      one: '1 rejected photo moves to the trash and can be restored.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullMovedToTrash(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos moved to the trash',
+      one: '1 photo moved to the trash',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullAlbumMade(int count, String title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos are in the album $title',
+      one: '1 photo is in the album $title',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullAlbumWillHold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The album will hold $count picked photos.',
+      one: 'The album will hold 1 picked photo.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminMlTitle => 'Analysis service';
+
+  @override
+  String get adminMlConnected => 'Connected';
+
+  @override
+  String get adminMlLoaded => 'Loaded models';
+
+  @override
+  String get adminMlMemory => 'Memory';
+
+  @override
+  String get adminMlAcceleration => 'Acceleration';
+
+  @override
+  String get adminMlNoneLoaded => 'None right now';
+
+  @override
+  String get adminMlState => 'Status';
+
+  @override
+  String get adminMlUnreachable =>
+      'Cannot be reached. Analysis waits and continues when it is back; until then search uses words on pictures and file names.';
+
+  @override
+  String get adminMlWrongToken =>
+      'The service refused the token. ML_TOKEN must be the same in .env here and on the computer that runs it.';
 }

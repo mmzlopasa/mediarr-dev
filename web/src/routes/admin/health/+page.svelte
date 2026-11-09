@@ -85,6 +85,37 @@
 	<Skeleton height="220px" />
 {/if}
 
+{#if health?.ml}
+	{@const ml = health.ml}
+	<Card title={t('admin.health.analysisService')}>
+		<div class="btn-row" data-testid="ml-state">
+			{#if ml.state === 'connected'}
+				<Badge kind="ok">{t('admin.health.mlConnected')}</Badge>
+			{:else if ml.state === 'wrongToken'}
+				<Badge kind="bad">{t('admin.health.mlWrongToken')}</Badge>
+			{:else}
+				<Badge kind="bad">{t('admin.health.mlUnreachable')}</Badge>
+			{/if}
+		</div>
+		{#if ml.models}
+			{@const loaded = ml.models.filter((model) => model.loaded).map((model) => model.name)}
+			<Kv
+				label={t('admin.health.mlLoadedModels')}
+				value={loaded.length ? loaded.join(', ') : t('admin.health.mlNoneLoaded')}
+			/>
+		{/if}
+		{#if ml.rssBytes != null}
+			<Kv label={t('admin.health.mlMemory')} value={formatBytes(ml.rssBytes)} />
+		{/if}
+		{#if ml.acceleration}
+			<Kv
+				label={t('admin.health.mlAcceleration')}
+				value={`${ml.acceleration.requested} (${ml.acceleration.providers.join(', ')})`}
+			/>
+		{/if}
+	</Card>
+{/if}
+
 <Card title={t('admin.health.checkTheOriginals')}>
 	<p class="alb-meta">
 		{t('admin.health.aCheckChangesNoFile')}

@@ -1,9 +1,11 @@
+import { appendFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
-const FIRST_VIEW_LIMIT_MS = 1000;
-const MIN_FPS = 55;
+// A shared runner has slow moments, so each result is the median of several passes.
 const RUNS = 5;
-const SEARCH_P95_LIMIT_MS = 300;
+const SEARCH_PASSES = 3;
+// The server allows 120 searches a minute, so each pass waits out the one before.
+const SEARCH_WINDOW_MS = 61000;
 
 async function signIn(page: Page) {
 	const response = await page.request.post('/api/auth/login', {
@@ -14,6 +16,43 @@ async function signIn(page: Page) {
 
 const median = (values: number[]) =>
 	[...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
+
+const p95 = (values: number[]) =>
+	[...values].sort((a, b) => a - b)[Math.ceil(values.length * 0.95) - 1];
+
+// Limits are enforced in report.mjs, so that one result over its limit does not stop the others.
+function record(key: string, value: number, detail: string) {
+	if (process.env.BENCH_RESULTS) {
+		appendFileSync(process.env.BENCH_RESULTS, `${JSON.stringify({ key, value, detail })}\n`);
+	}
+}
+
+// Times the same requests in several passes, and records the median of the p95 of each.
+async function searchPasses(
+	page: Page,
+	key: string,
+	paths: string[],
+	check?: (body: never) => void
+) {
+	const passes: number[] = [];
+	for (let pass = 0; pass < SEARCH_PASSES; pass++) {
+		if (pass > 0) await page.waitForTimeout(SEARCH_WINDOW_MS);
+		const times: number[] = [];
+		for (const path of paths) {
+			const started = Date.now();
+			const response = await page.request.get(path);
+			times.push(Date.now() - started);
+			expect(response.status()).toBe(200);
+			check?.((await response.json()) as never);
+		}
+		passes.push(p95(times));
+	}
+	record(
+		key,
+		median(passes),
+		`median of ${SEARCH_PASSES} passes of ${paths.length}: ${passes.join(', ')}`
+	);
+}
 
 test('the first view of 100k assets takes under a second', async ({ page }) => {
 	await signIn(page);
@@ -28,22 +67,34 @@ test('the first view of 100k assets takes under a second', async ({ page }) => {
 		});
 		times.push(Date.now() - started);
 	}
-	console.log(`first view: median ${median(times)} ms, runs ${times.join(', ')}`);
+	record('firstView', median(times), `median of ${RUNS}: ${times.join(', ')}`);
 
 	const buckets = await page.request.get('/api/timeline/buckets');
 	const { buckets: months } = await buckets.json();
 	const total = months.reduce((sum: number, month: { count: number }) => sum + month.count, 0);
 	expect(total).toBe(100000);
-	console.log(
-		`months: ${months.length}, tiles rendered: ${await page.locator('.tl-tile').count()}`
-	);
+});
 
-	expect(median(times)).toBeLessThan(FIRST_VIEW_LIMIT_MS);
+test('clean up counts its categories quickly', async ({ page }) => {
+	await signIn(page);
+	const times: number[] = [];
+	let categories: { id: string; count: number }[] = [];
+	for (let run = 0; run < RUNS; run++) {
+		const started = Date.now();
+		const response = await page.request.get('/api/cleanup');
+		times.push(Date.now() - started);
+		expect(response.status()).toBe(200);
+		categories = (await response.json()).categories;
+	}
+	const counts = categories.map((category) => `${category.id} ${category.count}`).join(', ');
+	record('cleanup', median(times), `median of ${RUNS}: ${times.join(', ')}; ${counts}`);
+	// With nothing to count this would measure nothing.
+	for (const category of categories) expect(category.count, category.id).toBeGreaterThan(0);
 });
 
 test('smart search answers within its limit, in both languages', async ({ page }) => {
 	// The first run on a machine also fetches the model.
-	test.setTimeout(900000);
+	test.setTimeout(1500000);
 	await signIn(page);
 	const subjects = [
 		'pas na plaži',
@@ -98,44 +149,31 @@ test('smart search answers within its limit, in both languages', async ({ page }
 		)
 		.toBe(true);
 
-	const times: number[] = [];
-	for (const subject of subjects) {
-		const started = Date.now();
-		const response = await page.request.get(`/api/search?q=${encodeURIComponent(subject)}`);
-		times.push(Date.now() - started);
-		expect(response.status()).toBe(200);
-		const result = await response.json();
-		expect(result.smart).toBe(true);
-		expect(result.items.length).toBeGreaterThan(0);
-	}
-	times.sort((a, b) => a - b);
-	const p95 = times[Math.ceil(times.length * 0.95) - 1];
-	console.log(`smart search: p50 ${median(times)} ms, p95 ${p95} ms, worst ${times.at(-1)} ms`);
-	expect(p95).toBeLessThan(SEARCH_P95_LIMIT_MS);
-
-	// The same words with filters, and filters alone, stay as fast. The server allows 120 searches
-	// a minute, so the minute above is waited out first, and this stays under it.
-	await page.waitForTimeout(61000);
-	const filtered: number[] = [];
-	for (const subject of subjects.slice(0, 30)) {
-		for (const filters of [
-			'&type=photo&from=2015-01-01&to=2026-12-31',
-			'&notInAlbum=true&minRating=0',
-			'&type=video'
-		]) {
-			const q = filters === '&type=video' ? '' : `q=${encodeURIComponent(subject)}`;
-			const started = Date.now();
-			const response = await page.request.get(`/api/search?${q}${filters}`);
-			filtered.push(Date.now() - started);
-			expect(response.status()).toBe(200);
+	await searchPasses(
+		page,
+		'smartSearch',
+		subjects.map((subject) => `/api/search?q=${encodeURIComponent(subject)}`),
+		(result: { smart: boolean; items: unknown[] }) => {
+			expect(result.smart).toBe(true);
+			expect(result.items.length).toBeGreaterThan(0);
 		}
-	}
-	filtered.sort((a, b) => a - b);
-	const filteredP95 = filtered[Math.ceil(filtered.length * 0.95) - 1];
-	console.log(
-		`search with filters: p50 ${median(filtered)} ms, p95 ${filteredP95} ms, worst ${filtered.at(-1)} ms`
 	);
-	expect(filteredP95).toBeLessThan(SEARCH_P95_LIMIT_MS);
+
+	// The same words with filters, and filters alone, stay as fast.
+	await page.waitForTimeout(SEARCH_WINDOW_MS);
+	const filtered = subjects
+		.slice(0, 30)
+		.flatMap((subject) =>
+			[
+				'&type=photo&from=2015-01-01&to=2026-12-31',
+				'&notInAlbum=true&minRating=0',
+				'&type=video'
+			].map(
+				(filters) =>
+					`/api/search?${filters === '&type=video' ? '' : `q=${encodeURIComponent(subject)}`}${filters}`
+			)
+		);
+	await searchPasses(page, 'filteredSearch', filtered);
 });
 
 test('scrolling stays smooth', async ({ page }) => {
@@ -183,32 +221,34 @@ test('scrolling stays smooth', async ({ page }) => {
 				}
 			)
 	);
-	console.log(
-		`scroll: ${result.fps.toFixed(1)} fps, frames over 34 ms: ${result.slow}, worst ${result.worst} ms, ` +
-			`most tiles at once: ${result.tiles}, distance ${result.distance} px`
+	record(
+		'fps',
+		Math.round(result.fps * 10) / 10,
+		`frames over 34 ms: ${result.slow}, worst ${result.worst} ms, most tiles ${result.tiles}`
 	);
 
 	// Virtualization: however large the library, only what is near the screen exists.
 	expect(result.tiles).toBeLessThan(400);
 	expect(result.distance).toBeGreaterThan(5000);
-	if (!process.env.BENCH_SKIP_FPS) expect(result.fps).toBeGreaterThanOrEqual(MIN_FPS);
 });
 
 test('jumping far down loads that month quickly', async ({ page }) => {
 	await signIn(page);
-	await page.goto('/');
-	await page.locator('.tl-tile').first().waitFor();
-	const height = await page.evaluate(() => document.documentElement.scrollHeight);
-	const started = Date.now();
-	await page.evaluate((y) => window.scrollTo(0, y), Math.floor(height * 0.7));
-	await page.waitForFunction(() => {
-		const inView = [...document.querySelectorAll('.tl-tile')].filter((tile) => {
-			const box = tile.getBoundingClientRect();
-			return box.top < window.innerHeight && box.bottom > 0;
+	const times: number[] = [];
+	for (let run = 0; run < RUNS; run++) {
+		await page.goto('/');
+		await page.locator('.tl-tile').first().waitFor();
+		const height = await page.evaluate(() => document.documentElement.scrollHeight);
+		const started = Date.now();
+		await page.evaluate((y) => window.scrollTo(0, y), Math.floor(height * 0.7));
+		await page.waitForFunction(() => {
+			const inView = [...document.querySelectorAll('.tl-tile')].filter((tile) => {
+				const box = tile.getBoundingClientRect();
+				return box.top < window.innerHeight && box.bottom > 0;
+			});
+			return inView.length > 0;
 		});
-		return inView.length > 0;
-	});
-	const elapsed = Date.now() - started;
-	console.log(`jump to 70%: ${elapsed} ms`);
-	expect(elapsed).toBeLessThan(2000);
+		times.push(Date.now() - started);
+	}
+	record('jump', median(times), `median of ${RUNS}: ${times.join(', ')}`);
 });

@@ -4683,4 +4683,153 @@ class AppLocalizationsSl extends AppLocalizations {
   String notificationsLinkOpened(String subject) {
     return 'Tvoja povezava »$subject« je bila prvič odprta.';
   }
+
+  @override
+  String get cullTitle => 'Izbor posnetkov';
+
+  @override
+  String get cullMark => 'Oznaka';
+
+  @override
+  String get cullPick => 'Izbrano';
+
+  @override
+  String get cullReject => 'Zavrnjeno';
+
+  @override
+  String get cullNoMark => 'Brez oznake';
+
+  @override
+  String get cullPicks => 'Izbrane';
+
+  @override
+  String get cullRejects => 'Zavrnjene';
+
+  @override
+  String get cullUnmarked => 'Brez oznake';
+
+  @override
+  String get cullAddToCompare => 'Primerjaj';
+
+  @override
+  String get cullRemoveFromCompare => 'Odstrani iz primerjave';
+
+  @override
+  String get cullStopComparing => 'Končaj primerjavo';
+
+  @override
+  String get cullPicksToAlbum => 'Izbrane v nov album';
+
+  @override
+  String get cullRejectsToTrash => 'Zavrnjene v koš';
+
+  @override
+  String get cullNothing => 'Tukaj ni vaših fotografij za izbor.';
+
+  @override
+  String get cullNoneWithMark => 'Nobena fotografija nima te oznake.';
+
+  @override
+  String get cullNotSaved => 'Ni shranjeno';
+
+  @override
+  String get cullActionFailed => 'Dejanje ni uspelo';
+
+  @override
+  String get cullLoadFailed => 'Oznak ni bilo mogoče naložiti.';
+
+  @override
+  String get cullAlbumName => 'Ime';
+
+  @override
+  String get cullCreateAlbum => 'Ustvari';
+
+  @override
+  String cullTally(int picks, int rejects) {
+    return 'Izbrano: $picks · Zavrnjeno: $rejects';
+  }
+
+  @override
+  String cullConfirmTrash(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count zavrnjenih fotografij gre v koš in jih je mogoče obnoviti.',
+      few:
+          '$count zavrnjene fotografije gredo v koš in jih je mogoče obnoviti.',
+      two:
+          '$count zavrnjeni fotografiji gresta v koš in ju je mogoče obnoviti.',
+      one: '$count zavrnjena fotografija gre v koš in jo je mogoče obnoviti.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullMovedToTrash(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fotografij premaknjenih v koš',
+      few: '$count fotografije premaknjene v koš',
+      two: '$count fotografiji premaknjeni v koš',
+      one: '$count fotografija premaknjena v koš',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullAlbumMade(int count, String title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fotografij je v albumu $title',
+      few: '$count fotografije so v albumu $title',
+      two: '$count fotografiji sta v albumu $title',
+      one: '$count fotografija je v albumu $title',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullAlbumWillHold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'V albumu bo $count izbranih fotografij.',
+      few: 'V albumu bodo $count izbrane fotografije.',
+      two: 'V albumu bosta $count izbrani fotografiji.',
+      one: 'V albumu bo $count izbrana fotografija.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminMlTitle => 'Storitev za analizo';
+
+  @override
+  String get adminMlConnected => 'Povezano';
+
+  @override
+  String get adminMlLoaded => 'Naloženi modeli';
+
+  @override
+  String get adminMlMemory => 'Pomnilnik';
+
+  @override
+  String get adminMlAcceleration => 'Pospešitev';
+
+  @override
+  String get adminMlNoneLoaded => 'Trenutno noben';
+
+  @override
+  String get adminMlState => 'Stanje';
+
+  @override
+  String get adminMlUnreachable =>
+      'Ni dosegljivo. Analiza počaka in se nadaljuje, ko se vrne; do takrat iskanje upošteva besedilo na slikah in imena datotek.';
+
+  @override
+  String get adminMlWrongToken =>
+      'Storitev je zavrnila žeton. ML_TOKEN mora biti enak v .env tukaj in na računalniku, kjer storitev teče.';
 }

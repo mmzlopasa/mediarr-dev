@@ -41,6 +41,7 @@ SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a
 FROM assets a
 WHERE a.id IN (SELECT album_item_ids($1))
   AND a.local_at >= $2 AND a.local_at < $3
+  AND ($4::smallint IS NULL OR (a.pick = $4 AND a.user_id = $5))
 ORDER BY a.local_at DESC, a.id DESC
 `
 
@@ -48,6 +49,8 @@ type AlbumBucketParams struct {
 	AlbumID pgtype.UUID
 	FromAt  pgtype.Timestamp
 	ToAt    pgtype.Timestamp
+	Pick    pgtype.Int2
+	Viewer  pgtype.UUID
 }
 
 type AlbumBucketRow struct {
@@ -67,7 +70,13 @@ type AlbumBucketRow struct {
 }
 
 func (q *Queries) AlbumBucket(ctx context.Context, arg AlbumBucketParams) ([]AlbumBucketRow, error) {
-	rows, err := q.db.Query(ctx, albumBucket, arg.AlbumID, arg.FromAt, arg.ToAt)
+	rows, err := q.db.Query(ctx, albumBucket,
+		arg.AlbumID,
+		arg.FromAt,
+		arg.ToAt,
+		arg.Pick,
+		arg.Viewer,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -104,17 +113,24 @@ const albumBuckets = `-- name: AlbumBuckets :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
 WHERE a.id IN (SELECT album_item_ids($1))
+  AND ($2::smallint IS NULL OR (a.pick = $2 AND a.user_id = $3))
 GROUP BY 1
 ORDER BY 1 DESC
 `
+
+type AlbumBucketsParams struct {
+	AlbumID pgtype.UUID
+	Pick    pgtype.Int2
+	Viewer  pgtype.UUID
+}
 
 type AlbumBucketsRow struct {
 	Month string
 	Count int64
 }
 
-func (q *Queries) AlbumBuckets(ctx context.Context, pAlbum pgtype.UUID) ([]AlbumBucketsRow, error) {
-	rows, err := q.db.Query(ctx, albumBuckets, pAlbum)
+func (q *Queries) AlbumBuckets(ctx context.Context, arg AlbumBucketsParams) ([]AlbumBucketsRow, error) {
+	rows, err := q.db.Query(ctx, albumBuckets, arg.AlbumID, arg.Pick, arg.Viewer)
 	if err != nil {
 		return nil, err
 	}
@@ -574,7 +590,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 }
 
 const getVisibleAsset = `-- name: GetVisibleAsset :one
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none, cleanup_kept_at, screenshot_hint, vhash FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none, cleanup_kept_at, screenshot_hint, vhash, pick FROM assets WHERE id = $1 AND asset_visible_to(id, $2)
 `
 
 type GetVisibleAssetParams struct {
@@ -645,6 +661,7 @@ func (q *Queries) GetVisibleAsset(ctx context.Context, arg GetVisibleAssetParams
 		&i.CleanupKeptAt,
 		&i.ScreenshotHint,
 		&i.Vhash,
+		&i.Pick,
 	)
 	return i, err
 }
@@ -1016,7 +1033,7 @@ func (q *Queries) ListPartnersReceived(ctx context.Context, partnerID pgtype.UUI
 }
 
 const listVisibleAssets = `-- name: ListVisibleAssets :many
-SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none, cleanup_kept_at, screenshot_hint, vhash FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
+SELECT id, user_id, library_id, checksum, original_name, original_path, size_bytes, mime_type, kind, status, error, width, height, blurhash, taken_at, taken_offset_minutes, created_at, updated_at, is_favorite, archived_at, deleted_at, aspect_ratio, local_at, content_id, live_photo_of, duration_ms, video_codec, sprite_columns, sprite_rows, sprite_count, sprite_interval_ms, vault_at, stack_parent, stack_free, stack_chosen, phash, sharpness, organized_at, missing_at, edits, edit_revision, edit_applied, import_taken_at, import_latitude, import_longitude, checksum_sha1, manual_taken_at, manual_offset_minutes, manual_latitude, manual_longitude, caption, rating, rating_by_owner, import_offset_minutes, projection, manual_location_none, cleanup_kept_at, screenshot_hint, vhash, pick FROM assets WHERE id = ANY($1::uuid[]) AND asset_visible_to(id, $2)
 `
 
 type ListVisibleAssetsParams struct {
@@ -1093,6 +1110,7 @@ func (q *Queries) ListVisibleAssets(ctx context.Context, arg ListVisibleAssetsPa
 			&i.CleanupKeptAt,
 			&i.ScreenshotHint,
 			&i.Vhash,
+			&i.Pick,
 		); err != nil {
 			return nil, err
 		}

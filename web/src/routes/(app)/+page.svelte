@@ -142,7 +142,7 @@
 
 <Stories />
 
-<Timeline bind:this={timeline} onOpen={open} onCount={(count) => (total = count)}>
+<Timeline bind:this={timeline} cull onOpen={open} onCount={(count) => (total = count)}>
 	{#snippet selectionActions(ids, clear)}
 		<ShareButton {ids} onDone={clear} />
 		<AddToAlbum {ids} onDone={clear} />

@@ -78,7 +78,10 @@
 	let order = $state<Album['order']>('newest');
 	let rules = $state<AlbumRules>({});
 
-	const source = $derived(albumSource(id));
+	// Which mark the album is narrowed to; empty is every photo.
+	let pickFilter = $state('');
+	let filteredCount = $state<number>();
+	const source = $derived(albumSource(id, pickFilter === '' ? undefined : Number(pickFilter)));
 	const role = $derived(album?.role);
 	const canAdd = $derived(!album?.isSmart && role !== 'viewer');
 	const canEdit = $derived(role === 'owner' || role === 'editor');
@@ -272,6 +275,12 @@
 					{t('common.slideshow')}
 				</Button>
 			{/if}
+			{#if isOwner && album.assetCount > 0}
+				<Button small onclick={() => timeline?.startCull()}>
+					<Icon name="check" size={14} />
+					{t('cull.title')}
+				</Button>
+			{/if}
 			<Button small href={`${resolve('/(app)/search')}?album=${id}`}>
 				<Icon name="search" size={14} />
 				{t('albums.id.searchInAlbum')}
@@ -345,35 +354,61 @@
 		</section>
 	{/if}
 
-	<Timeline
-		bind:this={timeline}
-		{source}
-		onOpen={open}
-		hrefFor={(photo) => `${resolve('/(app)/albums/[id]', { id })}?photo=${photo}`}
-		ownActions={false}
-		selectable={canAdd || canEdit}
-	>
-		{#snippet selectionActions(ids, clear)}
-			{#if canEdit && ids.length === 1}
-				<button
-					type="button"
-					class="icon-btn"
-					aria-label={t('albums.id.setAsCover')}
-					title={t('albums.id.setAsCover')}
-					onclick={() => setCover(ids[0], clear)}><Icon name="photo" /></button
-				>
-			{/if}
-			{#if canAdd}
-				<button
-					type="button"
-					class="icon-btn"
-					aria-label={t('albums.id.removeFromAlbum')}
-					title={t('albums.id.removeFromAlbum')}
-					onclick={() => removeSelected(ids, clear)}><Icon name="trash" /></button
-				>
-			{/if}
-		{/snippet}
-	</Timeline>
+	{#if album.assetCount > 0}
+		<div class="alb-filter">
+			<Select
+				inline
+				label={t('cull.mark')}
+				bind:value={pickFilter}
+				options={[
+					{ value: '', label: t('filterPanel.any') },
+					{ value: '1', label: t('cull.picks') },
+					{ value: '-1', label: t('cull.rejects') },
+					{ value: '0', label: t('cull.unmarked') }
+				]}
+			/>
+		</div>
+	{/if}
+
+	{#if pickFilter !== '' && filteredCount === 0}
+		<section class="card glass">
+			<div class="card-b"><EmptyState icon="album" text={t('cull.noneWithThisMark')} /></div>
+		</section>
+	{/if}
+
+	{#key pickFilter}
+		<Timeline
+			bind:this={timeline}
+			{source}
+			cull={isOwner}
+			onCount={(count) => (filteredCount = count)}
+			onOpen={open}
+			hrefFor={(photo) => `${resolve('/(app)/albums/[id]', { id })}?photo=${photo}`}
+			ownActions={false}
+			selectable={canAdd || canEdit}
+		>
+			{#snippet selectionActions(ids, clear)}
+				{#if canEdit && ids.length === 1}
+					<button
+						type="button"
+						class="icon-btn"
+						aria-label={t('albums.id.setAsCover')}
+						title={t('albums.id.setAsCover')}
+						onclick={() => setCover(ids[0], clear)}><Icon name="photo" /></button
+					>
+				{/if}
+				{#if canAdd}
+					<button
+						type="button"
+						class="icon-btn"
+						aria-label={t('albums.id.removeFromAlbum')}
+						title={t('albums.id.removeFromAlbum')}
+						onclick={() => removeSelected(ids, clear)}><Icon name="trash" /></button
+					>
+				{/if}
+			{/snippet}
+		</Timeline>
+	{/key}
 
 	{#if page.state.viewer}
 		<Viewer

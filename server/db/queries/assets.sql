@@ -250,6 +250,16 @@ WHERE a.user_id = sqlc.arg('user_id') AND a.deleted_at IS NULL AND a.taken_at IS
 ORDER BY abs(extract(epoch FROM (a.taken_at - sqlc.arg('at')::timestamptz)))
 LIMIT 1;
 
+-- name: SetAssetPick :many
+-- Only what the user owns, and what is still in the library, gets a mark.
+UPDATE assets SET pick = sqlc.arg('pick'), updated_at = now()
+WHERE user_id = sqlc.arg('user_id') AND id = ANY(sqlc.arg('ids')::uuid[]) AND deleted_at IS NULL
+RETURNING id;
+
+-- name: ListAssetPicks :many
+SELECT id, pick, rating FROM assets
+WHERE user_id = sqlc.arg('user_id') AND id = ANY(sqlc.arg('ids')::uuid[]) AND deleted_at IS NULL;
+
 -- name: SetOwnerRating :exec
 UPDATE assets SET rating = $2, rating_by_owner = true, updated_at = now() WHERE id = $1;
 

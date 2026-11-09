@@ -27,7 +27,7 @@ func analyzeAgain(t *testing.T, s *stack, url, id string) {
 	if err := asset.Scan(id); err != nil {
 		t.Fatal(err)
 	}
-	if err := jobs.AnalyzeAsset(context.Background(), s.pool, db.New(s.pool), ml.New(url), asset); err != nil {
+	if err := jobs.AnalyzeAsset(context.Background(), s.pool, db.New(s.pool), ml.New(url, ""), asset); err != nil {
 		t.Fatal(err)
 	}
 }

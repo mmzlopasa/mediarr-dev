@@ -37,6 +37,20 @@ Future<AssetEntity> addPhotoToAlbum(String albumName) async {
   return saved;
 }
 
+/// Waits for what the server was told, which no text on the screen shows.
+Future<void> waitUntil(
+  WidgetTester tester,
+  bool Function() done, {
+  Duration timeout = const Duration(seconds: 30),
+}) async {
+  final end = DateTime.now().add(timeout);
+  while (DateTime.now().isBefore(end)) {
+    await tester.pump(const Duration(milliseconds: 200));
+    if (done()) return;
+  }
+  fail('the server was not told in time');
+}
+
 /// Spinners and timers never settle, so this waits for what the user would wait for.
 Future<void> waitFor(
   WidgetTester tester,
@@ -187,6 +201,31 @@ void main() {
     // The simulator records the access, yet the app still reads it as not decided, and a dialog
     // nobody can answer then waits forever. On iOS this has to be confirmed on a real iPhone.
   }, skip: Platform.isIOS);
+
+  testWidgets('a day is gone through: a pick, a reject, then to the trash', (
+    tester,
+  ) async {
+    await signIn(tester, server.address, password);
+    final open = find.byTooltip('Cull');
+    await waitFor(tester, open);
+    await tester.tap(open.first);
+    await waitFor(tester, find.byKey(const Key('cull-tally')));
+
+    await tester.tap(find.text('Pick').last);
+    await waitUntil(tester, () => server.lastPick == 1);
+
+    await tester.drag(
+      find.byKey(const Key('cull-stage')),
+      const Offset(0, 300),
+    );
+    await waitUntil(tester, () => server.lastPick == -1);
+
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.byTooltip('Rejects to trash'));
+    await waitFor(tester, find.text('Delete'));
+    await tester.tap(find.text('Delete').last);
+    await waitUntil(tester, () => server.trashed.contains(photoId));
+  });
 
   testWidgets('the bell lists what the server has to say', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MediarrApp()));

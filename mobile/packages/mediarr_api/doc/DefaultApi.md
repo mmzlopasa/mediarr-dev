@@ -188,6 +188,7 @@ Method | HTTP request | Description
 [**pairKeepGuest**](DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 [**pauseJobQueue**](DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 [**previewStorageTemplate**](DefaultApi.md#previewstoragetemplate) | **POST** /api/admin/storage-template/preview | Where a template would put a few real originals, without moving anything
+[**readAssetPicks**](DefaultApi.md#readassetpicks) | **POST** /api/assets/pick/read | The marks and stars of the user's own photos among those asked about. Photos of others are left out.
 [**readNotifications**](DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
 [**redeemQRSignIn**](DefaultApi.md#redeemqrsignin) | **POST** /api/auth/qr/redeem | A new device hands in a scanned code and gets a ticket to wait with
 [**reinviteKeepGuest**](DefaultApi.md#reinvitekeepguest) | **POST** /api/admin/keep/guests/{id}/invite | A new code for a guest that has not paired yet
@@ -218,6 +219,7 @@ Method | HTTP request | Description
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 [**setAssetEdits**](DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 [**setAssetFacts**](DefaultApi.md#setassetfacts) | **PATCH** /api/assets/{id}/facts | Change the date, location or description of a photo. Its file is never changed
+[**setAssetPick**](DefaultApi.md#setassetpick) | **POST** /api/assets/pick | Marks the user's own photos as picked, rejected or neither. Photos of others are left out.
 [**setAvatar**](DefaultApi.md#setavatar) | **PUT** /api/me/avatar | A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
 [**setBackupQuietDays**](DefaultApi.md#setbackupquietdays) | **PUT** /api/me/backup-devices/quiet-days | After how many days without a report a device counts as quiet; 0 never warns
 [**setBackupSettings**](DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
@@ -2865,7 +2867,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getAlbumBucket**
-> TimelineBucket getAlbumBucket(id, month)
+> TimelineBucket getAlbumBucket(id, month, pick)
 
 Assets of one month in an album
 
@@ -2876,9 +2878,10 @@ import 'package:mediarr_api/api.dart';
 final api_instance = DefaultApi();
 final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
 final month = month_example; // String | 
+final pick = 56; // int | Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
 
 try {
-    final result = api_instance.getAlbumBucket(id, month);
+    final result = api_instance.getAlbumBucket(id, month, pick);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->getAlbumBucket: $e\n');
@@ -2891,6 +2894,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **String**|  | 
  **month** | **String**|  | 
+ **pick** | **int**| Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked | [optional] 
 
 ### Return type
 
@@ -2908,7 +2912,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getAlbumBuckets**
-> TimelineBuckets getAlbumBuckets(id)
+> TimelineBuckets getAlbumBuckets(id, pick)
 
 Months in an album, in the album's order
 
@@ -2918,9 +2922,10 @@ import 'package:mediarr_api/api.dart';
 
 final api_instance = DefaultApi();
 final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final pick = 56; // int | Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
 
 try {
-    final result = api_instance.getAlbumBuckets(id);
+    final result = api_instance.getAlbumBuckets(id, pick);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->getAlbumBuckets: $e\n');
@@ -2932,6 +2937,7 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **String**|  | 
+ **pick** | **int**| Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked | [optional] 
 
 ### Return type
 
@@ -7415,6 +7421,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **readAssetPicks**
+> PickStates readAssetPicks(assetIds)
+
+The marks and stars of the user's own photos among those asked about. Photos of others are left out.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final assetIds = AssetIds(); // AssetIds | 
+
+try {
+    final result = api_instance.readAssetPicks(assetIds);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->readAssetPicks: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **assetIds** | [**AssetIds**](AssetIds.md)|  | 
+
+### Return type
+
+[**PickStates**](PickStates.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **readNotifications**
 > readNotifications()
 
@@ -8304,7 +8351,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **searchAssets**
-> SearchResult searchAssets(q, from, to, person, people, place, camera, lens, type, minRating, tag, album, notInAlbum, favorite, plain)
+> SearchResult searchAssets(q, from, to, person, people, place, camera, lens, type, minRating, pick, tag, album, notInAlbum, favorite, plain)
 
 Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 
@@ -8323,6 +8370,7 @@ final camera = camera_example; // String |
 final lens = lens_example; // String | 
 final type = type_example; // String | 
 final minRating = 56; // int | 
+final pick = 56; // int | Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
 final tag = []; // List<String> | 
 final album = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | Only in this album, which may be shared with the user
 final notInAlbum = true; // bool | 
@@ -8330,7 +8378,7 @@ final favorite = true; // bool |
 final plain = true; // bool | Take no filters from the words: every word is looked for as it is
 
 try {
-    final result = api_instance.searchAssets(q, from, to, person, people, place, camera, lens, type, minRating, tag, album, notInAlbum, favorite, plain);
+    final result = api_instance.searchAssets(q, from, to, person, people, place, camera, lens, type, minRating, pick, tag, album, notInAlbum, favorite, plain);
     print(result);
 } catch (e) {
     print('Exception when calling DefaultApi->searchAssets: $e\n');
@@ -8351,6 +8399,7 @@ Name | Type | Description  | Notes
  **lens** | **String**|  | [optional] 
  **type** | **String**|  | [optional] 
  **minRating** | **int**|  | [optional] 
+ **pick** | **int**| Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked | [optional] 
  **tag** | [**List<String>**](String.md)|  | [optional] [default to const []]
  **album** | **String**| Only in this album, which may be shared with the user | [optional] 
  **notInAlbum** | **bool**|  | [optional] 
@@ -8648,6 +8697,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setAssetPick**
+> BulkResponse setAssetPick(pickRequest)
+
+Marks the user's own photos as picked, rejected or neither. Photos of others are left out.
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final pickRequest = PickRequest(); // PickRequest | 
+
+try {
+    final result = api_instance.setAssetPick(pickRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setAssetPick: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **pickRequest** | [**PickRequest**](PickRequest.md)|  | 
+
+### Return type
+
+[**BulkResponse**](BulkResponse.md)
 
 ### Authorization
 

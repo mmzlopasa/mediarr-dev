@@ -13,13 +13,13 @@ import (
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/ml"
 )
 
 const (
 	failedJobsShown = 50
 	// The worker finishes a periodic job every minute, so this long a silence means it has stopped.
 	workerSilence = 5 * time.Minute
-	mlHealthWait  = 3 * time.Second
 )
 
 var jobQueues = []string{"default", "video", "ml", "import", "describe"}
@@ -132,24 +132,39 @@ func (s *apiServer) GetAdminHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.MLURL != "" {
-		out.MlRunning = optional(s.mlAnswers(ctx), true)
+		service := s.mlServiceStatus(ctx)
+		out.Ml = &service
+		out.MlRunning = optional(service.State == api.Connected, true)
 	}
 	writeJSON(w, http.StatusOK, out)
 }
 
-func (s *apiServer) mlAnswers(ctx context.Context) bool {
-	ctx, cancel := context.WithTimeout(ctx, mlHealthWait)
-	defer cancel()
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, s.MLURL+"/health", http.NoBody)
+func (s *apiServer) mlServiceStatus(ctx context.Context) api.MlServiceStatus {
+	status, err := s.embeddings.Client().Status(ctx)
 	if err != nil {
-		return false
+		var older *ml.StatusError
+		switch {
+		case errors.Is(err, ml.ErrWrongToken):
+			return api.MlServiceStatus{State: api.WrongToken}
+		case errors.As(err, &older) && older.Code == http.StatusNotFound:
+			// An older service answers, but says nothing about itself.
+			return api.MlServiceStatus{State: api.Connected}
+		}
+		return api.MlServiceStatus{State: api.Unreachable}
 	}
-	response, err := http.DefaultClient.Do(request) //nolint:gosec // From the installation's own settings.
-	if err != nil {
-		return false
+	models := make([]api.MlModel, len(status.Models))
+	for i, model := range status.Models {
+		models[i] = api.MlModel{Name: model.Name, Loaded: model.Loaded, InUse: model.InUse, IdleSeconds: model.IdleSeconds}
 	}
-	defer func() { _ = response.Body.Close() }()
-	return response.StatusCode == http.StatusOK
+	providers := status.Acceleration.Providers
+	if providers == nil {
+		providers = []string{}
+	}
+	return api.MlServiceStatus{
+		State:  api.Connected,
+		Models: &models, RssBytes: status.RSSBytes, IdleMinutes: &status.IdleMinutes,
+		Acceleration: &api.MlAcceleration{Requested: status.Acceleration.Requested, Providers: providers},
+	}
 }
 
 func (s *apiServer) GetAdminStorage(w http.ResponseWriter, r *http.Request) {

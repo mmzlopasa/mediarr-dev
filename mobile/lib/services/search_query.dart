@@ -16,6 +16,7 @@ class SearchQuery {
     this.lens,
     this.type,
     this.minRating,
+    this.pick,
     this.tags = const [],
     this.album,
     this.albumTitle,
@@ -40,6 +41,9 @@ class SearchQuery {
   /// photo or video.
   final String? type;
   final int? minRating;
+
+  /// Only photos with this mark: 1 picked, -1 rejected, 0 none.
+  final int? pick;
   final List<String> tags;
   final String? album;
   final String? albumTitle;
@@ -55,6 +59,7 @@ class SearchQuery {
     lens != null,
     type != null,
     minRating != null,
+    pick != null,
     tags.isNotEmpty,
     album != null,
     notInAlbum,
@@ -76,6 +81,7 @@ class SearchQuery {
     lens: lens,
     type: type,
     minRating: minRating,
+    pick: pick,
     tag: tags.isEmpty ? null : tags,
     album: album,
     notInAlbum: notInAlbum ? true : null,
@@ -94,6 +100,7 @@ class SearchQuery {
     String? Function()? lens,
     String? Function()? type,
     int? Function()? minRating,
+    int? Function()? pick,
     List<String>? tags,
     String? Function()? album,
     String? Function()? albumTitle,
@@ -111,6 +118,7 @@ class SearchQuery {
     lens: lens == null ? this.lens : lens(),
     type: type == null ? this.type : type(),
     minRating: minRating == null ? this.minRating : minRating(),
+    pick: pick == null ? this.pick : pick(),
     tags: tags ?? this.tags,
     album: album == null ? this.album : album(),
     albumTitle: albumTitle == null ? this.albumTitle : albumTitle(),
@@ -175,6 +183,18 @@ List<SearchChip> chipsFor(
   if (f.minRating != null) {
     chips.add(SearchChip('minRating', '${'★' * f.minRating!}+'));
   }
+  if (f.pick != null) {
+    chips.add(
+      SearchChip(
+        'pick',
+        f.pick == 1
+            ? l.cullPicks
+            : f.pick == -1
+            ? l.cullRejects
+            : l.cullUnmarked,
+      ),
+    );
+  }
   for (final tag in f.tags) {
     chips.add(SearchChip('tag', '#$tag', value: tag));
   }
@@ -233,6 +253,7 @@ SearchQuery withoutChip(SearchQuery q, SearchChip chip, SearchFilters f) {
     'lens' => q.copyWith(lens: () => null),
     'type' => q.copyWith(type: () => null),
     'minRating' => q.copyWith(minRating: () => null),
+    'pick' => q.copyWith(pick: () => null),
     'tag' => q.copyWith(
       tags: [
         for (final tag in q.tags)

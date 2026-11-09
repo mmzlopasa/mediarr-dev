@@ -8079,6 +8079,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your link “{subject}” was opened for the first time.'**
   String notificationsLinkOpened(String subject);
+
+  /// No description provided for @cullTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cull'**
+  String get cullTitle;
+
+  /// No description provided for @cullMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark'**
+  String get cullMark;
+
+  /// No description provided for @cullPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick'**
+  String get cullPick;
+
+  /// No description provided for @cullReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get cullReject;
+
+  /// No description provided for @cullNoMark.
+  ///
+  /// In en, this message translates to:
+  /// **'No mark'**
+  String get cullNoMark;
+
+  /// No description provided for @cullPicks.
+  ///
+  /// In en, this message translates to:
+  /// **'Picks'**
+  String get cullPicks;
+
+  /// No description provided for @cullRejects.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejects'**
+  String get cullRejects;
+
+  /// No description provided for @cullUnmarked.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmarked'**
+  String get cullUnmarked;
+
+  /// No description provided for @cullAddToCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get cullAddToCompare;
+
+  /// No description provided for @cullRemoveFromCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Take out of comparison'**
+  String get cullRemoveFromCompare;
+
+  /// No description provided for @cullStopComparing.
+  ///
+  /// In en, this message translates to:
+  /// **'End comparison'**
+  String get cullStopComparing;
+
+  /// No description provided for @cullPicksToAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Picks to new album'**
+  String get cullPicksToAlbum;
+
+  /// No description provided for @cullRejectsToTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejects to trash'**
+  String get cullRejectsToTrash;
+
+  /// No description provided for @cullNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no photos of yours to go through here.'**
+  String get cullNothing;
+
+  /// No description provided for @cullNoneWithMark.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos have this mark.'**
+  String get cullNoneWithMark;
+
+  /// No description provided for @cullNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved'**
+  String get cullNotSaved;
+
+  /// No description provided for @cullActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The action failed'**
+  String get cullActionFailed;
+
+  /// No description provided for @cullLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The marks could not be loaded.'**
+  String get cullLoadFailed;
+
+  /// No description provided for @cullAlbumName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get cullAlbumName;
+
+  /// No description provided for @cullCreateAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get cullCreateAlbum;
+
+  /// No description provided for @cullTally.
+  ///
+  /// In en, this message translates to:
+  /// **'{picks} picked · {rejects} rejected'**
+  String cullTally(int picks, int rejects);
+
+  /// No description provided for @cullConfirmTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 rejected photo moves to the trash and can be restored.} other{{count} rejected photos move to the trash and can be restored.}}'**
+  String cullConfirmTrash(int count);
+
+  /// No description provided for @cullMovedToTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo moved to the trash} other{{count} photos moved to the trash}}'**
+  String cullMovedToTrash(int count);
+
+  /// No description provided for @cullAlbumMade.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo is in the album {title}} other{{count} photos are in the album {title}}}'**
+  String cullAlbumMade(int count, String title);
+
+  /// No description provided for @cullAlbumWillHold.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{The album will hold 1 picked photo.} other{The album will hold {count} picked photos.}}'**
+  String cullAlbumWillHold(int count);
+
+  /// No description provided for @adminMlTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis service'**
+  String get adminMlTitle;
+
+  /// No description provided for @adminMlConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get adminMlConnected;
+
+  /// No description provided for @adminMlLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded models'**
+  String get adminMlLoaded;
+
+  /// No description provided for @adminMlMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get adminMlMemory;
+
+  /// No description provided for @adminMlAcceleration.
+  ///
+  /// In en, this message translates to:
+  /// **'Acceleration'**
+  String get adminMlAcceleration;
+
+  /// No description provided for @adminMlNoneLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'None right now'**
+  String get adminMlNoneLoaded;
+
+  /// No description provided for @adminMlState.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get adminMlState;
+
+  /// No description provided for @adminMlUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot be reached. Analysis waits and continues when it is back; until then search uses words on pictures and file names.'**
+  String get adminMlUnreachable;
+
+  /// No description provided for @adminMlWrongToken.
+  ///
+  /// In en, this message translates to:
+  /// **'The service refused the token. ML_TOKEN must be the same in .env here and on the computer that runs it.'**
+  String get adminMlWrongToken;
 }
 
 class _AppLocalizationsDelegate

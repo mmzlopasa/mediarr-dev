@@ -19,6 +19,14 @@ const (
 	maxCaption = 2000
 )
 
+// The marks of a photo while going through a shoot.
+const (
+	// PickRejected is a photo turned down.
+	PickRejected = -1
+	// PickPicked is a photo chosen to keep.
+	PickPicked = 1
+)
+
 // sidecarBeside finds an XMP file that another program left next to an original, as photo.jpg.xmp
 // or photo.xmp. A link is not followed, as an original is not, because anyone who can write to an
 // external folder could point it anywhere.
@@ -74,6 +82,7 @@ func readSidecarBeside(ctx context.Context, original string, meta *Metadata) err
 // SidecarFacts is what Mediarr knows about a photo beyond its file.
 type SidecarFacts struct {
 	Rating    int16
+	Pick      int16
 	Caption   string
 	TakenAt   *time.Time
 	Offset    *int32
@@ -85,7 +94,7 @@ type SidecarFacts struct {
 
 // LoadSidecarFacts reads them from the database.
 func LoadSidecarFacts(ctx context.Context, q *db.Queries, asset *db.Asset) (*SidecarFacts, error) {
-	facts := &SidecarFacts{Rating: asset.Rating, Caption: asset.Caption}
+	facts := &SidecarFacts{Rating: asset.Rating, Pick: asset.Pick, Caption: asset.Caption}
 	if asset.ManualTakenAt.Valid {
 		when := asset.ManualTakenAt.Time
 		facts.TakenAt = &when
@@ -114,6 +123,13 @@ func LoadSidecarFacts(ctx context.Context, q *db.Queries, asset *db.Asset) (*Sid
 // exiftoolArguments writes the facts, so that another program reads what was decided in Mediarr.
 func (f *SidecarFacts) exiftoolArguments() []string {
 	args := []string{"-XMP-xmp:Rating=" + strconv.Itoa(int(f.Rating))}
+	// Without a mark nothing is said, so that a label the file itself has stays as it is.
+	switch f.Pick {
+	case PickPicked:
+		args = append(args, "-XMP-xmp:Label=Pick")
+	case PickRejected:
+		args = append(args, "-XMP-xmp:Label=Reject")
+	}
 	if f.Caption != "" {
 		args = append(args, "-XMP-dc:Description="+f.Caption)
 	}

@@ -12,6 +12,7 @@ Name | Type | Description | Notes
 **workerLastSeen** | [**DateTime**](DateTime.md) |  | [optional] 
 **mlEnabled** | **bool** |  | 
 **mlRunning** | **bool** |  | [optional] 
+**ml** | [**MlServiceStatus**](MlServiceStatus.md) |  | [optional] 
 **databaseBytes** | **int** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

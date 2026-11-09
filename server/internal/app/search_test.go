@@ -110,7 +110,7 @@ func (s *stack) analyzed(t *testing.T, c *client, service *httptest.Server, name
 	if err := asset.Scan(id); err != nil {
 		t.Fatal(err)
 	}
-	if err := jobs.AnalyzeAsset(context.Background(), s.pool, db.New(s.pool), ml.New(service.URL), asset); err != nil {
+	if err := jobs.AnalyzeAsset(context.Background(), s.pool, db.New(s.pool), ml.New(service.URL, ""), asset); err != nil {
 		t.Fatal(err)
 	}
 	return id
@@ -119,13 +119,18 @@ func (s *stack) analyzed(t *testing.T, c *client, service *httptest.Server, name
 // useML turns the service on from here on, as setting ML_URL does in an installation.
 func (s *stack) useML(t *testing.T, service *httptest.Server) {
 	t.Helper()
+	s.useMLAt(t, service.URL, "")
+}
+
+func (s *stack) useMLAt(t *testing.T, url, token string) {
+	t.Helper()
 	inserter, err := jobs.NewInserter(s.pool)
 	if err != nil {
 		t.Fatal(err)
 	}
 	handler, err := NewHandler(Deps{
 		Pinger: db.New(s.pool), Pool: s.pool, Inserter: inserter,
-		LibraryPath: s.library, CachePath: s.cache, MLURL: service.URL,
+		LibraryPath: s.library, CachePath: s.cache, MLURL: url, MLToken: token,
 	})
 	if err != nil {
 		t.Fatal(err)

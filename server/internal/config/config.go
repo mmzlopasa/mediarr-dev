@@ -23,6 +23,7 @@ type Config struct {
 	WorkerConcurrency int
 	VideoAccel        string
 	MLURL             string
+	MLToken           string
 	// PublicPort is the port people reach the server on, announced on the network.
 	PublicPort int
 }
@@ -44,6 +45,7 @@ func Load() Config {
 		WorkerConcurrency: concurrency(os.Getenv("WORKER_CONCURRENCY"), runtime.NumCPU()),
 		VideoAccel:        os.Getenv("VIDEO_ACCEL"),
 		MLURL:             os.Getenv("ML_URL"),
+		MLToken:           os.Getenv("ML_TOKEN"),
 		PublicPort:        envInt("HTTP_PORT", 9851),
 	}
 }

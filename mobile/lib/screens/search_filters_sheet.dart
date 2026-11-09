@@ -245,6 +245,24 @@ class _FilterSheetState extends State<_FilterSheet> {
                       ),
                   ],
                 ),
+                _heading(l.cullMark),
+                Wrap(
+                  spacing: 6,
+                  children: [
+                    for (final (value, label) in [
+                      (null, l.searchFiltersSheetAnyRating),
+                      (1, l.cullPicks),
+                      (-1, l.cullRejects),
+                      (0, l.cullUnmarked),
+                    ])
+                      ChoiceChip(
+                        label: Text(label),
+                        selected: _q.pick == value,
+                        onSelected: (_) =>
+                            setState(() => _q = _q.copyWith(pick: () => value)),
+                      ),
+                  ],
+                ),
                 if ((options?.tags ?? const []).isNotEmpty) ...[
                   _heading(l.searchFiltersSheetTags),
                   Wrap(

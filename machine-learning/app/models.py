@@ -75,13 +75,15 @@ def _member(package: zipfile.ZipFile, name: str) -> str:
     raise FileNotFoundError(name)
 
 
+def providers() -> list[str]:
+    """What the models run on: what was asked for, as far as this runtime has it."""
+    available = ort.get_available_providers()
+    wanted = config.PROVIDERS.get(config.ACCEL, config.PROVIDERS["cpu"])
+    return [provider for provider in wanted if provider in available]
+
+
 def open_session(path: Path) -> ort.InferenceSession:
     options = ort.SessionOptions()
     if config.THREADS > 0:
         options.intra_op_num_threads = config.THREADS
-    providers = [
-        provider
-        for provider in config.PROVIDERS.get(config.ACCEL, config.PROVIDERS["cpu"])
-        if provider in ort.get_available_providers()
-    ]
-    return ort.InferenceSession(str(path), options, providers=providers)
+    return ort.InferenceSession(str(path), options, providers=providers())

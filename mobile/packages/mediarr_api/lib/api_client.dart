@@ -463,6 +463,12 @@ class ApiClient {
           return MemberRole.fromJson(value);
         case 'Memory':
           return Memory.fromJson(value);
+        case 'MlAcceleration':
+          return MlAcceleration.fromJson(value);
+        case 'MlModel':
+          return MlModel.fromJson(value);
+        case 'MlServiceStatus':
+          return MlServiceStatus.fromJson(value);
         case 'Notification':
           return Notification.fromJson(value);
         case 'NotificationList':
@@ -497,6 +503,12 @@ class ApiClient {
           return PersonRef.fromJson(value);
         case 'PersonUpdate':
           return PersonUpdate.fromJson(value);
+        case 'PickRequest':
+          return PickRequest.fromJson(value);
+        case 'PickState':
+          return PickState.fromJson(value);
+        case 'PickStates':
+          return PickStates.fromJson(value);
         case 'Place':
           return Place.fromJson(value);
         case 'PlaceList':

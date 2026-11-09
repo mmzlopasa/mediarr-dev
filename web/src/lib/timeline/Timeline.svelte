@@ -25,6 +25,7 @@
 		type MonthLayout
 	} from './layout.ts';
 	import Scrubber from './Scrubber.svelte';
+	import Cull from './Cull.svelte';
 	import { scrollPageTo, shiftPage } from '#lib/motion/motion.ts';
 
 	const LOAD_AHEAD = 1.5;
@@ -32,6 +33,7 @@
 	const LONG_PRESS_MS = 450;
 	const MOVE_TOLERANCE = 10;
 	const ZIP_LIMIT = 100;
+	const CULL_LIMIT = 20000;
 
 	type Month = {
 		month: string;
@@ -51,6 +53,7 @@
 		selectable = true,
 		ownActions = true,
 		downloads = true,
+		cull = false,
 		selectionActions
 	}: {
 		onOpen: (id: string) => void;
@@ -61,6 +64,8 @@
 		selectable?: boolean;
 		ownActions?: boolean;
 		downloads?: boolean;
+		/** Offers going through a day, the selection or everything, one photo at a time. */
+		cull?: boolean;
 		selectionActions?: Snippet<[string[], () => void]>;
 	} = $props();
 
@@ -78,6 +83,7 @@
 	let fixing = $state<'dates' | 'locations'>();
 	let dragBox = $state<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
 	let busy = $state(false);
+	let culling = $state.raw<TimelineItem[]>();
 
 	const locale = $derived(lang() === 'hr' ? 'hr-HR' : 'en-GB');
 	const selecting = $derived(selected.size > 0);
@@ -260,6 +266,32 @@
 		return items
 			.slice(Math.max(0, index - count), index + count + 1)
 			.map((item) => ({ id: item.id, blurhash: item.blurhash }));
+	}
+
+	function openCull(items: TimelineItem[]) {
+		const photos = items.filter((item) => item.kind === 'photo');
+		if (photos.length) culling = photos;
+		else showToast('warn', t('cull.nothingToGoThrough'));
+	}
+
+	/** Everything here, every month loaded first. */
+	export async function startCull() {
+		await playlist('', CULL_LIMIT);
+		openCull(allItems());
+	}
+
+	function cullDay(entry: Month, label: string) {
+		openCull((entry.items ?? []).filter((item) => formatDay(item.localAt, locale) === label));
+	}
+
+	function cullSelection() {
+		openCull(allItems().filter((item) => selected.has(item.id)));
+	}
+
+	async function closeCull() {
+		culling = undefined;
+		selected.clear();
+		await reloadLoaded();
 	}
 
 	function allItems() {
@@ -457,6 +489,14 @@
 						</div>
 					{:else if row.type === 'day'}
 						<h3 class="tl-day" style="top:{row.top}px;height:{row.height}px">{row.label}</h3>
+						{#if cull}
+							<button
+								type="button"
+								class="btn sm tl-day-cull"
+								style="top:{row.top}px"
+								onclick={() => cullDay(entry, row.label)}>{t('cull.title')}</button
+							>
+						{/if}
 					{:else}
 						{#each row.tiles as tile (tile.item.id)}
 							{@const blur = blurUrl(tile.item.blurhash)}
@@ -563,6 +603,13 @@
 		>
 		<b class="selbar-n">{selected.size}</b>
 		<div class="selbar-a">
+			{#if cull}<button
+					type="button"
+					class="icon-btn"
+					aria-label={t('cull.title')}
+					title={t('cull.title')}
+					onclick={cullSelection}><Icon name="check" /></button
+				>{/if}
 			{@render selectionActions?.([...selected], () => selected.clear())}
 			{#if ownActions}<button
 					type="button"
@@ -627,6 +674,10 @@
 				>{/if}
 		</div>
 	</div>
+{/if}
+
+{#if culling}
+	<Cull items={culling} onClose={closeCull} />
 {/if}
 
 {#if fixing}

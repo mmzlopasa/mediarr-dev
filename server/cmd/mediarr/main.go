@@ -173,7 +173,7 @@ func serve(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return fmt.Errorf("create job client: %w", err)
 	}
-	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, ProxyHops: cfg.ProxyHops, DemoEmail: cfg.DemoEmail, CheckUpdates: cfg.CheckUpdates, MaxUploadBytes: cfg.MaxUploadBytes, MetricsToken: cfg.MetricsToken, BackupPath: cfg.BackupPath})
+	handler, err := app.NewHandler(app.Deps{MLURL: cfg.MLURL, MLToken: cfg.MLToken, Pinger: queries, Pool: pool, Inserter: inserter, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, ProxyHops: cfg.ProxyHops, DemoEmail: cfg.DemoEmail, CheckUpdates: cfg.CheckUpdates, MaxUploadBytes: cfg.MaxUploadBytes, MetricsToken: cfg.MetricsToken, BackupPath: cfg.BackupPath})
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func worker(ctx context.Context, cfg config.Config) error {
 	if settings.WorkerConcurrency > 0 {
 		cfg.WorkerConcurrency = settings.WorkerConcurrency
 	}
-	client, err := jobs.NewWorker(pool, jobs.Options{VideoWorkers: settings.VideoWorkers, AnalysisWorkers: settings.AnalysisWorkers, MLURL: cfg.MLURL, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, DatabaseURL: cfg.DatabaseURL, VideoAccel: cfg.VideoAccel})
+	client, err := jobs.NewWorker(pool, jobs.Options{VideoWorkers: settings.VideoWorkers, AnalysisWorkers: settings.AnalysisWorkers, MLURL: cfg.MLURL, MLToken: cfg.MLToken, Concurrency: cfg.WorkerConcurrency, LibraryPath: cfg.LibraryPath, CachePath: cfg.CachePath, ExternalPath: cfg.ExternalPath, DatabaseURL: cfg.DatabaseURL, VideoAccel: cfg.VideoAccel})
 	if err != nil {
 		return fmt.Errorf("create worker: %w", err)
 	}

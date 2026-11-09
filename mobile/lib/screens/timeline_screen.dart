@@ -23,6 +23,7 @@ import 'organize_screens.dart';
 import 'viewer_screen.dart';
 import 'waiting_strip.dart';
 import '../l10n/l10n.dart';
+import 'cull_screen.dart';
 
 class TimelineScreen extends ConsumerStatefulWidget {
   const TimelineScreen({super.key});
@@ -79,6 +80,11 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     }
   }
 
+  Future<void> _cullDay(List<TimelineItem> items, Session session) async {
+    await openCull(context, session, items);
+    if (mounted) await _store.refresh(reloadLoaded: true);
+  }
+
   Future<void> _more(String choice, Session session) async {
     switch (choice) {
       case 'archive':
@@ -94,6 +100,16 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
           dates: choice == 'dates',
         );
         if (done && mounted) {
+          setState(_selected.clear);
+          await _store.refresh(reloadLoaded: true);
+        }
+      case 'cull':
+        final chosen = {..._selected};
+        await openCull(context, session, [
+          for (final item in _store.loadedItems)
+            if (chosen.contains(item.id)) item,
+        ]);
+        if (mounted) {
           setState(_selected.clear);
           await _store.refresh(reloadLoaded: true);
         }
@@ -174,6 +190,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
         store: store,
         session: session,
         selected: _selected,
+        onCull: (items) => _cullDay(items, session),
         onToggle: _toggle,
         onOpen: (index) => Navigator.of(context).push(
           MaterialPageRoute<void>(
@@ -233,6 +250,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     tooltip: l.timelineScreenMore,
                     onSelected: (choice) => _more(choice, session),
                     itemBuilder: (_) => [
+                      PopupMenuItem(value: 'cull', child: Text(l.cullTitle)),
                       PopupMenuItem(
                         value: 'archive',
                         child: Text(l.timelineScreenArchive),
@@ -274,6 +292,7 @@ class TimelineGrid extends StatelessWidget {
     required this.store,
     required this.session,
     required this.selected,
+    this.onCull,
     required this.onToggle,
     required this.onOpen,
     this.header,
@@ -283,6 +302,9 @@ class TimelineGrid extends StatelessWidget {
   final TimelineStore store;
   final Session session;
   final Set<String> selected;
+
+  /// Goes through the photos of a day; without it, a day offers nothing.
+  final void Function(List<TimelineItem> items)? onCull;
   final void Function(String id) onToggle;
   final void Function(int index) onOpen;
 
@@ -311,6 +333,7 @@ class TimelineGrid extends StatelessWidget {
                     width: width,
                     session: session,
                     selected: selected,
+                    onCull: onCull,
                     onToggle: onToggle,
                     onOpen: onOpen,
                   ),
@@ -331,6 +354,7 @@ class _MonthSliver extends ConsumerWidget {
     required this.width,
     required this.session,
     required this.selected,
+    this.onCull,
     required this.onToggle,
     required this.onOpen,
   });
@@ -340,6 +364,9 @@ class _MonthSliver extends ConsumerWidget {
   final double width;
   final Session session;
   final Set<String> selected;
+
+  /// Goes through the photos of a day; without it, a day offers nothing.
+  final void Function(List<TimelineItem> items)? onCull;
   final void Function(String id) onToggle;
   final void Function(int index) onOpen;
 
@@ -404,12 +431,39 @@ class _MonthSliver extends ConsumerWidget {
                 padding: EdgeInsets.only(bottom: isMonth ? 12 : 8),
                 child: isMonth
                     ? _MonthTitle(label)
-                    : Text(
-                        label,
-                        style: text.bodyMedium?.copyWith(
-                          color: Palette.ink,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.bodyMedium?.copyWith(
+                                color: Palette.ink,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          if (onCull != null)
+                            IconButton(
+                              tooltip: l.cullTitle,
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 28,
+                              ),
+                              iconSize: 18,
+                              icon: Icon(
+                                Icons.checklist_rtl,
+                                color: Palette.dim,
+                              ),
+                              onPressed: () => onCull!([
+                                for (final item in items)
+                                  if (formatDay(item.localAt) == label) item,
+                              ]),
+                            ),
+                        ],
                       ),
               ),
             ),

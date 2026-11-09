@@ -788,6 +788,27 @@ func (e MemoryKind) Valid() bool {
 	}
 }
 
+// Defines values for MlServiceStatusState.
+const (
+	Connected   MlServiceStatusState = "connected"
+	Unreachable MlServiceStatusState = "unreachable"
+	WrongToken  MlServiceStatusState = "wrongToken"
+)
+
+// Valid indicates whether the value is a known member of the MlServiceStatusState enum.
+func (e MlServiceStatusState) Valid() bool {
+	switch e {
+	case Connected:
+		return true
+	case Unreachable:
+		return true
+	case WrongToken:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for NotificationKind.
 const (
 	AlbumShared  NotificationKind = "album_shared"
@@ -1537,11 +1558,14 @@ type Activity struct {
 
 // AdminHealth defines model for AdminHealth.
 type AdminHealth struct {
-	DatabaseBytes  int64      `json:"databaseBytes"`
-	MlEnabled      bool       `json:"mlEnabled"`
-	MlRunning      *bool      `json:"mlRunning,omitempty"`
-	WorkerLastSeen *time.Time `json:"workerLastSeen,omitempty"`
-	WorkerRunning  bool       `json:"workerRunning"`
+	DatabaseBytes int64 `json:"databaseBytes"`
+
+	// Ml The analysis service as this server reaches it. The details come only from a connected service.
+	Ml             *MlServiceStatus `json:"ml,omitempty"`
+	MlEnabled      bool             `json:"mlEnabled"`
+	MlRunning      *bool            `json:"mlRunning,omitempty"`
+	WorkerLastSeen *time.Time       `json:"workerLastSeen,omitempty"`
+	WorkerRunning  bool             `json:"workerRunning"`
 }
 
 // AdminJobs defines model for AdminJobs.
@@ -2772,6 +2796,32 @@ type Memory struct {
 // MemoryKind defines model for Memory.Kind.
 type MemoryKind string
 
+// MlAcceleration defines model for MlAcceleration.
+type MlAcceleration struct {
+	Providers []string `json:"providers"`
+	Requested string   `json:"requested"`
+}
+
+// MlModel defines model for MlModel.
+type MlModel struct {
+	IdleSeconds *float64 `json:"idleSeconds,omitempty"`
+	InUse       int      `json:"inUse"`
+	Loaded      bool     `json:"loaded"`
+	Name        string   `json:"name"`
+}
+
+// MlServiceStatus The analysis service as this server reaches it. The details come only from a connected service.
+type MlServiceStatus struct {
+	Acceleration *MlAcceleration      `json:"acceleration,omitempty"`
+	IdleMinutes  *float64             `json:"idleMinutes,omitempty"`
+	Models       *[]MlModel           `json:"models,omitempty"`
+	RssBytes     *int64               `json:"rssBytes,omitempty"`
+	State        MlServiceStatusState `json:"state"`
+}
+
+// MlServiceStatusState defines model for MlServiceStatus.State.
+type MlServiceStatusState string
+
 // Notification defines model for Notification.
 type Notification struct {
 	CreatedAt time.Time          `json:"createdAt"`
@@ -2906,6 +2956,30 @@ type PersonUpdate struct {
 	Name      *string `json:"name,omitempty"`
 }
 
+// PickRequest defines model for PickRequest.
+type PickRequest struct {
+	Ids []openapi_types.UUID `json:"ids"`
+
+	// Pick 1 picked, -1 rejected, 0 none
+	Pick int `json:"pick"`
+}
+
+// PickState defines model for PickState.
+type PickState struct {
+	Id openapi_types.UUID `json:"id"`
+
+	// Pick 1 picked, -1 rejected, 0 none
+	Pick int `json:"pick"`
+
+	// Rating 0 to 5 stars; 0 is none
+	Rating int `json:"rating"`
+}
+
+// PickStates defines model for PickStates.
+type PickStates struct {
+	Items []PickState `json:"items"`
+}
+
 // Place defines model for Place.
 type Place struct {
 	Country   string  `json:"country"`
@@ -3019,11 +3093,14 @@ type SearchFilters struct {
 	PeopleMatch *SearchFiltersPeopleMatch `json:"peopleMatch,omitempty"`
 
 	// Person The name of a person found in the words
-	Person *string             `json:"person,omitempty"`
-	Place  *string             `json:"place,omitempty"`
-	Tags   *[]string           `json:"tags,omitempty"`
-	To     *openapi_types.Date `json:"to,omitempty"`
-	Type   *SearchFiltersType  `json:"type,omitempty"`
+	Person *string `json:"person,omitempty"`
+
+	// Pick 1 picked, -1 rejected, 0 unmarked
+	Pick  *int                `json:"pick,omitempty"`
+	Place *string             `json:"place,omitempty"`
+	Tags  *[]string           `json:"tags,omitempty"`
+	To    *openapi_types.Date `json:"to,omitempty"`
+	Type  *SearchFiltersType  `json:"type,omitempty"`
 
 	// Words What is left of the query after the filters were taken out
 	Words *string `json:"words,omitempty"`
@@ -3560,6 +3637,18 @@ type ListAlbumsParams struct {
 // ListAlbumsParamsSort defines parameters for ListAlbums.
 type ListAlbumsParamsSort string
 
+// GetAlbumBucketsParams defines parameters for GetAlbumBuckets.
+type GetAlbumBucketsParams struct {
+	// Pick Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
+	Pick *int `form:"pick,omitempty" json:"pick,omitempty"`
+}
+
+// GetAlbumBucketParams defines parameters for GetAlbumBucket.
+type GetAlbumBucketParams struct {
+	// Pick Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
+	Pick *int `form:"pick,omitempty" json:"pick,omitempty"`
+}
+
 // ListAlbumCommentsParams defines parameters for ListAlbumComments.
 type ListAlbumCommentsParams struct {
 	AssetId *openapi_types.UUID `form:"assetId,omitempty" json:"assetId,omitempty"`
@@ -3753,7 +3842,10 @@ type SearchAssetsParams struct {
 	Lens      *string                   `form:"lens,omitempty" json:"lens,omitempty"`
 	Type      *SearchAssetsParamsType   `form:"type,omitempty" json:"type,omitempty"`
 	MinRating *int                      `form:"minRating,omitempty" json:"minRating,omitempty"`
-	Tag       *[]string                 `form:"tag,omitempty" json:"tag,omitempty"`
+
+	// Pick Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
+	Pick *int      `form:"pick,omitempty" json:"pick,omitempty"`
+	Tag  *[]string `form:"tag,omitempty" json:"tag,omitempty"`
 
 	// Album Only in this album, which may be shared with the user
 	Album      *openapi_types.UUID `form:"album,omitempty" json:"album,omitempty"`
@@ -3868,6 +3960,12 @@ type FixDatesJSONRequestBody = DateFix
 
 // FixLocationsJSONRequestBody defines body for FixLocations for application/json ContentType.
 type FixLocationsJSONRequestBody = LocationFix
+
+// SetAssetPickJSONRequestBody defines body for SetAssetPick for application/json ContentType.
+type SetAssetPickJSONRequestBody = PickRequest
+
+// ReadAssetPicksJSONRequestBody defines body for ReadAssetPicks for application/json ContentType.
+type ReadAssetPicksJSONRequestBody = AssetIds
 
 // ChangeAssetTagsJSONRequestBody defines body for ChangeAssetTags for application/json ContentType.
 type ChangeAssetTagsJSONRequestBody = AssetTagChange
@@ -4218,10 +4316,10 @@ type ServerInterface interface {
 	SetAlbumHeart(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, assetId openapi_types.UUID)
 	// GetAlbumBuckets Months in an album, in the album's order
 	// (GET /api/albums/{id}/buckets)
-	GetAlbumBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	GetAlbumBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAlbumBucketsParams)
 	// GetAlbumBucket Assets of one month in an album
 	// (GET /api/albums/{id}/buckets/{month})
-	GetAlbumBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string)
+	GetAlbumBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string, params GetAlbumBucketParams)
 	// ListAlbumComments Comments on an album, or with assetId on one photo, and that photo's hearts
 	// (GET /api/albums/{id}/comments)
 	ListAlbumComments(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params ListAlbumCommentsParams)
@@ -4276,6 +4374,12 @@ type ServerInterface interface {
 	// FixLocations Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
 	// (POST /api/assets/locations)
 	FixLocations(w http.ResponseWriter, r *http.Request)
+	// SetAssetPick Marks the user's own photos as picked, rejected or neither. Photos of others are left out.
+	// (POST /api/assets/pick)
+	SetAssetPick(w http.ResponseWriter, r *http.Request)
+	// ReadAssetPicks The marks and stars of the user's own photos among those asked about. Photos of others are left out.
+	// (POST /api/assets/pick/read)
+	ReadAssetPicks(w http.ResponseWriter, r *http.Request)
 	// ChangeAssetTags Add a tag to the user's own assets, or remove it
 	// (POST /api/assets/tags)
 	ChangeAssetTags(w http.ResponseWriter, r *http.Request)
@@ -5163,13 +5267,13 @@ func (_ Unimplemented) SetAlbumHeart(w http.ResponseWriter, r *http.Request, id 
 
 // GetAlbumBuckets Months in an album, in the album's order
 // (GET /api/albums/{id}/buckets)
-func (_ Unimplemented) GetAlbumBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+func (_ Unimplemented) GetAlbumBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params GetAlbumBucketsParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // GetAlbumBucket Assets of one month in an album
 // (GET /api/albums/{id}/buckets/{month})
-func (_ Unimplemented) GetAlbumBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string) {
+func (_ Unimplemented) GetAlbumBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string, params GetAlbumBucketParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5278,6 +5382,18 @@ func (_ Unimplemented) DownloadAssets(w http.ResponseWriter, r *http.Request, pa
 // FixLocations Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
 // (POST /api/assets/locations)
 func (_ Unimplemented) FixLocations(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetAssetPick Marks the user's own photos as picked, rejected or neither. Photos of others are left out.
+// (POST /api/assets/pick)
+func (_ Unimplemented) SetAssetPick(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ReadAssetPicks The marks and stars of the user's own photos among those asked about. Photos of others are left out.
+// (POST /api/assets/pick/read)
+func (_ Unimplemented) ReadAssetPicks(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -7611,8 +7727,24 @@ func (siw *ServerInterfaceWrapper) GetAlbumBuckets(w http.ResponseWriter, r *htt
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAlbumBucketsParams
+
+	// ------------- Optional query parameter "pick" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pick", r.URL.Query(), &params.Pick, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pick"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pick", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetAlbumBuckets(w, r, id)
+		siw.Handler.GetAlbumBuckets(w, r, id, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -7646,8 +7778,24 @@ func (siw *ServerInterfaceWrapper) GetAlbumBucket(w http.ResponseWriter, r *http
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAlbumBucketParams
+
+	// ------------- Optional query parameter "pick" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pick", r.URL.Query(), &params.Pick, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pick"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pick", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetAlbumBucket(w, r, id, month)
+		siw.Handler.GetAlbumBucket(w, r, id, month, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -8165,6 +8313,34 @@ func (siw *ServerInterfaceWrapper) FixLocations(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.FixLocations(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetAssetPick operation middleware
+func (siw *ServerInterfaceWrapper) SetAssetPick(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetAssetPick(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ReadAssetPicks operation middleware
+func (siw *ServerInterfaceWrapper) ReadAssetPicks(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReadAssetPicks(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -11287,6 +11463,19 @@ func (siw *ServerInterfaceWrapper) SearchAssets(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// ------------- Optional query parameter "pick" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pick", r.URL.Query(), &params.Pick, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pick"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pick", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "tag" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "tag", r.URL.Query(), &params.Tag, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
@@ -12117,6 +12306,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/assets/bulk", wrapper.BulkAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/assets/pick", wrapper.SetAssetPick)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/assets/pick/read", wrapper.ReadAssetPicks)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/assets/download", wrapper.DownloadAssets)

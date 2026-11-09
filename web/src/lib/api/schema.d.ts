@@ -589,6 +589,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assets/pick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marks the user's own photos as picked, rejected or neither. Photos of others are left out. */
+        post: operations["setAssetPick"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assets/pick/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The marks and stars of the user's own photos among those asked about. Photos of others are left out. */
+        post: operations["readAssetPicks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assets/download": {
         parameters: {
             query?: never;
@@ -3727,8 +3761,31 @@ export interface components {
             workerLastSeen?: string;
             mlEnabled: boolean;
             mlRunning?: boolean;
+            ml?: components["schemas"]["MlServiceStatus"];
             /** Format: int64 */
             databaseBytes: number;
+        };
+        /** @description The analysis service as this server reaches it. The details come only from a connected service. */
+        MlServiceStatus: {
+            /** @enum {string} */
+            state: "connected" | "unreachable" | "wrongToken";
+            models?: components["schemas"]["MlModel"][];
+            /** Format: int64 */
+            rssBytes?: number;
+            acceleration?: components["schemas"]["MlAcceleration"];
+            /** Format: double */
+            idleMinutes?: number;
+        };
+        MlModel: {
+            name: string;
+            loaded: boolean;
+            inUse: number;
+            /** Format: double */
+            idleSeconds?: number;
+        };
+        MlAcceleration: {
+            requested: string;
+            providers: string[];
         };
         UserStorage: {
             /** Format: uuid */
@@ -4143,6 +4200,8 @@ export interface components {
             /** @enum {string} */
             type?: "photo" | "video";
             minRating?: number;
+            /** @description 1 picked, -1 rejected, 0 unmarked */
+            pick?: number;
             tags?: string[];
             album?: components["schemas"]["AlbumRef"];
             notInAlbum?: boolean;
@@ -5171,6 +5230,22 @@ export interface components {
             /** @description Only say how many it would change */
             dryRun?: boolean;
         };
+        PickRequest: {
+            ids: string[];
+            /** @description 1 picked, -1 rejected, 0 none */
+            pick: number;
+        };
+        PickState: {
+            /** Format: uuid */
+            id: string;
+            /** @description 1 picked, -1 rejected, 0 none */
+            pick: number;
+            /** @description 0 to 5 stars; 0 is none */
+            rating: number;
+        };
+        PickStates: {
+            items: components["schemas"]["PickState"][];
+        };
         BulkResponse: {
             /** Format: int64 */
             changed: number;
@@ -6188,6 +6263,58 @@ export interface operations {
             401: components["responses"]["Error"];
         };
     };
+    setAssetPick: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PickRequest"];
+            };
+        };
+        responses: {
+            /** @description How many were marked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResponse"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
+    readAssetPicks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetIds"];
+            };
+        };
+        responses: {
+            /** @description The marks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickStates"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+        };
+    };
     downloadAssets: {
         parameters: {
             query: {
@@ -6855,7 +6982,10 @@ export interface operations {
     };
     getAlbumBuckets: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked */
+                pick?: number;
+            };
             header?: never;
             path: {
                 id: string;
@@ -6879,7 +7009,10 @@ export interface operations {
     };
     getAlbumBucket: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked */
+                pick?: number;
+            };
             header?: never;
             path: {
                 id: string;
@@ -8254,6 +8387,8 @@ export interface operations {
                 lens?: string;
                 type?: "photo" | "video";
                 minRating?: number;
+                /** @description Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked */
+                pick?: number;
                 tag?: string[];
                 /** @description Only in this album, which may be shared with the user */
                 album?: string;

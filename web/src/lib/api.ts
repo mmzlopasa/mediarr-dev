@@ -161,6 +161,10 @@ export const api = {
 	asset: (id: string) => request<AssetDetail>(fetch, `/api/assets/${id}`),
 	bulk: (ids: string[], action: BulkAction) =>
 		request<{ changed: number }>(fetch, '/api/assets/bulk', { ids, action }),
+	setPicks: (ids: string[], pick: number) =>
+		request<{ changed: number }>(fetch, '/api/assets/pick', { ids, pick }),
+	readPicks: (ids: string[]) =>
+		request<components['schemas']['PickStates']>(fetch, '/api/assets/pick/read', { ids }),
 
 	directory: () => request<UserRef[]>(fetch, '/api/users/directory'),
 	albums: (sort: 'updated' | 'title' | 'date' = 'updated') =>
@@ -469,15 +473,16 @@ export type TimelineSource = {
 	bucket: (month: string) => Promise<TimelineBucket>;
 };
 
-function sourceAt(path: string): TimelineSource {
+function sourceAt(path: string, query = ''): TimelineSource {
 	return {
-		buckets: () => request<TimelineBuckets>(fetch, `${path}/buckets`),
-		bucket: (month) => request<TimelineBucket>(fetch, `${path}/buckets/${month}`)
+		buckets: () => request<TimelineBuckets>(fetch, `${path}/buckets${query}`),
+		bucket: (month) => request<TimelineBucket>(fetch, `${path}/buckets/${month}${query}`)
 	};
 }
 
 export const librarySource = sourceAt('/api/timeline');
-export const albumSource = (id: string) => sourceAt(`/api/albums/${id}`);
+export const albumSource = (id: string, pick?: number) =>
+	sourceAt(`/api/albums/${id}`, pick === undefined ? '' : `?pick=${pick}`);
 export const partnerSource = (id: string) => sourceAt(`/api/partners/${id}`);
 export const publicSource = (token: string) => sourceAt(`/api/public/${token}`);
 export const familySource = () => sourceAt('/api/family');

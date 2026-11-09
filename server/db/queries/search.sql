@@ -122,19 +122,18 @@ ORDER BY a.local_at DESC, a.id DESC
 LIMIT sqlc.arg('row_limit');
 
 -- name: ListSearchTerms :many
--- What a query can name: people, places and cameras in this library.
+-- What a query can name: people, places and cameras in this library. The combinations come from one
+-- reading of the table, because each column read on its own cost a whole pass over every picture.
+WITH combos AS (
+    SELECT DISTINCT e.city, e.state, e.country, e.make, e.model
+    FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL
+)
 SELECT 'person'::text AS kind, p.name AS value, p.id::text AS ref FROM people p WHERE p.user_id = $1 AND p.name <> ''
 UNION
-SELECT 'place', x.value, '' FROM (
-    SELECT e.city AS value FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.city IS NOT NULL
-    UNION SELECT e.state FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.state IS NOT NULL AND e.state <> ''
-    UNION SELECT e.country FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.country IS NOT NULL
-) x
-UNION
-SELECT 'camera', x.value, '' FROM (
-    SELECT e.make AS value FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.make IS NOT NULL
-    UNION SELECT e.model FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.model IS NOT NULL
-) x;
+SELECT DISTINCT t.kind, t.value, ''
+FROM combos c, LATERAL (VALUES ('place', c.city), ('place', c.state), ('place', c.country), ('camera', c.make), ('camera', c.model)) AS t(kind, value)
+WHERE t.value IS NOT NULL AND t.value <> '';
 
 -- name: SearchVector :many
 SELECT a.id
@@ -155,6 +154,7 @@ WHERE (a.user_id = sqlc.arg('user_id') OR sqlc.arg('album_shared')::boolean)
   AND (sqlc.narg('lens')::text IS NULL OR lower(e.lens) = lower(sqlc.narg('lens')))
   AND (sqlc.narg('kind')::text IS NULL OR a.kind = sqlc.narg('kind'))
   AND a.rating >= sqlc.arg('min_rating')::smallint
+  AND (sqlc.narg('pick')::smallint IS NULL OR (a.pick = sqlc.narg('pick') AND a.user_id = sqlc.arg('user_id')))
   AND (NOT sqlc.arg('favorite_only')::boolean OR a.is_favorite)
   -- Tags: every one asked for.
   AND (coalesce(cardinality(sqlc.arg('tags')::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
@@ -191,6 +191,7 @@ WHERE a.id IN (
   AND (sqlc.narg('lens')::text IS NULL OR lower(e.lens) = lower(sqlc.narg('lens')))
   AND (sqlc.narg('kind')::text IS NULL OR a.kind = sqlc.narg('kind'))
   AND a.rating >= sqlc.arg('min_rating')::smallint
+  AND (sqlc.narg('pick')::smallint IS NULL OR (a.pick = sqlc.narg('pick') AND a.user_id = sqlc.arg('user_id')))
   AND (NOT sqlc.arg('favorite_only')::boolean OR a.is_favorite)
   -- Tags: every one asked for.
   AND (coalesce(cardinality(sqlc.arg('tags')::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
@@ -218,6 +219,7 @@ WHERE (a.user_id = sqlc.arg('user_id') OR sqlc.arg('album_shared')::boolean)
   AND (sqlc.narg('lens')::text IS NULL OR lower(e.lens) = lower(sqlc.narg('lens')))
   AND (sqlc.narg('kind')::text IS NULL OR a.kind = sqlc.narg('kind'))
   AND a.rating >= sqlc.arg('min_rating')::smallint
+  AND (sqlc.narg('pick')::smallint IS NULL OR (a.pick = sqlc.narg('pick') AND a.user_id = sqlc.arg('user_id')))
   AND (NOT sqlc.arg('favorite_only')::boolean OR a.is_favorite)
   -- Tags: every one asked for.
   AND (coalesce(cardinality(sqlc.arg('tags')::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id

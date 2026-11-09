@@ -26,9 +26,10 @@ class TimelineStore extends ChangeNotifier {
       _bucket = ((api, month) => api.getTimelineBucket(month));
 
   /// The same months and photos, but from one album.
-  TimelineStore.album(this.session, String albumId)
-    : _buckets = ((api) => api.getAlbumBuckets(albumId)),
-      _bucket = ((api, month) => api.getAlbumBucket(albumId, month));
+  TimelineStore.album(this.session, String albumId, {int? pick})
+    : _buckets = ((api) => api.getAlbumBuckets(albumId, pick: pick)),
+      _bucket = ((api, month) =>
+          api.getAlbumBucket(albumId, month, pick: pick));
 
   /// The same months and photos, but from a library shared with this user.
   TimelineStore.partner(this.session, String userId)

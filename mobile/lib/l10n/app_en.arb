@@ -2643,5 +2643,80 @@
         "type": "String"
       }
     }
-  }
+  },
+  "cullTitle": "Cull",
+  "cullMark": "Mark",
+  "cullPick": "Pick",
+  "cullReject": "Reject",
+  "cullNoMark": "No mark",
+  "cullPicks": "Picks",
+  "cullRejects": "Rejects",
+  "cullUnmarked": "Unmarked",
+  "cullAddToCompare": "Compare",
+  "cullRemoveFromCompare": "Take out of comparison",
+  "cullStopComparing": "End comparison",
+  "cullPicksToAlbum": "Picks to new album",
+  "cullRejectsToTrash": "Rejects to trash",
+  "cullNothing": "There are no photos of yours to go through here.",
+  "cullNoneWithMark": "No photos have this mark.",
+  "cullNotSaved": "Not saved",
+  "cullActionFailed": "The action failed",
+  "cullLoadFailed": "The marks could not be loaded.",
+  "cullAlbumName": "Name",
+  "cullCreateAlbum": "Create",
+  "cullTally": "{picks} picked · {rejects} rejected",
+  "@cullTally": {
+    "placeholders": {
+      "picks": {
+        "type": "int"
+      },
+      "rejects": {
+        "type": "int"
+      }
+    }
+  },
+  "cullConfirmTrash": "{count, plural, =1{1 rejected photo moves to the trash and can be restored.} other{{count} rejected photos move to the trash and can be restored.}}",
+  "@cullConfirmTrash": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cullMovedToTrash": "{count, plural, =1{1 photo moved to the trash} other{{count} photos moved to the trash}}",
+  "@cullMovedToTrash": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cullAlbumMade": "{count, plural, =1{1 photo is in the album {title}} other{{count} photos are in the album {title}}}",
+  "@cullAlbumMade": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "cullAlbumWillHold": "{count, plural, =1{The album will hold 1 picked photo.} other{The album will hold {count} picked photos.}}",
+  "@cullAlbumWillHold": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminMlTitle": "Analysis service",
+  "adminMlConnected": "Connected",
+  "adminMlLoaded": "Loaded models",
+  "adminMlMemory": "Memory",
+  "adminMlAcceleration": "Acceleration",
+  "adminMlNoneLoaded": "None right now",
+  "adminMlState": "Status",
+  "adminMlUnreachable": "Cannot be reached. Analysis waits and continues when it is back; until then search uses words on pictures and file names.",
+  "adminMlWrongToken": "The service refused the token. ML_TOKEN must be the same in .env here and on the computer that runs it."
 }

@@ -239,6 +239,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**pairKeepGuest**](doc//DefaultApi.md#pairkeepguest) | **POST** /api/keep/pair | Another Mediarr server pairs with the token of its invitation and gets its credentials, once. After that it sends its encrypted backup over the restic REST protocol to /api/keep/{guestId}/, with HTTP Basic credentials. That protocol is served apart from this API and is not listed here.
 *DefaultApi* | [**pauseJobQueue**](doc//DefaultApi.md#pausejobqueue) | **POST** /api/admin/jobs/queues/{queue}/pause | Stop starting jobs from this queue
 *DefaultApi* | [**previewStorageTemplate**](doc//DefaultApi.md#previewstoragetemplate) | **POST** /api/admin/storage-template/preview | Where a template would put a few real originals, without moving anything
+*DefaultApi* | [**readAssetPicks**](doc//DefaultApi.md#readassetpicks) | **POST** /api/assets/pick/read | The marks and stars of the user's own photos among those asked about. Photos of others are left out.
 *DefaultApi* | [**readNotifications**](doc//DefaultApi.md#readnotifications) | **POST** /api/notifications/read | Mark every notification as read
 *DefaultApi* | [**redeemQRSignIn**](doc//DefaultApi.md#redeemqrsignin) | **POST** /api/auth/qr/redeem | A new device hands in a scanned code and gets a ticket to wait with
 *DefaultApi* | [**reinviteKeepGuest**](doc//DefaultApi.md#reinvitekeepguest) | **POST** /api/admin/keep/guests/{id}/invite | A new code for a guest that has not paired yet
@@ -269,6 +270,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 *DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
 *DefaultApi* | [**setAssetFacts**](doc//DefaultApi.md#setassetfacts) | **PATCH** /api/assets/{id}/facts | Change the date, location or description of a photo. Its file is never changed
+*DefaultApi* | [**setAssetPick**](doc//DefaultApi.md#setassetpick) | **POST** /api/assets/pick | Marks the user's own photos as picked, rejected or neither. Photos of others are left out.
 *DefaultApi* | [**setAvatar**](doc//DefaultApi.md#setavatar) | **PUT** /api/me/avatar | A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
 *DefaultApi* | [**setBackupQuietDays**](doc//DefaultApi.md#setbackupquietdays) | **PUT** /api/me/backup-devices/quiet-days | After how many days without a report a device counts as quiet; 0 never warns
 *DefaultApi* | [**setBackupSettings**](doc//DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
@@ -422,6 +424,9 @@ Class | Method | HTTP request | Description
  - [MapStyle](doc//MapStyle.md)
  - [MemberRole](doc//MemberRole.md)
  - [Memory](doc//Memory.md)
+ - [MlAcceleration](doc//MlAcceleration.md)
+ - [MlModel](doc//MlModel.md)
+ - [MlServiceStatus](doc//MlServiceStatus.md)
  - [Notification](doc//Notification.md)
  - [NotificationList](doc//NotificationList.md)
  - [OIDCExchange](doc//OIDCExchange.md)
@@ -439,6 +444,9 @@ Class | Method | HTTP request | Description
  - [Person](doc//Person.md)
  - [PersonRef](doc//PersonRef.md)
  - [PersonUpdate](doc//PersonUpdate.md)
+ - [PickRequest](doc//PickRequest.md)
+ - [PickState](doc//PickState.md)
+ - [PickStates](doc//PickStates.md)
  - [Place](doc//Place.md)
  - [PlaceList](doc//PlaceList.md)
  - [ProfileUpdate](doc//ProfileUpdate.md)

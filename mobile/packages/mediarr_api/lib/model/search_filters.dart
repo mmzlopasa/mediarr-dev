@@ -23,6 +23,7 @@ class SearchFilters {
     this.lens,
     this.type,
     this.minRating,
+    this.pick,
     this.tags = const [],
     this.album,
     this.notInAlbum,
@@ -93,6 +94,15 @@ class SearchFilters {
   ///
   int? minRating;
 
+  /// 1 picked, -1 rejected, 0 unmarked
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  int? pick;
+
   List<String> tags;
 
   ///
@@ -142,6 +152,7 @@ class SearchFilters {
           other.lens == lens &&
           other.type == type &&
           other.minRating == minRating &&
+          other.pick == pick &&
           _deepEquality.equals(other.tags, tags) &&
           other.album == album &&
           other.notInAlbum == notInAlbum &&
@@ -161,6 +172,7 @@ class SearchFilters {
       (lens == null ? 0 : lens!.hashCode) +
       (type == null ? 0 : type!.hashCode) +
       (minRating == null ? 0 : minRating!.hashCode) +
+      (pick == null ? 0 : pick!.hashCode) +
       (tags.hashCode) +
       (album == null ? 0 : album!.hashCode) +
       (notInAlbum == null ? 0 : notInAlbum!.hashCode) +
@@ -169,7 +181,7 @@ class SearchFilters {
 
   @override
   String toString() =>
-      'SearchFilters[from=$from, to=$to, person=$person, people=$people, peopleMatch=$peopleMatch, place=$place, camera=$camera, lens=$lens, type=$type, minRating=$minRating, tags=$tags, album=$album, notInAlbum=$notInAlbum, favorite=$favorite, words=$words]';
+      'SearchFilters[from=$from, to=$to, person=$person, people=$people, peopleMatch=$peopleMatch, place=$place, camera=$camera, lens=$lens, type=$type, minRating=$minRating, pick=$pick, tags=$tags, album=$album, notInAlbum=$notInAlbum, favorite=$favorite, words=$words]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -218,6 +230,11 @@ class SearchFilters {
       json[r'minRating'] = this.minRating;
     } else {
       json[r'minRating'] = null;
+    }
+    if (this.pick != null) {
+      json[r'pick'] = this.pick;
+    } else {
+      json[r'pick'] = null;
     }
     json[r'tags'] = this.tags;
     if (this.album != null) {
@@ -275,6 +292,7 @@ class SearchFilters {
         lens: mapValueOfType<String>(json, r'lens'),
         type: SearchFiltersTypeEnum.fromJson(json[r'type']),
         minRating: mapValueOfType<int>(json, r'minRating'),
+        pick: mapValueOfType<int>(json, r'pick'),
         tags: json[r'tags'] is Iterable
             ? (json[r'tags'] as Iterable).cast<String>().toList(growable: false)
             : const [],

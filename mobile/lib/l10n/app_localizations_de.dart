@@ -4685,4 +4685,143 @@ class AppLocalizationsDe extends AppLocalizations {
   String notificationsLinkOpened(String subject) {
     return 'Dein Link „$subject“ wurde zum ersten Mal geöffnet.';
   }
+
+  @override
+  String get cullTitle => 'Auswahl';
+
+  @override
+  String get cullMark => 'Markierung';
+
+  @override
+  String get cullPick => 'Behalten';
+
+  @override
+  String get cullReject => 'Verwerfen';
+
+  @override
+  String get cullNoMark => 'Keine Markierung';
+
+  @override
+  String get cullPicks => 'Behaltene';
+
+  @override
+  String get cullRejects => 'Verworfene';
+
+  @override
+  String get cullUnmarked => 'Ohne Markierung';
+
+  @override
+  String get cullAddToCompare => 'Vergleichen';
+
+  @override
+  String get cullRemoveFromCompare => 'Aus dem Vergleich nehmen';
+
+  @override
+  String get cullStopComparing => 'Vergleich beenden';
+
+  @override
+  String get cullPicksToAlbum => 'Behaltene in neues Album';
+
+  @override
+  String get cullRejectsToTrash => 'Verworfene in den Papierkorb';
+
+  @override
+  String get cullNothing => 'Hier gibt es keine eigenen Fotos zum Auswählen.';
+
+  @override
+  String get cullNoneWithMark => 'Kein Foto hat diese Markierung.';
+
+  @override
+  String get cullNotSaved => 'Nicht gespeichert';
+
+  @override
+  String get cullActionFailed => 'Die Aktion ist fehlgeschlagen';
+
+  @override
+  String get cullLoadFailed => 'Die Markierungen konnten nicht geladen werden.';
+
+  @override
+  String get cullAlbumName => 'Name';
+
+  @override
+  String get cullCreateAlbum => 'Erstellen';
+
+  @override
+  String cullTally(int picks, int rejects) {
+    return 'Behalten: $picks · Verworfen: $rejects';
+  }
+
+  @override
+  String cullConfirmTrash(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count verworfene Fotos kommen in den Papierkorb und können wiederhergestellt werden.',
+      one: '1 verworfenes Foto kommt in den Papierkorb und kann wiederhergestellt werden.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullMovedToTrash(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Fotos in den Papierkorb verschoben',
+      one: '1 Foto in den Papierkorb verschoben',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullAlbumMade(int count, String title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Fotos sind im Album $title',
+      one: '1 Foto ist im Album $title',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullAlbumWillHold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Das Album enthält $count behaltene Fotos.',
+      one: 'Das Album enthält 1 behaltenes Foto.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminMlTitle => 'Analysedienst';
+
+  @override
+  String get adminMlConnected => 'Verbunden';
+
+  @override
+  String get adminMlLoaded => 'Geladene Modelle';
+
+  @override
+  String get adminMlMemory => 'Speicher';
+
+  @override
+  String get adminMlAcceleration => 'Beschleunigung';
+
+  @override
+  String get adminMlNoneLoaded => 'Gerade keines';
+
+  @override
+  String get adminMlState => 'Status';
+
+  @override
+  String get adminMlUnreachable =>
+      'Nicht erreichbar. Die Analyse wartet und läuft weiter, sobald der Dienst zurück ist; bis dahin sucht die Suche in Text auf Bildern und Dateinamen.';
+
+  @override
+  String get adminMlWrongToken =>
+      'Der Dienst hat das Token abgelehnt. ML_TOKEN muss in der .env hier und auf dem Rechner des Dienstes gleich sein.';
 }

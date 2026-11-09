@@ -1,12 +1,11 @@
 """Finds faces and turns each into a vector. Nothing here leaves the server."""
 
 import io
-import threading
 
 import numpy as np
 from PIL import Image
 
-from . import config, models
+from . import config, lifecycle, models
 
 DETECT_SIZE = 640
 SCORE_THRESHOLD = 0.5
@@ -26,19 +25,13 @@ FACE_TEMPLATE = np.array(
     dtype=np.float64,
 )
 
-_lock = threading.Lock()
-_detector = None
-_recognizer = None
+
+def _open_sessions():
+    detect, recognize = models.face_paths(config.FACE_MODEL)
+    return models.open_session(detect), models.open_session(recognize)
 
 
-def _sessions():
-    global _detector, _recognizer
-    with _lock:
-        if _detector is None:
-            detect, recognize = models.face_paths(config.FACE_MODEL)
-            _detector = models.open_session(detect)
-            _recognizer = models.open_session(recognize)
-    return _detector, _recognizer
+_sessions = lifecycle.registry.add("faces", _open_sessions)
 
 
 def letterbox(picture: Image.Image) -> tuple[np.ndarray, float]:
@@ -129,25 +122,25 @@ def align(picture: Image.Image, points: np.ndarray) -> Image.Image:
 
 
 def detect(data: bytes) -> list[dict]:
-    detector, recognizer = _sessions()
     picture = Image.open(io.BytesIO(data)).convert("RGB")
     values, scale = letterbox(picture)
-    name = detector.get_inputs()[0].name
-    scores, boxes, points = decode(detector.run(None, {name: values}))
-    faces = []
-    input_name = recognizer.get_inputs()[0].name
-    for index in nms(scores, boxes) if len(scores) else []:
-        box = boxes[index] / scale
-        marks = points[index] / scale
-        face = np.asarray(align(picture, marks), dtype=np.float32)
-        tensor = ((face - 127.5) / 127.5).transpose(2, 0, 1)[np.newaxis, ...]
-        vector = recognizer.run(None, {input_name: tensor})[0][0]
-        vector = vector / max(float(np.linalg.norm(vector)), 1e-9)
-        faces.append(
-            {
-                "box": [float(value) for value in box],
-                "score": float(scores[index]),
-                "embedding": vector.astype(float).tolist(),
-            }
-        )
+    with _sessions.use() as (detector, recognizer):
+        name = detector.get_inputs()[0].name
+        scores, boxes, points = decode(detector.run(None, {name: values}))
+        faces = []
+        input_name = recognizer.get_inputs()[0].name
+        for index in nms(scores, boxes) if len(scores) else []:
+            box = boxes[index] / scale
+            marks = points[index] / scale
+            face = np.asarray(align(picture, marks), dtype=np.float32)
+            tensor = ((face - 127.5) / 127.5).transpose(2, 0, 1)[np.newaxis, ...]
+            vector = recognizer.run(None, {input_name: tensor})[0][0]
+            vector = vector / max(float(np.linalg.norm(vector)), 1e-9)
+            faces.append(
+                {
+                    "box": [float(value) for value in box],
+                    "score": float(scores[index]),
+                    "embedding": vector.astype(float).tolist(),
+                }
+            )
     return faces

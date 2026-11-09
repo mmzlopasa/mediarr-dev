@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 
@@ -34,8 +35,10 @@ const (
 	rrfConstant      = 60.0
 	minStem          = 4
 	stemTail         = 2
-	textDeadline     = 5 * time.Second
-	maxPersonName    = 100
+	// Long enough for the model to load again after a quiet period, which takes up to about 12 s.
+	textDeadline  = 20 * time.Second
+	maxPersonName = 100
+	termsFresh    = time.Minute
 )
 
 var yearWord = regexp.MustCompile(`^(19|20)[0-9]{2}$`)
@@ -248,7 +251,25 @@ func likePattern(words string) string {
 
 func textArg(value string) pgtype.Text { return pgtype.Text{String: value, Valid: value != ""} }
 
+// termsCache remembers what each library can name for a moment: the list comes from reading every
+// picture's details, which is far too slow to do for each search.
+type termsCache struct {
+	mu     sync.Mutex
+	byUser map[pgtype.UUID]cachedTerms
+}
+
+type cachedTerms struct {
+	terms []searchTerm
+	read  time.Time
+}
+
 func (s *apiServer) searchTerms(ctx context.Context, user pgtype.UUID) ([]searchTerm, error) {
+	s.terms.mu.Lock()
+	cached, known := s.terms.byUser[user]
+	s.terms.mu.Unlock()
+	if known && time.Since(cached.read) < termsFresh {
+		return cached.terms, nil
+	}
 	rows, err := s.queries.ListSearchTerms(ctx, user)
 	if err != nil {
 		return nil, err
@@ -257,7 +278,20 @@ func (s *apiServer) searchTerms(ctx context.Context, user pgtype.UUID) ([]search
 	for i, row := range rows {
 		terms[i] = searchTerm{kind: row.Kind, value: row.Value, ref: row.Ref}
 	}
+	s.terms.mu.Lock()
+	if s.terms.byUser == nil {
+		s.terms.byUser = map[pgtype.UUID]cachedTerms{}
+	}
+	s.terms.byUser[user] = cachedTerms{terms: terms, read: time.Now()}
+	s.terms.mu.Unlock()
 	return terms, nil
+}
+
+// forgetSearchTerms makes the next search read the names again, after a person was named.
+func (s *apiServer) forgetSearchTerms(user pgtype.UUID) {
+	s.terms.mu.Lock()
+	delete(s.terms.byUser, user)
+	s.terms.mu.Unlock()
 }
 
 func (s *apiServer) vectorSearch(ctx context.Context, params *db.SearchVectorParams) ([]pgtype.UUID, error) {
@@ -288,6 +322,7 @@ type searchScope struct {
 	lens        string
 	kind        string
 	minRating   int16
+	pick        pgtype.Int2
 	favorite    bool
 	tags        []string
 	album       pgtype.UUID
@@ -299,7 +334,7 @@ func (c *searchScope) filtered(user pgtype.UUID, limit int32) db.SearchFilteredP
 	return db.SearchFilteredParams{
 		UserID: user, AlbumShared: c.albumShared, FromAt: c.from, ToAt: c.to, People: c.people, PeopleAll: c.peopleAll,
 		Place: textArg(c.place), Camera: textArg(c.camera), Lens: textArg(c.lens), Kind: textArg(c.kind),
-		MinRating: c.minRating, FavoriteOnly: c.favorite, Tags: c.tags, Album: c.album, NotInAlbum: c.notInAlbum, RowLimit: limit,
+		MinRating: c.minRating, Pick: c.pick, FavoriteOnly: c.favorite, Tags: c.tags, Album: c.album, NotInAlbum: c.notInAlbum, RowLimit: limit,
 	}
 }
 
@@ -308,7 +343,7 @@ func (c *searchScope) text(user pgtype.UUID, words string, limit int32) db.Searc
 	return db.SearchTextParams{
 		UserID: user, Words: words, NamePattern: likePattern(words), AlbumShared: f.AlbumShared, FromAt: f.FromAt, ToAt: f.ToAt,
 		People: f.People, PeopleAll: f.PeopleAll, Place: f.Place, Camera: f.Camera, Lens: f.Lens, Kind: f.Kind,
-		MinRating: f.MinRating, FavoriteOnly: f.FavoriteOnly, Tags: f.Tags, Album: f.Album, NotInAlbum: f.NotInAlbum, RowLimit: limit,
+		MinRating: f.MinRating, Pick: f.Pick, FavoriteOnly: f.FavoriteOnly, Tags: f.Tags, Album: f.Album, NotInAlbum: f.NotInAlbum, RowLimit: limit,
 	}
 }
 
@@ -317,7 +352,7 @@ func (c *searchScope) vector(user pgtype.UUID, embedding string, limit int32) db
 	return db.SearchVectorParams{
 		UserID: user, Embedding: embedding, AlbumShared: f.AlbumShared, FromAt: f.FromAt, ToAt: f.ToAt,
 		People: f.People, PeopleAll: f.PeopleAll, Place: f.Place, Camera: f.Camera, Lens: f.Lens, Kind: f.Kind,
-		MinRating: f.MinRating, FavoriteOnly: f.FavoriteOnly, Tags: f.Tags, Album: f.Album, NotInAlbum: f.NotInAlbum, RowLimit: limit,
+		MinRating: f.MinRating, Pick: f.Pick, FavoriteOnly: f.FavoriteOnly, Tags: f.Tags, Album: f.Album, NotInAlbum: f.NotInAlbum, RowLimit: limit,
 	}
 }
 
@@ -369,6 +404,12 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 		scope.minRating = int16(min(max(*params.MinRating, 0), 5)) //nolint:gosec // Bounded.
 		filters.MinRating = params.MinRating
 	}
+	var validPick bool
+	if scope.pick, validPick = pickFilter(params.Pick); !validPick {
+		writeError(w, http.StatusBadRequest, errBadPick)
+		return
+	}
+	filters.Pick = params.Pick
 	if params.Album != nil {
 		album, err := s.queries.GetAlbumForUser(ctx, db.GetAlbumForUserParams{ID: pgUUID(*params.Album), UserID: user.ID})
 		if db.IsNotFound(err) {
@@ -417,7 +458,7 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 	scope.from, scope.to = dateParam(fromDay, false), dateParam(toDay, true)
 
 	chosen := scope.from.Valid || scope.to.Valid || len(scope.people) > 0 || scope.place != "" || scope.camera != "" ||
-		scope.lens != "" || scope.kind != "" || scope.minRating > 0 || scope.favorite || len(scope.tags) > 0 ||
+		scope.lens != "" || scope.kind != "" || scope.minRating > 0 || scope.pick.Valid || scope.favorite || len(scope.tags) > 0 ||
 		scope.album.Valid || scope.notInAlbum
 	if query == "" && !chosen {
 		writeError(w, http.StatusBadRequest, "type something to look for, or choose a filter")
@@ -512,7 +553,7 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 			vector, err := s.embeddings.Text(textCtx, words)
 			cancel()
 			if err != nil {
-				if !errors.Is(err, ml.ErrDisabled) {
+				if !errors.Is(err, ml.ErrDisabled) && !errors.Is(err, ml.ErrCoolingOff) {
 					slog.Warn("search without picture analysis", "error", err)
 				}
 				smart = false
@@ -640,7 +681,7 @@ func (s *apiServer) person(w http.ResponseWriter, r *http.Request, id openapi_ty
 }
 
 func (s *apiServer) UpdatePerson(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
-	row, _, ok := s.person(w, r, id)
+	row, user, ok := s.person(w, r, id)
 	if !ok {
 		return
 	}
@@ -671,6 +712,7 @@ func (s *apiServer) UpdatePerson(w http.ResponseWriter, r *http.Request, id open
 		internalError(w, r, err)
 		return
 	}
+	defer s.forgetSearchTerms(user.ID)
 	if body.BirthDate != nil {
 		if err := s.queries.SetPersonBirthDate(r.Context(), db.SetPersonBirthDateParams{ID: row.ID, BirthDate: date}); err != nil {
 			internalError(w, r, err)
@@ -706,6 +748,7 @@ func (s *apiServer) MergePeople(w http.ResponseWriter, r *http.Request, id opena
 		internalError(w, r, err)
 		return
 	}
+	s.forgetSearchTerms(user.ID)
 	w.WriteHeader(http.StatusNoContent)
 }
 

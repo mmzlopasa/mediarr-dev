@@ -30,6 +30,7 @@
 	let lens = $state(start.get('lens') ?? '');
 	let kind = $state(start.get('type') ?? '');
 	let minRating = $state(start.get('minRating') ?? '');
+	let pick = $state(start.get('pick') ?? '');
 	let tags = $state<string[]>(start.getAll('tag').map((tag) => tag.toLowerCase()));
 	let album = $state(start.get('notInAlbum') === 'true' ? 'none' : (start.get('album') ?? ''));
 	let favorite = $state(start.get('favorite') === 'true');
@@ -69,7 +70,8 @@
 			['camera', camera],
 			['lens', lens],
 			['type', kind],
-			['minRating', minRating]
+			['minRating', minRating],
+			['pick', pick]
 		]) {
 			if (value.trim()) next.set(key, value.trim());
 		}
@@ -162,6 +164,15 @@
 				{#each [1, 2, 3, 4, 5] as stars (stars)}
 					<option value={String(stars)}>{'★'.repeat(stars)}{stars < 5 ? '+' : ''}</option>
 				{/each}
+			</select>
+		</label>
+		<label class="sf-field">
+			<span>{t('cull.mark')}</span>
+			<select class="in" bind:value={pick}>
+				<option value="">{t('filterPanel.any')}</option>
+				<option value="1">{t('cull.picks')}</option>
+				<option value="-1">{t('cull.rejects')}</option>
+				<option value="0">{t('cull.unmarked')}</option>
 			</select>
 		</label>
 		<label class="sf-field">

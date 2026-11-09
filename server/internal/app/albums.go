@@ -481,8 +481,8 @@ func (s *apiServer) RemoveAlbumAssets(w http.ResponseWriter, r *http.Request, id
 	writeJSON(w, http.StatusOK, api.BulkResponse{Changed: changed})
 }
 
-func (s *apiServer) writeAlbumBuckets(w http.ResponseWriter, r *http.Request, albumID pgtype.UUID, order string) {
-	rows, err := s.queries.AlbumBuckets(r.Context(), albumID)
+func (s *apiServer) writeAlbumBuckets(w http.ResponseWriter, r *http.Request, albumID pgtype.UUID, order string, pick pgtype.Int2, viewer pgtype.UUID) {
+	rows, err := s.queries.AlbumBuckets(r.Context(), db.AlbumBucketsParams{AlbumID: albumID, Pick: pick, Viewer: viewer})
 	if err != nil {
 		internalError(w, r, err)
 		return
@@ -494,12 +494,12 @@ func (s *apiServer) writeAlbumBuckets(w http.ResponseWriter, r *http.Request, al
 	writeBuckets(w, out, order == string(api.AlbumOrderOldest))
 }
 
-func (s *apiServer) writeAlbumBucket(w http.ResponseWriter, r *http.Request, albumID pgtype.UUID, order, month string, viewer pgtype.UUID) {
+func (s *apiServer) writeAlbumBucket(w http.ResponseWriter, r *http.Request, albumID pgtype.UUID, order, month string, viewer pgtype.UUID, pick pgtype.Int2) {
 	from, to, ok := monthRange(w, month)
 	if !ok {
 		return
 	}
-	rows, err := s.queries.AlbumBucket(r.Context(), db.AlbumBucketParams{AlbumID: albumID, FromAt: from, ToAt: to})
+	rows, err := s.queries.AlbumBucket(r.Context(), db.AlbumBucketParams{AlbumID: albumID, FromAt: from, ToAt: to, Pick: pick, Viewer: viewer})
 	if err != nil {
 		internalError(w, r, err)
 		return
@@ -511,20 +511,30 @@ func (s *apiServer) writeAlbumBucket(w http.ResponseWriter, r *http.Request, alb
 	writeBucket(w, month, out, viewer, order == string(api.AlbumOrderOldest))
 }
 
-func (s *apiServer) GetAlbumBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
-	album, _, ok := s.album(w, r, id, roleViewer)
-	if !ok {
-		return
-	}
-	s.writeAlbumBuckets(w, r, album.ID, album.AssetOrder)
-}
-
-func (s *apiServer) GetAlbumBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string) {
+func (s *apiServer) GetAlbumBuckets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, params api.GetAlbumBucketsParams) {
 	album, user, ok := s.album(w, r, id, roleViewer)
 	if !ok {
 		return
 	}
-	s.writeAlbumBucket(w, r, album.ID, album.AssetOrder, month, user.ID)
+	pick, valid := pickFilter(params.Pick)
+	if !valid {
+		writeError(w, http.StatusBadRequest, errBadPick)
+		return
+	}
+	s.writeAlbumBuckets(w, r, album.ID, album.AssetOrder, pick, user.ID)
+}
+
+func (s *apiServer) GetAlbumBucket(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, month string, params api.GetAlbumBucketParams) {
+	album, user, ok := s.album(w, r, id, roleViewer)
+	if !ok {
+		return
+	}
+	pick, valid := pickFilter(params.Pick)
+	if !valid {
+		writeError(w, http.StatusBadRequest, errBadPick)
+		return
+	}
+	s.writeAlbumBucket(w, r, album.ID, album.AssetOrder, month, user.ID, pick)
 }
 
 func (s *apiServer) SetAlbumMember(w http.ResponseWriter, r *http.Request, id, userID openapi_types.UUID) {

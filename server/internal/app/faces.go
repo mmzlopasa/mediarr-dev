@@ -182,6 +182,7 @@ func (s *apiServer) AssignFace(w http.ResponseWriter, r *http.Request, id openap
 		internalError(w, r, err)
 		return
 	}
+	s.forgetSearchTerms(user.ID)
 	w.WriteHeader(http.StatusNoContent)
 }
 

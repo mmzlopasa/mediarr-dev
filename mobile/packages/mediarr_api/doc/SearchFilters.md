@@ -18,6 +18,7 @@ Name | Type | Description | Notes
 **lens** | **String** |  | [optional] 
 **type** | **String** |  | [optional] 
 **minRating** | **int** |  | [optional] 
+**pick** | **int** | 1 picked, -1 rejected, 0 unmarked | [optional] 
 **tags** | **List<String>** |  | [optional] [default to const []]
 **album** | [**AlbumRef**](AlbumRef.md) |  | [optional] 
 **notInAlbum** | **bool** |  | [optional] 

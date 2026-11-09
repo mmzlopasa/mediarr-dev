@@ -67,6 +67,8 @@ type Deps struct {
 	CachePath  string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
+	// MLToken is sent to that service only, when it asks for one.
+	MLToken string
 }
 
 type apiServer struct {
@@ -95,6 +97,7 @@ type apiServer struct {
 	// fullPreviews limits how many full resolution previews are made at once.
 	fullPreviews chan struct{}
 	embeddings   *ml.Cache
+	terms        termsCache
 }
 
 // NewHandler returns the root HTTP handler.
@@ -132,7 +135,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		server.uploads = uploads
 	}
 
-	server.embeddings = ml.NewCache(ml.New(deps.MLURL))
+	server.embeddings = ml.NewCache(ml.New(deps.MLURL, deps.MLToken))
 	server.metrics = newMetrics(server)
 	r := chi.NewRouter()
 	r.Use(traced)

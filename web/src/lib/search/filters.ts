@@ -14,6 +14,7 @@ export const FILTER_KEYS = [
 	'lens',
 	'type',
 	'minRating',
+	'pick',
 	'tag',
 	'album',
 	'notInAlbum',
@@ -74,6 +75,15 @@ export function chipsFor(
 	}
 	if (filters.minRating)
 		chips.push({ key: 'minRating', label: `${'★'.repeat(filters.minRating)}+`, found: false });
+	if (filters.pick !== undefined) {
+		const label =
+			filters.pick === 1
+				? t('cull.picks')
+				: filters.pick === -1
+					? t('cull.rejects')
+					: t('cull.unmarked');
+		chips.push({ key: 'pick', label, found: false });
+	}
 	for (const tag of filters.tags ?? [])
 		chips.push({ key: 'tag', value: tag, label: `#${tag}`, found: false });
 	if (filters.album)

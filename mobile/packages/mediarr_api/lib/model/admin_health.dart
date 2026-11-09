@@ -17,6 +17,7 @@ class AdminHealth {
     this.workerLastSeen,
     required this.mlEnabled,
     this.mlRunning,
+    this.ml,
     required this.databaseBytes,
   });
 
@@ -40,6 +41,14 @@ class AdminHealth {
   ///
   bool? mlRunning;
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  MlServiceStatus? ml;
+
   int databaseBytes;
 
   @override
@@ -50,6 +59,7 @@ class AdminHealth {
           other.workerLastSeen == workerLastSeen &&
           other.mlEnabled == mlEnabled &&
           other.mlRunning == mlRunning &&
+          other.ml == ml &&
           other.databaseBytes == databaseBytes;
 
   @override
@@ -59,11 +69,12 @@ class AdminHealth {
       (workerLastSeen == null ? 0 : workerLastSeen!.hashCode) +
       (mlEnabled.hashCode) +
       (mlRunning == null ? 0 : mlRunning!.hashCode) +
+      (ml == null ? 0 : ml!.hashCode) +
       (databaseBytes.hashCode);
 
   @override
   String toString() =>
-      'AdminHealth[workerRunning=$workerRunning, workerLastSeen=$workerLastSeen, mlEnabled=$mlEnabled, mlRunning=$mlRunning, databaseBytes=$databaseBytes]';
+      'AdminHealth[workerRunning=$workerRunning, workerLastSeen=$workerLastSeen, mlEnabled=$mlEnabled, mlRunning=$mlRunning, ml=$ml, databaseBytes=$databaseBytes]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -78,6 +89,11 @@ class AdminHealth {
       json[r'mlRunning'] = this.mlRunning;
     } else {
       json[r'mlRunning'] = null;
+    }
+    if (this.ml != null) {
+      json[r'ml'] = this.ml;
+    } else {
+      json[r'ml'] = null;
     }
     json[r'databaseBytes'] = this.databaseBytes;
     return json;
@@ -108,6 +124,7 @@ class AdminHealth {
         workerLastSeen: mapDateTime(json, r'workerLastSeen', r''),
         mlEnabled: mapValueOfType<bool>(json, r'mlEnabled')!,
         mlRunning: mapValueOfType<bool>(json, r'mlRunning'),
+        ml: MlServiceStatus.fromJson(json[r'ml']),
         databaseBytes: mapValueOfType<int>(json, r'databaseBytes')!,
       );
     }

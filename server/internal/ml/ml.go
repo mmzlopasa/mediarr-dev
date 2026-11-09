@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -20,20 +21,53 @@ const (
 	textTimeout    = 2 * time.Minute
 	maxResponse    = 8 * 1024 * 1024
 	cacheSize      = 500
+	statusTimeout  = 3 * time.Second
+	dialTimeout    = 5 * time.Second
+	// After the service fails, searches go without it for this long instead of each waiting again.
+	downBackoff = 15 * time.Second
 )
 
 // ErrDisabled means no service is configured.
 var ErrDisabled = errors.New("picture analysis is not turned on")
 
-// Client calls the service. An empty URL makes every call return ErrDisabled.
-type Client struct {
-	url  string
-	http *http.Client
+// ErrWrongToken means the service refused ML_TOKEN, or asks for one that is not set here.
+var ErrWrongToken = errors.New("the analysis service refused the token: ML_TOKEN must be the same on both sides")
+
+// unreachableError means no answer came, as opposed to an answer that was an error.
+type unreachableError struct{ cause error }
+
+func (e *unreachableError) Error() string { return e.cause.Error() }
+func (e *unreachableError) Unwrap() error { return e.cause }
+
+// Unavailable reports that the service cannot do its work now, whatever the picture or the query.
+// Trying again later is the right answer to all of these; a wrong token also needs the owner.
+func Unavailable(err error) bool {
+	var (
+		unreachable *unreachableError
+		status      *StatusError
+	)
+	if errors.Is(err, ErrWrongToken) || errors.As(err, &unreachable) {
+		return true
+	}
+	return errors.As(err, &status) && status.Code >= http.StatusBadGateway && status.Code <= http.StatusGatewayTimeout
 }
 
-// New returns a client for the service at url.
-func New(url string) *Client {
-	return &Client{url: strings.TrimRight(url, "/"), http: &http.Client{}}
+// Client calls the service. An empty URL makes every call return ErrDisabled.
+type Client struct {
+	url   string
+	token string
+	http  *http.Client
+}
+
+// New returns a client for the service at url. The token, if any, goes to that address only:
+// redirects are not followed.
+func New(url, token string) *Client {
+	transport := http.DefaultTransport.(*http.Transport).Clone() //nolint:errcheck,forcetypeassert // Always this type.
+	transport.DialContext = (&net.Dialer{Timeout: dialTimeout, KeepAlive: 30 * time.Second}).DialContext
+	return &Client{url: strings.TrimRight(url, "/"), token: strings.TrimSpace(token), http: &http.Client{
+		Transport:     transport,
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}}
 }
 
 // Enabled reports whether a service is configured.
@@ -47,24 +81,36 @@ type Face struct {
 }
 
 func (c *Client) post(ctx context.Context, path, contentType string, body []byte, timeout time.Duration, out any) error {
+	return c.call(ctx, http.MethodPost, path, contentType, body, timeout, out)
+}
+
+func (c *Client) call(ctx context.Context, method, path, contentType string, body []byte, timeout time.Duration, out any) error {
 	if !c.Enabled() {
 		return ErrDisabled
 	}
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url+path, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, method, c.url+path, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", contentType)
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	if c.token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return fmt.Errorf("call %s: %w", path, err)
+		return &unreachableError{fmt.Errorf("call %s: %w", path, err)}
 	}
 	defer func() { _ = resp.Body.Close() }()
 	data, err := io.ReadAll(io.LimitReader(resp.Body, maxResponse))
 	if err != nil {
-		return fmt.Errorf("read %s: %w", path, err)
+		return &unreachableError{fmt.Errorf("read %s: %w", path, err)}
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		return ErrWrongToken
 	}
 	if resp.StatusCode != http.StatusOK {
 		return &StatusError{Path: path, Code: resp.StatusCode}
@@ -125,6 +171,34 @@ func (c *Client) ReadText(ctx context.Context, picture []byte) (string, error) {
 	return out.Text, err
 }
 
+// ModelStatus is one model of the service.
+type ModelStatus struct {
+	Name        string   `json:"name"`
+	Loaded      bool     `json:"loaded"`
+	InUse       int      `json:"in_use"`
+	IdleSeconds *float64 `json:"idle_seconds"`
+}
+
+// Status is what the service says about itself.
+type Status struct {
+	Models       []ModelStatus `json:"models"`
+	RSSBytes     *int64        `json:"rss_bytes"`
+	Acceleration struct {
+		Requested string   `json:"requested"`
+		Providers []string `json:"providers"`
+	} `json:"acceleration"`
+	IdleMinutes float64 `json:"idle_minutes"`
+}
+
+// Status asks the service how it is, without waiting long for one that is not there.
+func (c *Client) Status(ctx context.Context) (*Status, error) {
+	var out Status
+	if err := c.call(ctx, http.MethodGet, "/status", "", nil, statusTimeout, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // Vector writes a vector the way pgvector reads it.
 func Vector(values []float32) string {
 	var out strings.Builder
@@ -141,10 +215,11 @@ func Vector(values []float32) string {
 
 // Cache remembers the vectors of recent queries, because people repeat and refine them.
 type Cache struct {
-	client *Client
-	mu     sync.Mutex
-	values map[string]string
-	order  []string
+	client    *Client
+	mu        sync.Mutex
+	values    map[string]string
+	order     []string
+	downUntil time.Time
 }
 
 // NewCache wraps a client.
@@ -155,21 +230,38 @@ func NewCache(client *Client) *Cache {
 // Enabled reports whether a service is configured.
 func (c *Cache) Enabled() bool { return c.client.Enabled() }
 
+// Client is the client this cache wraps.
+func (c *Cache) Client() *Client { return c.client }
+
+// ErrCoolingOff means the service failed moments ago, so it was not asked again.
+var ErrCoolingOff = errors.New("the analysis service was not available moments ago")
+
 // Text returns the query's vector, ready for pgvector.
 func (c *Cache) Text(ctx context.Context, text string) (string, error) {
 	c.mu.Lock()
 	value, ok := c.values[text]
+	cooling := time.Now().Before(c.downUntil)
 	c.mu.Unlock()
 	if ok {
 		return value, nil
 	}
+	if cooling {
+		return "", ErrCoolingOff
+	}
 	embedding, err := c.client.EmbedText(ctx, text)
 	if err != nil {
+		// Someone closing the page says nothing about the service.
+		if Unavailable(err) && !errors.Is(err, context.Canceled) {
+			c.mu.Lock()
+			c.downUntil = time.Now().Add(downBackoff)
+			c.mu.Unlock()
+		}
 		return "", err
 	}
 	value = Vector(embedding)
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.downUntil = time.Time{}
 	if _, known := c.values[text]; !known {
 		c.values[text] = value
 		c.order = append(c.order, text)

@@ -556,6 +556,40 @@ paths:
               schema: { $ref: "#/components/schemas/BulkResponse" }
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/assets/pick:
+    post:
+      operationId: setAssetPick
+      summary: Marks the user's own photos as picked, rejected or neither. Photos of others are left out.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PickRequest" }
+      responses:
+        "200":
+          description: How many were marked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BulkResponse" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/assets/pick/read:
+    post:
+      operationId: readAssetPicks
+      summary: The marks and stars of the user's own photos among those asked about. Photos of others are left out.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetIds" }
+      responses:
+        "200":
+          description: The marks
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PickStates" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/assets/download:
     get:
       operationId: downloadAssets
@@ -939,6 +973,7 @@ paths:
       summary: Months in an album, in the album's order
       parameters:
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: pick, in: query, schema: { type: integer, minimum: -1, maximum: 1 }, description: "Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked" }
       responses:
         "200":
           description: Months
@@ -954,6 +989,7 @@ paths:
       parameters:
         - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
         - { name: month, in: path, required: true, schema: { type: string } }
+        - { name: pick, in: query, schema: { type: integer, minimum: -1, maximum: 1 }, description: "Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked" }
       responses:
         "200":
           description: Assets
@@ -1741,6 +1777,7 @@ paths:
         - { name: lens, in: query, schema: { type: string } }
         - { name: type, in: query, schema: { type: string, enum: [photo, video] } }
         - { name: minRating, in: query, schema: { type: integer, minimum: 1, maximum: 5 } }
+        - { name: pick, in: query, schema: { type: integer, minimum: -1, maximum: 1 }, description: "Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked" }
         - { name: tag, in: query, schema: { type: array, items: { type: string } }, style: form, explode: true }
         - { name: album, in: query, schema: { type: string, format: uuid }, description: "Only in this album, which may be shared with the user" }
         - { name: notInAlbum, in: query, schema: { type: boolean } }
@@ -3565,7 +3602,32 @@ components:
         workerLastSeen: { type: string, format: date-time }
         mlEnabled: { type: boolean }
         mlRunning: { type: boolean }
+        ml: { $ref: "#/components/schemas/MlServiceStatus" }
         databaseBytes: { type: integer, format: int64 }
+    MlServiceStatus:
+      type: object
+      description: The analysis service as this server reaches it. The details come only from a connected service.
+      required: [state]
+      properties:
+        state: { type: string, enum: [connected, unreachable, wrongToken] }
+        models: { type: array, items: { $ref: "#/components/schemas/MlModel" } }
+        rssBytes: { type: integer, format: int64 }
+        acceleration: { $ref: "#/components/schemas/MlAcceleration" }
+        idleMinutes: { type: number, format: double }
+    MlModel:
+      type: object
+      required: [name, loaded, inUse]
+      properties:
+        name: { type: string }
+        loaded: { type: boolean }
+        inUse: { type: integer }
+        idleSeconds: { type: number, format: double }
+    MlAcceleration:
+      type: object
+      required: [requested, providers]
+      properties:
+        requested: { type: string }
+        providers: { type: array, items: { type: string } }
     UserStorage:
       type: object
       required: [id, name, email, storedBytes, assets]
@@ -3970,6 +4032,7 @@ components:
         lens: { type: string }
         type: { type: string, enum: [photo, video] }
         minRating: { type: integer }
+        pick: { type: integer, description: "1 picked, -1 rejected, 0 unmarked" }
         tags: { type: array, items: { type: string } }
         album: { $ref: "#/components/schemas/AlbumRef" }
         notInAlbum: { type: boolean }
@@ -4951,6 +5014,29 @@ components:
           items: { type: string, format: uuid }
         action: { type: string, enum: [favorite, unfavorite, archive, unarchive, delete, restore, vault, unvault, purge] }
         dryRun: { type: boolean, description: "Only say how many it would change" }
+    PickRequest:
+      type: object
+      required: [ids, pick]
+      properties:
+        ids:
+          type: array
+          maxItems: 1000
+          items: { type: string, format: uuid }
+        pick: { type: integer, minimum: -1, maximum: 1, description: "1 picked, -1 rejected, 0 none" }
+    PickState:
+      type: object
+      required: [id, pick, rating]
+      properties:
+        id: { type: string, format: uuid }
+        pick: { type: integer, description: "1 picked, -1 rejected, 0 none" }
+        rating: { type: integer, description: "0 to 5 stars; 0 is none" }
+    PickStates:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/PickState" }
     BulkResponse:
       type: object
       required: [changed]

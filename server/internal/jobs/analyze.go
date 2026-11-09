@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -78,7 +79,11 @@ func (w *analyzeWorker) Work(ctx context.Context, job *river.Job[AnalyzeArgs]) e
 		owner = asset.UserID
 		before, _ = w.queries.CountUserPeople(ctx, owner)
 	}
-	err := AnalyzeAsset(ctx, w.pool, w.queries, w.client, id)
+	err := untilAvailable(ctx, func() error { return AnalyzeAsset(ctx, w.pool, w.queries, w.client, id) })
+	if ml.Unavailable(err) {
+		// Waited long enough for now. A snooze does not count as an attempt, so it can never fail.
+		return river.JobSnooze(serviceSnooze)
+	}
 	if err == nil && before >= 0 {
 		if after, countErr := w.queries.CountUserPeople(ctx, owner); countErr == nil && after > before {
 			w.emitWebhook(ctx, EventPersonCreated, map[string]string{"assetId": uuidString(id), "userId": uuidString(owner)})
@@ -94,6 +99,40 @@ func (w *analyzeWorker) Work(ctx context.Context, job *river.Job[AnalyzeArgs]) e
 
 // Timeout leaves room for the first run, when the service fetches its models.
 func (w *analyzeWorker) Timeout(*river.Job[AnalyzeArgs]) time.Duration { return 30 * time.Minute }
+
+// While the service is away, the analysis workers keep their place and ask again now and then,
+// rather than cycling every waiting job through the queue. Only the analysis queue waits like this.
+const (
+	serviceRetry  = 30 * time.Second
+	serviceHold   = 20 * time.Minute
+	serviceSnooze = time.Minute
+)
+
+// untilAvailable runs the work, and again while the service cannot do it. It gives up after
+// serviceHold, or when the job's time is up, returning the error it ended on.
+func untilAvailable(ctx context.Context, work func() error) error {
+	return retryUntilAvailable(ctx, work, serviceRetry, serviceHold)
+}
+
+var lastServiceWarning atomic.Int64
+
+func retryUntilAvailable(ctx context.Context, work func() error, retry, hold time.Duration) error {
+	deadline := time.Now().Add(hold)
+	for {
+		err := work()
+		if !ml.Unavailable(err) || time.Now().After(deadline) {
+			return err
+		}
+		if last := lastServiceWarning.Load(); time.Now().Unix()-last >= 60 && lastServiceWarning.CompareAndSwap(last, time.Now().Unix()) {
+			slog.Warn("waiting for the analysis service", "error", err)
+		}
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(retry):
+		}
+	}
+}
 
 type beginner interface {
 	Begin(ctx context.Context) (pgx.Tx, error)

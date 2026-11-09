@@ -701,3 +701,52 @@ test('a settings page lists its parts and jumps to one', async ({ page }) => {
 		'location'
 	);
 });
+
+test('the admin sees how the analysis service is doing', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'admin');
+	const health = {
+		workerRunning: true,
+		mlEnabled: true,
+		databaseBytes: 1000
+	};
+	await page.route('**/api/admin/health', (route) =>
+		route.fulfill({
+			json: {
+				...health,
+				mlRunning: true,
+				ml: {
+					state: 'connected',
+					models: [
+						{ name: 'clip-text', loaded: true, inUse: 0, idleSeconds: 2 },
+						{ name: 'ocr', loaded: false, inUse: 0 }
+					],
+					rssBytes: 104857600,
+					acceleration: { requested: 'cpu', providers: ['CPUExecutionProvider'] },
+					idleMinutes: 5
+				}
+			}
+		})
+	);
+	await page.goto('/admin/health');
+	await expect(page.getByTestId('ml-state')).toContainText('Connected');
+	await expect(page.locator('.kv', { hasText: 'Loaded models' })).toContainText('clip-text');
+	await expect(page.locator('.kv', { hasText: 'Acceleration' })).toContainText('cpu');
+	await page.unroute('**/api/admin/health');
+
+	await page.route('**/api/admin/health', (route) =>
+		route.fulfill({ json: { ...health, mlRunning: false, ml: { state: 'wrongToken' } } })
+	);
+	await page.reload();
+	await expect(page.getByTestId('ml-state')).toContainText('refused the token');
+});
+
+test('a search without the analysis service says so', async ({ page }) => {
+	await page.addInitScript(() => localStorage.setItem('mediarr_lang', 'en'));
+	await signIn(page, 'admin');
+	await page.route('**/api/search?*', (route) =>
+		route.fulfill({ json: { items: [], smart: false, filters: { words: 'beach' } } })
+	);
+	await page.goto('/search?q=beach');
+	await expect(page.getByRole('status').filter({ hasText: 'Smart search is off' })).toBeVisible();
+});

@@ -433,18 +433,16 @@ func (q *Queries) ListPeople(ctx context.Context, arg ListPeopleParams) ([]ListP
 }
 
 const listSearchTerms = `-- name: ListSearchTerms :many
+WITH combos AS (
+    SELECT DISTINCT e.city, e.state, e.country, e.make, e.model
+    FROM exif e JOIN assets a ON a.id = e.asset_id
+    WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL
+)
 SELECT 'person'::text AS kind, p.name AS value, p.id::text AS ref FROM people p WHERE p.user_id = $1 AND p.name <> ''
 UNION
-SELECT 'place', x.value, '' FROM (
-    SELECT e.city AS value FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.city IS NOT NULL
-    UNION SELECT e.state FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.state IS NOT NULL AND e.state <> ''
-    UNION SELECT e.country FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.country IS NOT NULL
-) x
-UNION
-SELECT 'camera', x.value, '' FROM (
-    SELECT e.make AS value FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.make IS NOT NULL
-    UNION SELECT e.model FROM exif e JOIN assets a ON a.id = e.asset_id WHERE a.user_id = $1 AND a.vault_at IS NULL AND a.deleted_at IS NULL AND e.model IS NOT NULL
-) x
+SELECT DISTINCT t.kind, t.value, ''
+FROM combos c, LATERAL (VALUES ('place', c.city), ('place', c.state), ('place', c.country), ('camera', c.make), ('camera', c.model)) AS t(kind, value)
+WHERE t.value IS NOT NULL AND t.value <> ''
 `
 
 type ListSearchTermsRow struct {
@@ -453,7 +451,8 @@ type ListSearchTermsRow struct {
 	Ref   string
 }
 
-// What a query can name: people, places and cameras in this library.
+// What a query can name: people, places and cameras in this library. The combinations come from one
+// reading of the table, because each column read on its own cost a whole pass over every picture.
 func (q *Queries) ListSearchTerms(ctx context.Context, userID pgtype.UUID) ([]ListSearchTermsRow, error) {
 	rows, err := q.db.Query(ctx, listSearchTerms, userID)
 	if err != nil {
@@ -755,14 +754,15 @@ WHERE (a.user_id = $1 OR $2::boolean)
   AND ($9::text IS NULL OR lower(e.lens) = lower($9))
   AND ($10::text IS NULL OR a.kind = $10)
   AND a.rating >= $11::smallint
-  AND (NOT $12::boolean OR a.is_favorite)
+  AND ($12::smallint IS NULL OR (a.pick = $12 AND a.user_id = $1))
+  AND (NOT $13::boolean OR a.is_favorite)
   -- Tags: every one asked for.
-  AND (coalesce(cardinality($13::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
-        WHERE at.asset_id = a.id AND lower(t.name) = ANY($13::text[])) = cardinality($13::text[]))
-  AND ($14::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $14))
-  AND (NOT $15::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
+  AND (coalesce(cardinality($14::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY($14::text[])) = cardinality($14::text[]))
+  AND ($15::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $15))
+  AND (NOT $16::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
 ORDER BY a.local_at DESC, a.id DESC
-LIMIT $16
+LIMIT $17
 `
 
 type SearchFilteredParams struct {
@@ -777,6 +777,7 @@ type SearchFilteredParams struct {
 	Lens         pgtype.Text
 	Kind         pgtype.Text
 	MinRating    int16
+	Pick         pgtype.Int2
 	FavoriteOnly bool
 	Tags         []string
 	Album        pgtype.UUID
@@ -797,6 +798,7 @@ func (q *Queries) SearchFiltered(ctx context.Context, arg SearchFilteredParams) 
 		arg.Lens,
 		arg.Kind,
 		arg.MinRating,
+		arg.Pick,
 		arg.FavoriteOnly,
 		arg.Tags,
 		arg.Album,
@@ -894,14 +896,15 @@ WHERE a.id IN (
   AND ($11::text IS NULL OR lower(e.lens) = lower($11))
   AND ($12::text IS NULL OR a.kind = $12)
   AND a.rating >= $13::smallint
-  AND (NOT $14::boolean OR a.is_favorite)
+  AND ($14::smallint IS NULL OR (a.pick = $14 AND a.user_id = $3))
+  AND (NOT $15::boolean OR a.is_favorite)
   -- Tags: every one asked for.
-  AND (coalesce(cardinality($15::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
-        WHERE at.asset_id = a.id AND lower(t.name) = ANY($15::text[])) = cardinality($15::text[]))
-  AND ($16::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $16))
-  AND (NOT $17::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
+  AND (coalesce(cardinality($16::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY($16::text[])) = cardinality($16::text[]))
+  AND ($17::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $17))
+  AND (NOT $18::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
 ORDER BY ts_rank(s.ocr_tsv, plainto_tsquery('simple', $1)) DESC NULLS LAST, a.local_at DESC
-LIMIT $18
+LIMIT $19
 `
 
 type SearchTextParams struct {
@@ -918,6 +921,7 @@ type SearchTextParams struct {
 	Lens         pgtype.Text
 	Kind         pgtype.Text
 	MinRating    int16
+	Pick         pgtype.Int2
 	FavoriteOnly bool
 	Tags         []string
 	Album        pgtype.UUID
@@ -941,6 +945,7 @@ func (q *Queries) SearchText(ctx context.Context, arg SearchTextParams) ([]pgtyp
 		arg.Lens,
 		arg.Kind,
 		arg.MinRating,
+		arg.Pick,
 		arg.FavoriteOnly,
 		arg.Tags,
 		arg.Album,
@@ -984,14 +989,15 @@ WHERE (a.user_id = $1 OR $2::boolean)
   AND ($9::text IS NULL OR lower(e.lens) = lower($9))
   AND ($10::text IS NULL OR a.kind = $10)
   AND a.rating >= $11::smallint
-  AND (NOT $12::boolean OR a.is_favorite)
+  AND ($12::smallint IS NULL OR (a.pick = $12 AND a.user_id = $1))
+  AND (NOT $13::boolean OR a.is_favorite)
   -- Tags: every one asked for.
-  AND (coalesce(cardinality($13::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
-        WHERE at.asset_id = a.id AND lower(t.name) = ANY($13::text[])) = cardinality($13::text[]))
-  AND ($14::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $14))
-  AND (NOT $15::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
-ORDER BY s.embedding <=> $16::text::vector
-LIMIT $17
+  AND (coalesce(cardinality($14::text[]), 0) = 0 OR (SELECT count(DISTINCT lower(t.name)) FROM asset_tags at JOIN tags t ON t.id = at.tag_id
+        WHERE at.asset_id = a.id AND lower(t.name) = ANY($14::text[])) = cardinality($14::text[]))
+  AND ($15::uuid IS NULL OR EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id AND aa.album_id = $15))
+  AND (NOT $16::boolean OR NOT EXISTS (SELECT 1 FROM album_assets aa WHERE aa.asset_id = a.id))
+ORDER BY s.embedding <=> $17::text::vector
+LIMIT $18
 `
 
 type SearchVectorParams struct {
@@ -1006,6 +1012,7 @@ type SearchVectorParams struct {
 	Lens         pgtype.Text
 	Kind         pgtype.Text
 	MinRating    int16
+	Pick         pgtype.Int2
 	FavoriteOnly bool
 	Tags         []string
 	Album        pgtype.UUID
@@ -1027,6 +1034,7 @@ func (q *Queries) SearchVector(ctx context.Context, arg SearchVectorParams) ([]p
 		arg.Lens,
 		arg.Kind,
 		arg.MinRating,
+		arg.Pick,
 		arg.FavoriteOnly,
 		arg.Tags,
 		arg.Album,

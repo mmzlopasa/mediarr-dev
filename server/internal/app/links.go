@@ -348,7 +348,7 @@ func (s *apiServer) GetPublicBuckets(w http.ResponseWriter, r *http.Request, tok
 	if !ok {
 		return
 	}
-	s.writeAlbumBuckets(w, r, link.AlbumID, link.AssetOrder)
+	s.writeAlbumBuckets(w, r, link.AlbumID, link.AssetOrder, pgtype.Int2{}, pgtype.UUID{})
 }
 
 func (s *apiServer) GetPublicBucket(w http.ResponseWriter, r *http.Request, token, month string) {
@@ -356,7 +356,7 @@ func (s *apiServer) GetPublicBucket(w http.ResponseWriter, r *http.Request, toke
 	if !ok {
 		return
 	}
-	s.writeAlbumBucket(w, r, link.AlbumID, link.AssetOrder, month, pgtype.UUID{})
+	s.writeAlbumBucket(w, r, link.AlbumID, link.AssetOrder, month, pgtype.UUID{}, pgtype.Int2{})
 }
 
 func downloadsLeft(link *db.GetLinkByTokenRow) bool {

@@ -120,6 +120,9 @@ doc/MapPoints.md
 doc/MapStyle.md
 doc/MemberRole.md
 doc/Memory.md
+doc/MlAcceleration.md
+doc/MlModel.md
+doc/MlServiceStatus.md
 doc/Notification.md
 doc/NotificationList.md
 doc/OIDCExchange.md
@@ -137,6 +140,9 @@ doc/PeopleList.md
 doc/Person.md
 doc/PersonRef.md
 doc/PersonUpdate.md
+doc/PickRequest.md
+doc/PickState.md
+doc/PickStates.md
 doc/Place.md
 doc/PlaceList.md
 doc/ProfileUpdate.md
@@ -324,6 +330,9 @@ lib/model/map_points.dart
 lib/model/map_style.dart
 lib/model/member_role.dart
 lib/model/memory.dart
+lib/model/ml_acceleration.dart
+lib/model/ml_model.dart
+lib/model/ml_service_status.dart
 lib/model/notification.dart
 lib/model/notification_list.dart
 lib/model/oidc_exchange.dart
@@ -341,6 +350,9 @@ lib/model/people_list.dart
 lib/model/person.dart
 lib/model/person_ref.dart
 lib/model/person_update.dart
+lib/model/pick_request.dart
+lib/model/pick_state.dart
+lib/model/pick_states.dart
 lib/model/place.dart
 lib/model/place_list.dart
 lib/model/profile_update.dart

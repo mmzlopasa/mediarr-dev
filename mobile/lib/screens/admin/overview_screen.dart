@@ -49,6 +49,43 @@ class _AdminOverviewScreenState extends ConsumerState<AdminOverviewScreen> {
     trailing: Text(value, style: Theme.of(context).textTheme.bodyLarge),
   );
 
+  List<Widget> _mlRows(MlServiceStatus ml) {
+    final loaded = [
+      for (final model in ml.models)
+        if (model.loaded) model.name,
+    ];
+    final acceleration = ml.acceleration;
+    return [
+      AdminHeading(l.adminMlTitle),
+      ListTile(
+        key: const Key('admin-ml-state'),
+        dense: true,
+        title: Text(switch (ml.state) {
+          MlServiceStatusStateEnum.connected => l.adminMlConnected,
+          MlServiceStatusStateEnum.wrongToken => l.adminMlWrongToken,
+          _ => l.adminMlUnreachable,
+        }),
+      ),
+      if (ml.models.isNotEmpty)
+        ListTile(
+          dense: true,
+          title: Text(l.adminMlLoaded),
+          subtitle: Text(
+            loaded.isEmpty ? l.adminMlNoneLoaded : loaded.join(', '),
+          ),
+        ),
+      if (ml.rssBytes != null) _row(l.adminMlMemory, adminBytes(ml.rssBytes!)),
+      if (acceleration != null)
+        ListTile(
+          dense: true,
+          title: Text(l.adminMlAcceleration),
+          subtitle: Text(
+            '${acceleration.requested} (${acceleration.providers.join(', ')})',
+          ),
+        ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final overview = _overview;
@@ -101,6 +138,7 @@ class _AdminOverviewScreenState extends ConsumerState<AdminOverviewScreen> {
                   adminBytes(health.databaseBytes),
                 ),
               ],
+              if (health?.ml case final ml?) ..._mlRows(ml),
               AdminHeading(l.adminOverviewVersions),
               _row('Mediarr', overview.version),
               _row(l.adminOverviewDatabase, overview.databaseVersion),

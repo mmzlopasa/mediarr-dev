@@ -3510,10 +3510,14 @@ class DefaultApi {
   /// * [String] id (required):
   ///
   /// * [String] month (required):
+  ///
+  /// * [int] pick:
+  ///   Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
   Future<Response> getAlbumBucketWithHttpInfo(
     String id,
-    String month,
-  ) async {
+    String month, {
+    int? pick,
+  }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/albums/{id}/buckets/{month}'
         .replaceAll('{id}', id)
@@ -3525,6 +3529,10 @@ class DefaultApi {
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
+
+    if (pick != null) {
+      queryParams.addAll(_queryParams('', 'pick', pick));
+    }
 
     const contentTypes = <String>[];
 
@@ -3546,13 +3554,18 @@ class DefaultApi {
   /// * [String] id (required):
   ///
   /// * [String] month (required):
+  ///
+  /// * [int] pick:
+  ///   Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
   Future<TimelineBucket?> getAlbumBucket(
     String id,
-    String month,
-  ) async {
+    String month, {
+    int? pick,
+  }) async {
     final response = await getAlbumBucketWithHttpInfo(
       id,
       month,
+      pick: pick,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -3577,9 +3590,13 @@ class DefaultApi {
   /// Parameters:
   ///
   /// * [String] id (required):
+  ///
+  /// * [int] pick:
+  ///   Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
   Future<Response> getAlbumBucketsWithHttpInfo(
-    String id,
-  ) async {
+    String id, {
+    int? pick,
+  }) async {
     // ignore: prefer_const_declarations
     final path = r'/api/albums/{id}/buckets'.replaceAll('{id}', id);
 
@@ -3589,6 +3606,10 @@ class DefaultApi {
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
+
+    if (pick != null) {
+      queryParams.addAll(_queryParams('', 'pick', pick));
+    }
 
     const contentTypes = <String>[];
 
@@ -3608,11 +3629,16 @@ class DefaultApi {
   /// Parameters:
   ///
   /// * [String] id (required):
+  ///
+  /// * [int] pick:
+  ///   Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
   Future<TimelineBuckets?> getAlbumBuckets(
-    String id,
-  ) async {
+    String id, {
+    int? pick,
+  }) async {
     final response = await getAlbumBucketsWithHttpInfo(
       id,
+      pick: pick,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -10048,6 +10074,66 @@ class DefaultApi {
     return null;
   }
 
+  /// The marks and stars of the user's own photos among those asked about. Photos of others are left out.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<Response> readAssetPicksWithHttpInfo(
+    AssetIds assetIds,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/pick/read';
+
+    // ignore: prefer_final_locals
+    Object? postBody = assetIds;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The marks and stars of the user's own photos among those asked about. Photos of others are left out.
+  ///
+  /// Parameters:
+  ///
+  /// * [AssetIds] assetIds (required):
+  Future<PickStates?> readAssetPicks(
+    AssetIds assetIds,
+  ) async {
+    final response = await readAssetPicksWithHttpInfo(
+      assetIds,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'PickStates',
+      ) as PickStates;
+    }
+    return null;
+  }
+
   /// Mark every notification as read
   ///
   /// Note: This method returns the HTTP [Response].
@@ -11254,6 +11340,9 @@ class DefaultApi {
   ///
   /// * [int] minRating:
   ///
+  /// * [int] pick:
+  ///   Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
+  ///
   /// * [List<String>] tag:
   ///
   /// * [String] album:
@@ -11276,6 +11365,7 @@ class DefaultApi {
     String? lens,
     String? type,
     int? minRating,
+    int? pick,
     List<String>? tag,
     String? album,
     bool? notInAlbum,
@@ -11321,6 +11411,9 @@ class DefaultApi {
     }
     if (minRating != null) {
       queryParams.addAll(_queryParams('', 'minRating', minRating));
+    }
+    if (pick != null) {
+      queryParams.addAll(_queryParams('', 'pick', pick));
     }
     if (tag != null) {
       queryParams.addAll(_queryParams('multi', 'tag', tag));
@@ -11378,6 +11471,9 @@ class DefaultApi {
   ///
   /// * [int] minRating:
   ///
+  /// * [int] pick:
+  ///   Only the signed-in user's own photos with this mark: 1 picked, -1 rejected, 0 unmarked
+  ///
   /// * [List<String>] tag:
   ///
   /// * [String] album:
@@ -11400,6 +11496,7 @@ class DefaultApi {
     String? lens,
     String? type,
     int? minRating,
+    int? pick,
     List<String>? tag,
     String? album,
     bool? notInAlbum,
@@ -11417,6 +11514,7 @@ class DefaultApi {
       lens: lens,
       type: type,
       minRating: minRating,
+      pick: pick,
       tag: tag,
       album: album,
       notInAlbum: notInAlbum,
@@ -11829,6 +11927,66 @@ class DefaultApi {
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
     }
+  }
+
+  /// Marks the user's own photos as picked, rejected or neither. Photos of others are left out.
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [PickRequest] pickRequest (required):
+  Future<Response> setAssetPickWithHttpInfo(
+    PickRequest pickRequest,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/assets/pick';
+
+    // ignore: prefer_final_locals
+    Object? postBody = pickRequest;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Marks the user's own photos as picked, rejected or neither. Photos of others are left out.
+  ///
+  /// Parameters:
+  ///
+  /// * [PickRequest] pickRequest (required):
+  Future<BulkResponse?> setAssetPick(
+    PickRequest pickRequest,
+  ) async {
+    final response = await setAssetPickWithHttpInfo(
+      pickRequest,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'BulkResponse',
+      ) as BulkResponse;
+    }
+    return null;
   }
 
   /// A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square

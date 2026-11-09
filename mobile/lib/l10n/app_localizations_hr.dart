@@ -4638,4 +4638,146 @@ class AppLocalizationsHr extends AppLocalizations {
   String notificationsLinkOpened(String subject) {
     return 'Vaš link „$subject” otvoren je prvi put.';
   }
+
+  @override
+  String get cullTitle => 'Odabir kadrova';
+
+  @override
+  String get cullMark => 'Oznaka';
+
+  @override
+  String get cullPick => 'Odabrano';
+
+  @override
+  String get cullReject => 'Odbačeno';
+
+  @override
+  String get cullNoMark => 'Bez oznake';
+
+  @override
+  String get cullPicks => 'Odabrane';
+
+  @override
+  String get cullRejects => 'Odbačene';
+
+  @override
+  String get cullUnmarked => 'Bez oznake';
+
+  @override
+  String get cullAddToCompare => 'Usporedi';
+
+  @override
+  String get cullRemoveFromCompare => 'Makni iz usporedbe';
+
+  @override
+  String get cullStopComparing => 'Završi usporedbu';
+
+  @override
+  String get cullPicksToAlbum => 'Odabrane u novi album';
+
+  @override
+  String get cullRejectsToTrash => 'Odbačene u smeće';
+
+  @override
+  String get cullNothing => 'Ovdje nema Vaših fotografija za odabir.';
+
+  @override
+  String get cullNoneWithMark => 'Nijedna fotografija nema ovu oznaku.';
+
+  @override
+  String get cullNotSaved => 'Nije spremljeno';
+
+  @override
+  String get cullActionFailed => 'Radnja nije uspjela';
+
+  @override
+  String get cullLoadFailed => 'Oznake se nisu mogle učitati.';
+
+  @override
+  String get cullAlbumName => 'Naziv';
+
+  @override
+  String get cullCreateAlbum => 'Stvori';
+
+  @override
+  String cullTally(int picks, int rejects) {
+    return 'Odabrano: $picks · Odbačeno: $rejects';
+  }
+
+  @override
+  String cullConfirmTrash(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count odbačenih fotografija ide u smeće i mogu se vratiti.',
+      few: '$count odbačene fotografije idu u smeće i mogu se vratiti.',
+      one: '$count odbačena fotografija ide u smeće i može se vratiti.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullMovedToTrash(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fotografija premješteno je u smeće',
+      few: '$count fotografije premještene su u smeće',
+      one: '$count fotografija premještena je u smeće',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullAlbumMade(int count, String title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fotografija je u albumu $title',
+      few: '$count fotografije su u albumu $title',
+      one: '$count fotografija je u albumu $title',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cullAlbumWillHold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'U albumu će biti $count odabranih fotografija.',
+      few: 'U albumu će biti $count odabrane fotografije.',
+      one: 'U albumu će biti $count odabrana fotografija.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminMlTitle => 'Servis za analizu';
+
+  @override
+  String get adminMlConnected => 'Povezan';
+
+  @override
+  String get adminMlLoaded => 'Učitani modeli';
+
+  @override
+  String get adminMlMemory => 'Memorija';
+
+  @override
+  String get adminMlAcceleration => 'Ubrzanje';
+
+  @override
+  String get adminMlNoneLoaded => 'Trenutno nijedan';
+
+  @override
+  String get adminMlState => 'Stanje';
+
+  @override
+  String get adminMlUnreachable =>
+      'Nije dostupan. Analiza čeka i nastavlja kad se vrati; do tada se traži po tekstu na slikama i nazivima datoteka.';
+
+  @override
+  String get adminMlWrongToken =>
+      'Servis je odbio token. ML_TOKEN mora biti isti u .env ovdje i na računalu na kojem servis radi.';
 }

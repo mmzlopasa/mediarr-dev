@@ -103,6 +103,8 @@ type Options struct {
 	VideoAccel         string
 	// MLURL is empty when picture analysis is not turned on.
 	MLURL string
+	// MLToken is sent to that service only, when it asks for one.
+	MLToken string
 }
 
 type deps struct {
@@ -123,7 +125,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &sidecarWorker{deps: d})
 	river.AddWorker(workers, &transcodeWorker{deps: d})
 	river.AddWorker(workers, &cleanupWorker{deps: d})
-	river.AddWorker(workers, &analyzeWorker{deps: d, client: ml.New(opts.MLURL)})
+	river.AddWorker(workers, &analyzeWorker{deps: d, client: ml.New(opts.MLURL, opts.MLToken)})
 	river.AddWorker(workers, &analyzeBackfillWorker{deps: d})
 	river.AddWorker(workers, &storyWorker{deps: d})
 	river.AddWorker(workers, &organizeWorker{deps: d})

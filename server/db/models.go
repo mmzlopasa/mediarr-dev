@@ -124,6 +124,7 @@ type Asset struct {
 	CleanupKeptAt       pgtype.Timestamptz
 	ScreenshotHint      pgtype.Bool
 	Vhash               []int64
+	Pick                int16
 }
 
 type AssetDescription struct {

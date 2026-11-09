@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -104,5 +105,27 @@ func TestMediarrsSidecarCarriesWhatTheOwnerSaid(t *testing.T) {
 	}
 	if people, _ := row["PersonInImage"].([]any); len(people) != 2 {
 		t.Fatalf("people: %v", row["PersonInImage"])
+	}
+}
+
+func TestTheSidecarSaysPickOrReject(t *testing.T) {
+	has := func(args []string, want string) bool {
+		for _, arg := range args {
+			if arg == want {
+				return true
+			}
+		}
+		return false
+	}
+	if args := (&SidecarFacts{Pick: PickPicked}).exiftoolArguments(); !has(args, "-XMP-xmp:Label=Pick") {
+		t.Errorf("picked: %v", args)
+	}
+	if args := (&SidecarFacts{Pick: PickRejected}).exiftoolArguments(); !has(args, "-XMP-xmp:Label=Reject") {
+		t.Errorf("rejected: %v", args)
+	}
+	for _, arg := range (&SidecarFacts{}).exiftoolArguments() {
+		if strings.Contains(arg, "Label") {
+			t.Errorf("no mark, but %s", arg)
+		}
 	}
 }

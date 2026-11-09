@@ -21,7 +21,55 @@ Then apply it:
 docker compose up -d
 ```
 
-The models download on first use, about 1 GB, and the service needs about 2 GB of memory. Progress is under **Admin → Settings**. Pictures you already have are analysed in the background.
+The models download on first use, about 1 GB. Progress is under **Admin → Settings**. Pictures you already have are analysed in the background.
+
+## Memory
+
+The service opens a model when it first needs one, and closes it after 5 minutes without use. With nothing open it uses about 100 MB, and up to about 2 GB while every model is working. The first search after a quiet period takes a few seconds longer.
+
+`ML_IDLE_MINUTES` changes the 5 minutes, and `0` keeps models open once they are loaded.
+
+## On another computer
+
+Analysis can run on a stronger computer in your home. On that computer, make a folder with these two files.
+
+`docker-compose.yml`:
+
+```yaml
+services:
+  ml:
+    image: ghcr.io/mediarr-app/mediarr-ml:${MEDIARR_VERSION:-latest}
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - model-cache:/models
+    restart: unless-stopped
+
+volumes:
+  model-cache:
+```
+
+`.env`:
+
+```bash
+MEDIARR_VERSION=latest
+ML_IDLE_MINUTES=5
+ML_TOKEN=a-long-random-value
+```
+
+Start it with `docker compose up -d`, using the same version as your Mediarr server. Then, in the `.env` of your Mediarr server, leave `ml` out of `COMPOSE_PROFILES`, put in the address of the other computer, and apply it with `docker compose up -d`:
+
+```bash
+ML_URL=http://192.168.1.50:8000
+ML_TOKEN=a-long-random-value
+```
+
+Set the same `ML_TOKEN` in the `.env` on the other computer. If they differ, **Admin → Health** says so; smart search then falls back to plain search and analysis waits.
+
+If the other computer is switched off, analysis waits and continues when it is back. Search carries on with words on pictures and file names, and says so.
+
+Your photos travel to that computer unencrypted, so use this only on a network you trust, or over a VPN. Do not open the port to the internet.
 
 ## Searching
 

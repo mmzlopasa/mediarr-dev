@@ -84,7 +84,8 @@ SELECT id, name FROM users WHERE id <> $1 ORDER BY name, id;
 -- name: AlbumBuckets :many
 SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
 FROM assets a
-WHERE a.id IN (SELECT album_item_ids($1))
+WHERE a.id IN (SELECT album_item_ids(sqlc.arg('album_id')))
+  AND (sqlc.narg('pick')::smallint IS NULL OR (a.pick = sqlc.narg('pick') AND a.user_id = sqlc.narg('viewer')))
 GROUP BY 1
 ORDER BY 1 DESC;
 
@@ -96,6 +97,7 @@ SELECT a.id, a.user_id, a.kind, a.width, a.height, a.aspect_ratio, a.blurhash, a
 FROM assets a
 WHERE a.id IN (SELECT album_item_ids(sqlc.arg('album_id')))
   AND a.local_at >= sqlc.arg('from_at') AND a.local_at < sqlc.arg('to_at')
+  AND (sqlc.narg('pick')::smallint IS NULL OR (a.pick = sqlc.narg('pick') AND a.user_id = sqlc.narg('viewer')))
 ORDER BY a.local_at DESC, a.id DESC;
 
 -- name: ListCameras :many

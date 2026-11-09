@@ -25,7 +25,9 @@ Mediarr reads these from `.env`. After changing them, apply them with `docker co
 | Variable | Meaning |
 | --- | --- |
 | `COMPOSE_PROFILES` | Optional services: `ml`, `ai`, or `ml,ai` |
-| `ML_URL` | `http://ml:8000` turns on smart search and faces |
+| `ML_URL` | `http://ml:8000` turns on smart search and faces. Another address uses the service on [another computer](/features/smart-search#on-another-computer) |
+| `ML_IDLE_MINUTES` | Minutes without a request before a model leaves memory. Default `5`. `0` keeps models loaded |
+| `ML_TOKEN` | Makes the service ask for this token on everything except its health check, and the Mediarr server send it. Use the same value on both sides. See [another computer](/features/smart-search#on-another-computer) |
 | `ML_FACE_MODEL` | `buffalo_l`, or `buffalo_s`, which is smaller and faster but less accurate |
 | `ML_THREADS` | Processor threads for analysis. Default: all of them |
 | `EXTERNAL_LIBRARY_PATH` | A folder of photos to show without copying them, read only |

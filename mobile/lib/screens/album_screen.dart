@@ -14,6 +14,7 @@ import 'people_screens.dart';
 import 'share_sheet.dart';
 import 'slideshow_screen.dart';
 import 'album_sheets.dart';
+import 'cull_screen.dart';
 import 'timeline_screen.dart';
 import 'upload_screen.dart';
 import 'viewer_screen.dart';
@@ -32,10 +33,10 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
   static const _pollEvery = Duration(seconds: 10);
 
   late final Session _session = ref.read(sessionProvider).value!;
-  late final TimelineStore _store = TimelineStore.album(
-    _session,
-    widget.albumId,
-  );
+  late TimelineStore _store = TimelineStore.album(_session, widget.albumId);
+
+  /// Which mark the album is narrowed to; none is every photo.
+  int? _pick;
   final _selected = <String>{};
   Album? _album;
   bool _gone = false;
@@ -183,6 +184,45 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
       )
       .then((_) => _load());
 
+  void _filter(int? pick) {
+    final previous = _store;
+    setState(() {
+      _pick = pick;
+      _store = TimelineStore.album(_session, widget.albumId, pick: pick);
+      _selected.clear();
+    });
+    previous.dispose();
+    _store.refresh();
+  }
+
+  Widget _filterBar() => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final (value, label) in [
+          (null, l.searchFiltersSheetAnyRating),
+          (1, l.cullPicks),
+          (-1, l.cullRejects),
+          (0, l.cullUnmarked),
+        ])
+          ChoiceChip(
+            label: Text(label),
+            selected: _pick == value,
+            onSelected: (_) => _filter(value),
+          ),
+      ],
+    ),
+  );
+
+  Future<void> _cull() async {
+    final items = await _store.playlist('', limit: 20000);
+    if (!mounted) return;
+    await openCull(context, _session, items);
+    await _store.refresh(reloadLoaded: true);
+  }
+
   Future<void> _slideshow() async {
     final items = await _store.playlist('');
     if (!mounted || items.isEmpty) return;
@@ -275,6 +315,8 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
     switch (choice) {
       case 'slideshow':
         _slideshow();
+      case 'cull':
+        _cull();
       case 'inside':
         _makeInside();
       case 'move':
@@ -408,6 +450,8 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
                     value: 'slideshow',
                     child: Text(l.albumScreenSlideshow),
                   ),
+                if (album.assetCount > 0 && rights.isOwner)
+                  PopupMenuItem(value: 'cull', child: Text(l.cullTitle)),
                 if (rights.canAdd) ...[
                   PopupMenuItem(
                     value: 'library',
@@ -474,8 +518,26 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         if (months == null) {
           return Center(child: CircularProgressIndicator(color: Palette.gold));
         }
-        final header = _nesting();
+        final nesting = _nesting();
+        final Widget? header = album.assetCount == 0
+            ? nesting
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [?nesting, _filterBar()],
+              );
         if (months.isEmpty) {
+          if (_pick != null) {
+            return ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                ?header,
+                Padding(
+                  padding: const EdgeInsets.only(top: 32),
+                  child: Center(child: Text(l.cullNoneWithMark)),
+                ),
+              ],
+            );
+          }
           if (header != null) {
             return ListView(children: [header]);
           }

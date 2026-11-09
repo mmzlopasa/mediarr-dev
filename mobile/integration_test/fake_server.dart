@@ -54,6 +54,9 @@ class FakeServer {
   String storageTemplate = '';
   Map<String, dynamic>? savedDates;
 
+  /// The mark the app last gave the photo.
+  int? lastPick;
+
   /// The code a signed-in screen showed, and the device that handed it in.
   static const qrCode = 'K7QM-2XPA';
 
@@ -340,6 +343,23 @@ class FakeServer {
             },
         ],
       });
+      return;
+    }
+    if (path == '/api/assets/pick/read' && request.method == 'POST') {
+      await utf8.decoder.bind(request).join();
+      await _json(request, 200, {
+        'items': [
+          {'id': photoId, 'pick': lastPick ?? 0, 'rating': 0},
+        ],
+      });
+      return;
+    }
+    if (path == '/api/assets/pick' && request.method == 'POST') {
+      final body = jsonDecode(
+        await utf8.decoder.bind(request).join(),
+      ) as Map<String, dynamic>;
+      lastPick = body['pick'] as int;
+      await _json(request, 200, {'changed': (body['ids'] as List).length});
       return;
     }
     if (path == '/api/assets/bulk' && request.method == 'POST') {

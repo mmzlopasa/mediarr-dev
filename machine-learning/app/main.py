@@ -1,5 +1,4 @@
-import logging
-import threading
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -7,26 +6,19 @@ from fastapi import Body, FastAPI, HTTPException
 from PIL import UnidentifiedImageError
 from pydantic import BaseModel
 
-from . import clip, faces, ocr
-
-logger = logging.getLogger(__name__)
-
-
-def _warm_up() -> None:
-    # A person is waiting on a search, so its model is ready before the first one arrives.
-    try:
-        clip.load_text_model()
-    except Exception:
-        logger.exception("the search model could not be loaded yet")
+from . import clip, config, faces, lifecycle, models, ocr
+from .auth import TokenMiddleware
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    threading.Thread(target=_warm_up, daemon=True).start()
+    lifecycle.registry.start()
     yield
+    lifecycle.registry.stop()
 
 
 app = FastAPI(title="Mediarr ML", lifespan=lifespan)
+app.add_middleware(TokenMiddleware)
 
 MAX_TEXT = 2000
 
@@ -38,6 +30,24 @@ class TextQuery(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+def _rss_bytes() -> int | None:
+    try:
+        with open("/proc/self/statm", encoding="ascii") as statm:
+            return int(statm.read().split()[1]) * os.sysconf("SC_PAGE_SIZE")
+    except OSError:
+        return None
+
+
+@app.get("/status")
+def status() -> dict:
+    return {
+        "models": [slot.status() for slot in lifecycle.registry.slots],
+        "rss_bytes": _rss_bytes(),
+        "acceleration": {"requested": config.ACCEL, "providers": models.providers()},
+        "idle_minutes": config.IDLE_MINUTES,
+    }
 
 
 def _picture_error(cause: Exception) -> HTTPException:
