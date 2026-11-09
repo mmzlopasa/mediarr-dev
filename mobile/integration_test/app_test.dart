@@ -438,7 +438,10 @@ void main() {
       'Summer 2024',
     );
     await tester.tap(find.text('Save'));
-    await waitFor(tester, find.text('Summer 2024'));
+    // The new name is in the field already, so the server is what is waited for.
+    for (var i = 0; i < 100 && server.tagName != 'Summer 2024'; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
     expect(server.tagName, 'Summer 2024');
     await tester.pageBack();
     await tester.pump(const Duration(seconds: 1));
