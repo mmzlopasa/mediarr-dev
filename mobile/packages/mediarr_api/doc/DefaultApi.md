@@ -21,6 +21,7 @@ Method | HTTP request | Description
 [**beginPasskeyLogin**](DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
 [**beginPasskeyRegistration**](DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey, which takes the account's password
 [**bulkAssets**](DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
+[**cancelExport**](DefaultApi.md#cancelexport) | **POST** /api/exports/{id}/cancel | Stop an export that is running. Its parts are removed
 [**cancelImport**](DefaultApi.md#cancelimport) | **POST** /api/admin/imports/{id}/cancel | Stop an import. What it has brought in stays
 [**cancelUpload**](DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
 [**changeAssetTags**](DefaultApi.md#changeassettags) | **POST** /api/assets/tags | Add a tag to the user's own assets, or remove it
@@ -32,6 +33,7 @@ Method | HTTP request | Description
 [**createAlbumComment**](DefaultApi.md#createalbumcomment) | **POST** /api/albums/{id}/comments | Comment on an album or on a photo in it
 [**createAlbumLink**](DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
 [**createDeviceKey**](DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
+[**createExport**](DefaultApi.md#createexport) | **POST** /api/exports | Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
 [**createFamilyRule**](DefaultApi.md#createfamilyrule) | **POST** /api/family/rules | Share what matches a rule with the family. Photos are not copied
 [**createImport**](DefaultApi.md#createimport) | **POST** /api/admin/imports | Bring a library in from Immich, Google Takeout or an iCloud export
 [**createMyImport**](DefaultApi.md#createmyimport) | **POST** /api/imports | Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
@@ -46,6 +48,7 @@ Method | HTTP request | Description
 [**deleteAlbumLink**](DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 [**deleteBackupDevice**](DefaultApi.md#deletebackupdevice) | **DELETE** /api/me/backup-devices/{id} | Take a device off the list. Its photos stay
 [**deleteDevice**](DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
+[**deleteExport**](DefaultApi.md#deleteexport) | **DELETE** /api/exports/{id} | Remove an export that is not running, with its parts
 [**deleteFamilyRule**](DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
 [**deleteImport**](DefaultApi.md#deleteimport) | **DELETE** /api/imports/{id} | Remove an import and its ZIP files. What it brought in stays
 [**deleteNotification**](DefaultApi.md#deletenotification) | **DELETE** /api/notifications/{id} | Remove one notification
@@ -57,6 +60,7 @@ Method | HTTP request | Description
 [**dismissDuplicates**](DefaultApi.md#dismissduplicates) | **POST** /api/duplicates/dismiss | These photos are not duplicates of each other, and are not proposed again
 [**dissolveStack**](DefaultApi.md#dissolvestack) | **DELETE** /api/assets/{id}/stack | Split a stack back into single shots. It is not put together again by itself
 [**downloadAssets**](DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
+[**downloadExportPart**](DefaultApi.md#downloadexportpart) | **GET** /api/exports/{id}/parts/{number} | One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it
 [**emptyTrash**](DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 [**enableTotp**](DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
 [**endOtherSessions**](DefaultApi.md#endothersessions) | **DELETE** /api/me/sessions | Sign out everywhere except here
@@ -99,6 +103,7 @@ Method | HTTP request | Description
 [**getCollectionVideoFile**](DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
 [**getDocuments**](DefaultApi.md#getdocuments) | **GET** /api/documents | Photos of documents, found by the text on them
 [**getEmailSettings**](DefaultApi.md#getemailsettings) | **GET** /api/admin/email | The mail server this server sends through
+[**getExport**](DefaultApi.md#getexport) | **GET** /api/exports/{id} | An export and its parts. Its owner or an administrator
 [**getExternalLibrary**](DefaultApi.md#getexternallibrary) | **GET** /api/admin/external | The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 [**getFamily**](DefaultApi.md#getfamily) | **GET** /api/family | The family library, and what this user shares with it
 [**getFamilyBucket**](DefaultApi.md#getfamilybucket) | **GET** /api/family/buckets/{month} | Assets of one month in the family library
@@ -151,6 +156,7 @@ Method | HTTP request | Description
 [**listAlbumLinks**](DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 [**listAlbums**](DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
 [**listAllBackupDevices**](DefaultApi.md#listallbackupdevices) | **GET** /api/admin/backup-devices | Every user's devices that back up
+[**listAllExports**](DefaultApi.md#listallexports) | **GET** /api/admin/exports | Exports of every library, the newest first
 [**listAssetFaces**](DefaultApi.md#listassetfaces) | **GET** /api/assets/{id}/faces | The faces found in a picture of the signed-in user
 [**listAssets**](DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 [**listAuditLog**](DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
@@ -169,6 +175,7 @@ Method | HTTP request | Description
 [**listKeepGuests**](DefaultApi.md#listkeepguests) | **GET** /api/admin/keep/guests | Other Mediarr servers whose encrypted backup this one keeps
 [**listLinkVisits**](DefaultApi.md#listlinkvisits) | **GET** /api/albums/{id}/links/{linkId}/visits | Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
 [**listMemories**](DefaultApi.md#listmemories) | **GET** /api/memories | Memories to show on this day
+[**listMyExports**](DefaultApi.md#listmyexports) | **GET** /api/exports | Exports of my library, the newest first, also those an administrator started
 [**listMyImports**](DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 [**listMySessions**](DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
 [**listNotifications**](DefaultApi.md#listnotifications) | **GET** /api/notifications | The newest notifications of the signed-in user
@@ -750,6 +757,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **cancelExport**
+> cancelExport(id)
+
+Stop an export that is running. Its parts are removed
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.cancelExport(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->cancelExport: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **cancelImport**
 > cancelImport(id)
 
@@ -1188,6 +1235,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**DeviceKey**](DeviceKey.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **createExport**
+> LibraryExport createExport(libraryExportCreate)
+
+Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final libraryExportCreate = LibraryExportCreate(); // LibraryExportCreate | 
+
+try {
+    final result = api_instance.createExport(libraryExportCreate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->createExport: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **libraryExportCreate** | [**LibraryExportCreate**](LibraryExportCreate.md)|  | 
+
+### Return type
+
+[**LibraryExport**](LibraryExport.md)
 
 ### Authorization
 
@@ -1763,6 +1851,46 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **deleteExport**
+> deleteExport(id)
+
+Remove an export that is not running, with its parts
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.deleteExport(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->deleteExport: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **deleteFamilyRule**
 > deleteFamilyRule(id)
 
@@ -2188,6 +2316,49 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **ids** | **String**| Comma-separated asset IDs, at most 100 | 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/zip, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **downloadExportPart**
+> MultipartFile downloadExportPart(id, number)
+
+One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final number = 56; // int | 
+
+try {
+    final result = api_instance.downloadExportPart(id, number);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->downloadExportPart: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **number** | **int**|  | 
 
 ### Return type
 
@@ -3893,6 +4064,47 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**EmailSettings**](EmailSettings.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getExport**
+> LibraryExport getExport(id)
+
+An export and its parts. Its owner or an administrator
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getExport(id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getExport: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+[**LibraryExport**](LibraryExport.md)
 
 ### Authorization
 
@@ -5981,6 +6193,43 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **listAllExports**
+> List<LibraryExport> listAllExports()
+
+Exports of every library, the newest first
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listAllExports();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listAllExports: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<LibraryExport>**](LibraryExport.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **listAssetFaces**
 > AssetFaces listAssetFaces(id)
 
@@ -6679,6 +6928,43 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**List<Memory>**](Memory.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **listMyExports**
+> List<LibraryExport> listMyExports()
+
+Exports of my library, the newest first, also those an administrator started
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.listMyExports();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listMyExports: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**List<LibraryExport>**](LibraryExport.md)
 
 ### Authorization
 

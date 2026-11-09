@@ -722,6 +722,33 @@ func (e Language) Valid() bool {
 	}
 }
 
+// Defines values for LibraryExportStatus.
+const (
+	LibraryExportStatusCancelled LibraryExportStatus = "cancelled"
+	LibraryExportStatusDone      LibraryExportStatus = "done"
+	LibraryExportStatusFailed    LibraryExportStatus = "failed"
+	LibraryExportStatusRemoved   LibraryExportStatus = "removed"
+	LibraryExportStatusRunning   LibraryExportStatus = "running"
+)
+
+// Valid indicates whether the value is a known member of the LibraryExportStatus enum.
+func (e LibraryExportStatus) Valid() bool {
+	switch e {
+	case LibraryExportStatusCancelled:
+		return true
+	case LibraryExportStatusDone:
+		return true
+	case LibraryExportStatusFailed:
+		return true
+	case LibraryExportStatusRemoved:
+		return true
+	case LibraryExportStatusRunning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for LocationFixAction.
 const (
 	LocationFixActionClear          LocationFixAction = "clear"
@@ -2779,6 +2806,55 @@ type KeepRestored struct {
 // Language English is the main language; de and sl are machine translated for now
 type Language string
 
+// LibraryExport defines model for LibraryExport.
+type LibraryExport struct {
+	// CanDownload Whether the one asking may download the parts
+	CanDownload bool      `json:"canDownload"`
+	CreatedAt   time.Time `json:"createdAt"`
+	DoneBytes   int64     `json:"doneBytes"`
+	DoneFiles   int       `json:"doneFiles"`
+
+	// ExpiresAt When the parts are removed
+	ExpiresAt  *time.Time         `json:"expiresAt,omitempty"`
+	FinishedAt *time.Time         `json:"finishedAt,omitempty"`
+	Id         openapi_types.UUID `json:"id"`
+	LastError  string             `json:"lastError"`
+
+	// Missing Files in the database that were not on the disk
+	Missing int                 `json:"missing"`
+	Parts   []LibraryExportPart `json:"parts"`
+
+	// StartedBy The name of who started it
+	StartedBy string `json:"startedBy"`
+
+	// StartedByAdmin Started by an administrator, not by the owner
+	StartedByAdmin bool `json:"startedByAdmin"`
+
+	// Status removed: the parts were removed a week after the export was done
+	Status     LibraryExportStatus `json:"status"`
+	TotalBytes int64               `json:"totalBytes"`
+	TotalFiles int                 `json:"totalFiles"`
+	UserEmail  string              `json:"userEmail"`
+	UserId     openapi_types.UUID  `json:"userId"`
+}
+
+// LibraryExportStatus removed: the parts were removed a week after the export was done
+type LibraryExportStatus string
+
+// LibraryExportCreate defines model for LibraryExportCreate.
+type LibraryExportCreate struct {
+	// UserId Whose library; mine when left out. Only an administrator exports someone else's
+	UserId *openapi_types.UUID `json:"userId,omitempty"`
+}
+
+// LibraryExportPart defines model for LibraryExportPart.
+type LibraryExportPart struct {
+	// Files Originals in it
+	Files  int   `json:"files"`
+	Number int32 `json:"number"`
+	Size   int64 `json:"size"`
+}
+
 // LinkPassword defines model for LinkPassword.
 type LinkPassword struct {
 	Password string `json:"password"`
@@ -4145,6 +4221,9 @@ type DismissDuplicatesJSONRequestBody = AssetIds
 // ResolveDuplicatesJSONRequestBody defines body for ResolveDuplicates for application/json ContentType.
 type ResolveDuplicatesJSONRequestBody = DuplicateResolve
 
+// CreateExportJSONRequestBody defines body for CreateExport for application/json ContentType.
+type CreateExportJSONRequestBody = LibraryExportCreate
+
 // AssignFaceJSONRequestBody defines body for AssignFace for application/json ContentType.
 type AssignFaceJSONRequestBody = FaceAssign
 
@@ -4279,6 +4358,9 @@ type ServerInterface interface {
 	// SendTestEmail Send a message to the administrator asking
 	// (POST /api/admin/email/test)
 	SendTestEmail(w http.ResponseWriter, r *http.Request)
+	// ListAllExports Exports of every library, the newest first
+	// (GET /api/admin/exports)
+	ListAllExports(w http.ResponseWriter, r *http.Request)
 	// GetExternalLibrary The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 	// (GET /api/admin/external)
 	GetExternalLibrary(w http.ResponseWriter, r *http.Request)
@@ -4657,6 +4739,24 @@ type ServerInterface interface {
 	// ListExplorePlaces The places in the user's own photos, those with the most first
 	// (GET /api/explore/places)
 	ListExplorePlaces(w http.ResponseWriter, r *http.Request)
+	// ListMyExports Exports of my library, the newest first, also those an administrator started
+	// (GET /api/exports)
+	ListMyExports(w http.ResponseWriter, r *http.Request)
+	// CreateExport Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
+	// (POST /api/exports)
+	CreateExport(w http.ResponseWriter, r *http.Request)
+	// DeleteExport Remove an export that is not running, with its parts
+	// (DELETE /api/exports/{id})
+	DeleteExport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// GetExport An export and its parts. Its owner or an administrator
+	// (GET /api/exports/{id})
+	GetExport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// CancelExport Stop an export that is running. Its parts are removed
+	// (POST /api/exports/{id}/cancel)
+	CancelExport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// DownloadExportPart One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it
+	// (GET /api/exports/{id}/parts/{number})
+	DownloadExportPart(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, number int32)
 	// RemoveFace Say this is not a person. Analysing the picture again does not bring it back
 	// (DELETE /api/faces/{id})
 	RemoveFace(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
@@ -5068,6 +5168,12 @@ func (_ Unimplemented) SetEmailSettings(w http.ResponseWriter, r *http.Request) 
 // SendTestEmail Send a message to the administrator asking
 // (POST /api/admin/email/test)
 func (_ Unimplemented) SendTestEmail(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListAllExports Exports of every library, the newest first
+// (GET /api/admin/exports)
+func (_ Unimplemented) ListAllExports(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5824,6 +5930,42 @@ func (_ Unimplemented) ResolveDuplicates(w http.ResponseWriter, r *http.Request)
 // ListExplorePlaces The places in the user's own photos, those with the most first
 // (GET /api/explore/places)
 func (_ Unimplemented) ListExplorePlaces(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ListMyExports Exports of my library, the newest first, also those an administrator started
+// (GET /api/exports)
+func (_ Unimplemented) ListMyExports(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CreateExport Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
+// (POST /api/exports)
+func (_ Unimplemented) CreateExport(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteExport Remove an export that is not running, with its parts
+// (DELETE /api/exports/{id})
+func (_ Unimplemented) DeleteExport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetExport An export and its parts. Its owner or an administrator
+// (GET /api/exports/{id})
+func (_ Unimplemented) GetExport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// CancelExport Stop an export that is running. Its parts are removed
+// (POST /api/exports/{id}/cancel)
+func (_ Unimplemented) CancelExport(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DownloadExportPart One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it
+// (GET /api/exports/{id}/parts/{number})
+func (_ Unimplemented) DownloadExportPart(w http.ResponseWriter, r *http.Request, id openapi_types.UUID, number int32) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6717,6 +6859,20 @@ func (siw *ServerInterfaceWrapper) SendTestEmail(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SendTestEmail(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAllExports operation middleware
+func (siw *ServerInterfaceWrapper) ListAllExports(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAllExports(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -9817,6 +9973,147 @@ func (siw *ServerInterfaceWrapper) ListExplorePlaces(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListExplorePlaces(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMyExports operation middleware
+func (siw *ServerInterfaceWrapper) ListMyExports(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMyExports(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CreateExport operation middleware
+func (siw *ServerInterfaceWrapper) CreateExport(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateExport(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteExport operation middleware
+func (siw *ServerInterfaceWrapper) DeleteExport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteExport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetExport operation middleware
+func (siw *ServerInterfaceWrapper) GetExport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetExport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelExport operation middleware
+func (siw *ServerInterfaceWrapper) CancelExport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelExport(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DownloadExportPart operation middleware
+func (siw *ServerInterfaceWrapper) DownloadExportPart(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "number" -------------
+	var number int32
+
+	err = runtime.BindStyledParameterWithOptions("simple", "number", chi.URLParam(r, "number"), &number, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int32", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "number", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DownloadExportPart(w, r, id, number)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -13006,6 +13303,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/imports/{id}/stop", wrapper.StopImport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/exports", wrapper.ListMyExports)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/exports", wrapper.CreateExport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/exports/{id}", wrapper.DeleteExport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/exports/{id}", wrapper.GetExport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/exports/{id}/cancel", wrapper.CancelExport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/exports/{id}/parts/{number}", wrapper.DownloadExportPart)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/admin/exports", wrapper.ListAllExports)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/imports", wrapper.ListImports)

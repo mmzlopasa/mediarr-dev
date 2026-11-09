@@ -232,6 +232,40 @@ type Exif struct {
 	GeocodedAt   pgtype.Timestamptz
 }
 
+type Export struct {
+	ID         pgtype.UUID
+	UserID     pgtype.UUID
+	CreatedBy  pgtype.UUID
+	Status     string
+	TotalFiles int32
+	TotalBytes int64
+	DoneFiles  int32
+	DoneBytes  int64
+	Missing    int32
+	PlannedAt  pgtype.Timestamptz
+	LastError  string
+	CreatedAt  pgtype.Timestamptz
+	FinishedAt pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+}
+
+type ExportFile struct {
+	ExportID pgtype.UUID
+	AssetID  pgtype.UUID
+	Path     string
+	Part     pgtype.Int4
+	Sidecar  bool
+	Missing  bool
+}
+
+type ExportPart struct {
+	ExportID  pgtype.UUID
+	Number    int32
+	SizeBytes int64
+	Files     int32
+	CreatedAt pgtype.Timestamptz
+}
+
 type ExternalFile struct {
 	LibraryID pgtype.UUID
 	Path      string

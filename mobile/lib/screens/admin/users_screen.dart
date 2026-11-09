@@ -5,6 +5,7 @@ import 'package:mediarr_api/api.dart';
 import '../../l10n/l10n.dart';
 import '../../services/session.dart';
 import '../../theme.dart';
+import '../exports_screen.dart';
 import 'admin_common.dart';
 
 /// A quota typed in gigabytes; empty means no limit. Null when it is not a number.
@@ -75,6 +76,15 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
     if (changed == true) await _load();
   }
 
+  Future<void> _export(User user) async {
+    try {
+      await _session.api.createExport(LibraryExportCreate(userId: user.id));
+      if (mounted) tellAdmin(context, l.adminUsersExportStarted(user.email));
+    } on ApiException catch (cause) {
+      if (mounted) tellAdmin(context, exportProblem(cause));
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(l.adminScreenUsers)),
@@ -112,10 +122,20 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                       ),
                   ].join(' · '),
                 ),
-                trailing: IconButton(
-                  tooltip: l.adminUsersQuotaTooltip(user.email),
-                  icon: const Icon(Icons.data_usage),
-                  onPressed: () => _quota(user),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: l.adminUsersExportTooltip(user.email),
+                      icon: const Icon(Icons.ios_share),
+                      onPressed: () => _export(user),
+                    ),
+                    IconButton(
+                      tooltip: l.adminUsersQuotaTooltip(user.email),
+                      icon: const Icon(Icons.data_usage),
+                      onPressed: () => _quota(user),
+                    ),
+                  ],
                 ),
               ),
           ],

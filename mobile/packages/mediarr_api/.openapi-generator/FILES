@@ -110,6 +110,9 @@ doc/KeepPairRequest.md
 doc/KeepPairing.md
 doc/KeepRestored.md
 doc/Language.md
+doc/LibraryExport.md
+doc/LibraryExportCreate.md
+doc/LibraryExportPart.md
 doc/LinkPassword.md
 doc/LinkPrivacy.md
 doc/LinkVisit.md
@@ -324,6 +327,9 @@ lib/model/keep_pair_request.dart
 lib/model/keep_pairing.dart
 lib/model/keep_restored.dart
 lib/model/language.dart
+lib/model/library_export.dart
+lib/model/library_export_create.dart
+lib/model/library_export_part.dart
 lib/model/link_password.dart
 lib/model/link_privacy.dart
 lib/model/link_visit.dart
@@ -421,4 +427,3 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/hidden_memories_test.dart

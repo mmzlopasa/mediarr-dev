@@ -70,7 +70,7 @@ func TestEveryRouteNeedsAnAccount(t *testing.T) {
 			continue
 		}
 		// The required query values, so that the answer is about the account and not about them.
-		path := routeParam.ReplaceAllString(strings.ReplaceAll(r.path, "/jobs/{id}", "/jobs/1"), someID) + "?ids=" + someID + "&q=x"
+		path := routeParam.ReplaceAllString(strings.NewReplacer("/jobs/{id}", "/jobs/1", "/parts/{number}", "/parts/1").Replace(r.path), someID) + "?ids=" + someID + "&q=x"
 		resp, body := anonymous.send(r.method, path, map[string]any{})
 		if resp.StatusCode != http.StatusUnauthorized {
 			t.Errorf("%s %s without an account: %d %s", r.method, r.path, resp.StatusCode, truncateForTest(body))
@@ -169,6 +169,7 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 		"/api/me/device-keys":                {"name": "phone"},
 		"/api/stories":                       {"title": "Mine", "ids": []string{photo}},
 		"/api/imports":                       {"source": "takeout"},
+		"/api/exports":                       {},
 	} {
 		resp, body := owner.post(path, payload)
 		if resp.StatusCode >= http.StatusBadRequest {
@@ -201,7 +202,7 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 	ids := map[string]string{
 		"backup-devices/id": device,
 		"assets/id":         photo, "albums/id": album, "assetId": photo, "month": "2024-07", "file": "master.m3u8",
-		"scope": "archive", "userId": s.userID("admin@example.com"), "qr/id": qrCode.ID,
+		"scope": "archive", "userId": s.userID("admin@example.com"), "qr/id": qrCode.ID, "parts/number": "1",
 	}
 	for name, query := range map[string]string{
 		"tags/id":        "SELECT id::text FROM tags LIMIT 1",
@@ -212,6 +213,7 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 		"device-keys/id": "SELECT id::text FROM api_keys LIMIT 1",
 		"stories/id":     "SELECT id::text FROM story_exports LIMIT 1",
 		"imports/id":     "SELECT id::text FROM imports LIMIT 1",
+		"exports/id":     "SELECT id::text FROM exports LIMIT 1",
 	} {
 		var id string
 		if err := s.pool.QueryRow(ctx, query).Scan(&id); err != nil {

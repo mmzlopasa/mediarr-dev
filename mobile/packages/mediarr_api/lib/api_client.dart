@@ -443,6 +443,12 @@ class ApiClient {
           return KeepRestored.fromJson(value);
         case 'Language':
           return LanguageTypeTransformer().decode(value);
+        case 'LibraryExport':
+          return LibraryExport.fromJson(value);
+        case 'LibraryExportCreate':
+          return LibraryExportCreate.fromJson(value);
+        case 'LibraryExportPart':
+          return LibraryExportPart.fromJson(value);
         case 'LinkPassword':
           return LinkPassword.fromJson(value);
         case 'LinkPrivacy':

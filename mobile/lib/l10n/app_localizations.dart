@@ -8493,6 +8493,197 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show all again'**
   String get settingsScreenShowAllAgain;
+
+  /// No description provided for @accountSheetExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export my library'**
+  String get accountSheetExport;
+
+  /// No description provided for @adminScreenExports.
+  ///
+  /// In en, this message translates to:
+  /// **'Library exports'**
+  String get adminScreenExports;
+
+  /// No description provided for @adminScreenExportsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow, cancel and download exports'**
+  String get adminScreenExportsHint;
+
+  /// No description provided for @adminUsersExportTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Export the library of {email}'**
+  String adminUsersExportTooltip(String email);
+
+  /// No description provided for @adminUsersExportStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'The export of {email}\'s library has started.'**
+  String adminUsersExportStarted(String email);
+
+  /// No description provided for @exportsScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get exportsScreenTitle;
+
+  /// No description provided for @exportsScreenAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Library exports'**
+  String get exportsScreenAllTitle;
+
+  /// No description provided for @exportsScreenWhatIsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Take your whole library with you: ZIP files of up to 10 GB with every original as uploaded, its XMP sidecar, a folder for each album and one JSON file with dates, places, descriptions, ratings, favourites, tags, people and edits. Passwords and keys are never in it. It is made on the server, goes on after a restart, and can be downloaded for 7 days.'**
+  String get exportsScreenWhatIsIn;
+
+  /// No description provided for @exportsScreenAdminHint.
+  ///
+  /// In en, this message translates to:
+  /// **'An export you start for someone appears in their own list as well. You and they can download it; other administrators only follow it.'**
+  String get exportsScreenAdminHint;
+
+  /// No description provided for @exportsScreenStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Export my library'**
+  String get exportsScreenStart;
+
+  /// No description provided for @exportsScreenStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'The export has started.'**
+  String get exportsScreenStarted;
+
+  /// No description provided for @exportsScreenNothingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been exported yet.'**
+  String get exportsScreenNothingYet;
+
+  /// No description provided for @exportsScreenNotLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'The exports could not be loaded.'**
+  String get exportsScreenNotLoaded;
+
+  /// No description provided for @exportsScreenRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get exportsScreenRunning;
+
+  /// No description provided for @exportsScreenReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get exportsScreenReady;
+
+  /// No description provided for @exportsScreenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get exportsScreenFailed;
+
+  /// No description provided for @exportsScreenCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get exportsScreenCancelled;
+
+  /// No description provided for @exportsScreenRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed after 7 days'**
+  String get exportsScreenRemoved;
+
+  /// No description provided for @exportsScreenProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total, plural, =1{1 file} other{{total} files}} · {doneBytes} of {totalBytes}'**
+  String exportsScreenProgress(
+    int done,
+    int total,
+    String doneBytes,
+    String totalBytes,
+  );
+
+  /// No description provided for @exportsScreenStartedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Started by {name}'**
+  String exportsScreenStartedBy(String name);
+
+  /// No description provided for @exportsScreenMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not on the disk, so only listed: {count, plural, =1{1 file} other{{count} files}}'**
+  String exportsScreenMissing(int count);
+
+  /// No description provided for @exportsScreenKeptUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Can be downloaded until {date}.'**
+  String exportsScreenKeptUntil(String date);
+
+  /// No description provided for @exportsScreenOnlyOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the owner of the library, or the administrator who started the export, downloads it.'**
+  String get exportsScreenOnlyOwner;
+
+  /// No description provided for @exportsScreenCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get exportsScreenCancel;
+
+  /// No description provided for @exportsScreenRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get exportsScreenRemove;
+
+  /// No description provided for @exportsScreenPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Part {number}'**
+  String exportsScreenPart(int number);
+
+  /// No description provided for @exportsScreenFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String exportsScreenFiles(int count);
+
+  /// No description provided for @exportsScreenDownloadPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Download part {number}'**
+  String exportsScreenDownloadPart(int number);
+
+  /// No description provided for @exportsScreenDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The part could not be downloaded. Try again to go on from where it stopped.'**
+  String get exportsScreenDownloadFailed;
+
+  /// No description provided for @exportsScreenNoSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'There is not enough free space on the server for this export. Free up space, or ask the administrator.'**
+  String get exportsScreenNoSpace;
+
+  /// No description provided for @exportsScreenAlreadyRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'An export of this library is already running.'**
+  String get exportsScreenAlreadyRunning;
 }
 
 class _AppLocalizationsDelegate

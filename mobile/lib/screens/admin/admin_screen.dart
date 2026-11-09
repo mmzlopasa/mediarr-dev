@@ -4,6 +4,7 @@ import '../../l10n/l10n.dart';
 import '../../theme.dart';
 import '../backup_screen.dart';
 import '../devices_screen.dart';
+import '../exports_screen.dart';
 import '../storage_template_screen.dart';
 import 'audit_screen.dart';
 import 'email_screen.dart';
@@ -79,6 +80,12 @@ class AdminScreen extends StatelessWidget {
         l.adminScreenStorageTemplate,
         l.adminScreenStorageTemplateHint,
         const StorageTemplateScreen(),
+      ),
+      (
+        Icons.ios_share,
+        l.adminScreenExports,
+        l.adminScreenExportsHint,
+        const ExportsScreen(all: true),
       ),
     ];
     return Scaffold(

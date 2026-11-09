@@ -113,6 +113,31 @@ class FakeServer {
   String? qrDevice;
   int qrWaits = 0;
 
+  /// The export of the library: none, then running, then ready after the app has asked once.
+  String? exportStatus;
+  int exportPolls = 0;
+
+  Map<String, Object> get _export => {
+    'id': '00000000-0000-4000-8000-0000000000e1',
+    'userId': userId,
+    'userEmail': email,
+    'status': exportStatus!,
+    'startedByAdmin': false,
+    'startedBy': 'Owner',
+    'totalFiles': 40,
+    'totalBytes': 4000,
+    'doneFiles': exportStatus == 'done' ? 40 : 10,
+    'doneBytes': exportStatus == 'done' ? 4000 : 1000,
+    'missing': 0,
+    'lastError': '',
+    'createdAt': '2026-11-09T10:00:00Z',
+    if (exportStatus == 'done') 'expiresAt': '2026-11-16T10:00:00Z',
+    'parts': [
+      if (exportStatus == 'done') {'number': 1, 'size': 4096, 'files': 40},
+    ],
+    'canDownload': true,
+  };
+
   Map<String, Object> get _user => {
     'id': userId,
     'email': email,
@@ -674,6 +699,26 @@ class FakeServer {
           'createdAt': '2026-11-01T10:00:00Z',
         },
       ]);
+      return;
+    }
+    if (path == '/api/exports' && request.method == 'POST') {
+      exportStatus = 'running';
+      exportPolls = 0;
+      await _json(request, 201, _export);
+      return;
+    }
+    if (path == '/api/exports') {
+      if (exportStatus == 'running' && exportPolls++ > 0) {
+        exportStatus = 'done';
+      }
+      await _json(request, 200, [if (exportStatus != null) _export]);
+      return;
+    }
+    if (path == '/api/exports/00000000-0000-4000-8000-0000000000e1' &&
+        request.method == 'DELETE') {
+      exportStatus = null;
+      request.response.statusCode = 204;
+      await request.response.close();
       return;
     }
     if (path == '/api/imports') {

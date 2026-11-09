@@ -2875,6 +2875,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exports of my library, the newest first, also those an administrator started */
+        get: operations["listMyExports"];
+        put?: never;
+        /** Export a whole library into ZIP parts. My own, or, for an administrator, anyone's */
+        post: operations["createExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An export and its parts. Its owner or an administrator */
+        get: operations["getExport"];
+        put?: never;
+        post?: never;
+        /** Remove an export that is not running, with its parts */
+        delete: operations["deleteExport"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exports/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop an export that is running. Its parts are removed */
+        post: operations["cancelExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exports/{id}/parts/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it */
+        get: operations["downloadExportPart"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exports of every library, the newest first */
+        get: operations["listAllExports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/imports": {
         parameters: {
             query?: never;
@@ -3999,6 +4086,58 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             finishedAt?: string;
+        };
+        LibraryExportCreate: {
+            /**
+             * Format: uuid
+             * @description Whose library; mine when left out. Only an administrator exports someone else's
+             */
+            userId?: string;
+        };
+        LibraryExportPart: {
+            /** Format: int32 */
+            number: number;
+            /** Format: int64 */
+            size: number;
+            /** @description Originals in it */
+            files: number;
+        };
+        LibraryExport: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            userId: string;
+            userEmail: string;
+            /**
+             * @description removed: the parts were removed a week after the export was done
+             * @enum {string}
+             */
+            status: "running" | "done" | "failed" | "cancelled" | "removed";
+            /** @description Started by an administrator, not by the owner */
+            startedByAdmin: boolean;
+            /** @description The name of who started it */
+            startedBy: string;
+            totalFiles: number;
+            /** Format: int64 */
+            totalBytes: number;
+            doneFiles: number;
+            /** Format: int64 */
+            doneBytes: number;
+            /** @description Files in the database that were not on the disk */
+            missing: number;
+            lastError: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /**
+             * Format: date-time
+             * @description When the parts are removed
+             */
+            expiresAt?: string;
+            parts: components["schemas"]["LibraryExportPart"][];
+            /** @description Whether the one asking may download the parts */
+            canDownload: boolean;
         };
         Features: {
             [key: string]: boolean;
@@ -10180,6 +10319,183 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             404: components["responses"]["Error"];
+        };
+    };
+    listMyExports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The exports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryExport"][];
+                };
+            };
+            401: components["responses"]["Error"];
+        };
+    };
+    createExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibraryExportCreate"];
+            };
+        };
+        responses: {
+            /** @description Started */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryExport"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            507: components["responses"]["Error"];
+        };
+    };
+    getExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryExport"];
+                };
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    deleteExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    cancelExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cancelled */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    downloadExportPart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The ZIP file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            /** @description The part of it that was asked for */
+            206: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    listAllExports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The exports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryExport"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     listImports: {

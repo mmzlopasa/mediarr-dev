@@ -30,6 +30,7 @@
 			label: t('common.backupDevices')
 		},
 		{ href: resolve('/(app)/account/import'), icon: 'download', label: t('common.import') },
+		{ href: resolve('/(app)/account/export'), icon: 'upload', label: t('export.title') },
 		...(data.user.isAdmin
 			? [
 					{

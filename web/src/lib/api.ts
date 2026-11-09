@@ -52,6 +52,7 @@ export type BackupDestination = components['schemas']['BackupDestination'];
 export type KeepGuest = components['schemas']['KeepGuest'];
 export type KeepInvite = components['schemas']['KeepInvite'];
 export type ImportDetail = components['schemas']['ImportDetail'];
+export type LibraryExport = components['schemas']['LibraryExport'];
 export type AuthMethods = components['schemas']['AuthMethods'];
 export type OIDCSettings = components['schemas']['OIDCSettings'];
 export type OIDCSettingsUpdate = components['schemas']['OIDCSettingsUpdate'];
@@ -388,6 +389,12 @@ export const api = {
 	runImport: (id: string) => request<void>(fetch, `/api/imports/${id}/start`, {}),
 	stopImport: (id: string) => request<void>(fetch, `/api/imports/${id}/stop`, {}),
 	removeImport: (id: string) => request<void>(fetch, `/api/imports/${id}`, undefined, 'DELETE'),
+	myExports: () => request<LibraryExport[]>(fetch, '/api/exports'),
+	allExports: () => request<LibraryExport[]>(fetch, '/api/admin/exports'),
+	startExport: (userId?: string) =>
+		request<LibraryExport>(fetch, '/api/exports', userId ? { userId } : {}),
+	cancelExport: (id: string) => request<void>(fetch, `/api/exports/${id}/cancel`, {}),
+	removeExport: (id: string) => request<void>(fetch, `/api/exports/${id}`, undefined, 'DELETE'),
 	features: () => request<Features>(fetch, '/api/features'),
 	setFeature: (name: string, enabled: boolean) =>
 		request<void>(fetch, `/api/admin/features/${name}`, { enabled }, 'PUT'),

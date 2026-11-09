@@ -4869,4 +4869,144 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsScreenShowAllAgain => 'Show all again';
+
+  @override
+  String get accountSheetExport => 'Export my library';
+
+  @override
+  String get adminScreenExports => 'Library exports';
+
+  @override
+  String get adminScreenExportsHint => 'Follow, cancel and download exports';
+
+  @override
+  String adminUsersExportTooltip(String email) {
+    return 'Export the library of $email';
+  }
+
+  @override
+  String adminUsersExportStarted(String email) {
+    return 'The export of $email\'s library has started.';
+  }
+
+  @override
+  String get exportsScreenTitle => 'Export';
+
+  @override
+  String get exportsScreenAllTitle => 'Library exports';
+
+  @override
+  String get exportsScreenWhatIsIn =>
+      'Take your whole library with you: ZIP files of up to 10 GB with every original as uploaded, its XMP sidecar, a folder for each album and one JSON file with dates, places, descriptions, ratings, favourites, tags, people and edits. Passwords and keys are never in it. It is made on the server, goes on after a restart, and can be downloaded for 7 days.';
+
+  @override
+  String get exportsScreenAdminHint =>
+      'An export you start for someone appears in their own list as well. You and they can download it; other administrators only follow it.';
+
+  @override
+  String get exportsScreenStart => 'Export my library';
+
+  @override
+  String get exportsScreenStarted => 'The export has started.';
+
+  @override
+  String get exportsScreenNothingYet => 'Nothing has been exported yet.';
+
+  @override
+  String get exportsScreenNotLoaded => 'The exports could not be loaded.';
+
+  @override
+  String get exportsScreenRunning => 'Running';
+
+  @override
+  String get exportsScreenReady => 'Ready';
+
+  @override
+  String get exportsScreenFailed => 'Failed';
+
+  @override
+  String get exportsScreenCancelled => 'Cancelled';
+
+  @override
+  String get exportsScreenRemoved => 'Removed after 7 days';
+
+  @override
+  String exportsScreenProgress(
+    int done,
+    int total,
+    String doneBytes,
+    String totalBytes,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total files',
+      one: '1 file',
+    );
+    return '$done of $_temp0 · $doneBytes of $totalBytes';
+  }
+
+  @override
+  String exportsScreenStartedBy(String name) {
+    return 'Started by $name';
+  }
+
+  @override
+  String exportsScreenMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return 'Not on the disk, so only listed: $_temp0';
+  }
+
+  @override
+  String exportsScreenKeptUntil(String date) {
+    return 'Can be downloaded until $date.';
+  }
+
+  @override
+  String get exportsScreenOnlyOwner =>
+      'Only the owner of the library, or the administrator who started the export, downloads it.';
+
+  @override
+  String get exportsScreenCancel => 'Cancel';
+
+  @override
+  String get exportsScreenRemove => 'Remove';
+
+  @override
+  String exportsScreenPart(int number) {
+    return 'Part $number';
+  }
+
+  @override
+  String exportsScreenFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exportsScreenDownloadPart(int number) {
+    return 'Download part $number';
+  }
+
+  @override
+  String get exportsScreenDownloadFailed =>
+      'The part could not be downloaded. Try again to go on from where it stopped.';
+
+  @override
+  String get exportsScreenNoSpace =>
+      'There is not enough free space on the server for this export. Free up space, or ask the administrator.';
+
+  @override
+  String get exportsScreenAlreadyRunning =>
+      'An export of this library is already running.';
 }

@@ -72,6 +72,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**beginPasskeyLogin**](doc//DefaultApi.md#beginpasskeylogin) | **POST** /api/auth/passkey/begin | Start signing in with a passkey
 *DefaultApi* | [**beginPasskeyRegistration**](doc//DefaultApi.md#beginpasskeyregistration) | **POST** /api/me/passkeys/begin | Start adding a passkey, which takes the account's password
 *DefaultApi* | [**bulkAssets**](doc//DefaultApi.md#bulkassets) | **POST** /api/assets/bulk | Apply an action to several of the current user's assets. Other assets are ignored.
+*DefaultApi* | [**cancelExport**](doc//DefaultApi.md#cancelexport) | **POST** /api/exports/{id}/cancel | Stop an export that is running. Its parts are removed
 *DefaultApi* | [**cancelImport**](doc//DefaultApi.md#cancelimport) | **POST** /api/admin/imports/{id}/cancel | Stop an import. What it has brought in stays
 *DefaultApi* | [**cancelUpload**](doc//DefaultApi.md#cancelupload) | **DELETE** /api/uploads/{id} | Cancel an upload (tus 1.0)
 *DefaultApi* | [**changeAssetTags**](doc//DefaultApi.md#changeassettags) | **POST** /api/assets/tags | Add a tag to the user's own assets, or remove it
@@ -83,6 +84,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**createAlbumComment**](doc//DefaultApi.md#createalbumcomment) | **POST** /api/albums/{id}/comments | Comment on an album or on a photo in it
 *DefaultApi* | [**createAlbumLink**](doc//DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
 *DefaultApi* | [**createDeviceKey**](doc//DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
+*DefaultApi* | [**createExport**](doc//DefaultApi.md#createexport) | **POST** /api/exports | Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
 *DefaultApi* | [**createFamilyRule**](doc//DefaultApi.md#createfamilyrule) | **POST** /api/family/rules | Share what matches a rule with the family. Photos are not copied
 *DefaultApi* | [**createImport**](doc//DefaultApi.md#createimport) | **POST** /api/admin/imports | Bring a library in from Immich, Google Takeout or an iCloud export
 *DefaultApi* | [**createMyImport**](doc//DefaultApi.md#createmyimport) | **POST** /api/imports | Start bringing in a Google Takeout or iCloud export. Its ZIP files are then uploaded through /api/uploads with the metadata importId, and the import is started once they are all in
@@ -97,6 +99,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 *DefaultApi* | [**deleteBackupDevice**](doc//DefaultApi.md#deletebackupdevice) | **DELETE** /api/me/backup-devices/{id} | Take a device off the list. Its photos stay
 *DefaultApi* | [**deleteDevice**](doc//DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
+*DefaultApi* | [**deleteExport**](doc//DefaultApi.md#deleteexport) | **DELETE** /api/exports/{id} | Remove an export that is not running, with its parts
 *DefaultApi* | [**deleteFamilyRule**](doc//DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
 *DefaultApi* | [**deleteImport**](doc//DefaultApi.md#deleteimport) | **DELETE** /api/imports/{id} | Remove an import and its ZIP files. What it brought in stays
 *DefaultApi* | [**deleteNotification**](doc//DefaultApi.md#deletenotification) | **DELETE** /api/notifications/{id} | Remove one notification
@@ -108,6 +111,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**dismissDuplicates**](doc//DefaultApi.md#dismissduplicates) | **POST** /api/duplicates/dismiss | These photos are not duplicates of each other, and are not proposed again
 *DefaultApi* | [**dissolveStack**](doc//DefaultApi.md#dissolvestack) | **DELETE** /api/assets/{id}/stack | Split a stack back into single shots. It is not put together again by itself
 *DefaultApi* | [**downloadAssets**](doc//DefaultApi.md#downloadassets) | **GET** /api/assets/download | Download several originals as one uncompressed ZIP file
+*DefaultApi* | [**downloadExportPart**](doc//DefaultApi.md#downloadexportpart) | **GET** /api/exports/{id}/parts/{number} | One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it
 *DefaultApi* | [**emptyTrash**](doc//DefaultApi.md#emptytrash) | **POST** /api/trash/empty | Permanently delete everything in the trash
 *DefaultApi* | [**enableTotp**](doc//DefaultApi.md#enabletotp) | **POST** /api/me/totp/enable | Confirm a code and turn on TOTP
 *DefaultApi* | [**endOtherSessions**](doc//DefaultApi.md#endothersessions) | **DELETE** /api/me/sessions | Sign out everywhere except here
@@ -150,6 +154,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getCollectionVideoFile**](doc//DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
 *DefaultApi* | [**getDocuments**](doc//DefaultApi.md#getdocuments) | **GET** /api/documents | Photos of documents, found by the text on them
 *DefaultApi* | [**getEmailSettings**](doc//DefaultApi.md#getemailsettings) | **GET** /api/admin/email | The mail server this server sends through
+*DefaultApi* | [**getExport**](doc//DefaultApi.md#getexport) | **GET** /api/exports/{id} | An export and its parts. Its owner or an administrator
 *DefaultApi* | [**getExternalLibrary**](doc//DefaultApi.md#getexternallibrary) | **GET** /api/admin/external | The folder given as EXTERNAL_LIBRARY_PATH, and how it is doing
 *DefaultApi* | [**getFamily**](doc//DefaultApi.md#getfamily) | **GET** /api/family | The family library, and what this user shares with it
 *DefaultApi* | [**getFamilyBucket**](doc//DefaultApi.md#getfamilybucket) | **GET** /api/family/buckets/{month} | Assets of one month in the family library
@@ -202,6 +207,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listAlbumLinks**](doc//DefaultApi.md#listalbumlinks) | **GET** /api/albums/{id}/links | Public links of an album. Owner only.
 *DefaultApi* | [**listAlbums**](doc//DefaultApi.md#listalbums) | **GET** /api/albums | Albums the current user owns or that are shared with them
 *DefaultApi* | [**listAllBackupDevices**](doc//DefaultApi.md#listallbackupdevices) | **GET** /api/admin/backup-devices | Every user's devices that back up
+*DefaultApi* | [**listAllExports**](doc//DefaultApi.md#listallexports) | **GET** /api/admin/exports | Exports of every library, the newest first
 *DefaultApi* | [**listAssetFaces**](doc//DefaultApi.md#listassetfaces) | **GET** /api/assets/{id}/faces | The faces found in a picture of the signed-in user
 *DefaultApi* | [**listAssets**](doc//DefaultApi.md#listassets) | **GET** /api/assets | List the current user's most recent assets and their processing status
 *DefaultApi* | [**listAuditLog**](doc//DefaultApi.md#listauditlog) | **GET** /api/admin/audit | Who changed what, newest first. Never the content of a request
@@ -220,6 +226,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**listKeepGuests**](doc//DefaultApi.md#listkeepguests) | **GET** /api/admin/keep/guests | Other Mediarr servers whose encrypted backup this one keeps
 *DefaultApi* | [**listLinkVisits**](doc//DefaultApi.md#listlinkvisits) | **GET** /api/albums/{id}/links/{linkId}/visits | Who opened a link, newest first, for the last 90 days. Only the album's owner sees it
 *DefaultApi* | [**listMemories**](doc//DefaultApi.md#listmemories) | **GET** /api/memories | Memories to show on this day
+*DefaultApi* | [**listMyExports**](doc//DefaultApi.md#listmyexports) | **GET** /api/exports | Exports of my library, the newest first, also those an administrator started
 *DefaultApi* | [**listMyImports**](doc//DefaultApi.md#listmyimports) | **GET** /api/imports | My imports, the newest first
 *DefaultApi* | [**listMySessions**](doc//DefaultApi.md#listmysessions) | **GET** /api/me/sessions | Where this account is signed in
 *DefaultApi* | [**listNotifications**](doc//DefaultApi.md#listnotifications) | **GET** /api/notifications | The newest notifications of the signed-in user
@@ -418,6 +425,9 @@ Class | Method | HTTP request | Description
  - [KeepPairing](doc//KeepPairing.md)
  - [KeepRestored](doc//KeepRestored.md)
  - [Language](doc//Language.md)
+ - [LibraryExport](doc//LibraryExport.md)
+ - [LibraryExportCreate](doc//LibraryExportCreate.md)
+ - [LibraryExportPart](doc//LibraryExportPart.md)
  - [LinkPassword](doc//LinkPassword.md)
  - [LinkPrivacy](doc//LinkPrivacy.md)
  - [LinkVisit](doc//LinkVisit.md)

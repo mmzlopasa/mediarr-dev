@@ -692,6 +692,55 @@ class DefaultApi {
     return null;
   }
 
+  /// Stop an export that is running. Its parts are removed
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> cancelExportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/exports/{id}/cancel'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop an export that is running. Its parts are removed
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> cancelExport(
+    String id,
+  ) async {
+    final response = await cancelExportWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Stop an import. What it has brought in stays
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1307,6 +1356,66 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'DeviceKey',
       ) as DeviceKey;
+    }
+    return null;
+  }
+
+  /// Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [LibraryExportCreate] libraryExportCreate (required):
+  Future<Response> createExportWithHttpInfo(
+    LibraryExportCreate libraryExportCreate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/exports';
+
+    // ignore: prefer_final_locals
+    Object? postBody = libraryExportCreate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
+  ///
+  /// Parameters:
+  ///
+  /// * [LibraryExportCreate] libraryExportCreate (required):
+  Future<LibraryExport?> createExport(
+    LibraryExportCreate libraryExportCreate,
+  ) async {
+    final response = await createExportWithHttpInfo(
+      libraryExportCreate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'LibraryExport',
+      ) as LibraryExport;
     }
     return null;
   }
@@ -2064,6 +2173,55 @@ class DefaultApi {
     }
   }
 
+  /// Remove an export that is not running, with its parts
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteExportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/exports/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Remove an export that is not running, with its parts
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteExport(
+    String id,
+  ) async {
+    final response = await deleteExportWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
   /// Stop sharing what this rule covers
   ///
   /// Note: This method returns the HTTP [Response].
@@ -2602,6 +2760,75 @@ class DefaultApi {
   ) async {
     final response = await downloadAssetsWithHttpInfo(
       ids,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [int] number (required):
+  Future<Response> downloadExportPartWithHttpInfo(
+    String id,
+    int number,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/exports/{id}/parts/{number}'
+        .replaceAll('{id}', id)
+        .replaceAll('{number}', number.toString());
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [int] number (required):
+  Future<MultipartFile?> downloadExportPart(
+    String id,
+    int number,
+  ) async {
+    final response = await downloadExportPartWithHttpInfo(
+      id,
+      number,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -5097,6 +5324,66 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'EmailSettings',
       ) as EmailSettings;
+    }
+    return null;
+  }
+
+  /// An export and its parts. Its owner or an administrator
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> getExportWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/exports/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// An export and its parts. Its owner or an administrator
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<LibraryExport?> getExport(
+    String id,
+  ) async {
+    final response = await getExportWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'LibraryExport',
+      ) as LibraryExport;
     }
     return null;
   }
@@ -8083,6 +8370,53 @@ class DefaultApi {
     return null;
   }
 
+  /// Exports of every library, the newest first
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listAllExportsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/exports';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Exports of every library, the newest first
+  Future<List<LibraryExport>?> listAllExports() async {
+    final response = await listAllExportsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<LibraryExport>') as List)
+          .cast<LibraryExport>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
   /// The faces found in a picture of the signed-in user
   ///
   /// Note: This method returns the HTTP [Response].
@@ -9113,6 +9447,53 @@ class DefaultApi {
       return (await apiClient.deserializeAsync(responseBody, 'List<Memory>')
               as List)
           .cast<Memory>()
+          .toList(growable: false);
+    }
+    return null;
+  }
+
+  /// Exports of my library, the newest first, also those an administrator started
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> listMyExportsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/exports';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Exports of my library, the newest first, also those an administrator started
+  Future<List<LibraryExport>?> listMyExports() async {
+    final response = await listMyExportsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      final responseBody = await _decodeBodyBytes(response);
+      return (await apiClient.deserializeAsync(
+              responseBody, 'List<LibraryExport>') as List)
+          .cast<LibraryExport>()
           .toList(growable: false);
     }
     return null;

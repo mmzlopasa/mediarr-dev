@@ -15,6 +15,7 @@ import '../timeline/layout.dart';
 import 'backup_screen.dart';
 import 'devices_screen.dart';
 import 'free_space_screen.dart';
+import 'exports_screen.dart';
 import 'imports_screen.dart';
 import 'profile_screen.dart';
 import 'qr_sign_in.dart';
@@ -380,6 +381,11 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             leading: Icon(Icons.download_outlined, color: Palette.dim),
             title: Text(l.accountSheetImport),
             onTap: () => _push(const ImportsScreen()),
+          ),
+          ListTile(
+            leading: Icon(Icons.ios_share, color: Palette.dim),
+            title: Text(l.accountSheetExport),
+            onTap: () => _push(const ExportsScreen()),
           ),
           if (session.user.isAdmin)
             ListTile(

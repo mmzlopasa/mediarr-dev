@@ -4946,4 +4946,146 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsScreenShowAllAgain => 'Alle wieder anzeigen';
+
+  @override
+  String get accountSheetExport => 'Bibliothek exportieren';
+
+  @override
+  String get adminScreenExports => 'Bibliotheksexporte';
+
+  @override
+  String get adminScreenExportsHint =>
+      'Exporte verfolgen, abbrechen und herunterladen';
+
+  @override
+  String adminUsersExportTooltip(String email) {
+    return 'Bibliothek von $email exportieren';
+  }
+
+  @override
+  String adminUsersExportStarted(String email) {
+    return 'Der Export der Bibliothek von $email wurde gestartet.';
+  }
+
+  @override
+  String get exportsScreenTitle => 'Export';
+
+  @override
+  String get exportsScreenAllTitle => 'Bibliotheksexporte';
+
+  @override
+  String get exportsScreenWhatIsIn =>
+      'Nehmen Sie Ihre ganze Bibliothek mit: ZIP-Dateien mit je höchstens 10 GB, mit jedem Original wie hochgeladen, seinem XMP-Sidecar, einem Ordner für jedes Album und einer JSON-Datei mit Daten, Orten, Beschreibungen, Bewertungen, Favoriten, Tags, Personen und Bearbeitungen. Passwörter und Schlüssel sind nie darin. Er wird auf dem Server erstellt, läuft nach einem Neustart weiter und kann 7 Tage lang heruntergeladen werden.';
+
+  @override
+  String get exportsScreenAdminHint =>
+      'Ein Export, den Sie für jemanden starten, erscheint auch in dessen eigener Liste. Sie und die Person können ihn herunterladen; andere Administratoren verfolgen ihn nur.';
+
+  @override
+  String get exportsScreenStart => 'Meine Bibliothek exportieren';
+
+  @override
+  String get exportsScreenStarted => 'Der Export wurde gestartet.';
+
+  @override
+  String get exportsScreenNothingYet => 'Es wurde noch nichts exportiert.';
+
+  @override
+  String get exportsScreenNotLoaded =>
+      'Die Exporte konnten nicht geladen werden.';
+
+  @override
+  String get exportsScreenRunning => 'Läuft';
+
+  @override
+  String get exportsScreenReady => 'Fertig';
+
+  @override
+  String get exportsScreenFailed => 'Fehlgeschlagen';
+
+  @override
+  String get exportsScreenCancelled => 'Abgebrochen';
+
+  @override
+  String get exportsScreenRemoved => 'Nach 7 Tagen entfernt';
+
+  @override
+  String exportsScreenProgress(
+    int done,
+    int total,
+    String doneBytes,
+    String totalBytes,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total Dateien',
+      one: '1 Datei',
+    );
+    return '$done von $_temp0 · $doneBytes von $totalBytes';
+  }
+
+  @override
+  String exportsScreenStartedBy(String name) {
+    return 'Gestartet von $name';
+  }
+
+  @override
+  String exportsScreenMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Dateien',
+      one: '1 Datei',
+    );
+    return 'Nicht auf dem Datenträger, daher nur aufgeführt: $_temp0';
+  }
+
+  @override
+  String exportsScreenKeptUntil(String date) {
+    return 'Kann bis $date heruntergeladen werden.';
+  }
+
+  @override
+  String get exportsScreenOnlyOwner =>
+      'Herunterladen kann ihn nur der Besitzer der Bibliothek oder der Administrator, der den Export gestartet hat.';
+
+  @override
+  String get exportsScreenCancel => 'Abbrechen';
+
+  @override
+  String get exportsScreenRemove => 'Entfernen';
+
+  @override
+  String exportsScreenPart(int number) {
+    return 'Teil $number';
+  }
+
+  @override
+  String exportsScreenFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Dateien',
+      one: '1 Datei',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exportsScreenDownloadPart(int number) {
+    return 'Teil $number herunterladen';
+  }
+
+  @override
+  String get exportsScreenDownloadFailed =>
+      'Der Teil konnte nicht heruntergeladen werden. Versuchen Sie es erneut, um dort weiterzumachen, wo er stehen blieb.';
+
+  @override
+  String get exportsScreenNoSpace =>
+      'Auf dem Server ist nicht genug Platz für diesen Export. Geben Sie Speicher frei oder wenden Sie sich an den Administrator.';
+
+  @override
+  String get exportsScreenAlreadyRunning =>
+      'Ein Export dieser Bibliothek läuft bereits.';
 }

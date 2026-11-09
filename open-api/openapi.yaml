@@ -2706,6 +2706,104 @@ paths:
         "204": { description: Stopped }
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/exports:
+    get:
+      operationId: listMyExports
+      summary: Exports of my library, the newest first, also those an administrator started
+      responses:
+        "200":
+          description: The exports
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/LibraryExport" } }
+        "401": { $ref: "#/components/responses/Error" }
+    post:
+      operationId: createExport
+      summary: Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LibraryExportCreate" }
+      responses:
+        "201":
+          description: Started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LibraryExport" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "507": { $ref: "#/components/responses/Error" }
+  /api/exports/{id}:
+    get:
+      operationId: getExport
+      summary: An export and its parts. Its owner or an administrator
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: The export
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LibraryExport" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+    delete:
+      operationId: deleteExport
+      summary: Remove an export that is not running, with its parts
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/exports/{id}/cancel:
+    post:
+      operationId: cancelExport
+      summary: Stop an export that is running. Its parts are removed
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Cancelled }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/exports/{id}/parts/{number}:
+    get:
+      operationId: downloadExportPart
+      summary: One ZIP part of a finished export, with Range for going on with a broken download. The owner, or the administrator who started it
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: number, in: path, required: true, schema: { type: integer, format: int32, minimum: 1 } }
+      responses:
+        "200":
+          description: The ZIP file
+          content:
+            application/zip:
+              schema: { type: string, format: binary }
+        "206":
+          description: The part of it that was asked for
+          content:
+            application/zip:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/admin/exports:
+    get:
+      operationId: listAllExports
+      summary: Exports of every library, the newest first
+      responses:
+        "200":
+          description: The exports
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/LibraryExport" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/admin/imports:
     get:
       operationId: listImports
@@ -3842,6 +3940,38 @@ components:
         lastError: { type: string }
         createdAt: { type: string, format: date-time }
         finishedAt: { type: string, format: date-time }
+    LibraryExportCreate:
+      type: object
+      properties:
+        userId: { type: string, format: uuid, description: "Whose library; mine when left out. Only an administrator exports someone else's" }
+    LibraryExportPart:
+      type: object
+      required: [number, size, files]
+      properties:
+        number: { type: integer, format: int32 }
+        size: { type: integer, format: int64 }
+        files: { type: integer, description: "Originals in it" }
+    LibraryExport:
+      type: object
+      required: [id, userId, userEmail, status, startedByAdmin, startedBy, totalFiles, totalBytes, doneFiles, doneBytes, missing, lastError, createdAt, parts, canDownload]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        userEmail: { type: string }
+        status: { type: string, enum: [running, done, failed, cancelled, removed], description: "removed: the parts were removed a week after the export was done" }
+        startedByAdmin: { type: boolean, description: "Started by an administrator, not by the owner" }
+        startedBy: { type: string, description: "The name of who started it" }
+        totalFiles: { type: integer }
+        totalBytes: { type: integer, format: int64 }
+        doneFiles: { type: integer }
+        doneBytes: { type: integer, format: int64 }
+        missing: { type: integer, description: "Files in the database that were not on the disk" }
+        lastError: { type: string }
+        createdAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time, description: "When the parts are removed" }
+        parts: { type: array, items: { $ref: "#/components/schemas/LibraryExportPart" } }
+        canDownload: { type: boolean, description: "Whether the one asking may download the parts" }
     Features:
       type: object
       additionalProperties: { type: boolean }

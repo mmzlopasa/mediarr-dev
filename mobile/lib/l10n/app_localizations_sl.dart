@@ -4956,4 +4956,149 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get settingsScreenShowAllAgain => 'Znova prikaži vse';
+
+  @override
+  String get accountSheetExport => 'Izvoz knjižnice';
+
+  @override
+  String get adminScreenExports => 'Izvozi knjižnic';
+
+  @override
+  String get adminScreenExportsHint => 'Spremljanje, preklic in prenos izvozov';
+
+  @override
+  String adminUsersExportTooltip(String email) {
+    return 'Izvozi knjižnico uporabnika $email';
+  }
+
+  @override
+  String adminUsersExportStarted(String email) {
+    return 'Izvoz knjižnice uporabnika $email se je začel.';
+  }
+
+  @override
+  String get exportsScreenTitle => 'Izvoz';
+
+  @override
+  String get exportsScreenAllTitle => 'Izvozi knjižnic';
+
+  @override
+  String get exportsScreenWhatIsIn =>
+      'Vzemite s seboj celotno knjižnico: datoteke ZIP z največ 10 GB z vsakim izvirnikom, kot je bil naložen, njegovo stransko datoteko XMP, mapo za vsak album in eno datoteko JSON z datumi, kraji, opisi, ocenami, priljubljenimi, oznakami, osebami in urejanji. Gesel in ključev v njem nikoli ni. Izdela se na strežniku, se po ponovnem zagonu nadaljuje in ga lahko prenesete 7 dni.';
+
+  @override
+  String get exportsScreenAdminHint =>
+      'Izvoz, ki ga začnete za nekoga, se prikaže tudi na njegovem seznamu. Prenesete ga lahko vi in ta oseba; drugi skrbniki samo spremljajo napredek.';
+
+  @override
+  String get exportsScreenStart => 'Izvozi mojo knjižnico';
+
+  @override
+  String get exportsScreenStarted => 'Izvoz se je začel.';
+
+  @override
+  String get exportsScreenNothingYet => 'Nič še ni bilo izvoženo.';
+
+  @override
+  String get exportsScreenNotLoaded => 'Izvozov ni bilo mogoče naložiti.';
+
+  @override
+  String get exportsScreenRunning => 'V teku';
+
+  @override
+  String get exportsScreenReady => 'Pripravljen';
+
+  @override
+  String get exportsScreenFailed => 'Ni uspel';
+
+  @override
+  String get exportsScreenCancelled => 'Preklican';
+
+  @override
+  String get exportsScreenRemoved => 'Odstranjen po 7 dneh';
+
+  @override
+  String exportsScreenProgress(
+    int done,
+    int total,
+    String doneBytes,
+    String totalBytes,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total datotek',
+      few: '$total datotek',
+      two: '$total datotek',
+      one: '$total datoteke',
+    );
+    return '$done od $_temp0 · $doneBytes od $totalBytes';
+  }
+
+  @override
+  String exportsScreenStartedBy(String name) {
+    return 'Začel/a $name';
+  }
+
+  @override
+  String exportsScreenMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count datotek',
+      few: '$count datoteke',
+      two: '$count datoteki',
+      one: '$count datoteka',
+    );
+    return 'Ni bilo na disku, zato je samo navedeno: $_temp0';
+  }
+
+  @override
+  String exportsScreenKeptUntil(String date) {
+    return 'Prenesete ga lahko do $date.';
+  }
+
+  @override
+  String get exportsScreenOnlyOwner =>
+      'Prenese ga lahko samo lastnik knjižnice ali skrbnik, ki je izvoz začel.';
+
+  @override
+  String get exportsScreenCancel => 'Prekliči';
+
+  @override
+  String get exportsScreenRemove => 'Odstrani';
+
+  @override
+  String exportsScreenPart(int number) {
+    return 'Del $number';
+  }
+
+  @override
+  String exportsScreenFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count datotek',
+      few: '$count datoteke',
+      two: '$count datoteki',
+      one: '$count datoteka',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exportsScreenDownloadPart(int number) {
+    return 'Prenesi del $number';
+  }
+
+  @override
+  String get exportsScreenDownloadFailed =>
+      'Dela ni bilo mogoče prenesti. Poskusite znova, nadaljevalo se bo, kjer se je ustavilo.';
+
+  @override
+  String get exportsScreenNoSpace =>
+      'Na strežniku ni dovolj prostora za ta izvoz. Sprostite prostor ali se obrnite na skrbnika.';
+
+  @override
+  String get exportsScreenAlreadyRunning => 'Izvoz te knjižnice že poteka.';
 }

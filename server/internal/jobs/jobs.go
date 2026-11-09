@@ -105,6 +105,8 @@ type Options struct {
 	MLURL string
 	// MLToken is sent to that service only, when it asks for one.
 	MLToken string
+	// ExportPartLimit is the most bytes in one ZIP part of an export; ExportPartLimit when zero.
+	ExportPartLimit int64
 }
 
 type deps struct {
@@ -142,6 +144,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 	river.AddWorker(workers, &storageApplyWorker{deps: d})
 	river.AddWorker(workers, &resolveDuplicatesWorker{deps: d})
 	river.AddWorker(workers, &memoriesWorker{deps: d})
+	river.AddWorker(workers, &exportWorker{deps: d})
 
 	var err error
 	client, err = river.NewClient(riverpgxv5.New(pool), &river.Config{
@@ -152,6 +155,7 @@ func NewWorker(pool *pgxpool.Pool, opts Options) (*river.Client[pgx.Tx], error) 
 			videoQueue:         {MaxWorkers: max(opts.VideoWorkers, 1)},
 			mlQueue:            {MaxWorkers: max(opts.AnalysisWorkers, 1)},
 			importQueue:        {MaxWorkers: 1},
+			exportQueue:        {MaxWorkers: 1},
 			describeQueue:      {MaxWorkers: 1},
 		},
 		Workers: workers,
@@ -528,6 +532,9 @@ func (w *cleanupWorker) Work(ctx context.Context, _ *river.Job[CleanupArgs]) err
 		return err
 	}
 	if err := RemoveStaleImports(ctx, w.queries, w.opts.LibraryPath); err != nil {
+		return err
+	}
+	if err := CleanExports(ctx, w.queries, w.opts.CachePath, time.Now()); err != nil {
 		return err
 	}
 	keepHousekeeping(ctx, w.queries, w.opts.LibraryPath)
