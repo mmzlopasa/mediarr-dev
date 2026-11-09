@@ -407,13 +407,17 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: Text('Still being analysed: ${summary.pending} photos.'),
             ),
-          GridView.count(
-            crossAxisCount: 2,
+          // A fixed height, not a ratio: on a narrow phone a ratio leaves too little room for the
+          // count, and the font can be enlarged.
+          GridView(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 1.9,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              mainAxisExtent: 92 * MediaQuery.textScalerOf(context).scale(1),
+            ),
             children: [for (final id in cleanupCategories) _categoryCard(id)],
           ),
           const SizedBox(height: 12),

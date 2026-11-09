@@ -122,6 +122,7 @@ type Asset struct {
 	Projection          pgtype.Text
 	ManualLocationNone  bool
 	CleanupKeptAt       pgtype.Timestamptz
+	ScreenshotHint      pgtype.Bool
 }
 
 type AssetDescription struct {

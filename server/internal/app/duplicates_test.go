@@ -164,7 +164,10 @@ func TestAllDuplicatesAreResolvedInTheBackground(t *testing.T) {
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
-	if items := len(timelineOf(t, c)); items != 2 {
-		t.Fatalf("timeline: %d", items)
+	// One of each pair stays. The trash is asked, not the timeline: the worker started here may still
+	// be busy with these made-up files.
+	var left int
+	if err := s.pool.QueryRow(context.Background(), `SELECT count(*) FROM assets WHERE deleted_at IS NULL`).Scan(&left); err != nil || left != 2 {
+		t.Fatalf("left %d: %v", left, err)
 	}
 }

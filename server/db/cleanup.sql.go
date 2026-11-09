@@ -233,10 +233,8 @@ FROM assets a
 LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.user_id = $1 AND a.kind = 'photo' AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.cleanup_kept_at IS NULL
-  AND (a.original_name ~* '(screenshot|screen ?shot|snimka zaslona|snimak ekrana|bildschirmfoto|capture d.[ée]cran|schermata|captura de pantalla|zrzut ekranu|sn[ií]mek obrazovky|снимок экрана)'
-       OR e.raw->>'UserComment' = 'Screenshot'
-       OR (a.mime_type = 'image/png' AND coalesce(e.make, '') = '' AND a.width > 0 AND a.height > 0
-           AND greatest(a.width, a.height)::real / least(a.width, a.height) >= 1.6))
+  AND ((a.screenshot_hint AND (a.original_name ~* '(screenshot|screen ?shot|snimka zaslona|snimak ekrana|bildschirmfoto|capture d.[ée]cran|schermata|captura de pantalla|zrzut ekranu|sn[ií]mek obrazovky|снимок экрана)' OR coalesce(e.make, '') = ''))
+       OR a.id IN (SELECT x.asset_id FROM exif x WHERE x.raw->>'UserComment' = 'Screenshot'))
 ORDER BY a.local_at DESC, a.id
 LIMIT $3 OFFSET $2
 `
@@ -263,7 +261,7 @@ type CleanupScreenshotsRow struct {
 }
 
 // By the name in many languages, by the mark an iPhone leaves, or a PNG without a camera in the
-// shape of a phone's screen.
+// shape of a phone's screen. screenshot_hint holds the first and the shape, so few rows are read.
 func (q *Queries) CleanupScreenshots(ctx context.Context, arg CleanupScreenshotsParams) ([]CleanupScreenshotsRow, error) {
 	rows, err := q.db.Query(ctx, cleanupScreenshots, arg.UserID, arg.Skip, arg.Max)
 	if err != nil {
@@ -374,10 +372,8 @@ FROM assets a
 LEFT JOIN exif e ON e.asset_id = a.id
 WHERE a.user_id = $1 AND a.kind = 'photo' AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL
   AND a.vault_at IS NULL AND a.cleanup_kept_at IS NULL
-  AND (a.original_name ~* '(screenshot|screen ?shot|snimka zaslona|snimak ekrana|bildschirmfoto|capture d.[ée]cran|schermata|captura de pantalla|zrzut ekranu|sn[ií]mek obrazovky|снимок экрана)'
-       OR e.raw->>'UserComment' = 'Screenshot'
-       OR (a.mime_type = 'image/png' AND coalesce(e.make, '') = '' AND a.width > 0 AND a.height > 0
-           AND greatest(a.width, a.height)::real / least(a.width, a.height) >= 1.6))
+  AND ((a.screenshot_hint AND (a.original_name ~* '(screenshot|screen ?shot|snimka zaslona|snimak ekrana|bildschirmfoto|capture d.[ée]cran|schermata|captura de pantalla|zrzut ekranu|sn[ií]mek obrazovky|снимок экрана)' OR coalesce(e.make, '') = ''))
+       OR a.id IN (SELECT x.asset_id FROM exif x WHERE x.raw->>'UserComment' = 'Screenshot'))
 `
 
 type CountScreenshotsRow struct {
