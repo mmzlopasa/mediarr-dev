@@ -131,7 +131,7 @@ struct AlbumWidgetView: View {
   var body: some View {
     ZStack(alignment: .bottomLeading) {
       if let picture = entry.picture {
-        Image(uiImage: picture).resizable().scaledToFill()
+        photo(picture)
         if !entry.title.isEmpty {
           Text(entry.title)
             .font(.caption.weight(.semibold))
@@ -150,6 +150,17 @@ struct AlbumWidgetView: View {
       }
     }
     .widgetBackground()
+  }
+}
+
+/// A photo stays a photo on a tinted or clear home screen too, where iOS would otherwise draw every
+/// picture of a widget as a flat shape in one colour.
+@ViewBuilder
+func photo(_ picture: UIImage) -> some View {
+  if #available(iOS 18.0, *) {
+    Image(uiImage: picture).widgetAccentedRenderingMode(.fullColor).resizable().scaledToFill()
+  } else {
+    Image(uiImage: picture).resizable().scaledToFill()
   }
 }
 
