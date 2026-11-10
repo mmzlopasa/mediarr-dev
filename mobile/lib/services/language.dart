@@ -43,9 +43,11 @@ class LanguageNotifier extends Notifier<String> {
   /// Chooses a language on this phone and, when signed in, for the account.
   Future<void> choose(String code, {DefaultApi? api}) async {
     _chosenHere = true;
-    _apply(appLanguageOf(code));
-    await _storage.write(key: _key, value: state);
-    if (api != null) await _tellAccount(api);
+    final chosen = appLanguageOf(code);
+    _apply(chosen);
+    await _storage.write(key: _key, value: chosen);
+    // The screen that chose may be gone by now, so the language is not read back from the state.
+    if (api != null) await _tellAccount(api, chosen);
   }
 
   /// After signing in: a phone that chose keeps its choice and gives it to the account; one that did
@@ -55,13 +57,13 @@ class LanguageNotifier extends Notifier<String> {
       if (account != null) _apply(appLanguageOf(account.value));
       return;
     }
-    if (account?.value != state) await _tellAccount(api);
+    if (account?.value != state) await _tellAccount(api, state);
   }
 
-  Future<void> _tellAccount(DefaultApi api) async {
+  Future<void> _tellAccount(DefaultApi api, String code) async {
     try {
       await api.updateProfile(
-        ProfileUpdate(language: Language.fromJson(state)),
+        ProfileUpdate(language: Language.fromJson(code)),
       );
     } on ApiException {
       // The phone keeps its language; the account learns it next time.
