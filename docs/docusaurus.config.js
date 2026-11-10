@@ -1,7 +1,11 @@
 const config = {
   title: 'Mediarr',
   tagline: 'Your photos and videos, on your own server',
-  favicon: 'img/logo.svg',
+  favicon: 'favicon.svg?v=2',
+  headTags: [
+    { tagName: 'link', attributes: { rel: 'icon', href: '/favicon.ico?v=2', sizes: '48x48' } },
+    { tagName: 'link', attributes: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } },
+  ],
   url: 'https://docs.mediarr.app',
   baseUrl: '/',
   trailingSlash: false,
