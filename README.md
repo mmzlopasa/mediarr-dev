@@ -22,7 +22,15 @@
 | Smart search in plain language | Yes | Yes |
 | People and face recognition | Yes | Yes |
 | Map, places and trips | Yes | Yes |
-| Memories | Yes | Yes |
+| Memories: trips, people through the years, birthdays | Yes | Yes |
+| Culling: pick, reject, compare | Yes | Yes |
+| Clean up and duplicates that keep what copies had | Yes | Yes |
+| Dates, time zones and places of many photos | Yes | Yes |
+| Play on TV: Chromecast, AirPlay, DLNA | Yes | Yes |
+| Private links: blurred faces, who opened them | Yes | Yes |
+| Export of the whole library | Yes | Yes |
+| Sign in with a QR code, server found on Wi-Fi | Yes | Yes |
+| English, Croatian, German, Slovenian | Yes | Yes |
 | Partner sharing, shared albums, public links | Yes | Yes |
 | Non-destructive editing | Yes | Yes |
 | Duplicates and stacks | Yes | Yes |
@@ -30,7 +38,7 @@
 | Family library | Yes | Yes |
 | AI descriptions with a local model | Yes | Yes |
 | Import from Immich, Google Takeout, iCloud | Yes | |
-| Encrypted backups, restore testing | Yes | |
+| Encrypted backups, restore testing | Yes | Yes |
 | OIDC, two-factor sign-in, API keys | Yes | Yes |
 | Passkeys, kiosk | Yes | |
 

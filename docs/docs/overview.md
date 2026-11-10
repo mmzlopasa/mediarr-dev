@@ -19,6 +19,15 @@ Mediarr is a photo and video library that you run on your own server. Your phone
 - **Non-destructive editing**: originals are never changed.
 - **Import** from Immich, Google Takeout and iCloud.
 - **Backups** to a folder, S3 or Backblaze B2, with a test that really brings them back.
+- **Duplicates and Clean up**: a copy that goes gives what it had to the one that stays, and blurry photos, screenshots, large videos and extra burst shots are gathered for the trash.
+- **Culling a shoot**: pick, reject and compare, with the keyboard or a swipe.
+- **Memories**: on this day, trips, a person through the years, birthdays and the year in photos.
+- **Dates, time zones and places** of many photos fixed at once, also from a GPX track.
+- **Play on TV** with Chromecast, AirPlay or DLNA.
+- **Private links** that can blur faces, leave out camera details and show who opened them.
+- **Signing in with a QR code**, and the app finds the server on your Wi-Fi.
+- **Four languages**: English, Croatian, German and Slovenian.
+- **Export** of the whole library, to leave whenever you want.
 
 ## How it runs
 

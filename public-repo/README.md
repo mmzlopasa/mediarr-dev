@@ -92,8 +92,11 @@ Open `http://your-server-ip:9851` and create the first account. These two files 
 | Albums, favourites, star ratings, archive and trash | ✓ | ✓ |
 | Locked vault with its own PIN | ✓ | ✓ |
 | Editing that never changes the original | ✓ | ✓ |
-| Duplicates and stacks of similar shots | ✓ | ✓ |
-| Memories, shown as stories | ✓ | ✓ |
+| Duplicates that keep what the copies had, and stacks of similar shots | ✓ | ✓ |
+| Clean up: blurry photos, screenshots, large videos, extra burst shots | ✓ | ✓ |
+| Culling a shoot: pick, reject, stars and side-by-side comparison | ✓ | ✓ |
+| Dates, time zones and places of many photos at once, also from GPX | ✓ | ✓ |
+| Memories: on this day, trips, a person through the years, birthdays | ✓ | ✓ |
 | Your profile: picture, name and email | ✓ | ✓ |
 | **Finding things** | | |
 | Smart search in plain language, in many languages | ✓ | ✓ |
@@ -106,11 +109,14 @@ Open `http://your-server-ip:9851` and create the first account. These two files 
 | Partners, shared albums with comments, and public links | ✓ | ✓ |
 | Upload links, so guests can add their photos to an album | ✓ | ✓ |
 | Family library | ✓ | ✓ |
+| Links that blur faces, leave out camera details and show who opened them | ✓ | ✓ |
+| Play on TV: Chromecast, AirPlay and DLNA | ✓ | ✓ |
 | TV mode, and a kiosk slideshow for a screen on the wall | ✓ | |
 | **Bringing photos in** | | |
 | Google Takeout and iCloud, from their ZIP files, for anyone | ✓ | follows |
 | Immich, through its API, with albums, favourites and people | ✓ | |
 | External libraries, read only | ✓ | ✓ |
+| Export of the whole library, to leave whenever you want | ✓ | ✓ |
 | **Keeping them safe** | | |
 | Encrypted backups to a disk, S3 or B2, with a real restore test | ✓ | ✓ |
 | A copy at another Mediarr, paired with a code or a QR code | ✓ | ✓ |
@@ -118,7 +124,9 @@ Open `http://your-server-ip:9851` and create the first account. These two files 
 | **Running it** | | |
 | Single sign-on, two-factor sign-in and API keys | ✓ | ✓ |
 | Passkeys | ✓ | |
-| Users, storage limits and an activity log | ✓ | |
+| Users, storage limits and an activity log | ✓ | ✓ |
+| Signing in on a new phone with a QR code; the app finds the server on Wi-Fi | ✓ | ✓ |
+| English, Croatian, German and Slovenian | ✓ | ✓ |
 | Webhooks and Prometheus metrics | ✓ | |
 
 *follows: the app shows an import's progress and report, and can stop and continue it; the ZIP files are uploaded from a computer.*
@@ -139,7 +147,7 @@ Measured on a small library:
 | Part | Memory | Disk for the image |
 | --- | --- | --- |
 | Server, worker and database | About 300 MB | About 1.1 GB |
-| Smart search and faces, optional | About 950 MB idle | 832 MB, and about 1 GB of models |
+| Smart search and faces, optional | About 100 MB idle, about 2 GB while working | 832 MB, and about 1 GB of models |
 | AI descriptions, optional | About 8.8 GB while working | 8.5 GB, and the models |
 
 Keep the images on a disk with a few GB free: an update downloads the new ones before it starts them.
@@ -151,13 +159,14 @@ Keep the images on a disk with a few GB free: an update downloads the new ones b
 | Android | [mediarr.apk](https://cdn.mediarr.app/apps/mediarr.apk) |
 | iPhone | [mediarr.ipa](https://cdn.mediarr.app/apps/mediarr.ipa), installed with a sideloading app such as Feather |
 
-Sign in with the address of your server, as you open it in the browser. The app backs up the photos you choose, in the background, and frees space on the phone only for what the server has.
+Sign in with the address of your server, as you open it in the browser, or scan the QR code from **Sign in on a phone** in the web's account menu. On the home Wi-Fi the app finds the server by itself. The app backs up the photos you choose, in the background, and frees space on the phone only for what the server has.
 
 ## Documentation
 
 - [Requirements](https://docs.mediarr.app/install/requirements) and [installation](https://docs.mediarr.app/install/docker-compose)
 - [Domain and HTTPS](https://docs.mediarr.app/administration/reverse-proxy)
 - [Import from Google Photos, iCloud or Immich](https://docs.mediarr.app/features/import)
+- [What's new](https://docs.mediarr.app/release-notes)
 - [Backup and restore](https://docs.mediarr.app/administration/backup) and [a copy at a relative's](https://docs.mediarr.app/administration/keep)
 - [The mobile app](https://docs.mediarr.app/features/mobile-app)
 - [FAQ](https://docs.mediarr.app/faq)
