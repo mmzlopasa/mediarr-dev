@@ -18,6 +18,27 @@ struct WidgetShare: Codable, Equatable {
     return id.hasSuffix(".widget") ? String(id.dropLast(".widget".count)) : id
   }
 
+  /// The keychain groups the signing allows, from the profile in this bundle, or in the app's when
+  /// the widget carries none. A sideloading app signs with its own profile, so they vary.
+  private static var profileGroups: [String] {
+    var bundles = [Bundle.main.bundleURL]
+    if Bundle.main.bundleURL.pathExtension == "appex" {
+      bundles.append(Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent())
+    }
+    for bundle in bundles {
+      guard let data = try? Data(contentsOf: bundle.appendingPathComponent("embedded.mobileprovision")),
+        let start = data.range(of: Data("<?xml".utf8)),
+        let end = data.range(of: Data("</plist>".utf8), in: start.lowerBound..<data.endIndex),
+        let plist = try? PropertyListSerialization.propertyList(
+          from: data.subdata(in: start.lowerBound..<end.upperBound), format: nil) as? [String: Any],
+        let entitlements = plist["Entitlements"] as? [String: Any],
+        let groups = entitlements["keychain-access-groups"] as? [String], !groups.isEmpty
+      else { continue }
+      return groups
+    }
+    return []
+  }
+
   /// The team prefix the signing gave, found from an item only this app can see.
   private static var teamPrefix: String? {
     let probe: [String: Any] = [
@@ -43,13 +64,26 @@ struct WidgetShare: Codable, Equatable {
     return String(group[...dot])
   }
 
-  private static var query: [String: Any]? {
+  /// Where the app and its widget meet. A profile that allows any group under its team gets one of
+  /// Mediarr's own; one that names its groups gets the first, which the app and the widget, signed
+  /// with the same profile, both have.
+  static var group: String? {
+    let groups = profileGroups
+    if let any = groups.first(where: { $0.hasSuffix(".*") }) {
+      return String(any.dropLast()) + appBundleID + ".share"
+    }
+    if let first = groups.first { return first }
     guard let prefix = teamPrefix else { return nil }
+    return prefix + appBundleID + ".share"
+  }
+
+  private static var query: [String: Any]? {
+    guard let group else { return nil }
     return [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: appBundleID + ".widget",
       kSecAttrAccount as String: account,
-      kSecAttrAccessGroup as String: prefix + appBundleID + ".share",
+      kSecAttrAccessGroup as String: group,
     ]
   }
 

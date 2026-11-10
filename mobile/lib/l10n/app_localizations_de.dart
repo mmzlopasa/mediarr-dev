@@ -5208,11 +5208,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Widget ist in der App, wurde aber nicht signiert, daher bietet iOS es nicht an. Signiere die App erneut, sodass auch ihre Erweiterungen signiert werden.';
 
   @override
-  String widgetInstallWrongProfile(String profile, String widget) {
-    return 'Das Widget wurde mit einem Profil für $profile signiert, nicht für seine eigene Kennung $widget, daher bietet iOS es nicht an. Signiere mit einem Zertifikat, dessen Profil jede Kennung (*) erlaubt.';
-  }
-
-  @override
   String get widgetInstallFine =>
       'Das Widget ist installiert und signiert. Wenn es weiterhin nicht angeboten wird, starte das Telefon neu.';
+
+  @override
+  String get homeWidgetNoShare =>
+      'Diese Installation erlaubt der App nicht, das Album an ihr Widget zu übergeben.';
 }

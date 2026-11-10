@@ -92,6 +92,7 @@ enum WidgetInstall {
     out["signed"] = FileManager.default.fileExists(
       atPath: widget.appendingPathComponent("_CodeSignature/CodeResources").path)
     out["widgetProfile"] = appIdentifier(readProfile(in: widget)) ?? ""
+    out["group"] = WidgetShare.group ?? ""
     return out
   }
 }

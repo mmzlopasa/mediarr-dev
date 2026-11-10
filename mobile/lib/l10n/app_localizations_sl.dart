@@ -5221,11 +5221,10 @@ class AppLocalizationsSl extends AppLocalizations {
       'Gradnik je v aplikaciji, a ni podpisan, zato ga iOS ne ponudi. Aplikacijo podpiši znova, da se podpišejo tudi razširitve.';
 
   @override
-  String widgetInstallWrongProfile(String profile, String widget) {
-    return 'Gradnik je podpisan s profilom za $profile, ne za svoj identifikator $widget, zato ga iOS ne ponudi. Podpiši s certifikatom, katerega profil dovoli vsak identifikator (*).';
-  }
-
-  @override
   String get widgetInstallFine =>
       'Gradnik je nameščen in podpisan. Če ga še vedno ni med ponujenimi, znova zaženi telefon.';
+
+  @override
+  String get homeWidgetNoShare =>
+      'Ta namestitev aplikaciji ne dovoli, da gradniku preda album.';
 }

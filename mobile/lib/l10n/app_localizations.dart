@@ -8871,17 +8871,17 @@ abstract class AppLocalizations {
   /// **'The widget is in the app but was not signed, so iOS does not offer it. Sign the app again so that its extensions are signed too.'**
   String get widgetInstallUnsigned;
 
-  /// No description provided for @widgetInstallWrongProfile.
-  ///
-  /// In en, this message translates to:
-  /// **'The widget was signed with a profile for {profile}, not for its own identifier {widget}, so iOS does not offer it. Sign with a certificate whose profile allows any identifier (*).'**
-  String widgetInstallWrongProfile(String profile, String widget);
-
   /// No description provided for @widgetInstallFine.
   ///
   /// In en, this message translates to:
   /// **'The widget is installed and signed. If it is still not offered, restart the phone.'**
   String get widgetInstallFine;
+
+  /// No description provided for @homeWidgetNoShare.
+  ///
+  /// In en, this message translates to:
+  /// **'This installation does not let the app hand the album to its widget.'**
+  String get homeWidgetNoShare;
 }
 
 class _AppLocalizationsDelegate

@@ -12,6 +12,7 @@ import 'package:mediarr/screens/album_sheets.dart';
 import 'package:mediarr/screens/albums_screen.dart';
 import 'package:mediarr/services/session.dart';
 import 'package:mediarr/theme.dart';
+import 'package:mediarr/l10n/l10n.dart';
 import 'package:mediarr_api/api.dart';
 
 const _albumId = '11111111-1111-1111-1111-111111111111';
@@ -336,7 +337,7 @@ void main() {
     expect(widgetPicturesLine(20), '20 photos kept on this phone for it');
   });
 
-  test('the install check says why iOS does not offer the widget', () {
+  test('the install check says when the signing dropped the widget', () {
     WidgetInstallVerdict of(Map<String, Object> facts) =>
         WidgetInstall(facts).verdict;
     const base = {
@@ -348,21 +349,11 @@ void main() {
     expect(of({'present': false}), WidgetInstallVerdict.missing);
     expect(of({}), WidgetInstallVerdict.unknown);
     expect(of({...base, 'signed': false}), WidgetInstallVerdict.unsigned);
-    expect(of({...base, 'appProfile': 'TEAM.*'}), WidgetInstallVerdict.fine);
+    // A profile made for another identifier still gets the widget offered.
     expect(
-      of({...base, 'appProfile': 'TEAM.app.mediarr.*'}),
+      of({...base, 'appProfile': 'TEAM.app.moon599.giraffe640'}),
       WidgetInstallVerdict.fine,
     );
-    expect(
-      of({...base, 'widgetProfile': 'TEAM.app.mediarr.mediarr.dev.widget'}),
-      WidgetInstallVerdict.fine,
-    );
-    final wrong = WidgetInstall({
-      ...base,
-      'appProfile': 'TEAM.app.mediarr.mediarr.dev',
-    });
-    expect(wrong.verdict, WidgetInstallVerdict.wrongProfile);
-    expect(wrong.profileId, 'app.mediarr.mediarr.dev');
   });
 
   testWidgets('the install check shows what is wrong', (tester) async {
@@ -375,6 +366,20 @@ void main() {
     );
     expect(find.text('Installation check'), findsOneWidget);
     expect(find.textContaining('signing left it out'), findsOneWidget);
+  });
+
+  testWidgets('an album the widget cannot be given says so', (tester) async {
+    await _show(
+      tester,
+      HomeWidgetScreen(service: _FakeWidget(shares: false)),
+      (request) async => _json([_album(title: 'Summer', count: 12)]),
+    );
+    await tester.tap(find.text('Summer'));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(find.textContaining('hand the album to its widget'), findsOneWidget);
+    await _finish(tester);
   });
 
   testWidgets('choosing an album hands it to the widget', (tester) async {
@@ -402,6 +407,9 @@ void main() {
 }
 
 class _FakeWidget extends HomeWidgetService {
+  _FakeWidget({this.shares = true});
+
+  final bool shares;
   String? chosen;
 
   @override
@@ -410,8 +418,10 @@ class _FakeWidget extends HomeWidgetService {
       : WidgetChoice(albumId: _albumId, albumTitle: chosen!, pictures: 5);
 
   @override
-  Future<void> choose(Session session, Album album) async =>
-      chosen = album.title;
+  Future<void> choose(Session session, Album album) async {
+    if (!shares) throw ApiException(500, l.homeWidgetNoShare);
+    chosen = album.title;
+  }
 
   @override
   Future<void> clear(Session session) async => chosen = null;

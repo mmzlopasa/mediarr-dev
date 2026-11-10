@@ -5167,11 +5167,10 @@ class AppLocalizationsHr extends AppLocalizations {
       'Widget je u aplikaciji, ali nije potpisan, pa ga iOS ne nudi. Potpiši aplikaciju ponovno tako da se potpišu i ekstenzije.';
 
   @override
-  String widgetInstallWrongProfile(String profile, String widget) {
-    return 'Widget je potpisan profilom za $profile, a ne za svoj identifikator $widget, pa ga iOS ne nudi. Potpiši certifikatom čiji profil dopušta svaki identifikator (*).';
-  }
-
-  @override
   String get widgetInstallFine =>
       'Widget je instaliran i potpisan. Ako ga i dalje nema u ponudi, ponovno pokreni mobitel.';
+
+  @override
+  String get homeWidgetNoShare =>
+      'Ova instalacija ne dopušta aplikaciji da widgetu preda album.';
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
@@ -70,6 +71,8 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
       _say(done);
     } on ApiException catch (cause) {
       _say(cause.message ?? l.homeWidgetScreenDidNotWork);
+    } on PlatformException {
+      _say(l.homeWidgetScreenDidNotWork);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -159,10 +162,6 @@ class WidgetInstallTile extends StatelessWidget {
     final message = switch (verdict) {
       WidgetInstallVerdict.missing => l.widgetInstallMissing,
       WidgetInstallVerdict.unsigned => l.widgetInstallUnsigned,
-      WidgetInstallVerdict.wrongProfile => l.widgetInstallWrongProfile(
-        install.profileId,
-        install.widgetId,
-      ),
       _ => l.widgetInstallFine,
     };
     return ListTile(

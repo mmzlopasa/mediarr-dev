@@ -25,7 +25,7 @@ class WidgetChoice {
 }
 
 /// What iOS was given of the widget, after the phone signed the app again.
-enum WidgetInstallVerdict { missing, unsigned, wrongProfile, fine, unknown }
+enum WidgetInstallVerdict { missing, unsigned, fine, unknown }
 
 class WidgetInstall {
   const WidgetInstall(this.facts);
@@ -37,29 +37,13 @@ class WidgetInstall {
   String get appId => _text('appId');
   String get widgetId => _text('widgetId');
 
-  /// The profile's app identifier without the team in front, such as `*` or `app.mediarr.*`.
-  String get profileId {
-    final full = _text('widgetProfile').isNotEmpty
-        ? _text('widgetProfile')
-        : _text('appProfile');
-    final dot = full.indexOf('.');
-    return dot < 0 ? full : full.substring(dot + 1);
-  }
-
   WidgetInstallVerdict get verdict {
     if (facts['present'] == false) return WidgetInstallVerdict.missing;
     if (facts['present'] != true) return WidgetInstallVerdict.unknown;
     if (facts['signed'] == false) return WidgetInstallVerdict.unsigned;
-    final id = profileId;
-    if (id.isEmpty) return WidgetInstallVerdict.fine;
-    final allowed =
-        id == '*' ||
-        id == widgetId ||
-        (id.endsWith('.*') &&
-            widgetId.startsWith(id.substring(0, id.length - 1)));
-    return allowed
-        ? WidgetInstallVerdict.fine
-        : WidgetInstallVerdict.wrongProfile;
+    // Which profile signed it says nothing for sure: iOS has offered a widget signed with a
+    // profile made for another identifier.
+    return WidgetInstallVerdict.fine;
   }
 }
 
@@ -105,12 +89,18 @@ class HomeWidgetService {
       throw ApiException(500, l.homeWidgetNoKey);
     }
     await _storage.write(key: _keyId, value: key.id);
-    await _channel.invokeMethod<void>('configure', {
-      'server': session.serverUrl,
-      'key': key.key,
-      'albumId': album.id,
-      'albumTitle': album.title,
-    });
+    try {
+      await _channel.invokeMethod<void>('configure', {
+        'server': session.serverUrl,
+        'key': key.key,
+        'albumId': album.id,
+        'albumTitle': album.title,
+      });
+    } on PlatformException {
+      // The widget cannot read it, so the key is of no use to anyone.
+      await _revoke(session);
+      throw ApiException(500, l.homeWidgetNoShare);
+    }
   }
 
   Future<void> clear(Session session) async {
