@@ -96,8 +96,9 @@ struct AlbumProvider: TimelineProvider {
       let entry = AlbumEntry(
         date: Date(), picture: nil, title: "",
         note: "Choose an album in Mediarr: Settings, Home screen widget"
-          + (WidgetShare.defaultGroup.map { "\n\nWidget keychain: " + $0 } ?? ""))
-      completion(Timeline(entries: [entry], policy: .never))
+          + "\n\nWidget keychain: \(WidgetShare.defaultGroup ?? "none") (\(WidgetShare.lastStatus))")
+      // Looks again later too, in case the app's word to reload never comes.
+      completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(15 * 60))))
       return
     }
     Task {
