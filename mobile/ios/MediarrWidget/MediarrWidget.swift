@@ -158,7 +158,7 @@ struct AlbumWidgetView: View {
 @ViewBuilder
 func photo(_ picture: UIImage) -> some View {
   if #available(iOS 18.0, *) {
-    Image(uiImage: picture).widgetAccentedRenderingMode(.fullColor).resizable().scaledToFill()
+    Image(uiImage: picture).resizable().widgetAccentedRenderingMode(.fullColor).scaledToFill()
   } else {
     Image(uiImage: picture).resizable().scaledToFill()
   }
