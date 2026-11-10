@@ -546,6 +546,137 @@ h2 {
 	color: var(--ink);
 }
 
+/* After the shoot: culling on the left, the tidy-up as a spec sheet on the right. */
+.sort-grid {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	column-gap: var(--gap);
+	row-gap: 48px;
+	align-items: start;
+}
+.cull {
+	grid-column: 1 / span 5;
+	padding: clamp(24px, 2.6vw, 36px);
+	background: var(--bg-2);
+	border: 1px solid var(--line);
+	border-radius: 16px;
+}
+.cull h3,
+.share-col h3 {
+	font-size: 20px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+.cull p,
+.share-col p {
+	margin-top: 10px;
+	color: var(--haze);
+	font-size: 15.5px;
+	max-width: 36em;
+}
+.keys {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px 22px;
+	margin: 28px 0 0;
+	padding: 0;
+	list-style: none;
+	font-size: 14px;
+	color: var(--haze);
+}
+.keys li {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+}
+.key-run {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	color: var(--dim);
+}
+kbd {
+	display: inline-grid;
+	place-items: center;
+	min-width: 34px;
+	height: 34px;
+	padding: 0 8px;
+	border-radius: 8px;
+	border: 1px solid var(--line-2);
+	border-bottom-width: 2px;
+	background: var(--bg-3);
+	color: var(--ink);
+	font: 500 14px/1 var(--mono);
+}
+.cull .note,
+.rows .note {
+	color: var(--dim);
+	font-size: 14px;
+}
+.cull .note {
+	margin-top: 24px;
+	padding-top: 16px;
+	border-top: 1px solid var(--line);
+}
+.rows .note {
+	margin-top: 6px;
+	max-width: 34em;
+}
+.sort .tidy {
+	grid-column: 7 / -1;
+}
+
+/* Memories and links: two columns of plain lists. */
+.share .head {
+	margin-bottom: clamp(28px, 3vw, 44px);
+}
+.share-grid {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	column-gap: var(--gap);
+	row-gap: 56px;
+}
+.share-col:first-child {
+	grid-column: 1 / span 5;
+}
+.share-col:last-child {
+	grid-column: 7 / -1;
+}
+.list {
+	margin: 24px 0 0;
+	padding: 0;
+	list-style: none;
+}
+.list li {
+	padding: 13px 0 13px 22px;
+	position: relative;
+	border-top: 1px solid var(--line);
+	font-size: 15.5px;
+}
+.list li:last-child {
+	border-bottom: 1px solid var(--line);
+}
+/* A short tick, as on the film edge. */
+.list li::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: calc(13px + 0.78em);
+	width: 10px;
+	height: 2px;
+	border-radius: 2px;
+	background: var(--line-2);
+}
+.apps-lead {
+	margin-top: 18px;
+	max-width: 38em;
+	color: var(--haze);
+	font-size: 17px;
+}
+.code .cmt {
+	color: var(--dim);
+}
+
 /* Install */
 .install-grid {
 	display: grid;
@@ -702,8 +833,13 @@ h2 {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 	.print.small,
-	.kept .spec {
+	.kept .spec,
+	.cull,
+	.sort .tidy {
 		grid-column: 1 / -1;
+	}
+	.cull {
+		max-width: 680px;
 	}
 	.print.small {
 		max-width: 520px;
@@ -713,6 +849,11 @@ h2 {
 	}
 	.apps-copy {
 		grid-column: 7 / -1;
+	}
+	.rows li {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 14px;
 	}
 }
 
@@ -807,6 +948,10 @@ h2 {
 		margin-bottom: 48px;
 	}
 	.apps-copy {
+		grid-column: 1 / -1;
+	}
+	.share-col:first-child,
+	.share-col:last-child {
 		grid-column: 1 / -1;
 	}
 	.rows li {

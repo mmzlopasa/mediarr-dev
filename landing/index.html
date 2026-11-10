@@ -4,7 +4,7 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 		<title>Mediarr: your family's photos and videos, on your own server</title>
-		<meta name="description" content="Mediarr is a photo and video library you run on your own server, with apps for iPhone and Android." />
+		<meta name="description" content="Mediarr is a photo and video library you run on your own server, with apps for iPhone and Android, and a way to the TV." />
 		<meta name="theme-color" content="#090B0F" />
 		<meta name="color-scheme" content="dark" />
 		<link rel="icon" href="/favicon.ico?v=2" sizes="48x48" />
@@ -43,7 +43,9 @@
 			<a href="#top" aria-current="true"><span>Start</span></a>
 			<a href="#sheet"><span>Contact sheet</span></a>
 			<a href="#viewer"><span>The viewer</span></a>
+			<a href="#sort"><span>After the shoot</span></a>
 			<a href="#kept"><span>Kept</span></a>
+			<a href="#share"><span>Memories and links</span></a>
 			<a href="#install"><span>Install</span></a>
 			<a href="#apps"><span>Apps</span></a>
 		</nav>
@@ -113,7 +115,7 @@
 							<figcaption>
 								<span class="data">tv.jpg <span>2160 × 1350</span></span>
 								<h3>Together on the TV</h3>
-								<p>Memories, albums and people in big rows, made for a remote: arrows, OK and back.</p>
+								<p>Send a photo or video to a Chromecast, an Apple TV or a DLNA TV, or open TV mode, made for a remote.</p>
 							</figcaption>
 						</figure>
 						<figure class="frame chosen">
@@ -138,6 +140,31 @@
 				</div>
 			</section>
 
+			<section class="sort wrap" id="sort" data-section aria-labelledby="sort-h">
+				<div class="head">
+					<h2 id="sort-h">After the shoot, less to look through.</h2>
+					<p>Go through a day of photos quickly, let Mediarr find the copies and the misses, and put wrong dates and places right for many photos at once. Nothing is deleted straight away: what you remove waits in the trash.</p>
+				</div>
+				<div class="sort-grid">
+					<div class="cull">
+						<h3>Culling a shoot</h3>
+						<p>One photo at a time, with the rest of the shoot in a strip below. Pick it, reject it or give it stars, and compare two to four side by side, zoomed together. When you are done, the rejects go to the trash and the picks become an album.</p>
+						<ul class="keys" aria-label="Keys for culling">
+							<li><kbd>P</kbd>Pick</li>
+							<li><kbd>X</kbd>Reject</li>
+							<li><span class="key-run"><kbd>1</kbd>–<kbd>5</kbd></span>Stars</li>
+							<li><kbd>U</kbd>Clear</li>
+						</ul>
+						<p class="note">On a phone, drag a photo up to pick it and down to reject it.</p>
+					</div>
+					<dl class="spec tidy">
+						<div><dt>Duplicates</dt><dd>Copies are grouped, with one proposed to keep and the reason why. The one you keep takes over what the copies had: their albums, tags, favourite, description and the people in them.</dd></div>
+						<div><dt>Clean up</dt><dd>Blurry photos, screenshots, large videos and the extra shots of a burst, each with the space they take. Favourites and photos in albums are left unticked.</dd></div>
+						<div><dt>Dates and places</dt><dd>Shift a camera clock that was wrong, give photos the time zone of where they were taken, or place them from nearby photos or a GPX track. A preview shows what will change first.</dd></div>
+					</dl>
+				</div>
+			</section>
+
 			<section class="kept wrap" id="kept" data-section aria-labelledby="kept-h">
 				<div class="head">
 					<h2 id="kept-h">Made to be kept for decades.</h2>
@@ -153,11 +180,42 @@
 						<div><dt>Every phone</dt><dd>Each phone backs up by itself in the background, so new pictures simply appear.</dd></div>
 						<div><dt>One library</dt><dd>The whole family's pictures in one place.</dd></div>
 						<div><dt>People</dt><dd>Faces are recognised on your server and grouped by person. Correct one in a tap.</dd></div>
+						<div><dt>Analysis</dt><dd>Smart search and faces can run on a stronger computer at home, and the models leave memory when nothing has asked for them for a while.</dd></div>
 						<div><dt>Your copies</dt><dd>Encrypted backups to a folder, S3 or Backblaze B2, with a test that really brings them back.</dd></div>
 						<div><dt>Metadata</dt><dd>Ratings, captions and corrected dates go out as a standard XMP sidecar with the picture.</dd></div>
 						<div><dt>Smart albums</dt><dd>They gather pictures by rules you set, and keep up as new ones arrive.</dd></div>
 						<div><dt>Coming over</dt><dd>Import from Immich, Google Takeout and iCloud, or show a folder you already have.</dd></div>
+						<div><dt>Leaving</dt><dd>Export the whole library at any time: every original, its XMP sidecar, your albums and everything Mediarr knows about each picture, in ZIP files any computer opens.</dd></div>
 					</dl>
+				</div>
+			</section>
+
+			<section class="share wrap" id="share" data-section aria-labelledby="share-h">
+				<div class="head">
+					<h2 id="share-h">Memories come back. Links share only what you choose.</h2>
+				</div>
+				<div class="share-grid">
+					<div class="share-col">
+						<h3>Memories that find themselves</h3>
+						<p>Besides On this day, Mediarr puts memories together from your own library once a day. Titles are built from your data, in the language you read Mediarr in.</p>
+						<ul class="list">
+							<li>Trips away from home</li>
+							<li>A person through the years</li>
+							<li>Birthdays</li>
+							<li>Last year in photos</li>
+							<li>The day a month ago</li>
+						</ul>
+					</div>
+					<div class="share-col">
+						<h3>A link that keeps things private</h3>
+						<p>When you share an album by link, you decide what goes with it, and can change it later.</p>
+						<ul class="list">
+							<li>Blur faces: all of them, or all but the people you choose</li>
+							<li>Take out the camera details and the date</li>
+							<li>Ask visitors for their name</li>
+							<li>See who opened it, when, from roughly where, and how much they viewed and downloaded</li>
+						</ul>
+					</div>
 				</div>
 			</section>
 
@@ -174,8 +232,10 @@
 						<div><dt>Domain, HTTPS</dt><dd>Not needed. Add them if you like.</dd></div>
 					</dl>
 					<div class="code">
-						<pre><code>curl -fsSL -o docker-compose.yml https://cdn.mediarr.app/install/docker-compose.yml
+						<pre><code>mkdir -p ~/mediarr &amp;&amp; cd ~/mediarr
+curl -fsSL -o docker-compose.yml https://cdn.mediarr.app/install/docker-compose.yml
 curl -fsSL -o .env https://cdn.mediarr.app/install/example.env
+<span class="cmt"># set the password and your photo folders in .env, then:</span>
 docker compose up -d</code></pre>
 						<div class="code-foot"><button type="button" class="copy" data-copy>Copy</button></div>
 					</div>
@@ -190,6 +250,7 @@ docker compose up -d</code></pre>
 				<div class="phone"><img src="/img/phone-library.jpg" width="780" height="1688" alt="The Mediarr library on a phone, with the dock at the bottom" loading="lazy" /></div>
 				<div class="apps-copy">
 					<h2 id="apps-h">On every phone, and on the TV.</h2>
+					<p class="apps-lead">Sign in on a new phone by scanning a QR code from a screen where you are already signed in. The app finds the server on your home Wi-Fi by itself. Mediarr speaks English, Croatian, German and Slovenian; German and Slovenian are machine translated for now.</p>
 					<ul class="rows">
 						<li>
 							<div><h3>iPhone</h3><p>Early version, installed with a sideloading app such as Feather.</p></div>
@@ -200,7 +261,7 @@ docker compose up -d</code></pre>
 							<a class="btn" href="https://cdn.mediarr.app/apps/mediarr.apk">Download .apk</a>
 						</li>
 						<li>
-							<div><h3>TV</h3><p>TV mode in the browser, made for a remote: arrows, OK and back.</p></div>
+							<div><h3>TV</h3><p>Play on TV sends what is on your screen to a Chromecast, an Apple TV or a DLNA TV, and the TV follows as you swipe. Or open TV mode in the TV's browser, made for a remote.</p><p class="note">From the web, Chromecast works in Chrome over HTTPS, and Safari sends videos by AirPlay. Photos reach an Apple TV by Screen Mirroring.</p></div>
 							<a class="btn" href="https://demo.mediarr.app">Try it in the demo</a>
 						</li>
 					</ul>
