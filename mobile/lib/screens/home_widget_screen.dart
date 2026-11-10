@@ -171,7 +171,11 @@ class WidgetInstallTile extends StatelessWidget {
         color: fine ? Palette.gold : Theme.of(context).colorScheme.error,
       ),
       title: Text(l.widgetInstallTitle),
-      subtitle: Text(message),
+      subtitle: Text(
+        install.group.isEmpty
+            ? message
+            : '$message\n\nApp keychain: ${install.group}',
+      ),
     );
   }
 }

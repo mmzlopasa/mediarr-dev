@@ -62,9 +62,7 @@ class LanguageNotifier extends Notifier<String> {
 
   Future<void> _tellAccount(DefaultApi api, String code) async {
     try {
-      await api.updateProfile(
-        ProfileUpdate(language: Language.fromJson(code)),
-      );
+      await api.updateProfile(ProfileUpdate(language: Language.fromJson(code)));
     } on ApiException {
       // The phone keeps its language; the account learns it next time.
     }

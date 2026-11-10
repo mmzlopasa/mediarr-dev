@@ -37,6 +37,9 @@ class WidgetInstall {
   String get appId => _text('appId');
   String get widgetId => _text('widgetId');
 
+  /// The keychain group the app writes the widget's album to.
+  String get group => _text('group');
+
   WidgetInstallVerdict get verdict {
     if (facts['present'] == false) return WidgetInstallVerdict.missing;
     if (facts['present'] != true) return WidgetInstallVerdict.unknown;

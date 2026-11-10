@@ -95,7 +95,8 @@ struct AlbumProvider: TimelineProvider {
     guard let share = WidgetShare.load() else {
       let entry = AlbumEntry(
         date: Date(), picture: nil, title: "",
-        note: "Choose an album in Mediarr: Settings, Home screen widget")
+        note: "Choose an album in Mediarr: Settings, Home screen widget"
+          + (WidgetShare.defaultGroup.map { "\n\nWidget keychain: " + $0 } ?? ""))
       completion(Timeline(entries: [entry], policy: .never))
       return
     }
