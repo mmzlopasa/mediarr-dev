@@ -2362,6 +2362,14 @@ html[data-theme='light'] .chat-m.agent {
 	min-width: 22px;
 	opacity: 0.6;
 }
+/* A machine translation says so on a quiet second line, so the names stay one line each. */
+.langdd-m a span {
+	display: grid;
+}
+.langdd-m a small {
+	color: var(--dim);
+	font-size: 0.76rem;
+}
 .langdd-m a:hover {
 	background: rgba(var(--acc-rgb), 0.12);
 }

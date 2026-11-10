@@ -1383,8 +1383,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       years,
       locale: localeName,
-      other: 'vor $years Jahren',
-      one: 'vor 1 Jahr',
+      other: 'Vor $years Jahren',
+      one: 'Vor 1 Jahr',
     );
     return '$_temp0';
   }
@@ -3175,7 +3175,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get qrSignInTheDevice => 'Gerät';
 
   @override
-  String get qrSignInTitle => 'Auf einem anderen Gerät anmelden';
+  String get qrSignInTitle => 'Anderes Gerät anmelden';
 
   @override
   String get qrSignInHowTo =>
@@ -5016,13 +5016,21 @@ class AppLocalizationsDe extends AppLocalizations {
     String doneBytes,
     String totalBytes,
   ) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
-      other: '$total Dateien',
+      other: '$totalString Dateien',
       one: '1 Datei',
     );
-    return '$done von $_temp0 · $doneBytes von $totalBytes';
+    return '$doneString von $_temp0 · $doneBytes von $totalBytes';
   }
 
   @override
@@ -5063,10 +5071,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String exportsScreenFiles(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Dateien',
+      other: '$countString Dateien',
       one: '1 Datei',
     );
     return '$_temp0';

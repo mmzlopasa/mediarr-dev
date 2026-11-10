@@ -432,7 +432,22 @@
 .selbar-a {
 	display: flex;
 	gap: 6px;
+	min-width: 0;
 	margin-left: 6px;
+	/* On a phone not every action fits: the row scrolls sideways instead of going off the screen. */
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+.selbar-a > * {
+	flex: none;
+}
+@media (max-width: 760px) {
+	/* The last action fades at the edge, so it reads as a row that goes on. */
+	.selbar-a {
+		padding-right: 16px;
+		-webkit-mask: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+		mask: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+	}
 }
 .selbar .icon-btn:disabled {
 	opacity: 0.5;
@@ -918,6 +933,20 @@ video.viewer-media {
 	flex-wrap: wrap;
 	gap: 8px;
 	margin-top: 12px;
+}
+.dup-bytes {
+	white-space: nowrap;
+}
+/* On a phone the actions fill the row they wrap onto, so wrapped buttons line up. */
+@media (max-width: 760px) {
+	.dup-all > .btn,
+	.dup-actions > .btn,
+	.cln-act > .btn {
+		flex: 1 1 auto;
+	}
+	.cln-act span {
+		flex-basis: 100%;
+	}
 }
 
 /* The shots of a stack, in the viewer */
@@ -1810,6 +1839,19 @@ img.ss-in.ss-zoom.ss-still {
 .fix-row .in {
 	width: 6.5rem;
 }
+/* On a phone: the direction across the row, then days, hours and minutes side by side. */
+@media (max-width: 520px) {
+	.fix-row {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	.fix-row > select {
+		grid-column: 1 / -1;
+	}
+	.fix-row .in {
+		width: 100%;
+	}
+}
 .fix-field {
 	display: grid;
 	gap: 4px;
@@ -1896,16 +1938,14 @@ img.ss-in.ss-zoom.ss-still {
 	display: grid;
 	gap: 8px;
 	width: 100%;
-	padding: 16px;
-	border: 1px solid var(--line);
-	border-radius: 14px;
-	background: var(--bg-2);
+	padding: 8px 0 4px;
 }
 .qrs-ask b {
 	font-size: 15.5px;
 }
 .qrs-ask p,
 .qrs-done {
+	text-wrap: pretty;
 	margin: 0;
 	color: var(--dim);
 	font-size: 13.5px;
@@ -2212,8 +2252,23 @@ img.ss-in.ss-zoom.ss-still {
 	padding: 12px 0 16px;
 	border-bottom: 1px solid var(--line);
 }
+.lp-visits .tbl th,
 .lp-visits .tbl td {
+	padding: 10px 6px;
+	font-size: 0.84rem;
+}
+/* Times, places and devices wrap so that all six columns fit the dialog; counts stay whole. */
+.lp-visits .tbl td:nth-child(n + 5) {
 	white-space: nowrap;
+}
+.lp-visits .tbl th:nth-child(n + 5),
+.lp-visits .tbl td:nth-child(n + 5) {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+/* A link: its name and what it allows across the dialog, its actions together under it. */
+.alb-list.lp-link > b {
+	flex-basis: 100%;
 }
 .viewer-note {
 	position: absolute;

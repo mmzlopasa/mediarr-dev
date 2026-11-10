@@ -47,6 +47,14 @@ export function lang() {
 	return current;
 }
 
+// How each language writes dates and numbers; English is written the British way.
+const LOCALES: Record<Lang, string> = { en: 'en-GB', hr: 'hr-HR', de: 'de-DE', sl: 'sl-SI' };
+
+/** The locale for dates and numbers in the chosen language. */
+export function dateLocale() {
+	return LOCALES[current];
+}
+
 /** Picks the texts of a language. Kept async for callers that awaited loading. */
 export async function loadLang(next: Lang = current) {
 	catalog = next === 'en' ? {} : catalogs[next];

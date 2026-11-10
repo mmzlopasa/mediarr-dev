@@ -215,7 +215,7 @@ class _ExportsScreenState extends ConsumerState<ExportsScreen> {
 
   Widget _entry(LibraryExport entry) {
     final running = entry.status == LibraryExportStatusEnum.running;
-    final created = entry.createdAt.toLocal().toString().substring(0, 16);
+    final created = localTime(entry.createdAt);
     final dim = TextStyle(color: Palette.dim);
     return Padding(
       key: ValueKey('export-${entry.id}'),
@@ -247,12 +247,7 @@ class _ExportsScreenState extends ConsumerState<ExportsScreen> {
           ],
           if (entry.status == LibraryExportStatusEnum.done) ...[
             if (entry.expiresAt case final until?)
-              Text(
-                l.exportsScreenKeptUntil(
-                  until.toLocal().toString().substring(0, 10),
-                ),
-                style: dim,
-              ),
+              Text(l.exportsScreenKeptUntil(localDay(until)), style: dim),
             if (!entry.canDownload)
               Text(l.exportsScreenOnlyOwner, style: dim)
             else

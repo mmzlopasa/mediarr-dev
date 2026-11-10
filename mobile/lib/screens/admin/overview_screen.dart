@@ -4,6 +4,7 @@ import 'package:mediarr_api/api.dart';
 
 import '../../l10n/l10n.dart';
 import '../../services/session.dart';
+import '../../theme.dart';
 import 'admin_common.dart';
 
 /// Live statistics of the whole server, as on the web's overview.
@@ -43,11 +44,20 @@ class _AdminOverviewScreenState extends ConsumerState<AdminOverviewScreen> {
     }
   }
 
-  Widget _row(String label, String value) => ListTile(
+  Widget _row(String label, String value, {bool alarm = false}) => ListTile(
     dense: true,
     title: Text(label),
-    trailing: Text(value, style: Theme.of(context).textTheme.bodyLarge),
+    trailing: Text(
+      value,
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+        color: alarm ? Palette.err : null,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    ),
   );
+
+  Widget _count(String label, int value, {bool alarm = false}) =>
+      _row(label, localCount(value), alarm: alarm && value > 0);
 
   List<Widget> _mlRows(MlServiceStatus ml) {
     final loaded = [
@@ -100,11 +110,11 @@ class _AdminOverviewScreenState extends ConsumerState<AdminOverviewScreen> {
           child: ListView(
             children: [
               AdminHeading(l.adminOverviewLibrary),
-              _row(l.adminOverviewUsers, '${overview!.users}'),
-              _row(l.adminOverviewPhotos, '${overview.photos}'),
-              _row(l.adminOverviewVideos, '${overview.videos}'),
-              _row(l.adminOverviewProcessing, '${overview.processing}'),
-              _row(l.adminOverviewFailed, '${overview.failed}'),
+              _count(l.adminOverviewUsers, overview!.users),
+              _count(l.adminOverviewPhotos, overview.photos),
+              _count(l.adminOverviewVideos, overview.videos),
+              _count(l.adminOverviewProcessing, overview.processing),
+              _count(l.adminOverviewFailed, overview.failed, alarm: true),
               _row(
                 l.adminOverviewLibrarySize,
                 adminBytes(overview.libraryBytes),
@@ -113,10 +123,10 @@ class _AdminOverviewScreenState extends ConsumerState<AdminOverviewScreen> {
               _row(l.adminOverviewFree, adminBytes(overview.diskFreeBytes)),
               _row(l.adminOverviewTotal, adminBytes(overview.diskTotalBytes)),
               AdminHeading(l.adminOverviewJobs),
-              _row(l.adminOverviewWaiting, '${overview.jobs.queued}'),
-              _row(l.adminOverviewRunning, '${overview.jobs.running}'),
-              _row(l.adminOverviewDone, '${overview.jobs.completed}'),
-              _row(l.adminOverviewFailed, '${overview.jobs.failed}'),
+              _count(l.adminOverviewWaiting, overview.jobs.queued),
+              _count(l.adminOverviewRunning, overview.jobs.running),
+              _count(l.adminOverviewDone, overview.jobs.completed),
+              _count(l.adminOverviewFailed, overview.jobs.failed, alarm: true),
               if (health != null) ...[
                 AdminHeading(l.adminOverviewServices),
                 _row(

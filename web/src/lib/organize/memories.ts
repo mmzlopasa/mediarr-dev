@@ -42,3 +42,17 @@ export function memoryTitle(memory: Memory, thisYear = new Date().getFullYear())
 		}
 	}
 }
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * When a memory is from, in the reader's language: the server sends a year, a day or a span of days
+ * ("2024-07-12 – 2024-07-19"), and this writes it as "12–19 Jul 2024".
+ */
+export function memoryDates(memory: Memory, locale: string) {
+	const days = memory.title.split(/\s*[–/]\s*/);
+	if (!days.every((day) => ISO_DAY.test(day))) return memory.title;
+	const [from, to] = days.map((day) => new Date(`${day}T12:00:00Z`));
+	const format = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' });
+	return to && to.getTime() !== from.getTime() ? format.formatRange(from, to) : format.format(from);
+}

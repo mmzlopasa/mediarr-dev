@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { trashDays } from '#lib/preferences.svelte.ts';
 	import {
 		api,
@@ -38,9 +39,12 @@
 		}
 	}
 
+	// Asked once, then again on a timer: quicker while groups are being resolved. The timer only
+	// follows whether that is so, so a new answer does not ask again at once.
+	const busy = $derived(Boolean(data?.resolving));
+	onMount(load);
 	$effect(() => {
-		load();
-		const timer = setInterval(load, data?.resolving ? BUSY_POLL_MS : POLL_MS);
+		const timer = setInterval(load, busy ? BUSY_POLL_MS : POLL_MS);
 		return () => clearInterval(timer);
 	});
 
@@ -165,7 +169,7 @@
 						>
 						<span
 							>{t('duplicates.proposedToKeep')}: {reasonOf(group)} · {t('duplicates.frees')}
-							{formatBytes(group.freedBytes)}</span
+							<span class="dup-bytes">{formatBytes(group.freedBytes)}</span></span
 						>
 					</p>
 					<div class="dup-grid">
@@ -185,8 +189,12 @@
 								</span>
 								<b>{item.originalName}</b>
 								<small>
-									{#if item.width && item.height}{item.width} × {item.height} ·
-									{/if}{formatBytes(item.sizeBytes)}
+									{[
+										item.width && item.height ? `${item.width} × ${item.height}` : '',
+										formatBytes(item.sizeBytes)
+									]
+										.filter(Boolean)
+										.join(' · ')}
 								</small>
 								{#if notesOf(item).length}
 									<span class="dup-notes">

@@ -397,7 +397,7 @@
   "serverStatusUpdateBody": "Mediarr {latest} je na voljo. Ta strežnik uporablja {version}. Skrbnik strežnika ga posodobi z:\n\ndocker compose pull && docker compose up -d",
   "serverStatusOk": "V redu",
   "storiesStripLastWeek": "Zadnji teden",
-  "storiesStripYearsAgo": "{years, plural, one{pred {years} letom} two{pred {years} letoma} few{pred {years} leti} other{pred {years} leti}}",
+  "storiesStripYearsAgo": "{years, plural, one{Pred {years} letom} two{Pred {years} letoma} few{Pred {years} leti} other{Pred {years} leti}}",
   "storiesStripItems": "{count, plural, one{{count} element} two{{count} elementa} few{{count} elementi} other{{count} elementov}}",
   "backupScreenNotYet": "še ne",
   "backupScreenLastBackup": "zadnja varnostna kopija {when}",

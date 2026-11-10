@@ -1760,6 +1760,13 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/search/warm:
+    post:
+      operationId: warmSearch
+      summary: The search page is open; the model that reads words starts loading if it is not loaded
+      responses:
+        "204": { description: Asked; it loads in the background }
+        "401": { $ref: "#/components/responses/Error" }
   /api/search:
     get:
       operationId: searchAssets

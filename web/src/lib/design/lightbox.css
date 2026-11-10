@@ -888,6 +888,15 @@ textarea.in {
 	.viewer-info {
 		width: auto;
 	}
+	/* The actions sit at the bottom, so their menus open above them, across the screen. */
+	.viewer-acts .share-menu {
+		position: fixed;
+		top: auto;
+		right: 12px;
+		bottom: calc(max(12px, env(safe-area-inset-bottom)) + 64px);
+		left: 12px;
+		max-width: none;
+	}
 }
 @media (prefers-reduced-motion: reduce) {
 	.viewer-info {
@@ -2130,7 +2139,8 @@ html.lenis body {
 
 /* ---------- Account card (the menu under the avatar) ---------- */
 .lb-me-m {
-	width: 320px;
+	/* Wide enough for the longest language name ("Deutsch (maschinell übersetzt)") in the select. */
+	width: 344px;
 	padding: 0;
 	overflow: hidden;
 	border-radius: 18px;
@@ -2691,11 +2701,16 @@ html[data-theme='light'] .set-chip.ok {
 	outline-offset: 3px;
 }
 .stories-page {
-	flex-wrap: wrap;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
 	gap: 14px;
+	overflow: visible;
 }
 .stories-page .story-tile {
-	width: 180px;
+	width: auto;
+}
+.story-tile-t small span {
+	white-space: nowrap;
 }
 @media (max-width: 760px) {
 	.lb-shell .stories {
@@ -2705,8 +2720,11 @@ html[data-theme='light'] .set-chip.ok {
 	.story-tile {
 		width: 108px;
 	}
-	.stories-page .story-tile {
-		width: calc(50% - 7px);
+	/* Two columns that end on the same edges as the rest of the page. */
+	.lb-shell .stories-page {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		margin-inline: 0;
+		padding-inline: 0;
 	}
 }
 @media (prefers-reduced-motion: reduce) {

@@ -131,6 +131,10 @@ ThemeData _build(bool light) {
       ),
     ),
     dividerTheme: DividerThemeData(color: Palette.line, thickness: 1, space: 1),
+    // A list row is one title and one quiet line under it, as on the web.
+    listTileTheme: ListTileThemeData(
+      subtitleTextStyle: _text(13.5, 400, Palette.haze),
+    ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
         TargetPlatform.iOS: _SkyPageTransitions(
@@ -378,6 +382,28 @@ class EmptyMessage extends StatelessWidget {
           ),
           if (action != null) ...[const SizedBox(height: 16), action!],
         ],
+      ),
+    ),
+  );
+}
+
+/// A grey line where text will be, while it loads. Never a made-up value.
+class SkeletonLine extends StatelessWidget {
+  const SkeletonLine({super.key, this.widthFactor = 1, this.height = 12});
+
+  final double widthFactor;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => FractionallySizedBox(
+    alignment: Alignment.centerLeft,
+    widthFactor: widthFactor,
+    child: Container(
+      height: height,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Palette.bg3,
+        borderRadius: BorderRadius.circular(4),
       ),
     ),
   );

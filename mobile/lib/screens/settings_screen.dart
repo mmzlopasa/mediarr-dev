@@ -463,7 +463,8 @@ class LanguageSettings extends ConsumerWidget {
             for (final entry in appLanguages.entries)
               RadioListTile<String>(
                 value: entry.key,
-                title: Text(entry.value),
+                // The line under it says it is a machine translation; the name need not.
+                title: Text(languageName(entry.key)),
                 subtitle: unreviewedLanguages.contains(entry.key)
                     ? Text(l.languageMachine)
                     : null,

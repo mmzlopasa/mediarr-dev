@@ -240,7 +240,7 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
               )
             else ...[
               Text(
-                '${counted.count}',
+                localCount(counted.count),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               Text(
@@ -373,15 +373,12 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
                 padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: chosen.isEmpty || _working ? null : _keep,
-                        child: Text(l.cleanupScreenKeep),
-                      ),
+                    OutlinedButton(
+                      onPressed: chosen.isEmpty || _working ? null : _keep,
+                      child: Text(l.cleanupScreenKeep),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      flex: 2,
                       child: FilledButton(
                         onPressed: chosen.isEmpty || _working ? null : _trash,
                         style: FilledButton.styleFrom(
@@ -392,8 +389,9 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
                             '${chosen.length}',
                             formatBytes(bytes),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          // The count and the size are the point: on a long language it takes two lines.
+                          maxLines: 2,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),

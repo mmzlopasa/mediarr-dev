@@ -4,7 +4,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import PlayOnTv from '#lib/cast/PlayOnTv.svelte';
 	import CastBar from '#lib/cast/CastBar.svelte';
-	import { lang, t, k, type Key } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t, k, type Key } from '#lib/i18n.svelte.ts';
 	import { formatDay } from './layout.ts';
 	import {
 		loadSettings,
@@ -95,9 +95,7 @@
 			.then((detail) => {
 				if (stale) return;
 				const place = [detail.city, detail.country].filter(Boolean).join(', ');
-				const day = detail.localAt
-					? formatDay(detail.localAt, lang() === 'hr' ? 'hr-HR' : 'en-GB')
-					: '';
+				const day = detail.localAt ? formatDay(detail.localAt, dateLocale()) : '';
 				caption = [day, place].filter(Boolean).join(' · ');
 			})
 			.catch(() => undefined);

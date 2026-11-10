@@ -115,26 +115,36 @@ class _FoundServersState extends State<FoundServers> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                _searching
-                    ? l.qrSignInLooking
-                    : _found.isEmpty
-                    ? l.qrSignInNoneFound
-                    : l.qrSignInOnThisNetwork,
-                style: text.bodySmall,
+        // One height whether it searches or offers to look again, so the fields below stay put.
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 40),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Text(
+                    _searching
+                        ? l.qrSignInLooking
+                        : _found.isEmpty
+                        ? l.qrSignInNoneFound
+                        : l.qrSignInOnThisNetwork,
+                    style: text.bodySmall,
+                  ),
+                ),
               ),
-            ),
-            if (_searching)
-              const SizedBox.square(
-                dimension: 14,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              TextButton(onPressed: _start, child: Text(l.qrSignInLookAgain)),
-          ],
+              if (_searching)
+                const Padding(
+                  padding: EdgeInsets.only(right: 12),
+                  child: SizedBox.square(
+                    dimension: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                TextButton(onPressed: _start, child: Text(l.qrSignInLookAgain)),
+            ],
+          ),
         ),
         for (final server in _found)
           ListTile(

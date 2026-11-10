@@ -11,7 +11,7 @@
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import FixDialog from '#lib/organize/FixDialog.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import { blurUrl, thumbUrl } from './blur.ts';
 	import {
 		estimateMonthHeight,
@@ -19,7 +19,6 @@
 		formatDuration,
 		formatMonth,
 		layoutMonth,
-		itemCount,
 		monthParts,
 		rowsInRange,
 		type MonthLayout
@@ -85,7 +84,7 @@
 	let busy = $state(false);
 	let culling = $state.raw<TimelineItem[]>();
 
-	const locale = $derived(lang() === 'hr' ? 'hr-HR' : 'en-GB');
+	const locale = $derived(dateLocale());
 	const selecting = $derived(selected.size > 0);
 
 	// Where each month starts. Months that are not loaded use an estimate.
@@ -485,7 +484,7 @@
 						{@const parts = monthParts(entry.month, locale)}
 						<div class="tl-month" style="top:{row.top}px;height:{row.height}px">
 							<h2>{parts.name} <span class="tl-year">{parts.year}</span></h2>
-							<small>{itemCount(entry.count, lang())}</small>
+							<small>{t('stories.items', { count: entry.count })}</small>
 						</div>
 					{:else if row.type === 'day'}
 						<h3 class="tl-day" style="top:{row.top}px;height:{row.height}px">{row.label}</h3>

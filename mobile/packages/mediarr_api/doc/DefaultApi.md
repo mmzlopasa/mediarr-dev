@@ -269,6 +269,7 @@ Method | HTTP request | Description
 [**updatePerson**](DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 [**updateProfile**](DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, language, or email address with the current password
 [**waitQRSignIn**](DefaultApi.md#waitqrsignin) | **POST** /api/auth/qr/wait | Waits up to 25 seconds for the answer; when allowed, this device is signed in
+[**warmSearch**](DefaultApi.md#warmsearch) | **POST** /api/search/warm | The search page is open; the model that reads words starts loading if it is not loaded
 
 
 # **addAlbumAssets**
@@ -10770,6 +10771,42 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **warmSearch**
+> warmSearch()
+
+The search page is open; the model that reads words starts loading if it is not loaded
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    api_instance.warmSearch();
+} catch (e) {
+    print('Exception when calling DefaultApi->warmSearch: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

@@ -7,7 +7,7 @@
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import { since } from '#lib/organize/agent.ts';
 	import LinkPrivacyFields from './LinkPrivacyFields.svelte';
 	import LinkVisits from './LinkVisits.svelte';
@@ -37,7 +37,7 @@
 	let saving = $state(false);
 	let visitsOf = $state<string>();
 
-	const locale = $derived(lang() === 'hr' ? 'hr-HR' : 'en-GB');
+	const locale = $derived(dateLocale());
 
 	async function load() {
 		try {
@@ -197,7 +197,7 @@
 		<Skeleton height="60px" />
 	{:else}
 		{#each links as link (link.id)}
-			<div class="alb-list">
+			<div class="alb-list lp-link">
 				<b>
 					{link.label || t('linksDialog.unnamedLink')}
 					<span class="alb-meta">{summary(link)}</span>

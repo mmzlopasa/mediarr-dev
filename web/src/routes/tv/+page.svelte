@@ -17,7 +17,6 @@
 	import { memoryTitle } from '#lib/organize/memories.ts';
 	import { lang, t } from '#lib/i18n.svelte.ts';
 	import { thumbUrl } from '#lib/timeline/blur.ts';
-	import { itemCount } from '#lib/timeline/layout.ts';
 
 	// The living room: one big picture, a few rows, and a remote with arrows, OK and back.
 	const SHOW_MS = 6000;
@@ -64,7 +63,7 @@
 		return {
 			key: `m-${memory.kind}-${memory.key ?? memory.title}`,
 			title: memoryTitle(memory),
-			sub: itemCount(memory.items.length, lang()),
+			sub: t('stories.items', { count: memory.items.length }),
 			cover: thumbUrl('/api', memory.items[0].id, memory.items[0].blurhash, 'large'),
 			play: async () => photos.map((item) => item.id)
 		};
@@ -74,7 +73,7 @@
 		return {
 			key: `a-${album.id}`,
 			title: album.title,
-			sub: itemCount(album.assetCount, lang()),
+			sub: t('stories.items', { count: album.assetCount }),
 			cover: album.coverAssetId ? thumbUrl('/api', album.coverAssetId, null, 'large') : '',
 			play: () => photosOf(albumSource(album.id))
 		};
@@ -84,7 +83,7 @@
 		return {
 			key: `p-${person.id}`,
 			title: person.name,
-			sub: itemCount(person.assetCount, lang()),
+			sub: t('stories.items', { count: person.assetCount }),
 			cover: `/api/people/${person.id}/thumbnail`,
 			round: true,
 			play: () => photosOf(personSource(person.id))

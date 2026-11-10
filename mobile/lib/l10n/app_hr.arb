@@ -397,7 +397,7 @@
   "serverStatusUpdateBody": "Mediarr {latest} je dostupan. Ovaj server koristi {version}. Administrator servera ga ažurira naredbom:\n\ndocker compose pull && docker compose up -d",
   "serverStatusOk": "U redu",
   "storiesStripLastWeek": "Protekli tjedan",
-  "storiesStripYearsAgo": "{years, plural, one{prije {years} godinu} few{prije {years} godine} other{prije {years} godina}}",
+  "storiesStripYearsAgo": "{years, plural, one{Prije {years} godinu} few{Prije {years} godine} other{Prije {years} godina}}",
   "storiesStripItems": "{count, plural, one{{count} stavka} few{{count} stavke} other{{count} stavki}}",
   "backupScreenNotYet": "još nije",
   "backupScreenLastBackup": "zadnji backup {when}",

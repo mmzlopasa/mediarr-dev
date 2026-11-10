@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { memoryTitle } from '#lib/organize/memories.ts';
+	import { memoryDates, memoryTitle } from '#lib/organize/memories.ts';
 	import { onMount } from 'svelte';
 	import { api, type Memory } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 	import Story from '#lib/organize/Story.svelte';
 
@@ -55,7 +55,10 @@
 				<img src="/api/assets/{memory.items[0].id}/thumbnail" alt="" loading="lazy" />
 				<span class="story-tile-t">
 					<b>{titleOf(memory)}</b>
-					<small>{memory.title} · {memory.items.length}</small>
+					<small
+						>{memoryDates(memory, dateLocale())} ·
+						<span>{t('stories.items', { count: memory.items.length })}</span></small
+					>
 				</span>
 			</button>
 		{/each}

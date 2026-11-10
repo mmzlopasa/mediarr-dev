@@ -320,6 +320,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**updatePerson**](doc//DefaultApi.md#updateperson) | **PATCH** /api/people/{id} | Name or hide a person
 *DefaultApi* | [**updateProfile**](doc//DefaultApi.md#updateprofile) | **PATCH** /api/me | Change one's own name, language, or email address with the current password
 *DefaultApi* | [**waitQRSignIn**](doc//DefaultApi.md#waitqrsignin) | **POST** /api/auth/qr/wait | Waits up to 25 seconds for the answer; when allowed, this device is signed in
+*DefaultApi* | [**warmSearch**](doc//DefaultApi.md#warmsearch) | **POST** /api/search/warm | The search page is open; the model that reads words starts loading if it is not loaded
 
 
 ## Documentation For Models

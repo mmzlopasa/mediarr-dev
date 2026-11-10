@@ -140,7 +140,8 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
     ),
   );
 
-  Widget _row(String label, String value) => Padding(
+  /// A label and its value; while the value loads, a grey line where it will be.
+  Widget _row(String label, String? value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,11 +149,16 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
         Text(label),
         const SizedBox(width: 16),
         Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: TextStyle(color: Palette.dim),
-          ),
+          child: value == null
+              ? const Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(width: 64, child: SkeletonLine()),
+                )
+              : Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: Palette.dim),
+                ),
         ),
       ],
     ),
@@ -238,7 +244,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
             color: Palette.bg,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: _stats == null
-                ? Text('…', style: text.bodySmall)
+                ? const SkeletonLine(widthFactor: 0.55)
                 : Row(
                     children: [
                       Expanded(
@@ -344,7 +350,7 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
               _row(l.accountSheetAppVersion, _appVersion!),
             _row(
               l.accountSheetServerVersion,
-              status?.version ?? (_online ? '…' : '—'),
+              status?.version ?? (_online ? null : '—'),
             ),
             if (status?.updateAvailable == true)
               _row(

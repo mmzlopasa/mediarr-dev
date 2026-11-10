@@ -254,6 +254,7 @@ export const api = {
 	qrSignIn: (id: string) => request<QRSignInState>(fetch, `/api/auth/qr/${encodeURIComponent(id)}`),
 	answerQRSignIn: (id: string, allow: boolean) =>
 		request<void>(fetch, `/api/auth/qr/${encodeURIComponent(id)}/answer`, { allow }),
+	warmSearch: () => request<void>(fetch, '/api/search/warm', {}),
 	searchPlaces: (q: string) =>
 		request<components['schemas']['PlaceList']>(fetch, `/api/places?q=${encodeURIComponent(q)}`),
 	assetFaces: (id: string) =>

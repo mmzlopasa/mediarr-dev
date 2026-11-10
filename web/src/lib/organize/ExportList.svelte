@@ -125,6 +125,11 @@
 		gap: 4px 10px;
 		min-width: 0;
 	}
+	/* Every part's button one width, so the sizes beside them line up. */
+	.exp-parts li > :global(.btn) {
+		justify-content: center;
+		min-width: 5.5rem;
+	}
 	.exp-parts small {
 		color: var(--dim);
 		font-size: 13px;

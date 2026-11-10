@@ -60,6 +60,8 @@
 	let asked = $state('');
 
 	onMount(async () => {
+		// The model that reads words may have been let go while idle; it starts loading now.
+		api.warmSearch().catch(() => undefined);
 		const features = await api.features().catch(() => ({}) as Features);
 		askOn = features.descriptions ?? false;
 	});

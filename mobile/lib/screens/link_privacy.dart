@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mediarr_api/api.dart';
 
 import '../l10n/l10n.dart';
@@ -76,17 +75,7 @@ class LinkPrivacyChoice {
 }
 
 /// The date and time of a visit, in the chosen language.
-String visitTime(DateTime at) {
-  final local = at.toLocal();
-  try {
-    return DateFormat.yMMMd(l.localeName).add_Hm().format(local);
-  } on Object {
-    // The language's dates are not loaded (as in a test): numbers say it too.
-    String two(int value) => value.toString().padLeft(2, '0');
-    return '${local.year}-${two(local.month)}-${two(local.day)} '
-        '${two(local.hour)}:${two(local.minute)}';
-  }
-}
+String visitTime(DateTime at) => localTime(at);
 
 /// How often a link was opened, and when last.
 String linkOpenedLine(ShareLink link) {
@@ -121,27 +110,6 @@ List<String> albumPrivacyFacts(AlbumPrivacy privacy) => [
   if (privacy.videos > 0) l.linkPrivacyVideosStill('${privacy.videos}'),
   l.linkPrivacyNoOriginals,
 ];
-
-/// A grey line where text will be, while it loads.
-class _SkeletonLine extends StatelessWidget {
-  const _SkeletonLine({this.widthFactor = 1});
-
-  final double widthFactor;
-
-  @override
-  Widget build(BuildContext context) => FractionallySizedBox(
-    alignment: Alignment.centerLeft,
-    widthFactor: widthFactor,
-    child: Container(
-      height: 12,
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        color: Palette.bg3,
-        borderRadius: BorderRadius.circular(4),
-      ),
-    ),
-  );
-}
 
 /// The privacy options of a link, for a new link and for one that exists.
 class LinkPrivacyFields extends StatefulWidget {
@@ -261,7 +229,7 @@ class _LinkPrivacyFieldsState extends State<LinkPrivacyFields> {
           if (_peopleFailed)
             Text(l.linkPrivacyPeopleFailed, style: dim)
           else if (people == null)
-            const _SkeletonLine(widthFactor: 0.6)
+            const SkeletonLine(widthFactor: 0.6)
           else if (people.isEmpty)
             Text(l.linkPrivacyNoPeople, style: dim)
           else
@@ -290,8 +258,8 @@ class _LinkPrivacyFieldsState extends State<LinkPrivacyFields> {
           else if (_factsFailed)
             Text(l.linkPrivacyUnrecognized, style: dim)
           else ...const [
-            _SkeletonLine(widthFactor: 0.9),
-            _SkeletonLine(widthFactor: 0.7),
+            SkeletonLine(widthFactor: 0.9),
+            SkeletonLine(widthFactor: 0.7),
           ],
         ],
         SwitchListTile(
@@ -472,8 +440,8 @@ class _LinkVisitsScreenState extends State<LinkVisitsScreen> {
                   padding: EdgeInsets.only(bottom: 12),
                   child: Column(
                     children: [
-                      _SkeletonLine(widthFactor: 0.4),
-                      _SkeletonLine(widthFactor: 0.8),
+                      SkeletonLine(widthFactor: 0.4),
+                      SkeletonLine(widthFactor: 0.8),
                     ],
                   ),
                 )

@@ -14804,4 +14804,39 @@ class DefaultApi {
     }
     return null;
   }
+
+  /// The search page is open; the model that reads words starts loading if it is not loaded
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> warmSearchWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/search/warm';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The search page is open; the model that reads words starts loading if it is not loaded
+  Future<void> warmSearch() async {
+    final response = await warmSearchWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
 }

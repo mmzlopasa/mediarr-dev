@@ -733,6 +733,11 @@ class FakeServer {
       });
       return;
     }
+    if (path == '/api/search/warm') {
+      request.response.statusCode = 204;
+      await request.response.close();
+      return;
+    }
     if (path == '/api/search') {
       final favourite = request.uri.queryParameters['favorite'] == 'true';
       await _json(request, 200, {

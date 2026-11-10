@@ -1364,9 +1364,9 @@ class AppLocalizationsHr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       years,
       locale: localeName,
-      other: 'prije $years godina',
-      few: 'prije $years godine',
-      one: 'prije $years godinu',
+      other: 'Prije $years godina',
+      few: 'Prije $years godine',
+      one: 'Prije $years godinu',
     );
     return '$_temp0';
   }
@@ -4972,14 +4972,22 @@ class AppLocalizationsHr extends AppLocalizations {
     String doneBytes,
     String totalBytes,
   ) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
-      other: '$total datoteka',
-      few: '$total datoteke',
-      one: '$total datoteke',
+      other: '$totalString datoteka',
+      few: '$totalString datoteke',
+      one: '$totalString datoteke',
     );
-    return '$done od $_temp0 · $doneBytes od $totalBytes';
+    return '$doneString od $_temp0 · $doneBytes od $totalBytes';
   }
 
   @override
@@ -5021,12 +5029,16 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String exportsScreenFiles(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count datoteka',
-      few: '$count datoteke',
-      one: '$count datoteka',
+      other: '$countString datoteka',
+      few: '$countString datoteke',
+      one: '$countString datoteka',
     );
     return '$_temp0';
   }

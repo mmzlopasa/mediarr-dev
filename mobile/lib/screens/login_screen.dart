@@ -229,11 +229,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 hintText: '192.168.1.10:9851',
                               ),
                             ),
+                            const SizedBox(height: 4),
                             FoundServers(
                               onPick: (url) =>
                                   setState(() => _server.text = url),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 12),
                             TextField(
                               controller: _email,
                               keyboardType: TextInputType.emailAddress,

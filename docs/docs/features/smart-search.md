@@ -29,6 +29,8 @@ The service opens a model when it first needs one, and closes it after 5 minutes
 
 `ML_IDLE_MINUTES` changes the 5 minutes, and `0` keeps models open once they are loaded.
 
+Opening search, on the web or in the app, starts loading the model that reads words, so it is usually ready by the time a query is typed.
+
 ## On another computer
 
 Analysis can run on a stronger computer in your home. On that computer, make a folder with these two files.

@@ -5081,6 +5081,9 @@ type ServerInterface interface {
 	// GetSearchOptions The cameras, lenses, places and tags in the user's library, to choose from in the filters
 	// (GET /api/search/options)
 	GetSearchOptions(w http.ResponseWriter, r *http.Request)
+	// WarmSearch The search page is open; the model that reads words starts loading if it is not loaded
+	// (POST /api/search/warm)
+	WarmSearch(w http.ResponseWriter, r *http.Request)
 	// GetServerHello Lets an app on the same network recognise a Mediarr server; only its version
 	// (GET /api/server/hello)
 	GetServerHello(w http.ResponseWriter, r *http.Request)
@@ -6560,6 +6563,12 @@ func (_ Unimplemented) AskSearch(w http.ResponseWriter, r *http.Request) {
 // GetSearchOptions The cameras, lenses, places and tags in the user's library, to choose from in the filters
 // (GET /api/search/options)
 func (_ Unimplemented) GetSearchOptions(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// WarmSearch The search page is open; the model that reads words starts loading if it is not loaded
+// (POST /api/search/warm)
+func (_ Unimplemented) WarmSearch(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -12310,6 +12319,20 @@ func (siw *ServerInterfaceWrapper) GetSearchOptions(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// WarmSearch operation middleware
+func (siw *ServerInterfaceWrapper) WarmSearch(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.WarmSearch(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetServerHello operation middleware
 func (siw *ServerInterfaceWrapper) GetServerHello(w http.ResponseWriter, r *http.Request) {
 
@@ -13399,6 +13422,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/api/map/style", wrapper.SetMapStyle)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/search/warm", wrapper.WarmSearch)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/search", wrapper.SearchAssets)

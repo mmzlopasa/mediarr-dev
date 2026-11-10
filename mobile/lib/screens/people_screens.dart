@@ -87,6 +87,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   void initState() {
     super.initState();
+    // The model that reads words may have been let go while idle; it starts loading now.
+    unawaited(_session.api.warmSearch().catchError((Object _) {}));
     final first = widget.initialQuery;
     if (first != null) _query.text = first;
     if (first != null || widget.albumId != null) unawaited(_search());

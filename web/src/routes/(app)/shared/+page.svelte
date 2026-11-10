@@ -10,7 +10,7 @@
 	import Select from '#lib/design/components/Select.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
 
 	const POLL_MS = 10000;
@@ -23,7 +23,7 @@
 	let userId = $state('');
 	let since = $state('');
 
-	const locale = $derived(lang() === 'hr' ? 'hr-HR' : 'en-GB');
+	const locale = $derived(dateLocale());
 	const withMe = $derived((albums ?? []).filter((album) => album.role !== 'owner'));
 	const free = $derived(
 		users.filter((user) => !partners?.given.some((entry) => entry.userId === user.id))

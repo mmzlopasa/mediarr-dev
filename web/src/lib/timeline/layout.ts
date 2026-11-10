@@ -154,13 +154,3 @@ export function monthParts(month: string, locale: string) {
 	);
 	return { name: name.charAt(0).toLocaleUpperCase(locale) + name.slice(1), year: String(year) };
 }
-
-/** How many photos and videos, in words: Croatian has three forms of the noun. */
-export function itemCount(count: number, lang: string) {
-	if (lang !== 'hr') return `${count} ${count === 1 ? 'item' : 'items'}`;
-	const tens = count % 100;
-	const ones = count % 10;
-	if (ones === 1 && tens !== 11) return `${count} stavka`;
-	if (ones >= 2 && ones <= 4 && (tens < 12 || tens > 14)) return `${count} stavke`;
-	return `${count} stavki`;
-}

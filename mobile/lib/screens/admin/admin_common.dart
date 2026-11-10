@@ -24,7 +24,7 @@ void tellAdmin(BuildContext context, String message) =>
     ScaffoldMessenger.maybeOf(context)
         ?.showSnackBar(SnackBar(content: Text(message)));
 
-/// A heading between groups of settings.
+/// A heading between groups of settings: quiet, as on the settings screen. Blue is for state.
 class AdminHeading extends StatelessWidget {
   const AdminHeading(this.text, {super.key});
 
@@ -36,7 +36,7 @@ class AdminHeading extends StatelessWidget {
     child: Text(
       text,
       style: Theme.of(context).textTheme.titleSmall
-          ?.copyWith(color: Palette.gold),
+          ?.copyWith(color: Palette.dim, fontWeight: FontWeight.w600),
     ),
   );
 }
@@ -80,9 +80,5 @@ String adminBytes(int bytes) {
       : '${value.toStringAsFixed(value < 10 ? 1 : 0)} ${units[unit]}';
 }
 
-/// A moment as the phone shows it, without seconds.
-String adminTime(DateTime at) {
-  final local = at.toLocal();
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${local.year}-${two(local.month)}-${two(local.day)} ${two(local.hour)}:${two(local.minute)}';
-}
+/// A moment as the phone shows it, without seconds, in the chosen language.
+String adminTime(DateTime at) => localTime(at);

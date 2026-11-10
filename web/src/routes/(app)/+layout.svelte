@@ -21,7 +21,7 @@
 <AppShell
 	nav={shownNav}
 	user={data.user}
-	roleLabel={t('common.user')}
+	roleLabel={t('admin.administrator')}
 	footLinks={[
 		{ href: resolve('/(app)/account'), icon: 'user', label: t('common.account') },
 		{

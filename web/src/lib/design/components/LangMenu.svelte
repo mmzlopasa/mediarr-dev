@@ -24,7 +24,12 @@
 				lang={code}
 				class:on={code === lang()}
 				aria-current={code === lang() ? 'true' : undefined}
-				onclick={(event) => pick(event, code as Lang)}><b>{code.toUpperCase()}</b>{name}</a
+				onclick={(event) => pick(event, code as Lang)}
+				><b>{code.toUpperCase()}</b><span
+					>{name.split(' (')[0]}{#if name.includes(' (')}<small
+							>{name.slice(name.indexOf(' (') + 2, -1)}</small
+						>{/if}</span
+				></a
 			>
 		{/each}
 	</div>

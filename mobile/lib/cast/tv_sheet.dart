@@ -300,7 +300,7 @@ class TvBar extends ConsumerWidget {
           border: Border.all(color: Colors.white24),
         ),
         // A slider takes all the height it is given, and the bar must stay a bar.
-        height: 52,
+        height: 56,
         child: Row(
           children: [
             Icon(
@@ -311,17 +311,48 @@ class TvBar extends ConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: tv.video && total > 0 && !tv.connecting
-                  ? Semantics(
-                      label: l.tvSheetPosition,
-                      child: Slider(
-                        value: tv.position.inMilliseconds
-                            .clamp(0, total)
-                            .toDouble(),
-                        max: total.toDouble(),
-                        onChanged: (value) => controller.seek(
-                          Duration(milliseconds: value.round()),
+                  // Which TV it is stays said above the slider, as on the web.
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.tvSheetPlayingOn(device.name),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                         ),
-                      ),
+                        SizedBox(
+                          height: 22,
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 3,
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 6,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 12,
+                              ),
+                            ),
+                            child: Semantics(
+                              label: l.tvSheetPosition,
+                              child: Slider(
+                                padding: EdgeInsets.zero,
+                                value: tv.position.inMilliseconds
+                                    .clamp(0, total)
+                                    .toDouble(),
+                                max: total.toDouble(),
+                                onChanged: (value) => controller.seek(
+                                  Duration(milliseconds: value.round()),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     )
                   : Text(
                       tv.connecting

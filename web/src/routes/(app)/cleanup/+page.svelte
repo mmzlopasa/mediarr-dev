@@ -13,7 +13,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import {
 		CATEGORIES,
 		VIDEO_SIZES,
@@ -115,7 +115,7 @@
 {#if summary && summary.pending > 0}
 	<Alert kind="warn"
 		>{t('cleanup.stillBeingAnalysedSummaryPhotos', {
-			summary: summary.pending.toLocaleString()
+			summary: summary.pending.toLocaleString(dateLocale())
 		})}</Alert
 	>
 {/if}
@@ -132,7 +132,7 @@
 		>
 			<span>{titleOf(id)}</span>
 			{#if countOf(id)}
-				<b>{countOf(id)?.count.toLocaleString()}</b>
+				<b>{countOf(id)?.count.toLocaleString(dateLocale())}</b>
 				<small>{formatBytes(countOf(id)?.bytes ?? 0)}</small>
 			{:else}
 				<span class="cln-wait"></span>
@@ -197,8 +197,9 @@
 							{/if}
 						</button>
 						<span class="cln-meta">
-							{formatBytes(item.sizeBytes)}{#if item.durationMs}
-								· {lengthOf(item.durationMs)}{/if}
+							{[formatBytes(item.sizeBytes), item.durationMs ? lengthOf(item.durationMs) : '']
+								.filter(Boolean)
+								.join(' · ')}
 						</span>
 						{#if item.kind === 'video'}
 							<button type="button" class="cln-play" onclick={() => (playing = item)}

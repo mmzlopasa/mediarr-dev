@@ -15,7 +15,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Kv from '#lib/design/components/Kv.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import { formatDateTime, formatDuration } from './layout.ts';
 	import PanoramaView from './PanoramaView.svelte';
 	import Slideshow from './Slideshow.svelte';
@@ -116,7 +116,7 @@
 	let y = $state(0);
 	let stage = $state<HTMLDivElement>();
 
-	const locale = $derived(lang() === 'hr' ? 'hr-HR' : 'en-GB');
+	const locale = $derived(dateLocale());
 
 	$effect(() => {
 		const current = id;

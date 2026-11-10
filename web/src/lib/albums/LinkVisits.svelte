@@ -2,7 +2,7 @@
 	import { api, type LinkVisit } from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { lang, t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import { placeOf } from './linkPrivacy.ts';
 
 	let { albumId, linkId }: { albumId: string; linkId: string } = $props();
@@ -10,7 +10,7 @@
 	let visits = $state<LinkVisit[]>();
 	let failed = $state(false);
 
-	const locale = $derived(lang() === 'hr' ? 'hr-HR' : lang() === 'en' ? 'en-GB' : lang());
+	const locale = $derived(dateLocale());
 
 	$effect(() => {
 		visits = undefined;

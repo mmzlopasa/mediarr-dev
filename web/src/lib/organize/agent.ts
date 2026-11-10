@@ -38,7 +38,7 @@ export function describeAgent(userAgent: string): Agent {
 /** How long ago, in the words of the chosen language: "3 hours ago". */
 export function since(at: Date, now = new Date()): string {
 	const seconds = Math.round((at.getTime() - now.getTime()) / 1000);
-	const format = new Intl.RelativeTimeFormat(lang() === 'hr' ? 'hr' : 'en', { numeric: 'auto' });
+	const format = new Intl.RelativeTimeFormat(lang(), { numeric: 'auto' });
 	const steps: [Intl.RelativeTimeFormatUnit, number][] = [
 		['second', 60],
 		['minute', 60],

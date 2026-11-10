@@ -561,7 +561,13 @@ class _FixSheetState extends State<_FixSheet> {
                     (value) => _placeAction = value,
                   ),
                 const SizedBox(height: 12),
-                ...(widget.dates ? _dateFields(text) : _placeFields(text)),
+                // Room between a hint and the fields under it, whose labels float above them.
+                for (final (index, field)
+                    in (widget.dates ? _dateFields(text) : _placeFields(text))
+                        .indexed) ...[
+                  if (index > 0) const SizedBox(height: 12),
+                  field,
+                ],
                 const Divider(height: 28),
                 if (_problem != null)
                   Text(_problem!, style: TextStyle(color: Palette.err))

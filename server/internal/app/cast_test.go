@@ -147,10 +147,14 @@ func TestATVPlaysAVideoWithoutItsLocation(t *testing.T) {
 		t.Fatal("the test video has no location to remove")
 	}
 	id := uploadedID(t, owner.upload("clip.mp4", data, nil))
-	deadline := time.Now().Add(90 * time.Second)
-	for time.Now().Before(deadline) {
+	// Converting a video takes a while when the whole suite runs at once.
+	deadline := time.Now().Add(4 * time.Minute)
+	for {
 		if detail := owner.detail(id); detail.HlsReady != nil && *detail.HlsReady {
 			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the video was not converted in time")
 		}
 		time.Sleep(200 * time.Millisecond)
 	}

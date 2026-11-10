@@ -6,7 +6,6 @@ import {
 	formatDuration,
 	formatMonth,
 	GAP,
-	itemCount,
 	justify,
 	layoutMonth,
 	monthParts,
@@ -143,18 +142,6 @@ describe('month titles and counts', () => {
 	it('names the month on its own and keeps the year apart', () => {
 		expect(monthParts('2026-11', 'en')).toEqual({ name: 'November', year: '2026' });
 		expect(monthParts('2026-11', 'hr').name).toBe('Studeni');
-	});
-
-	it('uses the three Croatian forms', () => {
-		expect(itemCount(1, 'hr')).toBe('1 stavka');
-		expect(itemCount(3, 'hr')).toBe('3 stavke');
-		expect(itemCount(5, 'hr')).toBe('5 stavki');
-		expect(itemCount(11, 'hr')).toBe('11 stavki');
-		expect(itemCount(12, 'hr')).toBe('12 stavki');
-		expect(itemCount(21, 'hr')).toBe('21 stavka');
-		expect(itemCount(22, 'hr')).toBe('22 stavke');
-		expect(itemCount(1, 'en')).toBe('1 item');
-		expect(itemCount(2, 'en')).toBe('2 items');
 	});
 });
 

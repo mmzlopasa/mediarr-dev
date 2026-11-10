@@ -1377,10 +1377,10 @@ class AppLocalizationsSl extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       years,
       locale: localeName,
-      other: 'pred $years leti',
-      few: 'pred $years leti',
-      two: 'pred $years letoma',
-      one: 'pred $years letom',
+      other: 'Pred $years leti',
+      few: 'Pred $years leti',
+      two: 'Pred $years letoma',
+      one: 'Pred $years letom',
     );
     return '$_temp0';
   }
@@ -5024,15 +5024,23 @@ class AppLocalizationsSl extends AppLocalizations {
     String doneBytes,
     String totalBytes,
   ) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
-      other: '$total datotek',
-      few: '$total datotek',
-      two: '$total datotek',
-      one: '$total datoteke',
+      other: '$totalString datotek',
+      few: '$totalString datotek',
+      two: '$totalString datotek',
+      one: '$totalString datoteke',
     );
-    return '$done od $_temp0 · $doneBytes od $totalBytes';
+    return '$doneString od $_temp0 · $doneBytes od $totalBytes';
   }
 
   @override
@@ -5075,13 +5083,17 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String exportsScreenFiles(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count datotek',
-      few: '$count datoteke',
-      two: '$count datoteki',
-      one: '$count datoteka',
+      other: '$countString datotek',
+      few: '$countString datoteke',
+      two: '$countString datoteki',
+      one: '$countString datoteka',
     );
     return '$_temp0';
   }

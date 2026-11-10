@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import en from './i18n/en.json';
 import hr from './i18n/hr.json';
-import { format, parseLang } from './i18n.svelte.ts';
+import { dateLocale, format, parseLang, setLang } from './i18n.svelte.ts';
 
 describe('parseLang', () => {
 	it('uses a stored choice', () => {
@@ -59,5 +59,16 @@ describe('the catalogs', () => {
 			return [...names(text)].filter((name) => !given.has(name)).map((name) => `${key}: ${name}`);
 		});
 		expect(unknown).toEqual([]);
+	});
+});
+
+describe('locale', () => {
+	it('writes dates and numbers the way each language does', async () => {
+		await setLang('de');
+		expect(dateLocale()).toBe('de-DE');
+		await setLang('sl');
+		expect(dateLocale()).toBe('sl-SI');
+		await setLang('en');
+		expect(dateLocale()).toBe('en-GB');
 	});
 });

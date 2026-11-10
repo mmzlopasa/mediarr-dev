@@ -222,13 +222,25 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
               runSpacing: 4,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Chip(
-                  label: Text(
+                // A quiet label, as on the web: it names the kind, it is not a button.
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Palette.bg3,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
                     group.exact
                         ? l.duplicatesScreenSamePicture
                         : l.duplicatesScreenAlike,
+                    style: text.labelSmall?.copyWith(
+                      color: Palette.haze,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  visualDensity: VisualDensity.compact,
                 ),
                 Text(
                   l.duplicatesScreenProposedToKeep(
@@ -281,6 +293,8 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                   child: Text(l.duplicatesScreenNotDuplicates),
                 ),
                 TextButton(
+                  // It moves photos to the trash, so it reads as such.
+                  style: TextButton.styleFrom(foregroundColor: Palette.err),
                   onPressed: choice == null || _working
                       ? null
                       : () => _resolve(choice),

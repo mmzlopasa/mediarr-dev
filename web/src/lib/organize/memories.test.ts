@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { setLang } from '#lib/i18n.svelte.ts';
 import type { Memory } from '#lib/api.ts';
-import { memoryTitle } from './memories.ts';
+import { memoryDates, memoryTitle } from './memories.ts';
 
 const memory = (over: Partial<Memory>): Memory =>
 	({ kind: 'trip', key: 'x', title: '', items: [], ...over }) as Memory;
@@ -32,5 +32,18 @@ describe('memoryTitle', () => {
 		expect(memoryTitle(person)).toBe('Rođendan: Ana');
 		expect(memoryTitle(memory({ kind: 'month_ago' }))).toBe('Prije mjesec dana');
 		setLang('en');
+	});
+});
+
+describe('memoryDates', () => {
+	it('writes a span of days in the language, not as the server sends it', () => {
+		const trip = memory({ title: '2024-07-12 – 2024-07-19' });
+		expect(memoryDates(trip, 'en-GB')).toMatch(/^12\s*–\s*19 Jul 2024$/);
+		expect(memoryDates(trip, 'de-DE')).toMatch(/^12\.\s*[–-]\s*19\.\s*0?7\.\s*2024$/);
+	});
+
+	it('writes one day, and leaves a year alone', () => {
+		expect(memoryDates(memory({ title: '2024-11-10' }), 'en-GB')).toBe('10 Nov 2024');
+		expect(memoryDates(memory({ title: '2025' }), 'en-GB')).toBe('2025');
 	});
 });

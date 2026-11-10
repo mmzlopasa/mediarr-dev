@@ -4937,13 +4937,21 @@ class AppLocalizationsEn extends AppLocalizations {
     String doneBytes,
     String totalBytes,
   ) {
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
     String _temp0 = intl.Intl.pluralLogic(
       total,
       locale: localeName,
-      other: '$total files',
+      other: '$totalString files',
       one: '1 file',
     );
-    return '$done of $_temp0 · $doneBytes of $totalBytes';
+    return '$doneString of $_temp0 · $doneBytes of $totalBytes';
   }
 
   @override
@@ -4984,10 +4992,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String exportsScreenFiles(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count files',
+      other: '$countString files',
       one: '1 file',
     );
     return '$_temp0';
