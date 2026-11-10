@@ -22,6 +22,8 @@ var publicRoutes = []*regexp.Regexp{
 	regexp.MustCompile(`^/api/server/hello$`),
 	// Another Mediarr pairs with the token of its invitation, which is the proof.
 	regexp.MustCompile(`^/api/keep/pair$`),
+	// A TV has no account: its token opens only the photos and videos sent to it, for 4 hours.
+	regexp.MustCompile(`^/api/tv/\{token\}/assets/\{id\}/(image|original|video/\{file\})$`),
 }
 
 var routeParam = regexp.MustCompile(`\{[^}]+\}`)
@@ -170,6 +172,7 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 		"/api/stories":                       {"title": "Mine", "ids": []string{photo}},
 		"/api/imports":                       {"source": "takeout"},
 		"/api/exports":                       {},
+		"/api/cast-sessions":                 {"ids": []string{photo}},
 	} {
 		resp, body := owner.post(path, payload)
 		if resp.StatusCode >= http.StatusBadRequest {
@@ -205,15 +208,16 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 		"scope": "archive", "userId": s.userID("admin@example.com"), "qr/id": qrCode.ID, "parts/number": "1",
 	}
 	for name, query := range map[string]string{
-		"tags/id":        "SELECT id::text FROM tags LIMIT 1",
-		"people/id":      "SELECT id::text FROM people LIMIT 1",
-		"rules/id":       "SELECT id::text FROM albums WHERE is_family LIMIT 1",
-		"commentId":      "SELECT id::text FROM album_comments LIMIT 1",
-		"linkId":         "SELECT id::text FROM share_links LIMIT 1",
-		"device-keys/id": "SELECT id::text FROM api_keys LIMIT 1",
-		"stories/id":     "SELECT id::text FROM story_exports LIMIT 1",
-		"imports/id":     "SELECT id::text FROM imports LIMIT 1",
-		"exports/id":     "SELECT id::text FROM exports LIMIT 1",
+		"tags/id":          "SELECT id::text FROM tags LIMIT 1",
+		"people/id":        "SELECT id::text FROM people LIMIT 1",
+		"rules/id":         "SELECT id::text FROM albums WHERE is_family LIMIT 1",
+		"commentId":        "SELECT id::text FROM album_comments LIMIT 1",
+		"linkId":           "SELECT id::text FROM share_links LIMIT 1",
+		"device-keys/id":   "SELECT id::text FROM api_keys LIMIT 1",
+		"stories/id":       "SELECT id::text FROM story_exports LIMIT 1",
+		"imports/id":       "SELECT id::text FROM imports LIMIT 1",
+		"exports/id":       "SELECT id::text FROM exports LIMIT 1",
+		"cast-sessions/id": "SELECT id::text FROM cast_sessions LIMIT 1",
 	} {
 		var id string
 		if err := s.pool.QueryRow(ctx, query).Scan(&id); err != nil {
@@ -255,5 +259,8 @@ func TestStrangersReachNothingOfTheOwner(t *testing.T) {
 	}
 	if keys != 1 {
 		t.Fatalf("the owner's key is gone: %d", keys)
+	}
+	if casts := s.count(t, "SELECT count(*) FROM cast_sessions"); casts != 1 {
+		t.Fatalf("the owner's TV session is gone: %d", casts)
 	}
 }

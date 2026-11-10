@@ -24,6 +24,9 @@ Name | Type | Description | Notes
 **externalScanHours** | **int** |  | 
 **visibleOnNetwork** | **bool** | Apps on the same network can find this server. Left out keeps it on | [optional] 
 **serverName** | **String** | What people see this server called. Left out keeps the name it has | [optional] 
+**dlnaServer** | **bool** | TVs on the home network see the albums of dlnaOwner, without a password. Turning it on makes the administrator who does it the owner. Left out keeps it as it is | [optional] 
+**dlnaOwner** | **String** | Whose albums TVs see, while dlnaServer is on | [optional] [readonly] 
+**dlnaAnnounced** | **bool** | The dlna service has asked for the description in the last few minutes, so TVs can find the server | [optional] [readonly] 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

@@ -30,5 +30,8 @@ import UIKit
       WidgetChannel.register(messenger: registrar.messenger())
       AwakeChannel.register(messenger: registrar.messenger())
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "MediarrAirPlay") {
+      AirPlayChannel.register(registrar: registrar)
+    }
   }
 }

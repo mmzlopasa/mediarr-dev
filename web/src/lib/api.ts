@@ -53,6 +53,8 @@ export type KeepGuest = components['schemas']['KeepGuest'];
 export type KeepInvite = components['schemas']['KeepInvite'];
 export type ImportDetail = components['schemas']['ImportDetail'];
 export type LibraryExport = components['schemas']['LibraryExport'];
+export type CastSession = components['schemas']['CastSession'];
+export type CastMedia = components['schemas']['CastMedia'];
 export type AuthMethods = components['schemas']['AuthMethods'];
 export type OIDCSettings = components['schemas']['OIDCSettings'];
 export type OIDCSettingsUpdate = components['schemas']['OIDCSettingsUpdate'];
@@ -395,6 +397,10 @@ export const api = {
 		request<LibraryExport>(fetch, '/api/exports', userId ? { userId } : {}),
 	cancelExport: (id: string) => request<void>(fetch, `/api/exports/${id}/cancel`, {}),
 	removeExport: (id: string) => request<void>(fetch, `/api/exports/${id}`, undefined, 'DELETE'),
+	startCast: (ids: string[]) => request<CastSession>(fetch, '/api/cast-sessions', { ids }),
+	addToCast: (id: string, ids: string[]) =>
+		request<CastSession>(fetch, `/api/cast-sessions/${id}/assets`, { ids }),
+	stopCast: (id: string) => request<void>(fetch, `/api/cast-sessions/${id}`, undefined, 'DELETE'),
 	features: () => request<Features>(fetch, '/api/features'),
 	setFeature: (name: string, enabled: boolean) =>
 		request<void>(fetch, `/api/admin/features/${name}`, { enabled }, 'PUT'),

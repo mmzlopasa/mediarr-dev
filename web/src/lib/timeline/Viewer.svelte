@@ -23,6 +23,8 @@
 	import VideoPlayer from './VideoPlayer.svelte';
 	import AlbumActivity from './AlbumActivity.svelte';
 	import PhotoEditor from '#lib/edit/PhotoEditor.svelte';
+	import PlayOnTv from '#lib/cast/PlayOnTv.svelte';
+	import CastBar from '#lib/cast/CastBar.svelte';
 
 	const MIN_SCALE = 1;
 	const MAX_SCALE = 6;
@@ -390,6 +392,13 @@
 							onclick={startSlideshow}><Icon name="play" /></button
 						>
 					{/if}
+					{#if base === '/api' && !previewOnly}
+						<PlayOnTv
+							id={detail.id}
+							kind={detail.kind === 'video' ? 'video' : 'photo'}
+							video={() => stage?.querySelector('video')}
+						/>
+					{/if}
 					{#if isPanorama}
 						<button
 							type="button"
@@ -558,6 +567,11 @@
 					</div>
 				{/if}
 			{/if}
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<!-- No box of its own, so the photo stays the stage's only cell. -->
+			<div class="tv-bar-wrap" onpointerdown={(event) => event.stopPropagation()}>
+				<CastBar />
+			</div>
 			{#if detail?.stack && scale === 1}
 				<div
 					class="viewer-stack"

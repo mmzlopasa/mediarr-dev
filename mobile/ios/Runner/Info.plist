@@ -106,9 +106,10 @@
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_mediarr._tcp</string>
+		<string>_googlecast._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Mediarr finds and connects to your own server on the local network.</string>
+	<string>Mediarr finds and connects to your own server, and to TVs that show your photos, on the local network.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

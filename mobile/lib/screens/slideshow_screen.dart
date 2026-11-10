@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 import 'package:video_player/video_player.dart';
 
+import '../cast/tv_controller.dart';
+import '../cast/tv_sheet.dart';
 import '../services/session.dart';
 import '../services/slideshow.dart';
 import '../l10n/l10n.dart';
@@ -17,7 +20,7 @@ String transitionName(SlideChange transition) => switch (transition) {
 };
 
 /// The photos of a list one after another, full screen, from the one that was open.
-class SlideshowScreen extends StatefulWidget {
+class SlideshowScreen extends ConsumerStatefulWidget {
   const SlideshowScreen({
     super.key,
     required this.session,
@@ -30,10 +33,10 @@ class SlideshowScreen extends StatefulWidget {
   final String startId;
 
   @override
-  State<SlideshowScreen> createState() => _SlideshowScreenState();
+  ConsumerState<SlideshowScreen> createState() => _SlideshowScreenState();
 }
 
-class _SlideshowScreenState extends State<SlideshowScreen> {
+class _SlideshowScreenState extends ConsumerState<SlideshowScreen> {
   SlideshowSettings _settings = const SlideshowSettings();
   late List<TimelineItem> _order = playOrder(
     widget.items,
@@ -107,6 +110,18 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
       _index = next;
     });
     _play();
+    _followOnTv();
+  }
+
+  /// The TV shows the same slide as the phone.
+  void _followOnTv() {
+    final slide = _slide;
+    if (slide == null) return;
+    ref
+        .read(tvProvider.notifier)
+        .follow(
+          TvAsset(slide.id, video: slide.kind == TimelineItemKindEnum.video),
+        );
   }
 
   void _precacheNext() {
@@ -368,6 +383,17 @@ class _SlideshowScreenState extends State<SlideshowScreen> {
                     _wake();
                   },
                   onSettings: _openSettings,
+                  onTv: castable(widget.session) && slide != null
+                      ? () => showTvSheet(
+                          context,
+                          widget.session,
+                          TvAsset(
+                            slide.id,
+                            video: slide.kind == TimelineItemKindEnum.video,
+                          ),
+                        )
+                      : null,
+                  casting: ref.watch(tvProvider).device != null,
                   onClose: () => Navigator.of(context).pop(_slide?.id),
                 ),
               ),
@@ -404,7 +430,12 @@ class _Controls extends StatelessWidget {
     required this.onNext,
     required this.onSettings,
     required this.onClose,
+    this.onTv,
+    this.casting = false,
   });
+
+  final VoidCallback? onTv;
+  final bool casting;
 
   final String count;
   final bool paused;
@@ -427,48 +458,70 @@ class _Controls extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 8, 8),
-          child: Row(
-            children: [
-              Text(count, style: const TextStyle(color: Colors.white70)),
-              const Spacer(),
-              IconButton(
-                tooltip: l.slideshowScreenPrevious,
-                color: Colors.white,
-                icon: const Icon(Icons.skip_previous),
-                onPressed: onPrevious,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const TvBar(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 8, 8),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      count,
+                      maxLines: 1,
+                      overflow: TextOverflow.fade,
+                      softWrap: false,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: l.slideshowScreenPrevious,
+                    color: Colors.white,
+                    icon: const Icon(Icons.skip_previous),
+                    onPressed: onPrevious,
+                  ),
+                  IconButton(
+                    tooltip: paused
+                        ? l.slideshowScreenPlay
+                        : l.slideshowScreenPause,
+                    color: Colors.white,
+                    iconSize: 34,
+                    icon: Icon(paused ? Icons.play_arrow : Icons.pause),
+                    onPressed: onPause,
+                  ),
+                  IconButton(
+                    tooltip: l.slideshowScreenNext,
+                    color: Colors.white,
+                    icon: const Icon(Icons.skip_next),
+                    onPressed: onNext,
+                  ),
+                  const Spacer(),
+                  if (onTv != null)
+                    IconButton(
+                      tooltip: l.slideshowScreenPlayOnTv,
+                      color: Colors.white,
+                      isSelected: casting,
+                      icon: Icon(casting ? Icons.cast_connected : Icons.cast),
+                      onPressed: onTv,
+                    ),
+                  IconButton(
+                    tooltip: l.slideshowScreenSettings,
+                    color: Colors.white,
+                    icon: const Icon(Icons.tune),
+                    onPressed: onSettings,
+                  ),
+                  IconButton(
+                    tooltip: l.slideshowScreenClose,
+                    color: Colors.white,
+                    icon: const Icon(Icons.close),
+                    onPressed: onClose,
+                  ),
+                ],
               ),
-              IconButton(
-                tooltip: paused
-                    ? l.slideshowScreenPlay
-                    : l.slideshowScreenPause,
-                color: Colors.white,
-                iconSize: 34,
-                icon: Icon(paused ? Icons.play_arrow : Icons.pause),
-                onPressed: onPause,
-              ),
-              IconButton(
-                tooltip: l.slideshowScreenNext,
-                color: Colors.white,
-                icon: const Icon(Icons.skip_next),
-                onPressed: onNext,
-              ),
-              const Spacer(),
-              IconButton(
-                tooltip: l.slideshowScreenSettings,
-                color: Colors.white,
-                icon: const Icon(Icons.tune),
-                onPressed: onSettings,
-              ),
-              IconButton(
-                tooltip: l.slideshowScreenClose,
-                color: Colors.white,
-                icon: const Icon(Icons.close),
-                onPressed: onClose,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     ),

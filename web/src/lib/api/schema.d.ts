@@ -2875,6 +2875,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cast-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours */
+        post: operations["createCastSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cast-sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Stop casting. The TV's token stops working at once */
+        delete: operations["deleteCastSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cast-sessions/{id}/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Let the TV show more assets, such as the next photo swiped to */
+        post: operations["addCastAssets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tv/{token}/assets/{id}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session */
+        get: operations["getCastImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tv/{token}/assets/{id}/original": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** For a TV. The original of a video, without its location. Only an asset of the token's session */
+        get: operations["getCastOriginal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tv/{token}/assets/{id}/video/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** For a TV. HLS files of a video. Only an asset of the token's session */
+        get: operations["getCastVideoFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/exports": {
         parameters: {
             query?: never;
@@ -4102,6 +4204,36 @@ export interface components {
             /** @description Originals in it */
             files: number;
         };
+        CastAssets: {
+            ids: string[];
+        };
+        /** @description Addresses on this server, starting with /api/tv/, that a TV opens without signing in */
+        CastMedia: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "photo" | "video";
+            /** @description A JPEG: the photo, or the still of a video */
+            image: string;
+            /** @description A video's HLS playlist, once the server has converted it */
+            hls?: string;
+            /** @description A video's original file, without its location */
+            file?: string;
+            /** @description Of file */
+            mimeType?: string;
+            /** Format: int64 */
+            durationMs?: number;
+        };
+        CastSession: {
+            /** Format: uuid */
+            id: string;
+            /** @description Only when the session is started */
+            token?: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** @description Of the assets just sent */
+            media: components["schemas"]["CastMedia"][];
+        };
         LibraryExport: {
             /** Format: uuid */
             id: string;
@@ -5215,6 +5347,12 @@ export interface components {
             visibleOnNetwork?: boolean;
             /** @description What people see this server called. Left out keeps the name it has */
             serverName?: string;
+            /** @description TVs on the home network see the albums of dlnaOwner, without a password. Turning it on makes the administrator who does it the owner. Left out keeps it as it is */
+            dlnaServer?: boolean;
+            /** @description Whose albums TVs see, while dlnaServer is on */
+            readonly dlnaOwner?: string;
+            /** @description The dlna service has asked for the description in the last few minutes, so TVs can find the server */
+            readonly dlnaAnnounced?: boolean;
         };
         EmailSettings: {
             enabled: boolean;
@@ -10318,6 +10456,158 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    createCastSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CastAssets"];
+            };
+        };
+        responses: {
+            /** @description Started */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CastSession"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    deleteCastSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stopped */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    addCastAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CastAssets"];
+            };
+        };
+        responses: {
+            /** @description The session, with what was added */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CastSession"];
+                };
+            };
+            400: components["responses"]["Error"];
+            401: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getCastImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Image */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+            404: components["responses"]["Error"];
+        };
+    };
+    getCastOriginal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Video */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "video/mp4": string;
+                };
+            };
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+        };
+    };
+    getCastVideoFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                id: string;
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
             404: components["responses"]["Error"];
         };
     };

@@ -50,6 +50,9 @@ doc/BackupSettings.md
 doc/BackupSettingsUpdate.md
 doc/BulkRequest.md
 doc/BulkResponse.md
+doc/CastAssets.md
+doc/CastMedia.md
+doc/CastSession.md
 doc/ChangePasswordRequest.md
 doc/ChecksumCheckRequest.md
 doc/ChecksumCheckResponse.md
@@ -268,6 +271,9 @@ lib/model/backup_settings.dart
 lib/model/backup_settings_update.dart
 lib/model/bulk_request.dart
 lib/model/bulk_response.dart
+lib/model/cast_assets.dart
+lib/model/cast_media.dart
+lib/model/cast_session.dart
 lib/model/change_password_request.dart
 lib/model/checksum_check_request.dart
 lib/model/checksum_check_response.dart

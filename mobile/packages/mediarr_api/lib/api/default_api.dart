@@ -143,6 +143,73 @@ class DefaultApi {
     return null;
   }
 
+  /// Let the TV show more assets, such as the next photo swiped to
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [CastAssets] castAssets (required):
+  Future<Response> addCastAssetsWithHttpInfo(
+    String id,
+    CastAssets castAssets,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/cast-sessions/{id}/assets'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody = castAssets;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Let the TV show more assets, such as the next photo swiped to
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [CastAssets] castAssets (required):
+  Future<CastSession?> addCastAssets(
+    String id,
+    CastAssets castAssets,
+  ) async {
+    final response = await addCastAssetsWithHttpInfo(
+      id,
+      castAssets,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'CastSession',
+      ) as CastSession;
+    }
+    return null;
+  }
+
   /// Add someone to the family library
   ///
   /// Note: This method returns the HTTP [Response].
@@ -1300,6 +1367,66 @@ class DefaultApi {
     return null;
   }
 
+  /// Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [CastAssets] castAssets (required):
+  Future<Response> createCastSessionWithHttpInfo(
+    CastAssets castAssets,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/cast-sessions';
+
+    // ignore: prefer_final_locals
+    Object? postBody = castAssets;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'POST',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours
+  ///
+  /// Parameters:
+  ///
+  /// * [CastAssets] castAssets (required):
+  Future<CastSession?> createCastSession(
+    CastAssets castAssets,
+  ) async {
+    final response = await createCastSessionWithHttpInfo(
+      castAssets,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'CastSession',
+      ) as CastSession;
+    }
+    return null;
+  }
+
   /// Create a long-lived key for this device, used by background backup
   ///
   /// Note: This method returns the HTTP [Response].
@@ -2117,6 +2244,55 @@ class DefaultApi {
     String id,
   ) async {
     final response = await deleteBackupDeviceWithHttpInfo(
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+  }
+
+  /// Stop casting. The TV's token stops working at once
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<Response> deleteCastSessionWithHttpInfo(
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/cast-sessions/{id}'.replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'DELETE',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Stop casting. The TV's token stops working at once
+  ///
+  /// Parameters:
+  ///
+  /// * [String] id (required):
+  Future<void> deleteCastSession(
+    String id,
+  ) async {
+    final response = await deleteCastSessionWithHttpInfo(
       id,
     );
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -4649,6 +4825,221 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'BackupSettings',
       ) as BackupSettings;
+    }
+    return null;
+  }
+
+  /// For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> getCastImageWithHttpInfo(
+    String token,
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/tv/{token}/assets/{id}/image'
+        .replaceAll('{token}', token)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  Future<MultipartFile?> getCastImage(
+    String token,
+    String id,
+  ) async {
+    final response = await getCastImageWithHttpInfo(
+      token,
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// For a TV. The original of a video, without its location. Only an asset of the token's session
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  Future<Response> getCastOriginalWithHttpInfo(
+    String token,
+    String id,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/tv/{token}/assets/{id}/original'
+        .replaceAll('{token}', token)
+        .replaceAll('{id}', id);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// For a TV. The original of a video, without its location. Only an asset of the token's session
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  Future<MultipartFile?> getCastOriginal(
+    String token,
+    String id,
+  ) async {
+    final response = await getCastOriginalWithHttpInfo(
+      token,
+      id,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// For a TV. HLS files of a video. Only an asset of the token's session
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] file (required):
+  Future<Response> getCastVideoFileWithHttpInfo(
+    String token,
+    String id,
+    String file,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/tv/{token}/assets/{id}/video/{file}'
+        .replaceAll('{token}', token)
+        .replaceAll('{id}', id)
+        .replaceAll('{file}', file);
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// For a TV. HLS files of a video. Only an asset of the token's session
+  ///
+  /// Parameters:
+  ///
+  /// * [String] token (required):
+  ///
+  /// * [String] id (required):
+  ///
+  /// * [String] file (required):
+  Future<MultipartFile?> getCastVideoFile(
+    String token,
+    String id,
+    String file,
+  ) async {
+    final response = await getCastVideoFileWithHttpInfo(
+      token,
+      id,
+      file,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'MultipartFile',
+      ) as MultipartFile;
     }
     return null;
   }

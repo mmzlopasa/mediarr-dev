@@ -29,6 +29,7 @@
 		A1B2C3D4E5F6000000000004 /* BackupChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000014 /* BackupChannel.swift */; };
 		B02DD64D1F3D0E955A696166 /* WidgetShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34060F14B3FB05DD7DA650EB /* WidgetShare.swift */; };
 		FB1E900A0FAD0CB73F70DE9C /* WidgetChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5091C1B05A8FD10E0C829574 /* WidgetChannel.swift */; };
+		A1B2C3D4E5F6000000000020 /* AirPlayChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000021 /* AirPlayChannel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +83,7 @@
 		34060F14B3FB05DD7DA650EB /* WidgetShare.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetShare.swift; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		5091C1B05A8FD10E0C829574 /* WidgetChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetChannel.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000021 /* AirPlayChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPlayChannel.swift; sourceTree = "<group>"; };
 		5EE7EB0086F80DFD5252F18A /* MediarrWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MediarrWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6953C17ACF24B3F9EF6B6534 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/WidgetKit.framework; sourceTree = DEVELOPER_DIR; };
 		70AC1E5E0F7698F8B650FAE1 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -215,6 +217,7 @@
 				A1B2C3D4E5F6000000000014 /* BackupChannel.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				5091C1B05A8FD10E0C829574 /* WidgetChannel.swift */,
+				A1B2C3D4E5F6000000000021 /* AirPlayChannel.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -427,6 +430,7 @@
 				A1B2C3D4E5F6000000000003 /* BackupEngine.swift in Sources */,
 				A1B2C3D4E5F6000000000004 /* BackupChannel.swift in Sources */,
 				FB1E900A0FAD0CB73F70DE9C /* WidgetChannel.swift in Sources */,
+				A1B2C3D4E5F6000000000020 /* AirPlayChannel.swift in Sources */,
 				55AEBF8A11278381FDD337E0 /* WidgetShare.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

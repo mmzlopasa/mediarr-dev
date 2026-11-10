@@ -325,6 +325,12 @@ class ApiClient {
           return BulkRequest.fromJson(value);
         case 'BulkResponse':
           return BulkResponse.fromJson(value);
+        case 'CastAssets':
+          return CastAssets.fromJson(value);
+        case 'CastMedia':
+          return CastMedia.fromJson(value);
+        case 'CastSession':
+          return CastSession.fromJson(value);
         case 'ChangePasswordRequest':
           return ChangePasswordRequest.fromJson(value);
         case 'ChecksumCheckRequest':

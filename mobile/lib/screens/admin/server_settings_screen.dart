@@ -147,6 +147,7 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
       externalScanHours: whole('externalScanHours')!,
       visibleOnNetwork: s.visibleOnNetwork ?? true,
       serverName: _field('serverName').text.trim(),
+      dlnaServer: s.dlnaServer ?? false,
     );
   }
 
@@ -310,6 +311,24 @@ class _ServerSettingsScreenState extends ConsumerState<ServerSettingsScreen> {
               subtitle: Text(l.adminServerSettingsVisibleOnNetworkHelp),
               value: s.visibleOnNetwork ?? true,
               onChanged: (value) => setState(() => s.visibleOnNetwork = value),
+            ),
+            SwitchListTile(
+              key: const ValueKey('setting-dlnaServer'),
+              title: Text(l.adminServerSettingsDlna),
+              subtitle: Text(
+                [
+                  l.adminServerSettingsDlnaHelp,
+                  if (s.dlnaServer == true && s.dlnaOwner != null)
+                    l.adminServerSettingsDlnaOwner(s.dlnaOwner!),
+                  if (s.dlnaServer == true && s.dlnaOwner != null)
+                    s.dlnaAnnounced == true
+                        ? l.adminServerSettingsDlnaAnnounced
+                        : l.adminServerSettingsDlnaNotAnnounced,
+                ].join(' '),
+              ),
+              isThreeLine: true,
+              value: s.dlnaServer ?? false,
+              onChanged: (value) => setState(() => s.dlnaServer = value),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),

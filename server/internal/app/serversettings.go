@@ -1,10 +1,13 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/google/uuid"
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
@@ -26,7 +29,27 @@ func settingsToAPI(in *jobs.ServerSettings) api.ServerSettings {
 		AnalysisWorkers: in.AnalysisWorkers, ExternalScanHours: in.ExternalScanHours,
 		VisibleOnNetwork: new(!in.HiddenOnNetwork),
 		ServerName:       new(in.Name()),
+		DlnaServer:       new(in.DLNAUserID != ""),
 	}
+}
+
+// settingsResponse adds what is not saved with the settings: whose albums TVs see, and whether the
+// announcer on the host's network is running.
+func (s *apiServer) settingsResponse(ctx context.Context, in *jobs.ServerSettings) (api.ServerSettings, error) {
+	out := settingsToAPI(in)
+	owner, on, err := s.dlnaOwner(ctx)
+	if err != nil {
+		return out, err
+	}
+	if on {
+		name := owner.Name
+		if name == "" {
+			name = owner.Email
+		}
+		out.DlnaOwner = &name
+	}
+	out.DlnaAnnounced = new(s.dlnaAnnounced())
+	return out, nil
 }
 
 func (s *apiServer) GetServerSettings(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +61,12 @@ func (s *apiServer) GetServerSettings(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, settingsToAPI(&settings))
+	out, err := s.settingsResponse(r.Context(), &settings)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +133,17 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	data, err := json.Marshal(jobs.ServerSettings{
+	dlnaUser := saved.DLNAUserID
+	if body.DlnaServer != nil {
+		switch {
+		case !*body.DlnaServer:
+			dlnaUser = ""
+		case dlnaUser == "":
+			// Whoever turns it on shows their own albums, and nobody else's.
+			dlnaUser = uuid.UUID(currentUser(r).ID.Bytes).String()
+		}
+	}
+	next := jobs.ServerSettings{
 		TrashDays: body.TrashDays, ImageQuality: body.ImageQuality, PreviewSize: body.PreviewSize,
 		VideoQuality: body.VideoQuality, VideoMaxHeight: body.VideoMaxHeight,
 		LoginMessage: body.LoginMessage, PasswordLogin: body.PasswordLogin, Maintenance: body.Maintenance,
@@ -114,7 +152,9 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 		AnalysisWorkers: body.AnalysisWorkers, ExternalScanHours: body.ExternalScanHours,
 		HiddenOnNetwork: body.VisibleOnNetwork != nil && !*body.VisibleOnNetwork,
 		ServerName:      name,
-	})
+		DLNAUserID:      dlnaUser,
+	}
+	data, err := json.Marshal(next)
 	if err != nil {
 		internalError(w, r, err)
 		return
@@ -124,5 +164,10 @@ func (s *apiServer) SetServerSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.security.Store(nil)
-	writeJSON(w, http.StatusOK, body)
+	out, err := s.settingsResponse(ctx, &next)
+	if err != nil {
+		internalError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }

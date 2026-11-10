@@ -54,7 +54,7 @@ test('a slideshow plays an album and the open photo, and keeps its settings', as
 	await settings.getByLabel('Transition').selectOption('none');
 	await expect(show.getByText('2 / 3')).toBeVisible({ timeout: 6_000 });
 	await show.press(' ');
-	await expect(show.getByRole('button', { name: 'Play' })).toBeVisible();
+	await expect(show.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
 	const kept = await page.evaluate(() =>
 		JSON.parse(localStorage.getItem('mediarr_slideshow') ?? '{}')
 	);

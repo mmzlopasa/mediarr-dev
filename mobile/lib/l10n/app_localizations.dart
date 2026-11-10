@@ -8684,6 +8684,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An export of this library is already running.'**
   String get exportsScreenAlreadyRunning;
+
+  /// No description provided for @viewerScreenPlayOnTv.
+  ///
+  /// In en, this message translates to:
+  /// **'Play on TV'**
+  String get viewerScreenPlayOnTv;
+
+  /// No description provided for @viewerScreenMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get viewerScreenMore;
+
+  /// No description provided for @slideshowScreenPlayOnTv.
+  ///
+  /// In en, this message translates to:
+  /// **'Play on TV'**
+  String get slideshowScreenPlayOnTv;
+
+  /// No description provided for @tvSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play on TV'**
+  String get tvSheetTitle;
+
+  /// No description provided for @tvSheetSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for TVs on this network…'**
+  String get tvSheetSearching;
+
+  /// No description provided for @tvSheetNoneFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No TV found yet.'**
+  String get tvSheetNoneFound;
+
+  /// No description provided for @tvSheetSearchAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Search again'**
+  String get tvSheetSearchAgain;
+
+  /// No description provided for @tvSheetChromecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Chromecast'**
+  String get tvSheetChromecast;
+
+  /// No description provided for @tvSheetDlna.
+  ///
+  /// In en, this message translates to:
+  /// **'DLNA TV'**
+  String get tvSheetDlna;
+
+  /// No description provided for @tvSheetAirPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'AirPlay'**
+  String get tvSheetAirPlay;
+
+  /// No description provided for @tvSheetAirPlayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an Apple TV with the button: the videos you play go to it. Photos appear on the TV with Screen Mirroring in Control Centre.'**
+  String get tvSheetAirPlayHint;
+
+  /// No description provided for @tvSheetAddByAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a TV by its address'**
+  String get tvSheetAddByAddress;
+
+  /// No description provided for @tvSheetAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'The TV\'s IP address, or its description address'**
+  String get tvSheetAddressLabel;
+
+  /// No description provided for @tvSheetAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get tvSheetAdd;
+
+  /// No description provided for @tvSheetNotFoundAt.
+  ///
+  /// In en, this message translates to:
+  /// **'No TV answered at that address.'**
+  String get tvSheetNotFoundAt;
+
+  /// No description provided for @tvSheetPlayingOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing on {device}'**
+  String tvSheetPlayingOn(String device);
+
+  /// No description provided for @tvSheetStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get tvSheetStop;
+
+  /// No description provided for @tvSheetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The TV could not be reached.'**
+  String get tvSheetFailed;
+
+  /// No description provided for @tvSheetPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play on the TV'**
+  String get tvSheetPlay;
+
+  /// No description provided for @tvSheetPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause on the TV'**
+  String get tvSheetPause;
+
+  /// No description provided for @tvSheetPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Position on the TV'**
+  String get tvSheetPosition;
+
+  /// No description provided for @tvSheetConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to the TV…'**
+  String get tvSheetConnecting;
+
+  /// No description provided for @tvSheetSameNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'The TV and this phone must be on the same network. The TV gets an address that works for 4 hours and only for what you send it.'**
+  String get tvSheetSameNetwork;
+
+  /// No description provided for @adminServerSettingsDlna.
+  ///
+  /// In en, this message translates to:
+  /// **'DLNA media server'**
+  String get adminServerSettingsDlna;
+
+  /// No description provided for @adminServerSettingsDlnaHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'TVs on your home network see your albums, without a password. It needs the dlna service, which runs on the host\'s network: see the TV page of the docs.'**
+  String get adminServerSettingsDlnaHelp;
+
+  /// No description provided for @adminServerSettingsDlnaOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'TVs see the albums of {name}.'**
+  String adminServerSettingsDlnaOwner(String name);
+
+  /// No description provided for @adminServerSettingsDlnaAnnounced.
+  ///
+  /// In en, this message translates to:
+  /// **'The dlna service is running, so TVs can find this server.'**
+  String get adminServerSettingsDlnaAnnounced;
+
+  /// No description provided for @adminServerSettingsDlnaNotAnnounced.
+  ///
+  /// In en, this message translates to:
+  /// **'The dlna service has not been heard from, so TVs cannot find this server yet.'**
+  String get adminServerSettingsDlnaNotAnnounced;
 }
 
 class _AppLocalizationsDelegate

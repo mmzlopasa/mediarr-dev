@@ -92,6 +92,23 @@
 				{t('serverSettingsCard.appsOnTheSameNetwork')}
 			</label>
 			<label>
+				<input
+					type="checkbox"
+					checked={settings.dlnaServer ?? false}
+					onchange={(event) => {
+						if (settings) settings.dlnaServer = event.currentTarget.checked;
+					}}
+				/>
+				{t('admin.dlnaServer')}
+			</label>
+			<p class="alb-meta">
+				{t('admin.dlnaServerHint')}
+				{#if settings.dlnaServer && settings.dlnaOwner}
+					{t('admin.dlnaOwner', { name: settings.dlnaOwner })}
+					{settings.dlnaAnnounced ? t('admin.dlnaAnnounced') : t('admin.dlnaNotAnnounced')}
+				{/if}
+			</p>
+			<label>
 				<input type="checkbox" bind:checked={settings.maintenance} />
 				{t('serverSettingsCard.maintenanceModeOnlyAdministratorsCan')}
 			</label>

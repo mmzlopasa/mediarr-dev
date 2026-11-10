@@ -32,6 +32,8 @@ type ServerSettings struct {
 	HiddenOnNetwork bool `json:"hiddenOnNetwork,omitempty"`
 	// ServerName is what people see this server called; empty is "Mediarr".
 	ServerName string `json:"serverName,omitempty"`
+	// DLNAUserID is whose albums TVs on the home network see; empty keeps the DLNA server off.
+	DLNAUserID string `json:"dlnaUserId,omitempty"`
 }
 
 // DefaultServerName is what a server is called until its administrator names it.

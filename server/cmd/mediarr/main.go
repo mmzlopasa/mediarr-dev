@@ -10,9 +10,11 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -25,13 +27,14 @@ import (
 	"github.com/mediarr-app/mediarr/server/internal/app"
 	"github.com/mediarr-app/mediarr/server/internal/auth"
 	"github.com/mediarr-app/mediarr/server/internal/config"
+	"github.com/mediarr-app/mediarr/server/internal/dlna"
 	"github.com/mediarr-app/mediarr/server/internal/jobs"
 	"github.com/mediarr-app/mediarr/server/internal/storage"
 	"github.com/mediarr-app/mediarr/server/internal/upgrade"
 )
 
 const (
-	usage             = "usage: mediarr <serve|worker|healthcheck|migrate [down]|rollback [list|<name>] [--yes]|user upsert <email> <name> [--admin]|user reset-vault <email>|security reset>"
+	usage             = "usage: mediarr <serve|worker|dlna|healthcheck|migrate [down]|rollback [list|<name>] [--yes]|user upsert <email> <name> [--admin]|user reset-vault <email>|security reset>"
 	stateStorageReady = "storage_initialized"
 )
 
@@ -48,6 +51,10 @@ func main() {
 func run(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		return errors.New(usage)
+	}
+	if args[0] == "dlna" {
+		// Runs on the host's network, apart from the database and everything else.
+		return announceDLNA(ctx)
 	}
 	cfg := config.Load()
 
@@ -461,4 +468,30 @@ func securityCommand(ctx context.Context, cfg config.Config, args []string) erro
 	}
 	defer pool.Close()
 	return app.ResetSecurity(ctx, db.New(pool))
+}
+
+// announceDLNA lets TVs find the server, while its administrator has the DLNA server on. It needs
+// network_mode: host, and reaches the server through the address in MEDIARR_URL.
+func announceDLNA(ctx context.Context) error {
+	upstream, err := url.Parse(envOr("MEDIARR_URL", "http://127.0.0.1:9851"))
+	if err != nil {
+		return fmt.Errorf("MEDIARR_URL: %w", err)
+	}
+	port, err := strconv.Atoi(envOr("DLNA_PORT", "8200"))
+	if err != nil || port < 1 || port > 65535 {
+		return errors.New("DLNA_PORT must be a port number")
+	}
+	announcer := &dlna.Announcer{
+		Upstream: upstream, Port: port, Version: app.Version,
+		Client: &http.Client{Timeout: 10 * time.Second},
+	}
+	slog.Info("announcing Mediarr to TVs on the network", "port", port, "server", upstream.String())
+	return announcer.Run(ctx)
+}
+
+func envOr(name, fallback string) string {
+	if value := strings.TrimSpace(os.Getenv(name)); value != "" {
+		return value
+	}
+	return fallback
 }

@@ -29,6 +29,9 @@ class ServerSettings {
     required this.externalScanHours,
     this.visibleOnNetwork,
     this.serverName,
+    this.dlnaServer,
+    this.dlnaOwner,
+    this.dlnaAnnounced,
   });
 
   int trashDays;
@@ -84,6 +87,33 @@ class ServerSettings {
   ///
   String? serverName;
 
+  /// TVs on the home network see the albums of dlnaOwner, without a password. Turning it on makes the administrator who does it the owner. Left out keeps it as it is
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? dlnaServer;
+
+  /// Whose albums TVs see, while dlnaServer is on
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? dlnaOwner;
+
+  /// The dlna service has asked for the description in the last few minutes, so TVs can find the server
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  bool? dlnaAnnounced;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -103,7 +133,10 @@ class ServerSettings {
           other.analysisWorkers == analysisWorkers &&
           other.externalScanHours == externalScanHours &&
           other.visibleOnNetwork == visibleOnNetwork &&
-          other.serverName == serverName;
+          other.serverName == serverName &&
+          other.dlnaServer == dlnaServer &&
+          other.dlnaOwner == dlnaOwner &&
+          other.dlnaAnnounced == dlnaAnnounced;
 
   @override
   int get hashCode =>
@@ -123,11 +156,14 @@ class ServerSettings {
       (analysisWorkers.hashCode) +
       (externalScanHours.hashCode) +
       (visibleOnNetwork == null ? 0 : visibleOnNetwork!.hashCode) +
-      (serverName == null ? 0 : serverName!.hashCode);
+      (serverName == null ? 0 : serverName!.hashCode) +
+      (dlnaServer == null ? 0 : dlnaServer!.hashCode) +
+      (dlnaOwner == null ? 0 : dlnaOwner!.hashCode) +
+      (dlnaAnnounced == null ? 0 : dlnaAnnounced!.hashCode);
 
   @override
   String toString() =>
-      'ServerSettings[trashDays=$trashDays, imageQuality=$imageQuality, previewSize=$previewSize, videoQuality=$videoQuality, videoMaxHeight=$videoMaxHeight, loginMessage=$loginMessage, passwordLogin=$passwordLogin, maintenance=$maintenance, faceMinScore=$faceMinScore, faceMaxDistance=$faceMaxDistance, workerConcurrency=$workerConcurrency, videoWorkers=$videoWorkers, analysisWorkers=$analysisWorkers, externalScanHours=$externalScanHours, visibleOnNetwork=$visibleOnNetwork, serverName=$serverName]';
+      'ServerSettings[trashDays=$trashDays, imageQuality=$imageQuality, previewSize=$previewSize, videoQuality=$videoQuality, videoMaxHeight=$videoMaxHeight, loginMessage=$loginMessage, passwordLogin=$passwordLogin, maintenance=$maintenance, faceMinScore=$faceMinScore, faceMaxDistance=$faceMaxDistance, workerConcurrency=$workerConcurrency, videoWorkers=$videoWorkers, analysisWorkers=$analysisWorkers, externalScanHours=$externalScanHours, visibleOnNetwork=$visibleOnNetwork, serverName=$serverName, dlnaServer=$dlnaServer, dlnaOwner=$dlnaOwner, dlnaAnnounced=$dlnaAnnounced]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -154,6 +190,21 @@ class ServerSettings {
       json[r'serverName'] = this.serverName;
     } else {
       json[r'serverName'] = null;
+    }
+    if (this.dlnaServer != null) {
+      json[r'dlnaServer'] = this.dlnaServer;
+    } else {
+      json[r'dlnaServer'] = null;
+    }
+    if (this.dlnaOwner != null) {
+      json[r'dlnaOwner'] = this.dlnaOwner;
+    } else {
+      json[r'dlnaOwner'] = null;
+    }
+    if (this.dlnaAnnounced != null) {
+      json[r'dlnaAnnounced'] = this.dlnaAnnounced;
+    } else {
+      json[r'dlnaAnnounced'] = null;
     }
     return json;
   }
@@ -195,6 +246,9 @@ class ServerSettings {
         externalScanHours: mapValueOfType<int>(json, r'externalScanHours')!,
         visibleOnNetwork: mapValueOfType<bool>(json, r'visibleOnNetwork'),
         serverName: mapValueOfType<String>(json, r'serverName'),
+        dlnaServer: mapValueOfType<bool>(json, r'dlnaServer'),
+        dlnaOwner: mapValueOfType<String>(json, r'dlnaOwner'),
+        dlnaAnnounced: mapValueOfType<bool>(json, r'dlnaAnnounced'),
       );
     }
     return null;

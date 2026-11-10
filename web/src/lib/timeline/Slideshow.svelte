@@ -2,6 +2,8 @@
 	import { onMount, untrack } from 'svelte';
 	import { api } from '#lib/api.ts';
 	import Icon from '#lib/design/components/Icon.svelte';
+	import PlayOnTv from '#lib/cast/PlayOnTv.svelte';
+	import CastBar from '#lib/cast/CastBar.svelte';
 	import { lang, t, k, type Key } from '#lib/i18n.svelte.ts';
 	import { formatDay } from './layout.ts';
 	import {
@@ -289,6 +291,13 @@
 			>
 		</div>
 		<div class="ss-buttons">
+			{#if base === '/api' && slide}
+				<PlayOnTv
+					id={slide.id}
+					kind={slide.kind === 'video' ? 'video' : 'photo'}
+					video={() => root?.querySelector('video')}
+				/>
+			{/if}
 			<button
 				type="button"
 				class="icon-btn"
@@ -302,6 +311,8 @@
 			>
 		</div>
 	</div>
+
+	<CastBar />
 
 	{#if choosing}
 		<form class="ss-settings" aria-label={t('slideshow.slideshowSettings')}>

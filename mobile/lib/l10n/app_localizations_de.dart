@@ -5088,4 +5088,99 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get exportsScreenAlreadyRunning =>
       'Ein Export dieser Bibliothek läuft bereits.';
+
+  @override
+  String get viewerScreenPlayOnTv => 'Auf dem Fernseher zeigen';
+
+  @override
+  String get viewerScreenMore => 'Weitere Aktionen';
+
+  @override
+  String get slideshowScreenPlayOnTv => 'Auf dem Fernseher zeigen';
+
+  @override
+  String get tvSheetTitle => 'Auf dem Fernseher zeigen';
+
+  @override
+  String get tvSheetSearching => 'Fernseher in diesem Netzwerk werden gesucht…';
+
+  @override
+  String get tvSheetNoneFound => 'Noch kein Fernseher gefunden.';
+
+  @override
+  String get tvSheetSearchAgain => 'Erneut suchen';
+
+  @override
+  String get tvSheetChromecast => 'Chromecast';
+
+  @override
+  String get tvSheetDlna => 'DLNA-Fernseher';
+
+  @override
+  String get tvSheetAirPlay => 'AirPlay';
+
+  @override
+  String get tvSheetAirPlayHint =>
+      'Wählen Sie mit der Taste ein Apple TV: Videos, die Sie abspielen, laufen dort. Fotos erscheinen mit der Bildschirmsynchronisierung im Kontrollzentrum.';
+
+  @override
+  String get tvSheetAddByAddress => 'Fernseher über seine Adresse hinzufügen';
+
+  @override
+  String get tvSheetAddressLabel =>
+      'IP-Adresse des Fernsehers oder seine Beschreibungsadresse';
+
+  @override
+  String get tvSheetAdd => 'Hinzufügen';
+
+  @override
+  String get tvSheetNotFoundAt =>
+      'Unter dieser Adresse hat kein Fernseher geantwortet.';
+
+  @override
+  String tvSheetPlayingOn(String device) {
+    return 'Läuft auf $device';
+  }
+
+  @override
+  String get tvSheetStop => 'Beenden';
+
+  @override
+  String get tvSheetFailed => 'Der Fernseher war nicht erreichbar.';
+
+  @override
+  String get tvSheetPlay => 'Auf dem Fernseher abspielen';
+
+  @override
+  String get tvSheetPause => 'Auf dem Fernseher pausieren';
+
+  @override
+  String get tvSheetPosition => 'Position auf dem Fernseher';
+
+  @override
+  String get tvSheetConnecting => 'Verbindung zum Fernseher…';
+
+  @override
+  String get tvSheetSameNetwork =>
+      'Fernseher und Handy müssen im selben Netzwerk sein. Der Fernseher bekommt eine Adresse, die 4 Stunden gilt und nur für das, was Sie senden.';
+
+  @override
+  String get adminServerSettingsDlna => 'DLNA-Medienserver';
+
+  @override
+  String get adminServerSettingsDlnaHelp =>
+      'Fernseher im Heimnetz sehen Ihre Alben, ohne Passwort. Dafür braucht es den Dienst dlna, der im Netzwerk des Hosts läuft: siehe die TV-Seite der Dokumentation.';
+
+  @override
+  String adminServerSettingsDlnaOwner(String name) {
+    return 'Fernseher sehen die Alben von $name.';
+  }
+
+  @override
+  String get adminServerSettingsDlnaAnnounced =>
+      'Der Dienst dlna läuft, Fernseher finden diesen Server.';
+
+  @override
+  String get adminServerSettingsDlnaNotAnnounced =>
+      'Vom Dienst dlna kam noch nichts, Fernseher finden diesen Server noch nicht.';
 }

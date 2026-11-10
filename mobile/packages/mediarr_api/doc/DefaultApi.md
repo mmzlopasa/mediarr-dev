@@ -11,6 +11,7 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**addAlbumAssets**](DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
 [**addBackupDestination**](DefaultApi.md#addbackupdestination) | **POST** /api/admin/backup/destinations | Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
+[**addCastAssets**](DefaultApi.md#addcastassets) | **POST** /api/cast-sessions/{id}/assets | Let the TV show more assets, such as the next photo swiped to
 [**addFamilyMember**](DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
 [**answerQRSignIn**](DefaultApi.md#answerqrsignin) | **POST** /api/auth/qr/{id}/answer | Allow or deny the device that scanned my code
 [**appendUpload**](DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
@@ -32,6 +33,7 @@ Method | HTTP request | Description
 [**createAlbum**](DefaultApi.md#createalbum) | **POST** /api/albums | Create an album. With rules it is a smart album.
 [**createAlbumComment**](DefaultApi.md#createalbumcomment) | **POST** /api/albums/{id}/comments | Comment on an album or on a photo in it
 [**createAlbumLink**](DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
+[**createCastSession**](DefaultApi.md#createcastsession) | **POST** /api/cast-sessions | Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours
 [**createDeviceKey**](DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
 [**createExport**](DefaultApi.md#createexport) | **POST** /api/exports | Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
 [**createFamilyRule**](DefaultApi.md#createfamilyrule) | **POST** /api/family/rules | Share what matches a rule with the family. Photos are not copied
@@ -47,6 +49,7 @@ Method | HTTP request | Description
 [**deleteAlbumComment**](DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 [**deleteAlbumLink**](DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 [**deleteBackupDevice**](DefaultApi.md#deletebackupdevice) | **DELETE** /api/me/backup-devices/{id} | Take a device off the list. Its photos stay
+[**deleteCastSession**](DefaultApi.md#deletecastsession) | **DELETE** /api/cast-sessions/{id} | Stop casting. The TV's token stops working at once
 [**deleteDevice**](DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 [**deleteExport**](DefaultApi.md#deleteexport) | **DELETE** /api/exports/{id} | Remove an export that is not running, with its parts
 [**deleteFamilyRule**](DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
@@ -93,6 +96,9 @@ Method | HTTP request | Description
 [**getAuthStatus**](DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 [**getAvatar**](DefaultApi.md#getavatar) | **GET** /api/users/{id}/avatar | The picture of a person with an account here, for anyone signed in
 [**getBackupSettings**](DefaultApi.md#getbackupsettings) | **GET** /api/admin/backup | Where backups go, without any secret
+[**getCastImage**](DefaultApi.md#getcastimage) | **GET** /api/tv/{token}/assets/{id}/image | For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session
+[**getCastOriginal**](DefaultApi.md#getcastoriginal) | **GET** /api/tv/{token}/assets/{id}/original | For a TV. The original of a video, without its location. Only an asset of the token's session
+[**getCastVideoFile**](DefaultApi.md#getcastvideofile) | **GET** /api/tv/{token}/assets/{id}/video/{file} | For a TV. HLS files of a video. Only an asset of the token's session
 [**getCleanup**](DefaultApi.md#getcleanup) | **GET** /api/cleanup | How many of my photos and videos each kind of clean-up would offer, and their size
 [**getCollectionAsset**](DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 [**getCollectionBucket**](DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
@@ -337,6 +343,49 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**BackupDestination**](BackupDestination.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **addCastAssets**
+> CastSession addCastAssets(id, castAssets)
+
+Let the TV show more assets, such as the next photo swiped to
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final castAssets = CastAssets(); // CastAssets | 
+
+try {
+    final result = api_instance.addCastAssets(id, castAssets);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->addCastAssets: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+ **castAssets** | [**CastAssets**](CastAssets.md)|  | 
+
+### Return type
+
+[**CastSession**](CastSession.md)
 
 ### Authorization
 
@@ -1206,6 +1255,47 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **createCastSession**
+> CastSession createCastSession(castAssets)
+
+Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final castAssets = CastAssets(); // CastAssets | 
+
+try {
+    final result = api_instance.createCastSession(castAssets);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->createCastSession: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **castAssets** | [**CastAssets**](CastAssets.md)|  | 
+
+### Return type
+
+[**CastSession**](CastSession.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **createDeviceKey**
 > DeviceKey createDeviceKey(createDeviceKeyRequest)
 
@@ -1787,6 +1877,46 @@ try {
     api_instance.deleteBackupDevice(id);
 } catch (e) {
     print('Exception when calling DefaultApi->deleteBackupDevice: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **String**|  | 
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteCastSession**
+> deleteCastSession(id)
+
+Stop casting. The TV's token stops working at once
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    api_instance.deleteCastSession(id);
+} catch (e) {
+    print('Exception when calling DefaultApi->deleteCastSession: $e\n');
 }
 ```
 
@@ -3651,6 +3781,137 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCastImage**
+> MultipartFile getCastImage(token, id)
+
+For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final token = token_example; // String | 
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getCastImage(token, id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCastImage: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **token** | **String**|  | 
+ **id** | **String**|  | 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: image/jpeg, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCastOriginal**
+> MultipartFile getCastOriginal(token, id)
+
+For a TV. The original of a video, without its location. Only an asset of the token's session
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final token = token_example; // String | 
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final result = api_instance.getCastOriginal(token, id);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCastOriginal: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **token** | **String**|  | 
+ **id** | **String**|  | 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: video/mp4, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCastVideoFile**
+> MultipartFile getCastVideoFile(token, id, file)
+
+For a TV. HLS files of a video. Only an asset of the token's session
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final token = token_example; // String | 
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final file = file_example; // String | 
+
+try {
+    final result = api_instance.getCastVideoFile(token, id, file);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCastVideoFile: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **token** | **String**|  | 
+ **id** | **String**|  | 
+ **file** | **String**|  | 
+
+### Return type
+
+[**MultipartFile**](MultipartFile.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/octet-stream, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

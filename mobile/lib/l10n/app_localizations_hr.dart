@@ -5047,4 +5047,99 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get exportsScreenAlreadyRunning =>
       'Izvoz ove biblioteke već je u tijeku.';
+
+  @override
+  String get viewerScreenPlayOnTv => 'Prikaži na televizoru';
+
+  @override
+  String get viewerScreenMore => 'Više radnji';
+
+  @override
+  String get slideshowScreenPlayOnTv => 'Prikaži na televizoru';
+
+  @override
+  String get tvSheetTitle => 'Prikaži na televizoru';
+
+  @override
+  String get tvSheetSearching => 'Traže se televizori u ovoj mreži…';
+
+  @override
+  String get tvSheetNoneFound => 'Još nije pronađen nijedan televizor.';
+
+  @override
+  String get tvSheetSearchAgain => 'Traži ponovno';
+
+  @override
+  String get tvSheetChromecast => 'Chromecast';
+
+  @override
+  String get tvSheetDlna => 'DLNA televizor';
+
+  @override
+  String get tvSheetAirPlay => 'AirPlay';
+
+  @override
+  String get tvSheetAirPlayHint =>
+      'Gumbom odaberite Apple TV: videi koje pokrenete idu na njega. Fotke se na televizoru vide preko zrcaljenja zaslona u Kontrolnom centru.';
+
+  @override
+  String get tvSheetAddByAddress => 'Dodaj televizor po adresi';
+
+  @override
+  String get tvSheetAddressLabel =>
+      'IP adresa televizora ili adresa njegova opisa';
+
+  @override
+  String get tvSheetAdd => 'Dodaj';
+
+  @override
+  String get tvSheetNotFoundAt =>
+      'Na toj se adresi nije javio nijedan televizor.';
+
+  @override
+  String tvSheetPlayingOn(String device) {
+    return 'Prikazuje se na: $device';
+  }
+
+  @override
+  String get tvSheetStop => 'Zaustavi';
+
+  @override
+  String get tvSheetFailed => 'Televizor nije dostupan.';
+
+  @override
+  String get tvSheetPlay => 'Pokreni na televizoru';
+
+  @override
+  String get tvSheetPause => 'Pauziraj na televizoru';
+
+  @override
+  String get tvSheetPosition => 'Mjesto na televizoru';
+
+  @override
+  String get tvSheetConnecting => 'Spajanje s televizorom…';
+
+  @override
+  String get tvSheetSameNetwork =>
+      'Televizor i ovaj mobitel moraju biti u istoj mreži. Televizor dobiva adresu koja vrijedi 4 sata i samo za ono što mu pošaljete.';
+
+  @override
+  String get adminServerSettingsDlna => 'DLNA medijski poslužitelj';
+
+  @override
+  String get adminServerSettingsDlnaHelp =>
+      'Televizori u kućnoj mreži vide vaše albume, bez lozinke. Treba mu servis dlna, koji radi na mreži računala: pogledajte stranicu o televizoru u uputama.';
+
+  @override
+  String adminServerSettingsDlnaOwner(String name) {
+    return 'Televizori vide albume korisnika $name.';
+  }
+
+  @override
+  String get adminServerSettingsDlnaAnnounced =>
+      'Servis dlna radi, pa televizori mogu pronaći ovaj poslužitelj.';
+
+  @override
+  String get adminServerSettingsDlnaNotAnnounced =>
+      'Servis dlna se još nije javio, pa televizori ne mogu pronaći ovaj poslužitelj.';
 }

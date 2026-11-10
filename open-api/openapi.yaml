@@ -2706,6 +2706,98 @@ paths:
         "204": { description: Stopped }
         "401": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
+  /api/cast-sessions:
+    post:
+      operationId: createCastSession
+      summary: Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CastAssets" }
+      responses:
+        "201":
+          description: Started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CastSession" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/cast-sessions/{id}:
+    delete:
+      operationId: deleteCastSession
+      summary: Stop casting. The TV's token stops working at once
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Stopped }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/cast-sessions/{id}/assets:
+    post:
+      operationId: addCastAssets
+      summary: Let the TV show more assets, such as the next photo swiped to
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CastAssets" }
+      responses:
+        "200":
+          description: The session, with what was added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CastSession" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/tv/{token}/assets/{id}/image:
+    get:
+      operationId: getCastImage
+      summary: For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Image
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/tv/{token}/assets/{id}/original:
+    get:
+      operationId: getCastOriginal
+      summary: For a TV. The original of a video, without its location. Only an asset of the token's session
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Video
+          content:
+            video/mp4:
+              schema: { type: string, format: binary }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/tv/{token}/assets/{id}/video/{file}:
+    get:
+      operationId: getCastVideoFile
+      summary: For a TV. HLS files of a video. Only an asset of the token's session
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: file, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: File
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        "404": { $ref: "#/components/responses/Error" }
   /api/exports:
     get:
       operationId: listMyExports
@@ -3951,6 +4043,31 @@ components:
         number: { type: integer, format: int32 }
         size: { type: integer, format: int64 }
         files: { type: integer, description: "Originals in it" }
+    CastAssets:
+      type: object
+      required: [ids]
+      properties:
+        ids: { type: array, minItems: 1, maxItems: 500, items: { type: string, format: uuid } }
+    CastMedia:
+      type: object
+      required: [id, kind, image]
+      description: Addresses on this server, starting with /api/tv/, that a TV opens without signing in
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [photo, video] }
+        image: { type: string, description: "A JPEG: the photo, or the still of a video" }
+        hls: { type: string, description: "A video's HLS playlist, once the server has converted it" }
+        file: { type: string, description: "A video's original file, without its location" }
+        mimeType: { type: string, description: "Of file" }
+        durationMs: { type: integer, format: int64 }
+    CastSession:
+      type: object
+      required: [id, expiresAt, media]
+      properties:
+        id: { type: string, format: uuid }
+        token: { type: string, description: "Only when the session is started" }
+        expiresAt: { type: string, format: date-time }
+        media: { type: array, items: { $ref: "#/components/schemas/CastMedia" }, description: "Of the assets just sent" }
     LibraryExport:
       type: object
       required: [id, userId, userEmail, status, startedByAdmin, startedBy, totalFiles, totalBytes, doneFiles, doneBytes, missing, lastError, createdAt, parts, canDownload]
@@ -5033,6 +5150,9 @@ components:
         externalScanHours: { type: integer }
         visibleOnNetwork: { type: boolean, description: "Apps on the same network can find this server. Left out keeps it on" }
         serverName: { type: string, maxLength: 60, description: "What people see this server called. Left out keeps the name it has" }
+        dlnaServer: { type: boolean, description: "TVs on the home network see the albums of dlnaOwner, without a password. Turning it on makes the administrator who does it the owner. Left out keeps it as it is" }
+        dlnaOwner: { type: string, readOnly: true, description: "Whose albums TVs see, while dlnaServer is on" }
+        dlnaAnnounced: { type: boolean, readOnly: true, description: "The dlna service has asked for the description in the last few minutes, so TVs can find the server" }
     EmailSettings:
       type: object
       required: [enabled, host, port, username, from, security, publicUrl, hasPassword]

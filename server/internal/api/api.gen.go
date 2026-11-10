@@ -371,6 +371,24 @@ func (e BulkRequestAction) Valid() bool {
 	}
 }
 
+// Defines values for CastMediaKind.
+const (
+	CastMediaKindPhoto CastMediaKind = "photo"
+	CastMediaKindVideo CastMediaKind = "video"
+)
+
+// Valid indicates whether the value is a known member of the CastMediaKind enum.
+func (e CastMediaKind) Valid() bool {
+	switch e {
+	case CastMediaKindPhoto:
+		return true
+	case CastMediaKindVideo:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CleanupCategoryId.
 const (
 	Blurry      CleanupCategoryId = "blurry"
@@ -2233,6 +2251,45 @@ type BulkResponse struct {
 	Changed int64 `json:"changed"`
 }
 
+// CastAssets defines model for CastAssets.
+type CastAssets struct {
+	Ids []openapi_types.UUID `json:"ids"`
+}
+
+// CastMedia Addresses on this server, starting with /api/tv/, that a TV opens without signing in
+type CastMedia struct {
+	DurationMs *int64 `json:"durationMs,omitempty"`
+
+	// File A video's original file, without its location
+	File *string `json:"file,omitempty"`
+
+	// Hls A video's HLS playlist, once the server has converted it
+	Hls *string            `json:"hls,omitempty"`
+	Id  openapi_types.UUID `json:"id"`
+
+	// Image A JPEG: the photo, or the still of a video
+	Image string        `json:"image"`
+	Kind  CastMediaKind `json:"kind"`
+
+	// MimeType Of file
+	MimeType *string `json:"mimeType,omitempty"`
+}
+
+// CastMediaKind defines model for CastMedia.Kind.
+type CastMediaKind string
+
+// CastSession defines model for CastSession.
+type CastSession struct {
+	ExpiresAt time.Time          `json:"expiresAt"`
+	Id        openapi_types.UUID `json:"id"`
+
+	// Media Of the assets just sent
+	Media []CastMedia `json:"media"`
+
+	// Token Only when the session is started
+	Token *string `json:"token,omitempty"`
+}
+
 // ChangePasswordRequest defines model for ChangePasswordRequest.
 type ChangePasswordRequest struct {
 	CurrentPassword string `json:"currentPassword"`
@@ -3385,8 +3442,17 @@ type ServerHelloApp string
 // ServerSettings defines model for ServerSettings.
 type ServerSettings struct {
 	// AnalysisWorkers Applies after a restart of the worker
-	AnalysisWorkers   int `json:"analysisWorkers"`
-	ExternalScanHours int `json:"externalScanHours"`
+	AnalysisWorkers int `json:"analysisWorkers"`
+
+	// DlnaAnnounced The dlna service has asked for the description in the last few minutes, so TVs can find the server
+	DlnaAnnounced *bool `json:"dlnaAnnounced,omitempty"`
+
+	// DlnaOwner Whose albums TVs see, while dlnaServer is on
+	DlnaOwner *string `json:"dlnaOwner,omitempty"`
+
+	// DlnaServer TVs on the home network see the albums of dlnaOwner, without a password. Turning it on makes the administrator who does it the owner. Left out keeps it as it is
+	DlnaServer        *bool `json:"dlnaServer,omitempty"`
+	ExternalScanHours int   `json:"externalScanHours"`
 
 	// FaceMaxDistance How alike two faces must be to be one person
 	FaceMaxDistance float32 `json:"faceMaxDistance"`
@@ -4212,6 +4278,12 @@ type AnswerQRSignInJSONRequestBody = QRAnswer
 // SetupJSONRequestBody defines body for Setup for application/json ContentType.
 type SetupJSONRequestBody = SetupRequest
 
+// CreateCastSessionJSONRequestBody defines body for CreateCastSession for application/json ContentType.
+type CreateCastSessionJSONRequestBody = CastAssets
+
+// AddCastAssetsJSONRequestBody defines body for AddCastAssets for application/json ContentType.
+type AddCastAssetsJSONRequestBody = CastAssets
+
 // KeepFromCleanupJSONRequestBody defines body for KeepFromCleanup for application/json ContentType.
 type KeepFromCleanupJSONRequestBody = AssetIds
 
@@ -4694,6 +4766,15 @@ type ServerInterface interface {
 	// GetAuthStatus Report whether setup is needed and who is signed in
 	// (GET /api/auth/status)
 	GetAuthStatus(w http.ResponseWriter, r *http.Request)
+	// CreateCastSession Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours
+	// (POST /api/cast-sessions)
+	CreateCastSession(w http.ResponseWriter, r *http.Request)
+	// DeleteCastSession Stop casting. The TV's token stops working at once
+	// (DELETE /api/cast-sessions/{id})
+	DeleteCastSession(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
+	// AddCastAssets Let the TV show more assets, such as the next photo swiped to
+	// (POST /api/cast-sessions/{id}/assets)
+	AddCastAssets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// GetCleanup How many of my photos and videos each kind of clean-up would offer, and their size
 	// (GET /api/cleanup)
 	GetCleanup(w http.ResponseWriter, r *http.Request, params GetCleanupParams)
@@ -5042,6 +5123,15 @@ type ServerInterface interface {
 	// GetTrashSummary What emptying the trash would remove
 	// (GET /api/trash/summary)
 	GetTrashSummary(w http.ResponseWriter, r *http.Request)
+	// GetCastImage For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session
+	// (GET /api/tv/{token}/assets/{id}/image)
+	GetCastImage(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID)
+	// GetCastOriginal For a TV. The original of a video, without its location. Only an asset of the token's session
+	// (GET /api/tv/{token}/assets/{id}/original)
+	GetCastOriginal(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID)
+	// GetCastVideoFile For a TV. HLS files of a video. Only an asset of the token's session
+	// (GET /api/tv/{token}/assets/{id}/video/{file})
+	GetCastVideoFile(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, file string)
 	// CreateUpload Create a resumable upload (tus 1.0). A body uploads the whole file in this request. With the metadata importId, the file is a ZIP part of that import, not a photo.
 	// (POST /api/uploads)
 	CreateUpload(w http.ResponseWriter, r *http.Request)
@@ -5843,6 +5933,24 @@ func (_ Unimplemented) GetAuthStatus(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// CreateCastSession Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours
+// (POST /api/cast-sessions)
+func (_ Unimplemented) CreateCastSession(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// DeleteCastSession Stop casting. The TV's token stops working at once
+// (DELETE /api/cast-sessions/{id})
+func (_ Unimplemented) DeleteCastSession(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// AddCastAssets Let the TV show more assets, such as the next photo swiped to
+// (POST /api/cast-sessions/{id}/assets)
+func (_ Unimplemented) AddCastAssets(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // GetCleanup How many of my photos and videos each kind of clean-up would offer, and their size
 // (GET /api/cleanup)
 func (_ Unimplemented) GetCleanup(w http.ResponseWriter, r *http.Request, params GetCleanupParams) {
@@ -6536,6 +6644,24 @@ func (_ Unimplemented) EmptyTrash(w http.ResponseWriter, r *http.Request) {
 // GetTrashSummary What emptying the trash would remove
 // (GET /api/trash/summary)
 func (_ Unimplemented) GetTrashSummary(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCastImage For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session
+// (GET /api/tv/{token}/assets/{id}/image)
+func (_ Unimplemented) GetCastImage(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCastOriginal For a TV. The original of a video, without its location. Only an asset of the token's session
+// (GET /api/tv/{token}/assets/{id}/original)
+func (_ Unimplemented) GetCastOriginal(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetCastVideoFile For a TV. HLS files of a video. Only an asset of the token's session
+// (GET /api/tv/{token}/assets/{id}/video/{file})
+func (_ Unimplemented) GetCastVideoFile(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, file string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -9494,6 +9620,72 @@ func (siw *ServerInterfaceWrapper) GetAuthStatus(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// CreateCastSession operation middleware
+func (siw *ServerInterfaceWrapper) CreateCastSession(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateCastSession(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteCastSession operation middleware
+func (siw *ServerInterfaceWrapper) DeleteCastSession(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteCastSession(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AddCastAssets operation middleware
+func (siw *ServerInterfaceWrapper) AddCastAssets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AddCastAssets(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetCleanup operation middleware
 func (siw *ServerInterfaceWrapper) GetCleanup(w http.ResponseWriter, r *http.Request) {
 
@@ -12407,6 +12599,120 @@ func (siw *ServerInterfaceWrapper) GetTrashSummary(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// GetCastImage operation middleware
+func (siw *ServerInterfaceWrapper) GetCastImage(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCastImage(w, r, token, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCastOriginal operation middleware
+func (siw *ServerInterfaceWrapper) GetCastOriginal(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCastOriginal(w, r, token, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCastVideoFile operation middleware
+func (siw *ServerInterfaceWrapper) GetCastVideoFile(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "token" -------------
+	var token string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "token", chi.URLParam(r, "token"), &token, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "token", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "file" -------------
+	var file string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "file", chi.URLParam(r, "file"), &file, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: r.URL.RawPath == ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "file", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCastVideoFile(w, r, token, id, file)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateUpload operation middleware
 func (siw *ServerInterfaceWrapper) CreateUpload(w http.ResponseWriter, r *http.Request) {
 
@@ -13303,6 +13609,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/api/imports/{id}/stop", wrapper.StopImport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/cast-sessions", wrapper.CreateCastSession)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/cast-sessions/{id}", wrapper.DeleteCastSession)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/api/cast-sessions/{id}/assets", wrapper.AddCastAssets)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/tv/{token}/assets/{id}/image", wrapper.GetCastImage)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/tv/{token}/assets/{id}/original", wrapper.GetCastOriginal)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/tv/{token}/assets/{id}/video/{file}", wrapper.GetCastVideoFile)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/exports", wrapper.ListMyExports)

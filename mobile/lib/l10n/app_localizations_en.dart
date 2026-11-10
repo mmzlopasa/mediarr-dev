@@ -5009,4 +5009,98 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get exportsScreenAlreadyRunning =>
       'An export of this library is already running.';
+
+  @override
+  String get viewerScreenPlayOnTv => 'Play on TV';
+
+  @override
+  String get viewerScreenMore => 'More actions';
+
+  @override
+  String get slideshowScreenPlayOnTv => 'Play on TV';
+
+  @override
+  String get tvSheetTitle => 'Play on TV';
+
+  @override
+  String get tvSheetSearching => 'Looking for TVs on this network…';
+
+  @override
+  String get tvSheetNoneFound => 'No TV found yet.';
+
+  @override
+  String get tvSheetSearchAgain => 'Search again';
+
+  @override
+  String get tvSheetChromecast => 'Chromecast';
+
+  @override
+  String get tvSheetDlna => 'DLNA TV';
+
+  @override
+  String get tvSheetAirPlay => 'AirPlay';
+
+  @override
+  String get tvSheetAirPlayHint =>
+      'Choose an Apple TV with the button: the videos you play go to it. Photos appear on the TV with Screen Mirroring in Control Centre.';
+
+  @override
+  String get tvSheetAddByAddress => 'Add a TV by its address';
+
+  @override
+  String get tvSheetAddressLabel =>
+      'The TV\'s IP address, or its description address';
+
+  @override
+  String get tvSheetAdd => 'Add';
+
+  @override
+  String get tvSheetNotFoundAt => 'No TV answered at that address.';
+
+  @override
+  String tvSheetPlayingOn(String device) {
+    return 'Playing on $device';
+  }
+
+  @override
+  String get tvSheetStop => 'Stop';
+
+  @override
+  String get tvSheetFailed => 'The TV could not be reached.';
+
+  @override
+  String get tvSheetPlay => 'Play on the TV';
+
+  @override
+  String get tvSheetPause => 'Pause on the TV';
+
+  @override
+  String get tvSheetPosition => 'Position on the TV';
+
+  @override
+  String get tvSheetConnecting => 'Connecting to the TV…';
+
+  @override
+  String get tvSheetSameNetwork =>
+      'The TV and this phone must be on the same network. The TV gets an address that works for 4 hours and only for what you send it.';
+
+  @override
+  String get adminServerSettingsDlna => 'DLNA media server';
+
+  @override
+  String get adminServerSettingsDlnaHelp =>
+      'TVs on your home network see your albums, without a password. It needs the dlna service, which runs on the host\'s network: see the TV page of the docs.';
+
+  @override
+  String adminServerSettingsDlnaOwner(String name) {
+    return 'TVs see the albums of $name.';
+  }
+
+  @override
+  String get adminServerSettingsDlnaAnnounced =>
+      'The dlna service is running, so TVs can find this server.';
+
+  @override
+  String get adminServerSettingsDlnaNotAnnounced =>
+      'The dlna service has not been heard from, so TVs cannot find this server yet.';
 }

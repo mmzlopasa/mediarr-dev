@@ -21,6 +21,8 @@ import 'asset_picture.dart';
 import 'duplicates_screen.dart';
 import 'faces_section.dart';
 import 'panorama_view.dart';
+import '../cast/tv_controller.dart';
+import '../cast/tv_sheet.dart';
 import 'slideshow_screen.dart';
 import 'photo_editor_screen.dart';
 
@@ -216,9 +218,10 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black38,
         foregroundColor: Colors.white,
-        actions: [
+        actions: fitActions(context, [
           if (mine && current.stackSize != null)
-            IconButton(
+            ViewerAction(
+              priority: 9,
               tooltip: l.viewerScreenStackShots,
               icon: const Icon(Icons.burst_mode),
               onPressed: () => showStackSheet(
@@ -228,7 +231,8 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
                 () => store.refresh(reloadLoaded: true),
               ),
             ),
-          IconButton(
+          ViewerAction(
+            priority: 3,
             tooltip: l.viewerScreenSlideshow,
             icon: const Icon(Icons.slideshow_outlined),
             onPressed: () async {
@@ -253,20 +257,23 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
             },
           ),
           if (current.isPanorama == true)
-            IconButton(
+            ViewerAction(
+              priority: 2,
               tooltip: _flat ? l.viewerScreen360View : l.viewerScreenFlatView,
-              isSelected: !_flat,
+              selected: !_flat,
               icon: const Icon(Icons.threesixty),
               onPressed: () => setState(() => _flat = !_flat),
             ),
           if (current.isLive == true)
-            IconButton(
+            ViewerAction(
+              priority: 7,
               tooltip: l.viewerScreenPlayLive,
               icon: const Icon(Icons.motion_photos_on_outlined),
               onPressed: () => _playLive(session, current),
             ),
           if (widget.albumId != null)
-            IconButton(
+            ViewerAction(
+              priority: 8,
               tooltip: l.viewerScreenCommentsAndHearts,
               icon: const Icon(Icons.favorite_border),
               onPressed: () => showModalBottomSheet<void>(
@@ -280,7 +287,8 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
               ),
             ),
           if (mine)
-            IconButton(
+            ViewerAction(
+              priority: 4,
               tooltip: l.viewerScreenFavorite,
               icon: Pulse(
                 on: current.isFavorite,
@@ -292,7 +300,8 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
               onPressed: () => _favorite(current),
             ),
           if (mine && current.kind == TimelineItemKindEnum.photo)
-            IconButton(
+            ViewerAction(
+              priority: 10,
               tooltip: l.viewerScreenEdit,
               icon: const Icon(Icons.tune),
               onPressed: () async {
@@ -307,24 +316,47 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
                 if (mounted) setState(() => _revision++);
               },
             ),
-          IconButton(
+          if (castable(session))
+            ViewerAction(
+              priority: 6,
+              tooltip: l.viewerScreenPlayOnTv,
+              selected: ref.watch(tvProvider).device != null,
+              icon: Icon(
+                ref.watch(tvProvider).device != null
+                    ? Icons.cast_connected
+                    : Icons.cast,
+              ),
+              onPressed: () => showTvSheet(
+                context,
+                session,
+                TvAsset(
+                  current.id,
+                  video: current.kind == TimelineItemKindEnum.video,
+                ),
+              ),
+            ),
+          ViewerAction(
+            priority: 0,
             tooltip: l.viewerScreenShare,
             icon: Icon(Platform.isIOS ? Icons.ios_share : Icons.share_outlined),
             onPressed: () => shareAssets(context, ref, session, [current.id]),
           ),
-          IconButton(
+          ViewerAction(
+            priority: 1,
             tooltip: l.viewerScreenDetails,
             icon: const Icon(Icons.info_outline),
             onPressed: () => _info(session, current),
           ),
           if (mine)
-            IconButton(
+            ViewerAction(
+              priority: 5,
               tooltip: l.viewerScreenDelete,
               icon: const Icon(Icons.delete_outline),
               onPressed: () => _delete(current),
             ),
-        ],
+        ]),
       ),
+      bottomNavigationBar: const TvBar(),
       body: DragToDismiss(
         enabled: !_zoomed && !turning,
         onDismiss: () => Navigator.of(context).maybePop(),
@@ -344,6 +376,16 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
                 _zoomed = false;
                 _flat = false;
               });
+              // The TV follows the photo on the phone.
+              final shown = items[value];
+              ref
+                  .read(tvProvider.notifier)
+                  .follow(
+                    TvAsset(
+                      shown.id,
+                      video: shown.kind == TimelineItemKindEnum.video,
+                    ),
+                  );
               // Moving towards the end of what is loaded fetches the next month.
               if (value >= items.length - 3) {
                 final months = store.months ?? const <TimelineMonth>[];
@@ -965,4 +1007,70 @@ class _DragToDismissState extends State<DragToDismiss> {
       ),
     );
   }
+}
+
+/// One button of the viewer's bar. The lower the priority, the longer it stays a button when the
+/// screen is narrow; the rest go into a menu.
+class ViewerAction {
+  const ViewerAction({
+    required this.priority,
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+    this.selected,
+  });
+
+  final int priority;
+  final String tooltip;
+  final Widget icon;
+  final VoidCallback onPressed;
+  final bool? selected;
+}
+
+/// As many buttons as fit beside the back button, in their order, and a menu with the rest.
+List<Widget> fitActions(BuildContext context, List<ViewerAction> actions) {
+  const button = 48.0;
+  final width = MediaQuery.sizeOf(context).width;
+  final room = ((width - kToolbarHeight - 8) / button).floor();
+  var shown = actions;
+  var hidden = <ViewerAction>[];
+  if (actions.length > room) {
+    final keep =
+        (actions.toList()..sort((a, b) => a.priority.compareTo(b.priority)))
+            .take(room - 1)
+            .toSet();
+    shown = actions.where(keep.contains).toList();
+    hidden = actions.where((action) => !keep.contains(action)).toList();
+  }
+  return [
+    for (final action in shown)
+      IconButton(
+        tooltip: action.tooltip,
+        isSelected: action.selected,
+        icon: action.icon,
+        onPressed: action.onPressed,
+      ),
+    if (hidden.isNotEmpty)
+      PopupMenuButton<ViewerAction>(
+        tooltip: l.viewerScreenMore,
+        icon: const Icon(Icons.more_vert),
+        onSelected: (action) => action.onPressed(),
+        itemBuilder: (_) => [
+          for (final action in hidden)
+            PopupMenuItem(
+              value: action,
+              child: Row(
+                children: [
+                  IconTheme(
+                    data: IconThemeData(color: Palette.ink),
+                    child: action.icon,
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(child: Text(action.tooltip)),
+                ],
+              ),
+            ),
+        ],
+      ),
+  ];
 }

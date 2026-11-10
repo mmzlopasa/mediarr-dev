@@ -62,6 +62,7 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *DefaultApi* | [**addAlbumAssets**](doc//DefaultApi.md#addalbumassets) | **POST** /api/albums/{id}/assets | Add your own assets to an album. Needs the contributor role.
 *DefaultApi* | [**addBackupDestination**](doc//DefaultApi.md#addbackupdestination) | **POST** /api/admin/backup/destinations | Pair with another Mediarr server by the code it gave, so that it keeps a copy of the backup
+*DefaultApi* | [**addCastAssets**](doc//DefaultApi.md#addcastassets) | **POST** /api/cast-sessions/{id}/assets | Let the TV show more assets, such as the next photo swiped to
 *DefaultApi* | [**addFamilyMember**](doc//DefaultApi.md#addfamilymember) | **PUT** /api/admin/family/{userId} | Add someone to the family library
 *DefaultApi* | [**answerQRSignIn**](doc//DefaultApi.md#answerqrsignin) | **POST** /api/auth/qr/{id}/answer | Allow or deny the device that scanned my code
 *DefaultApi* | [**appendUpload**](doc//DefaultApi.md#appendupload) | **PATCH** /api/uploads/{id} | Append data to an upload (tus 1.0). The last chunk returns X-Asset-Id.
@@ -83,6 +84,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**createAlbum**](doc//DefaultApi.md#createalbum) | **POST** /api/albums | Create an album. With rules it is a smart album.
 *DefaultApi* | [**createAlbumComment**](doc//DefaultApi.md#createalbumcomment) | **POST** /api/albums/{id}/comments | Comment on an album or on a photo in it
 *DefaultApi* | [**createAlbumLink**](doc//DefaultApi.md#createalbumlink) | **POST** /api/albums/{id}/links | Create a public link. Its token is returned only this once.
+*DefaultApi* | [**createCastSession**](doc//DefaultApi.md#createcastsession) | **POST** /api/cast-sessions | Start showing photos on a TV. The TV gets a token that opens only these assets, for 4 hours
 *DefaultApi* | [**createDeviceKey**](doc//DefaultApi.md#createdevicekey) | **POST** /api/me/device-keys | Create a long-lived key for this device, used by background backup
 *DefaultApi* | [**createExport**](doc//DefaultApi.md#createexport) | **POST** /api/exports | Export a whole library into ZIP parts. My own, or, for an administrator, anyone's
 *DefaultApi* | [**createFamilyRule**](doc//DefaultApi.md#createfamilyrule) | **POST** /api/family/rules | Share what matches a rule with the family. Photos are not copied
@@ -98,6 +100,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deleteAlbumComment**](doc//DefaultApi.md#deletealbumcomment) | **DELETE** /api/albums/{id}/comments/{commentId} | Delete a comment. The author, an editor or the owner can do this.
 *DefaultApi* | [**deleteAlbumLink**](doc//DefaultApi.md#deletealbumlink) | **DELETE** /api/albums/{id}/links/{linkId} | Revoke a public link. It stops working at once.
 *DefaultApi* | [**deleteBackupDevice**](doc//DefaultApi.md#deletebackupdevice) | **DELETE** /api/me/backup-devices/{id} | Take a device off the list. Its photos stay
+*DefaultApi* | [**deleteCastSession**](doc//DefaultApi.md#deletecastsession) | **DELETE** /api/cast-sessions/{id} | Stop casting. The TV's token stops working at once
 *DefaultApi* | [**deleteDevice**](doc//DefaultApi.md#deletedevice) | **DELETE** /api/admin/security/devices/{id} | Forget this device, which then has to be approved again
 *DefaultApi* | [**deleteExport**](doc//DefaultApi.md#deleteexport) | **DELETE** /api/exports/{id} | Remove an export that is not running, with its parts
 *DefaultApi* | [**deleteFamilyRule**](doc//DefaultApi.md#deletefamilyrule) | **DELETE** /api/family/rules/{id} | Stop sharing what this rule covers
@@ -144,6 +147,9 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getAuthStatus**](doc//DefaultApi.md#getauthstatus) | **GET** /api/auth/status | Report whether setup is needed and who is signed in
 *DefaultApi* | [**getAvatar**](doc//DefaultApi.md#getavatar) | **GET** /api/users/{id}/avatar | The picture of a person with an account here, for anyone signed in
 *DefaultApi* | [**getBackupSettings**](doc//DefaultApi.md#getbackupsettings) | **GET** /api/admin/backup | Where backups go, without any secret
+*DefaultApi* | [**getCastImage**](doc//DefaultApi.md#getcastimage) | **GET** /api/tv/{token}/assets/{id}/image | For a TV. A photo as a JPEG for a TV, without location or camera details. Only an asset of the token's session
+*DefaultApi* | [**getCastOriginal**](doc//DefaultApi.md#getcastoriginal) | **GET** /api/tv/{token}/assets/{id}/original | For a TV. The original of a video, without its location. Only an asset of the token's session
+*DefaultApi* | [**getCastVideoFile**](doc//DefaultApi.md#getcastvideofile) | **GET** /api/tv/{token}/assets/{id}/video/{file} | For a TV. HLS files of a video. Only an asset of the token's session
 *DefaultApi* | [**getCleanup**](doc//DefaultApi.md#getcleanup) | **GET** /api/cleanup | How many of my photos and videos each kind of clean-up would offer, and their size
 *DefaultApi* | [**getCollectionAsset**](doc//DefaultApi.md#getcollectionasset) | **GET** /api/collections/{scope}/assets/{id} | An asset in a collection
 *DefaultApi* | [**getCollectionBucket**](doc//DefaultApi.md#getcollectionbucket) | **GET** /api/collections/{scope}/buckets/{month} | Assets of one month in a collection
@@ -366,6 +372,9 @@ Class | Method | HTTP request | Description
  - [BackupSettingsUpdate](doc//BackupSettingsUpdate.md)
  - [BulkRequest](doc//BulkRequest.md)
  - [BulkResponse](doc//BulkResponse.md)
+ - [CastAssets](doc//CastAssets.md)
+ - [CastMedia](doc//CastMedia.md)
+ - [CastSession](doc//CastSession.md)
  - [ChangePasswordRequest](doc//ChangePasswordRequest.md)
  - [ChecksumCheckRequest](doc//ChecksumCheckRequest.md)
  - [ChecksumCheckResponse](doc//ChecksumCheckResponse.md)

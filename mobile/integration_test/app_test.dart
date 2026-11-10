@@ -752,6 +752,56 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('a photo goes to a DLNA TV, and stopping takes its address away', (
+    tester,
+  ) async {
+    server.tvOn = true;
+    addTearDown(server.resetTv);
+    await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+    await signIn(tester, server.address, password);
+    await waitFor(tester, find.byType(AssetPicture));
+    await tester.tap(find.byType(AssetPicture).first, warnIfMissed: false);
+    await waitFor(tester, find.byTooltip('Details'));
+    // On a narrow phone the button is in the menu of the rest.
+    if (find.byTooltip('Play on TV').evaluate().isEmpty) {
+      await tester.tap(find.byTooltip('More actions').last);
+      await waitFor(tester, find.text('Play on TV'));
+      await tester.tap(find.text('Play on TV').last);
+    } else {
+      await tester.tap(find.byTooltip('Play on TV').last);
+    }
+    await waitFor(tester, find.text('Add a TV by its address'));
+    await tester.tap(find.text('Add a TV by its address'));
+    await waitFor(tester, find.byKey(const ValueKey('tv-address')));
+    tester
+            .widget<TextField>(find.byKey(const ValueKey('tv-address')))
+            .controller!
+            .text =
+        '${server.address}/renderer/description.xml';
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.widgetWithText(TextButton, 'Add').last);
+    await waitFor(tester, find.text('Fake TV'));
+    await tester.tap(find.text('Fake TV').last);
+    await waitUntil(tester, () => server.tvActions.contains('Play'));
+    expect(
+      server.tvUri,
+      '${server.address}/api/tv/${FakeServer.castToken}/assets/$photoId/image',
+    );
+    // The TV opened it by itself, with no cookie.
+    expect(server.tvFetched, 200);
+    await waitFor(tester, find.text('Playing on Fake TV'));
+    await tester.tap(find.widgetWithText(TextButton, 'Stop').last);
+    await waitUntil(tester, () => server.castStopped);
+    expect(server.tvActions.last, 'Stop');
+    await waitUntil(
+      tester,
+      () => find.text('Playing on Fake TV').evaluate().isEmpty,
+    );
+    await tester.pageBack();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('a search is narrowed by filters, shown as chips', (
     tester,
   ) async {

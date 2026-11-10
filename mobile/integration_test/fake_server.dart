@@ -113,6 +113,107 @@ class FakeServer {
   String? qrDevice;
   int qrWaits = 0;
 
+  /// A DLNA TV on the network and the server's side of casting. Only the test of the TV turns it on,
+  /// so no other test finds a TV.
+  bool tvOn = false;
+  static const castToken = 'tv-token-1';
+  static const castSessionId = '00000000-0000-4000-8000-0000000000c1';
+  final tvActions = <String>[];
+  String? tvUri;
+
+  /// What the TV got when it opened the address itself, without a cookie.
+  int? tvFetched;
+  bool castStopped = false;
+
+  void resetTv() {
+    tvOn = false;
+    tvActions.clear();
+    tvUri = null;
+    tvFetched = null;
+    castStopped = false;
+  }
+
+  Future<bool> _tv(HttpRequest request, String path) async {
+    if (!tvOn) return false;
+    if (path == '/renderer/description.xml') {
+      request.response.headers.contentType = ContentType('text', 'xml');
+      request.response.write(
+        '<?xml version="1.0"?><root xmlns="urn:schemas-upnp-org:device-1-0"><device>'
+        '<deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>'
+        '<friendlyName>Fake TV</friendlyName><UDN>uuid:fake-tv</UDN><serviceList>'
+        '<service><serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType>'
+        '<controlURL>control</controlURL></service></serviceList></device></root>',
+      );
+      await request.response.close();
+      return true;
+    }
+    if (path == '/renderer/control' && request.method == 'POST') {
+      final body = await utf8.decoder.bind(request).join();
+      final action = (request.headers.value('soapaction') ?? '')
+          .replaceAll('"', '')
+          .split('#')
+          .last;
+      if (action == 'SetAVTransportURI') {
+        final uri = RegExp(r'<CurrentURI>([^<]*)</CurrentURI>')
+            .firstMatch(body)
+            ?.group(1);
+        tvUri = uri?.replaceAll('&amp;', '&');
+        final fetch = await HttpClient().getUrl(Uri.parse(tvUri!));
+        final answer = await fetch.close();
+        await answer.drain<void>();
+        tvFetched = answer.statusCode;
+      }
+      tvActions.add(action);
+      request.response.headers.contentType = ContentType('text', 'xml');
+      request.response.write(
+        '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>'
+        '<u:${action}Response xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"/>'
+        '</s:Body></s:Envelope>',
+      );
+      await request.response.close();
+      return true;
+    }
+    Map<String, Object> media(String id) => {
+      'id': id,
+      'kind': 'photo',
+      'image': '/api/tv/{token}/assets/$id/image',
+    };
+    if (path == '/api/cast-sessions' && request.method == 'POST') {
+      final body = jsonDecode(await utf8.decoder.bind(request).join()) as Map;
+      await _json(request, 201, {
+        'id': castSessionId,
+        'token': castToken,
+        'expiresAt': '2026-11-10T14:00:00Z',
+        'media': [for (final id in body['ids'] as List) media(id as String)],
+      });
+      return true;
+    }
+    if (path == '/api/cast-sessions/$castSessionId/assets' &&
+        request.method == 'POST') {
+      final body = jsonDecode(await utf8.decoder.bind(request).join()) as Map;
+      await _json(request, 200, {
+        'id': castSessionId,
+        'expiresAt': '2026-11-10T14:00:00Z',
+        'media': [for (final id in body['ids'] as List) media(id as String)],
+      });
+      return true;
+    }
+    if (path == '/api/cast-sessions/$castSessionId' &&
+        request.method == 'DELETE') {
+      castStopped = true;
+      request.response.statusCode = 204;
+      await request.response.close();
+      return true;
+    }
+    if (path == '/api/tv/$castToken/assets/$photoId/image' && !castStopped) {
+      request.response.headers.contentType = ContentType('image', 'jpeg');
+      request.response.add(base64Decode(tinyJpeg));
+      await request.response.close();
+      return true;
+    }
+    return false;
+  }
+
   /// The export of the library: none, then running, then ready after the app has asked once.
   String? exportStatus;
   int exportPolls = 0;
@@ -153,6 +254,7 @@ class FakeServer {
         false;
     final hasKey = request.headers.value('x-api-key') == 'device-key';
 
+    if (await _tv(request, path)) return;
     if (path == '/api/uploads' && request.method == 'POST') {
       await _upload(request, hasKey);
       return;

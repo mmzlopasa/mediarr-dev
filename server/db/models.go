@@ -214,6 +214,19 @@ type BackupRun struct {
 	DestinationID pgtype.UUID
 }
 
+type CastSession struct {
+	ID        pgtype.UUID
+	UserID    pgtype.UUID
+	TokenHash []byte
+	CreatedAt pgtype.Timestamptz
+	ExpiresAt pgtype.Timestamptz
+}
+
+type CastSessionAsset struct {
+	SessionID pgtype.UUID
+	AssetID   pgtype.UUID
+}
+
 type Exif struct {
 	AssetID      pgtype.UUID
 	Make         pgtype.Text

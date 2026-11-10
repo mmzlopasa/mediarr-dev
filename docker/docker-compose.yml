@@ -34,6 +34,23 @@ services:
       server:
         condition: service_healthy
 
+  # Lets TVs on the home network find Mediarr and browse albums (DLNA). Off unless COMPOSE_PROFILES
+  # in .env has dlna, and the administrator turns on the DLNA server in the settings. It needs the
+  # host's network to be seen by TVs, and passes only /dlna/ on to Mediarr.
+  dlna:
+    image: ghcr.io/mediarr-app/mediarr-server:${MEDIARR_VERSION:-latest}
+    profiles: ["dlna"]
+    command: ["dlna"]
+    network_mode: host
+    user: ${PUID:-10001}:${PGID:-10001}
+    environment:
+      MEDIARR_URL: ${DLNA_MEDIARR_URL:-http://127.0.0.1:${HTTP_PORT:-9851}}
+      DLNA_PORT: ${DLNA_PORT:-8200}
+    depends_on:
+      nginx:
+        condition: service_healthy
+    restart: unless-stopped
+
   ml:
     image: ghcr.io/mediarr-app/mediarr-ml:${MEDIARR_VERSION:-latest}
     profiles: ["ml"]

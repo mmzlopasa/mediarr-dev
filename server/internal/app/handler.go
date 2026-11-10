@@ -98,6 +98,8 @@ type apiServer struct {
 	fullPreviews chan struct{}
 	embeddings   *ml.Cache
 	terms        termsCache
+	// dlnaSeen is when the DLNA announcer last asked, as Unix seconds.
+	dlnaSeen atomic.Int64
 }
 
 // NewHandler returns the root HTTP handler.
@@ -155,6 +157,9 @@ func NewHandler(deps Deps) (http.Handler, error) {
 	}
 	r.NotFound(notFound)
 	r.Get("/metrics", server.serveMetrics)
+	if server.queries != nil {
+		server.mountDLNA(r)
+	}
 	api.HandlerFromMux(server, r)
 	if server.queries == nil {
 		return r, nil
