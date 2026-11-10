@@ -17,7 +17,7 @@ enum AlbumPictures {
 
   static var folder: URL {
     let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-    let url = base.appendingPathComponent("widget", isDirectory: true)
+    let url = base.appendingPathComponent("widget-pictures", isDirectory: true)
     try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return url
   }
@@ -69,16 +69,22 @@ enum AlbumPictures {
       }
     }
     let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
-    return files.compactMap { UIImage(contentsOfFile: $0.path) }
+    return files.compactMap { UIImage(contentsOfFile: $0.path) }.map(small)
   }
 
-  /// Small enough for a widget, which has little memory to draw with.
+  /// Small enough for a widget: iOS leaves a widget blank when its picture has more pixels than it
+  /// shows. The side is in pixels, so the screen's scale must not multiply it.
+  static let side: CGFloat = 700
+
   private static func small(_ image: UIImage) -> UIImage {
-    let side: CGFloat = 800
-    let scale = min(1, side / max(image.size.width, image.size.height))
-    guard scale < 1 else { return image }
-    let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-    return UIGraphicsImageRenderer(size: size).image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }
+    let pixels = CGSize(width: image.size.width * image.scale, height: image.size.height * image.scale)
+    let scale = min(1, side / max(pixels.width, pixels.height))
+    let size = CGSize(width: (pixels.width * scale).rounded(), height: (pixels.height * scale).rounded())
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+      image.draw(in: CGRect(origin: .zero, size: size))
+    }
   }
 }
 
