@@ -3,6 +3,7 @@ import 'dart:io';
 import '../motion.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 import 'package:video_player/video_player.dart';
@@ -66,8 +67,19 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
   /// A 360° panorama opens as one; the button shows it flat.
   bool _flat = false;
 
+  /// One tap hides the bars and the status bar, so the whole photo shows; the next brings them back.
+  bool _chrome = true;
+
+  void _toggleChrome() {
+    setState(() => _chrome = !_chrome);
+    SystemChrome.setEnabledSystemUIMode(
+      _chrome ? SystemUiMode.edgeToEdge : SystemUiMode.immersiveSticky,
+    );
+  }
+
   @override
   void dispose() {
+    if (!_chrome) SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _pages.dispose();
     super.dispose();
   }
@@ -185,14 +197,17 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     );
   }
 
-  void _tapToNavigate(TapUpDetails details) {
+  /// The edges turn the page when the setting asks for it; anywhere else shows or hides the bars.
+  void _tap(TapUpDetails details, {required bool navigate}) {
     final width = MediaQuery.sizeOf(context).width;
     final x = details.globalPosition.dx;
     const turn = Duration(milliseconds: 200);
-    if (x < width / 4) {
+    if (navigate && x < width / 4) {
       _pages.previousPage(duration: turn, curve: Curves.easeOut);
-    } else if (x > width * 3 / 4) {
+    } else if (navigate && x > width * 3 / 4) {
       _pages.nextPage(duration: turn, curve: Curves.easeOut);
+    } else {
+      _toggleChrome();
     }
   }
 
@@ -215,155 +230,161 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.black38,
-        foregroundColor: Colors.white,
-        actions: fitActions(context, [
-          if (mine && current.stackSize != null)
-            ViewerAction(
-              priority: 9,
-              tooltip: l.viewerScreenStackShots,
-              icon: const Icon(Icons.burst_mode),
-              onPressed: () => showStackSheet(
-                context,
-                session,
-                current.id,
-                () => store.refresh(reloadLoaded: true),
-              ),
-            ),
-          ViewerAction(
-            priority: 3,
-            tooltip: l.viewerScreenSlideshow,
-            icon: const Icon(Icons.slideshow_outlined),
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final items = await store.playlist(current.id);
-              if (!mounted) return;
-              final last = await navigator.push<String>(
-                MaterialPageRoute(
-                  fullscreenDialog: true,
-                  builder: (_) => SlideshowScreen(
-                    session: session,
-                    items: items,
-                    startId: current.id,
-                  ),
-                ),
-              );
-              // Back where the slideshow stopped.
-              final at = store.loadedItems.indexWhere(
-                (item) => item.id == last,
-              );
-              if (at >= 0 && mounted) _pages.jumpToPage(at);
-            },
-          ),
-          if (current.isPanorama == true)
-            ViewerAction(
-              priority: 2,
-              tooltip: _flat ? l.viewerScreen360View : l.viewerScreenFlatView,
-              selected: !_flat,
-              icon: const Icon(Icons.threesixty),
-              onPressed: () => setState(() => _flat = !_flat),
-            ),
-          if (current.isLive == true)
-            ViewerAction(
-              priority: 7,
-              tooltip: l.viewerScreenPlayLive,
-              icon: const Icon(Icons.motion_photos_on_outlined),
-              onPressed: () => _playLive(session, current),
-            ),
-          if (widget.albumId != null)
-            ViewerAction(
-              priority: 8,
-              tooltip: l.viewerScreenCommentsAndHearts,
-              icon: const Icon(Icons.favorite_border),
-              onPressed: () => showModalBottomSheet<void>(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) => ActivitySheet(
-                  session: session,
-                  albumId: widget.albumId!,
-                  assetId: current.id,
+      appBar: _Hideable(
+        shown: _chrome,
+        child: AppBar(
+          backgroundColor: Colors.black38,
+          foregroundColor: Colors.white,
+          actions: fitActions(context, [
+            if (mine && current.stackSize != null)
+              ViewerAction(
+                priority: 9,
+                tooltip: l.viewerScreenStackShots,
+                icon: const Icon(Icons.burst_mode),
+                onPressed: () => showStackSheet(
+                  context,
+                  session,
+                  current.id,
+                  () => store.refresh(reloadLoaded: true),
                 ),
               ),
-            ),
-          if (mine)
             ViewerAction(
-              priority: 4,
-              tooltip: l.viewerScreenFavorite,
-              icon: Pulse(
-                on: current.isFavorite,
-                child: Icon(
-                  current.isFavorite ? Icons.star : Icons.star_border,
-                  color: current.isFavorite ? Palette.gold : Colors.white,
-                ),
-              ),
-              onPressed: () => _favorite(current),
-            ),
-          if (mine && current.kind == TimelineItemKindEnum.photo)
-            ViewerAction(
-              priority: 10,
-              tooltip: l.viewerScreenEdit,
-              icon: const Icon(Icons.tune),
+              priority: 3,
+              tooltip: l.viewerScreenSlideshow,
+              icon: const Icon(Icons.slideshow_outlined),
               onPressed: () async {
-                final changed = await Navigator.of(context).push<bool>(
+                final navigator = Navigator.of(context);
+                final items = await store.playlist(current.id);
+                if (!mounted) return;
+                final last = await navigator.push<String>(
                   MaterialPageRoute(
-                    builder: (_) =>
-                        PhotoEditorScreen(session: session, id: current.id),
+                    fullscreenDialog: true,
+                    builder: (_) => SlideshowScreen(
+                      session: session,
+                      items: items,
+                      startId: current.id,
+                    ),
                   ),
                 );
-                if (changed != true) return;
-                await store.refresh(reloadLoaded: true);
-                if (mounted) setState(() => _revision++);
+                // Back where the slideshow stopped.
+                final at = store.loadedItems.indexWhere(
+                  (item) => item.id == last,
+                );
+                if (at >= 0 && mounted) _pages.jumpToPage(at);
               },
             ),
-          if (castable(session))
-            ViewerAction(
-              priority: 6,
-              tooltip: l.viewerScreenPlayOnTv,
-              selected: ref.watch(tvProvider).device != null,
-              icon: Icon(
-                ref.watch(tvProvider).device != null
-                    ? Icons.cast_connected
-                    : Icons.cast,
+            if (current.isPanorama == true)
+              ViewerAction(
+                priority: 2,
+                tooltip: _flat ? l.viewerScreen360View : l.viewerScreenFlatView,
+                selected: !_flat,
+                icon: const Icon(Icons.threesixty),
+                onPressed: () => setState(() => _flat = !_flat),
               ),
-              onPressed: () => showTvSheet(
-                context,
-                session,
-                TvAsset(
-                  current.id,
-                  video: current.kind == TimelineItemKindEnum.video,
+            if (current.isLive == true)
+              ViewerAction(
+                priority: 7,
+                tooltip: l.viewerScreenPlayLive,
+                icon: const Icon(Icons.motion_photos_on_outlined),
+                onPressed: () => _playLive(session, current),
+              ),
+            if (widget.albumId != null)
+              ViewerAction(
+                priority: 8,
+                tooltip: l.viewerScreenCommentsAndHearts,
+                icon: const Icon(Icons.favorite_border),
+                onPressed: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => ActivitySheet(
+                    session: session,
+                    albumId: widget.albumId!,
+                    assetId: current.id,
+                  ),
                 ),
               ),
-            ),
-          ViewerAction(
-            priority: 0,
-            tooltip: l.viewerScreenShare,
-            icon: Icon(Platform.isIOS ? Icons.ios_share : Icons.share_outlined),
-            onPressed: () => shareAssets(context, ref, session, [current.id]),
-          ),
-          ViewerAction(
-            priority: 1,
-            tooltip: l.viewerScreenDetails,
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => _info(session, current),
-          ),
-          if (mine)
+            if (mine)
+              ViewerAction(
+                priority: 4,
+                tooltip: l.viewerScreenFavorite,
+                icon: Pulse(
+                  on: current.isFavorite,
+                  child: Icon(
+                    current.isFavorite ? Icons.star : Icons.star_border,
+                    color: current.isFavorite ? Palette.gold : Colors.white,
+                  ),
+                ),
+                onPressed: () => _favorite(current),
+              ),
+            if (mine && current.kind == TimelineItemKindEnum.photo)
+              ViewerAction(
+                priority: 10,
+                tooltip: l.viewerScreenEdit,
+                icon: const Icon(Icons.tune),
+                onPressed: () async {
+                  final changed = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PhotoEditorScreen(session: session, id: current.id),
+                    ),
+                  );
+                  if (changed != true) return;
+                  await store.refresh(reloadLoaded: true);
+                  if (mounted) setState(() => _revision++);
+                },
+              ),
+            if (castable(session))
+              ViewerAction(
+                priority: 6,
+                tooltip: l.viewerScreenPlayOnTv,
+                selected: ref.watch(tvProvider).device != null,
+                icon: Icon(
+                  ref.watch(tvProvider).device != null
+                      ? Icons.cast_connected
+                      : Icons.cast,
+                ),
+                onPressed: () => showTvSheet(
+                  context,
+                  session,
+                  TvAsset(
+                    current.id,
+                    video: current.kind == TimelineItemKindEnum.video,
+                  ),
+                ),
+              ),
             ViewerAction(
-              priority: 5,
-              tooltip: l.viewerScreenDelete,
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _delete(current),
+              priority: 0,
+              tooltip: l.viewerScreenShare,
+              icon: Icon(
+                Platform.isIOS ? Icons.ios_share : Icons.share_outlined,
+              ),
+              onPressed: () => shareAssets(context, ref, session, [current.id]),
             ),
-        ]),
+            ViewerAction(
+              priority: 1,
+              tooltip: l.viewerScreenDetails,
+              icon: const Icon(Icons.info_outline),
+              onPressed: () => _info(session, current),
+            ),
+            if (mine)
+              ViewerAction(
+                priority: 5,
+                tooltip: l.viewerScreenDelete,
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => _delete(current),
+              ),
+          ]),
+        ),
       ),
       bottomNavigationBar: const TvBar(),
       body: DragToDismiss(
         enabled: !_zoomed && !turning,
         onDismiss: () => Navigator.of(context).maybePop(),
         child: GestureDetector(
-          onTapUp: settings.tapToNavigate && !_zoomed && !turning
-              ? _tapToNavigate
-              : null,
+          onTapUp: turning
+              ? null
+              : (details) =>
+                    _tap(details, navigate: settings.tapToNavigate && !_zoomed),
           child: PageView.builder(
             controller: _pages,
             physics: _zoomed || turning
@@ -433,6 +454,28 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
       ),
     );
   }
+}
+
+/// The viewer's top bar, which fades away while the photo is shown alone.
+class _Hideable extends StatelessWidget implements PreferredSizeWidget {
+  const _Hideable({required this.shown, required this.child});
+
+  final bool shown;
+  final PreferredSizeWidget child;
+
+  @override
+  Size get preferredSize => child.preferredSize;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    ignoring: !shown,
+    child: AnimatedOpacity(
+      opacity: shown ? 1 : 0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      child: child,
+    ),
+  );
 }
 
 class _PhotoPage extends StatefulWidget {

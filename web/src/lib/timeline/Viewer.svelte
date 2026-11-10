@@ -212,6 +212,11 @@
 	let pinchStart = { distance: 0, scale: 1 };
 	let dragStart: { x: number; y: number; originX: number; originY: number } | null = null;
 	let lastTap = 0;
+	// One tap hides the bars so the whole photo shows; the next brings them back. It waits for a
+	// second tap first, since two quick taps zoom instead.
+	let hud = $state(true);
+	let tapTimer: ReturnType<typeof setTimeout> | undefined;
+	$effect(() => () => clearTimeout(tapTimer));
 
 	function down(event: PointerEvent) {
 		if (detail?.kind === 'video') return;
@@ -259,10 +264,13 @@
 		if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
 			const now = Date.now();
 			if (now - lastTap < 300) {
+				clearTimeout(tapTimer);
 				zoomTo(scale > 1 ? 1 : 2.5, event.clientX, event.clientY);
 				lastTap = 0;
 			} else {
 				lastTap = now;
+				clearTimeout(tapTimer);
+				tapTimer = setTimeout(() => (hud = !hud), 300);
 			}
 		}
 	}
@@ -370,6 +378,7 @@
 <div
 	bind:this={dialog}
 	class="viewer"
+	class:hud-off={!hud}
 	data-lenis-prevent
 	role="dialog"
 	aria-modal="true"

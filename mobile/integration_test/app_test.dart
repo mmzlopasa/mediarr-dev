@@ -725,6 +725,38 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets(
+    'a tap on the photo hides the bars and the next one brings them back',
+    (tester) async {
+      await tester.pumpWidget(const ProviderScope(child: MediarrApp()));
+      await signIn(tester, server.address, password);
+      await waitFor(tester, find.byType(AssetPicture));
+      await tester.tap(find.byType(AssetPicture).first);
+      await waitFor(tester, find.byTooltip('Details'));
+      double barOpacity() => tester
+          .widget<AnimatedOpacity>(
+            find
+                .ancestor(
+                  of: find.byTooltip('Details').last,
+                  matching: find.byType(AnimatedOpacity),
+                )
+                .first,
+          )
+          .opacity;
+      expect(barOpacity(), 1);
+      final middle = tester.getCenter(find.byType(Scaffold).last);
+      // A single tap waits to be sure it is not the first of two, which zoom.
+      await tester.tapAt(middle);
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(barOpacity(), 0);
+      await tester.tapAt(middle);
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(barOpacity(), 1);
+      await tester.pageBack();
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
+
   testWidgets('a photo is offered for sending or saving on the phone', (
     tester,
   ) async {

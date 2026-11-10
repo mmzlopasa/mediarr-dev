@@ -830,6 +830,15 @@ textarea.in {
 .viewer-acts {
 	gap: 2px;
 }
+.viewer-top,
+.viewer .viewer-nav {
+	transition: opacity 200ms var(--ease);
+}
+.viewer.hud-off .viewer-top,
+.viewer.hud-off .viewer-nav {
+	opacity: 0;
+	pointer-events: none;
+}
 .viewer-nav,
 :is(html, html[data-theme]) .viewer .viewer-nav {
 	background: var(--bg-2);
