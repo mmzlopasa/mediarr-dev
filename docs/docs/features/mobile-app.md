@@ -74,6 +74,8 @@ The widget shows a photo from an album you choose, a different one every hour, a
 
 On an iPhone the widget fetches its photos itself. It needs the app and the widget to share a keychain group, which the certificate Feather signs with allows; if it does not, the app says so when you choose an album.
 
+If the iPhone does not offer the widget at all, look at **Installation check** at the top of the same screen. It says whether the signing left the widget out, left it unsigned, or signed it with a profile that does not allow its identifier, and what to change in Feather.
+
 ## Administration
 
 Administrators find **Administration** in the account menu of the app, with what the web has:

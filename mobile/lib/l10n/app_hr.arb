@@ -1455,5 +1455,10 @@
   "adminServerSettingsDlnaHelp": "Televizori u kućnoj mreži vide vaše albume, bez lozinke. Treba mu servis dlna, koji radi na mreži računala: pogledajte stranicu o televizoru u uputama.",
   "adminServerSettingsDlnaOwner": "Televizori vide albume korisnika {name}.",
   "adminServerSettingsDlnaAnnounced": "Servis dlna radi, pa televizori mogu pronaći ovaj poslužitelj.",
-  "adminServerSettingsDlnaNotAnnounced": "Servis dlna se još nije javio, pa televizori ne mogu pronaći ovaj poslužitelj."
+  "adminServerSettingsDlnaNotAnnounced": "Servis dlna se još nije javio, pa televizori ne mogu pronaći ovaj poslužitelj.",
+  "widgetInstallTitle": "Provjera instalacije",
+  "widgetInstallMissing": "Widgeta nema u ovoj instalaciji: potpisivanje ga je izbacilo. Potpiši aplikaciju ponovno bez uklanjanja ekstenzija (u Featheru: ne uklanjaj PlugIns).",
+  "widgetInstallUnsigned": "Widget je u aplikaciji, ali nije potpisan, pa ga iOS ne nudi. Potpiši aplikaciju ponovno tako da se potpišu i ekstenzije.",
+  "widgetInstallWrongProfile": "Widget je potpisan profilom za {profile}, a ne za svoj identifikator {widget}, pa ga iOS ne nudi. Potpiši certifikatom čiji profil dopušta svaki identifikator (*).",
+  "widgetInstallFine": "Widget je instaliran i potpisan. Ako ga i dalje nema u ponudi, ponovno pokreni mobitel."
 }

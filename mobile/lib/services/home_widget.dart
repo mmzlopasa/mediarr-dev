@@ -24,6 +24,45 @@ class WidgetChoice {
   bool get chosen => albumId != null && albumId!.isNotEmpty;
 }
 
+/// What iOS was given of the widget, after the phone signed the app again.
+enum WidgetInstallVerdict { missing, unsigned, wrongProfile, fine, unknown }
+
+class WidgetInstall {
+  const WidgetInstall(this.facts);
+
+  final Map<Object?, Object?> facts;
+
+  String _text(String key) => facts[key]?.toString() ?? '';
+
+  String get appId => _text('appId');
+  String get widgetId => _text('widgetId');
+
+  /// The profile's app identifier without the team in front, such as `*` or `app.mediarr.*`.
+  String get profileId {
+    final full = _text('widgetProfile').isNotEmpty
+        ? _text('widgetProfile')
+        : _text('appProfile');
+    final dot = full.indexOf('.');
+    return dot < 0 ? full : full.substring(dot + 1);
+  }
+
+  WidgetInstallVerdict get verdict {
+    if (facts['present'] == false) return WidgetInstallVerdict.missing;
+    if (facts['present'] != true) return WidgetInstallVerdict.unknown;
+    if (facts['signed'] == false) return WidgetInstallVerdict.unsigned;
+    final id = profileId;
+    if (id.isEmpty) return WidgetInstallVerdict.fine;
+    final allowed =
+        id == '*' ||
+        id == widgetId ||
+        (id.endsWith('.*') &&
+            widgetId.startsWith(id.substring(0, id.length - 1)));
+    return allowed
+        ? WidgetInstallVerdict.fine
+        : WidgetInstallVerdict.wrongProfile;
+  }
+}
+
 /// The home screen widget shows an album the user chooses. It reads it with a key of its own that
 /// can only read, so a widget never holds more than it needs.
 class HomeWidgetService {
@@ -38,6 +77,18 @@ class HomeWidgetService {
       );
     } on MissingPluginException {
       return const WidgetChoice();
+    }
+  }
+
+  /// Only iOS answers; elsewhere there is nothing to check.
+  Future<WidgetInstall?> install() async {
+    try {
+      final facts = await _channel.invokeMapMethod<Object?, Object?>('install');
+      return facts == null ? null : WidgetInstall(facts);
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
     }
   }
 

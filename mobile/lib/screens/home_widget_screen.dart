@@ -35,6 +35,7 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
   late final Session _session = ref.read(sessionProvider).value!;
   late final HomeWidgetService _widget = widget.service ?? HomeWidgetService();
   WidgetChoice? _choice;
+  WidgetInstall? _install;
   List<Album>? _albums;
   bool _busy = false;
 
@@ -46,6 +47,7 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
 
   Future<void> _load() async {
     final choice = await _widget.status();
+    final install = Platform.isIOS ? await _widget.install() : null;
     List<Album>? albums;
     try {
       albums = await _session.api.listAlbums(sort: 'title');
@@ -55,6 +57,7 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
     if (!mounted) return;
     setState(() {
       _choice = choice;
+      _install = install;
       _albums = albums ?? const [];
     });
   }
@@ -97,6 +100,8 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
                     style: text.bodyMedium,
                   ),
                 ),
+                if (_install case final install?)
+                  WidgetInstallTile(install: install),
                 if (choice.chosen)
                   ListTile(
                     leading: Icon(Icons.widgets_outlined, color: Palette.gold),
@@ -136,6 +141,38 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
                   ),
               ],
             ),
+    );
+  }
+}
+
+/// Says whether iOS can offer the widget, and if not, why.
+class WidgetInstallTile extends StatelessWidget {
+  const WidgetInstallTile({super.key, required this.install});
+
+  final WidgetInstall install;
+
+  @override
+  Widget build(BuildContext context) {
+    final verdict = install.verdict;
+    if (verdict == WidgetInstallVerdict.unknown) return const SizedBox.shrink();
+    final fine = verdict == WidgetInstallVerdict.fine;
+    final message = switch (verdict) {
+      WidgetInstallVerdict.missing => l.widgetInstallMissing,
+      WidgetInstallVerdict.unsigned => l.widgetInstallUnsigned,
+      WidgetInstallVerdict.wrongProfile => l.widgetInstallWrongProfile(
+        install.profileId,
+        install.widgetId,
+      ),
+      _ => l.widgetInstallFine,
+    };
+    return ListTile(
+      key: const ValueKey('widget-install'),
+      leading: Icon(
+        fine ? Icons.check_circle_outline : Icons.error_outline,
+        color: fine ? Palette.gold : Theme.of(context).colorScheme.error,
+      ),
+      title: Text(l.widgetInstallTitle),
+      subtitle: Text(message),
     );
   }
 }

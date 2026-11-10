@@ -8852,6 +8852,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The dlna service has not been heard from, so TVs cannot find this server yet.'**
   String get adminServerSettingsDlnaNotAnnounced;
+
+  /// No description provided for @widgetInstallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Installation check'**
+  String get widgetInstallTitle;
+
+  /// No description provided for @widgetInstallMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The widget is not in this installation: the signing left it out. Sign the app again without removing extensions (in Feather: do not remove PlugIns).'**
+  String get widgetInstallMissing;
+
+  /// No description provided for @widgetInstallUnsigned.
+  ///
+  /// In en, this message translates to:
+  /// **'The widget is in the app but was not signed, so iOS does not offer it. Sign the app again so that its extensions are signed too.'**
+  String get widgetInstallUnsigned;
+
+  /// No description provided for @widgetInstallWrongProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'The widget was signed with a profile for {profile}, not for its own identifier {widget}, so iOS does not offer it. Sign with a certificate whose profile allows any identifier (*).'**
+  String widgetInstallWrongProfile(String profile, String widget);
+
+  /// No description provided for @widgetInstallFine.
+  ///
+  /// In en, this message translates to:
+  /// **'The widget is installed and signed. If it is still not offered, restart the phone.'**
+  String get widgetInstallFine;
 }
 
 class _AppLocalizationsDelegate

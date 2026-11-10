@@ -5195,4 +5195,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get adminServerSettingsDlnaNotAnnounced =>
       'Vom Dienst dlna kam noch nichts, Fernseher finden diesen Server noch nicht.';
+
+  @override
+  String get widgetInstallTitle => 'Installationsprüfung';
+
+  @override
+  String get widgetInstallMissing =>
+      'Das Widget fehlt in dieser Installation: Die Signierung hat es entfernt. Signiere die App erneut, ohne Erweiterungen zu entfernen (in Feather: PlugIns nicht entfernen).';
+
+  @override
+  String get widgetInstallUnsigned =>
+      'Das Widget ist in der App, wurde aber nicht signiert, daher bietet iOS es nicht an. Signiere die App erneut, sodass auch ihre Erweiterungen signiert werden.';
+
+  @override
+  String widgetInstallWrongProfile(String profile, String widget) {
+    return 'Das Widget wurde mit einem Profil für $profile signiert, nicht für seine eigene Kennung $widget, daher bietet iOS es nicht an. Signiere mit einem Zertifikat, dessen Profil jede Kennung (*) erlaubt.';
+  }
+
+  @override
+  String get widgetInstallFine =>
+      'Das Widget ist installiert und signiert. Wenn es weiterhin nicht angeboten wird, starte das Telefon neu.';
 }

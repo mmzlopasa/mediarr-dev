@@ -1455,5 +1455,10 @@
   "adminServerSettingsDlnaHelp": "Fernseher im Heimnetz sehen Ihre Alben, ohne Passwort. Dafür braucht es den Dienst dlna, der im Netzwerk des Hosts läuft: siehe die TV-Seite der Dokumentation.",
   "adminServerSettingsDlnaOwner": "Fernseher sehen die Alben von {name}.",
   "adminServerSettingsDlnaAnnounced": "Der Dienst dlna läuft, Fernseher finden diesen Server.",
-  "adminServerSettingsDlnaNotAnnounced": "Vom Dienst dlna kam noch nichts, Fernseher finden diesen Server noch nicht."
+  "adminServerSettingsDlnaNotAnnounced": "Vom Dienst dlna kam noch nichts, Fernseher finden diesen Server noch nicht.",
+  "widgetInstallTitle": "Installationsprüfung",
+  "widgetInstallMissing": "Das Widget fehlt in dieser Installation: Die Signierung hat es entfernt. Signiere die App erneut, ohne Erweiterungen zu entfernen (in Feather: PlugIns nicht entfernen).",
+  "widgetInstallUnsigned": "Das Widget ist in der App, wurde aber nicht signiert, daher bietet iOS es nicht an. Signiere die App erneut, sodass auch ihre Erweiterungen signiert werden.",
+  "widgetInstallWrongProfile": "Das Widget wurde mit einem Profil für {profile} signiert, nicht für seine eigene Kennung {widget}, daher bietet iOS es nicht an. Signiere mit einem Zertifikat, dessen Profil jede Kennung (*) erlaubt.",
+  "widgetInstallFine": "Das Widget ist installiert und signiert. Wenn es weiterhin nicht angeboten wird, starte das Telefon neu."
 }

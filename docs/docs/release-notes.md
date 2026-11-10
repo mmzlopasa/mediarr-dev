@@ -8,6 +8,10 @@ The server and the web come as one version, such as `v0.2.40`. The apps have ver
 
 ## Apps
 
+### app-v0.10.1
+- One tap on a photo hides the bars and the status bar, so the whole photo shows.
+- On an iPhone, the widget screen checks the installation and says why the widget is not offered, when it is not.
+
 ### app-v0.10.0
 Everything from the server versions up to v0.2.40: culling, smart memories, export, Play on TV, and the refined screens.
 
@@ -15,6 +19,10 @@ Everything from the server versions up to v0.2.40: culling, smart memories, expo
 Everything up to v0.2.35: duplicates and Clean up, dates and places of many photos, signing in with a QR code, administration in the app, four languages, and private links.
 
 ## Server and web
+
+### v0.2.41
+- One tap on an open photo hides the bars and the arrows, so the whole photo shows; the next tap brings them back.
+- docs.mediarr.app shows the new icon.
 
 ### v0.2.40
 - The screens added lately were checked on phones and computers, light and dark, in all four languages, and refined.

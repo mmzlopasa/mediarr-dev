@@ -5115,4 +5115,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminServerSettingsDlnaNotAnnounced =>
       'The dlna service has not been heard from, so TVs cannot find this server yet.';
+
+  @override
+  String get widgetInstallTitle => 'Installation check';
+
+  @override
+  String get widgetInstallMissing =>
+      'The widget is not in this installation: the signing left it out. Sign the app again without removing extensions (in Feather: do not remove PlugIns).';
+
+  @override
+  String get widgetInstallUnsigned =>
+      'The widget is in the app but was not signed, so iOS does not offer it. Sign the app again so that its extensions are signed too.';
+
+  @override
+  String widgetInstallWrongProfile(String profile, String widget) {
+    return 'The widget was signed with a profile for $profile, not for its own identifier $widget, so iOS does not offer it. Sign with a certificate whose profile allows any identifier (*).';
+  }
+
+  @override
+  String get widgetInstallFine =>
+      'The widget is installed and signed. If it is still not offered, restart the phone.';
 }

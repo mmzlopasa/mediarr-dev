@@ -5154,4 +5154,24 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get adminServerSettingsDlnaNotAnnounced =>
       'Servis dlna se još nije javio, pa televizori ne mogu pronaći ovaj poslužitelj.';
+
+  @override
+  String get widgetInstallTitle => 'Provjera instalacije';
+
+  @override
+  String get widgetInstallMissing =>
+      'Widgeta nema u ovoj instalaciji: potpisivanje ga je izbacilo. Potpiši aplikaciju ponovno bez uklanjanja ekstenzija (u Featheru: ne uklanjaj PlugIns).';
+
+  @override
+  String get widgetInstallUnsigned =>
+      'Widget je u aplikaciji, ali nije potpisan, pa ga iOS ne nudi. Potpiši aplikaciju ponovno tako da se potpišu i ekstenzije.';
+
+  @override
+  String widgetInstallWrongProfile(String profile, String widget) {
+    return 'Widget je potpisan profilom za $profile, a ne za svoj identifikator $widget, pa ga iOS ne nudi. Potpiši certifikatom čiji profil dopušta svaki identifikator (*).';
+  }
+
+  @override
+  String get widgetInstallFine =>
+      'Widget je instaliran i potpisan. Ako ga i dalje nema u ponudi, ponovno pokreni mobitel.';
 }

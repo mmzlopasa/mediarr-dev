@@ -5208,4 +5208,24 @@ class AppLocalizationsSl extends AppLocalizations {
   @override
   String get adminServerSettingsDlnaNotAnnounced =>
       'Storitev dlna se še ni oglasila, zato televizorji še ne najdejo tega strežnika.';
+
+  @override
+  String get widgetInstallTitle => 'Preverjanje namestitve';
+
+  @override
+  String get widgetInstallMissing =>
+      'Gradnika ni v tej namestitvi: podpisovanje ga je odstranilo. Aplikacijo podpiši znova brez odstranjevanja razširitev (v Featherju: ne odstranjuj PlugIns).';
+
+  @override
+  String get widgetInstallUnsigned =>
+      'Gradnik je v aplikaciji, a ni podpisan, zato ga iOS ne ponudi. Aplikacijo podpiši znova, da se podpišejo tudi razširitve.';
+
+  @override
+  String widgetInstallWrongProfile(String profile, String widget) {
+    return 'Gradnik je podpisan s profilom za $profile, ne za svoj identifikator $widget, zato ga iOS ne ponudi. Podpiši s certifikatom, katerega profil dovoli vsak identifikator (*).';
+  }
+
+  @override
+  String get widgetInstallFine =>
+      'Gradnik je nameščen in podpisan. Če ga še vedno ni med ponujenimi, znova zaženi telefon.';
 }

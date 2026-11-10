@@ -336,6 +336,47 @@ void main() {
     expect(widgetPicturesLine(20), '20 photos kept on this phone for it');
   });
 
+  test('the install check says why iOS does not offer the widget', () {
+    WidgetInstallVerdict of(Map<String, Object> facts) =>
+        WidgetInstall(facts).verdict;
+    const base = {
+      'appId': 'app.mediarr.mediarr.dev',
+      'widgetId': 'app.mediarr.mediarr.dev.widget',
+      'present': true,
+      'signed': true,
+    };
+    expect(of({'present': false}), WidgetInstallVerdict.missing);
+    expect(of({}), WidgetInstallVerdict.unknown);
+    expect(of({...base, 'signed': false}), WidgetInstallVerdict.unsigned);
+    expect(of({...base, 'appProfile': 'TEAM.*'}), WidgetInstallVerdict.fine);
+    expect(
+      of({...base, 'appProfile': 'TEAM.app.mediarr.*'}),
+      WidgetInstallVerdict.fine,
+    );
+    expect(
+      of({...base, 'widgetProfile': 'TEAM.app.mediarr.mediarr.dev.widget'}),
+      WidgetInstallVerdict.fine,
+    );
+    final wrong = WidgetInstall({
+      ...base,
+      'appProfile': 'TEAM.app.mediarr.mediarr.dev',
+    });
+    expect(wrong.verdict, WidgetInstallVerdict.wrongProfile);
+    expect(wrong.profileId, 'app.mediarr.mediarr.dev');
+  });
+
+  testWidgets('the install check shows what is wrong', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WidgetInstallTile(install: WidgetInstall({'present': false})),
+        ),
+      ),
+    );
+    expect(find.text('Installation check'), findsOneWidget);
+    expect(find.textContaining('signing left it out'), findsOneWidget);
+  });
+
   testWidgets('choosing an album hands it to the widget', (tester) async {
     final widget = _FakeWidget();
     await _show(
