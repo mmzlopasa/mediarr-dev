@@ -262,15 +262,21 @@ class DlnaFinder {
     Future<void> run() async {
       try {
         socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
-        socket!.listen((event) {
-          if (event != RawSocketEvent.read) return;
-          final packet = socket?.receive();
-          if (packet == null) return;
-          final location = locationOf(
-            utf8.decode(packet.data, allowMalformed: true),
-          );
-          if (location != null) describe(location);
-        });
+        socket!.listen(
+          (event) {
+            if (event != RawSocketEvent.read) return;
+            final packet = socket?.receive();
+            if (packet == null) return;
+            final location = locationOf(
+              utf8.decode(packet.data, allowMalformed: true),
+            );
+            if (location != null) describe(location);
+          },
+          onError: (Object _) {
+            // A network that refuses one address (no route, no multicast) is not an error: the
+            // others are still asked, and what answers is shown.
+          },
+        );
         final message = utf8.encode(searchMessage());
         try {
           socket!.send(message, InternetAddress(ssdpGroup), ssdpPort);
