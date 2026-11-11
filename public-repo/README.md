@@ -29,7 +29,7 @@ Your pictures stay on your disk. There is no account with us, no subscription, a
 - **Your originals are never changed.** Every edit is kept as a list beside the photo and can be undone at any time. A backup holds the files exactly as your camera made them.
 - **A backup you can trust.** Mediarr makes encrypted backups to a disk, S3 or B2, and **Test bringing it back** really restores the newest one and checks every file.
 - **A copy at a relative's.** Two Mediarr servers, yours and a relative's or a friend's, keep an encrypted copy of each other, paired with one code. They cannot read your copy, and what is deleted from it is kept for 90 days, so not even someone who takes over your server can wipe it out at once.
-- **Leave Google Photos and iCloud in one step.** Anyone in the family uploads the ZIP files of their Google Takeout or iCloud export, as they came. Dates, time zones, places, descriptions, favourites and albums come with them.
+- **Move in from another photo service in one step.** Anyone in the family uploads the ZIP files of their export, as they came. Dates, time zones, places, descriptions, favourites and albums come with them.
 - **Clever, and still private.** Smart search, faces, places, text inside pictures and AI descriptions all run on your own server.
 - **It runs anywhere.** Mediarr opens at `http://your-server-ip:9851`. A domain name and HTTPS are up to you, whenever you like.
 
@@ -113,8 +113,8 @@ Open `http://your-server-ip:9851` and create the first account. These two files 
 | Play on TV: Chromecast, AirPlay and DLNA | ✓ | ✓ |
 | TV mode, and a kiosk slideshow for a screen on the wall | ✓ | |
 | **Bringing photos in** | | |
-| Google Takeout and iCloud, from their ZIP files, for anyone | ✓ | follows |
-| Immich, through its API, with albums, favourites and people | ✓ | |
+| Exports of other photo services, from their ZIP files, for anyone | ✓ | follows |
+| Another photo server, through its API, with albums, favourites and people | ✓ | |
 | External libraries, read only | ✓ | ✓ |
 | Export of the whole library, to leave whenever you want | ✓ | ✓ |
 | **Keeping them safe** | | |
@@ -165,7 +165,7 @@ Sign in with the address of your server, as you open it in the browser, or scan 
 
 - [Requirements](https://docs.mediarr.app/install/requirements) and [installation](https://docs.mediarr.app/install/docker-compose)
 - [Domain and HTTPS](https://docs.mediarr.app/administration/reverse-proxy)
-- [Import from Google Photos, iCloud or Immich](https://docs.mediarr.app/features/import)
+- [Import the photos you already have](https://docs.mediarr.app/features/import)
 - [What's new](https://docs.mediarr.app/release-notes)
 - [Backup and restore](https://docs.mediarr.app/administration/backup) and [a copy at a relative's](https://docs.mediarr.app/administration/keep)
 - [The mobile app](https://docs.mediarr.app/features/mobile-app)
