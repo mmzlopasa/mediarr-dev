@@ -29,6 +29,9 @@ const config = {
     ],
   ],
   themeConfig: {
+    // The picture a link to any page shows when shared.
+    image: 'img/social.png',
+    metadata: [{ property: 'og:site_name', content: 'Mediarr' }],
     colorMode: { defaultMode: 'dark', respectPrefersColorScheme: true },
     navbar: {
       logo: { alt: 'Mediarr', src: 'img/logo-full.svg', srcDark: 'img/logo-full-dark.svg', height: 26 },

@@ -1,5 +1,7 @@
 ---
-title: Docker Compose
+title: "Install Mediarr with Docker Compose"
+sidebar_label: Docker Compose
+description: "Install Mediarr on your own server with Docker Compose: two files, one command, and the first account in a few minutes."
 ---
 
 # Install with Docker Compose

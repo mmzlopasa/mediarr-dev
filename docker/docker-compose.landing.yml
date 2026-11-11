@@ -35,13 +35,19 @@ configs:
           add_header X-Content-Type-Options nosniff always;
           add_header Referrer-Policy strict-origin-when-cross-origin always;
 
+          gzip on;
+          gzip_types text/css application/javascript image/svg+xml application/xml text/plain application/json;
+          gzip_min_length 512;
+          error_page 404 /404.html;
+
           location = /health {
               access_log off;
               default_type application/json;
               return 200 '{"status":"ok"}';
           }
 
-          location /design/ {
+          # ^~ keeps the rule for pictures below from taking the design's fonts and icons.
+          location ^~ /design/ {
               alias /srv/design/;
           }
 
@@ -50,8 +56,16 @@ configs:
               alias /srv/static/$$1;
           }
 
-          # A single page, so any other address shows it too.
+          # Pictures change rarely; the page itself is always asked for again.
+          location ~* \.(jpg|png|webp|svg|woff2|ico)$$ {
+              add_header X-Content-Type-Options nosniff always;
+              add_header Referrer-Policy strict-origin-when-cross-origin always;
+              add_header Cache-Control "public, max-age=604800";
+              try_files $$uri =404;
+          }
+
+          # Any other address is not found, so search engines do not see the page under many names.
           location / {
-              try_files $$uri $$uri/ /index.html;
+              try_files $$uri $$uri/ =404;
           }
       }

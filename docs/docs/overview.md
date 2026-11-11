@@ -1,7 +1,9 @@
 ---
 slug: /
-title: Overview
+title: "Mediarr documentation: a self-hosted photo and video library"
 sidebar_position: 1
+sidebar_label: Overview
+description: "How Mediarr works: a free, self-hosted photo and video library with phone backup, smart search, faces, places and memories, on web, iPhone and Android."
 ---
 
 # Mediarr

@@ -46,7 +46,7 @@ docs: cli
 
 # Publishes landing/ on mediarr.app.
 landing:
-	docker compose -f docker/docker-compose.landing.yml up -d --wait
+	docker compose -f docker/docker-compose.landing.yml up -d --wait --force-recreate
 
 TESTDATA ?= $(CURDIR)/.dev/testdata
 SCALE ?= 5

@@ -1,5 +1,7 @@
 ---
-title: Mobile app
+title: "Mediarr app for iPhone and Android: backup and library"
+sidebar_label: Mobile app
+description: "The Mediarr app backs up your iPhone or Android phone to your own server in the background, and shows the whole library, also offline."
 ---
 
 # Mobile app

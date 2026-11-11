@@ -1,5 +1,7 @@
 ---
-title: FAQ
+title: "Mediarr FAQ"
+sidebar_label: FAQ
+description: "Answers about Mediarr: domains and HTTPS, privacy, originals, phone backup, passwords and the first start."
 ---
 
 # FAQ

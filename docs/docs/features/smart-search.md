@@ -1,5 +1,7 @@
 ---
-title: Smart search and faces
+title: "Smart search and face recognition on your own server"
+sidebar_label: Smart search and faces
+description: "Find photos by what is in them and by who is in them, with search and face recognition that run on your own server."
 ---
 
 # Smart search and faces
