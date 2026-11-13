@@ -51,9 +51,6 @@ struct WidgetShare: Codable, Equatable {
     ]
   }
 
-  /// What the keychain answered the last time the widget looked, for the note it shows without one.
-  static var lastStatus: OSStatus = errSecSuccess
-
   static func load() -> WidgetShare? {
     var search = query
     search[kSecReturnData as String] = true
@@ -64,7 +61,6 @@ struct WidgetShare: Codable, Equatable {
       search[kSecAttrAccessGroup as String] = group
       status = SecItemCopyMatching(search as CFDictionary, &found)
     }
-    lastStatus = status
     guard status == errSecSuccess, let data = found as? Data else { return nil }
     return try? JSONDecoder().decode(WidgetShare.self, from: data)
   }

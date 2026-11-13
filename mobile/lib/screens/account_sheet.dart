@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'admin/admin_screen.dart';
 import '../brand.dart';
 import '../services/backup.dart';
+import '../services/home_widget.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
 import '../theme.dart';
@@ -127,6 +128,8 @@ class _AccountSheetState extends ConsumerState<AccountSheet> {
     } on MissingPluginException {
       // No native engine on this platform.
     }
+    // The widget's server and read-only key would otherwise stay on the phone, and stay valid.
+    await HomeWidgetService().forget(session);
     await forgetVaultPin();
     navigator.pop();
     await notifier.signOut();

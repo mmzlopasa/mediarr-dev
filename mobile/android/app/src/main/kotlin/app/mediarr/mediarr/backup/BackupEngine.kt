@@ -1,7 +1,9 @@
 package app.mediarr.mediarr.backup
 
+import android.Manifest
 import android.content.ContentUris
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -59,6 +61,12 @@ fun findAlbum(id: String?, name: String?, albums: List<BackupAlbum>): BackupAlbu
     return albums.firstOrNull { normalizeAlbumName(it.title) == wanted }
 }
 
+/**
+ * The original could not be opened. Android would give a copy without the photo's location
+ * instead, which is never sent: the phone could later free up space believing it was safe.
+ */
+class OriginalUnavailable : Exception()
+
 fun encodeMetadata(metadata: List<Pair<String, String>>): String =
     metadata.joinToString(",") { (key, value) ->
         "$key ${Base64.encodeToString(value.toByteArray(), Base64.NO_WRAP)}"
@@ -71,7 +79,9 @@ class BackupEngine(context: Context) {
 
     val enabled get() = prefs.getBoolean(KEY_ENABLED, false)
     private val server get() = prefs.getString(KEY_SERVER, null)
-    private val key get() = prefs.getString(KEY_KEY, null)
+    /** Kept encrypted with a key in the Android Keystore. */
+    private val key get() = SecretStore.read(prefs, KEY_KEY)
+    private val unauthorized get() = prefs.getBoolean(KEY_UNAUTHORIZED, false)
     private val wifiOnly get() = prefs.getBoolean(KEY_WIFI, true)
     private val chargingOnly get() = prefs.getBoolean(KEY_CHARGING, false)
     private val albumId get() = prefs.getString(KEY_ALBUM_ID, null)
@@ -94,10 +104,11 @@ class BackupEngine(context: Context) {
         prefs.edit()
             .putBoolean(KEY_ENABLED, true)
             .putBoolean(KEY_UNAUTHORIZED, false)
+            .putBoolean(KEY_UNREACHABLE, false)
             .putString(KEY_SERVER, server)
-            .putString(KEY_KEY, key)
             .putBoolean(KEY_WIFI, wifiOnly)
             .apply()
+        SecretStore.write(prefs, KEY_KEY, key)
         choose(albumId, albumName, onlyNew)
     }
 
@@ -108,7 +119,8 @@ class BackupEngine(context: Context) {
         val album = findAlbum(albumId, albumName, albums())
         val inAlbum = album?.let(::assetsIn) ?: emptyList()
         store.forgetPending(inAlbum.map { it.id }.toSet())
-        if (onlyNew) store.addSkipped(inAlbum.map { it.id to it.createdMs })
+        // "Everything" for this album, even if it was once chosen with "only new".
+        if (onlyNew) store.addSkipped(inAlbum.map { it.id to it.createdMs }) else store.forgetSkipped(inAlbum.map { it.id })
         schedule()
         runNow()
     }
@@ -120,9 +132,13 @@ class BackupEngine(context: Context) {
             .putStringSet(KEY_MORE_ALBUMS, more.toSet())
             .putStringSet(KEY_EXCLUDED_ALBUMS, excluded.toSet())
             .apply()
-        if (onlyNew) {
-            for (album in albums().filter { it.id in added }) {
-                store.addSkipped(assetsIn(album).map { it.id to it.createdMs })
+        // Each album keeps the choice made for it when it was added.
+        for (album in albums().filter { it.id in added }) {
+            val inAlbum = assetsIn(album)
+            if (onlyNew) {
+                store.addSkipped(inAlbum.map { it.id to it.createdMs })
+            } else {
+                store.forgetSkipped(inAlbum.map { it.id })
             }
         }
         store.forgetPending(assetsToSend().map { it.id }.toSet())
@@ -272,24 +288,23 @@ class BackupEngine(context: Context) {
         return out
     }
 
-    private fun original(uri: Uri): Uri =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            try {
-                // With the location still in the file, as the owner took it.
-                MediaStore.setRequireOriginal(uri)
-            } catch (_: UnsupportedOperationException) {
-                uri
-            }
-        } else {
-            uri
-        }
+    /** Since Android 10 the photo's location is only in the file with this permission. */
+    private fun mayReadLocation(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+            context.checkSelfPermission(Manifest.permission.ACCESS_MEDIA_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
 
-    private fun open(uri: Uri): InputStream? =
-        try {
-            context.contentResolver.openInputStream(original(uri))
+    /** The file as the owner took it, with its location. Never the copy without it. */
+    private fun open(uri: Uri): InputStream? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return context.contentResolver.openInputStream(uri)
+        return try {
+            context.contentResolver.openInputStream(MediaStore.setRequireOriginal(uri))
         } catch (_: SecurityException) {
-            context.contentResolver.openInputStream(uri)
+            throw OriginalUnavailable()
+        } catch (_: UnsupportedOperationException) {
+            throw OriginalUnavailable()
         }
+    }
 
     private fun sha256(uri: Uri): String? {
         val digest = MessageDigest.getInstance("SHA-256")
@@ -355,8 +370,12 @@ class BackupEngine(context: Context) {
             )
             val source = open(asset.uri) ?: return Outcome.Retry("The file could not be read.")
             source.use { input -> connection.outputStream.use { input.copyTo(it, BUFFER) } }
-            outcomeOf(connection.responseCode)
+            val status = connection.responseCode
+            prefs.edit().putBoolean(KEY_UNREACHABLE, false).apply()
+            outcomeOf(status)
         } catch (cause: java.io.IOException) {
+            // No answer from the server; cleared by the next answer of any kind.
+            prefs.edit().putBoolean(KEY_UNREACHABLE, true).apply()
             Outcome.Retry(cause.message ?: "The connection was lost.")
         } finally {
             connection.disconnect()
@@ -383,7 +402,7 @@ class BackupEngine(context: Context) {
     private fun checkInIfDue() {
         val server = server ?: return
         val key = key ?: return
-        if (!enabled) return
+        if (!enabled || unauthorized) return
         val now = System.currentTimeMillis()
         if (now - prefs.getLong(KEY_LAST_REPORT, 0) < REPORT_EVERY_MS) return
         val counts = store.counts()
@@ -419,7 +438,12 @@ class BackupEngine(context: Context) {
 
     private fun send(progress: (sent: Int) -> Unit, stopped: () -> Boolean): Boolean {
         if (!enabled || server == null || key == null) return true
+        // The key was refused: nothing is read or sent until the app turns backup on again.
+        if (unauthorized) return true
+        // Without it only copies without the location could be read. Shown in status().
+        if (!mayReadLocation()) return true
         store.recoverInterrupted()
+        store.retryFailedAutomatically()
         val assets = assetsToSend().associateBy { it.id }
         if (assets.isEmpty() && currentAlbum() == null && moreAlbums.isEmpty()) return true
         store.add(assets.values.map { it.id to it.createdMs })
@@ -437,6 +461,9 @@ class BackupEngine(context: Context) {
             } catch (cause: java.io.IOException) {
                 store.recordFailure(item.assetId, cause.message ?: "The file could not be read.", MAX_ATTEMPTS)
                 continue
+            } catch (_: OriginalUnavailable) {
+                store.markWaiting(item.assetId, WAITING_FOR_LOCATION, System.currentTimeMillis() + WAIT_MS)
+                continue
             }
             if (checksum == null) {
                 store.recordFailure(item.assetId, "The file could not be read.", MAX_ATTEMPTS)
@@ -447,7 +474,13 @@ class BackupEngine(context: Context) {
                 store.markVerified(item.assetId)
                 continue
             }
-            when (val outcome = upload(asset, checksum)) {
+            val outcome = try {
+                upload(asset, checksum)
+            } catch (_: OriginalUnavailable) {
+                store.markWaiting(item.assetId, WAITING_FOR_LOCATION, System.currentTimeMillis() + WAIT_MS)
+                continue
+            }
+            when (outcome) {
                 Outcome.Verified -> {
                     store.markVerified(item.assetId)
                     sent += 1
@@ -475,11 +508,18 @@ class BackupEngine(context: Context) {
             "enabled" to enabled,
             "wifiOnly" to wifiOnly,
             "chargingOnly" to chargingOnly,
-            "unauthorized" to prefs.getBoolean(KEY_UNAUTHORIZED, false),
+            // Also when the stored key can no longer be decrypted: turning backup on again fixes both.
+            "unauthorized" to (unauthorized || (enabled && key == null)),
+            // Nothing is sent until the app is allowed to read where photos were taken.
+            "waitingForMediaLocation" to (enabled && !mayReadLocation()),
             "pending" to (counts[BackupStatus.PENDING] ?: 0),
             "working" to (counts[BackupStatus.UPLOADING] ?: 0),
             "verified" to (counts[BackupStatus.VERIFIED] ?: 0),
             "failed" to (counts[BackupStatus.FAILED] ?: 0),
+            "serverUnreachable" to (enabled && prefs.getBoolean(KEY_UNREACHABLE, false)),
+            // Android waits for Wi-Fi through WorkManager's network rule, not per file.
+            "waitingForWifi" to 0,
+            "retrying" to store.retryingCount(),
             "lastFinished" to store.lastFinished()?.let { it / 1000.0 },
             "failures" to store.failures(FAILURES_SHOWN),
             "albumName" to (album?.title ?: albumName ?: ""),
@@ -495,6 +535,9 @@ class BackupEngine(context: Context) {
     companion object {
         private val running = AtomicBoolean(false)
         const val MAX_ATTEMPTS = 5
+        const val WAITING_FOR_LOCATION =
+            "Waiting for permission to read where photos were taken, so the original is sent with its location."
+        private const val WAIT_MS = 60 * 60_000L
         private const val FAILURES_SHOWN = 5
         private const val BUFFER = 1024 * 1024
         private const val TIMEOUT_MS = 20_000
@@ -503,6 +546,7 @@ class BackupEngine(context: Context) {
         private const val WORK_PERIODIC = "mediarr-backup-periodic"
         private const val KEY_ENABLED = "enabled"
         private const val KEY_UNAUTHORIZED = "unauthorized"
+        private const val KEY_UNREACHABLE = "unreachable"
         private const val KEY_SERVER = "server"
         private const val KEY_KEY = "key"
         private const val KEY_WIFI = "wifiOnly"

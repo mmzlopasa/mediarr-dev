@@ -5168,9 +5168,78 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get widgetInstallFine =>
-      'Widget je instaliran i potpisan. Ako ga i dalje nema u ponudi, ponovno pokreni mobitel.';
+      'Widget je u aplikaciji i potpisan. Ako ga iOS i dalje ne nudi, obriši aplikaciju, ponovno je instaliraj i ponovno pokreni mobitel.';
 
   @override
   String get homeWidgetNoShare =>
       'Ova instalacija ne dopušta aplikaciji da widgetu preda album.';
+
+  @override
+  String get homeWidgetKeyName => 'Widget na početnom zaslonu';
+
+  @override
+  String get homeWidgetScreenAlbumsFailed => 'Albumi se nisu mogli učitati.';
+
+  @override
+  String get homeWidgetScreenTryAgain => 'Pokušaj ponovno';
+
+  @override
+  String get loginScreenLinkTitle => 'Prijava preko poveznice?';
+
+  @override
+  String loginScreenLinkBody(String server) {
+    return 'Poveznica traži da se ovaj mobitel prijavi na $server. Nastavi samo ako je to tvoj poslužitelj i ako si poveznicu otvorio sam.';
+  }
+
+  @override
+  String get loginScreenLinkContinue => 'Prijavi se';
+
+  @override
+  String get sessionOddAnswer =>
+      'Odgovor poslužitelja nije čitljiv. Provjeri adresu: možda umjesto poslužitelja odgovara nešto ispred njega.';
+
+  @override
+  String get backupCardNeedsLocation =>
+      'Čeka se dopuštenje za čitanje mjesta snimanja. Bez njega mobitel daje samo kopije bez lokacije, pa se ništa ne šalje.';
+
+  @override
+  String get backupCardAllowLocation => 'Dopusti';
+
+  @override
+  String get backupCardOpenSettings => 'Otvori postavke';
+
+  @override
+  String get backupCardServerAway =>
+      'Poslužitelj nije dostupan. Sigurnosna kopija nastavlja sama čim se ponovno javi.';
+
+  @override
+  String backupCardWaitingForWifi(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count fotografija čeka Wi-Fi: nalaze se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.',
+      few:
+          '$count fotografije čekaju Wi-Fi: nalaze se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.',
+      one:
+          '$count fotografija čeka Wi-Fi: nalazi se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupCardRetryingSoon(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count datoteka nije prošlo i uskoro se same ponovno šalju.',
+      few: '$count datoteke nisu prošle i uskoro se same ponovno šalju.',
+      one: '$count datoteka nije prošla i uskoro se sama ponovno šalje.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backupCardFailedRetryLater =>
+      'Neuspjele datoteke same se ponovno pokušavaju nakon jednog dana.';
 }

@@ -5129,9 +5129,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetInstallFine =>
-      'The widget is installed and signed. If it is still not offered, restart the phone.';
+      'The widget is in the app and signed. If iOS still does not offer it, delete the app, install it again and restart the phone.';
 
   @override
   String get homeWidgetNoShare =>
       'This installation does not let the app hand the album to its widget.';
+
+  @override
+  String get homeWidgetKeyName => 'Home screen widget';
+
+  @override
+  String get homeWidgetScreenAlbumsFailed => 'The albums could not be loaded.';
+
+  @override
+  String get homeWidgetScreenTryAgain => 'Try again';
+
+  @override
+  String get loginScreenLinkTitle => 'Sign in from a link?';
+
+  @override
+  String loginScreenLinkBody(String server) {
+    return 'A link asks to sign this phone in to $server. Continue only if this is your server and you opened the link yourself.';
+  }
+
+  @override
+  String get loginScreenLinkContinue => 'Sign in';
+
+  @override
+  String get sessionOddAnswer =>
+      'The server\'s answer could not be read. Check the address: something in front of the server may be answering instead.';
+
+  @override
+  String get backupCardNeedsLocation =>
+      'Waiting for permission to read where photos were taken. Without it the phone only hands out copies without the location, so nothing is sent.';
+
+  @override
+  String get backupCardAllowLocation => 'Allow';
+
+  @override
+  String get backupCardOpenSettings => 'Open settings';
+
+  @override
+  String get backupCardServerAway =>
+      'The server cannot be reached. Backup goes on by itself once it answers again.';
+
+  @override
+  String backupCardWaitingForWifi(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count photos are waiting for Wi-Fi: they are only in iCloud, and backup may only use Wi-Fi.',
+      one: '1 photo is waiting for Wi-Fi: it is only in iCloud, and backup may only use Wi-Fi.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupCardRetryingSoon(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count files did not go through and are tried again by themselves shortly.',
+      one: '1 file did not go through and is tried again by itself shortly.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backupCardFailedRetryLater =>
+      'Files that failed are tried again by themselves after a day.';
 }

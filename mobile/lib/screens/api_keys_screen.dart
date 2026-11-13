@@ -5,6 +5,7 @@ import 'package:mediarr_api/api.dart';
 
 import '../l10n/l10n.dart';
 import '../services/dispose_later.dart';
+import '../services/home_widget.dart';
 import '../services/session.dart';
 import '../theme.dart';
 
@@ -174,7 +175,7 @@ class _ApiKeysScreenState extends ConsumerState<ApiKeysScreen> {
               children: [
                 for (final key in keys)
                   ListTile(
-                    title: Text(key.name),
+                    title: Text(apiKeyLabel(key.name)),
                     subtitle: Text(describeKey(key)),
                     trailing: IconButton(
                       tooltip: l.apiKeysScreenRevoke,

@@ -21,6 +21,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import app.mediarr.mediarr.MainActivity
 import app.mediarr.mediarr.R
+import app.mediarr.mediarr.backup.SecretStore
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -35,7 +36,8 @@ class WidgetStore(context: Context) {
     val folder: File get() = File(context.filesDir, "widget").apply { mkdirs() }
 
     val server get() = prefs.getString(KEY_SERVER, null)
-    val key get() = prefs.getString(KEY_KEY, null)
+    /** Kept encrypted with a key in the Android Keystore. */
+    val key get() = SecretStore.read(prefs, KEY_KEY)
     val albumId get() = prefs.getString(KEY_ALBUM, null)
     val albumTitle get() = prefs.getString(KEY_TITLE, "") ?: ""
 
@@ -47,8 +49,9 @@ class WidgetStore(context: Context) {
         } ?: emptyList()
 
     fun configure(server: String, key: String, albumId: String, title: String) {
-        prefs.edit().putString(KEY_SERVER, server).putString(KEY_KEY, key)
+        prefs.edit().putString(KEY_SERVER, server)
             .putString(KEY_ALBUM, albumId).putString(KEY_TITLE, title).apply()
+        SecretStore.write(prefs, KEY_KEY, key)
     }
 
     fun clear() {

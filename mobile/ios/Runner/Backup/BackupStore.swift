@@ -47,6 +47,19 @@ final class BackupStore {
       """)
     // Older installations lack the column. Their files are simply not offered for freeing up space.
     try? execute("ALTER TABLE items ADD COLUMN checksum TEXT")
+    // When a waiting file may be tried again, or a failed one is tried anew. Null means now.
+    try? execute("ALTER TABLE items ADD COLUMN retry_after REAL")
+  }
+
+  /// A failed file is tried again by itself after this long, so one bad evening is not forever.
+  static let failedRetryDelay: TimeInterval = 24 * 60 * 60
+  /// Stands for "until the phone is on Wi-Fi", far beyond any real time.
+  static let untilWifi: Double = 1e15
+
+  /// The wait before a file that failed is tried again: 1, 4, 16, 64 minutes, at most 6 hours.
+  static func backoff(attempts: Int) -> TimeInterval {
+    let exponent = Double(max(0, min(attempts - 1, 6)))
+    return min(60 * pow(4, exponent), 6 * 60 * 60)
   }
 
   deinit {
@@ -119,18 +132,35 @@ final class BackupStore {
     run("COMMIT")
   }
 
+  /// The user chose "everything" for these files after all, so they are no longer kept back.
+  func forgetSkipped(_ assetIDs: [String]) {
+    guard !assetIDs.isEmpty else { return }
+    run("BEGIN")
+    for id in assetIDs {
+      run(
+        "DELETE FROM items WHERE asset_id = ? AND status = ?",
+        [.text(id), .text(BackupStatus.skipped.rawValue)])
+    }
+    run("COMMIT")
+  }
+
   /// Forgets everything not yet sent, so changing the album can never send the old album's files.
-  /// Verified files stay: they are on the server and must not be sent again.
+  /// Verified files stay: they are on the server and must not be sent again. Skipped files stay
+  /// too, unless `keepSkipped` is false: "only new" must survive any later change of albums.
   /// A Live Photo whose video was not sent is forgotten whole, so the video is found again later.
   /// Its photo is then only checked with the server, not sent twice.
-  func forgetUnfinished() {
+  func forgetUnfinished(keepSkipped: Bool = true) {
     let verified = BackupStatus.verified.rawValue
+    let kept = keepSkipped ? BackupStatus.skipped.rawValue : verified
     run(
       """
       DELETE FROM items WHERE asset_id IN (
-        SELECT asset_id FROM items WHERE status <> ?
+        SELECT asset_id FROM items WHERE status NOT IN (?, ?)
       )
-      """, [.text(verified)])
+      """, [.text(verified), .text(kept)])
+    if !keepSkipped {
+      run("DELETE FROM items WHERE status = ?", [.text(BackupStatus.skipped.rawValue)])
+    }
   }
 
   /// True while this file is still meant to be sent. False once its album was changed or backup
@@ -178,12 +208,17 @@ final class BackupStore {
     run("COMMIT")
   }
 
-  /// The newest file waiting, excluding the ones already taken.
-  func nextPending() -> BackupItem? {
+  /// The newest file waiting, excluding the ones already taken and the ones still waiting out a
+  /// failure or for Wi-Fi.
+  func nextPending(now: Date = Date()) -> BackupItem? {
     guard
       let statement = prepare(
-        "SELECT asset_id, part, attempts FROM items WHERE status = ? ORDER BY created DESC LIMIT 1",
-        [.text(BackupStatus.pending.rawValue)])
+        """
+        SELECT asset_id, part, attempts FROM items
+        WHERE status = ? AND (retry_after IS NULL OR retry_after <= ?)
+        ORDER BY created DESC LIMIT 1
+        """,
+        [.text(BackupStatus.pending.rawValue), .double(now.timeIntervalSince1970)])
     else { return nil }
     defer { sqlite3_finalize(statement) }
     guard sqlite3_step(statement) == SQLITE_ROW, let id = text(statement, 0),
@@ -192,10 +227,74 @@ final class BackupStore {
     return BackupItem(assetID: id, part: part, attempts: Int(sqlite3_column_int(statement, 2)))
   }
 
-  func setStatus(_ status: BackupStatus, assetID: String, part: String, error: String? = nil) {
+  /// A failed file is tried again by itself after `failedRetryDelay`. Any other state starts now.
+  func setStatus(
+    _ status: BackupStatus, assetID: String, part: String, error: String? = nil, now: Date = Date()
+  ) {
+    let retry: Value =
+      status == .failed
+      ? .double(now.timeIntervalSince1970 + BackupStore.failedRetryDelay) : .null
     run(
-      "UPDATE items SET status = ?, error = ? WHERE asset_id = ? AND part = ?",
-      [.text(status.rawValue), error.map(Value.text) ?? .null, .text(assetID), .text(part)])
+      "UPDATE items SET status = ?, error = ?, retry_after = ? WHERE asset_id = ? AND part = ?",
+      [.text(status.rawValue), error.map(Value.text) ?? .null, retry, .text(assetID), .text(part)])
+  }
+
+  /// Not the file's fault and not counted: it waits until the phone is on Wi-Fi again, for
+  /// example to download its original from iCloud while backup may only use Wi-Fi.
+  func waitForWifi(assetID: String, part: String, reason: String) {
+    run(
+      "UPDATE items SET status = ?, error = ?, retry_after = ? WHERE asset_id = ? AND part = ?",
+      [
+        .text(BackupStatus.pending.rawValue), .text(reason), .double(BackupStore.untilWifi),
+        .text(assetID), .text(part),
+      ])
+  }
+
+  /// The phone is on Wi-Fi, or may use any network: what waited for Wi-Fi may go.
+  func releaseWaitingForWifi() {
+    run(
+      "UPDATE items SET retry_after = NULL, error = NULL WHERE status = ? AND retry_after >= ?",
+      [.text(BackupStatus.pending.rawValue), .double(BackupStore.untilWifi)])
+  }
+
+  /// How many files wait for Wi-Fi.
+  func waitingForWifiCount() -> Int {
+    count(
+      "SELECT count(*) FROM items WHERE status = ? AND retry_after >= ?",
+      [.text(BackupStatus.pending.rawValue), .double(BackupStore.untilWifi)])
+  }
+
+  /// How many files wait out a failure before they are tried again.
+  func retryingCount(now: Date = Date()) -> Int {
+    count(
+      """
+      SELECT count(*) FROM items
+      WHERE status = ? AND error IS NOT NULL AND retry_after > ? AND retry_after < ?
+      """,
+      [
+        .text(BackupStatus.pending.rawValue), .double(now.timeIntervalSince1970),
+        .double(BackupStore.untilWifi),
+      ])
+  }
+
+  private func count(_ sql: String, _ values: [Value]) -> Int {
+    guard let statement = prepare(sql, values) else { return 0 }
+    defer { sqlite3_finalize(statement) }
+    return sqlite3_step(statement) == SQLITE_ROW ? Int(sqlite3_column_int(statement, 0)) : 0
+  }
+
+  /// Failed files whose wait is over get a fresh set of attempts. Files that failed before the
+  /// wait was remembered are tried at once.
+  func retryFailedAutomatically(now: Date = Date()) {
+    run(
+      """
+      UPDATE items SET status = ?, attempts = 0, error = NULL, retry_after = NULL
+      WHERE status = ? AND (retry_after IS NULL OR retry_after <= ?)
+      """,
+      [
+        .text(BackupStatus.pending.rawValue), .text(BackupStatus.failed.rawValue),
+        .double(now.timeIntervalSince1970),
+      ])
   }
 
   /// Remembered so the server can be asked again before a file is removed from the phone.
@@ -261,9 +360,12 @@ final class BackupStore {
       ])
   }
 
-  /// Records a failed attempt. Returns true when the file should be tried again.
+  /// Records a failed attempt. Returns true when the file should be tried again, which it then is
+  /// only after a wait that grows with every attempt.
   @discardableResult
-  func recordFailure(assetID: String, part: String, error: String, limit: Int) -> Bool {
+  func recordFailure(
+    assetID: String, part: String, error: String, limit: Int, now: Date = Date()
+  ) -> Bool {
     run(
       "UPDATE items SET attempts = attempts + 1 WHERE asset_id = ? AND part = ?",
       [.text(assetID), .text(part)])
@@ -275,7 +377,15 @@ final class BackupStore {
     defer { sqlite3_finalize(statement) }
     let attempts = sqlite3_step(statement) == SQLITE_ROW ? Int(sqlite3_column_int(statement, 0)) : limit
     let again = attempts < limit
-    setStatus(again ? .pending : .failed, assetID: assetID, part: part, error: error)
+    setStatus(again ? .pending : .failed, assetID: assetID, part: part, error: error, now: now)
+    if again {
+      run(
+        "UPDATE items SET retry_after = ? WHERE asset_id = ? AND part = ?",
+        [
+          .double(now.timeIntervalSince1970 + BackupStore.backoff(attempts: attempts)),
+          .text(assetID), .text(part),
+        ])
+    }
     return again
   }
 
@@ -302,9 +412,13 @@ final class BackupStore {
 
   static func key(_ assetID: String, _ part: String) -> String { "\(assetID)\n\(part)" }
 
+  /// The user asked: every failed file, and every file waiting out a failure, goes now.
   func retryFailed() {
     run(
-      "UPDATE items SET status = ?, attempts = 0, error = NULL WHERE status = ?",
+      "UPDATE items SET retry_after = NULL WHERE status = ? AND retry_after < ?",
+      [.text(BackupStatus.pending.rawValue), .double(BackupStore.untilWifi)])
+    run(
+      "UPDATE items SET status = ?, attempts = 0, error = NULL, retry_after = NULL WHERE status = ?",
       [.text(BackupStatus.pending.rawValue), .text(BackupStatus.failed.rawValue)])
   }
 

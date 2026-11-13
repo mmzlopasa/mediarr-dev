@@ -137,6 +137,98 @@ final class BackupStoreTests: XCTestCase {
     XCTAssertEqual(store.counts()["pending"], 1)
   }
 
+  func testChangingAlbumsKeepsOnlyNewMarks() {
+    store.addSkipped(["old"])
+    store.add([("waiting", date(2))])
+    store.forgetUnfinished()
+    XCTAssertEqual(store.counts(), ["skipped": 1])
+    store.add([("old", date(1))])
+    XCTAssertNil(store.nextPending(), "A photo kept back by \"only new\" must stay kept back")
+  }
+
+  func testTurningBackupOffForgetsOnlyNewMarksButNotSentFiles() {
+    store.addSkipped(["old"])
+    store.add([("sent", date(1))])
+    store.markVerified(assetID: "sent", part: BackupPart.main, remoteID: nil)
+    store.forgetUnfinished(keepSkipped: false)
+    XCTAssertEqual(store.counts(), ["verified": 1])
+  }
+
+  func testEverythingLiftsAnEarlierOnlyNewMark() {
+    store.addSkipped(["old", "other"])
+    store.add([("sent", date(1))])
+    store.markVerified(assetID: "sent", part: BackupPart.main, remoteID: nil)
+    store.forgetSkipped(["old", "sent"])
+    store.add([("old", date(2))])
+    XCTAssertEqual(store.nextPending()?.assetID, "old")
+    XCTAssertEqual(store.counts(), ["pending": 1, "skipped": 1, "verified": 1])
+  }
+
+  func testAFailedAttemptWaitsLongerEachTime() {
+    store.add([("a", date(1))])
+    let now = date(1_000_000)
+    store.recordFailure(assetID: "a", part: BackupPart.main, error: "x", limit: 5, now: now)
+    XCTAssertNil(store.nextPending(now: now))
+    XCTAssertEqual(store.nextPending(now: now.addingTimeInterval(61))?.assetID, "a")
+    store.recordFailure(assetID: "a", part: BackupPart.main, error: "x", limit: 5, now: now)
+    XCTAssertNil(store.nextPending(now: now.addingTimeInterval(61)))
+    XCTAssertEqual(store.nextPending(now: now.addingTimeInterval(4 * 60 + 1))?.attempts, 2)
+    XCTAssertEqual(BackupStore.backoff(attempts: 50), 6 * 60 * 60)
+  }
+
+  func testAskingToRetryEndsTheWaitAtOnce() {
+    store.add([("a", date(1))])
+    store.recordFailure(assetID: "a", part: BackupPart.main, error: "x", limit: 5)
+    XCTAssertNil(store.nextPending())
+    store.retryFailed()
+    XCTAssertEqual(store.nextPending()?.assetID, "a")
+  }
+
+  func testFailedFilesAreTriedAgainByThemselvesAfterADay() {
+    store.add([("a", date(1))])
+    let now = date(1_000_000)
+    store.recordFailure(assetID: "a", part: BackupPart.main, error: "x", limit: 1, now: now)
+    XCTAssertEqual(store.counts()["failed"], 1)
+    store.retryFailedAutomatically(now: now.addingTimeInterval(60 * 60))
+    XCTAssertEqual(store.counts()["failed"], 1)
+    store.retryFailedAutomatically(now: now.addingTimeInterval(BackupStore.failedRetryDelay + 1))
+    XCTAssertEqual(store.counts()["pending"], 1)
+    XCTAssertEqual(store.nextPending(now: now.addingTimeInterval(BackupStore.failedRetryDelay + 1))?.attempts, 0)
+  }
+
+  func testRejectedFileIsAlsoTriedAgainAfterADay() {
+    store.add([("a", date(1))])
+    let now = date(1_000_000)
+    store.setStatus(.failed, assetID: "a", part: BackupPart.main, error: "refused", now: now)
+    store.retryFailedAutomatically(now: now.addingTimeInterval(BackupStore.failedRetryDelay + 1))
+    XCTAssertEqual(store.counts()["pending"], 1)
+  }
+
+  func testICloudOriginalWaitsForWifiWithoutCounting() {
+    store.add([("cloud", date(1))])
+    store.waitForWifi(assetID: "cloud", part: BackupPart.main, reason: "Waiting for Wi-Fi")
+    XCTAssertNil(store.nextPending(now: date(4_000_000_000)))
+    XCTAssertEqual(store.counts()["pending"], 1)
+    store.retryFailed()
+    XCTAssertNil(store.nextPending(), "Retrying failures does not send it over mobile data")
+    store.releaseWaitingForWifi()
+    let item = store.nextPending()
+    XCTAssertEqual(item?.assetID, "cloud")
+    XCTAssertEqual(item?.attempts, 0)
+  }
+
+  func testStatusCountsWhatWaitsForWifiAndWhatWaitsToRetry() {
+    store.add([("cloud", date(1)), ("flaky", date(2)), ("fresh", date(3))])
+    let now = date(1_000_000)
+    store.waitForWifi(assetID: "cloud", part: BackupPart.main, reason: "Waiting for Wi-Fi")
+    store.recordFailure(assetID: "flaky", part: BackupPart.main, error: "x", limit: 5, now: now)
+    XCTAssertEqual(store.waitingForWifiCount(), 1)
+    XCTAssertEqual(store.retryingCount(now: now), 1)
+    XCTAssertEqual(store.retryingCount(now: now.addingTimeInterval(61)), 0)
+    store.releaseWaitingForWifi()
+    XCTAssertEqual(store.waitingForWifiCount(), 0)
+  }
+
   func testLivePhotoIsVerifiedOnlyWithBothFiles() {
     store.add([("live", date(1))])
     store.add([("live", date(1))], part: BackupPart.paired)
@@ -204,6 +296,46 @@ final class BackupRequestTests: XCTestCase {
     let metadata = try XCTUnwrap(request.value(forHTTPHeaderField: "Upload-Metadata"))
     XCTAssertTrue(metadata.contains("filename \(Data("Šišmiš.HEIC".utf8).base64EncodedString())"))
     XCTAssertTrue(metadata.contains("lastModified \(Data("2000".utf8).base64EncodedString())"))
+  }
+
+  func testWifiOnlyRequestsStayOffMobileDataAndHotspots() throws {
+    let wifi = try XCTUnwrap(
+      BackupRequest.make(
+        server: "http://s", key: "k", fileName: "a.jpg", size: 1, checksum: "c", created: nil,
+        allowsCellular: false))
+    XCTAssertFalse(wifi.allowsExpensiveNetworkAccess)
+    XCTAssertFalse(BackupRequest.mayUseMobileData(wifi))
+    let any = try XCTUnwrap(
+      BackupRequest.make(
+        server: "http://s", key: "k", fileName: "a.jpg", size: 1, checksum: "c", created: nil,
+        allowsCellular: true))
+    XCTAssertTrue(BackupRequest.mayUseMobileData(any))
+    XCTAssertFalse(BackupRequest.mayUseMobileData(nil))
+    let check = try XCTUnwrap(
+      BackupRequest.check(server: "http://s", key: "k", checksum: "c", allowsCellular: false))
+    XCTAssertFalse(check.allowsExpensiveNetworkAccess)
+  }
+
+  func testProbeAsksTheServerWithoutTheKey() throws {
+    let probe = try XCTUnwrap(BackupRequest.probe(server: "http://10.0.0.2:9851", allowsCellular: false))
+    XCTAssertEqual(probe.url?.absoluteString, "http://10.0.0.2:9851/api/server/hello")
+    XCTAssertNil(probe.value(forHTTPHeaderField: "X-Api-Key"))
+    XCTAssertFalse(probe.allowsCellularAccess)
+    XCTAssertFalse(probe.allowsExpensiveNetworkAccess)
+  }
+
+  /// Away from home every photo would otherwise use up its attempts in seconds.
+  func testAnUnreachableServerIsNotTheFilesFault() {
+    for code: URLError.Code in [
+      .notConnectedToInternet, .networkConnectionLost, .cannotConnectToHost, .cannotFindHost,
+      .timedOut, .dnsLookupFailed, .secureConnectionFailed, .serverCertificateUntrusted,
+    ] {
+      XCTAssertTrue(BackupRequest.isUnreachable(URLError(code)), "\(code.rawValue)")
+    }
+    for code: URLError.Code in [.cancelled, .badServerResponse, .cannotOpenFile, .fileDoesNotExist] {
+      XCTAssertFalse(BackupRequest.isUnreachable(URLError(code)), "\(code.rawValue)")
+    }
+    XCTAssertFalse(BackupRequest.isUnreachable(NSError(domain: "other", code: 1)))
   }
 
   func testOutcomes() {

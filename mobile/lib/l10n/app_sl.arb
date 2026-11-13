@@ -1459,6 +1459,20 @@
   "widgetInstallTitle": "Preverjanje namestitve",
   "widgetInstallMissing": "Gradnika ni v tej namestitvi: podpisovanje ga je odstranilo. Aplikacijo podpiši znova brez odstranjevanja razširitev (v Featherju: ne odstranjuj PlugIns).",
   "widgetInstallUnsigned": "Gradnik je v aplikaciji, a ni podpisan, zato ga iOS ne ponudi. Aplikacijo podpiši znova, da se podpišejo tudi razširitve.",
-  "widgetInstallFine": "Gradnik je nameščen in podpisan. Če ga še vedno ni med ponujenimi, znova zaženi telefon.",
-  "homeWidgetNoShare": "Ta namestitev aplikaciji ne dovoli, da gradniku preda album."
+  "widgetInstallFine": "Gradnik je v aplikaciji in podpisan. Če ga iOS še vedno ne ponudi, izbriši aplikacijo, jo znova namesti in znova zaženi telefon.",
+  "homeWidgetNoShare": "Ta namestitev aplikaciji ne dovoli, da gradniku preda album.",
+  "homeWidgetKeyName": "Pripomoček za začetni zaslon",
+  "homeWidgetScreenAlbumsFailed": "Albumov ni bilo mogoče naložiti.",
+  "homeWidgetScreenTryAgain": "Poskusi znova",
+  "loginScreenLinkTitle": "Prijava prek povezave?",
+  "loginScreenLinkBody": "Povezava želi ta telefon prijaviti v {server}. Nadaljuj le, če je to tvoj strežnik in si povezavo odprl sam.",
+  "loginScreenLinkContinue": "Prijava",
+  "sessionOddAnswer": "Odgovora strežnika ni bilo mogoče prebrati. Preveri naslov: morda namesto strežnika odgovarja nekaj pred njim.",
+  "backupCardNeedsLocation": "Čakam na dovoljenje za branje kraja, kjer so bile fotografije posnete. Brez njega telefon da le kopije brez lokacije, zato se nič ne pošlje.",
+  "backupCardAllowLocation": "Dovoli",
+  "backupCardOpenSettings": "Odpri nastavitve",
+  "backupCardServerAway": "Strežnik ni dosegljiv. Varnostno kopiranje se nadaljuje samo, ko se spet odzove.",
+  "backupCardWaitingForWifi": "{count, plural, =1{1 fotografija čaka na Wi-Fi: je le v iCloudu, varnostno kopiranje pa sme uporabljati le Wi-Fi.} other{{count} fotografij čaka na Wi-Fi: so le v iCloudu, varnostno kopiranje pa sme uporabljati le Wi-Fi.}}",
+  "backupCardRetryingSoon": "{count, plural, =1{1 datoteka ni šla skozi in se kmalu sama poskusi znova.} other{{count} datotek ni šlo skozi in se kmalu same poskusijo znova.}}",
+  "backupCardFailedRetryLater": "Neuspele datoteke se same poskusijo znova po enem dnevu."
 }

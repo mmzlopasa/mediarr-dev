@@ -178,6 +178,15 @@ String? sessionCookieFrom(String? setCookie) {
   return match == null ? null : 'mediarr_session=${match.group(1)}';
 }
 
+/// A JSON answer, or null for anything else, such as a proxy's web page.
+Object? readJson(String body) {
+  try {
+    return jsonDecode(body);
+  } on FormatException {
+    return null;
+  }
+}
+
 /// What a sign-in QR code carries: the server's address and a one-time code.
 class SignInLink {
   const SignInLink(this.server, this.code);
@@ -315,7 +324,9 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     }
 
     if (response.statusCode == 401) {
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final body = readJson(response.body);
+      // A proxy in front of the server answers in its own words, often a web page.
+      if (body is! Map) throw LoginFailure(l.sessionOddAnswer);
       final totp = body['totpRequired'] == true;
       throw LoginFailure(
         totp && code != null ? l.sessionCodeWrong : l.sessionWrongPassword,
@@ -323,9 +334,10 @@ class SessionNotifier extends AsyncNotifier<Session?> {
       );
     }
     if (response.statusCode == 403) {
-      final answer = jsonDecode(response.body);
+      final answer = readJson(response.body);
+      if (answer is! Map) throw LoginFailure(l.sessionOddAnswer);
       throw LoginFailure(
-        answer is Map && answer['message'] is String
+        answer['message'] is String
             ? answer['message'] as String
             : deviceNotApprovedMessage,
       );
@@ -338,7 +350,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     }
 
     final cookie = sessionCookieFrom(response.headers['set-cookie']);
-    final user = User.fromJson(jsonDecode(response.body));
+    final user = User.fromJson(readJson(response.body));
     if (cookie == null || user == null) {
       throw LoginFailure(l.sessionNoSession);
     }
@@ -377,7 +389,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     }
     final cookie = sessionCookieFrom(response.headers['set-cookie']);
     final user = response.statusCode == 200
-        ? User.fromJson(jsonDecode(response.body))
+        ? User.fromJson(readJson(response.body))
         : null;
     if (cookie == null || user == null) {
       throw LoginFailure(l.sessionNoSession);
@@ -410,7 +422,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
     if (redeemed.statusCode != 200) {
       throw LoginFailure(l.sessionCodeExpired);
     }
-    final ticket = QRTicket.fromJson(jsonDecode(redeemed.body))?.ticket;
+    final ticket = QRTicket.fromJson(readJson(redeemed.body))?.ticket;
     if (ticket == null) throw LoginFailure(l.sessionNoAnswer);
     final until = DateTime.now().add(qrAnswerWait);
     while (DateTime.now().isBefore(until)) {
@@ -426,7 +438,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
       }
       if (response.statusCode == 202) continue;
       if (response.statusCode == 403) {
-        final answer = jsonDecode(response.body);
+        final answer = readJson(response.body);
         throw LoginFailure(
           answer is Map && answer['message'] is String
               ? '${answer['message']}'
@@ -437,7 +449,7 @@ class SessionNotifier extends AsyncNotifier<Session?> {
         throw LoginFailure(l.sessionSignInExpired);
       }
       final cookie = sessionCookieFrom(response.headers['set-cookie']);
-      final user = User.fromJson(jsonDecode(response.body));
+      final user = User.fromJson(readJson(response.body));
       if (cookie == null || user == null) {
         throw LoginFailure(l.sessionNoSession);
       }

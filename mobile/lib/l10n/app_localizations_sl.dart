@@ -5222,9 +5222,74 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get widgetInstallFine =>
-      'Gradnik je nameščen in podpisan. Če ga še vedno ni med ponujenimi, znova zaženi telefon.';
+      'Gradnik je v aplikaciji in podpisan. Če ga iOS še vedno ne ponudi, izbriši aplikacijo, jo znova namesti in znova zaženi telefon.';
 
   @override
   String get homeWidgetNoShare =>
       'Ta namestitev aplikaciji ne dovoli, da gradniku preda album.';
+
+  @override
+  String get homeWidgetKeyName => 'Pripomoček za začetni zaslon';
+
+  @override
+  String get homeWidgetScreenAlbumsFailed => 'Albumov ni bilo mogoče naložiti.';
+
+  @override
+  String get homeWidgetScreenTryAgain => 'Poskusi znova';
+
+  @override
+  String get loginScreenLinkTitle => 'Prijava prek povezave?';
+
+  @override
+  String loginScreenLinkBody(String server) {
+    return 'Povezava želi ta telefon prijaviti v $server. Nadaljuj le, če je to tvoj strežnik in si povezavo odprl sam.';
+  }
+
+  @override
+  String get loginScreenLinkContinue => 'Prijava';
+
+  @override
+  String get sessionOddAnswer =>
+      'Odgovora strežnika ni bilo mogoče prebrati. Preveri naslov: morda namesto strežnika odgovarja nekaj pred njim.';
+
+  @override
+  String get backupCardNeedsLocation =>
+      'Čakam na dovoljenje za branje kraja, kjer so bile fotografije posnete. Brez njega telefon da le kopije brez lokacije, zato se nič ne pošlje.';
+
+  @override
+  String get backupCardAllowLocation => 'Dovoli';
+
+  @override
+  String get backupCardOpenSettings => 'Odpri nastavitve';
+
+  @override
+  String get backupCardServerAway =>
+      'Strežnik ni dosegljiv. Varnostno kopiranje se nadaljuje samo, ko se spet odzove.';
+
+  @override
+  String backupCardWaitingForWifi(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count fotografij čaka na Wi-Fi: so le v iCloudu, varnostno kopiranje pa sme uporabljati le Wi-Fi.',
+      one: '1 fotografija čaka na Wi-Fi: je le v iCloudu, varnostno kopiranje pa sme uporabljati le Wi-Fi.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupCardRetryingSoon(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count datotek ni šlo skozi in se kmalu same poskusijo znova.',
+      one: '1 datoteka ni šla skozi in se kmalu sama poskusi znova.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backupCardFailedRetryLater =>
+      'Neuspele datoteke se same poskusijo znova po enem dnevu.';
 }

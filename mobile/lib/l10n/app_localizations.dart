@@ -8874,7 +8874,7 @@ abstract class AppLocalizations {
   /// No description provided for @widgetInstallFine.
   ///
   /// In en, this message translates to:
-  /// **'The widget is installed and signed. If it is still not offered, restart the phone.'**
+  /// **'The widget is in the app and signed. If iOS still does not offer it, delete the app, install it again and restart the phone.'**
   String get widgetInstallFine;
 
   /// No description provided for @homeWidgetNoShare.
@@ -8882,6 +8882,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This installation does not let the app hand the album to its widget.'**
   String get homeWidgetNoShare;
+
+  /// No description provided for @homeWidgetKeyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen widget'**
+  String get homeWidgetKeyName;
+
+  /// No description provided for @homeWidgetScreenAlbumsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The albums could not be loaded.'**
+  String get homeWidgetScreenAlbumsFailed;
+
+  /// No description provided for @homeWidgetScreenTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get homeWidgetScreenTryAgain;
+
+  /// No description provided for @loginScreenLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in from a link?'**
+  String get loginScreenLinkTitle;
+
+  /// No description provided for @loginScreenLinkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A link asks to sign this phone in to {server}. Continue only if this is your server and you opened the link yourself.'**
+  String loginScreenLinkBody(String server);
+
+  /// No description provided for @loginScreenLinkContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginScreenLinkContinue;
+
+  /// No description provided for @sessionOddAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'The server\'s answer could not be read. Check the address: something in front of the server may be answering instead.'**
+  String get sessionOddAnswer;
+
+  /// No description provided for @backupCardNeedsLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for permission to read where photos were taken. Without it the phone only hands out copies without the location, so nothing is sent.'**
+  String get backupCardNeedsLocation;
+
+  /// No description provided for @backupCardAllowLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get backupCardAllowLocation;
+
+  /// No description provided for @backupCardOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get backupCardOpenSettings;
+
+  /// No description provided for @backupCardServerAway.
+  ///
+  /// In en, this message translates to:
+  /// **'The server cannot be reached. Backup goes on by itself once it answers again.'**
+  String get backupCardServerAway;
+
+  /// No description provided for @backupCardWaitingForWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo is waiting for Wi-Fi: it is only in iCloud, and backup may only use Wi-Fi.} other{{count} photos are waiting for Wi-Fi: they are only in iCloud, and backup may only use Wi-Fi.}}'**
+  String backupCardWaitingForWifi(int count);
+
+  /// No description provided for @backupCardRetryingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file did not go through and is tried again by itself shortly.} other{{count} files did not go through and are tried again by themselves shortly.}}'**
+  String backupCardRetryingSoon(int count);
+
+  /// No description provided for @backupCardFailedRetryLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Files that failed are tried again by themselves after a day.'**
+  String get backupCardFailedRetryLater;
 }
 
 class _AppLocalizationsDelegate

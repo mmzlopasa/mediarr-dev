@@ -39,6 +39,8 @@ final class BackupEngine: NSObject {
   private static let maxQueued = 6
   private static let maxAttempts = 5
   private static let checkInterval: TimeInterval = 60
+  /// While the server cannot be reached, how often it is asked again (a network change asks at once).
+  private static let probeInterval: TimeInterval = 60
 
   private enum Keys {
     static let enabled = "backup.enabled"
@@ -60,6 +62,11 @@ final class BackupEngine: NSObject {
   private let defaults = UserDefaults.standard
   private let pathMonitor = NWPathMonitor()
   private var networkIsCheap = true
+  /// The server could not be reached. Nothing is exported or sent until it answers again, and the
+  /// files that met this are not counted as failed. Not stored: a new launch simply asks again.
+  private var unreachable = false
+  private var lastProbe: TimeInterval = 0
+  private var probing = false
   private var exporting = 0
   private var pendingChecks = 0
   private var observing = false
@@ -83,7 +90,14 @@ final class BackupEngine: NSObject {
   private override init() {
     super.init()
     pathMonitor.pathUpdateHandler = { [weak self] path in
-      self?.queue.async { self?.networkIsCheap = !path.isExpensive }
+      self?.queue.async {
+        guard let self else { return }
+        self.networkIsCheap = !path.isExpensive
+        // Another network may reach the server, or allow what waited for Wi-Fi.
+        self.lastProbe = 0
+        // Only once the engine has started: before that the transfer session may not exist yet.
+        if path.status == .satisfied, self.recovered { self.pump() }
+      }
     }
     pathMonitor.start(queue: queue)
   }
@@ -167,7 +181,8 @@ final class BackupEngine: NSObject {
     timer?.cancel()
     timer = nil
     defaults.set(false, forKey: Keys.enabled)
-    openStore()?.forgetUnfinished()
+    // Backup is off: a later start asks again which photos are new, so no old marks may stay.
+    openStore()?.forgetUnfinished(keepSkipped: false)
     if observing {
       PHPhotoLibrary.shared().unregisterChangeObserver(self)
       observing = false
@@ -203,6 +218,10 @@ final class BackupEngine: NSObject {
     defaults.set(albumName, forKey: Keys.albumName)
     defaults.set(onlyNew, forKey: Keys.onlyNewPending)
     openStore()?.forgetUnfinished()
+    if !onlyNew, let album = currentAlbum() {
+      // "Everything" for this album, even if it was once chosen with "only new".
+      openStore()?.forgetSkipped(assets(inAlbums: [album.id]).map(\.id))
+    }
     session.getAllTasks { [self] tasks in
       tasks.forEach { $0.cancel() }
       queue.async { [self] in recoverThenWork() }
@@ -236,8 +255,11 @@ final class BackupEngine: NSObject {
       let added = Set(more).subtracting(moreAlbums)
       defaults.set(more, forKey: Keys.moreAlbums)
       defaults.set(excluded, forKey: Keys.excludedAlbums)
-      if onlyNew, let store = openStore() {
-        store.addSkipped(assets(inAlbums: Array(added)).map(\.id))
+      if let store = openStore() {
+        let ids = assets(inAlbums: Array(added)).map(\.id)
+        // Each album keeps the choice made for it: "only new" marks what is there now, and
+        // "everything" lifts marks an earlier choice left on the same photos.
+        if onlyNew { store.addSkipped(ids) } else { store.forgetSkipped(ids) }
       }
       openStore()?.forgetUnfinished()
       session.getAllTasks { [self] tasks in
@@ -332,8 +354,19 @@ final class BackupEngine: NSObject {
 
   func setWifiOnly(_ value: Bool) {
     queue.async { [self] in
+      let was = wifiOnly
       defaults.set(value, forKey: Keys.wifiOnly)
-      pump()
+      guard value, !was else {
+        pump()
+        return
+      }
+      // Transfers already queued were allowed to use mobile data. They start again, Wi-Fi only.
+      session.getAllTasks { [self] tasks in
+        for task in tasks where BackupRequest.mayUseMobileData(task.originalRequest) {
+          task.cancel()
+        }
+        queue.async { [self] in pump() }
+      }
     }
   }
 
@@ -403,8 +436,14 @@ final class BackupEngine: NSObject {
     let never = Set(assets(inAlbums: excluded).map(\.id))
     let found = assets(inAlbums: chosen).filter { !never.contains($0.id) }
     if defaults.bool(forKey: Keys.onlyNewPending) {
-      // What is in the album right now stays on the device. Only what is added later is sent.
-      store.addSkipped(found.map(\.id))
+      // What is in the main album right now stays on the device. Only what is added later is
+      // sent. The other albums keep the choice made for each of them when they were added.
+      let mainOnly = Set(
+        album.map { assets(inAlbums: [$0.id]).map(\.id) } ?? []
+      ).subtracting(assets(
+          inAlbums: moreAlbums.filter { !excluded.contains($0) && $0 != album?.id }
+        ).map(\.id))
+      store.addSkipped(found.map(\.id).filter { mainOnly.contains($0) })
       defaults.set(false, forKey: Keys.onlyNewPending)
     }
     store.forgetPending(notIn: Set(found.map(\.id)))
@@ -419,9 +458,20 @@ final class BackupEngine: NSObject {
       finishIfIdle()
       return
     }
+    if unreachable {
+      probe()
+      finishIfIdle()
+      return
+    }
     session.getAllTasks { [self] tasks in
       queue.async { [self] in
         guard let store = openStore() else { return }
+        guard !unreachable else {
+          finishIfIdle()
+          return
+        }
+        if !wifiOnly || networkIsCheap { store.releaseWaitingForWifi() }
+        store.retryFailedAutomatically()
         var room = BackupEngine.maxQueued - tasks.count - exporting - pendingChecks
         while room > 0, let item = store.nextPending() {
           store.setStatus(.exporting, assetID: item.assetID, part: item.part)
@@ -460,6 +510,7 @@ final class BackupEngine: NSObject {
     request.httpMethod = "PUT"
     request.timeoutInterval = 20
     request.allowsCellularAccess = !wifiOnly
+    request.allowsExpensiveNetworkAccess = !wifiOnly
     request.setValue(key, forHTTPHeaderField: "X-Api-Key")
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.httpBody = data
@@ -473,8 +524,39 @@ final class BackupEngine: NSObject {
     }.resume()
   }
 
+  /// The server could not be reached: nothing more is started, and what met this goes back in the
+  /// queue without counting as an attempt.
+  private func markUnreachable() {
+    if !unreachable { lastProbe = Date().timeIntervalSince1970 }
+    unreachable = true
+  }
+
+  /// Asks the server whether it can be reached again, at most once a minute (at once after a
+  /// network change). Any answer at all means it can.
+  private func probe() {
+    let now = Date().timeIntervalSince1970
+    guard !probing, now - lastProbe >= BackupEngine.probeInterval,
+      let server = defaults.string(forKey: Keys.server),
+      let request = BackupRequest.probe(server: server, allowsCellular: !wifiOnly)
+    else { return }
+    probing = true
+    lastProbe = now
+    checkSession.dataTask(with: request) { [weak self] _, response, _ in
+      self?.queue.async {
+        guard let self else { return }
+        self.probing = false
+        if response is HTTPURLResponse {
+          self.unreachable = false
+          self.pump()
+        } else {
+          self.finishIfIdle()
+        }
+      }
+    }.resume()
+  }
+
   private func finishIfIdle() {
-    guard exporting == 0, pendingChecks == 0, !idleHandlers.isEmpty else { return }
+    guard exporting == 0, pendingChecks == 0, !probing, !idleHandlers.isEmpty else { return }
     let handlers = idleHandlers
     idleHandlers = []
     handlers.forEach { $0() }
@@ -524,13 +606,23 @@ final class BackupEngine: NSObject {
       UUID().uuidString + "." + (resource.originalFilename as NSString).pathExtension)
     let options = PHAssetResourceRequestOptions()
     // Downloading from iCloud counts as using the network, so it obeys the Wi-Fi setting.
-    options.isNetworkAccessAllowed = !wifiOnly || networkIsCheap
+    let mayDownload = !wifiOnly || networkIsCheap
+    options.isNetworkAccessAllowed = mayDownload
 
     PHAssetResourceManager.default().writeData(for: resource, toFile: file, options: options) {
       [self] error in
       queue.async { [self] in
         if let error {
           try? FileManager.default.removeItem(at: file)
+          if !mayDownload {
+            // Most likely only in iCloud, which may not be downloaded over mobile data. Not the
+            // file's fault: it waits for Wi-Fi, and only counts as failed if it fails there too.
+            openStore()?.waitForWifi(
+              assetID: item.assetID, part: item.part,
+              reason: "Waiting for Wi-Fi to download the original from iCloud.")
+            done()
+            return
+          }
           openStore()?.recordFailure(
             assetID: item.assetID, part: item.part,
             error: "The file could not be read from the device: \(error.localizedDescription)",
@@ -610,7 +702,20 @@ final class BackupEngine: NSObject {
       finishCheck(false)
       return
     }
-    checkSession.dataTask(with: check) { data, response, _ in
+    checkSession.dataTask(with: check) { [self] data, response, error in
+      if let error, BackupRequest.isUnreachable(error) {
+        // No point in queueing an upload to a server that cannot be reached.
+        queue.async { [self] in
+          pendingChecks -= 1
+          try? FileManager.default.removeItem(at: file)
+          if openStore()?.isExporting(assetID: item.assetID, part: item.part) == true {
+            openStore()?.setStatus(.pending, assetID: item.assetID, part: item.part)
+          }
+          markUnreachable()
+          finishIfIdle()
+        }
+        return
+      }
       finishCheck(
         BackupRequest.serverHasFile(
           status: (response as? HTTPURLResponse)?.statusCode ?? 0, body: data, checksum: checksum))
@@ -656,6 +761,9 @@ final class BackupEngine: NSObject {
         "verified": counts["verified"] ?? 0,
         "failed": counts["failed"] ?? 0,
         "failures": openStore()?.failures(limit: 20) ?? [],
+        "serverUnreachable": unreachable,
+        "waitingForWifi": openStore()?.waitingForWifiCount() ?? 0,
+        "retrying": openStore()?.retryingCount() ?? 0,
         "albumName": defaults.string(forKey: Keys.albumName) ?? "",
         "albumFound": currentAlbum() != nil || !moreAlbums.isEmpty,
         "moreAlbums": moreAlbums,
@@ -719,6 +827,8 @@ final class BackupEngine: NSObject {
     task.expirationHandler = { state.finish(success: false) }
     queue.async { [self] in
       idleHandlers.append { state.finish(success: true) }
+      // A background wake is a good moment to ask the server again.
+      lastProbe = 0
       startObserving()
       startTimer()
       recoverThenWork()
@@ -797,9 +907,11 @@ extension BackupEngine: URLSessionDataDelegate {
         if code == .cancelled {
           store.forgetCancelled(assetID: info.assetID, part: info.part)
           scan()
-        } else if code == .networkConnectionLost || code == .notConnectedToInternet {
-          // Not the file's fault: it simply goes back in the queue.
+        } else if BackupRequest.isUnreachable(error) {
+          // Not the file's fault: it goes back in the queue uncounted, and nothing more is sent
+          // until the server answers again.
           store.setStatus(.pending, assetID: info.assetID, part: info.part)
+          markUnreachable()
         } else {
           store.recordFailure(
             assetID: info.assetID, part: info.part, error: error.localizedDescription,

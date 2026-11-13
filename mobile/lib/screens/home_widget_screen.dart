@@ -38,6 +38,7 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
   WidgetChoice? _choice;
   WidgetInstall? _install;
   List<Album>? _albums;
+  bool _albumsFailed = false;
   bool _busy = false;
 
   @override
@@ -50,15 +51,17 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
     final choice = await _widget.status();
     final install = Platform.isIOS ? await _widget.install() : null;
     List<Album>? albums;
+    var failed = false;
     try {
       albums = await _session.api.listAlbums(sort: 'title');
     } on ApiException {
-      albums = const [];
+      failed = true;
     }
     if (!mounted) return;
     setState(() {
       _choice = choice;
       _install = install;
+      _albumsFailed = failed;
       _albums = albums ?? const [];
     });
   }
@@ -124,7 +127,20 @@ class _HomeWidgetScreenState extends ConsumerState<HomeWidgetScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                   child: Text(l.homeWidgetScreenAlbum, style: text.titleSmall),
                 ),
-                if (albums.isEmpty)
+                if (_albumsFailed)
+                  ListTile(
+                    key: const ValueKey('widget-albums-failed'),
+                    leading: Icon(
+                      Icons.cloud_off,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    title: Text(l.homeWidgetScreenAlbumsFailed),
+                    trailing: TextButton(
+                      onPressed: _busy ? null : _load,
+                      child: Text(l.homeWidgetScreenTryAgain),
+                    ),
+                  )
+                else if (albums.isEmpty)
                   ListTile(title: Text(l.homeWidgetScreenNoAlbums)),
                 for (final album in albums)
                   ListTile(
@@ -171,11 +187,7 @@ class WidgetInstallTile extends StatelessWidget {
         color: fine ? Palette.gold : Theme.of(context).colorScheme.error,
       ),
       title: Text(l.widgetInstallTitle),
-      subtitle: Text(
-        install.group.isEmpty
-            ? message
-            : '$message\n\nApp keychain: ${install.group}',
-      ),
+      subtitle: Text(message),
     );
   }
 }

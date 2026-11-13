@@ -1459,6 +1459,20 @@
   "widgetInstallTitle": "Provjera instalacije",
   "widgetInstallMissing": "Widgeta nema u ovoj instalaciji: potpisivanje ga je izbacilo. Potpiši aplikaciju ponovno bez uklanjanja ekstenzija (u Featheru: ne uklanjaj PlugIns).",
   "widgetInstallUnsigned": "Widget je u aplikaciji, ali nije potpisan, pa ga iOS ne nudi. Potpiši aplikaciju ponovno tako da se potpišu i ekstenzije.",
-  "widgetInstallFine": "Widget je instaliran i potpisan. Ako ga i dalje nema u ponudi, ponovno pokreni mobitel.",
-  "homeWidgetNoShare": "Ova instalacija ne dopušta aplikaciji da widgetu preda album."
+  "widgetInstallFine": "Widget je u aplikaciji i potpisan. Ako ga iOS i dalje ne nudi, obriši aplikaciju, ponovno je instaliraj i ponovno pokreni mobitel.",
+  "homeWidgetNoShare": "Ova instalacija ne dopušta aplikaciji da widgetu preda album.",
+  "homeWidgetKeyName": "Widget na početnom zaslonu",
+  "homeWidgetScreenAlbumsFailed": "Albumi se nisu mogli učitati.",
+  "homeWidgetScreenTryAgain": "Pokušaj ponovno",
+  "loginScreenLinkTitle": "Prijava preko poveznice?",
+  "loginScreenLinkBody": "Poveznica traži da se ovaj mobitel prijavi na {server}. Nastavi samo ako je to tvoj poslužitelj i ako si poveznicu otvorio sam.",
+  "loginScreenLinkContinue": "Prijavi se",
+  "sessionOddAnswer": "Odgovor poslužitelja nije čitljiv. Provjeri adresu: možda umjesto poslužitelja odgovara nešto ispred njega.",
+  "backupCardNeedsLocation": "Čeka se dopuštenje za čitanje mjesta snimanja. Bez njega mobitel daje samo kopije bez lokacije, pa se ništa ne šalje.",
+  "backupCardAllowLocation": "Dopusti",
+  "backupCardOpenSettings": "Otvori postavke",
+  "backupCardServerAway": "Poslužitelj nije dostupan. Sigurnosna kopija nastavlja sama čim se ponovno javi.",
+  "backupCardWaitingForWifi": "{count, plural, one{{count} fotografija čeka Wi-Fi: nalazi se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.} few{{count} fotografije čekaju Wi-Fi: nalaze se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.} other{{count} fotografija čeka Wi-Fi: nalaze se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.}}",
+  "backupCardRetryingSoon": "{count, plural, one{{count} datoteka nije prošla i uskoro se sama ponovno šalje.} few{{count} datoteke nisu prošle i uskoro se same ponovno šalju.} other{{count} datoteka nije prošlo i uskoro se same ponovno šalju.}}",
+  "backupCardFailedRetryLater": "Neuspjele datoteke same se ponovno pokušavaju nakon jednog dana."
 }

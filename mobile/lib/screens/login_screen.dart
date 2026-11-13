@@ -26,6 +26,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _busy = false;
   bool _waiting = false;
   bool _cancelWait = false;
+  bool _asking = false;
   String? _error;
   StreamSubscription<Uri>? _links;
 
@@ -48,9 +49,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _fromLink(Uri uri) {
+  /// Any web page or app can open such a link, so it only signs in once the person agrees to the
+  /// server it names.
+  Future<void> _fromLink(Uri uri) async {
     final link = parseSignInLink(uri.toString());
-    if (link != null && mounted && !_waiting) _signInWith(link);
+    if (link == null || !mounted || _waiting || _asking) return;
+    _asking = true;
+    final agreed = await confirmSignInLink(context, link);
+    _asking = false;
+    if (agreed && mounted && !_waiting) await _signInWith(link);
   }
 
   @override
@@ -86,6 +93,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _error = failure.message;
         }
       });
+    } on Exception {
+      if (mounted) setState(() => _error = l.sessionOddAnswer);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -100,6 +109,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(sessionProvider.notifier).signInWithProvider(_server.text);
     } on LoginFailure catch (failure) {
       if (mounted) setState(() => _error = failure.message);
+    } on Exception {
+      if (mounted) setState(() => _error = l.sessionOddAnswer);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -124,6 +135,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
     } on LoginFailure catch (failure) {
       if (mounted && !_cancelWait) setState(() => _error = failure.message);
+    } on Exception {
+      if (mounted && !_cancelWait) setState(() => _error = l.sessionOddAnswer);
     } finally {
       if (mounted) setState(() => _waiting = false);
     }
@@ -289,6 +302,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
+}
+
+/// Asks before a sign-in link from outside the app is followed, and names the server it leads to.
+Future<bool> confirmSignInLink(BuildContext context, SignInLink link) async {
+  final agreed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l.loginScreenLinkTitle),
+      content: Text(l.loginScreenLinkBody(link.server)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(l.loginScreenCancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(l.loginScreenLinkContinue),
+        ),
+      ],
+    ),
+  );
+  return agreed ?? false;
 }
 
 /// Asks for the code shown on a signed-in screen. It owns its field, so closing it is safe.

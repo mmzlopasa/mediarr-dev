@@ -40,6 +40,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (mounted && session != null) {
         unawaited(showUpdateNoticeIfNew(context, session));
         unawaited(_reportDevice());
+        unawaited(ref.read(backupProvider).askLocationIfWaiting());
       }
     });
     SharedFilesChannel.listen((files) {

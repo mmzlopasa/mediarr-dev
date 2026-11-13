@@ -1459,6 +1459,20 @@
   "widgetInstallTitle": "Installationsprüfung",
   "widgetInstallMissing": "Das Widget fehlt in dieser Installation: Die Signierung hat es entfernt. Signiere die App erneut, ohne Erweiterungen zu entfernen (in Feather: PlugIns nicht entfernen).",
   "widgetInstallUnsigned": "Das Widget ist in der App, wurde aber nicht signiert, daher bietet iOS es nicht an. Signiere die App erneut, sodass auch ihre Erweiterungen signiert werden.",
-  "widgetInstallFine": "Das Widget ist installiert und signiert. Wenn es weiterhin nicht angeboten wird, starte das Telefon neu.",
-  "homeWidgetNoShare": "Diese Installation erlaubt der App nicht, das Album an ihr Widget zu übergeben."
+  "widgetInstallFine": "Das Widget ist in der App und signiert. Wenn iOS es weiterhin nicht anbietet, lösche die App, installiere sie erneut und starte das Telefon neu.",
+  "homeWidgetNoShare": "Diese Installation erlaubt der App nicht, das Album an ihr Widget zu übergeben.",
+  "homeWidgetKeyName": "Widget für den Startbildschirm",
+  "homeWidgetScreenAlbumsFailed": "Die Alben konnten nicht geladen werden.",
+  "homeWidgetScreenTryAgain": "Erneut versuchen",
+  "loginScreenLinkTitle": "Über einen Link anmelden?",
+  "loginScreenLinkBody": "Ein Link möchte dieses Telefon bei {server} anmelden. Fahre nur fort, wenn das dein Server ist und du den Link selbst geöffnet hast.",
+  "loginScreenLinkContinue": "Anmelden",
+  "sessionOddAnswer": "Die Antwort des Servers konnte nicht gelesen werden. Prüfe die Adresse: Möglicherweise antwortet etwas, das vor dem Server steht.",
+  "backupCardNeedsLocation": "Warte auf die Erlaubnis, den Aufnahmeort von Fotos zu lesen. Ohne sie gibt das Telefon nur Kopien ohne Ort heraus, daher wird nichts gesendet.",
+  "backupCardAllowLocation": "Erlauben",
+  "backupCardOpenSettings": "Einstellungen öffnen",
+  "backupCardServerAway": "Der Server ist nicht erreichbar. Die Sicherung läuft von selbst weiter, sobald er wieder antwortet.",
+  "backupCardWaitingForWifi": "{count, plural, =1{1 Foto wartet auf WLAN: Es ist nur in iCloud, und die Sicherung darf nur WLAN nutzen.} other{{count} Fotos warten auf WLAN: Sie sind nur in iCloud, und die Sicherung darf nur WLAN nutzen.}}",
+  "backupCardRetryingSoon": "{count, plural, =1{1 Datei ging nicht durch und wird in Kürze von selbst erneut versucht.} other{{count} Dateien gingen nicht durch und werden in Kürze von selbst erneut versucht.}}",
+  "backupCardFailedRetryLater": "Fehlgeschlagene Dateien werden nach einem Tag von selbst erneut versucht."
 }

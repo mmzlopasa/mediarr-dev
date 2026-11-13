@@ -5209,9 +5209,76 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get widgetInstallFine =>
-      'Das Widget ist installiert und signiert. Wenn es weiterhin nicht angeboten wird, starte das Telefon neu.';
+      'Das Widget ist in der App und signiert. Wenn iOS es weiterhin nicht anbietet, lösche die App, installiere sie erneut und starte das Telefon neu.';
 
   @override
   String get homeWidgetNoShare =>
       'Diese Installation erlaubt der App nicht, das Album an ihr Widget zu übergeben.';
+
+  @override
+  String get homeWidgetKeyName => 'Widget für den Startbildschirm';
+
+  @override
+  String get homeWidgetScreenAlbumsFailed =>
+      'Die Alben konnten nicht geladen werden.';
+
+  @override
+  String get homeWidgetScreenTryAgain => 'Erneut versuchen';
+
+  @override
+  String get loginScreenLinkTitle => 'Über einen Link anmelden?';
+
+  @override
+  String loginScreenLinkBody(String server) {
+    return 'Ein Link möchte dieses Telefon bei $server anmelden. Fahre nur fort, wenn das dein Server ist und du den Link selbst geöffnet hast.';
+  }
+
+  @override
+  String get loginScreenLinkContinue => 'Anmelden';
+
+  @override
+  String get sessionOddAnswer =>
+      'Die Antwort des Servers konnte nicht gelesen werden. Prüfe die Adresse: Möglicherweise antwortet etwas, das vor dem Server steht.';
+
+  @override
+  String get backupCardNeedsLocation =>
+      'Warte auf die Erlaubnis, den Aufnahmeort von Fotos zu lesen. Ohne sie gibt das Telefon nur Kopien ohne Ort heraus, daher wird nichts gesendet.';
+
+  @override
+  String get backupCardAllowLocation => 'Erlauben';
+
+  @override
+  String get backupCardOpenSettings => 'Einstellungen öffnen';
+
+  @override
+  String get backupCardServerAway =>
+      'Der Server ist nicht erreichbar. Die Sicherung läuft von selbst weiter, sobald er wieder antwortet.';
+
+  @override
+  String backupCardWaitingForWifi(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Fotos warten auf WLAN: Sie sind nur in iCloud, und die Sicherung darf nur WLAN nutzen.',
+      one: '1 Foto wartet auf WLAN: Es ist nur in iCloud, und die Sicherung darf nur WLAN nutzen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String backupCardRetryingSoon(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Dateien gingen nicht durch und werden in Kürze von selbst erneut versucht.',
+      one: '1 Datei ging nicht durch und wird in Kürze von selbst erneut versucht.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backupCardFailedRetryLater =>
+      'Fehlgeschlagene Dateien werden nach einem Tag von selbst erneut versucht.';
 }

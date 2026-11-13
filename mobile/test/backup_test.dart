@@ -9,7 +9,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mediarr/screens/backup_card.dart';
 import 'package:mediarr/services/backup.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mediarr/theme.dart';
+import 'package:mediarr/l10n/l10n.dart';
+import 'package:photo_manager/photo_manager.dart';
+
+import 'fake_session.dart';
 
 const _channel = MethodChannel('app.mediarr/backup');
 
@@ -30,9 +35,12 @@ void main() {
         .setMockMethodCallHandler(_channel, null);
   });
 
-  Future<void> show(WidgetTester tester) async {
+  Future<void> show(WidgetTester tester, {BackupService? service}) async {
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          if (service != null) backupProvider.overrideWithValue(service),
+        ],
         child: MaterialApp(
           theme: buildTheme(),
           home: const Scaffold(
@@ -126,6 +134,76 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  test(
+    'the waiting states of the native engines are read and put in words',
+    () {
+      final status = BackupStatus.fromMap({
+        'enabled': true,
+        'unauthorized': true,
+        'waitingForMediaLocation': true,
+        'serverUnreachable': true,
+        'waitingForWifi': 2,
+        'retrying': 3,
+        'failed': 1,
+      });
+      expect(status.waitingForMediaLocation, isTrue);
+      expect(status.serverUnreachable, isTrue);
+      expect(status.waitingForWifi, 2);
+      expect(status.retrying, 3);
+      final notes = backupNotes(status).map((note) => note.text).toList();
+      expect(notes, [
+        l.backupCardRefused,
+        l.backupCardNeedsLocation,
+        l.backupCardServerAway,
+        '2 photos are waiting for Wi-Fi: they are only in iCloud, and backup may only use Wi-Fi.',
+        '3 files did not go through and are tried again by themselves shortly.',
+        l.backupCardFailedRetryLater,
+      ]);
+      expect(backupNotes(BackupStatus.fromMap({'enabled': true})), isEmpty);
+    },
+  );
+
+  testWidgets(
+    'backup waiting for the photos\' location asks for it, and again on a tap',
+    (tester) async {
+      reply({
+        'enabled': true,
+        'albumName': 'Backup',
+        'albumFound': true,
+        'waitingForMediaLocation': true,
+      });
+      final service = _AskingBackup();
+      await show(tester, service: service);
+      await tester.pump();
+      // Asked by itself once, when the card saw it.
+      expect(service.asked, 1);
+      expect(find.text(l.backupCardNeedsLocation), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('backup-media-location')),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(find.text(l.backupCardAllowLocation));
+      await tester.tap(find.text(l.backupCardAllowLocation));
+      await tester.pump();
+      expect(service.asked, 2);
+      await tester.tap(find.text(l.backupCardOpenSettings));
+      await tester.pump();
+      expect(service.settings, 1);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  test('on app start it asks only when backup waits, and only once', () async {
+    BackupService.askedForLocation = false;
+    reply({'enabled': true, 'waitingForMediaLocation': false});
+    final service = _AskingBackup();
+    expect(await service.askLocationIfWaiting(), isFalse);
+    reply({'enabled': true, 'waitingForMediaLocation': true});
+    expect(await service.askLocationIfWaiting(), isTrue);
+    expect(await service.askLocationIfWaiting(), isFalse);
+    expect(service.asked, 1);
+  });
+
   testWidgets('a missing album is reported, because nothing is sent then', (
     tester,
   ) async {
@@ -200,6 +278,62 @@ void freeSpaceTests() {
     });
     expect(lists.more, ['a']);
     expect(lists.excluded, ['b']);
+  });
+
+  group('the device key for backup', () {
+    var created = 0;
+    Future<Response> server(Request request) async {
+      if (request.method == 'POST') {
+        created += 1;
+        return jsonReply({'id': 'key-$created', 'key': 'secret-$created'}, 201);
+      }
+      return Response('', 204);
+    }
+
+    Future<void> enable(RecordingSession session) => BackupService().enable(
+      session,
+      wifiOnly: true,
+      onlyNew: false,
+      albumId: null,
+      albumName: '',
+    );
+
+    setUp(() => created = 0);
+
+    test('turning it on again revokes the key it used before', () async {
+      FlutterSecureStorage.setMockInitialValues({'device_key_id': 'key-old'});
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, (call) async => null);
+      final session = RecordingSession(server);
+      await enable(session);
+      expect(session.requests, [
+        'POST /api/me/device-keys',
+        'DELETE /api/me/device-keys/key-old',
+      ]);
+      expect(
+        await const FlutterSecureStorage().read(key: 'device_key_id'),
+        'key-1',
+      );
+    });
+
+    test('a key the engine did not take is revoked again', () async {
+      FlutterSecureStorage.setMockInitialValues({'device_key_id': 'key-old'});
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(_channel, (call) async {
+            throw PlatformException(code: 'denied');
+          });
+      final session = RecordingSession(server);
+      await expectLater(enable(session), throwsA(isA<PlatformException>()));
+      expect(session.requests, [
+        'POST /api/me/device-keys',
+        'DELETE /api/me/device-keys/key-1',
+      ]);
+      // The backup that still runs keeps its key.
+      expect(
+        await const FlutterSecureStorage().read(key: 'device_key_id'),
+        'key-old',
+      );
+    });
   });
 
   group('copying albums to the server', () {
@@ -281,3 +415,17 @@ Map<String, dynamic> _album(String id, String title, {String role = 'owner'}) =>
       'createdAt': '2026-01-01T00:00:00Z',
       'updatedAt': '2026-01-01T00:00:00Z',
     };
+
+class _AskingBackup extends BackupService {
+  int asked = 0;
+  int settings = 0;
+
+  @override
+  Future<PermissionState> requestAccess() async {
+    asked += 1;
+    return PermissionState.authorized;
+  }
+
+  @override
+  Future<void> openSettings() async => settings += 1;
+}

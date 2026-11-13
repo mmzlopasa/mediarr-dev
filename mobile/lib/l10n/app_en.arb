@@ -2832,6 +2832,41 @@
   "widgetInstallTitle": "Installation check",
   "widgetInstallMissing": "The widget is not in this installation: the signing left it out. Sign the app again without removing extensions (in Feather: do not remove PlugIns).",
   "widgetInstallUnsigned": "The widget is in the app but was not signed, so iOS does not offer it. Sign the app again so that its extensions are signed too.",
-  "widgetInstallFine": "The widget is installed and signed. If it is still not offered, restart the phone.",
-  "homeWidgetNoShare": "This installation does not let the app hand the album to its widget."
+  "widgetInstallFine": "The widget is in the app and signed. If iOS still does not offer it, delete the app, install it again and restart the phone.",
+  "homeWidgetNoShare": "This installation does not let the app hand the album to its widget.",
+  "homeWidgetKeyName": "Home screen widget",
+  "homeWidgetScreenAlbumsFailed": "The albums could not be loaded.",
+  "homeWidgetScreenTryAgain": "Try again",
+  "loginScreenLinkTitle": "Sign in from a link?",
+  "loginScreenLinkBody": "A link asks to sign this phone in to {server}. Continue only if this is your server and you opened the link yourself.",
+  "loginScreenLinkContinue": "Sign in",
+  "sessionOddAnswer": "The server's answer could not be read. Check the address: something in front of the server may be answering instead.",
+  "@loginScreenLinkBody": {
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "backupCardNeedsLocation": "Waiting for permission to read where photos were taken. Without it the phone only hands out copies without the location, so nothing is sent.",
+  "backupCardAllowLocation": "Allow",
+  "backupCardOpenSettings": "Open settings",
+  "backupCardServerAway": "The server cannot be reached. Backup goes on by itself once it answers again.",
+  "backupCardWaitingForWifi": "{count, plural, =1{1 photo is waiting for Wi-Fi: it is only in iCloud, and backup may only use Wi-Fi.} other{{count} photos are waiting for Wi-Fi: they are only in iCloud, and backup may only use Wi-Fi.}}",
+  "@backupCardWaitingForWifi": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupCardRetryingSoon": "{count, plural, =1{1 file did not go through and is tried again by itself shortly.} other{{count} files did not go through and are tried again by themselves shortly.}}",
+  "@backupCardRetryingSoon": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupCardFailedRetryLater": "Files that failed are tried again by themselves after a day."
 }

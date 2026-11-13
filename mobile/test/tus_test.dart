@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -127,4 +128,55 @@ void main() {
     );
     expect(attempts, 3);
   });
+
+  TusClient impatient(MockClientStreamHandler handler) => TusClient(
+    baseUrl: 'http://192.168.1.10:9851',
+    headers: const {'Cookie': 'mediarr_session=x'},
+    client: MockClient.streaming(handler),
+    chunkSize: 40,
+    retryDelays: const [Duration.zero, Duration.zero],
+    requestTimeout: const Duration(milliseconds: 50),
+    chunkTimeout: const Duration(milliseconds: 50),
+  );
+
+  test('a stalled chunk is given up and sent again', () async {
+    final received = <int>[];
+    var stalled = false;
+    final client = impatient((request, body) async {
+      if (request.method == 'POST') {
+        return reply(201, {'location': '/api/uploads/abc'});
+      }
+      if (request.method == 'HEAD') {
+        return reply(200, {'upload-offset': '${received.length}'});
+      }
+      final bytes = await body.expand((chunk) => chunk).toList();
+      if (received.length == 40 && !stalled) {
+        stalled = true;
+        // Never answers, like a connection that went quiet.
+        return Completer<http.StreamedResponse>().future;
+      }
+      received.addAll(bytes);
+      return reply(204);
+    });
+
+    await client.upload(file, name: 'a.jpg');
+    expect(stalled, isTrue);
+    expect(received, content);
+  });
+
+  test(
+    'a server that never answers fails the upload instead of hanging',
+    () async {
+      var attempts = 0;
+      final client = impatient((request, body) {
+        attempts += 1;
+        return Completer<http.StreamedResponse>().future;
+      });
+      await expectLater(
+        client.upload(file, name: 'a.jpg'),
+        throwsA(isA<TimeoutException>()),
+      );
+      expect(attempts, 3);
+    },
+  );
 }

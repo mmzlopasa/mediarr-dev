@@ -17,9 +17,16 @@ object BackupStatus {
 
 data class BackupItem(val assetId: String, val attempts: Int)
 
+/** The wait before a file that failed is tried again: 1, 4, 16, 64 minutes, at most 6 hours. */
+fun backoffMs(attempts: Int): Long {
+    var wait = 60_000L
+    repeat((attempts - 1).coerceIn(0, 6)) { wait *= 4 }
+    return wait.coerceAtMost(6 * 60 * 60_000L)
+}
+
 /** What happened to each file, so that the same one is never sent twice. */
 class BackupStore(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "backup.sqlite", null, 1) {
+    SQLiteOpenHelper(context.applicationContext, "backup.sqlite", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -31,14 +38,18 @@ class BackupStore(context: Context) :
               created INTEGER NOT NULL,
               error TEXT,
               checksum TEXT,
-              finished INTEGER
+              finished INTEGER,
+              retry_after INTEGER
             )
             """.trimIndent(),
         )
         db.execSQL("CREATE INDEX items_status ON items (status, created DESC)")
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    /** Version 2: when a waiting file may be tried again, or a failed one tried anew. Null is now. */
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) db.execSQL("ALTER TABLE items ADD COLUMN retry_after INTEGER")
+    }
 
     private fun insert(id: String, created: Long, status: String) {
         writableDatabase.insertWithOnConflict(
@@ -61,6 +72,12 @@ class BackupStore(context: Context) :
         assets.forEach { (id, created) -> insert(id, created, BackupStatus.SKIPPED) }
     }
 
+    /** The user chose "everything" for these files after all, so they are no longer kept back. */
+    fun forgetSkipped(ids: List<String>) = transaction {
+        val db = writableDatabase
+        ids.forEach { db.delete("items", "asset_id = ? AND status = ?", arrayOf(it, BackupStatus.SKIPPED)) }
+    }
+
     /** Switching album drops what the old one had queued. What was already sent stays known. */
     fun forgetPending(keep: Set<String>) = transaction {
         val db = writableDatabase
@@ -81,12 +98,13 @@ class BackupStore(context: Context) :
             buildList { while (it.moveToNext()) add(it.getString(0)) }
         }
 
-    fun nextPending(): BackupItem? =
+    /** The newest file waiting, except those still waiting out a failure. */
+    fun nextPending(now: Long = System.currentTimeMillis()): BackupItem? =
         readableDatabase.query(
             "items",
             arrayOf("asset_id", "attempts"),
-            "status = ?",
-            arrayOf(BackupStatus.PENDING),
+            "status = ? AND (retry_after IS NULL OR retry_after <= ?)",
+            arrayOf(BackupStatus.PENDING, now.toString()),
             null,
             null,
             "created DESC",
@@ -99,6 +117,7 @@ class BackupStore(context: Context) :
             ContentValues().apply {
                 put("status", BackupStatus.UPLOADING)
                 put("checksum", checksum)
+                putNull("retry_after")
             },
             "asset_id = ?",
             arrayOf(id),
@@ -118,20 +137,61 @@ class BackupStore(context: Context) :
         )
     }
 
-    /** Records a failed attempt. It stays in the queue until it has used up its attempts. */
-    fun recordFailure(id: String, error: String, limit: Int) {
+    /**
+     * Records a failed attempt. It stays in the queue, after a wait that grows with every attempt,
+     * until it has used up its attempts. A failed file is tried again by itself after a day.
+     */
+    fun recordFailure(id: String, error: String, limit: Int, now: Long = System.currentTimeMillis()) {
         val attempts = readableDatabase.query(
             "items", arrayOf("attempts"), "asset_id = ?", arrayOf(id), null, null, null,
         ).use { if (it.moveToFirst()) it.getInt(0) + 1 else 1 }
+        val failed = attempts >= limit
         writableDatabase.update(
             "items",
             ContentValues().apply {
                 put("attempts", attempts)
                 put("error", error)
-                put("status", if (attempts >= limit) BackupStatus.FAILED else BackupStatus.PENDING)
+                put("status", if (failed) BackupStatus.FAILED else BackupStatus.PENDING)
+                put("retry_after", now + if (failed) FAILED_RETRY_MS else backoffMs(attempts))
             },
             "asset_id = ?",
             arrayOf(id),
+        )
+    }
+
+    /** Not the file's fault and not counted: it waits, with the reason shown, and is tried later. */
+    fun markWaiting(id: String, reason: String, until: Long) {
+        writableDatabase.update(
+            "items",
+            ContentValues().apply {
+                put("status", BackupStatus.PENDING)
+                put("error", reason)
+                put("retry_after", until)
+            },
+            "asset_id = ?",
+            arrayOf(id),
+        )
+    }
+
+    /** How many files wait out a failure (or a missing permission) before they are tried again. */
+    fun retryingCount(now: Long = System.currentTimeMillis()): Int =
+        readableDatabase.rawQuery(
+            "SELECT count(*) FROM items WHERE status = ? AND error IS NOT NULL AND retry_after > ?",
+            arrayOf(BackupStatus.PENDING, now.toString()),
+        ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
+    /** Failed files whose wait is over get a fresh set of attempts. Older ones are tried at once. */
+    fun retryFailedAutomatically(now: Long = System.currentTimeMillis()) {
+        writableDatabase.update(
+            "items",
+            ContentValues().apply {
+                put("status", BackupStatus.PENDING)
+                put("attempts", 0)
+                putNull("error")
+                putNull("retry_after")
+            },
+            "status = ? AND (retry_after IS NULL OR retry_after <= ?)",
+            arrayOf(BackupStatus.FAILED, now.toString()),
         )
     }
 
@@ -145,13 +205,21 @@ class BackupStore(context: Context) :
         )
     }
 
+    /** The user asked: every failed file, and every file still waiting, goes now. */
     fun retryFailed() {
+        writableDatabase.update(
+            "items",
+            ContentValues().apply { putNull("retry_after") },
+            "status = ?",
+            arrayOf(BackupStatus.PENDING),
+        )
         writableDatabase.update(
             "items",
             ContentValues().apply {
                 put("status", BackupStatus.PENDING)
                 put("attempts", 0)
                 putNull("error")
+                putNull("retry_after")
             },
             "status = ?",
             arrayOf(BackupStatus.FAILED),
@@ -238,5 +306,9 @@ class BackupStore(context: Context) :
 
     fun clear() {
         writableDatabase.delete("items", null, null)
+    }
+
+    private companion object {
+        const val FAILED_RETRY_MS = 24 * 60 * 60_000L
     }
 }

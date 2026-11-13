@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mediarr_api/api.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 import 'session.dart';
 import '../l10n/l10n.dart';
@@ -44,6 +45,10 @@ class BackupStatus {
     this.moreAlbums = const [],
     this.excludedAlbums = const [],
     this.unauthorized = false,
+    this.waitingForMediaLocation = false,
+    this.serverUnreachable = false,
+    this.waitingForWifi = 0,
+    this.retrying = 0,
     this.pending = 0,
     this.working = 0,
     this.verified = 0,
@@ -64,6 +69,10 @@ class BackupStatus {
     moreAlbums: _strings(map['moreAlbums']),
     excludedAlbums: _strings(map['excludedAlbums']),
     unauthorized: map['unauthorized'] == true,
+    waitingForMediaLocation: map['waitingForMediaLocation'] == true,
+    serverUnreachable: map['serverUnreachable'] == true,
+    waitingForWifi: (map['waitingForWifi'] as num?)?.toInt() ?? 0,
+    retrying: (map['retrying'] as num?)?.toInt() ?? 0,
     pending: (map['pending'] as num?)?.toInt() ?? 0,
     working: (map['working'] as num?)?.toInt() ?? 0,
     verified: (map['verified'] as num?)?.toInt() ?? 0,
@@ -94,7 +103,23 @@ class BackupStatus {
   final bool chargingOnly;
   final List<String> moreAlbums;
   final List<String> excludedAlbums;
+
+  /// The device key was refused; nothing is sent until backup is turned on again.
   final bool unauthorized;
+
+  /// Android: nothing is sent until the app may read where photos were taken, so originals keep
+  /// their location.
+  final bool waitingForMediaLocation;
+
+  /// The server does not answer; the queue waits and goes on by itself once it does.
+  final bool serverUnreachable;
+
+  /// Photos only in iCloud while backup may only use Wi-Fi.
+  final int waitingForWifi;
+
+  /// Files that did not go through and are tried again by themselves after a wait.
+  final int retrying;
+
   final int pending;
   final int working;
   final int verified;
@@ -132,6 +157,15 @@ List<String> safeToRemove(
 ];
 
 final backupProvider = Provider<BackupService>((ref) => BackupService());
+
+/// Photo access for backup. On Android it also asks to read where photos were taken: without it
+/// Android hands out copies without the location, and backup sends nothing.
+const backupPermission = PermissionRequestOption(
+  androidPermission: AndroidPermission(
+    type: RequestType.common,
+    mediaLocation: true,
+  ),
+);
 
 class BackupService {
   static const _channel = MethodChannel('app.mediarr/backup');
@@ -175,6 +209,30 @@ class BackupService {
     ];
   }
 
+  Future<PermissionState> requestAccess() =>
+      PhotoManager.requestPermissionExtend(requestOption: backupPermission);
+
+  Future<void> openSettings() => PhotoManager.openSetting();
+
+  /// Asked by itself at most once while the app runs; after that only on a tap.
+  static bool askedForLocation = false;
+
+  /// Backup that was turned on before the app asked for the photos' location waits for it; asks
+  /// when the app starts. True when it asked.
+  Future<bool> askLocationIfWaiting() async {
+    if (askedForLocation) return false;
+    try {
+      if (!(await status()).waitingForMediaLocation) return false;
+      askedForLocation = true;
+      await requestAccess();
+      return true;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
   /// Background work outlives a session, so it gets its own long-lived key for this device.
   Future<void> enable(
     Session session, {
@@ -189,15 +247,34 @@ class BackupService {
     if (key == null) {
       throw ApiException(500, l.backupNoDeviceKey);
     }
+    final previous = await _storage.read(key: _keyIdKey);
+    try {
+      await _channel.invokeMethod<void>('enable', {
+        'server': session.serverUrl,
+        'key': key.key,
+        'wifiOnly': wifiOnly,
+        'onlyNew': onlyNew,
+        'albumId': albumId,
+        'albumName': albumName,
+      });
+    } catch (_) {
+      // Nothing holds the new key, so it must not stay valid on the server.
+      await _revokeQuietly(session, key.id);
+      rethrow;
+    }
     await _storage.write(key: _keyIdKey, value: key.id);
-    await _channel.invokeMethod<void>('enable', {
-      'server': session.serverUrl,
-      'key': key.key,
-      'wifiOnly': wifiOnly,
-      'onlyNew': onlyNew,
-      'albumId': albumId,
-      'albumName': albumName,
-    });
+    // The engine now uses the new key; the one before it is of no use to anyone.
+    if (previous != null && previous != key.id) {
+      await _revokeQuietly(session, previous);
+    }
+  }
+
+  Future<void> _revokeQuietly(Session session, String id) async {
+    try {
+      await session.api.revokeDeviceKey(id);
+    } on ApiException {
+      // Already gone, or the server cannot be reached; it is not used any more either way.
+    }
   }
 
   Future<List<BackupAlbum>> albums() async {

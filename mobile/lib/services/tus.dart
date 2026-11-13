@@ -37,12 +37,21 @@ class TusClient {
       Duration(seconds: 10),
       Duration(seconds: 20),
     ],
+    this.requestTimeout = const Duration(seconds: 30),
+    this.chunkTimeout = const Duration(minutes: 5),
   }) : _client = client ?? http.Client();
 
   final String baseUrl;
   final Map<String, String> headers;
   final int chunkSize;
   final List<Duration> retryDelays;
+
+  /// A short request that has not been answered by then counts as a dropped connection.
+  final Duration requestTimeout;
+
+  /// The same for one chunk, which on a slow connection takes a while.
+  final Duration chunkTimeout;
+
   final http.Client _client;
 
   void close() => _client.close();
@@ -122,14 +131,16 @@ class TusClient {
   }
 
   Future<String> _create(int total, Map<String, String> metadata) async {
-    final response = await _client.post(
-      Uri.parse('$baseUrl/api/uploads'),
-      headers: {
-        ..._tusHeaders,
-        'Upload-Length': '$total',
-        'Upload-Metadata': encodeMetadata(metadata),
-      },
-    );
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/api/uploads'),
+          headers: {
+            ..._tusHeaders,
+            'Upload-Length': '$total',
+            'Upload-Metadata': encodeMetadata(metadata),
+          },
+        )
+        .timeout(requestTimeout);
     _check(response, response.body);
     final location = response.headers['location'];
     if (location == null) throw const HttpException('no upload location');
@@ -139,10 +150,9 @@ class TusClient {
 
   Future<int> _offset(String path) async {
     final response = await _retrying(() async {
-      final head = await _client.head(
-        Uri.parse('$baseUrl$path'),
-        headers: _tusHeaders,
-      );
+      final head = await _client
+          .head(Uri.parse('$baseUrl$path'), headers: _tusHeaders)
+          .timeout(requestTimeout);
       _check(head, '');
       return head;
     });
@@ -171,8 +181,9 @@ class TusClient {
           onDone: request.sink.close,
           cancelOnError: true,
         );
-    final response = await _client.send(request);
-    final body = await response.stream.bytesToString();
+    // A stalled connection would otherwise keep the upload, and its slot, busy forever.
+    final response = await _client.send(request).timeout(chunkTimeout);
+    final body = await response.stream.bytesToString().timeout(chunkTimeout);
     _check(response, body);
     return response;
   }

@@ -22,6 +22,29 @@ String describeLastBackup(DateTime? last, DateTime now) {
   return l.backupCardLastDays(age.inDays.toString());
 }
 
+/// A line about why backup waits, or what it will do by itself.
+class BackupNote {
+  const BackupNote(this.text, {this.problem = false});
+
+  final String text;
+
+  /// Needs the user; otherwise it sorts itself out.
+  final bool problem;
+}
+
+/// What the native engine reports beyond the counts, in words, most pressing first.
+List<BackupNote> backupNotes(BackupStatus status) => [
+  if (status.unauthorized) BackupNote(l.backupCardRefused, problem: true),
+  if (status.waitingForMediaLocation)
+    BackupNote(l.backupCardNeedsLocation, problem: true),
+  if (status.serverUnreachable) BackupNote(l.backupCardServerAway),
+  if (status.waitingForWifi > 0)
+    BackupNote(l.backupCardWaitingForWifi(status.waitingForWifi)),
+  if (status.retrying > 0)
+    BackupNote(l.backupCardRetryingSoon(status.retrying)),
+  if (status.failed > 0) BackupNote(l.backupCardFailedRetryLater),
+];
+
 /// The switch and the live state of the automatic backup.
 class BackupCard extends ConsumerStatefulWidget {
   const BackupCard({super.key, this.onStatus});
@@ -61,6 +84,11 @@ class _BackupCardState extends ConsumerState<BackupCard> {
       }
       setState(() => _status = status);
       widget.onStatus?.call(status);
+      // Backup that was on before the app asked for it waits for this; ask once, by itself.
+      if (status.waitingForMediaLocation && !BackupService.askedForLocation) {
+        BackupService.askedForLocation = true;
+        await _askLocation();
+      }
     } on MissingPluginException {
       // Only the iOS app has the native engine so far.
     } on PlatformException catch (cause) {
@@ -68,6 +96,15 @@ class _BackupCardState extends ConsumerState<BackupCard> {
         setState(() => _error = cause.message);
       }
     }
+  }
+
+  Future<void> _askLocation() async {
+    try {
+      await ref.read(backupProvider).requestAccess();
+    } on PlatformException {
+      // The card still offers the settings.
+    }
+    if (mounted) await _refresh();
   }
 
   Future<bool?> _askScope(String album) => showDialog<bool>(
@@ -132,7 +169,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
   Future<bool> _chooseAndApply({required bool enable}) async {
     final session = ref.read(sessionProvider).value;
     final service = ref.read(backupProvider);
-    final permission = await PhotoManager.requestPermissionExtend();
+    final permission = await service.requestAccess();
     if (permission != PermissionState.authorized) {
       setState(() => _error = l.backupCardNeedsFullAccess);
       return false;
@@ -344,13 +381,31 @@ class _BackupCardState extends ConsumerState<BackupCard> {
                 child: Text(l.backupCardPerDevice),
               ),
             ),
-            if (status.unauthorized)
-              Padding(
+            ...backupNotes(status).map(
+              (note) => Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  l.backupCardRefused,
-                  style: text.bodySmall?.copyWith(color: Palette.err),
+                  note.text,
+                  style: text.bodySmall?.copyWith(
+                    color: note.problem ? Palette.err : Palette.warn,
+                  ),
                 ),
+              ),
+            ),
+            if (status.waitingForMediaLocation)
+              Wrap(
+                key: const ValueKey('backup-media-location'),
+                spacing: 4,
+                children: [
+                  TextButton(
+                    onPressed: _busy ? null : _askLocation,
+                    child: Text(l.backupCardAllowLocation),
+                  ),
+                  TextButton(
+                    onPressed: () => ref.read(backupProvider).openSettings(),
+                    child: Text(l.backupCardOpenSettings),
+                  ),
+                ],
               ),
             Align(
               alignment: Alignment.centerLeft,
