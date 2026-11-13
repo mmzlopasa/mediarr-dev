@@ -758,9 +758,15 @@ func (s *apiServer) DownloadAssets(w http.ResponseWriter, r *http.Request, param
 }
 
 func addToZip(archive *zip.Writer, row *db.Asset, used map[string]int) error {
-	f, err := os.Open(row.OriginalPath)
+	// O_NOFOLLOW, as in serveFile: a link left in an external folder must not put another file in
+	// the archive.
+	f, err := os.OpenFile(row.OriginalPath, os.O_RDONLY|syscall.O_NOFOLLOW, 0) //nolint:gosec // From the database.
 	if err != nil {
 		return err
+	}
+	if info, err := f.Stat(); err != nil || !info.Mode().IsRegular() {
+		_ = f.Close()
+		return fmt.Errorf("%s is not a plain file", filepath.Base(row.OriginalPath))
 	}
 	defer func() { _ = f.Close() }()
 

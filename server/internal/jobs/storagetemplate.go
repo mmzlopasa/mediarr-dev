@@ -110,21 +110,30 @@ func placedAs(path, target string) bool {
 	return true
 }
 
-// freeName finds a name nobody has: two photos called IMG_0001.jpg both stay, the second as
-// IMG_0001-1.jpg. Nothing is ever written over.
-func freeName(path string) (string, error) {
-	if _, err := os.Lstat(path); errors.Is(err, os.ErrNotExist) {
-		return path, nil
+// candidateName is the n-th name tried for a file: the name itself, then IMG_0001-1.jpg and on.
+func candidateName(path string, n int) string {
+	if n == 0 {
+		return path
 	}
 	ext := filepath.Ext(path)
-	stem := strings.TrimSuffix(path, ext)
-	for n := 1; n < maxNameTries; n++ {
-		candidate := fmt.Sprintf("%s-%d%s", stem, n, ext)
-		if _, err := os.Lstat(candidate); errors.Is(err, os.ErrNotExist) {
+	return fmt.Sprintf("%s-%d%s", strings.TrimSuffix(path, ext), n, ext)
+}
+
+// moveToFreeName moves a file to the first name nobody has: two photos called IMG_0001.jpg both
+// stay, the second as IMG_0001-1.jpg. The move itself refuses a taken name, so two moves running at
+// once never write over each other's original.
+func moveToFreeName(from, to string) (string, error) {
+	for n := range maxNameTries {
+		candidate := candidateName(to, n)
+		err := renameNoReplace(from, candidate)
+		if err == nil {
 			return candidate, nil
 		}
+		if !errors.Is(err, os.ErrExist) {
+			return "", err
+		}
 	}
-	return "", fmt.Errorf("no free name beside %s", path)
+	return "", fmt.Errorf("no free name beside %s", to)
 }
 
 // MoveOriginal renames an original to its new place on the same disk, which is atomic, and then
@@ -133,15 +142,12 @@ func MoveOriginal(ctx context.Context, q *db.Queries, library string, id pgtype.
 	if err := os.MkdirAll(filepath.Dir(to), 0o750); err != nil {
 		return "", fmt.Errorf("make the folder: %w", err)
 	}
-	target, err := freeName(to)
+	target, err := moveToFreeName(from, to)
 	if err != nil {
-		return "", err
-	}
-	if err := os.Rename(from, target); err != nil {
 		return "", fmt.Errorf("move %s: %w", filepath.Base(from), err)
 	}
 	if err := q.SetOriginalPath(ctx, db.SetOriginalPathParams{ID: id, OriginalPath: target}); err != nil {
-		if back := os.Rename(target, from); back != nil {
+		if back := renameNoReplace(target, from); back != nil {
 			slog.Error("an original could not be put back after a failed move", "from", target, "to", from, "error", back)
 		}
 		return "", err

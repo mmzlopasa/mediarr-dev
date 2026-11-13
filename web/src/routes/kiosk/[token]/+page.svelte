@@ -6,6 +6,8 @@
 
 	const SHOW_MS = 10000;
 	const REFRESH_MS = 10 * 60000;
+	// After a failure the frame asks again soon, so it recovers by itself once the server is back.
+	const RETRY_MS = 30000;
 
 	const token = $derived(page.params.token ?? '');
 	const base = $derived(`/api/public/${token}`);
@@ -14,11 +16,17 @@
 	let photos = $state<string[]>([]);
 	let index = $state(0);
 	let gone = $state(false);
+	let failed = $state(false);
+	let retry: ReturnType<typeof setTimeout> | undefined;
 
 	async function load() {
+		clearTimeout(retry);
 		try {
 			link = await api.publicLink(token);
-			if (!link.kiosk || link.locked || link.uploadOnly) return;
+			gone = false;
+			failed = false;
+			// A link that asks each visitor for a name has nobody to ask here.
+			if (!link.kiosk || link.locked || link.uploadOnly || (link.askName && !link.named)) return;
 			const source = publicSource(token);
 			const { buckets } = await source.buckets();
 			const found: string[] = [];
@@ -29,7 +37,12 @@
 			photos = found;
 		} catch (cause) {
 			// A revoked link stops the frame, which then says so.
-			if (cause instanceof ApiError) gone = true;
+			if (cause instanceof ApiError && (cause.status === 404 || cause.status === 410)) gone = true;
+			else if (photos.length === 0) {
+				// Nothing to show yet: say why, and try again; photos already shown keep going.
+				failed = true;
+				retry = setTimeout(load, RETRY_MS);
+			}
 		}
 	}
 
@@ -40,6 +53,7 @@
 			if (photos.length > 0) index = (index + 1) % photos.length;
 		}, SHOW_MS);
 		return () => {
+			clearTimeout(retry);
 			clearInterval(refresh);
 			clearInterval(next);
 		};
@@ -48,13 +62,17 @@
 	const message = $derived(
 		gone
 			? t('kiosk.token.thisLinkNoLongerWorks')
-			: link && !link.kiosk
-				? t('kiosk.token.anAdministratorHasNotTurned')
-				: link?.locked
-					? t('kiosk.token.aSlideshowDoesNotWork')
-					: link && photos.length === 0
-						? t('kiosk.token.thisAlbumIsEmpty')
-						: ''
+			: failed
+				? t('kiosk.token.serverUnreachable')
+				: link && link.askName && !link.named
+					? t('kiosk.token.asksForAName')
+					: link && !link.kiosk
+						? t('kiosk.token.anAdministratorHasNotTurned')
+						: link?.locked
+							? t('kiosk.token.aSlideshowDoesNotWork')
+							: link && photos.length === 0
+								? t('kiosk.token.thisAlbumIsEmpty')
+								: ''
 	);
 </script>
 

@@ -99,7 +99,7 @@ func requireAdmin(w http.ResponseWriter, r *http.Request) *db.User {
 	if user == nil {
 		return nil
 	}
-	if !user.IsAdmin {
+	if !actsAsAdmin(r, user) {
 		writeError(w, http.StatusForbidden, "administrators only")
 		return nil
 	}
@@ -279,7 +279,7 @@ func (s *apiServer) Login(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusForbidden, "signing in with a password is turned off on this server")
 		return
 	}
-	ip := clientIP(r)
+	ip := hostOnly(clientIP(r))
 	userKey := email + "|" + ip
 	if !s.userLimiter.Allowed(userKey) || !s.ipLimiter.Allowed(ip) {
 		s.recordSecurity(r, eventLoginLocked, email, "too many attempts")

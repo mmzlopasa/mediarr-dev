@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '#lib/design/components/Icon.svelte';
+	import { escapeLayer } from '#lib/design/layers.ts';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { t } from '#lib/i18n.svelte.ts';
 	import { browserCaps, tvChoices, type TvChoice, type TvTarget } from './cast.ts';
@@ -19,6 +20,11 @@
 
 	let open = $state(false);
 	let busy = $state(false);
+
+	// While the menu is open it is on top: Esc closes it, not the viewer under it.
+	$effect(() => {
+		if (open) return escapeLayer(() => (open = false));
+	});
 	const choices = $derived<TvChoice[]>(tvChoices(browserCaps(kind)));
 	const names: Record<TvTarget, string> = {
 		chromecast: 'Chromecast',

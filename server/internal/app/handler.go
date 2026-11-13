@@ -4,6 +4,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -17,6 +18,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	tusd "github.com/tus/tusd/v2/pkg/handler"
+	"golang.org/x/sync/singleflight"
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
@@ -84,7 +86,7 @@ type apiServer struct {
 	ipLimiter         *auth.Limiter
 	linkPasswords     *auth.Limiter
 	linkUploads       *auth.Limiter
-	vaultPins         *auth.Limiter
+	vaultPins         *auth.Lockout
 	limits            *rateLimits
 	metrics           *metrics
 	oidcFlows         *shortLived[oidcFlow]
@@ -96,8 +98,10 @@ type apiServer struct {
 	uploads           *tusd.UnroutedHandler
 	// fullPreviews limits how many full resolution previews are made at once.
 	fullPreviews chan struct{}
-	embeddings   *ml.Cache
-	terms        termsCache
+	// tvCopies makes each TV copy once, however many requests ask for it at the same time.
+	tvCopies   singleflight.Group
+	embeddings *ml.Cache
+	terms      termsCache
 	// dlnaSeen is when the DLNA announcer last asked, as Unix seconds.
 	dlnaSeen atomic.Int64
 }
@@ -110,7 +114,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		ipLimiter:         auth.NewLimiter(loginFailuresIP, loginWindow),
 		linkPasswords:     auth.NewLimiter(linkPasswordFailures, loginWindow),
 		linkUploads:       auth.NewLimiter(linkUploadsPerHour, time.Hour),
-		vaultPins:         auth.NewLimiter(vaultPinFailures, loginWindow),
+		vaultPins:         auth.NewLockout(vaultPinFailures, loginWindow, vaultPinMaxLockout),
 		fullPreviews:      make(chan struct{}, 2),
 		limits:            newRateLimits(),
 		oidcFlows:         newShortLived[oidcFlow](),
@@ -288,10 +292,21 @@ func writeError(w http.ResponseWriter, code int, message string) {
 	writeJSON(w, code, api.Error{Message: message})
 }
 
+// clientGone says that err comes from the client going away: the request's own context was
+// canceled. A time limit the server set, or a failure of its own, still counts as an error.
+func clientGone(r *http.Request, err error) bool {
+	return errors.Is(err, context.Canceled) && errors.Is(r.Context().Err(), context.Canceled)
+}
+
 func internalError(w http.ResponseWriter, r *http.Request, err error) {
 	path := r.URL.Path
 	if strings.HasPrefix(path, publicPathPrefix) {
 		path = publicPathPrefix + "…" // The token in the path opens the album, so it stays out of logs.
+	}
+	if clientGone(r, err) {
+		// The browser stopped waiting (a page left, a preview scrolled away): not the server's fault.
+		slog.Debug("request abandoned", "path", path, "error", err)
+		return
 	}
 	slog.Error("request failed", "path", path, "error", err)
 	writeError(w, http.StatusInternalServerError, "something went wrong")

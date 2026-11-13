@@ -19,10 +19,12 @@ import (
 )
 
 const (
-	vaultCookie         = "mediarr_vault"
-	vaultTokenHeader    = "X-Vault-Token" //nolint:gosec // A header name, not a credential.
-	vaultSessionTime    = 15 * time.Minute
-	vaultPinFailures    = 5
+	vaultCookie      = "mediarr_vault"
+	vaultTokenHeader = "X-Vault-Token" //nolint:gosec // A header name, not a credential.
+	vaultSessionTime = 15 * time.Minute
+	vaultPinFailures = 5
+	// vaultPinMaxLockout caps the lockout after wrong PINs, which doubles each time from 15 minutes.
+	vaultPinMaxLockout  = 24 * time.Hour
 	collectionVault     = "vault"
 	collectionRecent    = "recent"
 	maxTagLength        = 100
@@ -302,7 +304,8 @@ func (s *apiServer) GetVaultStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, api.VaultStatus{HasPin: user.VaultPinHash.Valid, Unlocked: unlocked})
 }
 
-// checkPin counts failures per user, so a stolen session cannot try every PIN.
+// checkPin counts failures per user, so a stolen session cannot try every PIN: after five wrong ones
+// the vault stays shut for 15 minutes, then 30, an hour, and so on up to a day.
 func (s *apiServer) checkPin(w http.ResponseWriter, user *db.User, pin string) bool {
 	key := user.Email
 	if !s.vaultPins.Allowed(key) {

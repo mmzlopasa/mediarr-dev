@@ -154,6 +154,10 @@ func listSnapshots(cfg config.Config) error {
 }
 
 func serve(ctx context.Context, cfg config.Config) error {
+	if config.UsesExamplePassword(cfg.DatabaseURL) {
+		slog.Warn("the database password is still change-me from the example .env: set DB_PASSWORD in .env to a password of your own " +
+			"and change it in the database too (ALTER USER ... PASSWORD), then restart Mediarr")
+	}
 	if err := migrate(ctx, cfg, false); err != nil {
 		return err
 	}
@@ -444,7 +448,7 @@ func healthcheck(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := (&http.Client{Timeout: 5 * time.Second}).Do(req)
 	if err != nil {
 		return err
 	}

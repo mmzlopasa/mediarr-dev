@@ -240,7 +240,7 @@ func (s *apiServer) serveTVImage(w http.ResponseWriter, r *http.Request, row *db
 			internalError(w, r, err)
 			return
 		}
-		if err := tvJPEG(ctx, source, dest); err != nil {
+		if err := s.makeTVCopy(ctx, dest, func(ctx context.Context) error { return tvJPEG(ctx, source, dest) }); err != nil {
 			internalError(w, r, err)
 			return
 		}
@@ -251,6 +251,25 @@ func (s *apiServer) serveTVImage(w http.ResponseWriter, r *http.Request, row *db
 	// A Chromecast's receiver is a web page on another origin.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	serveFile(w, r, dest)
+}
+
+// makeTVCopy runs build once for dest, however many requests want it at the same time: a TV and a
+// phone asking for one video then share a single copy of the whole file. The copy does not stop when
+// one request goes away, since the others still wait for it and the next one finds it made; a
+// request that goes away only stops waiting.
+func (s *apiServer) makeTVCopy(ctx context.Context, dest string, build func(context.Context) error) error {
+	done := s.tvCopies.DoChan(dest, func() (any, error) {
+		if _, err := os.Stat(dest); err == nil { //nolint:gosec // Made by the caller from the cache folder and an id.
+			return nil, nil
+		}
+		return nil, build(context.WithoutCancel(ctx))
+	})
+	select {
+	case result := <-done:
+		return result.Err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func tvJPEG(ctx context.Context, source, dest string) error {
@@ -302,7 +321,9 @@ func (s *apiServer) serveTVVideo(w http.ResponseWriter, r *http.Request, row *db
 	}
 	dest := filepath.Join(s.CachePath, "tv", id[:2], id+"-nolocation"+ext)
 	if _, err := os.Stat(dest); err != nil { //nolint:gosec // The cache folder, an id from the database and a checked extension.
-		if err := jobs.StripLocation(r.Context(), row.OriginalPath, dest); err != nil {
+		if err := s.makeTVCopy(r.Context(), dest, func(ctx context.Context) error {
+			return jobs.StripLocation(ctx, row.OriginalPath, dest)
+		}); err != nil {
 			// Never the original instead, which is the very thing this avoids.
 			writeError(w, http.StatusForbidden, "this video cannot be shown without its location")
 			return

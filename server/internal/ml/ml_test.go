@@ -125,3 +125,16 @@ func TestSearchesDoNotQueueBehindADeadService(t *testing.T) {
 		t.Fatalf("the service was asked %d times", calls.Load())
 	}
 }
+
+func TestAPictureTooLargeOrUnreadableIsNotTriedAgain(t *testing.T) {
+	for code, want := range map[int]bool{
+		http.StatusUnprocessableEntity:   true,
+		http.StatusRequestEntityTooLarge: true,
+		http.StatusServiceUnavailable:    false,
+		http.StatusInternalServerError:   false,
+	} {
+		if got := (&StatusError{Path: "/faces", Code: code}).Unreadable(); got != want {
+			t.Errorf("%d: Unreadable = %v, want %v", code, got, want)
+		}
+	}
+}

@@ -8,6 +8,12 @@ The server and the web come as one version, such as `v0.2.40`. The apps have ver
 
 ## Apps
 
+### app-v0.10.2
+- Backup keeps "only new photos" when albums change, waits instead of giving up when the server cannot be reached, retries failed files by itself, and waits for Wi-Fi for photos that are only in iCloud.
+- On Android, backup asks for access to photo locations and never sends a copy without them. Keys are kept encrypted.
+- The home screen widget shows its photo also on a tinted home screen, in your language, and is cleared when you sign out.
+- A sign-in link from outside the app asks before signing in to a server.
+
 ### app-v0.10.1
 - One tap on a photo hides the bars and the status bar, so the whole photo shows.
 - On an iPhone, the widget screen checks the installation and says why the widget is not offered, when it is not.
@@ -19,6 +25,16 @@ Everything from the server versions up to v0.2.40: culling, smart memories, expo
 Everything up to v0.2.35: duplicates and Clean up, dates and places of many photos, signing in with a QR code, administration in the app, four languages, and private links.
 
 ## Server and web
+
+### v0.2.42
+- Private links: details such as the camera and the date are left out of what the visitor sees too, an edited photo is shared as edited, and a download limit also covers playing a video.
+- Moving files with the storage template can never write over another original.
+- Keys from the API need the admin permission for everything an administrator can do.
+- The page for an error says what happened and offers to try again; the public link page too.
+- Escape closes only the topmost window, and the photo viewer keeps the keyboard inside it.
+- The trash shows the server's number of days instead of a fixed one.
+- Copies for the TV are removed with their photo, an import no longer hangs on a server that stops answering, and the log no longer lists requests a browser left as errors.
+- The service for smart search checks every model it downloads, and gets only its own settings.
 
 ### v0.2.41
 - One tap on an open photo hides the bars and the arrows, so the whole photo shows; the next tap brings them back.

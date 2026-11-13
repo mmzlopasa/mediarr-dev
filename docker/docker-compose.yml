@@ -54,13 +54,20 @@ services:
   ml:
     image: ghcr.io/mediarr-app/mediarr-ml:${MEDIARR_VERSION:-latest}
     profiles: ["ml"]
-    env_file: .env
+    # Only what the service reads: it has no use for the database password or other secrets.
+    environment:
+      ML_TOKEN: ${ML_TOKEN:-}
+      ML_IDLE_MINUTES: ${ML_IDLE_MINUTES:-}
+      ML_FACE_MODEL: ${ML_FACE_MODEL:-}
+      ML_THREADS: ${ML_THREADS:-}
+      ML_ACCEL: ${ML_ACCEL:-}
+      ML_MAX_BODY_MB: ${ML_MAX_BODY_MB:-}
     volumes:
       - model-cache:/models
     restart: unless-stopped
 
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.40.16
     profiles: ["ai"]
     volumes:
       - ollama-models:/root/.ollama
@@ -83,7 +90,7 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.30-alpine
     ports:
       - "${BIND_ADDRESS:-0.0.0.0}:${HTTP_PORT:-9851}:80"
     configs:

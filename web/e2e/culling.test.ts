@@ -102,7 +102,10 @@ test('a shoot is gone through, compared, and its picks and rejects dealt with', 
 	// The rejects go to the trash, after asking.
 	await cull.getByRole('button', { name: 'Rejects to trash' }).click();
 	await expect(page.getByText('1 rejected photo moves to the trash')).toBeVisible();
-	await page.getByRole('button', { name: 'Delete' }).click();
+	await page
+		.getByRole('dialog', { name: 'Rejects to trash' })
+		.getByRole('button', { name: 'Delete' })
+		.click();
 	await expect(cull.getByTestId('cull-position')).toHaveText(/\/ 2$/);
 	await expect
 		.poll(async () => (await marks()).filter((pick) => pick === undefined).length)

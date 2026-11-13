@@ -141,7 +141,7 @@ func (s *apiServer) ownImport(w http.ResponseWriter, r *http.Request, id openapi
 		return nil, nil
 	}
 	row, err := s.queries.GetImport(r.Context(), pgUUID(id))
-	if db.IsNotFound(err) || (err == nil && row.UserID != user.ID && !user.IsAdmin) {
+	if db.IsNotFound(err) || (err == nil && row.UserID != user.ID && !actsAsAdmin(r, user)) {
 		writeError(w, http.StatusNotFound, "no such import")
 		return nil, nil
 	}

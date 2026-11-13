@@ -9,7 +9,7 @@
 	import Button from '#lib/design/components/Button.svelte';
 	import SnapshotsCard from '#lib/organize/SnapshotsCard.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import { liveOverview } from '#lib/overview.svelte.ts';
 
 	const overview = liveOverview();
@@ -123,7 +123,7 @@
 	{#if integrity?.finishedAt}
 		<Kv
 			label={t('admin.health.lastCheck')}
-			value={new Date(integrity.finishedAt).toLocaleString()}
+			value={new Date(integrity.finishedAt).toLocaleString(dateLocale())}
 		/>
 		<Kv label={t('admin.health.checked')} value={String(integrity.checked)} />
 		<Kv label={t('admin.health.problems')} value={String(integrity.total)} />

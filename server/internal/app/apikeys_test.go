@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"maps"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 )
 
@@ -125,5 +127,33 @@ func TestOnlyAnAdminGetsAnAdminsKey(t *testing.T) {
 	keys := decode[[]api.ApiKey](t, body)
 	if len(keys) != 1 || keys[0].Name != "test" || len(keys[0].Scopes) != 1 {
 		t.Fatalf("%s", body)
+	}
+}
+
+func TestOnlyAnAdminKeyActsAsAdministrator(t *testing.T) {
+	admin := &db.User{IsAdmin: true}
+	plain := &db.User{}
+	withScopes := func(scopes ...string) *http.Request {
+		r := httptest.NewRequest(http.MethodPost, "/api/exports", http.NoBody)
+		return r.WithContext(context.WithValue(r.Context(), scopesKey{}, scopes))
+	}
+	signedIn := httptest.NewRequest(http.MethodPost, "/api/exports", http.NoBody)
+	cases := []struct {
+		name string
+		r    *http.Request
+		user *db.User
+		want bool
+	}{
+		{"administrator signed in", signedIn, admin, true},
+		{"user signed in", signedIn, plain, false},
+		{"administrator's admin key", withScopes(scopeRead, scopeAdmin), admin, true},
+		{"administrator's write key", withScopes(scopeRead, scopeWrite), admin, false},
+		{"user's key with admin scope", withScopes(scopeAdmin), plain, false},
+		{"nobody", signedIn, nil, false},
+	}
+	for _, tc := range cases {
+		if got := actsAsAdmin(tc.r, tc.user); got != tc.want {
+			t.Errorf("%s: actsAsAdmin = %v, want %v", tc.name, got, tc.want)
+		}
 	}
 }

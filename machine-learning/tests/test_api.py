@@ -82,3 +82,46 @@ def test_status_says_what_is_loaded(fake_text_model):
     after = {model["name"]: model for model in client.get("/status").json()["models"]}
     assert after["clip-text"]["loaded"] and after["clip-text"]["in_use"] == 0
     assert not after["faces"]["loaded"]
+
+
+@pytest.fixture
+def small_limit(monkeypatch):
+    monkeypatch.setattr(config, "MAX_BODY_BYTES", 1000)
+
+
+@pytest.mark.parametrize("path", ["/clip/image", "/faces", "/ocr"])
+def test_a_body_over_the_limit_is_413(small_limit, path):
+    response = client.post(path, content=b"x" * 1001)
+    assert response.status_code == 413
+
+
+def test_a_body_without_a_length_is_counted(small_limit):
+    def chunks():
+        for _ in range(5):
+            yield b"x" * 400
+
+    response = client.post("/clip/image", content=chunks())
+    assert response.status_code == 413
+
+
+def test_without_the_token_the_size_is_not_even_looked_at(token, small_limit):
+    assert client.post("/faces", content=b"x" * 1001).status_code == 401
+
+
+@pytest.mark.parametrize("path", ["/clip/image", "/faces", "/ocr"])
+def test_a_body_that_is_not_a_picture_is_422(path):
+    response = client.post(path, content=b"not a picture")
+    assert response.status_code == 422
+
+
+def test_a_decompression_bomb_is_422(monkeypatch):
+    import io
+
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("L", (300, 300)).save(buffer, format="PNG")
+    # Pillow refuses outright what is over twice its limit.
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 100)
+    response = client.post("/clip/image", content=buffer.getvalue())
+    assert response.status_code == 422

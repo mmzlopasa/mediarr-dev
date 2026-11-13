@@ -6,7 +6,7 @@
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 
 	let settings = $state<SecuritySettings>();
 	let events = $state<SecurityEvent[]>();
@@ -119,7 +119,7 @@
 			<div class="audit-list">
 				{#each settings.devices as device (device.id)}
 					<div class="audit-row">
-						<small>{new Date(device.lastSeen).toLocaleString()}</small>
+						<small>{new Date(device.lastSeen).toLocaleString(dateLocale())}</small>
 						<b>{device.email}</b>
 						<span>{device.ip} · {device.userAgent}</span>
 						<span>
@@ -151,7 +151,7 @@
 			<div class="audit-list">
 				{#each events as entry (entry.id)}
 					<div class="audit-row" class:audit-failed={entry.kind !== 'login_ok'}>
-						<small>{new Date(entry.at).toLocaleString()}</small>
+						<small>{new Date(entry.at).toLocaleString(dateLocale())}</small>
 						<b>{eventLabel(entry.kind)}</b>
 						<span>{entry.email} {entry.ip}</span>
 						<span>

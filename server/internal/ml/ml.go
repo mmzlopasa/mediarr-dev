@@ -126,8 +126,11 @@ type StatusError struct {
 
 func (e *StatusError) Error() string { return fmt.Sprintf("%s answered %d", e.Path, e.Code) }
 
-// Unreadable reports that the service could not read the picture, which trying again will not fix.
-func (e *StatusError) Unreadable() bool { return e.Code == http.StatusUnprocessableEntity }
+// Unreadable reports that the service could not read the picture (422), or would not take it because
+// it is larger than its limit (413). Trying again fixes neither.
+func (e *StatusError) Unreadable() bool {
+	return e.Code == http.StatusUnprocessableEntity || e.Code == http.StatusRequestEntityTooLarge
+}
 
 const pictureType = "application/octet-stream"
 

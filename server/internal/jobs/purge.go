@@ -61,11 +61,11 @@ func PurgeAssets(ctx context.Context, q *db.Queries, cachePath string, ids []pgt
 		for j := range files {
 			paths = append(paths, files[j].Path)
 		}
-		marked, err := filepath.Glob(filepath.Join(cachePath, "links", "*", uuid.UUID(row.ID.Bytes).String()+"-*"))
+		copies, err := cachedCopies(cachePath, uuid.UUID(row.ID.Bytes).String())
 		if err != nil {
 			return err
 		}
-		paths = append(paths, marked...)
+		paths = append(paths, copies...)
 	}
 	if err := q.DeleteAssetsByID(ctx, family); err != nil {
 		return fmt.Errorf("delete assets: %w", err)
@@ -76,4 +76,22 @@ func PurgeAssets(ctx context.Context, q *db.Queries, cachePath string, ids []pgt
 		}
 	}
 	return nil
+}
+
+// cachedCopies are the copies made of one asset for others to see: the marked and stripped ones of
+// each share link, and the pictures and videos made for a TV.
+func cachedCopies(cachePath, id string) ([]string, error) {
+	var out []string
+	for _, pattern := range []string{
+		filepath.Join(cachePath, "links", "*", id+"-*"),
+		filepath.Join(cachePath, "links", "*", "v*", id+"-*"),
+		filepath.Join(cachePath, "tv", id[:2], id+"-*"),
+	} {
+		found, err := filepath.Glob(pattern)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, found...)
+	}
+	return out, nil
 }

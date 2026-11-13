@@ -95,6 +95,47 @@ func (q *Queries) CountDLNAAlbumAssets(ctx context.Context, arg CountDLNAAlbumAs
 	return column_1, err
 }
 
+const countDLNAAlbumsAssets = `-- name: CountDLNAAlbumsAssets :many
+SELECT al.id::uuid AS album_id, (
+  SELECT count(*) FROM assets a
+  WHERE a.id IN (SELECT album_item_ids(al.id))
+    AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL
+    AND asset_visible_to(a.id, $1)
+)::bigint AS total
+FROM unnest($2::uuid[]) AS al(id)
+`
+
+type CountDLNAAlbumsAssetsParams struct {
+	UserID   pgtype.UUID
+	AlbumIds []pgtype.UUID
+}
+
+type CountDLNAAlbumsAssetsRow struct {
+	AlbumID pgtype.UUID
+	Total   int64
+}
+
+// How many assets each of the given albums shows a TV, in one query for the whole root listing.
+func (q *Queries) CountDLNAAlbumsAssets(ctx context.Context, arg CountDLNAAlbumsAssetsParams) ([]CountDLNAAlbumsAssetsRow, error) {
+	rows, err := q.db.Query(ctx, countDLNAAlbumsAssets, arg.UserID, arg.AlbumIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountDLNAAlbumsAssetsRow
+	for rows.Next() {
+		var i CountDLNAAlbumsAssetsRow
+		if err := rows.Scan(&i.AlbumID, &i.Total); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createCastSession = `-- name: CreateCastSession :one
 INSERT INTO cast_sessions (user_id, token_hash, expires_at) VALUES ($1, $2, $3) RETURNING id, user_id, token_hash, created_at, expires_at
 `

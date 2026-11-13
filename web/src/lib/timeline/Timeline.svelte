@@ -26,6 +26,7 @@
 	import Scrubber from './Scrubber.svelte';
 	import Cull from './Cull.svelte';
 	import { scrollPageTo, shiftPage } from '#lib/motion/motion.ts';
+	import { anyLayerOpen } from '#lib/design/layers.ts';
 
 	const LOAD_AHEAD = 1.5;
 	const RENDER_AHEAD = 0.75;
@@ -151,12 +152,18 @@
 		if (above && layout.height !== height) shiftPage(layout.height - height);
 	}
 
+	// Which list is shown; an answer for a list the grid has moved on from is dropped.
+	let generation = 0;
+
 	async function loadMonth(month: string) {
+		const asked = generation;
 		updateMonth(month, (entry) => ({ ...entry, loading: true, failed: false }));
 		try {
 			const bucket = await source.bucket(month);
+			if (asked !== generation) return;
 			applyLoaded(month, bucket.items);
 		} catch {
+			if (asked !== generation) return;
 			updateMonth(month, (entry) => ({ ...entry, loading: false, failed: true }));
 		}
 	}
@@ -186,8 +193,10 @@
 
 	/** Reads what changed. Months whose counts are the same are not fetched again. */
 	export async function refresh(force: string[] = []) {
+		const asked = generation;
 		try {
 			const { buckets } = await source.buckets();
+			if (asked !== generation) return;
 			loadFailed = false;
 			const known = new Map((months ?? []).map((entry) => [entry.month, entry]));
 			const stale: string[] = [];
@@ -200,10 +209,33 @@
 			onCount?.(buckets.reduce((sum, bucket) => sum + bucket.count, 0));
 			for (const month of stale) await loadMonth(month);
 		} catch {
+			if (asked !== generation) return;
 			loadFailed = true;
 			if (!months) onCount?.(undefined);
 		}
 	}
+
+	// Another list in the same grid, as when a page moves to another album or tag: nothing of the
+	// old one stays, neither its photos nor what was selected in it.
+	let shownSource: TimelineSource | undefined;
+	$effect(() => {
+		const next = source;
+		untrack(() => {
+			const previous = shownSource;
+			shownSource = next;
+			if (previous === undefined || previous === next) return;
+			generation += 1;
+			months = undefined;
+			loadFailed = false;
+			selected.clear();
+			lastIndex = null;
+			culling = undefined;
+			fixing = undefined;
+			confirmDelete = false;
+			onCount?.(undefined);
+			void refresh();
+		});
+	});
 
 	/** Reloads everything loaded, after an action that changes photos but maybe not counts. */
 	export function reloadLoaded() {
@@ -418,7 +450,10 @@
 	}
 
 	function onKey(event: KeyboardEvent) {
-		if (event.key === 'Escape' && selecting && !confirmDelete) selected.clear();
+		// A dialog, menu or viewer over the grid takes Esc; the selection stays.
+		if (event.key !== 'Escape' || !selecting || confirmDelete || fixing || culling) return;
+		if (event.defaultPrevented || anyLayerOpen()) return;
+		selected.clear();
 	}
 
 	async function act(action: 'favorite' | 'unfavorite' | 'archive' | 'delete') {
@@ -541,7 +576,9 @@
 									<span class="tl-badge tl-pano" title="360°">360°</span>
 								{/if}
 								{#if tile.item.isLive}
-									<span class="tl-badge tl-live" title="Live"><Icon name="live" size={14} /></span>
+									<span class="tl-badge tl-live" title={t('timeline.live')}
+										><Icon name="live" size={14} /></span
+									>
 								{/if}
 								{#if tile.item.isFavorite}
 									<span class="tl-badge tl-fav"><Icon name="star" size={14} /></span>
@@ -699,7 +736,9 @@
 
 <Dialog title={t('timeline.deleteTheSelection')} bind:open={confirmDelete}>
 	<p>
-		{t('timeline.selectedSizeTheyMoveTo', { size: selected.size, trashDays: trashDays() })}
+		{trashDays() === undefined
+			? t('timeline.selectedSizeTheyMoveToNoDays', { size: selected.size })
+			: t('timeline.selectedSizeTheyMoveTo', { size: selected.size, trashDays: trashDays() })}
 	</p>
 	{#snippet footer()}
 		<Button onclick={() => (confirmDelete = false)}>{t('common.cancel')}</Button>

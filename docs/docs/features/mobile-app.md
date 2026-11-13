@@ -37,7 +37,7 @@ The new phone shows under **Account → Devices**, where it can be signed out, a
 
 Choose which albums go to the server under **Backup** in the app. Uploads continue where they stopped after a lost connection, and files already on the server are not sent again.
 
-Administration, imports and the kiosk are only on the web.
+Administrators also have [Administration](#administration) in the app. An [import](/features/import) is started on the web, where its large ZIP files are uploaded; under **Import** in the app's account menu you can follow it, stop or continue it, and read its report. The kiosk is only on the web.
 
 ## Backup devices
 

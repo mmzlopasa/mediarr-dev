@@ -2,7 +2,10 @@
 // for information about these interfaces
 declare global {
 	namespace App {
-		// interface Error {}
+		interface Error {
+			/** What kind of failure, for the error page. */
+			kind?: import('#lib/errors.ts').ErrorKind;
+		}
 		// interface Locals {}
 		// interface PageData {}
 		interface PageState {

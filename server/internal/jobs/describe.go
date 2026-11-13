@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"slices"
 	"strings"
@@ -50,10 +51,22 @@ type Ollama struct {
 	client  *http.Client
 }
 
-// NewOllama has no overall limit of its own: each call's context sets it, as a picture takes minutes
-// on a machine with no graphics card.
+// ollamaHTTP gives up quickly on a server that is not there. Each call's context sets how long an
+// answer may take, as a picture takes minutes on a machine with no graphics card; the overall limit
+// is only a backstop, as long as the longest call (a first model download).
+var ollamaHTTP = &http.Client{
+	Timeout: ollamaPullTimeout,
+	Transport: &http.Transport{
+		Proxy:               http.ProxyFromEnvironment,
+		DialContext:         (&net.Dialer{Timeout: 10 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+		TLSHandshakeTimeout: 10 * time.Second,
+		IdleConnTimeout:     90 * time.Second,
+	},
+}
+
+// NewOllama talks to the Ollama server at address.
 func NewOllama(address string) *Ollama {
-	return &Ollama{Address: strings.TrimRight(address, "/"), client: &http.Client{}}
+	return &Ollama{Address: strings.TrimRight(address, "/"), client: ollamaHTTP}
 }
 
 func (o *Ollama) post(ctx context.Context, path string, body, out any) error {

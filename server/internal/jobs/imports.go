@@ -12,6 +12,7 @@ import (
 	"io"
 	"log/slog"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -34,9 +35,11 @@ import (
 )
 
 const (
-	importQueue         = "import"
-	importSlice         = 6 * time.Hour
-	immichPageSize      = 250
+	importQueue    = "import"
+	importSlice    = 6 * time.Hour
+	immichPageSize = 250
+	// importRequestWait is how long the other server may stay silent: before its answer starts, and
+	// between two pieces of a body, so one that stops halfway does not hold the import queue forever.
 	importRequestWait   = 2 * time.Minute
 	maxImportError      = 400
 	foreignKeyViolation = "23503"
@@ -369,11 +372,57 @@ type immichFace struct {
 
 // importHTTP follows no redirects: it would carry the key along, and fetch whatever it is sent to.
 var importHTTP = &http.Client{
-	Transport:     &http.Transport{ResponseHeaderTimeout: importRequestWait},
+	Transport: &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           (&net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+		TLSHandshakeTimeout:   30 * time.Second,
+		ResponseHeaderTimeout: importRequestWait,
+		IdleConnTimeout:       90 * time.Second,
+	},
 	CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 }
 
+// stallGuard gives a context that ends when what is read through watch stays silent for idle, and
+// a stop to call when done. The request made with that context then fails instead of waiting on a
+// body that stopped coming.
+func stallGuard(ctx context.Context, idle time.Duration) (context.Context, func(io.Reader) io.Reader, func()) {
+	ctx, cancel := context.WithCancelCause(ctx)
+	timer := time.AfterFunc(idle, func() { cancel(errStalled) })
+	watch := func(r io.Reader) io.Reader { return &idleReader{r: r, timer: timer, idle: idle} }
+	return ctx, watch, func() {
+		timer.Stop()
+		cancel(nil)
+	}
+}
+
+var errStalled = errors.New("the other server stopped sending")
+
+// idleReader puts off its timer each time something arrives.
+type idleReader struct {
+	r     io.Reader
+	timer *time.Timer
+	idle  time.Duration
+}
+
+func (r *idleReader) Read(p []byte) (int, error) {
+	n, err := r.r.Read(p)
+	if n > 0 {
+		r.timer.Reset(r.idle)
+	}
+	return n, err
+}
+
+// stalledErr names a stall instead of a bare "context canceled".
+func stalledErr(ctx context.Context, err error) error {
+	if cause := context.Cause(ctx); errors.Is(cause, errStalled) {
+		return cause
+	}
+	return err
+}
+
 func (i *importRun) immichCall(ctx context.Context, method, path string, body, out any) error {
+	ctx, watch, stop := stallGuard(ctx, importRequestWait)
+	defer stop()
 	var reader io.Reader
 	if body != nil {
 		encoded, err := json.Marshal(body)
@@ -402,7 +451,10 @@ func (i *importRun) immichCall(ctx context.Context, method, path string, body, o
 	if response.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("immich answered %d to %s", response.StatusCode, path)
 	}
-	return json.NewDecoder(io.LimitReader(response.Body, maxImportAnswer)).Decode(out)
+	if err := json.NewDecoder(watch(io.LimitReader(response.Body, maxImportAnswer))).Decode(out); err != nil {
+		return stalledErr(ctx, err)
+	}
+	return nil
 }
 
 func (i *importRun) immichPeople(ctx context.Context) error {
@@ -492,6 +544,8 @@ func (i *importRun) immichDownload(ctx context.Context, id, checksum string) (st
 		_ = os.Remove(file.Name())
 		return "", cause
 	}
+	ctx, watch, stop := stallGuard(ctx, importRequestWait)
+	defer stop()
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(i.row.Address, "/")+"/api/assets/"+url.PathEscape(id)+"/original", http.NoBody)
 	if err != nil {
 		return remove(err)
@@ -509,8 +563,8 @@ func (i *importRun) immichDownload(ctx context.Context, id, checksum string) (st
 		return remove(err)
 	}
 	hash := sha1.New() //nolint:gosec // See the import.
-	if _, err := io.Copy(io.MultiWriter(file, hash), response.Body); err != nil {
-		return remove(err)
+	if _, err := io.Copy(io.MultiWriter(file, hash), watch(response.Body)); err != nil {
+		return remove(stalledErr(ctx, err))
 	}
 	if checksum != "" && base64.StdEncoding.EncodeToString(hash.Sum(nil)) != checksum {
 		return remove(errors.New("the file was damaged on the way"))

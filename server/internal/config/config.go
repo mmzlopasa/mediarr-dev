@@ -2,6 +2,7 @@
 package config
 
 import (
+	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -70,4 +71,18 @@ func env(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+// examplePassword is the database password docker/example.env ships with.
+const examplePassword = "change-me"
+
+// UsesExamplePassword says whether the database is still protected by the password of the example
+// .env, which anyone who read it knows.
+func UsesExamplePassword(databaseURL string) bool {
+	parsed, err := url.Parse(databaseURL)
+	if err != nil || parsed.User == nil {
+		return false
+	}
+	password, _ := parsed.User.Password()
+	return password == examplePassword
 }

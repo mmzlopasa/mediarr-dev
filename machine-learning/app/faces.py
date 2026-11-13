@@ -1,11 +1,10 @@
 """Finds faces and turns each into a vector. Nothing here leaves the server."""
 
-import io
-
 import numpy as np
 from PIL import Image
 
 from . import config, lifecycle, models
+from . import picture as pictures
 
 DETECT_SIZE = 640
 SCORE_THRESHOLD = 0.5
@@ -122,7 +121,7 @@ def align(picture: Image.Image, points: np.ndarray) -> Image.Image:
 
 
 def detect(data: bytes) -> list[dict]:
-    picture = Image.open(io.BytesIO(data)).convert("RGB")
+    picture = pictures.open_rgb(data)
     values, scale = letterbox(picture)
     with _sessions.use() as (detector, recognizer):
         name = detector.get_inputs()[0].name

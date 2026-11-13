@@ -138,10 +138,12 @@
 			{/if}
 		{:else if status === 'allowed' || status === 'used'}
 			<p class="qrs-done">
-				{t('qRSignInDialog.valueIsSignedInIt', {
-					value: current?.device ?? 'The device',
-					value2: current?.device ?? ''
-				})}
+				{current?.device
+					? t('qRSignInDialog.valueIsSignedInIt', {
+							value: current.device,
+							value2: current.device
+						})
+					: t('qRSignInDialog.theDeviceIsSignedIn')}
 			</p>
 			<div class="qrs-btns">
 				<Button onclick={() => (open = false)}>{t('qRSignInDialog.done')}</Button>

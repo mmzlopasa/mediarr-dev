@@ -292,3 +292,22 @@ func TestDocumentsAndFiltersWaitForTheirSwitch(t *testing.T) {
 	resp, body = c.send(http.MethodPut, "/api/assets/"+letter+"/edits", map[string]any{"filter": "mono"})
 	expect(t, resp, body, http.StatusNoContent)
 }
+
+func TestTheDevNullMountIsNoBackupFolder(t *testing.T) {
+	dir := t.TempDir()
+	notAFolder := filepath.Join(dir, "null")
+	if err := os.WriteFile(notAFolder, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for path, want := range map[string]string{
+		dir:                          dir,
+		notAFolder:                   "",
+		filepath.Join(dir, "absent"): "",
+		"":                           "",
+	} {
+		s := &apiServer{Deps: Deps{BackupPath: path}}
+		if got := s.localBackupFolder(); got != want {
+			t.Errorf("%q: %q, want %q", path, got, want)
+		}
+	}
+}

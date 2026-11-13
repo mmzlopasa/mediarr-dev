@@ -22,7 +22,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { t, k, type Key } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t, k, type Key } from '#lib/i18n.svelte.ts';
 
 	let { data }: PageProps = $props();
 
@@ -281,7 +281,7 @@
 
 			{#if methods?.passkeys}
 				<div class="set-group">
-					<h3>Passkeys</h3>
+					<h3>{t('account.passkeys')}</h3>
 					{#if passkeyError}<Alert kind="err">{passkeyError}</Alert>{/if}
 					{#if passkeys.length}
 						<ul class="set-list">
@@ -334,7 +334,7 @@
 										})
 										.join(', ')}
 									{#if key.expiresAt}· {t('account.expires')}
-										{new Date(key.expiresAt).toLocaleDateString()}{/if}
+										{new Date(key.expiresAt).toLocaleDateString(dateLocale())}{/if}
 								</small>
 							</span>
 							<Button small onclick={() => revokeKey(key.id)}>{t('account.revoke')}</Button>

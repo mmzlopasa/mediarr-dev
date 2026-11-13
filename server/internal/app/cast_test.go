@@ -150,7 +150,8 @@ func TestATVPlaysAVideoWithoutItsLocation(t *testing.T) {
 	// Converting a video takes a while when the whole suite runs at once.
 	deadline := time.Now().Add(4 * time.Minute)
 	for {
-		if detail := owner.detail(id); detail.HlsReady != nil && *detail.HlsReady {
+		// A TV is offered only what is ready, which can come a moment after the conversion.
+		if detail := owner.detail(id); detail.HlsReady != nil && *detail.HlsReady && detail.Status == "ready" {
 			break
 		}
 		if time.Now().After(deadline) {

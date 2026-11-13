@@ -50,7 +50,7 @@ func privateAddress(value string) bool {
 }
 
 // fromHomeNetwork checks every address the request passed through, so that a reverse proxy in front
-// of Mediarr that is not counted in TRUSTED_PROXIES does not let the internet in.
+// of Mediarr that is not counted in TRUSTED_PROXY_HOPS does not let the internet in.
 func fromHomeNetwork(r *http.Request) bool {
 	if !privateAddress(r.RemoteAddr) {
 		return false
@@ -289,15 +289,23 @@ func (s *apiServer) dlnaBrowse(w http.ResponseWriter, r *http.Request, call dlna
 			return
 		}
 		page := albums[min(start, len(albums)):min(start+count, len(albums))]
+		ids := make([]pgtype.UUID, len(page))
+		for i := range page {
+			ids[i] = page[i].ID
+		}
+		counts, err := s.queries.CountDLNAAlbumsAssets(ctx, db.CountDLNAAlbumsAssetsParams{AlbumIds: ids, UserID: owner.ID})
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		totals := make(map[pgtype.UUID]int, len(counts))
+		for _, c := range counts {
+			totals[c.AlbumID] = int(c.Total)
+		}
 		containers := make([]dlna.Container, 0, len(page))
 		for _, album := range page {
-			total, err := s.queries.CountDLNAAlbumAssets(ctx, db.CountDLNAAlbumAssetsParams{AlbumID: album.ID, UserID: owner.ID})
-			if err != nil {
-				internalError(w, r, err)
-				return
-			}
 			containers = append(containers, dlna.Container{
-				ID: uuid.UUID(album.ID.Bytes).String(), ParentID: dlna.Root, Title: album.Title, ChildCount: int(total),
+				ID: uuid.UUID(album.ID.Bytes).String(), ParentID: dlna.Root, Title: album.Title, ChildCount: totals[album.ID],
 			})
 		}
 		reply(containers, nil, len(albums))

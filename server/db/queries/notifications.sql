@@ -1,5 +1,7 @@
 -- name: CreateNotification :exec
-INSERT INTO notifications (user_id, kind, subject, ref) VALUES ($1, $2, $3, $4);
+-- Nothing is written for a user who was deleted in the meantime: there is no one left to tell.
+INSERT INTO notifications (user_id, kind, subject, ref)
+SELECT $1, $2, $3, $4 FROM users u WHERE u.id = $1;
 
 -- name: NotifyAdmins :exec
 INSERT INTO notifications (user_id, kind, subject, ref)

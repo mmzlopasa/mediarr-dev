@@ -1,4 +1,5 @@
 import type { components } from './api/schema';
+import { t } from './i18n.svelte.ts';
 
 export type User = components['schemas']['User'];
 export type FixResult = components['schemas']['FixResult'];
@@ -135,7 +136,7 @@ async function request<T>(
 	if (!response.ok) {
 		throw new ApiError(
 			response.status,
-			data.message ?? 'Something went wrong',
+			data.message ?? t('common.somethingWentWrong'),
 			data.totpRequired ?? false
 		);
 	}
@@ -528,7 +529,7 @@ async function sendAvatar(file: Blob): Promise<User> {
 	});
 	const data = await response.json().catch(() => ({}));
 	if (!response.ok)
-		throw new ApiError(response.status, data.message ?? 'Something went wrong', false);
+		throw new ApiError(response.status, data.message ?? t('common.somethingWentWrong'), false);
 	return data as User;
 }
 

@@ -24,11 +24,11 @@ const exportHeadroom = 1 << 30
 
 // canDownloadExport says who may take the files of an export: its owner, and the administrator who
 // started it for them. Other administrators follow and stop it, and do not get the photos.
-func canDownloadExport(row *db.GetExportRow, user *db.User) bool {
-	return row.UserID == user.ID || (user.IsAdmin && row.CreatedBy == user.ID)
+func canDownloadExport(row *db.GetExportRow, user *db.User, admin bool) bool {
+	return row.UserID == user.ID || (admin && row.CreatedBy == user.ID)
 }
 
-func (s *apiServer) exportToAPI(ctx context.Context, row *db.GetExportRow, user *db.User) (api.LibraryExport, error) {
+func (s *apiServer) exportToAPI(ctx context.Context, row *db.GetExportRow, user *db.User, admin bool) (api.LibraryExport, error) {
 	parts, err := s.queries.ListExportParts(ctx, row.ID)
 	if err != nil {
 		return api.LibraryExport{}, err
@@ -39,7 +39,7 @@ func (s *apiServer) exportToAPI(ctx context.Context, row *db.GetExportRow, user 
 		TotalFiles: int(row.TotalFiles), TotalBytes: row.TotalBytes, DoneFiles: int(row.DoneFiles), DoneBytes: row.DoneBytes,
 		Missing: int(row.Missing), LastError: row.LastError, CreatedAt: row.CreatedAt.Time,
 		FinishedAt: optional(row.FinishedAt.Time, row.FinishedAt.Valid), ExpiresAt: optional(row.ExpiresAt.Time, row.ExpiresAt.Valid),
-		Parts: make([]api.LibraryExportPart, 0, len(parts)), CanDownload: canDownloadExport(row, user),
+		Parts: make([]api.LibraryExportPart, 0, len(parts)), CanDownload: canDownloadExport(row, user, admin),
 	}
 	// Parts are offered once all of them are there.
 	if row.Status == string(api.LibraryExportStatusDone) {
@@ -58,7 +58,7 @@ func (s *apiServer) exportsByID(w http.ResponseWriter, r *http.Request, user *db
 			internalError(w, r, err)
 			return
 		}
-		entry, err := s.exportToAPI(r.Context(), &row, user)
+		entry, err := s.exportToAPI(r.Context(), &row, user, actsAsAdmin(r, user))
 		if err != nil {
 			internalError(w, r, err)
 			return
@@ -106,7 +106,7 @@ func (s *apiServer) CreateExport(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	owner := user.ID
 	if body.UserId != nil && pgUUID(*body.UserId) != user.ID {
-		if !user.IsAdmin {
+		if !actsAsAdmin(r, user) {
 			writeError(w, http.StatusForbidden, "only an administrator exports someone else's library")
 			return
 		}
@@ -163,7 +163,7 @@ func (s *apiServer) CreateExport(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
-	out, err := s.exportToAPI(ctx, &row, user)
+	out, err := s.exportToAPI(ctx, &row, user, actsAsAdmin(r, user))
 	if err != nil {
 		internalError(w, r, err)
 		return
@@ -194,7 +194,7 @@ func (s *apiServer) ownExport(w http.ResponseWriter, r *http.Request, id openapi
 		return nil, nil
 	}
 	row, err := s.queries.GetExport(r.Context(), pgUUID(id))
-	if db.IsNotFound(err) || (err == nil && row.UserID != user.ID && !user.IsAdmin) {
+	if db.IsNotFound(err) || (err == nil && row.UserID != user.ID && !actsAsAdmin(r, user)) {
 		writeError(w, http.StatusNotFound, "no such export")
 		return nil, nil
 	}
@@ -210,7 +210,7 @@ func (s *apiServer) GetExport(w http.ResponseWriter, r *http.Request, id openapi
 	if row == nil {
 		return
 	}
-	out, err := s.exportToAPI(r.Context(), row, user)
+	out, err := s.exportToAPI(r.Context(), row, user, actsAsAdmin(r, user))
 	if err != nil {
 		internalError(w, r, err)
 		return
@@ -260,7 +260,7 @@ func (s *apiServer) DownloadExportPart(w http.ResponseWriter, r *http.Request, i
 	if row == nil {
 		return
 	}
-	if !canDownloadExport(row, user) {
+	if !canDownloadExport(row, user, actsAsAdmin(r, user)) {
 		writeError(w, http.StatusForbidden, "only the owner of the library, or the administrator who started the export, downloads it")
 		return
 	}

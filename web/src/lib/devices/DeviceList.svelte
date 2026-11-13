@@ -4,7 +4,7 @@
 	import Button from '#lib/design/components/Button.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { lang, t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, lang, t } from '#lib/i18n.svelte.ts';
 	import { since } from '#lib/organize/agent.ts';
 
 	/** Phones that back up, with what the server itself counts as safe from each. */
@@ -67,7 +67,9 @@
 							: device.ownerEmail} ·
 					{/if}{system(device.platform)}{device.appVersion ? ` · Mediarr ${device.appVersion}` : ''} ·
 					{t('deviceList.lastReport')}
-					<time datetime={device.reportedAt} title={new Date(device.reportedAt).toLocaleString()}
+					<time
+						datetime={device.reportedAt}
+						title={new Date(device.reportedAt).toLocaleString(dateLocale())}
 						>{since(new Date(device.reportedAt))}</time
 					>
 				</small>

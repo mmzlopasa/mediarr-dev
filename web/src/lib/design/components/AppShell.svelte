@@ -4,7 +4,8 @@
 	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { api, avatarOf, initialsOf, type User } from '#lib/api.ts';
+	import { api, ApiError, avatarOf, initialsOf, type User } from '#lib/api.ts';
+	import { showToast } from './toast.svelte.ts';
 	import NotificationBell from '#lib/organize/NotificationBell.svelte';
 	import type { IconName } from '../icons.ts';
 	import { t } from '#lib/i18n.svelte.ts';
@@ -108,7 +109,15 @@
 
 	async function signOut(event: SubmitEvent) {
 		event.preventDefault();
-		await api.logout();
+		try {
+			await api.logout();
+		} catch (cause) {
+			// A session that has already ended is signed out; anything else did not happen.
+			if (!(cause instanceof ApiError && cause.status === 401)) {
+				showToast('err', t('appShell.signOutFailed'));
+				return;
+			}
+		}
 		await goto(resolve('/login'), { invalidateAll: true });
 	}
 

@@ -138,7 +138,9 @@
 		</section>
 	{:else}
 		<p class="dup-note">
-			{t('duplicates.theseAreOnlyProposalsNothing', { trashDays: trashDays() })}
+			{trashDays() === undefined
+				? t('duplicates.theseAreOnlyProposalsNothingNoDays')
+				: t('duplicates.theseAreOnlyProposalsNothing', { trashDays: trashDays() })}
 			{#if data.total > data.groups.length}
 				{t('duplicates.showingGroupscountOfTotal', {
 					groupsCount: data.groups.length,
@@ -225,7 +227,9 @@
 	bind:open={() => confirming !== undefined, (open) => !open && (confirming = undefined)}
 >
 	<p>
-		{t('duplicates.theKeptPhotoTakesOver', { trashDays: trashDays() })}
+		{trashDays() === undefined
+			? t('duplicates.theKeptPhotoTakesOverNoDays')
+			: t('duplicates.theKeptPhotoTakesOver', { trashDays: trashDays() })}
 	</p>
 	{#snippet footer()}
 		<Button onclick={() => (confirming = undefined)}>{t('common.cancel')}</Button>
@@ -248,7 +252,9 @@
 			})}
 		</p>
 		<p>
-			{t('duplicates.inEachGroupTheProposed', { trashDays: trashDays() })}
+			{trashDays() === undefined
+				? t('duplicates.inEachGroupTheProposedNoDays')
+				: t('duplicates.inEachGroupTheProposed', { trashDays: trashDays() })}
 		</p>
 	{/if}
 	{#snippet footer()}

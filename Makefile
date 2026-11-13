@@ -37,10 +37,19 @@ cli:
 	done
 	cd $(HOME)/mediarr-apps/install/cli && sha256sum mediarr-cli-* > SHA256SUMS
 
-docs: cli
-	mkdir -p docs/static/install $(HOME)/mediarr-apps/install
+# The install files (compose, example.env, the CLI) at cdn.mediarr.app/install/ change only with a
+# release, so they need its images: `make docs CLI_VERSION=v1.2.3`. Without one, only the site is rebuilt.
+RELEASE_VERSION := $(shell printf '%s' '$(CLI_VERSION)' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$$')
+docs: $(if $(RELEASE_VERSION),cli)
+	mkdir -p docs/static/install
 	cp docs/monitoring/grafana-dashboard.json docs/static/install/
-	cp docker/docker-compose.yml docker/example.env $(HOME)/mediarr-apps/install/
+	@if [ -n "$(RELEASE_VERSION)" ]; then \
+		mkdir -p $(HOME)/mediarr-apps/install && \
+		cp docker/docker-compose.yml docker/example.env $(HOME)/mediarr-apps/install/ && \
+		echo "install files published for $(RELEASE_VERSION)"; \
+	else \
+		echo "install files left as they are: pass CLI_VERSION=vX.Y.Z to publish them with a release"; \
+	fi
 	cd docs && pnpm install --frozen-lockfile && pnpm build
 	docker compose -f docker/docker-compose.docs.yml up -d --force-recreate --wait
 

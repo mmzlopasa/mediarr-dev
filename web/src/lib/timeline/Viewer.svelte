@@ -6,6 +6,7 @@
 	import FacesEditor from '#lib/organize/FacesEditor.svelte';
 	import { preferences, trashDays } from '#lib/preferences.svelte.ts';
 	import { onMount, untrack } from 'svelte';
+	import { openLayer, trapFocus, type Layer } from '#lib/design/layers.ts';
 	import { holdScroll } from '#lib/motion/motion.ts';
 	import { pulse } from '#lib/motion/actions.ts';
 	import { api, formatBytes, type AssetDetail } from '#lib/api.ts';
@@ -59,6 +60,9 @@
 		/** Videos do not play here: their still is shown with this note instead. */
 		videoNote?: string;
 	} = $props();
+
+	// Sharing to other apps and the XMP sidecar exist only for a signed-in person, not on public links.
+	const signedIn = $derived(!base.startsWith('/api/public/'));
 
 	const load = (asset: string) =>
 		base === '/api' ? api.asset(asset) : (fetchPublicAsset(asset) as Promise<AssetDetail>);
@@ -157,10 +161,15 @@
 
 	onMount(() => {
 		const previous = document.activeElement as HTMLElement | null;
+		const own = openLayer();
+		layer = own;
 		document.body.classList.add('viewer-open');
 		holdScroll(true);
 		dialog?.focus();
+		const untrap = dialog ? trapFocus(dialog, own) : undefined;
 		return () => {
+			untrap?.();
+			own.close();
 			document.body.classList.remove('viewer-open');
 			holdScroll(false);
 			previous?.focus?.();
@@ -174,9 +183,14 @@
 		if (target) onNavigate(target);
 	};
 
+	// The viewer is an overlay; a dialog, menu or slideshow opened over it takes the keys first.
+	let layer: Layer | undefined;
+
 	function onKey(event: KeyboardEvent) {
-		if (confirmDelete || editing) return;
+		if (confirmDelete || editing || editingFacts || slides) return;
+		if (event.defaultPrevented || !layer?.isTop()) return;
 		if (event.key === 'Escape') {
+			event.preventDefault();
 			if (showInfo) showInfo = false;
 			else if (showActivity) showActivity = false;
 			else onClose();
@@ -454,7 +468,7 @@
 							title={t('common.favorite')}
 							onclick={toggleFavorite}><Icon name="star" /></button
 						>{/if}
-					{#if detail.downloadAllowed !== false}<ShareButton ids={[detail.id]} />{/if}
+					{#if detail.downloadAllowed !== false && signedIn}<ShareButton ids={[detail.id]} />{/if}
 					{#if detail.downloadAllowed !== false}<a
 							class="icon-btn"
 							href="{base}/assets/{detail.id}/original?download=true"
@@ -727,7 +741,7 @@
 								{t('viewer.editDetails')}
 							</Button>
 						{/if}
-						{#if detail.isOwner}
+						{#if detail.isOwner && signedIn}
 							<a class="btn sm ghost" href="/api/assets/{id}/sidecar" download
 								><Icon name="download" size={14} />{t('viewer.downloadXmp')}</a
 							>
@@ -779,7 +793,9 @@
 
 <Dialog title={t('viewer.deleteThisPhoto')} bind:open={confirmDelete}>
 	<p>
-		{t('viewer.itMovesToTheTrash', { trashDays: trashDays() })}
+		{trashDays() === undefined
+			? t('viewer.itMovesToTheTrashNoDays')
+			: t('viewer.itMovesToTheTrash', { trashDays: trashDays() })}
 	</p>
 	{#snippet footer()}
 		<Button onclick={() => (confirmDelete = false)}>{t('common.cancel')}</Button>

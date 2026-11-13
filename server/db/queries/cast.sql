@@ -57,6 +57,16 @@ WHERE a.id IN (SELECT album_item_ids(sqlc.arg('album_id')::uuid))
   AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL
   AND asset_visible_to(a.id, sqlc.arg('user_id'));
 
+-- name: CountDLNAAlbumsAssets :many
+-- How many assets each of the given albums shows a TV, in one query for the whole root listing.
+SELECT al.id::uuid AS album_id, (
+  SELECT count(*) FROM assets a
+  WHERE a.id IN (SELECT album_item_ids(al.id))
+    AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL
+    AND asset_visible_to(a.id, sqlc.arg('user_id'))
+)::bigint AS total
+FROM unnest(sqlc.arg('album_ids')::uuid[]) AS al(id);
+
 -- name: GetDLNAAsset :one
 -- An asset a TV asks for: only one in an album of the chosen user.
 SELECT a.* FROM assets a

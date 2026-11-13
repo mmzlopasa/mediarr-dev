@@ -9,6 +9,7 @@
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { t } from '#lib/i18n.svelte.ts';
 	import { holdScroll } from '#lib/motion/motion.ts';
+	import { openLayer, type Layer } from '#lib/design/layers.ts';
 	import {
 		actualSizeScale,
 		chunks,
@@ -87,13 +88,18 @@
 		}
 	}
 
+	let layer: Layer | undefined;
+
 	onMount(() => {
 		const previous = document.activeElement as HTMLElement | null;
+		const own = openLayer();
+		layer = own;
 		document.body.classList.add('viewer-open');
 		holdScroll(true);
 		root?.focus();
 		loadMarks();
 		return () => {
+			own.close();
 			document.body.classList.remove('viewer-open');
 			holdScroll(false);
 			previous?.focus?.();
@@ -185,6 +191,7 @@
 
 	function onKey(event: KeyboardEvent) {
 		if (confirmTrash || makingAlbum) return;
+		if (event.defaultPrevented || !layer?.isTop()) return;
 		if (event.key === 'Escape') {
 			if (comparing) stopComparing();
 			else onClose();

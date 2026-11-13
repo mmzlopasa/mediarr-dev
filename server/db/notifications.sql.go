@@ -23,7 +23,8 @@ func (q *Queries) CountUnreadNotifications(ctx context.Context, userID pgtype.UU
 }
 
 const createNotification = `-- name: CreateNotification :exec
-INSERT INTO notifications (user_id, kind, subject, ref) VALUES ($1, $2, $3, $4)
+INSERT INTO notifications (user_id, kind, subject, ref)
+SELECT $1, $2, $3, $4 FROM users u WHERE u.id = $1
 `
 
 type CreateNotificationParams struct {
@@ -33,6 +34,7 @@ type CreateNotificationParams struct {
 	Ref     string
 }
 
+// Nothing is written for a user who was deleted in the meantime: there is no one left to tell.
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) error {
 	_, err := q.db.Exec(ctx, createNotification,
 		arg.UserID,

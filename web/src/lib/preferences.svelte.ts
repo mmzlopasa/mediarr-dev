@@ -1,11 +1,18 @@
 import { api, type UserPreferences } from '#lib/api.ts';
 
 let current = $state<UserPreferences | undefined>();
-let days = $state(30);
+// How long the trash keeps a photo: only what the server says, never a guess.
+let days = $state<number | undefined>();
+let daysLoading = $state(true);
 
-/** How long the trash keeps a photo on this server. */
+/** How long the trash keeps a photo on this server; undefined until the server has said. */
 export function trashDays() {
 	return days;
+}
+
+/** Whether the server has not answered yet about how long the trash keeps photos. */
+export function trashDaysLoading() {
+	return daysLoading;
 }
 
 /** What this person chose, once it has been read from the server. */
@@ -14,13 +21,11 @@ export function preferences() {
 }
 
 export async function loadPreferences() {
-	try {
-		const [mine, status] = await Promise.all([api.myPreferences(), api.serverStatus()]);
-		current = mine;
-		days = status.trashDays;
-	} catch {
-		// Everything keeps working with its default until the server answers.
-	}
+	// Each on its own: one failing must not keep the other from showing.
+	const [mine, status] = await Promise.allSettled([api.myPreferences(), api.serverStatus()]);
+	if (mine.status === 'fulfilled') current = mine.value;
+	if (status.status === 'fulfilled') days = status.value.trashDays;
+	daysLoading = false;
 }
 
 export async function savePreferences(next: UserPreferences) {

@@ -4,7 +4,7 @@
 	import { api, type Notification } from '#lib/api.ts';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import type { IconName } from '#lib/design/icons.ts';
 	import { since } from './agent.ts';
 
@@ -195,7 +195,9 @@
 									>
 								{/if}
 								<small>
-									<time datetime={item.createdAt} title={new Date(item.createdAt).toLocaleString()}
+									<time
+										datetime={item.createdAt}
+										title={new Date(item.createdAt).toLocaleString(dateLocale())}
 										>{since(new Date(item.createdAt))}</time
 									>
 									{#if group.ids.length > 1}

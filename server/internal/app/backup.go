@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -97,8 +98,17 @@ func (s *apiServer) backupToAPI(ctx context.Context) (api.BackupSettings, error)
 	}
 	return api.BackupSettings{
 		Repository: settings.Repository, Hour: parsed, HasPassword: settings.Password != "", HasS3Key: settings.S3Key != "",
-		LocalFolder: s.BackupPath,
+		LocalFolder: s.localBackupFolder(),
 	}, nil
+}
+
+// localBackupFolder is where a backup may go on this machine, or "" when BACKUP_PATH is not set:
+// docker-compose.yml then mounts /dev/null there, which is a file, not a folder to back up into.
+func (s *apiServer) localBackupFolder() string {
+	if s.BackupPath == "" || !jobs.IsExternalAvailable(s.BackupPath) {
+		return ""
+	}
+	return s.BackupPath
 }
 
 func (s *apiServer) GetBackupSettings(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +133,11 @@ func (s *apiServer) SetBackupSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	repository := strings.TrimSpace(body.Repository)
 	if repository != "" {
-		if err := jobs.ValidRepository(repository, s.BackupPath); err != nil {
+		if filepath.IsAbs(repository) && s.localBackupFolder() == "" {
+			writeError(w, http.StatusBadRequest, "no local backup folder is set up: set BACKUP_PATH in .env and restart Mediarr")
+			return
+		}
+		if err := jobs.ValidRepository(repository, s.localBackupFolder()); err != nil {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}

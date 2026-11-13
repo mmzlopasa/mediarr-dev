@@ -128,12 +128,15 @@ func (f *Finder) download(ctx context.Context) error {
 	return last
 }
 
+// downloadHTTP has a limit of its own besides the caller's context, so no download can hang forever.
+var downloadHTTP = &http.Client{Timeout: fetchLimit}
+
 func (f *Finder) downloadMonth(ctx context.Context, month string) error {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, Source(month), http.NoBody)
 	if err != nil {
 		return err
 	}
-	response, err := http.DefaultClient.Do(request)
+	response, err := downloadHTTP.Do(request)
 	if err != nil {
 		return err
 	}

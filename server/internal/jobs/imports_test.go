@@ -1,6 +1,11 @@
 package jobs
 
 import (
+	"context"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -70,5 +75,41 @@ func TestAFaceGoesToTheHintThatCoversIt(t *testing.T) {
 	}
 	if got := overlap(face, [4]float32{0.2, 0.1, 0.4, 0.3}); got < 0.3 || got > 0.4 {
 		t.Errorf("half covered: %f", got)
+	}
+}
+
+func TestAnImportGivesUpOnABodyThatStopsComing(t *testing.T) {
+	release := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Length", "1000")
+		_, _ = w.Write([]byte("start"))
+		w.(http.Flusher).Flush()
+		<-release
+	}))
+	defer server.Close()
+	defer close(release) // Runs first, so the handler ends before the server closes.
+	ctx, watch, stop := stallGuard(context.Background(), 100*time.Millisecond)
+	defer stop()
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, http.NoBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := importHTTP.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = response.Body.Close() }()
+	done := make(chan error, 1)
+	go func() {
+		_, err := io.Copy(io.Discard, watch(response.Body))
+		done <- stalledErr(ctx, err)
+	}()
+	select {
+	case err := <-done:
+		if !errors.Is(err, errStalled) {
+			t.Errorf("error %v, want a stall", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("the copy still waits on a body that stopped")
 	}
 }

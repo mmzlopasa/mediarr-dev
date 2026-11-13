@@ -3,9 +3,11 @@
 	import Button from '#lib/design/components/Button.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
 	import Icon from '#lib/design/components/Icon.svelte';
+	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { t } from '#lib/i18n.svelte.ts';
 	import { appNav } from '#lib/nav.ts';
+	import { trashDays, trashDaysLoading } from '#lib/preferences.svelte.ts';
 	import CollectionView from '#lib/organize/CollectionView.svelte';
 
 	const item = appNav.find((candidate) => candidate.path === '/trash') ?? appNav[0];
@@ -66,9 +68,12 @@
 <div class="ph">
 	<div>
 		<h1>{t(item.label)}</h1>
-		<p>
-			{t('trash.itemsArePermanentlyDeletedAfter')}
-		</p>
+		<!-- Only what the server says: no number is shown until it has answered. -->
+		{#if trashDays() !== undefined}
+			<p>{t('trash.itemsArePermanentlyDeletedAfter', { trashDays: trashDays() })}</p>
+		{:else if trashDaysLoading()}
+			<p><Skeleton width="16rem" height="1em" /></p>
+		{/if}
 	</div>
 	<div class="ph-a">
 		<Button small variant="danger" onclick={() => (confirmEmpty = true)}

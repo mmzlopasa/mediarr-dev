@@ -111,7 +111,7 @@ func (s *apiServer) serveKeep(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	ip := clientIP(r)
+	ip := hostOnly(clientIP(r))
 	if !s.keepFailures.Allowed(ip) {
 		http.Error(w, "too many failed attempts; wait a while", http.StatusTooManyRequests)
 		return
@@ -397,7 +397,7 @@ func (s *apiServer) RestoreKeepGuestDeleted(w http.ResponseWriter, r *http.Reque
 // PairKeepGuest gives a guest its credentials for the token of its invitation, once. Nobody is signed
 // in: the token is the proof.
 func (s *apiServer) PairKeepGuest(w http.ResponseWriter, r *http.Request) {
-	ip := clientIP(r)
+	ip := hostOnly(clientIP(r))
 	if !s.keepPairs.Allowed(ip) {
 		writeError(w, http.StatusTooManyRequests, "too many failed attempts; wait a while")
 		return

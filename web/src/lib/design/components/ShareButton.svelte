@@ -2,15 +2,30 @@
 	import { onMount } from 'svelte';
 	import { canShareFiles, prefersSmall, rememberSmall, shareAssets } from '#lib/share.ts';
 	import Icon from './Icon.svelte';
+	import { escapeLayer } from '#lib/design/layers.ts';
 	import { showToast } from './toast.svelte.ts';
 	import { t } from '#lib/i18n.svelte.ts';
 
 	/** Sends photos to another app, as originals or smaller for messages. Only where it can. */
-	let { ids, onDone }: { ids: string[]; onDone?: () => void } = $props();
+	let {
+		ids,
+		base = '/api',
+		onDone
+	}: {
+		ids: string[];
+		/** Where the photos are read from; only the signed-in API has a share endpoint. */
+		base?: string;
+		onDone?: () => void;
+	} = $props();
 
 	let able = $state(false);
 	let open = $state(false);
 	let busy = $state(false);
+
+	// While the menu is open it is on top: Esc closes it, not the viewer under it.
+	$effect(() => {
+		if (open) return escapeLayer(() => (open = false));
+	});
 	let small = $state(false);
 
 	onMount(() => {
@@ -24,7 +39,7 @@
 		small = choice;
 		busy = true;
 		try {
-			await shareAssets(ids, choice);
+			await shareAssets(ids, choice, base);
 			onDone?.();
 		} catch (cause) {
 			// Closing the sheet without sending is not a failure.

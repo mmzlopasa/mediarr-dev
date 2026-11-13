@@ -50,6 +50,18 @@ func isDeviceReport(path string) bool {
 	return ok && id != "" && id != "quiet-days" && !strings.Contains(id, "/")
 }
 
+// actsAsAdmin says whether a request may use the rights of an administrator: the user is one, and
+// when the request comes with an API key, that key has the admin scope. Handlers outside /api/admin/
+// that do something only an administrator may (another user's export or import) ask this instead of
+// looking at IsAdmin alone, so a read or write key of an administrator cannot reach past its scope.
+func actsAsAdmin(r *http.Request, user *db.User) bool {
+	if user == nil || !user.IsAdmin {
+		return false
+	}
+	scopes, isKey := r.Context().Value(scopesKey{}).([]string)
+	return !isKey || slices.Contains(scopes, scopeAdmin)
+}
+
 func keyMayDo(scopes []string, method, path string) bool {
 	if !strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, publicPathPrefix) || path == "/api/health" {
 		return true

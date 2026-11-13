@@ -343,7 +343,11 @@ func (s *apiServer) facesOf(ctx context.Context, link *db.GetLinkByTokenRow, ass
 
 // privateCopy is a picture of this link with the faces blurred, made once per link and choice.
 func (s *apiServer) privateCopy(ctx context.Context, link *db.GetLinkByTokenRow, asset pgtype.UUID, kind, source, ext string, keepDate bool) (string, error) {
-	name := fmt.Sprintf("%s-%s-faces-v%d%s", uuid.UUID(asset.Bytes), kind, link.PrivacyVersion, ext)
+	revision, err := s.editRevision(ctx, asset)
+	if err != nil {
+		return "", err
+	}
+	name := fmt.Sprintf("%s-%s-faces-v%d-r%d%s", uuid.UUID(asset.Bytes), kind, link.PrivacyVersion, revision, ext)
 	dest := filepath.Join(s.linkCacheDir(link.ID), name)
 	if _, err := os.Stat(dest); err == nil {
 		return dest, nil

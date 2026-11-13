@@ -1,12 +1,11 @@
 """SigLIP2: pictures and text become vectors that can be compared, in many languages."""
 
-import io
-
 import numpy as np
 from PIL import Image
 from tokenizers import Tokenizer
 
 from . import lifecycle, models
+from . import picture as pictures
 
 IMAGE_SIZE = 224
 MAX_TOKENS = 64
@@ -46,7 +45,7 @@ def encode_ids(ids: list[int]) -> np.ndarray:
 
 
 def embed_image(data: bytes) -> list[float]:
-    values = preprocess(Image.open(io.BytesIO(data)))
+    values = preprocess(pictures.open_rgb(data))
     with _vision.use() as session:
         result = session.run(None, {"pixel_values": values})
     return normalize(result[1][0] if len(result) > 1 else result[0][0])

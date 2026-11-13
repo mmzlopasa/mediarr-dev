@@ -5,7 +5,7 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 
 	/** Snapshots of the database made before upgrades; going back is a command, with the server off. */
 	let snapshots = $state<UpgradeSnapshot[]>();
@@ -43,7 +43,9 @@
 					<span class="set-list-t">
 						<b>{snap.fromVersion || t('snapshotsCard.earlierVersion')} → {snap.toVersion}</b>
 						<small>
-							<time datetime={snap.createdAt}>{new Date(snap.createdAt).toLocaleString()}</time>
+							<time datetime={snap.createdAt}
+								>{new Date(snap.createdAt).toLocaleString(dateLocale())}</time
+							>
 							· {formatBytes(snap.sizeBytes)} · <span class="mono">{snap.name}</span>
 						</small>
 					</span>

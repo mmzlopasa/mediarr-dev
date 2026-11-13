@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -308,7 +309,7 @@ func (s *apiServer) UnlockPublicLink(w http.ResponseWriter, r *http.Request, tok
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	key := hex.EncodeToString(link.TokenHash) + "|" + clientIP(r)
+	key := hex.EncodeToString(link.TokenHash) + "|" + hostOnly(clientIP(r))
 	if !s.linkPasswords.Allowed(key) {
 		writeError(w, http.StatusTooManyRequests, "too many attempts; try again later")
 		return
@@ -359,6 +360,13 @@ func (s *apiServer) GetPublicBucket(w http.ResponseWriter, r *http.Request, toke
 	s.writeAlbumBucket(w, r, link.AlbumID, link.AssetOrder, month, pgtype.UUID{}, pgtype.Int2{})
 }
 
+// playsOriginal says whether a guest may play an unconverted video from its original without it
+// counting as a download. Playing hands over the whole file, so a link with a download limit gives
+// it only as a counted download: otherwise each play would be a free one past the limit.
+func playsOriginal(link *db.GetLinkByTokenRow) bool {
+	return link.AllowDownload && !link.DownloadLimit.Valid
+}
+
 func downloadsLeft(link *db.GetLinkByTokenRow) bool {
 	return link.AllowDownload && (!link.DownloadLimit.Valid || link.DownloadCount < link.DownloadLimit.Int32)
 }
@@ -388,11 +396,54 @@ func (s *apiServer) GetPublicAsset(w http.ResponseWriter, r *http.Request, token
 		detail.Latitude, detail.Longitude = nil, nil
 		detail.City, detail.State, detail.Country = nil, nil, nil
 	}
+	hideLinkDetails(&detail, link)
 	if link.Watermark.Valid || hidesFaces(link) {
 		// Only the marked or blurred previews exist on such a link, so nothing plays or opens without.
 		detail.HlsReady, detail.HasMotion, detail.LiveVideoId, detail.Sprite = nil, nil, nil, nil
 	}
 	writeJSON(w, http.StatusOK, detail)
+}
+
+// hideLinkDetails leaves out of an asset's details what the link promised not to share. The camera
+// goes with its lens and exposure. The date keeps only its month, which the link's timeline shows
+// anyway and the API needs to place the asset; the day, the time and the time zone go, and so does a
+// file name that carries the date (IMG_20240101_120000.jpg).
+func hideLinkDetails(detail *api.AssetDetail, link *db.GetLinkByTokenRow) {
+	if link.StripCamera {
+		detail.Camera, detail.Lens = nil, nil
+		detail.Iso, detail.FNumber, detail.ExposureTime, detail.FocalLength = nil, nil, nil, nil
+	}
+	if link.StripDate {
+		month := monthOnly(detail.LocalAt)
+		detail.LocalAt = month.Format(localTimeLayout)
+		detail.CreatedAt = month
+		detail.OffsetMinutes = nil
+		detail.HasCaptureTime = optional(false, true)
+	}
+	if link.StripDate && datedName.MatchString(detail.OriginalName) {
+		detail.OriginalName = neutralName(string(detail.Kind), detail.Id, detail.OriginalName)
+	}
+}
+
+// datedName finds a date in a file name: 20240317, 2024-03-17 or 2024_03_17, from 1900 to 2099.
+var datedName = regexp.MustCompile(`(19|20)\d{2}[-_.]?(0[1-9]|1[0-2])[-_.]?(0[1-9]|[12]\d|3[01])`)
+
+// monthOnly is the first moment of the month of a local time, or the zero time when it cannot be
+// read.
+func monthOnly(local string) time.Time {
+	at, err := time.Parse(localTimeLayout, local)
+	if err != nil {
+		return time.Time{}
+	}
+	return time.Date(at.Year(), at.Month(), 1, 0, 0, 0, 0, time.UTC)
+}
+
+// neutralName is a file name that says nothing but what the file is: photo-1a2b3c4d.jpg.
+func neutralName(kind string, id uuid.UUID, original string) string {
+	if kind != "video" {
+		kind = "photo"
+	}
+	return kind + "-" + id.String()[:8] + strings.ToLower(filepath.Ext(original))
 }
 
 func (s *apiServer) GetPublicThumbnail(w http.ResponseWriter, r *http.Request, token string, id openapi_types.UUID, params api.GetPublicThumbnailParams) {
@@ -440,9 +491,23 @@ func (s *apiServer) GetPublicThumbnail(w http.ResponseWriter, r *http.Request, t
 	serveFile(w, r, path)
 }
 
-// watermarked keeps each marked preview per link. Revoking the link removes them.
+// editRevision is how many times an asset was edited. Copies kept for a link carry it in their
+// name, so an edit makes a new copy instead of serving the picture from before it.
+func (s *apiServer) editRevision(ctx context.Context, id pgtype.UUID) (int32, error) {
+	row, err := s.queries.GetAsset(ctx, id)
+	if err != nil {
+		return 0, err
+	}
+	return row.EditRevision, nil
+}
+
+// watermarked keeps each marked preview per link and edit. Revoking the link removes them.
 func (s *apiServer) watermarked(ctx context.Context, link *db.GetLinkByTokenRow, id uuid.UUID, kind, source string) (string, error) {
-	dest := filepath.Join(s.linkCacheDir(link.ID), id.String()+"-"+kind+".webp")
+	revision, err := s.editRevision(ctx, pgUUID(id))
+	if err != nil {
+		return "", err
+	}
+	dest := filepath.Join(s.linkCacheDir(link.ID), fmt.Sprintf("%s-%s-r%d.webp", id, kind, revision))
 	if _, err := os.Stat(dest); err == nil {
 		return dest, nil
 	}
@@ -479,7 +544,7 @@ func (s *apiServer) GetPublicOriginal(w http.ResponseWriter, r *http.Request, to
 			internalError(w, r, err)
 			return
 		}
-		if row.Kind != "video" || ready != "" || link.Watermark.Valid || hidesFaces(link) || !downloadsLeft(link) {
+		if row.Kind != "video" || ready != "" || link.Watermark.Valid || hidesFaces(link) || !playsOriginal(link) {
 			writeError(w, http.StatusForbidden, "this link does not allow this file")
 			return
 		}
@@ -510,6 +575,11 @@ func (s *apiServer) GetPublicOriginal(w http.ResponseWriter, r *http.Request, to
 // location, camera details, the date, and what the owner cropped out.
 func (s *apiServer) serveLinkOriginal(w http.ResponseWriter, r *http.Request, link *db.GetLinkByTokenRow, row *db.Asset, download bool) {
 	privacy := jobs.Privacy{Location: !link.ShowLocation, Camera: link.StripCamera, Date: link.StripDate}
+	if link.StripDate && datedName.MatchString(row.OriginalName) {
+		renamed := *row
+		renamed.OriginalName = neutralName(row.Kind, uuid.UUID(row.ID.Bytes), row.OriginalName)
+		row = &renamed
+	}
 	dir := filepath.Join(s.linkCacheDir(link.ID), fmt.Sprintf("v%d", link.PrivacyVersion))
 	var faces func(context.Context) ([][4]float32, error)
 	if hidesFaces(link) {
@@ -647,7 +717,12 @@ func (s *apiServer) GetPublicMotion(w http.ResponseWriter, r *http.Request, toke
 	}
 	if !link.ShowLocation {
 		// The video inside a Motion Photo can carry the place as well.
-		dest := filepath.Join(s.linkCacheDir(link.ID), id.String()+"-motion-nolocation.mp4")
+		revision, err := s.editRevision(r.Context(), pgUUID(id))
+		if err != nil {
+			internalError(w, r, err)
+			return
+		}
+		dest := filepath.Join(s.linkCacheDir(link.ID), fmt.Sprintf("%s-motion-nolocation-r%d.mp4", id, revision))
 		if _, err := os.Stat(dest); err != nil {
 			if err := jobs.StripLocation(r.Context(), path, dest); err != nil {
 				writeError(w, http.StatusForbidden, "this file cannot be shared without its location")
@@ -707,7 +782,7 @@ func (s *apiServer) CreatePublicUpload(w http.ResponseWriter, r *http.Request, t
 		writeError(w, http.StatusTooManyRequests, "this link has received a lot today; try again later")
 		return
 	}
-	key := hex.EncodeToString(link.TokenHash) + "|" + clientIP(r)
+	key := hex.EncodeToString(link.TokenHash) + "|" + hostOnly(clientIP(r))
 	if !s.linkUploads.Allowed(key) {
 		writeError(w, http.StatusTooManyRequests, "too many uploads; try again later")
 		return

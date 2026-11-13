@@ -16,7 +16,7 @@ jobs:
       - name: Vet and test, with the same media tools as the image
         run: |
           docker run --rm -v "$PWD:/repo" -w /repo/server golang:1.27-alpine sh -c \
-            "apk add --no-cache vips-tools vips-heif exiftool ffmpeg libheif-tools libraw-tools curl font-dejavu restic postgresql17-client && go vet ./... && go test ./..."
+            "apk add --no-cache vips-tools vips-heif vips-jxl exiftool ffmpeg libheif-tools libraw-tools curl font-dejavu restic postgresql17-client && go vet ./... && go test ./..."
 
   machine-learning:
     runs-on: ubuntu-latest

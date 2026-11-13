@@ -8,7 +8,7 @@
 		type AccountStats,
 		type User
 	} from '#lib/api.ts';
-	import { lang, languages, type Lang, t, k, type Key } from '#lib/i18n.svelte.ts';
+	import { dateLocale, lang, languages, type Lang, t, k, type Key } from '#lib/i18n.svelte.ts';
 	import type { IconName } from '../icons.ts';
 	import { setTheme, themeChoice, type ThemeChoice } from '../theme.ts';
 	import Icon from './Icon.svelte';
@@ -86,7 +86,7 @@
 	<p class="me-lib" aria-live="polite">
 		{#if stats}
 			<span
-				><b>{(stats.photos + stats.videos).toLocaleString()}</b>
+				><b>{(stats.photos + stats.videos).toLocaleString(dateLocale())}</b>
 				{t('accountCard.photosAndVideos')}</span
 			>
 			<span><b>{formatBytes(stats.bytes)}</b> {t('accountCard.used')}</span>

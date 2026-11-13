@@ -144,7 +144,7 @@
 			<form class="form" onsubmit={submit}>
 				{#if formError}<Alert kind="err">{formError}</Alert>{/if}
 				<Input
-					label="PIN"
+					label={t('vault.pin')}
 					type="password"
 					inputmode="numeric"
 					autocomplete="off"

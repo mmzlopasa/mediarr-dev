@@ -12,6 +12,7 @@
 	import PasswordInput from '#lib/design/components/PasswordInput.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { t } from '#lib/i18n.svelte.ts';
+	import { kindOfFailure, type ErrorKind } from '#lib/errors.ts';
 	import Timeline from '#lib/timeline/Timeline.svelte';
 	import Viewer from '#lib/timeline/Viewer.svelte';
 
@@ -23,6 +24,9 @@
 
 	let link = $state<PublicLink>();
 	let gone = $state(false);
+	// The link could not be read for another reason than not existing: the server or the network.
+	let failure = $state<ErrorKind>();
+	let retrying = $state(false);
 	let unlockError = $state('');
 	let visitor = $state('');
 	let nameError = $state('');
@@ -35,13 +39,26 @@
 	let sending = $state(0);
 
 	async function load() {
+		const asked = token;
 		try {
-			link = await api.publicLink(token);
+			const found = await api.publicLink(asked);
+			if (asked !== token) return;
+			link = found;
 			gone = false;
+			failure = undefined;
 			if (!link.locked && !link.uploadOnly) await timeline?.refresh();
 		} catch (cause) {
+			if (asked !== token) return;
 			if (cause instanceof ApiError && cause.status === 404) gone = true;
+			// Once open, the album stays on screen through a short outage; the next poll tries again.
+			else if (!link) failure = kindOfFailure(cause, navigator.onLine);
 		}
+	}
+
+	async function retry() {
+		retrying = true;
+		await load();
+		retrying = false;
 	}
 
 	onMount(() => {
@@ -143,6 +160,17 @@
 	{#if gone}
 		<div class="pub-box">
 			<Alert kind="err">{t('s.token.thisLinkIsNotAvailable')}</Alert>
+		</div>
+	{:else if !link && failure}
+		<div class="pub-box form">
+			<Alert kind="err"
+				>{failure === 'offline'
+					? t('common.serverUnreachable')
+					: failure === 'unavailable'
+						? t('common.serverUnavailable')
+						: t('common.serverError')}</Alert
+			>
+			<Button variant="gold" disabled={retrying} onclick={retry}>{t('common.tryAgain')}</Button>
 		</div>
 	{:else if !link}
 		<Skeleton height="220px" />

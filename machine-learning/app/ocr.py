@@ -1,11 +1,9 @@
 """Reads text on pictures, so that it can be searched."""
 
-import io
-
 import numpy as np
-from PIL import Image
 
 from . import config, lifecycle
+from . import picture as pictures
 
 MIN_SCORE = 0.5
 
@@ -23,7 +21,7 @@ _engine = lifecycle.registry.add("ocr", _open_engine)
 
 
 def read_text(data: bytes) -> str:
-    picture = np.asarray(Image.open(io.BytesIO(data)).convert("RGB"))[:, :, ::-1]
+    picture = np.asarray(pictures.open_rgb(data))[:, :, ::-1]
     with _engine.use() as engine:
         result = engine(picture)
     if result.txts is None:

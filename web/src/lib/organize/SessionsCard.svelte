@@ -6,7 +6,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 	import { describeAgent, since } from './agent.ts';
 
 	// The most recent few are what people look for; the rest are one click away.
@@ -77,7 +77,7 @@
 							{#if session.ip}<span class="mono">{session.ip}</span> ·{/if}
 							<time
 								datetime={session.lastSeenAt}
-								title={new Date(session.lastSeenAt).toLocaleString()}
+								title={new Date(session.lastSeenAt).toLocaleString(dateLocale())}
 								>{since(new Date(session.lastSeenAt))}</time
 							>
 						</small>

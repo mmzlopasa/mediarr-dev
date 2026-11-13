@@ -243,7 +243,12 @@
 
 <Dialog title={t('cleanup.moveToTheTrash')} bind:open={confirming}>
 	<p>
-		{t('cleanup.chosencountItemsStayInThe', { chosenCount: chosen.length, trashDays: trashDays() })}
+		{trashDays() === undefined
+			? t('cleanup.chosencountItemsStayInTheNoDays', { chosenCount: chosen.length })
+			: t('cleanup.chosencountItemsStayInThe', {
+					chosenCount: chosen.length,
+					trashDays: trashDays()
+				})}
 	</p>
 	{#snippet footer()}
 		<Button onclick={() => (confirming = false)}>{t('common.cancel')}</Button>

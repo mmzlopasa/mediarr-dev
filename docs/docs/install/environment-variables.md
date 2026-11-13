@@ -30,6 +30,7 @@ Mediarr reads these from `.env`. After changing them, apply them with `docker co
 | `ML_TOKEN` | Makes the service ask for this token on everything except its health check, and the Mediarr server send it. Use the same value on both sides. See [another computer](/features/smart-search#on-another-computer) |
 | `ML_FACE_MODEL` | `buffalo_l`, or `buffalo_s`, which is smaller and faster but less accurate |
 | `ML_THREADS` | Processor threads for analysis. Default: all of them |
+| `ML_MAX_BODY_MB` | The largest picture the analysis service accepts, in megabytes. Default `64`. Mediarr sends its previews, which are far smaller, so this matters only to other programs using the service |
 | `EXTERNAL_LIBRARY_PATH` | A folder of photos to show without copying them, read only |
 | `BACKUP_PATH` | A folder for backups, best on another disk |
 | `TRUSTED_PROXY_HOPS` | How many reverse proxies stand in front of Mediarr, usually `1` |

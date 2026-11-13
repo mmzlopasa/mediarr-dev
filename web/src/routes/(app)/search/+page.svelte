@@ -8,7 +8,8 @@
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Input from '#lib/design/components/Input.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { lang, t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
+	import { formatDateTime } from '#lib/timeline/layout.ts';
 	import { appNav } from '#lib/nav.ts';
 	import { blurUrl } from '#lib/timeline/blur.ts';
 	import FilterPanel from '#lib/search/FilterPanel.svelte';
@@ -104,12 +105,32 @@
 	}
 
 	const day = (iso: string) =>
-		new Date(`${iso}T12:00:00`).toLocaleDateString(lang(), {
+		new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), {
 			day: 'numeric',
 			month: 'short',
 			year: 'numeric'
 		});
 	const chips = $derived(result ? chipsFor(result.filters, params, day) : []);
+
+	// A photo changed or deleted in the viewer: the results are read again, keeping the order shown
+	// for what is still found, and an answer for a search that has since changed is dropped.
+	async function refreshResults() {
+		const asked = params;
+		try {
+			const found = await api.search(asked);
+			if (asked === params) result = found;
+		} catch {
+			// What is shown stays; the next search reads it again.
+		}
+	}
+
+	/** A name for each result that tells it from the others: what it is and when it was taken. */
+	function openLabel(found: SearchResult['items'][number]) {
+		const when = formatDateTime(found.localAt, dateLocale());
+		return found.kind === 'video'
+			? t('search.openVideoFrom', { when })
+			: t('search.openPhotoFrom', { when });
+	}
 
 	function neighbours(id: string) {
 		const items = result?.items ?? [];
@@ -199,7 +220,7 @@
 				{@const blur = blurUrl(found.blurhash)}
 				<button
 					type="button"
-					aria-label={t('common.open')}
+					aria-label={openLabel(found)}
 					style={blur ? `background-image:url(${blur});background-size:cover` : ''}
 					onclick={() => pushState('', { viewer: found.id })}
 				>
@@ -215,7 +236,7 @@
 		id={page.state.viewer}
 		onClose={() => history.back()}
 		onNavigate={(photo) => replaceState('', { viewer: photo })}
-		onChanged={() => {}}
+		onChanged={refreshResults}
 		{neighbours}
 		playlist={async () =>
 			(result?.items ?? []).map((found) => ({ id: found.id, kind: found.kind }))}

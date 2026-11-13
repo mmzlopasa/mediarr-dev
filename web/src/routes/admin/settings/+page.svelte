@@ -27,7 +27,7 @@
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import SectionNav from '#lib/design/components/SectionNav.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
-	import { t, k, type Key } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t, k, type Key } from '#lib/i18n.svelte.ts';
 
 	let light = $state('');
 	let dark = $state('');
@@ -380,7 +380,8 @@
 							value={external.scanning
 								? t('admin.settings.scanning')
 								: external.scanFinishedAt
-									? t('admin.settings.scanned') + new Date(external.scanFinishedAt).toLocaleString()
+									? t('admin.settings.scanned') +
+										new Date(external.scanFinishedAt).toLocaleString(dateLocale())
 									: t('admin.settings.notScannedYet')}
 						/>
 						{#if external.scanError}<Alert kind="err">{external.scanError}</Alert>{/if}
@@ -609,7 +610,7 @@
 												>{t(status(run.status).label)}</em
 											>
 											<time datetime={run.startedAt}
-												>{new Date(run.startedAt).toLocaleString()}</time
+												>{new Date(run.startedAt).toLocaleString(dateLocale())}</time
 											>
 											· {t('admin.settings.files')}
 											{run.files}

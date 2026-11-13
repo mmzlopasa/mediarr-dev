@@ -31,10 +31,10 @@ export function fileNameFrom(disposition: string | null, fallback: string): stri
 }
 
 /** Fetches the files and opens the system's sheet to send them. */
-export async function shareAssets(ids: string[], small: boolean) {
+export async function shareAssets(ids: string[], small: boolean, base = '/api') {
 	const files: File[] = [];
 	for (const id of ids) {
-		const response = await fetch(`/api/assets/${id}/share${small ? '?small=true' : ''}`);
+		const response = await fetch(`${base}/assets/${id}/share${small ? '?small=true' : ''}`);
 		if (!response.ok) throw new Error(`The server answered ${response.status}`);
 		const blob = await response.blob();
 		const name = fileNameFrom(response.headers.get('Content-Disposition'), id);

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { parallax } from '#lib/motion/actions.ts';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -99,8 +99,11 @@
 			.albums('title')
 			.then((found) => (allAlbums = found))
 			.catch(() => undefined);
+		const asked = id;
 		try {
-			const next = await api.album(id);
+			const next = await api.album(asked);
+			// The page moved to another album while this one was asked for.
+			if (asked !== id) return;
 			const changed = album && next.updatedAt !== album.updatedAt;
 			album = next;
 			gone = false;
@@ -108,8 +111,26 @@
 			if (changed) await timeline?.reloadLoaded();
 			else await timeline?.refresh();
 		} catch {
-			gone = true;
+			if (asked === id) gone = true;
 		}
+	}
+
+	// Moving to another album starts it afresh: nothing of the previous one stays on screen.
+	let shownId = '';
+	function reset() {
+		album = undefined;
+		gone = false;
+		sharing = false;
+		linking = false;
+		editing = false;
+		confirmDelete = false;
+		showComments = false;
+		slides = undefined;
+		making = false;
+		moving = false;
+		childTitle = '';
+		pickFilter = '';
+		filteredCount = undefined;
 	}
 
 	onMount(() => {
@@ -118,7 +139,11 @@
 	});
 
 	$effect(() => {
-		void id;
+		const current = id;
+		untrack(() => {
+			if (shownId && shownId !== current) reset();
+			shownId = current;
+		});
 		load();
 		const timer = setInterval(load, POLL_MS);
 		return () => clearInterval(timer);

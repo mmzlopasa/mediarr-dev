@@ -245,7 +245,7 @@ func (s *apiServer) RedeemQRSignIn(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "say what this device is called, in up to 80 characters")
 		return
 	}
-	ip := clientIP(r)
+	ip := hostOnly(clientIP(r))
 	q := s.qrSignIns
 	q.mu.Lock()
 	defer q.mu.Unlock()

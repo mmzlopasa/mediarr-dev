@@ -23,7 +23,7 @@ Then apply it:
 docker compose up -d
 ```
 
-The models download on first use, about 1 GB. Progress is under **Admin → Settings**. Pictures you already have are analysed in the background.
+The models download on first use, about 1 GB. Progress is under **Admin → Settings**. Every file is checked against the fingerprint (SHA-256) this version of Mediarr expects; one that does not match is deleted and not used, and the service log says so. Pictures you already have are analysed in the background.
 
 ## Memory
 

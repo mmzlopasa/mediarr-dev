@@ -3,11 +3,12 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import Body, FastAPI, HTTPException
-from PIL import UnidentifiedImageError
 from pydantic import BaseModel
 
 from . import clip, config, faces, lifecycle, models, ocr
 from .auth import TokenMiddleware
+from .limits import BodyLimitMiddleware
+from .picture import UnreadablePicture
 
 
 @asynccontextmanager
@@ -18,6 +19,8 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Mediarr ML", lifespan=lifespan)
+app.add_middleware(BodyLimitMiddleware)
+# Added last, so it runs first: without the token, not even the size of a body is looked at.
 app.add_middleware(TokenMiddleware)
 
 MAX_TEXT = 2000
@@ -50,6 +53,7 @@ def status() -> dict:
     }
 
 
+# The server cancels the job on 422 instead of trying again.
 def _picture_error(cause: Exception) -> HTTPException:
     return HTTPException(status_code=422, detail=f"not a readable picture: {cause}")
 
@@ -58,7 +62,7 @@ def _picture_error(cause: Exception) -> HTTPException:
 def clip_image(data: bytes = Body(media_type="application/octet-stream")) -> dict[str, list[float]]:
     try:
         return {"embedding": clip.embed_image(data)}
-    except (UnidentifiedImageError, OSError) as cause:
+    except UnreadablePicture as cause:
         raise _picture_error(cause) from cause
 
 
@@ -73,7 +77,7 @@ def clip_text(query: TextQuery) -> dict[str, list[float]]:
 def find_faces(data: bytes = Body(media_type="application/octet-stream")) -> dict[str, list[dict]]:
     try:
         return {"faces": faces.detect(data)}
-    except (UnidentifiedImageError, OSError) as cause:
+    except UnreadablePicture as cause:
         raise _picture_error(cause) from cause
 
 
@@ -81,5 +85,5 @@ def find_faces(data: bytes = Body(media_type="application/octet-stream")) -> dic
 def read_text(data: bytes = Body(media_type="application/octet-stream")) -> dict[str, str]:
     try:
         return {"text": ocr.read_text(data)}
-    except (UnidentifiedImageError, OSError) as cause:
+    except UnreadablePicture as cause:
         raise _picture_error(cause) from cause

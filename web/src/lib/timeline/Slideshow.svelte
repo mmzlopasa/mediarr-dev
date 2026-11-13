@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { api } from '#lib/api.ts';
+	import { openLayer, trapFocus, type Layer } from '#lib/design/layers.ts';
 	import Icon from '#lib/design/components/Icon.svelte';
 	import PlayOnTv from '#lib/cast/PlayOnTv.svelte';
 	import CastBar from '#lib/cast/CastBar.svelte';
@@ -137,7 +138,10 @@
 		else root?.requestFullscreen?.().catch(() => undefined);
 	}
 
+	let layer: Layer | undefined;
+
 	function key(event: KeyboardEvent) {
+		if (event.defaultPrevented || !layer?.isTop()) return;
 		if (event.key === 'Escape') close();
 		else if (event.key === ' ') {
 			event.preventDefault();
@@ -146,6 +150,9 @@
 		else if (event.key === 'ArrowLeft') go(-1);
 		else if (event.key === 'f') toggleFullscreen();
 		else return;
+		// Handled here: the viewer under the slideshow must not act on the same key.
+		event.preventDefault();
+		event.stopPropagation();
 		wake();
 	}
 
@@ -169,6 +176,9 @@
 		reduceMotion = query.matches;
 		const motion = (event: MediaQueryListEvent) => (reduceMotion = event.matches);
 		query.addEventListener('change', motion);
+		const own = openLayer();
+		layer = own;
+		const untrap = root ? trapFocus(root, own) : undefined;
 		root?.focus();
 		root?.requestFullscreen?.().catch(() => undefined);
 		keepAwake();
@@ -186,6 +196,8 @@
 		document.addEventListener('fullscreenchange', fullscreen);
 		wake();
 		return () => {
+			untrap?.();
+			own.close();
 			query.removeEventListener('change', motion);
 			document.removeEventListener('visibilitychange', visible);
 			document.removeEventListener('fullscreenchange', fullscreen);

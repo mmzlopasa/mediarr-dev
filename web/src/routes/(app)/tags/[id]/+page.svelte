@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { untrack } from 'svelte';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -18,13 +18,30 @@
 	let gone = $state(false);
 	let timeline = $state<Timeline>();
 
-	onMount(async () => {
-		try {
-			tag = (await api.tags()).find((candidate) => candidate.id === id);
-			gone = !tag;
-		} catch {
-			gone = true;
-		}
+	const source = $derived(tagSource(id));
+
+	// Read again for each tag, as when two tags were joined and the page moved to the one kept.
+	$effect(() => {
+		const current = id;
+		let stale = false;
+		untrack(() => {
+			if (tag?.id !== current) tag = undefined;
+			gone = false;
+			renaming = false;
+		});
+		api
+			.tags()
+			.then((tags) => {
+				if (stale) return;
+				tag = tags.find((candidate) => candidate.id === current);
+				gone = !tag;
+			})
+			.catch(() => {
+				if (!stale) gone = true;
+			});
+		return () => {
+			stale = true;
+		};
 	});
 
 	let renaming = $state(false);
@@ -99,7 +116,7 @@
 	</div>
 	<Timeline
 		bind:this={timeline}
-		source={tagSource(id)}
+		{source}
 		hrefFor={(photo) => resolve('/(app)/photos/[id]', { id: photo })}
 		onOpen={(photo) => pushState('', { viewer: photo })}
 	>
