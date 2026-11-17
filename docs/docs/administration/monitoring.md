@@ -28,6 +28,28 @@ docker compose restart worker
 
 The same place sets how sure a face must be, how alike two faces must be to be one person, and how often an external library is scanned. These apply to work done from then on.
 
+## A dashboard for your services
+
+A dashboard that watches your services can read Mediarr's numbers from `/api/stats`:
+
+1. Sign in as an administrator, open **Account → API keys** and make a key with only **Read**. The key cannot change anything, and it is shown once.
+2. In the dashboard, set the address of Mediarr (for example `http://your-server-ip:9851`), the header `X-Api-Key` with that key, and the path `/api/stats`.
+
+The answer is JSON:
+
+| Field | What it holds |
+| --- | --- |
+| `photos`, `videos` | How many there are in the whole library |
+| `usageBytes` | The total size of all originals |
+| `users` | How many accounts there are |
+| `processing`, `failed` | Files still being prepared, and files that could not be |
+| `diskTotalBytes`, `diskFreeBytes` | The disk of the library |
+| `lastUploadAt` | When the newest file arrived; absent in an empty library |
+| `version` | The version of the server |
+| `jobs` | A list with one entry per queue of background work: `queue`, `queued`, `running` and `failed` |
+
+To be warned about background work that failed, add up `failed` of every entry in `jobs`.
+
 ## Prometheus
 
 Set a long random value in `.env`:

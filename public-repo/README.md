@@ -6,14 +6,12 @@
   <a href="https://github.com/mediarr-app/mediarr/tags"><img src="https://img.shields.io/github/v/tag/mediarr-app/mediarr?label=version&color=ffd76a&labelColor=0d0f14" alt="Version"></a>
   <a href="https://github.com/mediarr-app/mediarr/actions/workflows/ci.yml"><img src="https://github.com/mediarr-app/mediarr/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://docs.mediarr.app"><img src="https://img.shields.io/badge/docs-docs.mediarr.app-3a55c9?labelColor=0d0f14" alt="Documentation"></a>
-  <a href="https://demo.mediarr.app"><img src="https://img.shields.io/badge/demo-try_it_live-3a55c9?labelColor=0d0f14" alt="Demo"></a>
   <img src="https://img.shields.io/badge/apps-iOS_·_Android-2ec4a6?labelColor=0d0f14" alt="iOS and Android">
 </p>
 
 <p align="center">
   <a href="https://mediarr.app"><b>Website</b></a> ·
   <a href="https://docs.mediarr.app"><b>Documentation</b></a> ·
-  <a href="https://demo.mediarr.app"><b>Live demo</b></a> ·
   <a href="#mobile-apps"><b>Mobile apps</b></a> ·
   <a href="#install-in-five-minutes"><b>Install</b></a>
 </p>
@@ -55,14 +53,6 @@ Your pictures stay on your disk. There is no account with us, no subscription, a
     <td align="center"><sub>Memories on the TV</sub></td>
   </tr>
 </table>
-
-## Try it first
-
-Open [demo.mediarr.app](https://demo.mediarr.app) and sign in. The demo is read only.
-
-| Email | Password |
-| --- | --- |
-| `demo@mediarr.app` | `mediarr-demo` |
 
 ## Install in five minutes
 

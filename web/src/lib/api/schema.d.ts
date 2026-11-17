@@ -555,6 +555,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Numbers of the whole server for a monitoring dashboard
+         * @description For an administrator. An API key needs only the read scope, so a dashboard can watch the server without being able to change anything.
+         */
+        get: operations["getServerStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assets": {
         parameters: {
             query?: never;
@@ -5413,6 +5433,52 @@ export interface components {
             diskTotalBytes: number;
             trashDays: number;
         };
+        ServerStats: {
+            /** Format: int64 */
+            photos: number;
+            /** Format: int64 */
+            videos: number;
+            /**
+             * Format: int64
+             * @description Total size of all originals
+             */
+            usageBytes: number;
+            /** Format: int64 */
+            users: number;
+            /**
+             * Format: int64
+             * @description Files still being prepared
+             */
+            processing: number;
+            /**
+             * Format: int64
+             * @description Files that could not be processed
+             */
+            failed: number;
+            /** Format: int64 */
+            diskTotalBytes: number;
+            /** Format: int64 */
+            diskFreeBytes: number;
+            /**
+             * Format: date-time
+             * @description When the newest file arrived; absent in an empty library
+             */
+            lastUploadAt?: string;
+            version: string;
+            /** @description One entry per queue of background work */
+            jobs: {
+                queue: string;
+                /** Format: int64 */
+                queued: number;
+                /** Format: int64 */
+                running: number;
+                /**
+                 * Format: int64
+                 * @description Jobs that gave up or were cancelled and are still kept
+                 */
+                failed: number;
+            }[];
+        };
         AdminOverview: {
             /** Format: int64 */
             users: number;
@@ -6568,6 +6634,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminOverview"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    getServerStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current numbers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerStats"];
                 };
             };
             401: components["responses"]["Error"];

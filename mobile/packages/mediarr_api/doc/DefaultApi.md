@@ -143,6 +143,7 @@ Method | HTTP request | Description
 [**getSecurity**](DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
 [**getServerHello**](DefaultApi.md#getserverhello) | **GET** /api/server/hello | Lets an app on the same network recognise a Mediarr server; only its version
 [**getServerSettings**](DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
+[**getServerStats**](DefaultApi.md#getserverstats) | **GET** /api/stats | Numbers of the whole server for a monitoring dashboard
 [**getServerStatus**](DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
 [**getShareableAsset**](DefaultApi.md#getshareableasset) | **GET** /api/assets/{id}/shareable | One of my photos ready to send elsewhere, without what I choose to keep to myself
 [**getStorageTemplate**](DefaultApi.md#getstoragetemplate) | **GET** /api/admin/storage-template | How originals are laid out in each user's folder, and what the last run over all of them did
@@ -5684,6 +5685,45 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**ServerSettings**](ServerSettings.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getServerStats**
+> ServerStats getServerStats()
+
+Numbers of the whole server for a monitoring dashboard
+
+For an administrator. An API key needs only the read scope, so a dashboard can watch the server without being able to change anything. 
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getServerStats();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getServerStats: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**ServerStats**](ServerStats.md)
 
 ### Authorization
 

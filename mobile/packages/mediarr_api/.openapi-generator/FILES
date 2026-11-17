@@ -173,6 +173,8 @@ doc/SecuritySettings.md
 doc/SecurityUpdate.md
 doc/ServerHello.md
 doc/ServerSettings.md
+doc/ServerStats.md
+doc/ServerStatsJobsInner.md
 doc/ServerStatus.md
 doc/SetupRequest.md
 doc/ShareLink.md
@@ -393,6 +395,8 @@ lib/model/security_settings.dart
 lib/model/security_update.dart
 lib/model/server_hello.dart
 lib/model/server_settings.dart
+lib/model/server_stats.dart
+lib/model/server_stats_jobs_inner.dart
 lib/model/server_status.dart
 lib/model/setup_request.dart
 lib/model/share_link.dart
@@ -433,3 +437,5 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
+test/server_stats_jobs_inner_test.dart
+test/server_stats_test.dart

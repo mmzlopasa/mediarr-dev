@@ -569,6 +569,10 @@ class ApiClient {
           return ServerHello.fromJson(value);
         case 'ServerSettings':
           return ServerSettings.fromJson(value);
+        case 'ServerStats':
+          return ServerStats.fromJson(value);
+        case 'ServerStatsJobsInner':
+          return ServerStatsJobsInner.fromJson(value);
         case 'ServerStatus':
           return ServerStatus.fromJson(value);
         case 'SetupRequest':

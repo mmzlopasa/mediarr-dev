@@ -26,6 +26,10 @@ Everything up to v0.2.35: duplicates and Clean up, dates and places of many phot
 
 ## Server and web
 
+### v0.2.43
+- [A dashboard for your services](/administration/monitoring#a-dashboard-for-your-services) can read the numbers of the whole server from `/api/stats`, with a key that can only read: photos, videos, the space they take, the newest upload and failed background work.
+- The public demo is closed.
+
 ### v0.2.42
 - Private links: details such as the camera and the date are left out of what the visitor sees too, an edited photo is shared as edited, and a download limit also covers playing a video.
 - Moving files with the storage template can never write over another original.

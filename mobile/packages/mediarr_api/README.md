@@ -194,6 +194,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getSecurity**](doc//DefaultApi.md#getsecurity) | **GET** /api/admin/security | Who may reach this server, and the devices that have tried
 *DefaultApi* | [**getServerHello**](doc//DefaultApi.md#getserverhello) | **GET** /api/server/hello | Lets an app on the same network recognise a Mediarr server; only its version
 *DefaultApi* | [**getServerSettings**](doc//DefaultApi.md#getserversettings) | **GET** /api/admin/server-settings | How this server treats files, and sign-in
+*DefaultApi* | [**getServerStats**](doc//DefaultApi.md#getserverstats) | **GET** /api/stats | Numbers of the whole server for a monitoring dashboard
 *DefaultApi* | [**getServerStatus**](doc//DefaultApi.md#getserverstatus) | **GET** /api/server/status | The version of this server, whether a newer one exists, and its disk
 *DefaultApi* | [**getShareableAsset**](doc//DefaultApi.md#getshareableasset) | **GET** /api/assets/{id}/shareable | One of my photos ready to send elsewhere, without what I choose to keep to myself
 *DefaultApi* | [**getStorageTemplate**](doc//DefaultApi.md#getstoragetemplate) | **GET** /api/admin/storage-template | How originals are laid out in each user's folder, and what the last run over all of them did
@@ -495,6 +496,8 @@ Class | Method | HTTP request | Description
  - [SecurityUpdate](doc//SecurityUpdate.md)
  - [ServerHello](doc//ServerHello.md)
  - [ServerSettings](doc//ServerSettings.md)
+ - [ServerStats](doc//ServerStats.md)
+ - [ServerStatsJobsInner](doc//ServerStatsJobsInner.md)
  - [ServerStatus](doc//ServerStatus.md)
  - [SetupRequest](doc//SetupRequest.md)
  - [ShareLink](doc//ShareLink.md)

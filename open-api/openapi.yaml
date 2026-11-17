@@ -521,6 +521,21 @@ paths:
               schema: { $ref: "#/components/schemas/AdminOverview" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/stats:
+    get:
+      operationId: getServerStats
+      summary: Numbers of the whole server for a monitoring dashboard
+      description: >
+        For an administrator. An API key needs only the read scope, so a dashboard can watch the
+        server without being able to change anything.
+      responses:
+        "200":
+          description: Current numbers
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServerStats" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/assets:
     get:
       operationId: listAssets
@@ -5205,6 +5220,31 @@ components:
         diskUsedBytes: { type: integer, format: int64 }
         diskTotalBytes: { type: integer, format: int64 }
         trashDays: { type: integer }
+    ServerStats:
+      type: object
+      required: [photos, videos, usageBytes, users, processing, failed, diskTotalBytes, diskFreeBytes, version, jobs]
+      properties:
+        photos: { type: integer, format: int64 }
+        videos: { type: integer, format: int64 }
+        usageBytes: { type: integer, format: int64, description: Total size of all originals }
+        users: { type: integer, format: int64 }
+        processing: { type: integer, format: int64, description: Files still being prepared }
+        failed: { type: integer, format: int64, description: Files that could not be processed }
+        diskTotalBytes: { type: integer, format: int64 }
+        diskFreeBytes: { type: integer, format: int64 }
+        lastUploadAt: { type: string, format: date-time, description: When the newest file arrived; absent in an empty library }
+        version: { type: string }
+        jobs:
+          type: array
+          description: One entry per queue of background work
+          items:
+            type: object
+            required: [queue, queued, running, failed]
+            properties:
+              queue: { type: string }
+              queued: { type: integer, format: int64 }
+              running: { type: integer, format: int64 }
+              failed: { type: integer, format: int64, description: Jobs that gave up or were cancelled and are still kept }
     AdminOverview:
       type: object
       required: [users, photos, videos, processing, failed, libraryBytes, diskTotalBytes, diskFreeBytes, jobs, version, databaseVersion]

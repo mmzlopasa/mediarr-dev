@@ -17,8 +17,10 @@ export default defineConfig({
 		})
 	],
 	server: {
-		// The development stack is what demo.mediarr.app serves.
-		allowedHosts: ['demo.mediarr.app']
+		// The development server answers only to this machine. It runs code on request by design, so
+		// it must never be given a public name.
+		allowedHosts: [],
+		fs: { strict: true }
 	},
 	test: {
 		include: ['src/**/*.test.ts']

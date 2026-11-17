@@ -200,6 +200,8 @@ part 'model/security_settings.dart';
 part 'model/security_update.dart';
 part 'model/server_hello.dart';
 part 'model/server_settings.dart';
+part 'model/server_stats.dart';
+part 'model/server_stats_jobs_inner.dart';
 part 'model/server_status.dart';
 part 'model/setup_request.dart';
 part 'model/share_link.dart';

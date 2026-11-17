@@ -8,7 +8,6 @@
 
 <p align="center">
   <a href="https://docs.mediarr.app">Documentation</a> ·
-  <a href="https://demo.mediarr.app">Demo</a> ·
   <a href="https://mediarr.app">Website</a>
 </p>
 

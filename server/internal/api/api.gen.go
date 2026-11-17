@@ -3485,6 +3485,37 @@ type ServerSettings struct {
 	WorkerConcurrency int `json:"workerConcurrency"`
 }
 
+// ServerStats defines model for ServerStats.
+type ServerStats struct {
+	DiskFreeBytes  int64 `json:"diskFreeBytes"`
+	DiskTotalBytes int64 `json:"diskTotalBytes"`
+
+	// Failed Files that could not be processed
+	Failed int64 `json:"failed"`
+
+	// Jobs One entry per queue of background work
+	Jobs []struct {
+		// Failed Jobs that gave up or were cancelled and are still kept
+		Failed  int64  `json:"failed"`
+		Queue   string `json:"queue"`
+		Queued  int64  `json:"queued"`
+		Running int64  `json:"running"`
+	} `json:"jobs"`
+
+	// LastUploadAt When the newest file arrived; absent in an empty library
+	LastUploadAt *time.Time `json:"lastUploadAt,omitempty"`
+	Photos       int64      `json:"photos"`
+
+	// Processing Files still being prepared
+	Processing int64 `json:"processing"`
+
+	// UsageBytes Total size of all originals
+	UsageBytes int64  `json:"usageBytes"`
+	Users      int64  `json:"users"`
+	Version    string `json:"version"`
+	Videos     int64  `json:"videos"`
+}
+
 // ServerStatus defines model for ServerStatus.
 type ServerStatus struct {
 	DiskTotalBytes int64 `json:"diskTotalBytes"`
@@ -5090,6 +5121,9 @@ type ServerInterface interface {
 	// GetServerStatus The version of this server, whether a newer one exists, and its disk
 	// (GET /api/server/status)
 	GetServerStatus(w http.ResponseWriter, r *http.Request)
+	// GetServerStats Numbers of the whole server for a monitoring dashboard
+	// (GET /api/stats)
+	GetServerStats(w http.ResponseWriter, r *http.Request)
 	// CreateStoryExport Make a video of the chosen photos. Runs in the background.
 	// (POST /api/stories)
 	CreateStoryExport(w http.ResponseWriter, r *http.Request)
@@ -6581,6 +6615,12 @@ func (_ Unimplemented) GetServerHello(w http.ResponseWriter, r *http.Request) {
 // GetServerStatus The version of this server, whether a newer one exists, and its disk
 // (GET /api/server/status)
 func (_ Unimplemented) GetServerStatus(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetServerStats Numbers of the whole server for a monitoring dashboard
+// (GET /api/stats)
+func (_ Unimplemented) GetServerStats(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -12361,6 +12401,20 @@ func (siw *ServerInterfaceWrapper) GetServerStatus(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// GetServerStats operation middleware
+func (siw *ServerInterfaceWrapper) GetServerStats(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetServerStats(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateStoryExport operation middleware
 func (siw *ServerInterfaceWrapper) CreateStoryExport(w http.ResponseWriter, r *http.Request) {
 
@@ -13167,6 +13221,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/overview", wrapper.GetAdminOverview)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/stats", wrapper.GetServerStats)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/assets", wrapper.ListAssets)

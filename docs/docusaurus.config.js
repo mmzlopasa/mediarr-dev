@@ -40,7 +40,6 @@ const config = {
         { to: '/features/mobile-app', label: 'Features', position: 'left' },
         { to: '/administration/users', label: 'Administration', position: 'left' },
         { href: 'https://mediarr.app', label: 'Website', position: 'right' },
-        { href: 'https://demo.mediarr.app', label: 'Demo', position: 'right' },
       ],
     },
     footer: { copyright: `Copyright © ${new Date().getFullYear()} Mediarr` },

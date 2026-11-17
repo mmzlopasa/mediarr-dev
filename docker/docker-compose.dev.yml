@@ -91,10 +91,14 @@ services:
     ports:
       - "127.0.0.1:9853:5173"
     volumes:
-      - ../web:/src/web
+      # Read only: whatever gets into the development server cannot change the source that is
+      # committed and published.
+      - ../web:/src/web:ro
       # Kept apart from the host's node_modules, so each side has its own store.
       - ../.dev/web-node_modules:/src/web/node_modules
-      - ../.dev/cache:/cache
+      - ../.dev/web-svelte-kit:/src/web/.svelte-kit
+      # A cache of its own, apart from the one the server's tools are built in and run from.
+      - ../.dev/web-cache:/cache
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
       interval: 5s
