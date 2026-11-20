@@ -12,7 +12,7 @@ No. Mediarr works at `http://your-server-ip:9851`. Only passkeys need HTTPS, and
 
 ## Do my photos leave my server?
 
-No. Search, faces, places and AI descriptions all run on your server. By default there are two outside requests, and neither carries your photos or anything about them: the map's background comes from `cdn.mediarr.app`, which you can change under **Admin → Settings → Map**, and the server asks GitHub's public API every 6 hours whether a new version exists, which `UPDATE_CHECK=off` in `.env` turns off.
+No. Search, faces, places and automatic descriptions all run on your server. By default there are two outside requests, and neither carries your photos or anything about them: the map's background comes from `cdn.mediarr.app`, which you can change under **Admin → Settings → Map**, and the server asks GitHub's public API every 6 hours whether a new version exists, which `UPDATE_CHECK=off` in `.env` turns off.
 
 ## Are my originals changed?
 

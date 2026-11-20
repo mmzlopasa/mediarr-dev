@@ -76,7 +76,7 @@ Ports published by Docker bypass firewalls such as `ufw`. To reach Mediarr from 
 These are turned on in `.env`, then applied with `docker compose up -d`:
 
 - [Smart search and faces](/features/smart-search)
-- [AI descriptions](/features/ai-descriptions)
+- [Automatic descriptions](/features/automatic-descriptions)
 - [External library](/features/external-library)
 - [Backups to a folder](/administration/backup)
 

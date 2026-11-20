@@ -30,8 +30,6 @@ part 'auth/http_bearer_auth.dart';
 
 part 'api/default_api.dart';
 
-part 'model/ai_settings.dart';
-part 'model/ai_settings_update.dart';
 part 'model/account_stats.dart';
 part 'model/activity.dart';
 part 'model/admin_health.dart';
@@ -95,6 +93,8 @@ part 'model/create_device_key_request.dart';
 part 'model/create_user_request.dart';
 part 'model/crop_box.dart';
 part 'model/date_fix.dart';
+part 'model/description_settings.dart';
+part 'model/description_settings_update.dart';
 part 'model/device_key.dart';
 part 'model/documents.dart';
 part 'model/duplicate_choice.dart';

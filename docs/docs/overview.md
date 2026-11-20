@@ -35,7 +35,7 @@ Mediarr is a photo and video library that you run on your own server. Your phone
 
 You need two files, `docker-compose.yml` and `.env`. Mediarr then opens at `http://your-server-ip:9851`. A domain name and HTTPS are up to you, and everything except passkeys works without them.
 
-Smart search, faces and AI descriptions are optional. Everything else works without them, which suits smaller servers.
+Smart search, faces and automatic descriptions are optional. Everything else works without them, which suits smaller servers.
 
 ## Where to start
 

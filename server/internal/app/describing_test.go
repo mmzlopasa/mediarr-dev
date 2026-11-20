@@ -76,13 +76,13 @@ func TestDescriptionsMakePhotosFindable(t *testing.T) {
 	if got := decode[api.SearchResult](t, body); len(got.Items) != 0 {
 		t.Fatalf("%s", body)
 	}
-	resp, body = c.send(http.MethodPut, "/api/admin/ai", map[string]any{"address": "file:///etc", "visionModel": "", "textModel": ""})
+	resp, body = c.send(http.MethodPut, "/api/admin/descriptions", map[string]any{"address": "file:///etc", "visionModel": "", "textModel": ""})
 	expect(t, resp, body, http.StatusBadRequest)
-	resp, body = other.send(http.MethodPut, "/api/admin/ai", map[string]any{"address": ollama.URL, "visionModel": "", "textModel": ""})
+	resp, body = other.send(http.MethodPut, "/api/admin/descriptions", map[string]any{"address": ollama.URL, "visionModel": "", "textModel": ""})
 	expect(t, resp, body, http.StatusForbidden)
-	resp, body = c.send(http.MethodPut, "/api/admin/ai", map[string]any{"address": ollama.URL, "visionModel": "", "textModel": ""})
+	resp, body = c.send(http.MethodPut, "/api/admin/descriptions", map[string]any{"address": ollama.URL, "visionModel": "", "textModel": ""})
 	expect(t, resp, body, http.StatusOK)
-	settings := decode[api.AISettings](t, body)
+	settings := decode[api.DescriptionSettings](t, body)
 	if !settings.Reachable || settings.ModelsReady || settings.VisionModel != jobs.DefaultVisionModel {
 		t.Fatalf("%s", body)
 	}
@@ -151,7 +151,7 @@ func TestAskingTurnsAQuestionIntoASearch(t *testing.T) {
 	expect(t, resp, body, http.StatusConflict)
 	resp, body = c.send(http.MethodPut, "/api/admin/features/descriptions", map[string]bool{"enabled": true})
 	expect(t, resp, body, http.StatusNoContent)
-	resp, body = c.send(http.MethodPut, "/api/admin/ai", map[string]any{"address": ollama.URL, "visionModel": "", "textModel": ""})
+	resp, body = c.send(http.MethodPut, "/api/admin/descriptions", map[string]any{"address": ollama.URL, "visionModel": "", "textModel": ""})
 	expect(t, resp, body, http.StatusOK)
 	resp, body = ask()
 	expect(t, resp, body, http.StatusOK)

@@ -16,7 +16,7 @@
 		type BackupSettings,
 		type Features,
 		type Webhook,
-		type AISettings
+		type DescriptionSettings
 	} from '#lib/api.ts';
 	import Alert from '#lib/design/components/Alert.svelte';
 	import Bar from '#lib/design/components/Bar.svelte';
@@ -137,7 +137,7 @@
 		family: { label: k('admin.settings.familyLibrary') },
 		webhooks: { label: k('admin.settings.webhooks') },
 		kiosk: { label: k('admin.settings.kioskForTvAndTablet') },
-		descriptions: { label: k('admin.settings.aiDescriptionsAndChatSearch') }
+		descriptions: { label: k('admin.settings.autoDescriptionsAndChatSearch') }
 	};
 	let features = $state<Features>({});
 	let backup = $state<BackupSettings>();
@@ -254,10 +254,10 @@
 		}
 	}
 
-	let ai = $state<AISettings>();
+	let describing = $state<DescriptionSettings>();
 
 	async function loadAI() {
-		ai = await api.aiSettings().catch(() => ai);
+		describing = await api.descriptionSettings().catch(() => describing);
 	}
 
 	onMount(() => {
@@ -268,9 +268,13 @@
 
 	async function saveAI(event: SubmitEvent) {
 		event.preventDefault();
-		if (!ai) return;
+		if (!describing) return;
 		try {
-			ai = await api.setAISettings(ai.address, ai.visionModel, ai.textModel);
+			describing = await api.setDescriptionSettings(
+				describing.address,
+				describing.visionModel,
+				describing.textModel
+			);
 			showToast('ok', t('common.saved'));
 		} catch (cause) {
 			showToast('err', cause instanceof Error ? cause.message : t('common.theActionFailed'));
@@ -297,7 +301,8 @@
 			backup && { id: 'backup', label: 'Backup' },
 			{ id: 'keep', label: t('admin.settings.aCopyAtARelative') },
 			features.family && { id: 'family', label: t('admin.settings.family') },
-			features.descriptions && ai && { id: 'ai', label: t('admin.settings.aiDescriptions') },
+			features.descriptions &&
+				describing && { id: 'describing', label: t('admin.settings.autoDescriptions') },
 			features.webhooks && { id: 'webhooks', label: 'Webhooks' },
 			{ id: 'server', label: 'Server' },
 			{ id: 'email', label: t('admin.settings.email') },
@@ -660,26 +665,35 @@
 					{/each}
 				</Card>
 			{/if}
-			{#if features.descriptions && ai}
-				<Card id="ai" title={t('admin.settings.aiDescriptionsAndQuestions')}>
+			{#if features.descriptions && describing}
+				<Card id="describing" title={t('admin.settings.autoDescriptionsAndQuestions')}>
 					<form class="form" onsubmit={saveAI}>
 						<p class="alb-meta">
 							{t('admin.settings.aLocalOllamaServerReceives')}
 						</p>
-						<Input label={t('admin.settings.ollamaAddress')} bind:value={ai.address} />
-						<Input label={t('admin.settings.modelForPictures')} bind:value={ai.visionModel} />
-						<Input label={t('admin.settings.modelForQuestions')} bind:value={ai.textModel} />
+						<Input label={t('admin.settings.ollamaAddress')} bind:value={describing.address} />
+						<Input
+							label={t('admin.settings.modelForPictures')}
+							bind:value={describing.visionModel}
+						/>
+						<Input
+							label={t('admin.settings.modelForQuestions')}
+							bind:value={describing.textModel}
+						/>
 						<Kv
 							label={t('admin.settings.state')}
-							value={!ai.address
+							value={!describing.address
 								? t('admin.settings.notSet')
-								: !ai.reachable
+								: !describing.reachable
 									? t('admin.settings.ollamaIsNotAnswering')
-									: ai.modelsReady
+									: describing.modelsReady
 										? t('admin.settings.running')
 										: t('admin.settings.theModelsAreDownloading')}
 						/>
-						<Kv label={t('admin.settings.described')} value="{ai.described} / {ai.total}" />
+						<Kv
+							label={t('admin.settings.described')}
+							value="{describing.described} / {describing.total}"
+						/>
 						<Button type="submit" variant="gold" small>{t('common.save')}</Button>
 					</form>
 				</Card>

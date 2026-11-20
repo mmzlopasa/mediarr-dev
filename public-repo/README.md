@@ -28,7 +28,7 @@ Your pictures stay on your disk. There is no account with us, no subscription, a
 - **A backup you can trust.** Mediarr makes encrypted backups to a disk, S3 or B2, and **Test bringing it back** really restores the newest one and checks every file.
 - **A copy at a relative's.** Two Mediarr servers, yours and a relative's or a friend's, keep an encrypted copy of each other, paired with one code. They cannot read your copy, and what is deleted from it is kept for 90 days, so not even someone who takes over your server can wipe it out at once.
 - **Move in from another photo service in one step.** Anyone in the family uploads the ZIP files of their export, as they came. Dates, time zones, places, descriptions, favourites and albums come with them.
-- **Clever, and still private.** Smart search, faces, places, text inside pictures and AI descriptions all run on your own server.
+- **Clever, and still private.** Smart search, faces, places, text inside pictures and automatic descriptions all run on your own server.
 - **It runs anywhere.** Mediarr opens at `http://your-server-ip:9851`. A domain name and HTTPS are up to you, whenever you like.
 
 ## Have a look
@@ -93,7 +93,7 @@ Open `http://your-server-ip:9851` and create the first account. These two files 
 | Text inside pictures | ✓ | ✓ |
 | People, found by faces recognised on your server | ✓ | ✓ |
 | Map, places and trips, worked out offline | ✓ | ✓ |
-| AI descriptions, with a local model | ✓ | ✓ |
+| Automatic descriptions, with a local model | ✓ | ✓ |
 | Ask your photos a question, answered by the local model | ✓ | |
 | **Sharing** | | |
 | Partners, shared albums with comments, and public links | ✓ | ✓ |
@@ -121,12 +121,12 @@ Open `http://your-server-ip:9851` and create the first account. These two files 
 
 *follows: the app shows an import's progress and report, and can stop and continue it; the ZIP files are uploaded from a computer.*
 
-Smart search, faces and AI descriptions are optional. Everything else works without them.
+Smart search, faces and automatic descriptions are optional. Everything else works without them.
 
 ## Your privacy
 
 - Your files stay on your disk, and originals are read only.
-- Search, faces, places and AI descriptions all run on your server.
+- Search, faces, places and automatic descriptions all run on your server.
 - A copy kept by another Mediarr is encrypted with your password before it leaves; the other server cannot open it.
 - By default there are two outside requests, and neither carries your photos: the map's background from `cdn.mediarr.app`, and a check for a new version on GitHub. You can change or turn off both.
 
@@ -138,7 +138,7 @@ Measured on a small library:
 | --- | --- | --- |
 | Server, worker and database | About 300 MB | About 1.1 GB |
 | Smart search and faces, optional | About 100 MB idle, about 2 GB while working | 832 MB, and about 1 GB of models |
-| AI descriptions, optional | About 8.8 GB while working | 8.5 GB, and the models |
+| Automatic descriptions, optional | About 8.8 GB while working | 8.5 GB, and the models |
 
 Keep the images on a disk with a few GB free: an update downloads the new ones before it starts them.
 

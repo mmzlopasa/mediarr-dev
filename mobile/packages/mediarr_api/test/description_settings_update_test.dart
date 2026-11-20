@@ -11,11 +11,11 @@
 import 'package:mediarr_api/api.dart';
 import 'package:test/test.dart';
 
-// tests for AISettings
+// tests for DescriptionSettingsUpdate
 void main() {
-  // final instance = AISettings();
+  // final instance = DescriptionSettingsUpdate();
 
-  group('test AISettings', () {
+  group('test DescriptionSettingsUpdate', () {
     // String address
     test('to test the property `address`', () async {
       // TODO
@@ -28,26 +28,6 @@ void main() {
 
     // String textModel
     test('to test the property `textModel`', () async {
-      // TODO
-    });
-
-    // bool reachable
-    test('to test the property `reachable`', () async {
-      // TODO
-    });
-
-    // bool modelsReady
-    test('to test the property `modelsReady`', () async {
-      // TODO
-    });
-
-    // int described
-    test('to test the property `described`', () async {
-      // TODO
-    });
-
-    // int total
-    test('to test the property `total`', () async {
       // TODO
     });
   });

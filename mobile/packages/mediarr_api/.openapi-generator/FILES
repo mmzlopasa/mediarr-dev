@@ -2,8 +2,6 @@
 .travis.yml
 README.md
 analysis_options.yaml
-doc/AISettings.md
-doc/AISettingsUpdate.md
 doc/AccountStats.md
 doc/Activity.md
 doc/AdminHealth.md
@@ -68,6 +66,8 @@ doc/CreateUserRequest.md
 doc/CropBox.md
 doc/DateFix.md
 doc/DefaultApi.md
+doc/DescriptionSettings.md
+doc/DescriptionSettingsUpdate.md
 doc/DeviceKey.md
 doc/Documents.md
 doc/DuplicateChoice.md
@@ -231,8 +231,6 @@ lib/model/admin_health.dart
 lib/model/admin_jobs.dart
 lib/model/admin_overview.dart
 lib/model/admin_overview_jobs.dart
-lib/model/ai_settings.dart
-lib/model/ai_settings_update.dart
 lib/model/album.dart
 lib/model/album_create.dart
 lib/model/album_member.dart
@@ -290,6 +288,8 @@ lib/model/create_device_key_request.dart
 lib/model/create_user_request.dart
 lib/model/crop_box.dart
 lib/model/date_fix.dart
+lib/model/description_settings.dart
+lib/model/description_settings_update.dart
 lib/model/device_key.dart
 lib/model/documents.dart
 lib/model/duplicate_choice.dart
@@ -437,5 +437,5 @@ lib/model/webhook.dart
 lib/model/webhook_create.dart
 lib/model/webhook_created.dart
 pubspec.yaml
-test/server_stats_jobs_inner_test.dart
-test/server_stats_test.dart
+test/description_settings_test.dart
+test/description_settings_update_test.dart

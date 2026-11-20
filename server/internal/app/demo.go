@@ -6,7 +6,7 @@ import (
 )
 
 // demoReadOnly keeps a shared public account as it is: its password, photos and keys cannot change,
-// and nobody can use it to store files or run the slow AI model. Signing in and out still work.
+// and nobody can use it to store files or run the slow language model. Signing in and out still work.
 func (s *apiServer) demoReadOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := currentUser(r)

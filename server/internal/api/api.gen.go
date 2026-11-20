@@ -1646,24 +1646,6 @@ func (e SearchAssetsParamsType) Valid() bool {
 	}
 }
 
-// AISettings defines model for AISettings.
-type AISettings struct {
-	Address     string `json:"address"`
-	Described   int64  `json:"described"`
-	ModelsReady bool   `json:"modelsReady"`
-	Reachable   bool   `json:"reachable"`
-	TextModel   string `json:"textModel"`
-	Total       int64  `json:"total"`
-	VisionModel string `json:"visionModel"`
-}
-
-// AISettingsUpdate defines model for AISettingsUpdate.
-type AISettingsUpdate struct {
-	Address     string `json:"address"`
-	TextModel   string `json:"textModel"`
-	VisionModel string `json:"visionModel"`
-}
-
 // AccountStats defines model for AccountStats.
 type AccountStats struct {
 	Albums    int64 `json:"albums"`
@@ -2409,6 +2391,24 @@ type DateFix struct {
 
 // DateFixAction defines model for DateFix.Action.
 type DateFixAction string
+
+// DescriptionSettings defines model for DescriptionSettings.
+type DescriptionSettings struct {
+	Address     string `json:"address"`
+	Described   int64  `json:"described"`
+	ModelsReady bool   `json:"modelsReady"`
+	Reachable   bool   `json:"reachable"`
+	TextModel   string `json:"textModel"`
+	Total       int64  `json:"total"`
+	VisionModel string `json:"visionModel"`
+}
+
+// DescriptionSettingsUpdate defines model for DescriptionSettingsUpdate.
+type DescriptionSettingsUpdate struct {
+	Address     string `json:"address"`
+	TextModel   string `json:"textModel"`
+	VisionModel string `json:"visionModel"`
+}
 
 // DeviceKey defines model for DeviceKey.
 type DeviceKey struct {
@@ -4165,9 +4165,6 @@ type SearchAssetsParamsPeople string
 // SearchAssetsParamsType defines parameters for SearchAssets.
 type SearchAssetsParamsType string
 
-// SetAISettingsJSONRequestBody defines body for SetAISettings for application/json ContentType.
-type SetAISettingsJSONRequestBody = AISettingsUpdate
-
 // SetBackupSettingsJSONRequestBody defines body for SetBackupSettings for application/json ContentType.
 type SetBackupSettingsJSONRequestBody = BackupSettingsUpdate
 
@@ -4176,6 +4173,9 @@ type AddBackupDestinationJSONRequestBody = BackupDestinationCreate
 
 // StartBackupRunJSONRequestBody defines body for StartBackupRun for application/json ContentType.
 type StartBackupRunJSONRequestBody = BackupRunRequest
+
+// SetDescriptionSettingsJSONRequestBody defines body for SetDescriptionSettings for application/json ContentType.
+type SetDescriptionSettingsJSONRequestBody = DescriptionSettingsUpdate
 
 // SetEmailSettingsJSONRequestBody defines body for SetEmailSettings for application/json ContentType.
 type SetEmailSettingsJSONRequestBody = EmailSettingsUpdate
@@ -4416,12 +4416,6 @@ type UnlockVaultJSONRequestBody = VaultUnlock
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// GetAISettings The local Ollama server and how far descriptions have come
-	// (GET /api/admin/ai)
-	GetAISettings(w http.ResponseWriter, r *http.Request)
-	// SetAISettings Name the Ollama server. Previews of photos are sent to it
-	// (PUT /api/admin/ai)
-	SetAISettings(w http.ResponseWriter, r *http.Request)
 	// GetAnalysisProgress How far picture analysis has come. Administrators only.
 	// (GET /api/admin/analysis)
 	GetAnalysisProgress(w http.ResponseWriter, r *http.Request)
@@ -4452,6 +4446,12 @@ type ServerInterface interface {
 	// StartBackupRun Back up now, or test bringing the newest backup back
 	// (POST /api/admin/backup/runs)
 	StartBackupRun(w http.ResponseWriter, r *http.Request)
+	// GetDescriptionSettings The local Ollama server and how far descriptions have come
+	// (GET /api/admin/descriptions)
+	GetDescriptionSettings(w http.ResponseWriter, r *http.Request)
+	// SetDescriptionSettings Name the Ollama server. Previews of photos are sent to it
+	// (PUT /api/admin/descriptions)
+	SetDescriptionSettings(w http.ResponseWriter, r *http.Request)
 	// GetEmailSettings The mail server this server sends through
 	// (GET /api/admin/email)
 	GetEmailSettings(w http.ResponseWriter, r *http.Request)
@@ -5208,18 +5208,6 @@ type ServerInterface interface {
 
 type Unimplemented struct{}
 
-// GetAISettings The local Ollama server and how far descriptions have come
-// (GET /api/admin/ai)
-func (_ Unimplemented) GetAISettings(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// SetAISettings Name the Ollama server. Previews of photos are sent to it
-// (PUT /api/admin/ai)
-func (_ Unimplemented) SetAISettings(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
 // GetAnalysisProgress How far picture analysis has come. Administrators only.
 // (GET /api/admin/analysis)
 func (_ Unimplemented) GetAnalysisProgress(w http.ResponseWriter, r *http.Request) {
@@ -5277,6 +5265,18 @@ func (_ Unimplemented) ListBackupRuns(w http.ResponseWriter, r *http.Request) {
 // StartBackupRun Back up now, or test bringing the newest backup back
 // (POST /api/admin/backup/runs)
 func (_ Unimplemented) StartBackupRun(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GetDescriptionSettings The local Ollama server and how far descriptions have come
+// (GET /api/admin/descriptions)
+func (_ Unimplemented) GetDescriptionSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SetDescriptionSettings Name the Ollama server. Previews of photos are sent to it
+// (PUT /api/admin/descriptions)
+func (_ Unimplemented) SetDescriptionSettings(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -6789,34 +6789,6 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// GetAISettings operation middleware
-func (siw *ServerInterfaceWrapper) GetAISettings(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetAISettings(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// SetAISettings operation middleware
-func (siw *ServerInterfaceWrapper) SetAISettings(w http.ResponseWriter, r *http.Request) {
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.SetAISettings(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
 // GetAnalysisProgress operation middleware
 func (siw *ServerInterfaceWrapper) GetAnalysisProgress(w http.ResponseWriter, r *http.Request) {
 
@@ -6992,6 +6964,34 @@ func (siw *ServerInterfaceWrapper) StartBackupRun(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.StartBackupRun(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetDescriptionSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetDescriptionSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetDescriptionSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetDescriptionSettings operation middleware
+func (siw *ServerInterfaceWrapper) SetDescriptionSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetDescriptionSettings(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -13829,10 +13829,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/api/search/ask", wrapper.AskSearch)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/api/admin/ai", wrapper.GetAISettings)
+		r.Get(options.BaseURL+"/api/admin/descriptions", wrapper.GetDescriptionSettings)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/api/admin/ai", wrapper.SetAISettings)
+		r.Put(options.BaseURL+"/api/admin/descriptions", wrapper.SetDescriptionSettings)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/admin/external", wrapper.GetExternalLibrary)

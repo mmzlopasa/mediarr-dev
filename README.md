@@ -35,7 +35,7 @@
 | Duplicates and stacks | Yes | Yes |
 | External libraries | Yes | Yes |
 | Family library | Yes | Yes |
-| AI descriptions with a local model | Yes | Yes |
+| Automatic descriptions with a local model | Yes | Yes |
 | Import from other photo services and servers | Yes | |
 | Encrypted backups, restore testing | Yes | Yes |
 | OIDC, two-factor sign-in, API keys | Yes | Yes |

@@ -126,7 +126,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**fixDates**](doc//DefaultApi.md#fixdates) | **POST** /api/assets/dates | Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
 *DefaultApi* | [**fixLocations**](doc//DefaultApi.md#fixlocations) | **POST** /api/assets/locations | Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
 *DefaultApi* | [**forgotPassword**](doc//DefaultApi.md#forgotpassword) | **POST** /api/auth/password/forgot | Send a link for a new password. Answers the same whether or not the address has an account
-*DefaultApi* | [**getAISettings**](doc//DefaultApi.md#getaisettings) | **GET** /api/admin/ai | The local Ollama server and how far descriptions have come
 *DefaultApi* | [**getAdminHealth**](doc//DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
 *DefaultApi* | [**getAdminJobs**](doc//DefaultApi.md#getadminjobs) | **GET** /api/admin/jobs | The job queues, and the jobs that gave up
 *DefaultApi* | [**getAdminOverview**](doc//DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
@@ -158,6 +157,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**getCollectionOriginal**](doc//DefaultApi.md#getcollectionoriginal) | **GET** /api/collections/{scope}/assets/{id}/original | The original of an asset in a collection
 *DefaultApi* | [**getCollectionThumbnail**](doc//DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 *DefaultApi* | [**getCollectionVideoFile**](doc//DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
+*DefaultApi* | [**getDescriptionSettings**](doc//DefaultApi.md#getdescriptionsettings) | **GET** /api/admin/descriptions | The local Ollama server and how far descriptions have come
 *DefaultApi* | [**getDocuments**](doc//DefaultApi.md#getdocuments) | **GET** /api/documents | Photos of documents, found by the text on them
 *DefaultApi* | [**getEmailSettings**](doc//DefaultApi.md#getemailsettings) | **GET** /api/admin/email | The mail server this server sends through
 *DefaultApi* | [**getExport**](doc//DefaultApi.md#getexport) | **GET** /api/exports/{id} | An export and its parts. Its owner or an administrator
@@ -281,7 +281,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**searchAssets**](doc//DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 *DefaultApi* | [**searchPlaces**](doc//DefaultApi.md#searchplaces) | **GET** /api/places | Find a place by the start of its name
 *DefaultApi* | [**sendTestEmail**](doc//DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
-*DefaultApi* | [**setAISettings**](doc//DefaultApi.md#setaisettings) | **PUT** /api/admin/ai | Name the Ollama server. Previews of photos are sent to it
 *DefaultApi* | [**setAlbumHeart**](doc//DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 *DefaultApi* | [**setAlbumMember**](doc//DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 *DefaultApi* | [**setAssetEdits**](doc//DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
@@ -290,6 +289,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**setAvatar**](doc//DefaultApi.md#setavatar) | **PUT** /api/me/avatar | A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
 *DefaultApi* | [**setBackupQuietDays**](doc//DefaultApi.md#setbackupquietdays) | **PUT** /api/me/backup-devices/quiet-days | After how many days without a report a device counts as quiet; 0 never warns
 *DefaultApi* | [**setBackupSettings**](doc//DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
+*DefaultApi* | [**setDescriptionSettings**](doc//DefaultApi.md#setdescriptionsettings) | **PUT** /api/admin/descriptions | Name the Ollama server. Previews of photos are sent to it
 *DefaultApi* | [**setEmailSettings**](doc//DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 *DefaultApi* | [**setExternalLibrary**](doc//DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 *DefaultApi* | [**setFeature**](doc//DefaultApi.md#setfeature) | **PUT** /api/admin/features/{name} | Turn an addition on or off
@@ -326,8 +326,6 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
- - [AISettings](doc//AISettings.md)
- - [AISettingsUpdate](doc//AISettingsUpdate.md)
  - [AccountStats](doc//AccountStats.md)
  - [Activity](doc//Activity.md)
  - [AdminHealth](doc//AdminHealth.md)
@@ -391,6 +389,8 @@ Class | Method | HTTP request | Description
  - [CreateUserRequest](doc//CreateUserRequest.md)
  - [CropBox](doc//CropBox.md)
  - [DateFix](doc//DateFix.md)
+ - [DescriptionSettings](doc//DescriptionSettings.md)
+ - [DescriptionSettingsUpdate](doc//DescriptionSettingsUpdate.md)
  - [DeviceKey](doc//DeviceKey.md)
  - [Documents](doc//Documents.md)
  - [DuplicateChoice](doc//DuplicateChoice.md)

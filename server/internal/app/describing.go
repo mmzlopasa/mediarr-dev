@@ -13,14 +13,14 @@ import (
 )
 
 const (
-	askTimeout     = 90 * time.Second
-	aiCheckTimeout = 3 * time.Second
-	maxQuestion    = 500
-	maxAskWords    = 12
+	askTimeout           = 90 * time.Second
+	describeCheckTimeout = 3 * time.Second
+	maxQuestion          = 500
+	maxAskWords          = 12
 )
 
-func (s *apiServer) aiToAPI(ctx context.Context) (api.AISettings, error) {
-	var out api.AISettings
+func (s *apiServer) describingToAPI(ctx context.Context) (api.DescriptionSettings, error) {
+	var out api.DescriptionSettings
 	address, vision, text, err := jobs.OllamaSettings(ctx, s.queries)
 	if err != nil {
 		return out, err
@@ -29,9 +29,9 @@ func (s *apiServer) aiToAPI(ctx context.Context) (api.AISettings, error) {
 	if err != nil {
 		return out, err
 	}
-	out = api.AISettings{Address: address, VisionModel: vision, TextModel: text, Described: progress.Described, Total: progress.Total}
+	out = api.DescriptionSettings{Address: address, VisionModel: vision, TextModel: text, Described: progress.Described, Total: progress.Total}
 	if address != "" {
-		check, cancel := context.WithTimeout(ctx, aiCheckTimeout)
+		check, cancel := context.WithTimeout(ctx, describeCheckTimeout)
 		defer cancel()
 		models, err := jobs.NewOllama(address).Models(check)
 		out.Reachable = err == nil
@@ -40,11 +40,11 @@ func (s *apiServer) aiToAPI(ctx context.Context) (api.AISettings, error) {
 	return out, nil
 }
 
-func (s *apiServer) GetAISettings(w http.ResponseWriter, r *http.Request) {
+func (s *apiServer) GetDescriptionSettings(w http.ResponseWriter, r *http.Request) {
 	if requireAdmin(w, r) == nil {
 		return
 	}
-	out, err := s.aiToAPI(r.Context())
+	out, err := s.describingToAPI(r.Context())
 	if err != nil {
 		internalError(w, r, err)
 		return
@@ -52,12 +52,12 @@ func (s *apiServer) GetAISettings(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-// SetAISettings is for administrators, since the server then sends previews to the address it is given.
-func (s *apiServer) SetAISettings(w http.ResponseWriter, r *http.Request) {
+// SetDescriptionSettings is for administrators, since the server then sends previews to the address it is given.
+func (s *apiServer) SetDescriptionSettings(w http.ResponseWriter, r *http.Request) {
 	if requireAdmin(w, r) == nil {
 		return
 	}
-	var body api.AISettingsUpdate
+	var body api.DescriptionSettingsUpdate
 	if !readJSON(w, r, &body) {
 		return
 	}
@@ -78,7 +78,7 @@ func (s *apiServer) SetAISettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	out, err := s.aiToAPI(ctx)
+	out, err := s.describingToAPI(ctx)
 	if err != nil {
 		internalError(w, r, err)
 		return

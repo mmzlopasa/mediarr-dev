@@ -3519,7 +3519,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/ai": {
+    "/api/admin/descriptions": {
         parameters: {
             query?: never;
             header?: never;
@@ -3527,9 +3527,9 @@ export interface paths {
             cookie?: never;
         };
         /** The local Ollama server and how far descriptions have come */
-        get: operations["getAISettings"];
+        get: operations["getDescriptionSettings"];
         /** Name the Ollama server. Previews of photos are sent to it */
-        put: operations["setAISettings"];
+        put: operations["setDescriptionSettings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4486,7 +4486,7 @@ export interface components {
         AskAnswer: {
             query: string;
         };
-        AISettings: {
+        DescriptionSettings: {
             address: string;
             visionModel: string;
             textModel: string;
@@ -4497,7 +4497,7 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
-        AISettingsUpdate: {
+        DescriptionSettingsUpdate: {
             address: string;
             visionModel: string;
             textModel: string;
@@ -11694,7 +11694,7 @@ export interface operations {
             409: components["responses"]["Error"];
         };
     };
-    getAISettings: {
+    getDescriptionSettings: {
         parameters: {
             query?: never;
             header?: never;
@@ -11709,14 +11709,14 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AISettings"];
+                    "application/json": components["schemas"]["DescriptionSettings"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
         };
     };
-    setAISettings: {
+    setDescriptionSettings: {
         parameters: {
             query?: never;
             header?: never;
@@ -11725,7 +11725,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AISettingsUpdate"];
+                "application/json": components["schemas"]["DescriptionSettingsUpdate"];
             };
         };
         responses: {
@@ -11735,7 +11735,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AISettings"];
+                    "application/json": components["schemas"]["DescriptionSettings"];
                 };
             };
             400: components["responses"]["Error"];

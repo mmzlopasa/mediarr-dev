@@ -1,4 +1,4 @@
-# mediarr_api.model.AISettingsUpdate
+# mediarr_api.model.DescriptionSettings
 
 ## Load the model package
 ```dart
@@ -11,6 +11,10 @@ Name | Type | Description | Notes
 **address** | **String** |  | 
 **visionModel** | **String** |  | 
 **textModel** | **String** |  | 
+**reachable** | **bool** |  | 
+**modelsReady** | **bool** |  | 
+**described** | **int** |  | 
+**total** | **int** |  | 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

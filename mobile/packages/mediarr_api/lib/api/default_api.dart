@@ -3613,52 +3613,6 @@ class DefaultApi {
     }
   }
 
-  /// The local Ollama server and how far descriptions have come
-  ///
-  /// Note: This method returns the HTTP [Response].
-  Future<Response> getAISettingsWithHttpInfo() async {
-    // ignore: prefer_const_declarations
-    final path = r'/api/admin/ai';
-
-    // ignore: prefer_final_locals
-    Object? postBody;
-
-    final queryParams = <QueryParam>[];
-    final headerParams = <String, String>{};
-    final formParams = <String, String>{};
-
-    const contentTypes = <String>[];
-
-    return apiClient.invokeAPI(
-      path,
-      'GET',
-      queryParams,
-      postBody,
-      headerParams,
-      formParams,
-      contentTypes.isEmpty ? null : contentTypes.first,
-    );
-  }
-
-  /// The local Ollama server and how far descriptions have come
-  Future<AISettings?> getAISettings() async {
-    final response = await getAISettingsWithHttpInfo();
-    if (response.statusCode >= HttpStatus.badRequest) {
-      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
-    }
-    // When a remote server returns no body with a status of 204, we shall not decode it.
-    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
-    // FormatException when trying to decode an empty string.
-    if (response.body.isNotEmpty &&
-        response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(
-        await _decodeBodyBytes(response),
-        'AISettings',
-      ) as AISettings;
-    }
-    return null;
-  }
-
   /// Whether the worker and the analysis service are running
   ///
   /// Note: This method returns the HTTP [Response].
@@ -5623,6 +5577,52 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'MultipartFile',
       ) as MultipartFile;
+    }
+    return null;
+  }
+
+  /// The local Ollama server and how far descriptions have come
+  ///
+  /// Note: This method returns the HTTP [Response].
+  Future<Response> getDescriptionSettingsWithHttpInfo() async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/descriptions';
+
+    // ignore: prefer_final_locals
+    Object? postBody;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>[];
+
+    return apiClient.invokeAPI(
+      path,
+      'GET',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// The local Ollama server and how far descriptions have come
+  Future<DescriptionSettings?> getDescriptionSettings() async {
+    final response = await getDescriptionSettingsWithHttpInfo();
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'DescriptionSettings',
+      ) as DescriptionSettings;
     }
     return null;
   }
@@ -12549,66 +12549,6 @@ class DefaultApi {
     }
   }
 
-  /// Name the Ollama server. Previews of photos are sent to it
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
-  /// Parameters:
-  ///
-  /// * [AISettingsUpdate] aISettingsUpdate (required):
-  Future<Response> setAISettingsWithHttpInfo(
-    AISettingsUpdate aISettingsUpdate,
-  ) async {
-    // ignore: prefer_const_declarations
-    final path = r'/api/admin/ai';
-
-    // ignore: prefer_final_locals
-    Object? postBody = aISettingsUpdate;
-
-    final queryParams = <QueryParam>[];
-    final headerParams = <String, String>{};
-    final formParams = <String, String>{};
-
-    const contentTypes = <String>['application/json'];
-
-    return apiClient.invokeAPI(
-      path,
-      'PUT',
-      queryParams,
-      postBody,
-      headerParams,
-      formParams,
-      contentTypes.isEmpty ? null : contentTypes.first,
-    );
-  }
-
-  /// Name the Ollama server. Previews of photos are sent to it
-  ///
-  /// Parameters:
-  ///
-  /// * [AISettingsUpdate] aISettingsUpdate (required):
-  Future<AISettings?> setAISettings(
-    AISettingsUpdate aISettingsUpdate,
-  ) async {
-    final response = await setAISettingsWithHttpInfo(
-      aISettingsUpdate,
-    );
-    if (response.statusCode >= HttpStatus.badRequest) {
-      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
-    }
-    // When a remote server returns no body with a status of 204, we shall not decode it.
-    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
-    // FormatException when trying to decode an empty string.
-    if (response.body.isNotEmpty &&
-        response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(
-        await _decodeBodyBytes(response),
-        'AISettings',
-      ) as AISettings;
-    }
-    return null;
-  }
-
   /// Add your heart to a photo in an album
   ///
   /// Note: This method returns the HTTP [Response].
@@ -13069,6 +13009,66 @@ class DefaultApi {
         await _decodeBodyBytes(response),
         'BackupSettings',
       ) as BackupSettings;
+    }
+    return null;
+  }
+
+  /// Name the Ollama server. Previews of photos are sent to it
+  ///
+  /// Note: This method returns the HTTP [Response].
+  ///
+  /// Parameters:
+  ///
+  /// * [DescriptionSettingsUpdate] descriptionSettingsUpdate (required):
+  Future<Response> setDescriptionSettingsWithHttpInfo(
+    DescriptionSettingsUpdate descriptionSettingsUpdate,
+  ) async {
+    // ignore: prefer_const_declarations
+    final path = r'/api/admin/descriptions';
+
+    // ignore: prefer_final_locals
+    Object? postBody = descriptionSettingsUpdate;
+
+    final queryParams = <QueryParam>[];
+    final headerParams = <String, String>{};
+    final formParams = <String, String>{};
+
+    const contentTypes = <String>['application/json'];
+
+    return apiClient.invokeAPI(
+      path,
+      'PUT',
+      queryParams,
+      postBody,
+      headerParams,
+      formParams,
+      contentTypes.isEmpty ? null : contentTypes.first,
+    );
+  }
+
+  /// Name the Ollama server. Previews of photos are sent to it
+  ///
+  /// Parameters:
+  ///
+  /// * [DescriptionSettingsUpdate] descriptionSettingsUpdate (required):
+  Future<DescriptionSettings?> setDescriptionSettings(
+    DescriptionSettingsUpdate descriptionSettingsUpdate,
+  ) async {
+    final response = await setDescriptionSettingsWithHttpInfo(
+      descriptionSettingsUpdate,
+    );
+    if (response.statusCode >= HttpStatus.badRequest) {
+      throw ApiException(response.statusCode, await _decodeBodyBytes(response));
+    }
+    // When a remote server returns no body with a status of 204, we shall not decode it.
+    // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
+    // FormatException when trying to decode an empty string.
+    if (response.body.isNotEmpty &&
+        response.statusCode != HttpStatus.noContent) {
+      return await apiClient.deserializeAsync(
+        await _decodeBodyBytes(response),
+        'DescriptionSettings',
+      ) as DescriptionSettings;
     }
     return null;
   }

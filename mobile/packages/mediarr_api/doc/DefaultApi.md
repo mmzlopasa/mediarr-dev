@@ -75,7 +75,6 @@ Method | HTTP request | Description
 [**fixDates**](DefaultApi.md#fixdates) | **POST** /api/assets/dates | Shift, set or zone the dates of many photos, or take them from the files again; with dryRun only show what would change
 [**fixLocations**](DefaultApi.md#fixlocations) | **POST** /api/assets/locations | Set, take away or find the locations of many photos (from nearby photos or a GPX track); with dryRun only show what would change
 [**forgotPassword**](DefaultApi.md#forgotpassword) | **POST** /api/auth/password/forgot | Send a link for a new password. Answers the same whether or not the address has an account
-[**getAISettings**](DefaultApi.md#getaisettings) | **GET** /api/admin/ai | The local Ollama server and how far descriptions have come
 [**getAdminHealth**](DefaultApi.md#getadminhealth) | **GET** /api/admin/health | Whether the worker and the analysis service are running
 [**getAdminJobs**](DefaultApi.md#getadminjobs) | **GET** /api/admin/jobs | The job queues, and the jobs that gave up
 [**getAdminOverview**](DefaultApi.md#getadminoverview) | **GET** /api/admin/overview | Live statistics of the whole server, read from the database and the library disk
@@ -107,6 +106,7 @@ Method | HTTP request | Description
 [**getCollectionOriginal**](DefaultApi.md#getcollectionoriginal) | **GET** /api/collections/{scope}/assets/{id}/original | The original of an asset in a collection
 [**getCollectionThumbnail**](DefaultApi.md#getcollectionthumbnail) | **GET** /api/collections/{scope}/assets/{id}/thumbnail | A preview of an asset in a collection
 [**getCollectionVideoFile**](DefaultApi.md#getcollectionvideofile) | **GET** /api/collections/{scope}/assets/{id}/video/{file} | HLS files of a video in a collection
+[**getDescriptionSettings**](DefaultApi.md#getdescriptionsettings) | **GET** /api/admin/descriptions | The local Ollama server and how far descriptions have come
 [**getDocuments**](DefaultApi.md#getdocuments) | **GET** /api/documents | Photos of documents, found by the text on them
 [**getEmailSettings**](DefaultApi.md#getemailsettings) | **GET** /api/admin/email | The mail server this server sends through
 [**getExport**](DefaultApi.md#getexport) | **GET** /api/exports/{id} | An export and its parts. Its owner or an administrator
@@ -230,7 +230,6 @@ Method | HTTP request | Description
 [**searchAssets**](DefaultApi.md#searchassets) | **GET** /api/search | Search in natural language, with filters, or with filters alone. Dates, people, places and cameras in the query become filters, which the answer lists.
 [**searchPlaces**](DefaultApi.md#searchplaces) | **GET** /api/places | Find a place by the start of its name
 [**sendTestEmail**](DefaultApi.md#sendtestemail) | **POST** /api/admin/email/test | Send a message to the administrator asking
-[**setAISettings**](DefaultApi.md#setaisettings) | **PUT** /api/admin/ai | Name the Ollama server. Previews of photos are sent to it
 [**setAlbumHeart**](DefaultApi.md#setalbumheart) | **PUT** /api/albums/{id}/assets/{assetId}/heart | Add your heart to a photo in an album
 [**setAlbumMember**](DefaultApi.md#setalbummember) | **PUT** /api/albums/{id}/members/{userId} | Share an album with a user or change their role. Owner only.
 [**setAssetEdits**](DefaultApi.md#setassetedits) | **PUT** /api/assets/{id}/edits | Replace the list of edits of a photo. The original is never changed
@@ -239,6 +238,7 @@ Method | HTTP request | Description
 [**setAvatar**](DefaultApi.md#setavatar) | **PUT** /api/me/avatar | A picture of oneself, from a JPEG, PNG, WebP or HEIC image of up to 20 MB. It is cut to a square
 [**setBackupQuietDays**](DefaultApi.md#setbackupquietdays) | **PUT** /api/me/backup-devices/quiet-days | After how many days without a report a device counts as quiet; 0 never warns
 [**setBackupSettings**](DefaultApi.md#setbackupsettings) | **PUT** /api/admin/backup | Change where backups go. A secret left out stays as it was
+[**setDescriptionSettings**](DefaultApi.md#setdescriptionsettings) | **PUT** /api/admin/descriptions | Name the Ollama server. Previews of photos are sent to it
 [**setEmailSettings**](DefaultApi.md#setemailsettings) | **PUT** /api/admin/email | Change the mail server
 [**setExternalLibrary**](DefaultApi.md#setexternallibrary) | **PUT** /api/admin/external | Choose whose photos the folder holds, and start reading it
 [**setFeature**](DefaultApi.md#setfeature) | **PUT** /api/admin/features/{name} | Turn an addition on or off
@@ -2947,43 +2947,6 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getAISettings**
-> AISettings getAISettings()
-
-The local Ollama server and how far descriptions have come
-
-### Example
-```dart
-import 'package:mediarr_api/api.dart';
-
-final api_instance = DefaultApi();
-
-try {
-    final result = api_instance.getAISettings();
-    print(result);
-} catch (e) {
-    print('Exception when calling DefaultApi->getAISettings: $e\n');
-}
-```
-
-### Parameters
-This endpoint does not need any parameter.
-
-### Return type
-
-[**AISettings**](AISettings.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **getAdminHealth**
 > AdminHealth getAdminHealth()
 
@@ -4262,6 +4225,43 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getDescriptionSettings**
+> DescriptionSettings getDescriptionSettings()
+
+The local Ollama server and how far descriptions have come
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+
+try {
+    final result = api_instance.getDescriptionSettings();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getDescriptionSettings: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**DescriptionSettings**](DescriptionSettings.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -9165,47 +9165,6 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **setAISettings**
-> AISettings setAISettings(aISettingsUpdate)
-
-Name the Ollama server. Previews of photos are sent to it
-
-### Example
-```dart
-import 'package:mediarr_api/api.dart';
-
-final api_instance = DefaultApi();
-final aISettingsUpdate = AISettingsUpdate(); // AISettingsUpdate | 
-
-try {
-    final result = api_instance.setAISettings(aISettingsUpdate);
-    print(result);
-} catch (e) {
-    print('Exception when calling DefaultApi->setAISettings: $e\n');
-}
-```
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **aISettingsUpdate** | [**AISettingsUpdate**](AISettingsUpdate.md)|  | 
-
-### Return type
-
-[**AISettings**](AISettings.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
 # **setAlbumHeart**
 > setAlbumHeart(id, assetId)
 
@@ -9527,6 +9486,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**BackupSettings**](BackupSettings.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setDescriptionSettings**
+> DescriptionSettings setDescriptionSettings(descriptionSettingsUpdate)
+
+Name the Ollama server. Previews of photos are sent to it
+
+### Example
+```dart
+import 'package:mediarr_api/api.dart';
+
+final api_instance = DefaultApi();
+final descriptionSettingsUpdate = DescriptionSettingsUpdate(); // DescriptionSettingsUpdate | 
+
+try {
+    final result = api_instance.setDescriptionSettings(descriptionSettingsUpdate);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->setDescriptionSettings: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **descriptionSettingsUpdate** | [**DescriptionSettingsUpdate**](DescriptionSettingsUpdate.md)|  | 
+
+### Return type
+
+[**DescriptionSettings**](DescriptionSettings.md)
 
 ### Authorization
 

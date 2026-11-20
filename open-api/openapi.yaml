@@ -3360,32 +3360,32 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
-  /api/admin/ai:
+  /api/admin/descriptions:
     get:
-      operationId: getAISettings
+      operationId: getDescriptionSettings
       summary: The local Ollama server and how far descriptions have come
       responses:
         "200":
           description: The settings
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AISettings" }
+              schema: { $ref: "#/components/schemas/DescriptionSettings" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
     put:
-      operationId: setAISettings
+      operationId: setDescriptionSettings
       summary: Name the Ollama server. Previews of photos are sent to it
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/AISettingsUpdate" }
+            schema: { $ref: "#/components/schemas/DescriptionSettingsUpdate" }
       responses:
         "200":
           description: The settings
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AISettings" }
+              schema: { $ref: "#/components/schemas/DescriptionSettings" }
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
@@ -4285,7 +4285,7 @@ components:
       required: [query]
       properties:
         query: { type: string }
-    AISettings:
+    DescriptionSettings:
       type: object
       required: [address, visionModel, textModel, reachable, modelsReady, described, total]
       properties:
@@ -4296,7 +4296,7 @@ components:
         modelsReady: { type: boolean }
         described: { type: integer, format: int64 }
         total: { type: integer, format: int64 }
-    AISettingsUpdate:
+    DescriptionSettingsUpdate:
       type: object
       required: [address, visionModel, textModel]
       properties:

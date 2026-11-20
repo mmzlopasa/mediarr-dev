@@ -164,7 +164,7 @@ SELECT a.id, f.path, f.sidecar, f.missing, a.original_name, a.original_path, a.k
        a.width, a.height, a.duration_ms, a.caption, a.rating, a.pick, a.is_favorite, a.archived_at,
        a.live_photo_of, a.stack_parent, a.edits, (l.kind = 'external')::boolean AS external,
        e.latitude, e.longitude, e.city, e.state, e.country, e.make, e.model, e.lens,
-       coalesce(d.description, '')::text AS ai_description,
+       coalesce(d.description, '')::text AS auto_description,
        coalesce((SELECT array_agg(t.name ORDER BY t.name) FROM asset_tags x JOIN tags t ON t.id = x.tag_id
                  WHERE x.asset_id = a.id AND t.user_id = a.user_id), '{}')::text[] AS tags,
        coalesce((SELECT s.path FROM asset_files s WHERE s.asset_id = a.id AND s.kind = 'thumb_large'), '')::text AS preview_path
@@ -219,7 +219,7 @@ type ExportAssetsPageRow struct {
 	Make               pgtype.Text
 	Model              pgtype.Text
 	Lens               pgtype.Text
-	AiDescription      string
+	AutoDescription    string
 	Tags               []string
 	PreviewPath        string
 }
@@ -269,7 +269,7 @@ func (q *Queries) ExportAssetsPage(ctx context.Context, arg ExportAssetsPagePara
 			&i.Make,
 			&i.Model,
 			&i.Lens,
-			&i.AiDescription,
+			&i.AutoDescription,
 			&i.Tags,
 			&i.PreviewPath,
 		); err != nil {

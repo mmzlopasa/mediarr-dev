@@ -55,7 +55,7 @@ services:
       server:
         condition: service_healthy
 
-  # The demo's AI descriptions. No limits, by the owner's decision.
+  # The language model for descriptions. No limits, by the owner's decision.
   ollama:
     image: ollama/ollama:latest
     volumes:

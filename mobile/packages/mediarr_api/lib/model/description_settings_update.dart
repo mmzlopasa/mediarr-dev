@@ -10,16 +10,12 @@
 
 part of openapi.api;
 
-class AISettings {
-  /// Returns a new [AISettings] instance.
-  AISettings({
+class DescriptionSettingsUpdate {
+  /// Returns a new [DescriptionSettingsUpdate] instance.
+  DescriptionSettingsUpdate({
     required this.address,
     required this.visionModel,
     required this.textModel,
-    required this.reachable,
-    required this.modelsReady,
-    required this.described,
-    required this.total,
   });
 
   String address;
@@ -28,57 +24,35 @@ class AISettings {
 
   String textModel;
 
-  bool reachable;
-
-  bool modelsReady;
-
-  int described;
-
-  int total;
-
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AISettings &&
+      other is DescriptionSettingsUpdate &&
           other.address == address &&
           other.visionModel == visionModel &&
-          other.textModel == textModel &&
-          other.reachable == reachable &&
-          other.modelsReady == modelsReady &&
-          other.described == described &&
-          other.total == total;
+          other.textModel == textModel;
 
   @override
   int get hashCode =>
       // ignore: unnecessary_parenthesis
-      (address.hashCode) +
-      (visionModel.hashCode) +
-      (textModel.hashCode) +
-      (reachable.hashCode) +
-      (modelsReady.hashCode) +
-      (described.hashCode) +
-      (total.hashCode);
+      (address.hashCode) + (visionModel.hashCode) + (textModel.hashCode);
 
   @override
   String toString() =>
-      'AISettings[address=$address, visionModel=$visionModel, textModel=$textModel, reachable=$reachable, modelsReady=$modelsReady, described=$described, total=$total]';
+      'DescriptionSettingsUpdate[address=$address, visionModel=$visionModel, textModel=$textModel]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
     json[r'address'] = this.address;
     json[r'visionModel'] = this.visionModel;
     json[r'textModel'] = this.textModel;
-    json[r'reachable'] = this.reachable;
-    json[r'modelsReady'] = this.modelsReady;
-    json[r'described'] = this.described;
-    json[r'total'] = this.total;
     return json;
   }
 
-  /// Returns a new [AISettings] instance and imports its values from
+  /// Returns a new [DescriptionSettingsUpdate] instance and imports its values from
   /// [value] if it's a [Map], null otherwise.
   // ignore: prefer_constructors_over_static_methods
-  static AISettings? fromJson(dynamic value) {
+  static DescriptionSettingsUpdate? fromJson(dynamic value) {
     if (value is Map) {
       final json = value.cast<String, dynamic>();
 
@@ -88,34 +62,30 @@ class AISettings {
       assert(() {
         requiredKeys.forEach((key) {
           assert(json.containsKey(key),
-              'Required key "AISettings[$key]" is missing from JSON.');
+              'Required key "DescriptionSettingsUpdate[$key]" is missing from JSON.');
           assert(json[key] != null,
-              'Required key "AISettings[$key]" has a null value in JSON.');
+              'Required key "DescriptionSettingsUpdate[$key]" has a null value in JSON.');
         });
         return true;
       }());
 
-      return AISettings(
+      return DescriptionSettingsUpdate(
         address: mapValueOfType<String>(json, r'address')!,
         visionModel: mapValueOfType<String>(json, r'visionModel')!,
         textModel: mapValueOfType<String>(json, r'textModel')!,
-        reachable: mapValueOfType<bool>(json, r'reachable')!,
-        modelsReady: mapValueOfType<bool>(json, r'modelsReady')!,
-        described: mapValueOfType<int>(json, r'described')!,
-        total: mapValueOfType<int>(json, r'total')!,
       );
     }
     return null;
   }
 
-  static List<AISettings> listFromJson(
+  static List<DescriptionSettingsUpdate> listFromJson(
     dynamic json, {
     bool growable = false,
   }) {
-    final result = <AISettings>[];
+    final result = <DescriptionSettingsUpdate>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
-        final value = AISettings.fromJson(row);
+        final value = DescriptionSettingsUpdate.fromJson(row);
         if (value != null) {
           result.add(value);
         }
@@ -124,12 +94,12 @@ class AISettings {
     return result.toList(growable: growable);
   }
 
-  static Map<String, AISettings> mapFromJson(dynamic json) {
-    final map = <String, AISettings>{};
+  static Map<String, DescriptionSettingsUpdate> mapFromJson(dynamic json) {
+    final map = <String, DescriptionSettingsUpdate>{};
     if (json is Map && json.isNotEmpty) {
       json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        final value = AISettings.fromJson(entry.value);
+        final value = DescriptionSettingsUpdate.fromJson(entry.value);
         if (value != null) {
           map[entry.key] = value;
         }
@@ -138,17 +108,17 @@ class AISettings {
     return map;
   }
 
-  // maps a json object with a list of AISettings-objects as value to a dart map
-  static Map<String, List<AISettings>> mapListFromJson(
+  // maps a json object with a list of DescriptionSettingsUpdate-objects as value to a dart map
+  static Map<String, List<DescriptionSettingsUpdate>> mapListFromJson(
     dynamic json, {
     bool growable = false,
   }) {
-    final map = <String, List<AISettings>>{};
+    final map = <String, List<DescriptionSettingsUpdate>>{};
     if (json is Map && json.isNotEmpty) {
       // ignore: parameter_assignments
       json = json.cast<String, dynamic>();
       for (final entry in json.entries) {
-        map[entry.key] = AISettings.listFromJson(
+        map[entry.key] = DescriptionSettingsUpdate.listFromJson(
           entry.value,
           growable: growable,
         );
@@ -162,9 +132,5 @@ class AISettings {
     'address',
     'visionModel',
     'textModel',
-    'reachable',
-    'modelsReady',
-    'described',
-    'total',
   };
 }

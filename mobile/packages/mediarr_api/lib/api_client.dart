@@ -229,10 +229,6 @@ class ApiClient {
           return valueString == 'true' || valueString == '1';
         case 'DateTime':
           return value is DateTime ? value : DateTime.tryParse(value);
-        case 'AISettings':
-          return AISettings.fromJson(value);
-        case 'AISettingsUpdate':
-          return AISettingsUpdate.fromJson(value);
         case 'AccountStats':
           return AccountStats.fromJson(value);
         case 'Activity':
@@ -359,6 +355,10 @@ class ApiClient {
           return CropBox.fromJson(value);
         case 'DateFix':
           return DateFix.fromJson(value);
+        case 'DescriptionSettings':
+          return DescriptionSettings.fromJson(value);
+        case 'DescriptionSettingsUpdate':
+          return DescriptionSettingsUpdate.fromJson(value);
         case 'DeviceKey':
           return DeviceKey.fromJson(value);
         case 'Documents':

@@ -769,39 +769,39 @@ type exportFace struct {
 }
 
 type exportAsset struct {
-	ID            string          `json:"id"`
-	File          *string         `json:"file"`
-	Sidecar       *string         `json:"sidecar"`
-	Missing       bool            `json:"missing,omitempty"`
-	ExternalPath  *string         `json:"externalPath,omitempty"`
-	OriginalName  string          `json:"originalName"`
-	Kind          string          `json:"kind"`
-	MimeType      string          `json:"mimeType,omitempty"`
-	SizeBytes     int64           `json:"sizeBytes"`
-	SHA256        string          `json:"sha256"`
-	TakenAt       *time.Time      `json:"takenAt"`
-	OffsetMinutes *int32          `json:"timeZoneOffsetMinutes"`
-	LocalDateTime string          `json:"localDateTime"`
-	UploadedAt    time.Time       `json:"uploadedAt"`
-	Latitude      *float64        `json:"latitude"`
-	Longitude     *float64        `json:"longitude"`
-	Place         *exportPlace    `json:"place,omitempty"`
-	Camera        *exportCamera   `json:"camera,omitempty"`
-	Width         *int32          `json:"width,omitempty"`
-	Height        *int32          `json:"height,omitempty"`
-	DurationMs    *int64          `json:"durationMs,omitempty"`
-	Description   string          `json:"description"`
-	AIDescription string          `json:"aiDescription,omitempty"`
-	Rating        int16           `json:"rating"`
-	Pick          *string         `json:"pick"`
-	Favorite      bool            `json:"favorite"`
-	Archived      bool            `json:"archived"`
-	Tags          []string        `json:"tags"`
-	People        []exportFace    `json:"faces"`
-	Albums        []string        `json:"albums"`
-	LivePhotoOf   *string         `json:"livePhotoOf,omitempty"`
-	StackParent   *string         `json:"stackParent,omitempty"`
-	Edits         json.RawMessage `json:"edits"`
+	ID              string          `json:"id"`
+	File            *string         `json:"file"`
+	Sidecar         *string         `json:"sidecar"`
+	Missing         bool            `json:"missing,omitempty"`
+	ExternalPath    *string         `json:"externalPath,omitempty"`
+	OriginalName    string          `json:"originalName"`
+	Kind            string          `json:"kind"`
+	MimeType        string          `json:"mimeType,omitempty"`
+	SizeBytes       int64           `json:"sizeBytes"`
+	SHA256          string          `json:"sha256"`
+	TakenAt         *time.Time      `json:"takenAt"`
+	OffsetMinutes   *int32          `json:"timeZoneOffsetMinutes"`
+	LocalDateTime   string          `json:"localDateTime"`
+	UploadedAt      time.Time       `json:"uploadedAt"`
+	Latitude        *float64        `json:"latitude"`
+	Longitude       *float64        `json:"longitude"`
+	Place           *exportPlace    `json:"place,omitempty"`
+	Camera          *exportCamera   `json:"camera,omitempty"`
+	Width           *int32          `json:"width,omitempty"`
+	Height          *int32          `json:"height,omitempty"`
+	DurationMs      *int64          `json:"durationMs,omitempty"`
+	Description     string          `json:"description"`
+	AutoDescription string          `json:"autoDescription,omitempty"`
+	Rating          int16           `json:"rating"`
+	Pick            *string         `json:"pick"`
+	Favorite        bool            `json:"favorite"`
+	Archived        bool            `json:"archived"`
+	Tags            []string        `json:"tags"`
+	People          []exportFace    `json:"faces"`
+	Albums          []string        `json:"albums"`
+	LivePhotoOf     *string         `json:"livePhotoOf,omitempty"`
+	StackParent     *string         `json:"stackParent,omitempty"`
+	Edits           json.RawMessage `json:"edits"`
 }
 
 type exportAlbum struct {
@@ -1026,7 +1026,7 @@ func (r *exportRun) exportAsset(row *db.ExportAssetsPageRow, faces []exportFace,
 	asset := exportAsset{
 		ID: uuidString(row.ID), OriginalName: row.OriginalName, Kind: row.Kind, MimeType: row.MimeType,
 		SizeBytes: row.SizeBytes, SHA256: hex.EncodeToString(row.Checksum), UploadedAt: row.CreatedAt.Time.UTC(),
-		LocalDateTime: row.LocalAt.Time.Format("2006-01-02T15:04:05"), Description: row.Caption, AIDescription: row.AiDescription,
+		LocalDateTime: row.LocalAt.Time.Format("2006-01-02T15:04:05"), Description: row.Caption, AutoDescription: row.AutoDescription,
 		Rating: row.Rating, Favorite: row.IsFavorite, Archived: row.ArchivedAt.Valid,
 		Tags: nonNil(row.Tags), People: nonNil(faces), Albums: nonNil(albums),
 		LivePhotoOf: optionalUUID(row.LivePhotoOf), StackParent: optionalUUID(row.StackParent), Edits: json.RawMessage("null"),
