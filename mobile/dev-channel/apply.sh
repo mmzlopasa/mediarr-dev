@@ -2,12 +2,7 @@
 # Turns this checkout into Mediarr Dev, which installs beside the stable app. Runs in CI, never commit its result.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-cp dev-channel/ios/AppIcon.appiconset/*.png ios/Runner/Assets.xcassets/AppIcon.appiconset/
-for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-  cp "dev-channel/android/mipmap-$density/ic_launcher.png" "android/app/src/main/res/mipmap-$density/"
-  # Android 8 and later draw the adaptive icon: the same dark tile, with DEV under the fan.
-  cp "dev-channel/android/drawable-$density/ic_launcher_foreground.png" "android/app/src/main/res/drawable-$density/"
-done
+# The same icon as the stable app; only the name and the identifiers differ.
 perl -pi -e 's/PRODUCT_BUNDLE_IDENTIFIER = app\.mediarr\.mediarr;/PRODUCT_BUNDLE_IDENTIFIER = app.mediarr.mediarr.dev;/' ios/Runner.xcodeproj/project.pbxproj
 # The widget's identifier starts with its app's.
 perl -pi -e 's/PRODUCT_BUNDLE_IDENTIFIER = app\.mediarr\.mediarr\.widget;/PRODUCT_BUNDLE_IDENTIFIER = app.mediarr.mediarr.dev.widget;/' ios/Runner.xcodeproj/project.pbxproj
