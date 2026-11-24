@@ -87,6 +87,8 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
 
   Future<void> _more(String choice, Session session) async {
     switch (choice) {
+      case 'save':
+        await saveAssetsToPhone(context, session, _selected.toList());
       case 'archive':
         await _act(BulkRequestActionEnum.archive);
       case 'tag':
@@ -231,12 +233,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     },
                   ),
                   IconButton(
-                    tooltip: l.shareSheetSaveToPhone,
-                    icon: const Icon(Icons.download_outlined),
-                    onPressed: () =>
-                        saveAssetsToPhone(context, session, _selected.toList()),
-                  ),
-                  IconButton(
                     tooltip: l.timelineScreenShare,
                     icon: const Icon(Icons.share_outlined),
                     onPressed: () =>
@@ -256,6 +252,10 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     tooltip: l.timelineScreenMore,
                     onSelected: (choice) => _more(choice, session),
                     itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: 'save',
+                        child: Text(l.shareSheetSaveToPhone),
+                      ),
                       PopupMenuItem(value: 'cull', child: Text(l.cullTitle)),
                       PopupMenuItem(
                         value: 'archive',

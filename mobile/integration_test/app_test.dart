@@ -277,7 +277,7 @@ void main() {
     await waitFor(tester, find.text('Split, July 2024'));
     await tester.tap(find.text('Split, July 2024').last);
     await waitFor(tester, find.byTooltip('More'));
-    await tester.tap(find.byTooltip('More').last);
+    await tester.tap(find.byTooltip('More actions').last);
     await waitFor(tester, find.text('Hide this memory'));
     await tester.tap(find.text('Hide this memory').last);
     for (var i = 0; i < 50 && server.hiddenMemoryKey == null; i++) {
@@ -483,7 +483,7 @@ void main() {
     await waitFor(tester, find.text('Travels'));
     await tester.tap(find.text('Travels'));
     await waitFor(tester, find.byTooltip('More'));
-    await tester.tap(find.byTooltip('More').last);
+    await tester.tap(find.byTooltip('More actions').last);
     await waitFor(tester, find.text('Public links'));
     await tester.tap(find.text('Public links'));
     await waitFor(tester, find.text('Family'));
@@ -765,8 +765,14 @@ void main() {
     await waitFor(tester, find.byType(AssetPicture));
     await tester.tap(find.byType(AssetPicture).first);
     await waitFor(tester, find.byTooltip('Share'));
-    // Saving has a button of its own, not only a row at the bottom of the sharing sheet.
-    expect(find.byTooltip('Save to this phone'), findsOneWidget);
+    // Saving has a place of its own: a button, or on a narrow screen a line in More.
+    if (find.byTooltip('Save to this phone').evaluate().isEmpty) {
+      await tester.tap(find.byTooltip('More actions').last);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Save to this phone'), findsOneWidget);
+      await tester.tapAt(const Offset(20, 300));
+      await tester.pump(const Duration(milliseconds: 500));
+    }
     await tester.tap(find.byTooltip('Share'));
     await waitFor(tester, find.text('Smaller, for messages'));
     expect(find.text('Original'), findsOneWidget);

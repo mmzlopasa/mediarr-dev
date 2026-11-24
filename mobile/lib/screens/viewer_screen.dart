@@ -361,7 +361,7 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
               onPressed: () => shareAssets(context, ref, session, [current.id]),
             ),
             ViewerAction(
-              priority: 1,
+              priority: 4,
               tooltip: l.shareSheetSaveToPhone,
               icon: const Icon(Icons.download_outlined),
               onPressed: () =>
