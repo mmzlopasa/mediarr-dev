@@ -765,6 +765,8 @@ void main() {
     await waitFor(tester, find.byType(AssetPicture));
     await tester.tap(find.byType(AssetPicture).first);
     await waitFor(tester, find.byTooltip('Share'));
+    // Saving has a button of its own, not only a row at the bottom of the sharing sheet.
+    expect(find.byTooltip('Save to this phone'), findsOneWidget);
     await tester.tap(find.byTooltip('Share'));
     await waitFor(tester, find.text('Smaller, for messages'));
     expect(find.text('Original'), findsOneWidget);

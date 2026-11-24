@@ -404,6 +404,12 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen> {
         actions: [
           if (selecting) ...[
             IconButton(
+              tooltip: l.shareSheetSaveToPhone,
+              icon: const Icon(Icons.download_outlined),
+              onPressed: () =>
+                  saveAssetsToPhone(context, _session, _selected.toList()),
+            ),
+            IconButton(
               tooltip: l.albumScreenShare,
               icon: const Icon(Icons.share_outlined),
               onPressed: () =>

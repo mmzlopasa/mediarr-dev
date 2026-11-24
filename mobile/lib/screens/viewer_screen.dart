@@ -362,6 +362,13 @@ class _ViewerScreenState extends ConsumerState<ViewerScreen> {
             ),
             ViewerAction(
               priority: 1,
+              tooltip: l.shareSheetSaveToPhone,
+              icon: const Icon(Icons.download_outlined),
+              onPressed: () =>
+                  saveAssetsToPhone(context, session, [current.id]),
+            ),
+            ViewerAction(
+              priority: 1,
               tooltip: l.viewerScreenDetails,
               icon: const Icon(Icons.info_outline),
               onPressed: () => _info(session, current),

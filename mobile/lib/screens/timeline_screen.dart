@@ -231,6 +231,12 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                     },
                   ),
                   IconButton(
+                    tooltip: l.shareSheetSaveToPhone,
+                    icon: const Icon(Icons.download_outlined),
+                    onPressed: () =>
+                        saveAssetsToPhone(context, session, _selected.toList()),
+                  ),
+                  IconButton(
                     tooltip: l.timelineScreenShare,
                     icon: const Icon(Icons.share_outlined),
                     onPressed: () =>
