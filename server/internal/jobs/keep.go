@@ -185,6 +185,10 @@ func KeepUsage(library string, guest uuid.UUID) (used, deleted int64) {
 
 // SoftDeleteKeep moves a file a guest deleted aside, by the day, instead of deleting it.
 func SoftDeleteKeep(library string, guest uuid.UUID, rel string, now time.Time) error {
+	// The caller checks the name too; a name that climbs out of the guest's folder is never moved.
+	if !filepath.IsLocal(rel) {
+		return fmt.Errorf("%q is not a file of this backup", rel)
+	}
 	from := filepath.Join(KeepRepoDir(library, guest), rel)
 	to := filepath.Join(KeepDeletedDir(library, guest), now.UTC().Format(keepDateLayout), rel)
 	if err := os.MkdirAll(filepath.Dir(to), 0o750); err != nil {

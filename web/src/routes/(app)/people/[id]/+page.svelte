@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto, pushState, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -24,21 +23,30 @@
 	let timeline = $state<Timeline>();
 
 	async function load() {
+		const asked = id;
 		try {
 			const { people } = await api.people();
-			person = people.find((candidate) => candidate.id === id);
-			others = people.filter((candidate) => candidate.id !== id);
+			// Another person was opened meanwhile.
+			if (asked !== id) return;
+			person = people.find((candidate) => candidate.id === asked);
+			others = people.filter((candidate) => candidate.id !== asked);
 			gone = !person;
 			if (person) {
 				name = person.name;
 				born = person.birthDate ?? '';
 			}
 		} catch {
-			gone = true;
+			if (asked === id) gone = true;
 		}
 	}
 
-	onMount(load);
+	// Again for each person: going from one to another keeps this page and changes only the id.
+	$effect(() => {
+		void id;
+		person = undefined;
+		gone = false;
+		load();
+	});
 
 	async function save(event: SubmitEvent) {
 		event.preventDefault();

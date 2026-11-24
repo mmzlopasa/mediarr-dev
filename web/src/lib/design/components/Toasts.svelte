@@ -5,7 +5,7 @@
 
 <div class="toasts" aria-live="polite">
 	{#each toasts() as toast (toast.id)}
-		<div class="toast glass {toast.kind}" role="status">
+		<div class="toast glass {toast.kind}" role={toast.kind === 'err' ? 'alert' : 'status'}>
 			<Icon name={toast.kind === 'ok' ? 'check' : 'warn'} /><span>{toast.text}</span>
 		</div>
 	{/each}

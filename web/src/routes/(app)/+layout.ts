@@ -3,11 +3,14 @@ import { api } from '#lib/api.ts';
 import { followAccount } from '#lib/language.ts';
 import type { LayoutLoad } from './$types';
 
-export const load: LayoutLoad = async ({ fetch, url, depends }) => {
+export const load: LayoutLoad = async ({ fetch, url, depends, untrack }) => {
+	// The address is read only to come back to it after signing in. Read tracked, it would ask the
+	// server who is signed in again on every navigation.
+	const here = untrack(() => url.pathname + url.search);
 	depends('app:session');
 	const status = await api.status(fetch);
 	if (status.setupRequired) redirect(307, '/setup');
-	if (!status.user) redirect(307, `/login?next=${encodeURIComponent(url.pathname + url.search)}`);
+	if (!status.user) redirect(307, `/login?next=${encodeURIComponent(here)}`);
 	await followAccount(status.user.language);
 	return { user: status.user };
 };

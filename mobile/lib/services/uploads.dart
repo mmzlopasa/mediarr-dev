@@ -10,6 +10,30 @@ import '../l10n/l10n.dart';
 
 enum UploadState { queued, preparing, uploading, done, duplicate, failed }
 
+/// The video of an iOS Live Photo, or null for any other asset.
+Future<File?> livePhotoVideo(AssetEntity asset, File still) async {
+  if (!Platform.isIOS || !asset.isLivePhoto) return null;
+  final video = await asset.originFileWithSubtype;
+  if (video == null || video.path == still.path) return null;
+  return isVideoPath(video.path) ? video : null;
+}
+
+bool isVideoPath(String path) {
+  final lower = path.toLowerCase();
+  return lower.endsWith('.mov') || lower.endsWith('.mp4');
+}
+
+/// The video's name has the still's name before the dot, as on the phone: IMG_0001.HEIC goes with
+/// IMG_0001.MOV.
+String livePhotoVideoName(String stillName, String videoPath) {
+  final dot = stillName.lastIndexOf('.');
+  final base = dot > 0 ? stillName.substring(0, dot) : stillName;
+  final file = videoPath.substring(videoPath.lastIndexOf('/') + 1);
+  final at = file.lastIndexOf('.');
+  final extension = at > 0 ? file.substring(at + 1).toUpperCase() : 'MOV';
+  return '$base.$extension';
+}
+
 class UploadTask {
   UploadTask({this.asset, this.sharedFile, this.name = '', this.albumId});
 
@@ -48,12 +72,20 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
   @override
   List<UploadTask> build() => [];
 
-  void _changed() => state = [...state];
+  void _changed() {
+    if (ref.mounted) state = [...state];
+  }
 
   void add(Iterable<AssetEntity> assets, {String? albumId}) {
+    // One chosen twice while it is still on its way is sent once.
+    final waiting = {
+      for (final task in state)
+        if (!task.finished && task.asset != null) task.asset!.id,
+    };
     state = [
       ...state,
-      ...assets.map((asset) => UploadTask(asset: asset, albumId: albumId)),
+      for (final asset in assets)
+        if (waiting.add(asset.id)) UploadTask(asset: asset, albumId: albumId),
     ];
     _pump();
   }
@@ -114,10 +146,23 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
           _changed();
         },
       );
-      task.state = result.duplicate ? UploadState.duplicate : UploadState.done;
+      // A Live Photo's moving part goes as its own file, the way the backup sends it; the server
+      // pairs the two by the identifier both carry.
+      final motion = asset == null ? null : await livePhotoVideo(asset, file);
+      var duplicate = result.duplicate;
+      if (motion != null) {
+        final video = await client.upload(
+          motion,
+          name: livePhotoVideoName(task.name, motion.path),
+          lastModifiedMs: asset!.createDateTime.millisecondsSinceEpoch,
+          albumId: task.albumId,
+        );
+        duplicate = duplicate && video.duplicate;
+      }
+      task.state = duplicate ? UploadState.duplicate : UploadState.done;
       await _removeShared(task);
       Future<void>.delayed(doneLinger, () {
-        if (state.contains(task)) {
+        if (ref.mounted && state.contains(task)) {
           state = state.where((other) => other != task).toList();
         }
       });
@@ -127,7 +172,7 @@ class UploadsNotifier extends Notifier<List<UploadTask>> {
     } finally {
       client.close();
       _changed();
-      _pump();
+      if (ref.mounted) _pump();
     }
   }
 

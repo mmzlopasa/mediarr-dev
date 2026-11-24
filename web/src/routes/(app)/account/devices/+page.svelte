@@ -8,13 +8,14 @@
 	import { t } from '#lib/i18n.svelte.ts';
 
 	let list = $state<BackupDeviceList>();
+	let failed = $state(false);
 
 	onMount(async () => {
 		try {
 			list = await api.backupDevices();
 		} catch {
-			list = { devices: [], quietDays: 3 };
-			showToast('err', t('account.devices.theDevicesDidNotLoad'));
+			// Nothing made up in its place: the page says it did not load.
+			failed = true;
 		}
 	});
 
@@ -42,7 +43,9 @@
 
 <div class="imp">
 	<Card id="devices" title={t('account.devices.yourDevices')}>
-		{#if list === undefined}
+		{#if failed}
+			<p class="alb-meta" role="alert">{t('account.devices.theDevicesDidNotLoad')}</p>
+		{:else if list === undefined}
 			<Skeleton height="96px" />
 		{:else if list.devices.length === 0}
 			<p class="alb-meta">
@@ -56,25 +59,28 @@
 		{/if}
 	</Card>
 	<Card id="quiet" title={t('account.devices.warning')}>
-		<label class="set-row">
-			<span>{t('account.devices.warnMeWhenADevice')}</span>
-			<select
-				class="in"
-				aria-label={t('account.devices.warnAfter')}
-				value={String(list?.quietDays ?? 3)}
-				disabled={list === undefined}
-				onchange={(event) => setDays(Number(event.currentTarget.value))}
-			>
-				{#each [1, 3, 7, 14] as days (days)}
-					<option value={String(days)}
-						>{days === 1
-							? t('account.devices.1Day')
-							: t('account.devices.daysDays', { days })}</option
-					>
-				{/each}
-				<option value="0">{t('account.devices.never')}</option>
-			</select>
-		</label>
+		{#if list === undefined}
+			{#if !failed}<Skeleton height="38px" />{/if}
+		{:else}
+			<label class="set-row">
+				<span>{t('account.devices.warnMeWhenADevice')}</span>
+				<select
+					class="in"
+					aria-label={t('account.devices.warnAfter')}
+					value={String(list.quietDays)}
+					onchange={(event) => setDays(Number(event.currentTarget.value))}
+				>
+					{#each [1, 3, 7, 14] as days (days)}
+						<option value={String(days)}
+							>{days === 1
+								? t('account.devices.1Day')
+								: t('account.devices.daysDays', { days })}</option
+						>
+					{/each}
+					<option value="0">{t('account.devices.never')}</option>
+				</select>
+			</label>
+		{/if}
 		<p class="alb-meta">
 			{t('account.devices.theNoticeComesHereAnd')}
 		</p>

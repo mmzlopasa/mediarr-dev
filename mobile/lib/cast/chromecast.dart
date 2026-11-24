@@ -20,7 +20,15 @@ class CastMessage {
   final String namespace;
   final String payload;
 
-  Map<String, dynamic> get json => jsonDecode(payload) as Map<String, dynamic>;
+  /// The payload, or an empty map for anything that is not a JSON object.
+  Map<String, dynamic> get json {
+    try {
+      final value = jsonDecode(payload);
+      return value is Map<String, dynamic> ? value : const {};
+    } on FormatException {
+      return const {};
+    }
+  }
 
   static void _varint(BytesBuilder out, int value) {
     var v = value;
@@ -68,6 +76,9 @@ class CastMessage {
       var result = 0;
       var shift = 0;
       while (true) {
+        if (at >= bytes.length || shift > 35) {
+          throw const FormatException('not a Cast message');
+        }
         final byte = bytes[at++];
         result |= (byte & 0x7f) << shift;
         if (byte < 0x80) return result;
@@ -84,6 +95,9 @@ class CastMessage {
           varint();
         case 2:
           final length = varint();
+          if (at + length > bytes.length) {
+            throw const FormatException('not a Cast message');
+          }
           texts[field] = utf8.decode(
             bytes.sublist(at, at + length),
             allowMalformed: true,
@@ -104,8 +118,13 @@ class CastMessage {
 
 /// Splits what comes from the socket into messages.
 class CastFramer {
+  /// The Cast protocol allows no bigger message. Anything claiming more is not a Chromecast, and
+  /// would otherwise make the phone keep everything it sends.
+  static const maxMessage = 64 * 1024;
+
   final _buffer = BytesBuilder();
 
+  /// Throws [FormatException] for what is not the Cast protocol.
   List<CastMessage> add(List<int> data) {
     _buffer.add(data);
     final out = <CastMessage>[];
@@ -113,6 +132,9 @@ class CastFramer {
     while (bytes.length >= 4) {
       final length =
           (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+      if (length > maxMessage) {
+        throw const FormatException('not a Cast message');
+      }
       if (bytes.length < 4 + length) break;
       out.add(CastMessage.decode(bytes.sublist(4, 4 + length)));
       bytes = bytes.sublist(4 + length);
@@ -136,7 +158,8 @@ typedef CastSocketFactory = Future<Socket> Function(String host, int port);
 Future<Socket> _secureSocket(String host, int port) => SecureSocket.connect(
   host,
   port,
-  // A Chromecast has a certificate of its own that no one signs.
+  // A Chromecast has a certificate of its own that no one signs. Only this socket accepts it, and
+  // all it carries are the cast token's short-lived addresses.
   onBadCertificate: (_) => true,
   timeout: const Duration(seconds: 8),
 );
@@ -168,14 +191,18 @@ class ChromecastConnection implements TvConnection {
   }
 
   void _send(String destination, String namespace, Map<String, Object?> body) {
-    _socket?.add(
-      CastMessage(
-        source: 'sender-0',
-        destination: destination,
-        namespace: namespace,
-        payload: jsonEncode(body),
-      ).encode(),
-    );
+    try {
+      _socket?.add(
+        CastMessage(
+          source: 'sender-0',
+          destination: destination,
+          namespace: namespace,
+          payload: jsonEncode(body),
+        ).encode(),
+      );
+    } on Object {
+      // The socket closed under it; the end is reported by the reader.
+    }
   }
 
   Future<Map<String, dynamic>> _ask(
@@ -204,14 +231,16 @@ class ChromecastConnection implements TvConnection {
     }
     if (message.namespace == _media && body['type'] == 'MEDIA_STATUS') {
       final list = body['status'];
-      if (list is List && list.isNotEmpty) {
-        final status = list.first as Map<String, dynamic>;
-        _mediaSession = status['mediaSessionId'] as int? ?? _mediaSession;
+      if (list is List && list.isNotEmpty && list.first is Map) {
+        final status = list.first as Map;
+        final id = status['mediaSessionId'];
+        if (id is int) _mediaSession = id;
+        final time = status['currentTime'];
         _emit(
           TvStatus(
             playing: status['playerState'] == 'PLAYING',
             position: Duration(
-              milliseconds: (((status['currentTime'] as num?) ?? 0) * 1000)
+              milliseconds: ((time is num && time.isFinite ? time : 0) * 1000)
                   .round(),
             ),
           ),
@@ -224,7 +253,7 @@ class ChromecastConnection implements TvConnection {
       final apps = (body['status'] as Map?)?['applications'];
       final still =
           apps is List &&
-          apps.any((app) => (app as Map)['sessionId'] == _session);
+          apps.any((app) => app is Map && app['sessionId'] == _session);
       // Someone stopped it on the TV, or started something else there.
       if (!still) _emit(const TvStatus(ended: true));
     }
@@ -239,8 +268,14 @@ class ChromecastConnection implements TvConnection {
     final framer = CastFramer();
     _reading = socket.listen(
       (data) {
-        for (final message in framer.add(data)) {
-          _received(message);
+        try {
+          for (final message in framer.add(data)) {
+            _received(message);
+          }
+        } on Object {
+          // Not a Chromecast speaking: the connection is given up.
+          _emit(const TvStatus(ended: true));
+          _reading?.cancel();
         }
       },
       onDone: () => _emit(const TvStatus(ended: true)),
@@ -255,14 +290,21 @@ class ChromecastConnection implements TvConnection {
       'type': 'LAUNCH',
       'appId': defaultMediaReceiver,
     });
-    final apps = (launched['status'] as Map?)?['applications'] as List?;
-    final app = apps
-        ?.cast<Map<String, dynamic>>()
-        .where((app) => app['appId'] == defaultMediaReceiver)
-        .firstOrNull;
-    if (app == null) throw const TvException('the Chromecast did not start');
-    _transport = app['transportId'] as String;
-    _session = app['sessionId'] as String?;
+    final status = launched['status'];
+    final apps = status is Map ? status['applications'] : null;
+    final app = apps is List
+        ? apps
+              .whereType<Map>()
+              .where((app) => app['appId'] == defaultMediaReceiver)
+              .firstOrNull
+        : null;
+    final transport = app?['transportId'];
+    if (app == null || transport is! String) {
+      throw const TvException('the Chromecast did not start');
+    }
+    _transport = transport;
+    final session = app['sessionId'];
+    _session = session is String ? session : null;
     _send(_transport!, _connection, {'type': 'CONNECT'});
   }
 
@@ -289,8 +331,9 @@ class ChromecastConnection implements TvConnection {
       throw const TvException('the Chromecast could not open it');
     }
     final list = answer['status'];
-    if (list is List && list.isNotEmpty) {
-      _mediaSession = (list.first as Map)['mediaSessionId'] as int?;
+    if (list is List && list.isNotEmpty && list.first is Map) {
+      final id = (list.first as Map)['mediaSessionId'];
+      if (id is int) _mediaSession = id;
     }
   }
 
@@ -332,7 +375,11 @@ class ChromecastConnection implements TvConnection {
     }
     _ping?.cancel();
     await _reading?.cancel();
-    await _socket?.close();
+    try {
+      await _socket?.close();
+    } on Object {
+      // Already gone.
+    }
     _socket = null;
     for (final waiting in _waiting.values) {
       if (!waiting.isCompleted) {
@@ -340,6 +387,6 @@ class ChromecastConnection implements TvConnection {
       }
     }
     _waiting.clear();
-    await _status.close();
+    if (!_status.isClosed) await _status.close();
   }
 }

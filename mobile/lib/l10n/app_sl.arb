@@ -1474,5 +1474,6 @@
   "backupCardServerAway": "Strežnik ni dosegljiv. Varnostno kopiranje se nadaljuje samo, ko se spet odzove.",
   "backupCardWaitingForWifi": "{count, plural, =1{1 fotografija čaka na Wi-Fi: je le v iCloudu, varnostno kopiranje pa sme uporabljati le Wi-Fi.} other{{count} fotografij čaka na Wi-Fi: so le v iCloudu, varnostno kopiranje pa sme uporabljati le Wi-Fi.}}",
   "backupCardRetryingSoon": "{count, plural, =1{1 datoteka ni šla skozi in se kmalu sama poskusi znova.} other{{count} datotek ni šlo skozi in se kmalu same poskusijo znova.}}",
-  "backupCardFailedRetryLater": "Neuspele datoteke se same poskusijo znova po enem dnevu."
+  "backupCardFailedRetryLater": "Neuspele datoteke se same poskusijo znova po enem dnevu.",
+  "freeSpaceScreenKeptChanged": "{count, plural, =1{1 fotografija je ostala: spremenila se je ali je ni več na strežniku.} other{{count} fotografij je ostalo: spremenile so se ali jih ni več na strežniku.}}"
 }

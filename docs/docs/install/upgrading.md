@@ -11,7 +11,13 @@ docker compose pull
 docker compose up -d
 ```
 
-The database is updated by itself when the server starts. To stay on one version, set `MEDIARR_VERSION` in `.env` to that number instead of `latest`.
+The database is updated by itself when the server starts. Download the `docker-compose.yml` again too, as in [step 2 of the install](/install/docker-compose#2-download-the-two-files), because it carries the settings each version is tested with. Keep your `.env`. To stay on one version, set `MEDIARR_VERSION` in `.env` to that number instead of `latest`.
+
+If your `.env` lists the profile for automatic descriptions in `COMPOSE_PROFILES`, its name is now `descriptions`, for example `COMPOSE_PROFILES=ml,descriptions`. With the old name, the model service does not start.
+
+## What the install file protects
+
+The containers start with as few rights as each needs, and the database is on a network of its own that only the server and the worker reach. A program of yours in another container that used to connect to the database directly no longer can: use the [API](/administration/api-keys) instead. Each container keeps at most 50 MB of logs.
 
 ## A snapshot before every upgrade
 

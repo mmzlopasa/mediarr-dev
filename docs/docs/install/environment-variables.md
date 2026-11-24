@@ -24,7 +24,7 @@ Mediarr reads these from `.env`. After changing them, apply them with `docker co
 
 | Variable | Meaning |
 | --- | --- |
-| `COMPOSE_PROFILES` | Optional services, separated by commas: `ml` (smart search and faces), `ai` (descriptions), `dlna` (the [DLNA server](/features/tv)) |
+| `COMPOSE_PROFILES` | Optional services, separated by commas: `ml` (smart search and faces), `descriptions` (automatic descriptions), `dlna` (the [DLNA server](/features/tv)) |
 | `ML_URL` | `http://ml:8000` turns on smart search and faces. Another address uses the service on [another computer](/features/smart-search#on-another-computer) |
 | `ML_IDLE_MINUTES` | Minutes without a request before a model leaves memory. Default `5`. `0` keeps models loaded |
 | `ML_TOKEN` | Makes the service ask for this token on everything except its health check, and the Mediarr server send it. Use the same value on both sides. See [another computer](/features/smart-search#on-another-computer) |
@@ -36,8 +36,10 @@ Mediarr reads these from `.env`. After changing them, apply them with `docker co
 | `TRUSTED_PROXY_HOPS` | How many reverse proxies stand in front of Mediarr, usually `1` |
 | `MAX_UPLOAD_MB` | The largest single upload. Default: limited only by free disk space |
 | `WORKER_CONCURRENCY` | Background jobs at once. Default: half of the processor cores |
-| `VIDEO_ACCEL` | Video encoding hardware: `none`, `qsv`, `nvenc` or `vaapi` |
+| `VIDEO_ACCEL` | Video encoding hardware: `qsv`, `nvenc` or `vaapi`. Empty or anything else encodes on the processor, which is the only way that works with the install file alone: it does not pass a graphics device into the containers |
 | `METRICS_TOKEN` | Turns on `/metrics` for Prometheus, using this as a bearer token |
 | `UPDATE_CHECK` | `off` stops the check for a new version |
 | `MEDIARR_UPGRADE_SNAPSHOT` | `false` upgrades without a snapshot of the database first. See [Upgrading](/install/upgrading) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Sends traces to an OpenTelemetry collector |
+| `DLNA_PORT`, `DLNA_MEDIARR_URL` | Settings of the [DLNA server](/features/tv#dlna-server) |
+| `SERVER_MEM_LIMIT`, `WORKER_MEM_LIMIT`, `ML_MEM_LIMIT`, `OLLAMA_MEM_LIMIT` | The most memory a container may use, such as `2g`. Empty: no limit. A container over its limit is stopped and started again, so leave room for large videos and models |

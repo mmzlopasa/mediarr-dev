@@ -5200,4 +5200,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupCardFailedRetryLater =>
       'Files that failed are tried again by themselves after a day.';
+
+  @override
+  String freeSpaceScreenKeptChanged(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count photos were kept: they changed or are no longer on the server.',
+      one: '1 photo was kept: it changed or is no longer on the server.',
+    );
+    return '$_temp0';
+  }
 }

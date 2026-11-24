@@ -371,6 +371,24 @@ func (s *apiServer) claimTotp(ctx context.Context, user *db.User, code string) (
 	return rows == 1, nil
 }
 
+// confirmPassword checks the password of someone already signed in, before a change that needs it.
+// Wrong answers are counted per account, so a stolen session cannot be used to guess the password.
+// It answers by itself when the password is not accepted.
+func (s *apiServer) confirmPassword(w http.ResponseWriter, user *db.User, password, wrong string) bool {
+	key := uuid.UUID(user.ID.Bytes).String()
+	if !s.confirmations.Allowed(key) {
+		writeError(w, http.StatusTooManyRequests, "too many attempts; try again later")
+		return false
+	}
+	if !auth.VerifyPassword(user.PasswordHash, password) {
+		s.confirmations.Fail(key)
+		writeError(w, http.StatusUnauthorized, wrong)
+		return false
+	}
+	s.confirmations.Reset(key)
+	return true
+}
+
 func (s *apiServer) Logout(w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie(sessionCookie); err == nil {
 		if err := s.queries.DeleteSession(r.Context(), auth.HashToken(cookie.Value)); err != nil {
@@ -391,8 +409,7 @@ func (s *apiServer) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body) {
 		return
 	}
-	if !auth.VerifyPassword(user.PasswordHash, body.CurrentPassword) {
-		writeError(w, http.StatusUnauthorized, "the current password is wrong")
+	if !s.confirmPassword(w, user, body.CurrentPassword, "the current password is wrong") {
 		return
 	}
 	if err := auth.ValidatePassword(body.NewPassword); err != nil {
@@ -484,8 +501,7 @@ func (s *apiServer) DisableTotp(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body) {
 		return
 	}
-	if !auth.VerifyPassword(user.PasswordHash, body.Password) {
-		writeError(w, http.StatusUnauthorized, "the password is wrong")
+	if !s.confirmPassword(w, user, body.Password, "the password is wrong") {
 		return
 	}
 	if err := s.queries.DisableTotp(r.Context(), user.ID); err != nil {

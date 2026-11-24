@@ -29,13 +29,19 @@
 	let showCluster = $state(false);
 	let around = $state<string[]>([]);
 
+	// Only the answer to the latest dates is shown, however the answers arrive.
+	let asked = 0;
+
 	async function load() {
+		const mine = ++asked;
 		try {
-			points = await api.mapPoints(from, to);
-			if (points.ids.length > 0) everHadPoints = true;
+			const next = await api.mapPoints(from, to);
+			if (mine !== asked) return;
+			points = next;
+			if (next.ids.length > 0) everHadPoints = true;
 			failed = false;
 		} catch {
-			failed = true;
+			if (mine === asked) failed = true;
 		}
 	}
 

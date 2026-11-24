@@ -23,14 +23,17 @@ enum WidgetChannel {
       switch call.method {
       case "configure":
         guard let args = call.arguments as? [String: Any],
-          let server = args["server"] as? String, let key = args["key"] as? String,
-          let album = args["albumId"] as? String
+          let server = args["server"] as? String, BackupRequest.isServerAddress(server),
+          let key = args["key"] as? String, !key.isEmpty,
+          let album = args["albumId"] as? String, BackupRequest.isPlainID(album)
         else {
           result(FlutterError(code: "args", message: "server, key and albumId are needed", details: nil))
           return
         }
         let saved = WidgetShare.save(
-          WidgetShare(server: server, key: key, albumId: album, albumTitle: args["albumTitle"] as? String ?? ""))
+          WidgetShare(
+            server: BackupRequest.trimmedServer(server), key: key, albumId: album,
+            albumTitle: args["albumTitle"] as? String ?? ""))
         WidgetCenter.shared.reloadAllTimelines()
         if saved {
           result(nil)

@@ -93,7 +93,20 @@
 			);
 			return;
 		}
-		importReports = { ...importReports, [id]: await api.importDetail(id) };
+		try {
+			importReports = { ...importReports, [id]: await api.importDetail(id) };
+		} catch {
+			showToast('err', t('common.thisCouldNotBeLoaded'));
+		}
+	}
+
+	async function importAction(action: () => Promise<void>) {
+		try {
+			await action();
+		} catch (cause) {
+			showToast('err', cause instanceof Error ? cause.message : t('common.theActionFailed'));
+		}
+		await loadImports();
 	}
 	let importSource = $state<ImportCreate['source']>('immich');
 	let importOwner = $state('');
@@ -298,13 +311,13 @@
 			oidc && { id: 'sso', label: t('admin.settings.singleSignOn') },
 			{ id: 'import', label: t('common.import') },
 			{ id: 'additions', label: t('admin.settings.additions') },
-			backup && { id: 'backup', label: 'Backup' },
+			backup && { id: 'backup', label: t('admin.settings.backup') },
 			{ id: 'keep', label: t('admin.settings.aCopyAtARelative') },
 			features.family && { id: 'family', label: t('admin.settings.family') },
 			features.descriptions &&
 				describing && { id: 'describing', label: t('admin.settings.autoDescriptions') },
-			features.webhooks && { id: 'webhooks', label: 'Webhooks' },
-			{ id: 'server', label: 'Server' },
+			features.webhooks && { id: 'webhooks', label: t('admin.settings.webhooks') },
+			{ id: 'server', label: t('serverSettingsCard.server') },
 			{ id: 'email', label: t('admin.settings.email') },
 			{ id: 'map', label: t('admin.settings.map') }
 		].filter((item): item is { id: string; label: string } => Boolean(item))
@@ -318,7 +331,8 @@
 		failed: { label: k('admin.jobs.failed'), tone: 'err' },
 		cancelled: { label: k('account.import.stopped'), tone: '' }
 	};
-	const status = (value: string) => STATUS[value] ?? { hr: value, en: value, tone: '' };
+	// A state this page does not know yet is shown as the server names it.
+	const status = (value: string) => STATUS[value] ?? { label: value as Key, tone: '' };
 
 	async function save(event: SubmitEvent) {
 		event.preventDefault();
@@ -414,9 +428,11 @@
 							<code>{location.origin}/api/auth/oidc/callback</code>
 						</p>
 						<Input label={t('admin.settings.issuer')} bind:value={oidc.issuer} />
-						<Input label="Client ID" bind:value={oidc.clientId} />
+						<Input label={t('admin.settings.clientId')} bind:value={oidc.clientId} />
 						<Input
-							label={oidc.hasSecret ? t('admin.settings.clientSecretSavedTypeTo') : 'Client secret'}
+							label={oidc.hasSecret
+								? t('admin.settings.clientSecretSavedTypeTo')
+								: t('admin.settings.clientSecret')}
 							bind:value={oidcSecret}
 						/>
 						<Input label={t('admin.settings.buttonLabel')} bind:value={oidc.label} />
@@ -514,12 +530,8 @@
 							</span>
 							<span class="imp-acts">
 								{#if entry.status === 'running' || entry.status === 'uploading'}
-									<Button
-										small
-										onclick={async () => {
-											await api.cancelImport(entry.id);
-											await loadImports();
-										}}>{t('common.stop')}</Button
+									<Button small onclick={() => importAction(() => api.cancelImport(entry.id))}
+										>{t('common.stop')}</Button
 									>
 								{/if}
 								{#if entry.failed > 0}
@@ -533,10 +545,8 @@
 									<Button
 										small
 										variant="danger"
-										onclick={async () => {
-											await api.removeImport(entry.id);
-											await loadImports();
-										}}>{t('common.remove')}</Button
+										onclick={() => importAction(() => api.removeImport(entry.id))}
+										>{t('common.remove')}</Button
 									>
 								{/if}
 							</span>
@@ -562,7 +572,7 @@
 				{/each}
 			</Card>
 			{#if backup}
-				<Card id="backup" title="Backup">
+				<Card id="backup" title={t('admin.settings.backup')}>
 					{#snippet actions()}
 						<Button small onclick={() => runBackup('backup')}
 							>{t('admin.settings.backUpNow')}</Button
@@ -605,7 +615,7 @@
 									<span class="set-list-t">
 										<b
 											>{run.kind === 'backup'
-												? 'Backup'
+												? t('admin.settings.backup')
 												: t('admin.settings.restoreTest')}{run.destinationName
 												? ` → ${run.destinationName}`
 												: ''}</b
@@ -699,7 +709,7 @@
 				</Card>
 			{/if}
 			{#if features.webhooks}
-				<Card id="webhooks" title="Webhooks">
+				<Card id="webhooks" title={t('admin.settings.webhooks')}>
 					<p class="alb-meta">
 						{t('admin.settings.tellsOtherProgramsWhatHappened')}
 					</p>

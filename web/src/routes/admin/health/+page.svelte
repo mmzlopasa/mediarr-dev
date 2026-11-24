@@ -16,6 +16,7 @@
 	let health = $state<AdminHealth>();
 	let integrity = $state<IntegrityReport>();
 	let started = $state(false);
+	let integrityFailed = $state(false);
 	const problemNames = $derived({
 		missing: t('admin.health.missing'),
 		unreadable: t('admin.health.cannotBeRead'),
@@ -31,13 +32,16 @@
 		}
 	}
 
-	onMount(async () => {
-		try {
-			health = await api.adminHealth();
-			integrity = await api.integrity();
-		} catch {
-			health = undefined;
-		}
+	// Each on its own: a failed health check must not hide the last check of the originals.
+	onMount(() => {
+		api.adminHealth().then(
+			(value) => (health = value),
+			() => (health = undefined)
+		);
+		api.integrity().then(
+			(value) => (integrity = value),
+			() => (integrityFailed = true)
+		);
 	});
 </script>
 
@@ -132,6 +136,8 @@
 		{/each}
 	{:else if integrity}
 		<p class="alb-meta">{t('admin.health.notCheckedYet')}</p>
+	{:else if integrityFailed}
+		<p class="alb-meta" role="alert">{t('common.thisCouldNotBeLoaded')}</p>
 	{/if}
 	{#if started}
 		<p class="alb-meta" role="status">

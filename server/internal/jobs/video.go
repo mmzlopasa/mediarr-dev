@@ -163,7 +163,7 @@ func transcodeArgs(source, dir string, info *VideoInfo, accel string) []string {
 		}
 	}
 
-	args := []string{"-n", "15", "ffmpeg", "-protocol_whitelist", "file,pipe,crypto", "-nostdin", "-v", "error", "-y"}
+	args := []string{"-n", "15", "ffmpeg", "-nostdin", "-v", "error", "-y"}
 	args = append(args, input...)
 	// -map_metadata: a shared stream carries no place, whatever the file itself says.
 	args = append(args, "-i", source, "-map_metadata", "-1", "-filter_complex", graph.String())

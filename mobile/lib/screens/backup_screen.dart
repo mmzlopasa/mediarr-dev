@@ -167,7 +167,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final code = await Navigator.of(
       context,
     ).push<String>(MaterialPageRoute(builder: (_) => const KeepCodeScanner()));
-    if (code != null) setState(() => _code.text = code);
+    if (code != null && mounted) setState(() => _code.text = code);
   }
 
   Future<void> _pair() async {

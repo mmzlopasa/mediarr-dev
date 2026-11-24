@@ -144,3 +144,73 @@ def test_zero_never_starts_the_release_thread():
     registry = Registry(0)
     registry.start()
     assert registry._thread is None
+
+
+def test_an_exclusive_model_serves_one_request_at_a_time(registry):
+    slot = registry.add("fake", Counting(), exclusive=True)
+    inside, most = [0], [0]
+    guard = threading.Lock()
+    start = threading.Barrier(6)
+
+    def request() -> None:
+        start.wait()
+        with slot.use():
+            with guard:
+                inside[0] += 1
+                most[0] = max(most[0], inside[0])
+            time.sleep(0.02)
+            with guard:
+                inside[0] -= 1
+
+    threads = [threading.Thread(target=request) for _ in range(6)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert most[0] == 1
+    assert slot.status()["in_use"] == 0
+
+
+def test_a_request_waiting_for_its_turn_keeps_the_model_loaded(registry):
+    slot = registry.add("fake", Counting(), exclusive=True)
+    holding, waiting = threading.Event(), threading.Event()
+    done = threading.Event()
+
+    def first() -> None:
+        with slot.use():
+            holding.set()
+            done.wait(3)
+
+    def second() -> None:
+        waiting.set()
+        with slot.use():
+            pass
+
+    threads = [threading.Thread(target=first), threading.Thread(target=second)]
+    threads[0].start()
+    assert holding.wait(3)
+    threads[1].start()
+    assert waiting.wait(3)
+    assert wait_until(lambda: slot.status()["in_use"] == 2)
+    time.sleep(0.1)
+    assert registry.release_idle() == []
+    done.set()
+    for thread in threads:
+        thread.join()
+    assert slot.status()["in_use"] == 0
+
+
+def test_a_shared_model_serves_requests_together(registry):
+    slot = registry.add("fake", Counting())
+    both = threading.Barrier(2, timeout=3)
+
+    def request() -> None:
+        with slot.use():
+            both.wait()
+
+    threads = [threading.Thread(target=request) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert not both.broken

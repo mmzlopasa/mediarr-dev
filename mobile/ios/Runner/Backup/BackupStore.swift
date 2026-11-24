@@ -18,6 +18,8 @@ struct BackupItem: Equatable {
 enum BackupPart {
   static let main = "main"
   static let paired = "paired"
+  /// The RAW of a RAW+JPEG photo.
+  static let alternate = "alternate"
 }
 
 /// The state of every file, so a backup survives the app being stopped at any moment.

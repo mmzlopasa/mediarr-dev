@@ -18,6 +18,13 @@ import UIKit
     handleEventsForBackgroundURLSession identifier: String,
     completionHandler: @escaping () -> Void
   ) {
+    // Only the backup's own transfers; any other session belongs to a plugin.
+    guard identifier == BackupEngine.sessionID else {
+      super.application(
+        application, handleEventsForBackgroundURLSession: identifier,
+        completionHandler: completionHandler)
+      return
+    }
     BackupEngine.shared.backgroundCompletion = completionHandler
     BackupEngine.shared.activate()
   }

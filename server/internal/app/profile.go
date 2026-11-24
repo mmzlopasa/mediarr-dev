@@ -67,8 +67,11 @@ func (s *apiServer) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		// Signing in goes by the email address, so changing it takes the password.
 		if normalized != user.Email {
-			if body.CurrentPassword == nil || !auth.VerifyPassword(user.PasswordHash, *body.CurrentPassword) {
-				writeError(w, http.StatusUnauthorized, "enter your current password to change your email address")
+			current := ""
+			if body.CurrentPassword != nil {
+				current = *body.CurrentPassword
+			}
+			if !s.confirmPassword(w, user, current, "enter your current password to change your email address") {
 				return
 			}
 		}

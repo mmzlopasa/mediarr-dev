@@ -94,3 +94,10 @@ func TestOnlyPhotosAndVideosAreCollected(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestPartsGiveUpOnAServerThatStopsAnswering(t *testing.T) {
+	transport, ok := partClient.Transport.(*http.Transport)
+	if !ok || transport.ResponseHeaderTimeout <= 0 {
+		t.Fatal("a part waits forever for a server that does not answer")
+	}
+}

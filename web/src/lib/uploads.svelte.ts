@@ -1,4 +1,4 @@
-import { Upload } from 'tus-js-client';
+import type { Upload } from 'tus-js-client';
 import { showToast } from '#lib/design/components/toast.svelte.ts';
 import { t } from '#lib/i18n.svelte.ts';
 
@@ -33,6 +33,11 @@ let existed = 0;
 const files = new Map<number, File>();
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const albums = new Map<number, string>();
+// The uploads under way, so that one can be stopped.
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const running = new Map<number, Upload>();
+// The upload code is fetched with the first file, not with every page.
+let tus: Promise<typeof import('tus-js-client')> | undefined;
 
 export function uploads() {
 	return items;
@@ -50,7 +55,34 @@ export function setPreparingUpload(value: boolean) {
 }
 
 export function clearFinishedUploads() {
-	items = items.filter((item) => item.status === 'queued' || item.status === 'uploading');
+	items = items.filter((item) => {
+		const keep = item.status === 'queued' || item.status === 'uploading';
+		if (!keep) forget(item.id);
+		return keep;
+	});
+}
+
+function forget(id: number) {
+	files.delete(id);
+	albums.delete(id);
+	running.delete(id);
+}
+
+/** Sends a failed file again, from where it stopped if the server kept the part it had. */
+export function retryUpload(id: number) {
+	if (!files.has(id)) return;
+	update(id, { status: 'queued', error: undefined });
+	pump();
+}
+
+/** Stops a file that is waiting or on its way; what the server has of it is thrown away. */
+export function cancelUpload(id: number) {
+	const upload = running.get(id);
+	forget(id);
+	items = items.filter((item) => item.id !== id);
+	if (upload) void upload.abort(true).catch(() => undefined);
+	pump();
+	finishRound();
 }
 
 function finishRound() {
@@ -68,7 +100,9 @@ function update(id: number, changes: Partial<UploadItem>) {
 }
 
 function fail(id: number, message: string) {
-	files.delete(id);
+	// The file is kept, so that it can be sent again.
+	running.delete(id);
+	if (!items.some((item) => item.id === id)) return;
 	update(id, { status: 'failed', error: message });
 	pump();
 	finishRound();
@@ -87,6 +121,13 @@ async function start(item: UploadItem) {
 
 	let duplicate = false;
 	try {
+		tus ??= import('tus-js-client');
+		const { Upload } = await tus.catch((cause) => {
+			tus = undefined;
+			throw cause;
+		});
+		// Stopped while the upload code was on its way.
+		if (!files.has(item.id)) return;
 		const upload = new Upload(file, {
 			endpoint: '/api/uploads',
 			chunkSize: CHUNK_SIZE,
@@ -102,7 +143,7 @@ async function start(item: UploadItem) {
 				if (response.getHeader('X-Asset-Duplicate') === 'true') duplicate = true;
 			},
 			onSuccess: () => {
-				files.delete(item.id);
+				forget(item.id);
 				update(item.id, { status: duplicate ? 'duplicate' : 'done', loaded: file.size });
 				if (duplicate) existed += 1;
 				else sent += 1;
@@ -117,7 +158,9 @@ async function start(item: UploadItem) {
 
 		// Continue an upload interrupted earlier, for example by a closed tab.
 		const previous = await upload.findPreviousUploads();
+		if (!files.has(item.id)) return;
 		if (previous.length > 0) upload.resumeFromPreviousUpload(previous[0]);
+		running.set(item.id, upload);
 		upload.start();
 	} catch (cause) {
 		// Without this, a failure here would leave the file on "Uploading" forever.

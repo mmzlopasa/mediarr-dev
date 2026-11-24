@@ -32,7 +32,12 @@ data class LocalAsset(
     val name: String,
     val size: Long,
     val createdMs: Long,
+    /** When the file was last written, from MediaStore. A change after it was sent means an edit. */
+    val modifiedMs: Long = 0,
 )
+
+/** The checksum of exactly the bytes that are sent, and how many there are. */
+data class Hashed(val checksum: String, val size: Long)
 
 /** What a finished transfer means for the file. */
 sealed class Outcome {
@@ -40,6 +45,30 @@ sealed class Outcome {
     data class Retry(val reason: String) : Outcome()
     data class Rejected(val reason: String) : Outcome()
     object Unauthorized : Outcome()
+    /** The file could not be read to the end, or changed while it was sent. Not the server's fault. */
+    data class Unreadable(val reason: String) : Outcome()
+}
+
+/** The file ended early, or could not be read, while it was being sent. */
+class FileChanged(message: String) : Exception(message)
+
+/**
+ * Copies exactly [size] bytes, the number that was hashed. Fewer means the file changed since, and
+ * a reading error is the file's, not the network's: neither may count as an unreachable server.
+ */
+fun copyExactly(input: InputStream, output: java.io.OutputStream, size: Long, buffer: Int = 1024 * 1024) {
+    val bytes = ByteArray(buffer)
+    var left = size
+    while (left > 0) {
+        val read = try {
+            input.read(bytes, 0, minOf(bytes.size.toLong(), left).toInt())
+        } catch (cause: java.io.IOException) {
+            throw FileChanged("The file could not be read: ${cause.message ?: cause.javaClass.simpleName}")
+        }
+        if (read < 0) throw FileChanged("The file changed while it was being sent.")
+        output.write(bytes, 0, read)
+        left -= read
+    }
 }
 
 /** The same meaning the iOS code gives to the server's answers. */
@@ -268,6 +297,7 @@ class BackupEngine(context: Context) {
                     MediaStore.MediaColumns.DISPLAY_NAME,
                     MediaStore.MediaColumns.SIZE,
                     MediaStore.MediaColumns.DATE_ADDED,
+                    MediaStore.MediaColumns.DATE_MODIFIED,
                 ),
                 "${MediaStore.MediaColumns.BUCKET_ID} = ?",
                 arrayOf(album.id),
@@ -281,6 +311,7 @@ class BackupEngine(context: Context) {
                         cursor.getString(1) ?: "$id",
                         cursor.getLong(2),
                         cursor.getLong(3) * 1000,
+                        cursor.getLong(4) * 1000,
                     )
                 }
             }
@@ -306,18 +337,24 @@ class BackupEngine(context: Context) {
         }
     }
 
-    private fun sha256(uri: Uri): String? {
+    /**
+     * The original's bytes, as setRequireOriginal gives them: the same the app hashes when it frees
+     * up space. Its length is counted here, as MediaStore's size can be out of date or missing.
+     */
+    private fun sha256(uri: Uri): Hashed? {
         val digest = MessageDigest.getInstance("SHA-256")
         val stream = open(uri) ?: return null
+        var size = 0L
         stream.use { input ->
             val buffer = ByteArray(BUFFER)
             while (true) {
                 val read = input.read(buffer)
                 if (read < 0) break
                 digest.update(buffer, 0, read)
+                size += read
             }
         }
-        return digest.digest().joinToString("") { "%02x".format(it) }
+        return Hashed(digest.digest().joinToString("") { "%02x".format(it) }, size)
     }
 
     private fun serverHasFile(checksum: String): Boolean {
@@ -346,17 +383,19 @@ class BackupEngine(context: Context) {
         }
     }
 
-    private fun upload(asset: LocalAsset, checksum: String): Outcome {
+    private fun upload(asset: LocalAsset, hashed: Hashed): Outcome {
+        val checksum = hashed.checksum
         val connection = URL("$server/api/uploads").openConnection() as HttpURLConnection
         return try {
             connection.requestMethod = "POST"
             connection.doOutput = true
-            connection.setFixedLengthStreamingMode(asset.size)
+            // Streamed as it is read, so a large video never has to fit in memory.
+            connection.setFixedLengthStreamingMode(hashed.size)
             connection.connectTimeout = TIMEOUT_MS
             connection.readTimeout = UPLOAD_TIMEOUT_MS
             connection.setRequestProperty("X-Api-Key", key)
             connection.setRequestProperty("Tus-Resumable", "1.0.0")
-            connection.setRequestProperty("Upload-Length", asset.size.toString())
+            connection.setRequestProperty("Upload-Length", hashed.size.toString())
             connection.setRequestProperty("Content-Type", "application/offset+octet-stream")
             connection.setRequestProperty(
                 "Upload-Metadata",
@@ -369,10 +408,12 @@ class BackupEngine(context: Context) {
                 ),
             )
             val source = open(asset.uri) ?: return Outcome.Retry("The file could not be read.")
-            source.use { input -> connection.outputStream.use { input.copyTo(it, BUFFER) } }
+            source.use { input -> connection.outputStream.use { copyExactly(input, it, hashed.size, BUFFER) } }
             val status = connection.responseCode
             prefs.edit().putBoolean(KEY_UNREACHABLE, false).apply()
             outcomeOf(status)
+        } catch (cause: FileChanged) {
+            Outcome.Unreadable(cause.message ?: "The file could not be read.")
         } catch (cause: java.io.IOException) {
             // No answer from the server; cleared by the next answer of any kind.
             prefs.edit().putBoolean(KEY_UNREACHABLE, true).apply()
@@ -446,6 +487,8 @@ class BackupEngine(context: Context) {
         store.retryFailedAutomatically()
         val assets = assetsToSend().associateBy { it.id }
         if (assets.isEmpty() && currentAlbum() == null && moreAlbums.isEmpty()) return true
+        // A photo edited in place since it was sent is no longer what the server has.
+        store.resendChanged(assets.values.associate { it.id to (it.size to it.modifiedMs) })
         store.add(assets.values.map { it.id to it.createdMs })
         store.forgetPending(assets.keys)
         var sent = 0
@@ -456,7 +499,7 @@ class BackupEngine(context: Context) {
                 store.recordFailure(item.assetId, "The file is no longer in the album.", MAX_ATTEMPTS)
                 continue
             }
-            val checksum = try {
+            val hashed = try {
                 sha256(asset.uri)
             } catch (cause: java.io.IOException) {
                 store.recordFailure(item.assetId, cause.message ?: "The file could not be read.", MAX_ATTEMPTS)
@@ -465,24 +508,24 @@ class BackupEngine(context: Context) {
                 store.markWaiting(item.assetId, WAITING_FOR_LOCATION, System.currentTimeMillis() + WAIT_MS)
                 continue
             }
-            if (checksum == null) {
+            if (hashed == null) {
                 store.recordFailure(item.assetId, "The file could not be read.", MAX_ATTEMPTS)
                 continue
             }
-            store.setUploading(item.assetId, checksum)
-            if (serverHasFile(checksum)) {
-                store.markVerified(item.assetId)
+            store.setUploading(item.assetId, hashed.checksum)
+            if (serverHasFile(hashed.checksum)) {
+                store.markVerified(item.assetId, asset.size, asset.modifiedMs)
                 continue
             }
             val outcome = try {
-                upload(asset, checksum)
+                upload(asset, hashed)
             } catch (_: OriginalUnavailable) {
                 store.markWaiting(item.assetId, WAITING_FOR_LOCATION, System.currentTimeMillis() + WAIT_MS)
                 continue
             }
             when (outcome) {
                 Outcome.Verified -> {
-                    store.markVerified(item.assetId)
+                    store.markVerified(item.assetId, asset.size, asset.modifiedMs)
                     sent += 1
                     progress(sent)
                 }
@@ -491,6 +534,7 @@ class BackupEngine(context: Context) {
                     return false
                 }
                 is Outcome.Rejected -> store.recordFailure(item.assetId, outcome.reason, 1)
+                is Outcome.Unreadable -> store.recordFailure(item.assetId, outcome.reason, MAX_ATTEMPTS)
                 Outcome.Unauthorized -> {
                     prefs.edit().putBoolean(KEY_UNAUTHORIZED, true).apply()
                     store.recoverInterrupted()

@@ -25,7 +25,8 @@
 
 	onMount(async () => {
 		try {
-			memories = await api.memories(today());
+			// A memory with nothing left in it has no picture to show.
+			memories = (await api.memories(today())).filter((memory) => memory.items.length > 0);
 		} catch {
 			failed = true;
 		}

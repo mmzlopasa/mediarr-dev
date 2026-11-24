@@ -1,16 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mediarr_api/api.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import '../l10n/l10n.dart';
 import '../services/backup.dart';
+import '../services/free_space.dart';
 import '../services/session.dart';
 import '../services/settings.dart';
 import '../theme.dart';
-
-const _checkBatch = 1000;
 
 /// Removes from the phone only what the server confirms having at this moment.
 class FreeSpaceScreen extends ConsumerStatefulWidget {
@@ -38,21 +38,13 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
       _error = null;
     });
     try {
-      final session = ref.read(sessionProvider).value!;
-      final verified = await ref.read(backupProvider).verifiedChecksums();
+      final session = ref.read(sessionProvider).value;
+      if (session == null) throw const _CannotAsk();
+      final verified = _lowercase(
+        await ref.read(backupProvider).verifiedChecksums(),
+      );
       final checksums = {for (final list in verified.values) ...list}.toList();
-      final onServer = <String>{};
-      for (var start = 0; start < checksums.length; start += _checkBatch) {
-        final answer = await session.api.checkAssets(
-          ChecksumCheckRequest(
-            checksums: checksums.sublist(
-              start,
-              (start + _checkBatch).clamp(0, checksums.length),
-            ),
-          ),
-        );
-        onServer.addAll(answer?.existing ?? const []);
-      }
+      final onServer = await checksumsOnServer(session.api, checksums);
       final rules = ref.read(settingsProvider).freeSpace;
       final kept = await _idsInAlbums(rules.keepAlbums);
       final now = DateTime.now();
@@ -70,15 +62,32 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
         if (allowed) assets.add(asset);
       }
       if (mounted) setState(() => _assets = assets);
-    } on ApiException {
-      if (mounted) {
-        setState(() => _error = l.freeSpaceScreenServerUnreachable);
-      }
     } on PlatformException {
       if (mounted) {
         setState(() => _error = l.freeSpaceScreenBackupUnreadable);
       }
+    } on Object {
+      // The server did not answer, or answered something else: nothing may go.
+      if (mounted) {
+        setState(() => _error = l.freeSpaceScreenServerUnreachable);
+      }
     }
+  }
+
+  static Map<String, List<String>> _lowercase(Map<String, List<String>> map) =>
+      {
+        for (final entry in map.entries)
+          entry.key: [for (final sum in entry.value) sum.toLowerCase()],
+      };
+
+  /// On Android another app can change a photo in place after it was sent, so the file is read
+  /// again. On iOS the original of a photo never changes: an edit is kept beside it.
+  static Future<String?> _checksumNow(String id) async {
+    if (!Platform.isAndroid) return null;
+    final asset = await AssetEntity.fromId(id);
+    final file = await asset?.originFile;
+    if (file == null) return null;
+    return fileSha256(file.path);
   }
 
   Future<Set<String>> _idsInAlbums(List<String> albumIds) async {
@@ -125,19 +134,34 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted || _busy) return;
+    final session = ref.read(sessionProvider).value;
+    if (session == null) return;
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
+    final chosen = [for (final asset in assets) asset.id];
     try {
-      await PhotoManager.editor.deleteWithIds([
-        for (final asset in assets) asset.id,
-      ]);
-    } on PlatformException {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l.freeSpaceScreenNotRemoved)));
+      // Asked once more just before, as the server or the phone may have changed since.
+      final ids = await stillSafeToRemove(
+        ids: chosen,
+        verified: ref.read(backupProvider).verifiedChecksums,
+        onServer: (checksums) => checksumsOnServer(session.api, checksums),
+        currentChecksum: Platform.isAndroid ? _checksumNow : null,
+      );
+      if (ids.isNotEmpty) await PhotoManager.editor.deleteWithIds(ids);
+      final left = chosen.length - ids.length;
+      if (left > 0) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l.freeSpaceScreenKeptChanged(left))),
+        );
       }
+    } on Object {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.freeSpaceScreenNotRemoved)),
+      );
     }
-    if (mounted) setState(() => _busy = false);
+    if (!mounted) return;
+    setState(() => _busy = false);
     await _load();
   }
 
@@ -171,7 +195,10 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
                 crossAxisSpacing: 3,
               ),
               itemCount: assets.length,
-              itemBuilder: (_, index) => _Thumbnail(asset: assets[index]),
+              itemBuilder: (_, index) => _Thumbnail(
+                key: ValueKey(assets[index].id),
+                asset: assets[index],
+              ),
             ),
           ),
           SafeArea(
@@ -202,6 +229,10 @@ class _FreeSpaceScreenState extends ConsumerState<FreeSpaceScreen> {
       body: body,
     );
   }
+}
+
+class _CannotAsk implements Exception {
+  const _CannotAsk();
 }
 
 class _RulesSheet extends ConsumerStatefulWidget {
@@ -307,16 +338,31 @@ class _RulesSheetState extends ConsumerState<_RulesSheet> {
   }
 }
 
-class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.asset});
+class _Thumbnail extends StatefulWidget {
+  const _Thumbnail({required this.asset, super.key});
 
   final AssetEntity asset;
 
   @override
+  State<_Thumbnail> createState() => _ThumbnailState();
+}
+
+class _ThumbnailState extends State<_Thumbnail> {
+  // Asked once, not again on every rebuild of the grid.
+  late final Future<Uint8List?> _data = widget.asset.thumbnailDataWithSize(
+    const ThumbnailSize.square(200),
+  );
+
+  @override
   Widget build(BuildContext context) => FutureBuilder<Uint8List?>(
-    future: asset.thumbnailDataWithSize(const ThumbnailSize.square(200)),
+    future: _data,
     builder: (_, snapshot) => snapshot.data == null
         ? ColoredBox(color: Palette.bg3)
-        : Image.memory(snapshot.data!, fit: BoxFit.cover),
+        : Image.memory(
+            snapshot.data!,
+            fit: BoxFit.cover,
+            cacheWidth: 200,
+            gaplessPlayback: true,
+          ),
   );
 }

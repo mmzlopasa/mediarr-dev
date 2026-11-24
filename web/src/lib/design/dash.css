@@ -2403,7 +2403,7 @@ html[data-theme='light'] .chat-m.agent {
 	min-height: 1.2em;
 	overflow: visible;
 }
-.ai-tools .tabs.sm {
+.describe-tools .tabs.sm {
 	margin-bottom: 14px;
 }
 @media (max-width: 720px) {
@@ -2412,10 +2412,10 @@ html[data-theme='light'] .chat-m.agent {
 		height: 170px;
 	}
 }
-.ai-tools .tab {
+.describe-tools .tab {
 	white-space: nowrap;
 }
-.tbl :is(th, td).ai-n {
+.tbl :is(th, td).describe-n {
 	text-align: right;
 	white-space: nowrap;
 }

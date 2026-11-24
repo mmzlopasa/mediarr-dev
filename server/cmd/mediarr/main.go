@@ -86,6 +86,29 @@ func run(ctx context.Context, args []string) error {
 	}
 }
 
+// sessionSettings are set on every connection of the server and the worker. Postgres compiles a
+// query it thinks is large to machine code first, which for the queries of a library of 100,000
+// photos took longer than running them did; and a sort of that many rows needs more than the
+// default memory to stay off the disk.
+var sessionSettings = map[string]string{"jit": "off", "work_mem": "16MB"}
+
+func openPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
+	config, err := pgxpool.ParseConfig(databaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("read DATABASE_URL: %w", err)
+	}
+	for name, value := range sessionSettings {
+		if _, set := config.ConnConfig.RuntimeParams[name]; !set {
+			config.ConnConfig.RuntimeParams[name] = value
+		}
+	}
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("open database: %w", err)
+	}
+	return pool, nil
+}
+
 // prepareStorage checks both directories, and remembers that it did so: from then on a missing
 // marker means the disk is not mounted, and starting would write to the wrong disk.
 func prepareStorage(ctx context.Context, cfg config.Config, queries *db.Queries) error {
@@ -162,9 +185,9 @@ func serve(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
-	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	pool, err := openPool(ctx, cfg.DatabaseURL)
 	if err != nil {
-		return fmt.Errorf("open database: %w", err)
+		return err
 	}
 	defer pool.Close()
 
@@ -195,6 +218,8 @@ func serve(ctx context.Context, cfg config.Config) error {
 		Addr:              cfg.ListenAddr,
 		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second,
+		// Uploads and downloads can take hours, so only a connection that sits idle is closed.
+		IdleTimeout: 2 * time.Minute,
 	}
 
 	errs := make(chan error, 1)
@@ -213,9 +238,9 @@ func serve(ctx context.Context, cfg config.Config) error {
 }
 
 func worker(ctx context.Context, cfg config.Config) error {
-	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	pool, err := openPool(ctx, cfg.DatabaseURL)
 	if err != nil {
-		return fmt.Errorf("open database: %w", err)
+		return err
 	}
 	defer pool.Close()
 

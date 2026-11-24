@@ -146,7 +146,7 @@ class _CleanupScreenState extends ConsumerState<CleanupScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
     setState(() => _working = true);
     try {
       final ids = [for (final item in chosen) item.id];

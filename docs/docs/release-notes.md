@@ -8,8 +8,16 @@ The server and the web come as one version, such as `v0.2.40`. The apps have ver
 
 ## Apps
 
+### app-v0.10.3
+- A button saves photos to the phone, in the viewer and when choosing several.
+- Free up space asks the server again right before it removes anything, and on Android checks the photo on the phone again, so nothing that changed or is missing on the server is removed.
+- Live Photos uploaded by hand send their video too, and on an iPhone a RAW+JPEG photo backs up its RAW as well.
+- Android: backup notices a photo edited after it was sent, other apps cannot pass the app its own private files, and the widget handles large pictures.
+- Chromecast, DLNA and finding the server on Wi-Fi are hardened against devices that answer badly, and many places where the app could stop or spin are fixed.
+- Mediarr Dev has the same icon as Mediarr.
+
 ### app-v0.10.2
-- Backup keeps "only new photos" when albums change, waits instead of giving up when the server cannot be reached, retries failed files by itself, and waits for Wi-Fi for photos that are only in iCloud.
+- Backup keeps "only new photos" when albums change, waits instead of giving up when the server cannot be reached, retries failed files by itself, and waits for Wi-Fi for photos the iPhone keeps only online.
 - On Android, backup asks for access to photo locations and never sends a copy without them. Keys are kept encrypted.
 - The home screen widget shows its photo also on a tinted home screen, in your language, and is cleared when you sign out.
 - A sign-in link from outside the app asks before signing in to a server.
@@ -25,6 +33,16 @@ Everything from the server versions up to v0.2.40: culling, smart memories, expo
 Everything up to v0.2.35: duplicates and Clean up, dates and places of many photos, signing in with a QR code, administration in the app, four languages, and private links.
 
 ## Server and web
+
+### v0.2.44
+- The descriptions a local model writes are called automatic descriptions. **If `COMPOSE_PROFILES` in `.env` lists `ai`, change it to `descriptions`.**
+- The server sends security headers with every answer, and a policy that lets the web app load only its own code.
+- The phone's album sync and backup report are accepted again for large libraries; they were refused as too big.
+- Passwords asked again when signed in, and many inputs, are limited; creating an album can no longer leave half an album behind.
+- Faster on large libraries: lists of photos up to four times faster, the web app loads half as much, and a nightly clean-up that stopped after a minute now finishes.
+- The database has its own network that only Mediarr reaches, logs are rotated, and memory limits can be set in `.env`. Download `docker-compose.yml` again when you upgrade.
+- The service for smart search serves one request per model at a time where that matters, and starts with less in its image.
+- New [Security](/administration/security) page, and corrections across the docs.
 
 ### v0.2.43
 - [A dashboard for your services](/administration/monitoring#a-dashboard-for-your-services) can read the numbers of the whole server from `/api/stats`, with a key that can only read: photos, videos, the space they take, the newest upload and failed background work.

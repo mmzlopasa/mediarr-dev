@@ -1474,5 +1474,6 @@
   "backupCardServerAway": "Der Server ist nicht erreichbar. Die Sicherung läuft von selbst weiter, sobald er wieder antwortet.",
   "backupCardWaitingForWifi": "{count, plural, =1{1 Foto wartet auf WLAN: Es ist nur in iCloud, und die Sicherung darf nur WLAN nutzen.} other{{count} Fotos warten auf WLAN: Sie sind nur in iCloud, und die Sicherung darf nur WLAN nutzen.}}",
   "backupCardRetryingSoon": "{count, plural, =1{1 Datei ging nicht durch und wird in Kürze von selbst erneut versucht.} other{{count} Dateien gingen nicht durch und werden in Kürze von selbst erneut versucht.}}",
-  "backupCardFailedRetryLater": "Fehlgeschlagene Dateien werden nach einem Tag von selbst erneut versucht."
+  "backupCardFailedRetryLater": "Fehlgeschlagene Dateien werden nach einem Tag von selbst erneut versucht.",
+  "freeSpaceScreenKeptChanged": "{count, plural, =1{1 Foto wurde behalten: Es hat sich geändert oder ist nicht mehr auf dem Server.} other{{count} Fotos wurden behalten: Sie haben sich geändert oder sind nicht mehr auf dem Server.}}"
 }

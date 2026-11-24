@@ -24,10 +24,13 @@ import (
 )
 
 const (
-	auditKeptFor     = 365 * 24 * time.Hour
-	maxAttempts      = 5
-	staleUploadAge   = 7 * 24 * time.Hour
-	cleanupInterval  = 6 * time.Hour
+	auditKeptFor    = 365 * 24 * time.Hour
+	maxAttempts     = 5
+	staleUploadAge  = 7 * 24 * time.Hour
+	cleanupInterval = 6 * time.Hour
+	cleanupTimeout  = time.Hour
+	// toolJobTimeout is for jobs that run exiftool, which may take toolTimeout on a large video.
+	toolJobTimeout   = 2 * toolTimeout
 	shutdownDeadline = 30 * time.Second
 	videoQueue       = "video"
 	// Longer than any job's timeout, so a killed worker's jobs restart without cutting off a slow one.
@@ -253,6 +256,8 @@ type metadataWorker struct {
 	*deps
 }
 
+func (w *metadataWorker) Timeout(*river.Job[MetadataArgs]) time.Duration { return toolJobTimeout }
+
 func (w *metadataWorker) Work(ctx context.Context, job *river.Job[MetadataArgs]) error {
 	id := toPG(job.Args.AssetID)
 	asset, err := w.queries.GetAsset(ctx, id)
@@ -397,6 +402,8 @@ type sidecarWorker struct {
 	*deps
 }
 
+func (w *sidecarWorker) Timeout(*river.Job[SidecarArgs]) time.Duration { return toolJobTimeout }
+
 func (w *sidecarWorker) Work(ctx context.Context, job *river.Job[SidecarArgs]) error {
 	id := toPG(job.Args.AssetID)
 	asset, err := w.queries.GetAsset(ctx, id)
@@ -505,40 +512,52 @@ type cleanupWorker struct {
 	*deps
 }
 
+// Timeout leaves room for naming the places of a whole library and emptying a full trash, which
+// take longer than the queue's minute.
+func (w *cleanupWorker) Timeout(*river.Job[CleanupArgs]) time.Duration { return cleanupTimeout }
+
+// Work runs every step even when one fails, so that one stuck step does not stop the others from
+// ever running. The failures are returned together, and the job is tried again.
 func (w *cleanupWorker) Work(ctx context.Context, _ *river.Job[CleanupArgs]) error {
-	if err := w.queries.DeleteExpiredSessions(ctx); err != nil {
-		return err
+	now := time.Now()
+	return runSteps(ctx, []cleanupStep{
+		{"sessions", func() error { return w.queries.DeleteExpiredSessions(ctx) }},
+		{"vault sessions", func() error { return w.queries.DeleteExpiredVaultSessions(ctx) }},
+		{"trash", func() error { return PurgeExpiredTrash(ctx, w.queries, w.opts.CachePath, now) }},
+		{"places", func() error { return GeocodePending(ctx, w.queries) }},
+		{"audit", func() error {
+			return w.queries.DeleteOldAudit(ctx, pgtype.Timestamptz{Time: now.Add(-auditKeptFor), Valid: true})
+		}},
+		// Who opened a link is kept for 90 days.
+		{"link visits", func() error { return w.queries.DeleteOldLinkVisits(ctx) }},
+		{"security events", func() error {
+			return w.queries.DeleteOldSecurityEvents(ctx, pgtype.Timestamptz{Time: now.Add(-auditKeptFor), Valid: true})
+		}},
+		{"stories", func() error { return removeOldStories(ctx, w.queries, now) }},
+		{"imports", func() error { return RemoveStaleImports(ctx, w.queries, w.opts.LibraryPath) }},
+		{"exports", func() error { return CleanExports(ctx, w.queries, w.opts.CachePath, now) }},
+		{"kept backups", func() error { keepHousekeeping(ctx, w.queries, w.opts.LibraryPath); return nil }},
+		{"uploads", func() error { return removeStaleUploads(storage.TmpDir(w.opts.LibraryPath), now.Add(-staleUploadAge)) }},
+	})
+}
+
+type cleanupStep struct {
+	name string
+	run  func() error
+}
+
+func runSteps(ctx context.Context, steps []cleanupStep) error {
+	var failed []error
+	for _, step := range steps {
+		if err := ctx.Err(); err != nil {
+			return errors.Join(append(failed, err)...)
+		}
+		if err := step.run(); err != nil {
+			slog.Warn("a cleanup step failed", "step", step.name, "error", err)
+			failed = append(failed, fmt.Errorf("%s: %w", step.name, err))
+		}
 	}
-	if err := w.queries.DeleteExpiredVaultSessions(ctx); err != nil {
-		return err
-	}
-	if err := PurgeExpiredTrash(ctx, w.queries, w.opts.CachePath, time.Now()); err != nil {
-		return err
-	}
-	if err := GeocodePending(ctx, w.queries); err != nil {
-		return err
-	}
-	if err := w.queries.DeleteOldAudit(ctx, pgtype.Timestamptz{Time: time.Now().Add(-auditKeptFor), Valid: true}); err != nil {
-		return err
-	}
-	// Who opened a link is kept for 90 days.
-	if err := w.queries.DeleteOldLinkVisits(ctx); err != nil {
-		return err
-	}
-	if err := w.queries.DeleteOldSecurityEvents(ctx, pgtype.Timestamptz{Time: time.Now().Add(-auditKeptFor), Valid: true}); err != nil {
-		return err
-	}
-	if err := removeOldStories(ctx, w.queries, time.Now()); err != nil {
-		return err
-	}
-	if err := RemoveStaleImports(ctx, w.queries, w.opts.LibraryPath); err != nil {
-		return err
-	}
-	if err := CleanExports(ctx, w.queries, w.opts.CachePath, time.Now()); err != nil {
-		return err
-	}
-	keepHousekeeping(ctx, w.queries, w.opts.LibraryPath)
-	return removeStaleUploads(storage.TmpDir(w.opts.LibraryPath), time.Now().Add(-staleUploadAge))
+	return errors.Join(failed...)
 }
 
 // removeStaleUploads deletes uploads abandoned before the cutoff, so they do not fill the disk.

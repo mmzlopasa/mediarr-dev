@@ -38,7 +38,7 @@ Then the copies go to the trash. **Not duplicates** stops proposing the group.
 | --- | --- |
 | Blurry photos | Photos with very few sharp edges. A slider sets how strict. |
 | Screenshots | By their name in many languages, by the mark an iPhone leaves, or a PNG without a camera in the shape of a phone's screen. |
-| Large videos | Videos larger than 250 MB, 500 MB, 1 GB or 2 GB, the largest first. |
+| Large videos | Videos larger than 250 MB, 500 MB (the default), 1 GB or 2 GB, the largest first. |
 | Bursts | The other shots of a burst. The best shot stays. A RAW with its JPEG is not a burst. |
 
 Each kind shows how many items it has and how much space they take. Everything is ticked except favorites and photos in albums, which are shown with a label. Tap to tick or untick. In the app, hold a picture to look at it; on the web, videos have **Watch**.

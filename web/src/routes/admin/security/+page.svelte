@@ -33,12 +33,16 @@
 
 	async function save(event: SubmitEvent) {
 		event.preventDefault();
+		if (saving) return;
 		saving = true;
 		try {
 			use(
 				await api.setSecurity({
 					ipAllowlistEnabled: ipEnabled,
-					ipAllowlist: ipList.split('\n'),
+					ipAllowlist: ipList
+						.split('\n')
+						.map((line) => line.trim())
+						.filter(Boolean),
 					deviceApprovalEnabled: deviceApproval
 				})
 			);

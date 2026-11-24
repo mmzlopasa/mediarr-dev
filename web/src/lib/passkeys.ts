@@ -1,4 +1,5 @@
 import { ApiError } from './api.ts';
+import { t } from './i18n.svelte.ts';
 
 type Begin = {
 	challengeId: string;
@@ -17,7 +18,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 	});
 	if (!response.ok) {
 		const data = await response.json().catch(() => ({}));
-		throw new ApiError(response.status, data.message ?? 'Something went wrong', false);
+		throw new ApiError(response.status, data.message ?? t('common.somethingWentWrong'), false);
 	}
 	return (response.status === 204 ? undefined : await response.json()) as T;
 }
@@ -27,7 +28,7 @@ export async function registerPasskey(name: string, password: string) {
 	const created = await navigator.credentials.create({
 		publicKey: PublicKeyCredential.parseCreationOptionsFromJSON(begun.options.publicKey)
 	});
-	if (!created) throw new Error('No passkey was made.');
+	if (!created) throw new Error(t('passkeys.noneMade'));
 	await post('/api/me/passkeys/finish', {
 		challengeId: begun.challengeId,
 		name,
@@ -40,7 +41,7 @@ export async function signInWithPasskey() {
 	const found = await navigator.credentials.get({
 		publicKey: PublicKeyCredential.parseRequestOptionsFromJSON(begun.options.publicKey)
 	});
-	if (!found) throw new Error('No passkey was chosen.');
+	if (!found) throw new Error(t('passkeys.noneChosen'));
 	await post('/api/auth/passkey/finish', {
 		challengeId: begun.challengeId,
 		credential: (found as PublicKeyCredential).toJSON()

@@ -155,7 +155,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
       l.duplicatesScreenKeptTakesOver,
       l.duplicatesScreenResolve,
     );
-    if (!confirmed) return;
+    if (!confirmed || !mounted) return;
     setState(() => _working = true);
     try {
       await _session.api.resolveDuplicates(DuplicateResolve(groups: [choice]));

@@ -38,6 +38,7 @@ const (
 	minFreeDiskBytes  = 1 << 30
 	loginFailuresUser = 10
 	loginFailuresIP   = 50
+	confirmFailures   = 10
 	maxJSONBody       = 64 * 1024
 )
 
@@ -84,6 +85,7 @@ type apiServer struct {
 	security          atomic.Pointer[securityRules]
 	userLimiter       *auth.Limiter
 	ipLimiter         *auth.Limiter
+	confirmations     *auth.Limiter
 	linkPasswords     *auth.Limiter
 	linkUploads       *auth.Limiter
 	vaultPins         *auth.Lockout
@@ -112,6 +114,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		Deps:              deps,
 		userLimiter:       auth.NewLimiter(loginFailuresUser, loginWindow),
 		ipLimiter:         auth.NewLimiter(loginFailuresIP, loginWindow),
+		confirmations:     auth.NewLimiter(confirmFailures, loginWindow),
 		linkPasswords:     auth.NewLimiter(linkPasswordFailures, loginWindow),
 		linkUploads:       auth.NewLimiter(linkUploadsPerHour, time.Hour),
 		vaultPins:         auth.NewLockout(vaultPinFailures, loginWindow, vaultPinMaxLockout),
@@ -147,6 +150,7 @@ func NewHandler(deps Deps) (http.Handler, error) {
 	r.Use(traced)
 	r.Use(server.metrics.observe)
 	r.Use(middleware.Recoverer)
+	r.Use(securityHeaders(embeddedPage(webui.Handler())))
 	r.Use(trustProxies(deps.ProxyHops))
 	if server.queries != nil {
 		r.Use(server.enforceIPAllowlist)

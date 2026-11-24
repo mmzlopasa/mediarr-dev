@@ -23,6 +23,7 @@ import (
 	"github.com/riverqueue/river/rivertype"
 
 	"github.com/mediarr-app/mediarr/server/db"
+	"github.com/mediarr-app/mediarr/server/internal/upgrade"
 )
 
 const (
@@ -104,7 +105,7 @@ func dumpDatabase(ctx context.Context, databaseURL, dest string) error {
 	if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil {
 		return err
 	}
-	out, err := exec.CommandContext(ctx, "pg_dump", "--format=custom", "--file="+dest, "--dbname="+databaseURL).CombinedOutput()
+	out, err := upgrade.PostgresCommand(ctx, databaseURL, "pg_dump", "--format=custom", "--file="+dest).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("pg_dump: %s", truncate(strings.TrimSpace(string(out)), maxToolMessage))
 	}
@@ -147,7 +148,7 @@ func RunBackup(ctx context.Context, settings *BackupSettings, databaseURL, libra
 }
 
 func restoreDatabase(ctx context.Context, databaseURL, dump string) error {
-	out, err := exec.CommandContext(ctx, "pg_restore", "--clean", "--if-exists", "--no-owner", "--dbname="+databaseURL, dump).CombinedOutput()
+	out, err := upgrade.PostgresCommand(ctx, databaseURL, "pg_restore", "--clean", "--if-exists", "--no-owner", dump).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("pg_restore: %s", truncate(strings.TrimSpace(string(out)), maxToolMessage))
 	}

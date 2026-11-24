@@ -1,3 +1,4 @@
+import Photos
 import XCTest
 
 @testable import Runner
@@ -362,5 +363,81 @@ final class BackupRequestTests: XCTestCase {
     XCTAssertEqual(
       BackupEngine.sha256(of: file),
       "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+  }
+}
+
+final class BackupOriginalTests: XCTestCase {
+  func testAnEditedPhotoSendsTheOriginalNotTheRenderedCopy() {
+    let types: [PHAssetResourceType] = [.fullSizePhoto, .adjustmentData, .photo]
+    XCTAssertEqual(BackupEngine.resourceType(in: types, part: BackupPart.main, isVideo: false), .photo)
+    XCTAssertEqual(
+      BackupEngine.resourceType(in: [.fullSizeVideo, .video], part: BackupPart.main, isVideo: true), .video)
+  }
+
+  func testALivePhotoSendsItsOriginalVideo() {
+    let types: [PHAssetResourceType] = [.photo, .pairedVideo, .fullSizePairedVideo, .fullSizePhoto]
+    XCTAssertEqual(
+      BackupEngine.resourceType(in: types, part: BackupPart.paired, isVideo: false), .pairedVideo)
+    XCTAssertEqual(BackupEngine.extraParts(in: types, isVideo: false), [BackupPart.paired])
+  }
+
+  func testTheRawOfARawAndJpegPhotoIsSentToo() {
+    let types: [PHAssetResourceType] = [.photo, .alternatePhoto]
+    XCTAssertEqual(BackupEngine.extraParts(in: types, isVideo: false), [BackupPart.alternate])
+    XCTAssertEqual(
+      BackupEngine.resourceType(in: types, part: BackupPart.alternate, isVideo: false), .alternatePhoto)
+    XCTAssertEqual(BackupEngine.resourceType(in: types, part: BackupPart.main, isVideo: false), .photo)
+    // Without a JPEG the RAW is the photo itself, and nothing is sent twice.
+    XCTAssertEqual(BackupEngine.extraParts(in: [.alternatePhoto], isVideo: false), [])
+  }
+
+  func testAnEditsOwnDataIsNeverSentAsThePhoto() {
+    XCTAssertNil(BackupEngine.resourceType(in: [.adjustmentData], part: BackupPart.main, isVideo: false))
+    XCTAssertEqual(
+      BackupEngine.resourceType(in: [.fullSizePhoto], part: BackupPart.main, isVideo: false), .fullSizePhoto)
+  }
+}
+
+final class InputCheckTests: XCTestCase {
+  func testServerAddresses() {
+    for good in ["http://192.168.1.5:9851", "https://photos.example.com", "http://host/mediarr/"] {
+      XCTAssertTrue(BackupRequest.isServerAddress(good), good)
+    }
+    for bad in [
+      "", "192.168.1.5:9851", "ftp://host", "file:///etc/passwd", "http://", "http://u:p@host",
+      "http://host?x=1", "http://host#x", "javascript:alert(1)",
+    ] {
+      XCTAssertFalse(BackupRequest.isServerAddress(bad), bad)
+    }
+    XCTAssertEqual(BackupRequest.trimmedServer("http://host:9851//"), "http://host:9851")
+  }
+
+  func testIDsThatGoIntoAPath() {
+    XCTAssertTrue(BackupRequest.isPlainID("0f8fad5b-d9cb-469f-a165-70867728950e"))
+    for bad in ["", "../x", "a/b", "a?b", "a b", "č", String(repeating: "a", count: 65)] {
+      XCTAssertFalse(BackupRequest.isPlainID(bad), bad)
+    }
+  }
+
+  func testOnlyFilesInTheAppsOwnFoldersAreTakenFromAnotherApp() throws {
+    let home = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+    let inbox = home.appendingPathComponent("Documents/Inbox", isDirectory: true)
+    try FileManager.default.createDirectory(at: inbox, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: home) }
+    let file = inbox.appendingPathComponent("photo.jpg")
+    try Data("x".utf8).write(to: file)
+    let outside = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+    try Data("x".utf8).write(to: outside)
+    defer { try? FileManager.default.removeItem(at: outside) }
+
+    XCTAssertTrue(SharedFiles.mayReceive(file, home: home.path))
+    XCTAssertFalse(SharedFiles.mayReceive(outside, home: home.path))
+    XCTAssertFalse(
+      SharedFiles.mayReceive(
+        inbox.appendingPathComponent("../../../\(outside.lastPathComponent)"), home: home.path))
+    XCTAssertFalse(SharedFiles.mayReceive(inbox, home: home.path))
+    XCTAssertFalse(SharedFiles.mayReceive(URL(string: "https://example.com/a.jpg")!, home: home.path))
+    // A folder whose name only starts the same is not inside.
+    XCTAssertFalse(SharedFiles.mayReceive(file, home: home.path + "-other"))
   }
 }

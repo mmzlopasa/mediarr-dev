@@ -33,11 +33,15 @@
 	const top = $derived(albums?.filter((album) => !album.parentId));
 
 	async function load() {
+		const asked = sort;
 		try {
-			albums = await api.albums(sort);
+			const next = await api.albums(asked);
+			// An answer for an order that is no longer chosen is not shown.
+			if (asked !== sort) return;
+			albums = next;
 			failed = false;
 		} catch {
-			failed = true;
+			if (asked === sort) failed = true;
 		}
 	}
 
@@ -53,6 +57,7 @@
 
 	async function create(event: SubmitEvent) {
 		event.preventDefault();
+		if (busy) return;
 		busy = true;
 		try {
 			await api.createAlbum({ title, description, rules: smart ? rules : undefined });

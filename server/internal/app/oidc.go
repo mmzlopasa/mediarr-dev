@@ -40,6 +40,9 @@ const (
 	// oidcAppReturn leaves mediarr:// to sign-in links, which the phone's camera opens in the app.
 	oidcAppReturn = "mediarr-sso://oidc"
 	maxShortLived = 10000
+	// maxAppChallenge is far above the 43 characters of a SHA-256 in base64, and keeps what anyone can
+	// leave in memory small.
+	maxAppChallenge = 128
 )
 
 // shortLived holds what a sign-in needs between two of its steps, and only for a moment.
@@ -186,6 +189,10 @@ func (s *apiServer) StartOIDC(w http.ResponseWriter, r *http.Request, params api
 	}
 	if !settings.enabled() {
 		writeError(w, http.StatusNotFound, "single sign-on is not turned on")
+		return
+	}
+	if params.AppChallenge != nil && len(*params.AppChallenge) > maxAppChallenge {
+		writeError(w, http.StatusBadRequest, "the app's challenge is too long")
 		return
 	}
 	config, _, err := s.oauthConfig(ctx, r, &settings)
@@ -344,7 +351,10 @@ func (s *apiServer) FinishOIDC(w http.ResponseWriter, r *http.Request, params ap
 		return
 	}
 	flow, ok := s.oidcFlows.take(cookie.Value)
-	http.SetCookie(w, &http.Cookie{Name: oidcCookie, Path: oidcCallbackPath, MaxAge: -1})
+	http.SetCookie(w, &http.Cookie{
+		Name: oidcCookie, Path: oidcCallbackPath, MaxAge: -1,
+		HttpOnly: true, SameSite: http.SameSiteLaxMode, Secure: isHTTPS(r),
+	})
 	if !ok || params.State == nil || subtle.ConstantTimeCompare([]byte(*params.State), []byte(flow.state)) != 1 || params.Code == nil {
 		slog.Warn("a single sign-on came back without what was sent")
 		http.Redirect(w, r, oidcFailureURL(&flow), http.StatusFound)

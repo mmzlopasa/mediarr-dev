@@ -38,7 +38,9 @@ const (
 	// Long enough for the model to load again after a quiet period, which takes up to about 12 s.
 	textDeadline  = 20 * time.Second
 	maxPersonName = 100
-	termsFresh    = time.Minute
+	// maxSearchChoices is how many people or tags one search may name.
+	maxSearchChoices = 20
+	termsFresh       = time.Minute
 )
 
 var yearWord = regexp.MustCompile(`^(19|20)[0-9]{2}$`)
@@ -384,6 +386,16 @@ func (s *apiServer) SearchAssets(w http.ResponseWriter, r *http.Request, params 
 	query := trimmed(params.Q)
 	if len(query) > maxQueryLength {
 		writeError(w, http.StatusBadRequest, "the search may have at most 500 characters")
+		return
+	}
+	for _, value := range []*string{params.Place, params.Camera, params.Lens} {
+		if len(trimmed(value)) > maxQueryLength {
+			writeError(w, http.StatusBadRequest, "a filter may have at most 500 characters")
+			return
+		}
+	}
+	if (params.Tag != nil && len(*params.Tag) > maxSearchChoices) || (params.Person != nil && len(*params.Person) > maxSearchChoices) {
+		writeError(w, http.StatusBadRequest, "choose at most 20 people and 20 tags")
 		return
 	}
 	ctx := r.Context()

@@ -43,10 +43,17 @@ class WidgetStore(context: Context) {
 
     /** The pictures kept, as files, in the order they were chosen. */
     val pictures: List<File>
-        get() = prefs.getString(KEY_PICTURES, null)?.let { raw ->
-            val list = JSONArray(raw)
-            (0 until list.length()).map { File(folder, list.getString(it)) }.filter { it.isFile }
-        } ?: emptyList()
+        get() = try {
+            prefs.getString(KEY_PICTURES, null)?.let { raw ->
+                val list = JSONArray(raw)
+                // Only plain names inside the folder.
+                (0 until list.length()).map { list.getString(it) }
+                    .filter { it.isNotEmpty() && !it.contains('/') && it != "." && it != ".." }
+                    .map { File(folder, it) }.filter { it.isFile }
+            } ?: emptyList()
+        } catch (_: org.json.JSONException) {
+            emptyList()
+        }
 
     fun configure(server: String, key: String, albumId: String, title: String) {
         prefs.edit().putString(KEY_SERVER, server)
@@ -87,7 +94,7 @@ class AlbumWidget : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_root, open)
             val picture = pictures.getOrNull(((System.currentTimeMillis() / HOUR_MS) % pictures.size.coerceAtLeast(1)).toInt())
-            val bitmap = picture?.let { BitmapFactory.decodeFile(it.path) }
+            val bitmap = picture?.let(::decode)
             if (bitmap != null) {
                 views.setImageViewBitmap(R.id.widget_picture, bitmap)
                 views.setViewVisibility(R.id.widget_picture, View.VISIBLE)
@@ -113,6 +120,19 @@ class AlbumWidget : AppWidgetProvider() {
 
     companion object {
         private const val HOUR_MS = 60 * 60 * 1000L
+        /** Well under what a widget may be sent: a larger picture would leave it blank or fail. */
+        private const val MAX_SIDE = 800
+
+        /** A kept picture, no larger than a widget needs; null if it cannot be read. */
+        private fun decode(file: File): Bitmap? = try {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(file.path, bounds)
+            var sample = 1
+            while (bounds.outWidth / (sample * 2) >= MAX_SIDE || bounds.outHeight / (sample * 2) >= MAX_SIDE) sample *= 2
+            BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = sample })
+        } catch (_: OutOfMemoryError) {
+            null
+        }
 
         /** Draws every widget again, after the album or its pictures changed. */
         fun refresh(context: Context) {
@@ -134,14 +154,18 @@ class WidgetSync(context: Context, params: WorkerParameters) : Worker(context, p
             val months = JSONObject(get("$server/api/albums/$album/buckets", key).decodeToString())
                 .optJSONArray("buckets") ?: JSONArray()
             val ids = mutableListOf<String>()
+            // An id goes into a path and a file name, so only what the server's ids look like.
+            fun plain(id: String) = id.isNotEmpty() && id.length <= 64 && id.all { it.isLetterOrDigit() || it == '-' }
             for (i in 0 until months.length()) {
                 if (ids.size >= CANDIDATES) break
                 val month = months.getJSONObject(i).getString("month")
+                if (!month.all { it.isLetterOrDigit() || it == '-' }) continue
                 val items = JSONObject(get("$server/api/albums/$album/buckets/$month", key).decodeToString())
                     .optJSONArray("items") ?: continue
                 for (j in 0 until items.length()) {
                     val item = items.getJSONObject(j)
-                    if (item.optString("kind") == "photo") ids += item.getString("id")
+                    val id = item.optString("id")
+                    if (item.optString("kind") == "photo" && plain(id)) ids += id
                 }
             }
             val names = mutableListOf<String>()
@@ -151,15 +175,12 @@ class WidgetSync(context: Context, params: WorkerParameters) : Worker(context, p
                 val file = File(store.folder, name)
                 if (!file.isFile) {
                     val bytes = get("$server/api/assets/$id/thumbnail?size=large", key)
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: continue
-                    // Small enough for a widget, which has little memory to draw with.
-                    val scale = MAX_SIDE.toFloat() / maxOf(bitmap.width, bitmap.height)
-                    val sized = if (scale < 1f) {
-                        Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt(), (bitmap.height * scale).toInt(), true)
-                    } else {
-                        bitmap
-                    }
-                    file.outputStream().use { sized.compress(Bitmap.CompressFormat.JPEG, QUALITY, it) }
+                    val bitmap = small(bytes) ?: continue
+                    // Written beside it and renamed, so a stopped worker never leaves half a picture.
+                    val part = File(store.folder, "$name.part")
+                    part.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, QUALITY, it) }
+                    if (!part.renameTo(file)) part.delete()
+                    bitmap.recycle()
                 }
                 names += name
             }
@@ -170,7 +191,27 @@ class WidgetSync(context: Context, params: WorkerParameters) : Worker(context, p
             Result.retry()
         } catch (_: org.json.JSONException) {
             Result.retry()
+        } catch (_: OutOfMemoryError) {
+            Result.retry()
         }
+    }
+
+    /** Decoded no larger than needed, so a huge picture never has to fit in memory whole. */
+    private fun small(bytes: ByteArray): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        while (bounds.outWidth / (sample * 2) >= MAX_SIDE || bounds.outHeight / (sample * 2) >= MAX_SIDE) sample *= 2
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+            ?: return null
+        val scale = MAX_SIDE.toFloat() / maxOf(bitmap.width, bitmap.height)
+        if (scale >= 1f) return bitmap
+        val sized = Bitmap.createScaledBitmap(
+            bitmap, (bitmap.width * scale).toInt().coerceAtLeast(1), (bitmap.height * scale).toInt().coerceAtLeast(1), true,
+        )
+        if (sized !== bitmap) bitmap.recycle()
+        return sized
     }
 
     private fun get(url: String, key: String): ByteArray {
@@ -180,7 +221,17 @@ class WidgetSync(context: Context, params: WorkerParameters) : Worker(context, p
             connection.readTimeout = TIMEOUT_MS
             connection.setRequestProperty("X-Api-Key", key)
             if (connection.responseCode != 200) throw java.io.IOException("the server answered ${connection.responseCode}")
-            connection.inputStream.use { it.readBytes() }
+            connection.inputStream.use { input ->
+                val out = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(64 * 1024)
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) break
+                    out.write(buffer, 0, read)
+                    if (out.size() > MAX_BYTES) throw java.io.IOException("the answer is too large")
+                }
+                out.toByteArray()
+            }
         } finally {
             connection.disconnect()
         }
@@ -192,6 +243,8 @@ class WidgetSync(context: Context, params: WorkerParameters) : Worker(context, p
         private const val MAX_SIDE = 800
         private const val QUALITY = 85
         private const val TIMEOUT_MS = 20_000
+        /** More than any preview or list the widget asks for. */
+        private const val MAX_BYTES = 32 * 1024 * 1024
         private const val NOW = "mediarr-widget-now"
         private const val DAILY = "mediarr-widget-daily"
 

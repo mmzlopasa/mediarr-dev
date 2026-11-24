@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -577,4 +578,100 @@ void main() {
     // Discovery is still running; it is left to end on its own.
     await tester.pump(const Duration(seconds: 5));
   });
+
+  group('a hostile network', () {
+    test('a message claiming to be huge is refused, not kept', () {
+      final framer = CastFramer();
+      expect(
+        () => framer.add([0x7f, 0xff, 0xff, 0xff, 1, 2, 3]),
+        throwsFormatException,
+      );
+    });
+
+    test('a broken message is a format error, not a crash', () {
+      expect(
+        () => CastMessage.decode(Uint8List.fromList([0x12, 0x7f, 0x41])),
+        throwsFormatException,
+      );
+      expect(
+        () => CastMessage.decode(Uint8List.fromList([0x80, 0x80])),
+        throwsFormatException,
+      );
+    });
+
+    test('a payload that is not an object reads as empty', () {
+      const message = CastMessage(
+        source: 'a',
+        destination: 'b',
+        namespace: 'c',
+        payload: '[1,2]',
+      );
+      expect(message.json, isEmpty);
+      const broken = CastMessage(
+        source: 'a',
+        destination: 'b',
+        namespace: 'c',
+        payload: '{',
+      );
+      expect(broken.json, isEmpty);
+    });
+
+    test('a description pointing outside the home network is not a TV', () {
+      expect(
+        rendererFromDescription(
+          'http://192.168.1.20/d.xml',
+          '<root><URLBase>http://example.com/</URLBase><device><friendlyName>TV</friendlyName>'
+              '<serviceList><service><serviceType>urn:schemas-upnp-org:service:AVTransport:1'
+              '</serviceType><controlURL>/avt</controlURL></service></serviceList></device></root>',
+        ),
+        isNull,
+      );
+    });
+
+    test('a description too big to be one is not read', () async {
+      final client = MockClient(
+        (request) async => http.Response('x' * (600 * 1024), 200),
+      );
+      expect(
+        await readDescription(client, Uri.parse('http://192.168.1.20/d.xml')),
+        isNull,
+      );
+    });
+
+    test(
+      'a TV that does not answer play or seek leaves the bar as it was',
+      () async {
+        final tv = _SilentTv();
+        final container = ProviderContainer(
+          overrides: [
+            tvProvider.overrideWith(() => TvController(connector: (_) => tv)),
+          ],
+        );
+        addTearDown(container.dispose);
+        final controller = container.read(tvProvider.notifier);
+        await controller.start(
+          FakeCastServer(),
+          livingRoom,
+          const TvAsset(video, video: true),
+        );
+        final before = container.read(tvProvider).playing;
+        await controller.playOrPause();
+        expect(container.read(tvProvider).playing, before);
+        await controller.seek(const Duration(seconds: 3));
+        controller.preview(const Duration(seconds: 9));
+        expect(container.read(tvProvider).position, const Duration(seconds: 9));
+      },
+    );
+  });
+}
+
+class _SilentTv extends FakeTv {
+  @override
+  Future<void> play() async => throw const TvException('no answer');
+
+  @override
+  Future<void> pause() async => throw const TvException('no answer');
+
+  @override
+  Future<void> seek(Duration to) async => throw const TvException('no answer');
 }

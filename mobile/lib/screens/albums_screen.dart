@@ -474,7 +474,9 @@ class _NewAlbumSheetState extends State<_NewAlbumSheet> {
       );
       navigator.pop(true);
     } on ApiException catch (cause) {
-      setState(() => _error = cause.message ?? l.albumsScreenNotCreated);
+      if (mounted) {
+        setState(() => _error = cause.message ?? l.albumsScreenNotCreated);
+      }
     }
   }
 

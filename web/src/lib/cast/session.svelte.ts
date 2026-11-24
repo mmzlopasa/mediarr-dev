@@ -159,7 +159,6 @@ export async function startChromecast(id: string) {
 async function begin(target: Casting['target'], device: string, id: string) {
 	if (state) await stopCasting();
 	const session = await api.startCast([id]);
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- as above
 	sent = new Map(session.media.map((media) => [media.id, media]));
 	state = {
 		target,

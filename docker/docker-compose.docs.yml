@@ -2,7 +2,7 @@ name: mediarr-docs
 
 services:
   docs:
-    image: nginx:alpine
+    image: nginx:1.30-alpine
     ports:
       - "127.0.0.1:9856:80"
     volumes:
@@ -10,6 +10,8 @@ services:
     configs:
       - source: nginx
         target: /etc/nginx/conf.d/default.conf
+    # Not read only: Docker writes the configuration above into the container when it starts.
+    security_opt: ["no-new-privileges:true"]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
       interval: 30s
@@ -27,8 +29,25 @@ configs:
           server_tokens off;
           root /usr/share/nginx/html;
 
+          # The site loads only its own files. Docusaurus writes small scripts into every page, which
+          # change with each build, so inline scripts are allowed; the pages hold no visitor's input.
+          add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
           add_header X-Content-Type-Options nosniff always;
           add_header Referrer-Policy strict-origin-when-cross-origin always;
+          add_header X-Frame-Options DENY always;
+          add_header Cross-Origin-Opener-Policy same-origin always;
+          add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+          gzip on;
+          gzip_types text/css application/javascript image/svg+xml application/xml text/plain application/json;
+          gzip_min_length 512;
+
+          # Files whose names carry their content's hash never change.
+          location ^~ /assets/ {
+              add_header Cache-Control "public, max-age=31536000, immutable";
+              add_header X-Content-Type-Options nosniff always;
+              try_files $$uri =404;
+          }
 
           location = /health {
               access_log off;

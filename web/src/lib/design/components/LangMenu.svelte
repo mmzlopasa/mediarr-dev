@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { lang, languages, setLang, type Lang } from '#lib/i18n.svelte.ts';
+	import { lang, languages, setLang, t, type Lang } from '#lib/i18n.svelte.ts';
 
 	let menu = $state<HTMLDetailsElement>();
 
@@ -12,7 +12,7 @@
 </script>
 
 <details class="langdd" bind:this={menu}>
-	<summary aria-label="{lang().toUpperCase()} language"
+	<summary aria-label={t('langMenu.languageNow', { lang: lang().toUpperCase() })}
 		>{lang().toUpperCase()}<i aria-hidden="true"></i></summary
 	>
 	<div class="langdd-m" role="menu">

@@ -45,4 +45,42 @@ void main() {
       await server.close(force: true);
     },
   );
+
+  group('an answer to the hello', () {
+    late HttpServer server;
+    late String body;
+
+    setUp(() async {
+      server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((request) {
+        request.response
+          ..headers.contentType = ContentType.json
+          ..write(body)
+          ..close();
+      });
+    });
+
+    tearDown(() => server.close(force: true));
+
+    String url() => 'http://127.0.0.1:${server.port}';
+
+    test('is read when it is short', () async {
+      body = jsonEncode({'app': 'mediarr', 'version': '1.2', 'name': 'Home'});
+      final hello = await helloOf(url(), wait: const Duration(seconds: 2));
+      expect(hello?.name, 'Home');
+      expect(hello?.version, '1.2');
+    });
+
+    test('is not read when it is far too long to be one', () async {
+      body = jsonEncode({'app': 'mediarr', 'pad': 'x' * 100000});
+      expect(await helloOf(url(), wait: const Duration(seconds: 2)), isNull);
+    });
+
+    test('has a long or odd name cut short', () async {
+      body = jsonEncode({'app': 'mediarr', 'name': 'A\n${'b' * 200}'});
+      final hello = await helloOf(url(), wait: const Duration(seconds: 2));
+      expect(hello!.name, isNot(contains('\n')));
+      expect(hello.name.length, lessThanOrEqualTo(61));
+    });
+  });
 }

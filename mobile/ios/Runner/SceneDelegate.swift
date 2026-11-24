@@ -36,9 +36,20 @@ final class SharedFiles {
   }
 
   func receive(_ urls: [URL]) {
-    let files = urls.filter(\.isFileURL)
+    let files = urls.filter { SharedFiles.mayReceive($0, home: NSHomeDirectory()) }
     guard !files.isEmpty else { return }
     waiting += files.map(\.path)
     channel?.invokeMethod("changed", arguments: nil)
+  }
+
+  /// Only the copy iOS hands over, which lands in this app's own folders, and only a plain file.
+  /// Never a path elsewhere, which the app could otherwise be made to upload.
+  static func mayReceive(_ url: URL, home: String) -> Bool {
+    guard url.isFileURL else { return false }
+    let path = url.standardizedFileURL.resolvingSymlinksInPath().path
+    let root = URL(fileURLWithPath: home).standardizedFileURL.resolvingSymlinksInPath().path
+    guard path.hasPrefix(root.hasSuffix("/") ? root : root + "/") else { return false }
+    var directory: ObjCBool = false
+    return FileManager.default.fileExists(atPath: path, isDirectory: &directory) && !directory.boolValue
   }
 }

@@ -128,7 +128,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       firstDate: DateTime(1900),
       lastDate: DateTime(2100),
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() => from ? _from = picked : _to = picked);
     await _loadPoints();
   }

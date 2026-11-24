@@ -7,17 +7,19 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import Checkbox from '#lib/design/components/Checkbox.svelte';
 	import Input from '#lib/design/components/Input.svelte';
+	import Skeleton from '#lib/design/components/Skeleton.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import ExportList from '#lib/organize/ExportList.svelte';
 	import { exportBusy } from '#lib/organize/exports.ts';
 	import { t } from '#lib/i18n.svelte.ts';
 
-	let users = $state<User[]>([]);
+	let users = $state<User[]>();
 	let name = $state('');
 	let email = $state('');
 	let password = $state('');
 	let isAdmin = $state(false);
 	let error = $state('');
+	let adding = $state(false);
 
 	async function refresh() {
 		try {
@@ -62,6 +64,8 @@
 
 	async function create(event: SubmitEvent) {
 		event.preventDefault();
+		if (adding) return;
+		adding = true;
 		error = '';
 		try {
 			await api.createUser({ name, email, password, isAdmin });
@@ -73,6 +77,8 @@
 			await refresh();
 		} catch (cause) {
 			error = cause instanceof ApiError ? cause.message : t('admin.users.somethingWentWrong');
+		} finally {
+			adding = false;
 		}
 	}
 </script>
@@ -103,40 +109,44 @@
 			<Checkbox label={t('admin.users.administrator')} bind:checked={isAdmin} />
 		</div>
 		<div class="btn-row f-full">
-			<Button type="submit" variant="gold">{t('admin.users.addUser')}</Button>
+			<Button type="submit" variant="gold" disabled={adding}>{t('admin.users.addUser')}</Button>
 		</div>
 	</form>
 </Card>
 
 <Card title={t('admin.users.allUsers')}>
-	<div class="tbl-w">
-		<table class="tbl">
-			<thead>
-				<tr>
-					<th>{t('common.name2')}</th>
-					<th>{t('common.email')}</th>
-					<th>{t('admin.users.role')}</th>
-					<th><span class="sr">{t('export.forUser')}</span></th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each users as user (user.id)}
+	{#if users === undefined}
+		{#if !error}<Skeleton height="120px" />{/if}
+	{:else}
+		<div class="tbl-w">
+			<table class="tbl">
+				<thead>
 					<tr>
-						<td data-l={t('common.name2')}><b>{user.name}</b></td>
-						<td data-l={t('common.email')}>{user.email}</td>
-						<td data-l={t('admin.users.role')}>
-							<Badge kind={user.isAdmin ? 'acc' : 'mute'}>
-								{user.isAdmin ? t('admin.users.administrator') : t('common.user')}
-							</Badge>
-						</td>
-						<td data-l={t('export.title')}>
-							<Button small onclick={() => exportLibrary(user)}>{t('export.forUser')}</Button>
-						</td>
+						<th>{t('common.name2')}</th>
+						<th>{t('common.email')}</th>
+						<th>{t('admin.users.role')}</th>
+						<th><span class="sr">{t('export.forUser')}</span></th>
 					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
+				</thead>
+				<tbody>
+					{#each users as user (user.id)}
+						<tr>
+							<td data-l={t('common.name2')}><b>{user.name}</b></td>
+							<td data-l={t('common.email')}>{user.email}</td>
+							<td data-l={t('admin.users.role')}>
+								<Badge kind={user.isAdmin ? 'acc' : 'mute'}>
+									{user.isAdmin ? t('admin.users.administrator') : t('common.user')}
+								</Badge>
+							</td>
+							<td data-l={t('export.title')}>
+								<Button small onclick={() => exportLibrary(user)}>{t('export.forUser')}</Button>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{/if}
 </Card>
 
 <Card title={t('export.libraryExports')}>

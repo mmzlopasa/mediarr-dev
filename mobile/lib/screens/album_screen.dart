@@ -830,7 +830,9 @@ class _EditSheetState extends State<_EditSheet> {
       );
       navigator.pop();
     } on ApiException catch (cause) {
-      setState(() => _error = cause.message ?? l.albumScreenNotSaved);
+      if (mounted) {
+        setState(() => _error = cause.message ?? l.albumScreenNotSaved);
+      }
     }
   }
 

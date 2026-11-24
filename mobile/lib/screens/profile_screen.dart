@@ -134,7 +134,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       maxWidth: 2048,
       maxHeight: 2048,
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() => _busy = true);
     try {
       final session = _session;

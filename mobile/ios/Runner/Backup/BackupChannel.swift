@@ -10,14 +10,15 @@ enum BackupChannel {
       let arguments = call.arguments as? [String: Any] ?? [:]
       switch call.method {
       case "enable":
-        guard let server = arguments["server"] as? String, let key = arguments["key"] as? String,
+        guard let server = arguments["server"] as? String, BackupRequest.isServerAddress(server),
+          let key = arguments["key"] as? String, !key.isEmpty,
           arguments["albumId"] is String || !(arguments["albumName"] as? String ?? "").isEmpty
         else {
           result(FlutterError(code: "arguments", message: "server, key and album are required", details: nil))
           return
         }
         engine.enable(
-          server: server,
+          server: BackupRequest.trimmedServer(server),
           key: key,
           wifiOnly: arguments["wifiOnly"] as? Bool ?? true,
           onlyNew: arguments["onlyNew"] as? Bool ?? false,
@@ -47,7 +48,11 @@ enum BackupChannel {
       case "albumChecksums":
         engine.albumChecksums { value in DispatchQueue.main.async { result(value) } }
       case "setServer":
-        if let value = arguments["value"] as? String { engine.setServer(value) }
+        guard let value = arguments["value"] as? String, BackupRequest.isServerAddress(value) else {
+          result(FlutterError(code: "arguments", message: "not a server address", details: nil))
+          return
+        }
+        engine.setServer(BackupRequest.trimmedServer(value))
         result(nil)
       case "setChargingOnly":
         engine.setChargingOnly(arguments["value"] as? Bool ?? false)
@@ -60,7 +65,7 @@ enum BackupChannel {
       case "verifiedChecksums":
         engine.verifiedChecksums { value in DispatchQueue.main.async { result(value) } }
       case "waiting":
-        let limit = arguments["limit"] as? Int ?? 100
+        let limit = min(max((arguments["limit"] as? NSNumber)?.intValue ?? 100, 1), 10_000)
         engine.waiting(limit: limit) { value in DispatchQueue.main.async { result(value) } }
       case "statuses":
         let ids = arguments["ids"] as? [String] ?? []

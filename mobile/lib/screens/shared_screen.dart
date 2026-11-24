@@ -205,7 +205,9 @@ class _SharedScreenState extends ConsumerState<SharedScreen> {
                     firstDate: DateTime(1900),
                     lastDate: DateTime.now(),
                   );
-                  if (picked != null) setState(() => _since = picked);
+                  if (picked != null && mounted) {
+                    setState(() => _since = picked);
+                  }
                 },
               ),
             ),

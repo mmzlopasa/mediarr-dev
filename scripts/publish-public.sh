@@ -18,15 +18,34 @@ EXPORT=$(mktemp -d /tmp/mediarr-export-XXXX)
 trap 'rm -rf "$EXPORT"' EXIT
 git -C "$ROOT" archive HEAD "${INCLUDE[@]}" | tar -x -C "$EXPORT"
 for path in "${EXCLUDE[@]}"; do rm -rf "${EXPORT:?}/$path"; done
-cp -r "$ROOT/public-repo/.github/." "$EXPORT/.github/"
-cp "$ROOT/public-repo/README.md" "$EXPORT/README.md"
-cp -r "$ROOT/public-repo/design" "$EXPORT/design"
-cp "$ROOT/public-repo/docker-README.md" "$EXPORT/docker/README.md"
+# The public repository's own files come from git too: anything ignored or left lying around in
+# public-repo/ stays here.
+PUBLIC_FILES=$EXPORT/.public-repo
+mkdir "$PUBLIC_FILES"
+git -C "$ROOT" archive HEAD public-repo | tar -x -C "$PUBLIC_FILES"
+cp -r "$PUBLIC_FILES/public-repo/.github/." "$EXPORT/.github/"
+cp "$PUBLIC_FILES/public-repo/README.md" "$EXPORT/README.md"
+cp -r "$PUBLIC_FILES/public-repo/design" "$EXPORT/design"
+cp "$PUBLIC_FILES/public-repo/docker-README.md" "$EXPORT/docker/README.md"
+rm -rf "$PUBLIC_FILES"
 
 FORBID=$HOME/.config/mediarr-publish-forbid
 [ -f "$FORBID" ] || { echo "Missing $FORBID."; exit 1; }
-if grep -rIil -f "$FORBID" "$EXPORT"; then
+# Binary files too (an image's metadata, a font's names), and the names of files.
+if grep -rail -f "$FORBID" "$EXPORT"; then
   echo "The export holds words that must not be published."; exit 1
+fi
+if (cd "$EXPORT" && find . | grep -i -f "$FORBID"); then
+  echo "The export holds file names that must not be published."; exit 1
+fi
+# Keys, certificates, local settings and links that could point anywhere on this server.
+SECRETS=$(cd "$EXPORT" && find . \( -type l -o -type f \( -name '.env' -o -name '.env.*' ! -name '.env.example' \
+  -o -name '*.jks' -o -name '*.keystore' -o -name '*.p12' -o -name '*.pem' -o -name '*.key' \
+  -o -name 'id_rsa*' -o -name 'id_ed25519*' -o -name '*.mobileprovision' -o -name 'local.properties' \
+  -o -name 'CLAUDE.md' -o -name 'PLAN.md' \) \) -print)
+if [ -n "$SECRETS" ]; then
+  echo "$SECRETS"
+  echo "The export holds files that must not be published."; exit 1
 fi
 
 if [ "${1:-}" = "--check" ]; then
@@ -39,8 +58,19 @@ fi
 
 MESSAGE=${1:?give a commit message}
 TAG=${2:-}
+if printf '%s\n' "$MESSAGE" | grep -qi -f "$FORBID"; then
+  echo "The message holds words that must not be published."; exit 1
+fi
+# Only a version starts the image build; anything else would build images without a tag.
+if [ -n "$TAG" ] && ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+  echo "A tag looks like v1.2.3 or v1.2.3-rc1."; exit 1
+fi
 [ -d "$PUBLIC_DIR/.git" ] || git clone -q "$PUBLIC_URL" "$PUBLIC_DIR"
-git -C "$PUBLIC_DIR" fetch -q origin || true
+# Without the newest state the export would be compared with an old one.
+git -C "$PUBLIC_DIR" fetch -q --tags origin
+if [ -n "$TAG" ] && git -C "$PUBLIC_DIR" rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  echo "$TAG is already published."; exit 1
+fi
 git -C "$PUBLIC_DIR" checkout -q -B main
 git -C "$PUBLIC_DIR" rev-parse -q --verify origin/main >/dev/null && git -C "$PUBLIC_DIR" reset -q --hard origin/main
 find "$PUBLIC_DIR" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +

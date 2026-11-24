@@ -6,11 +6,11 @@ title: Sign-in options
 
 ## Two-factor sign-in
 
-Each person turns on an authenticator app under **Account**.
+Each person turns on an authenticator app under **Account → Password and sign-in**.
 
 ## Single sign-on (OIDC)
 
-Under **Admin → Settings**, enter your provider's issuer, client ID and secret, and a label for the button.
+Under **Admin → Settings → Single sign-on (OIDC)**, enter your provider's **Issuer**, **Client ID** and **Client secret**, and a **Button label**. An empty issuer turns it off; passwords keep working unless you turn them off.
 
 Give your provider this redirect address:
 
@@ -18,9 +18,9 @@ Give your provider this redirect address:
 http://your-server-ip:9851/api/auth/oidc/callback
 ```
 
-The mobile app signs in through the same address, so it needs nothing more.
+Behind a proxy with HTTPS, use the address people open, such as `https://photos.example.com/api/auth/oidc/callback`. The mobile app signs in through the same address, so it needs nothing more.
 
-People are matched by the email address, which the provider must have verified. Afterwards they are recognised by their identity at the provider, even if the email changes. Administrators are not linked by email unless you turn that on, which is less safe.
+People are matched by the email address, which the provider must have verified. Afterwards they are recognised by their identity at the provider, even if the email changes. Someone with no account is let in only with **Create an account for someone who has none (a plain user)**. Administrators are not linked by email unless you turn on **Also link administrators by email (less safe)**.
 
 ## Passkeys
 
@@ -28,7 +28,7 @@ Passkeys are added under **Account** on the web. Browsers allow them only over H
 
 ## Turning off passwords
 
-With single sign-on set up, **Admin → Settings → Server** can turn off signing in with a password. The same section sets a message for the sign-in page.
+With single sign-on set up, **Allow signing in with a password** under **Admin → Settings → Server** can be turned off; without single sign-on it cannot. The same section sets a message for the sign-in page.
 
 ## Who may connect
 
@@ -49,4 +49,4 @@ On the server, in the folder with your `docker-compose.yml`:
 docker compose exec server /mediarr security reset
 ```
 
-This turns both rules off and allows passwords again. It takes effect within 10 seconds.
+This turns both rules off, allows passwords again and turns off maintenance mode. It takes effect within 10 seconds.

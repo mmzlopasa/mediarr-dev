@@ -1,5 +1,4 @@
 <script lang="ts">
-	import QRCode from 'qrcode';
 	import { api, type QRSignIn, type QRSignInState } from '#lib/api.ts';
 	import Button from '#lib/design/components/Button.svelte';
 	import Dialog from '#lib/design/components/Dialog.svelte';
@@ -66,11 +65,25 @@
 		if (open) void fresh();
 	});
 
+	// The QR code library comes only when the dialog draws a code. A code drawn for an earlier link
+	// that finishes late is not shown.
 	$effect(() => {
-		if (!link) return;
-		void QRCode.toString(link, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }).then(
-			(value) => (svg = value)
-		);
+		const drawn = link;
+		if (!drawn) return;
+		let stale = false;
+		import('qrcode')
+			.then(({ default: QRCode }) =>
+				QRCode.toString(drawn, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' })
+			)
+			.then((value) => {
+				if (!stale) svg = value;
+			})
+			.catch(() => {
+				if (!stale) problem = t('common.thisCouldNotBeLoaded');
+			});
+		return () => {
+			stale = true;
+		};
 	});
 
 	// While the dialog is open, the clock ticks and the server is asked whether a phone has scanned.

@@ -1474,5 +1474,6 @@
   "backupCardServerAway": "Poslužitelj nije dostupan. Sigurnosna kopija nastavlja sama čim se ponovno javi.",
   "backupCardWaitingForWifi": "{count, plural, one{{count} fotografija čeka Wi-Fi: nalazi se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.} few{{count} fotografije čekaju Wi-Fi: nalaze se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.} other{{count} fotografija čeka Wi-Fi: nalaze se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.}}",
   "backupCardRetryingSoon": "{count, plural, one{{count} datoteka nije prošla i uskoro se sama ponovno šalje.} few{{count} datoteke nisu prošle i uskoro se same ponovno šalju.} other{{count} datoteka nije prošlo i uskoro se same ponovno šalju.}}",
-  "backupCardFailedRetryLater": "Neuspjele datoteke same se ponovno pokušavaju nakon jednog dana."
+  "backupCardFailedRetryLater": "Neuspjele datoteke same se ponovno pokušavaju nakon jednog dana.",
+  "freeSpaceScreenKeptChanged": "{count, plural, one{{count} fotka je zadržana: promijenila se ili više nije na serveru.} few{{count} fotke su zadržane: promijenile su se ili više nisu na serveru.} other{{count} fotki je zadržano: promijenile su se ili više nisu na serveru.}}"
 }

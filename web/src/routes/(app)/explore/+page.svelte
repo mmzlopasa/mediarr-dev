@@ -42,7 +42,7 @@
 			() => (placesFailed = true)
 		);
 		api.memories(today()).then(
-			(list) => (memories = list),
+			(list) => (memories = list.filter((memory) => memory.items.length > 0)),
 			() => (memoriesFailed = true)
 		);
 	});

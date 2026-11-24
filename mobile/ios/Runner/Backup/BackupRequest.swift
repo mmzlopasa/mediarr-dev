@@ -12,6 +12,30 @@ enum BackupOutcome: Equatable {
 }
 
 enum BackupRequest {
+  /// A server address the app may send its key to: http or https, a host, and nothing after the
+  /// path. http stays allowed, as the server is often reached at http://its-ip:9851 at home.
+  static func isServerAddress(_ value: String) -> Bool {
+    guard !value.isEmpty, value.count <= 2048, let parts = URLComponents(string: value),
+      let scheme = parts.scheme?.lowercased(), scheme == "http" || scheme == "https",
+      let host = parts.host, !host.isEmpty
+    else { return false }
+    return parts.user == nil && parts.password == nil && parts.query == nil && parts.fragment == nil
+  }
+
+  static func trimmedServer(_ value: String) -> String {
+    var out = value
+    while out.hasSuffix("/") { out.removeLast() }
+    return out
+  }
+
+  /// An id from the server, which goes into a path: letters, digits and dashes only.
+  static func isPlainID(_ value: String) -> Bool {
+    !value.isEmpty && value.count <= 64
+      && value.unicodeScalars.allSatisfy {
+        ($0.value < 128 && CharacterSet.alphanumerics.contains($0)) || $0 == "-"
+      }
+  }
+
   /// A whole file in one request (tus creation-with-upload), the only form a background transfer
   /// can send. The server compares the checksum and refuses a damaged file.
   static func make(

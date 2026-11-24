@@ -25,6 +25,12 @@ const mdnsService = '_mediarr._tcp';
 const defaultPort = 9851;
 const _probeWait = Duration(milliseconds: 700);
 const _probesAtOnce = 48;
+const _helloLimit = 16 * 1024;
+
+String _short(String text, int most) {
+  final plain = text.replaceAll(RegExp(r'[\u0000-\u001f\u007f]'), ' ').trim();
+  return plain.length <= most ? plain : '${plain.substring(0, most)}…';
+}
 
 /// Whether an address belongs to a home or office network, where a server can be looked for.
 bool isPrivateIPv4(InternetAddress address) {
@@ -56,12 +62,17 @@ Future<({String version, String name})?> helloOf(
         .timeout(wait);
     final response = await request.close().timeout(wait * 2);
     if (response.statusCode != 200) return null;
-    final body = await response.transform(utf8.decoder).join().timeout(wait);
-    final data = jsonDecode(body);
+    // Any device on the network can answer, so only a short answer is read.
+    final bytes = <int>[];
+    await for (final chunk in response.timeout(wait)) {
+      bytes.addAll(chunk);
+      if (bytes.length > _helloLimit) return null;
+    }
+    final data = jsonDecode(utf8.decode(bytes, allowMalformed: true));
     if (data is Map && data['app'] == 'mediarr') {
       return (
-        version: data['version']?.toString() ?? '',
-        name: data['name']?.toString() ?? 'Mediarr',
+        version: _short(data['version']?.toString() ?? '', 32),
+        name: _short(data['name']?.toString() ?? 'Mediarr', 60),
       );
     }
     return null;

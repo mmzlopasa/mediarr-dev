@@ -215,7 +215,7 @@ func Prepare(ctx context.Context, databaseURL, library, appVersion string, force
 	slog.Info("a snapshot of the database is made before the upgrade", "from", current, "to", latest)
 	final := dumpPath(library, snap.Name)
 	partial := final + ".partial"
-	out, err := exec.CommandContext(ctx, "pg_dump", "--format=custom", "--file="+partial, "--dbname="+databaseURL).CombinedOutput()
+	out, err := PostgresCommand(ctx, databaseURL, "pg_dump", "--format=custom", "--file="+partial).CombinedOutput()
 	if err != nil {
 		_ = os.Remove(partial)
 		return fmt.Errorf("snapshot before the upgrade: pg_dump: %s", clip(string(out)))
@@ -351,8 +351,7 @@ func restore(ctx context.Context, databaseURL, dump string) error {
 	}
 	var dumpErr strings.Builder
 	dumped.Stderr = &dumpErr
-	apply := exec.CommandContext(ctx, "psql", "--quiet", "--single-transaction", "--set=ON_ERROR_STOP=1",
-		"--dbname="+databaseURL)
+	apply := PostgresCommand(ctx, databaseURL, "psql", "--quiet", "--single-transaction", "--set=ON_ERROR_STOP=1")
 	apply.Stdin = io.MultiReader(strings.NewReader("DROP SCHEMA public CASCADE;\nCREATE SCHEMA public;\n"), script)
 	var applyOut strings.Builder
 	apply.Stdout = &applyOut

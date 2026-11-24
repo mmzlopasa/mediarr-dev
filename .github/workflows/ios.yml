@@ -11,25 +11,29 @@ on:
       - mobile/**
       - .github/workflows/ios.yml
 
-permissions:
-  contents: read
+# Nothing by default; each job names what it reads.
+permissions: {}
 
 jobs:
   ipa:
     runs-on: macos-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: mobile
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: 3.47.9
           channel: stable
           cache: true
       # Swift packages such as MapLibre come from GitHub releases, which sometimes answer 504 for
       # a while. Kept between runs, a build does not need them each time.
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/Library/Caches/org.swift.swiftpm
@@ -50,7 +54,9 @@ jobs:
             -only-testing:RunnerTests CODE_SIGNING_ALLOWED=NO | tail -40
           test "${PIPESTATUS[0]}" -eq 0
         shell: bash
-      - run: flutter build ios --release --no-codesign --build-number=${{ github.run_number }}
+      - run: flutter build ios --release --no-codesign --build-number="$BUILD_NUMBER"
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
       - name: The widget is in the app, with the app's version
         run: |
           app=build/ios/iphoneos/Runner.app
@@ -69,7 +75,7 @@ jobs:
           cd build/ipa
           zip -qry Mediarr.ipa Payload
           ls -la Mediarr.ipa
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ github.ref_type == 'tag' && 'Mediarr-ipa' || 'Mediarr-ipa-dev' }}
           path: mobile/build/ipa/Mediarr.ipa

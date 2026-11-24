@@ -71,8 +71,17 @@ TvDevice? rendererFromDescription(String location, String xml) {
   }
   if (control == null || control.isEmpty) return null;
   final base = _tag(xml, 'URLBase');
-  final resolved = Uri.parse(base.isEmpty ? location : base).resolve(control);
-  final name = _tag(xml, 'friendlyName');
+  final Uri resolved;
+  try {
+    resolved = Uri.parse(base.isEmpty ? location : base).resolve(control);
+  } on FormatException {
+    return null;
+  }
+  // Orders and the cast token's addresses go only to the home network, never to a host a
+  // description names somewhere else.
+  if (!isLocalHost(resolved.host)) return null;
+  var name = _tag(xml, 'friendlyName');
+  if (name.length > 80) name = '${name.substring(0, 80)}…';
   final udn = _tag(xml, 'UDN');
   return TvDevice(
     id: udn.isEmpty ? location : udn,
@@ -130,6 +139,25 @@ Duration parseUpnpTime(String text) {
     minutes: int.tryParse(parts[1]) ?? 0,
     milliseconds: (seconds * 1000).round(),
   );
+}
+
+/// The most of a description that is read: a real one is a few kilobytes.
+const _descriptionLimit = 512 * 1024;
+
+/// Reads a device description, or null for an error or anything too big to be one.
+Future<String?> readDescription(http.Client client, Uri uri) async {
+  final response = await client
+      .send(http.Request('GET', uri))
+      .timeout(const Duration(seconds: 4));
+  if (response.statusCode != 200) return null;
+  final bytes = <int>[];
+  await for (final chunk in response.stream.timeout(
+    const Duration(seconds: 4),
+  )) {
+    bytes.addAll(chunk);
+    if (bytes.length > _descriptionLimit) return null;
+  }
+  return utf8.decode(bytes, allowMalformed: true);
 }
 
 /// A DLNA TV, told what to play over SOAP. It fetches the file itself from the address it is given.
@@ -246,13 +274,10 @@ class DlnaFinder {
       // Only a TV on the home network, never an address a TV made up somewhere else.
       if (uri == null || !isLocalHost(uri.host)) return;
       try {
-        final response = await _client
-            .get(uri)
-            .timeout(const Duration(seconds: 4));
-        final device = rendererFromDescription(
-          location,
-          utf8.decode(response.bodyBytes, allowMalformed: true),
-        );
+        final xml = await readDescription(_client, uri);
+        final device = xml == null
+            ? null
+            : rendererFromDescription(location, xml);
         if (device != null && !out.isClosed) out.add(device);
       } catch (_) {
         // Not a TV that answers.
@@ -308,13 +333,8 @@ class DlnaFinder {
     if (input.isEmpty) return null;
     if (input.startsWith('http://') || input.startsWith('https://')) {
       try {
-        final response = await _client
-            .get(Uri.parse(input))
-            .timeout(const Duration(seconds: 5));
-        return rendererFromDescription(
-          input,
-          utf8.decode(response.bodyBytes, allowMalformed: true),
-        );
+        final xml = await readDescription(_client, Uri.parse(input));
+        return xml == null ? null : rendererFromDescription(input, xml);
       } catch (_) {
         return null;
       }
@@ -322,17 +342,24 @@ class DlnaFinder {
     final address = InternetAddress.tryParse(input);
     if (address == null) return null;
     final completer = Completer<TvDevice?>();
+    var answered = false;
     RawDatagramSocket? socket;
     try {
       socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
       socket.listen((event) async {
+        if (event != RawSocketEvent.read) return;
         final packet = socket?.receive();
         final location = packet == null
             ? null
             : locationOf(utf8.decode(packet.data, allowMalformed: true));
-        if (location == null || completer.isCompleted) return;
-        completer.complete(await byAddress(location));
-      });
+        // Only the first answer is read; a second one arriving meanwhile is not.
+        if (location == null || answered) return;
+        final uri = Uri.tryParse(location);
+        if (uri == null || !isLocalHost(uri.host)) return;
+        answered = true;
+        final device = await byAddress(location);
+        if (!completer.isCompleted) completer.complete(device);
+      }, onError: (Object _) {});
       socket.send(utf8.encode(searchMessage()), address, ssdpPort);
       return await completer.future.timeout(
         const Duration(seconds: 4),

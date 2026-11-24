@@ -306,20 +306,37 @@ class TvController extends Notifier<TvState> {
     }
   }
 
+  /// A TV that does not answer keeps what it shows; the bar says what it last reported.
   Future<void> playOrPause() async {
     final connection = _connection;
     if (connection == null) return;
-    if (state.playing) {
-      await connection.pause();
-    } else {
-      await connection.play();
+    final playing = state.playing;
+    try {
+      if (playing) {
+        await connection.pause();
+      } else {
+        await connection.play();
+      }
+    } on Object {
+      return;
     }
-    state = state.copyWith(playing: !state.playing);
+    if (_connection == connection) state = state.copyWith(playing: !playing);
+  }
+
+  /// Moves the slider while it is dragged, without telling the TV each step.
+  void preview(Duration to) {
+    if (state.active) state = state.copyWith(position: to);
   }
 
   Future<void> seek(Duration to) async {
-    await _connection?.seek(to);
+    final connection = _connection;
+    if (connection == null) return;
     state = state.copyWith(position: to);
+    try {
+      await connection.seek(to);
+    } on Object {
+      // The TV stays where it was, and reports that on its next status.
+    }
   }
 
   /// Stops casting; the TV's token stops working at once.

@@ -133,6 +133,17 @@ async function request<T>(
 	if (response.status === 503 && typeof window !== 'undefined') {
 		window.dispatchEvent(new Event('mediarr:maintenance'));
 	}
+	// The session ended, here or on another device: the page goes to sign-in instead of failing on.
+	if (
+		response.status === 401 &&
+		typeof window !== 'undefined' &&
+		!path.startsWith('/api/auth/') &&
+		!path.startsWith('/api/public/') &&
+		!path.startsWith('/api/me/password') &&
+		!path.startsWith('/api/me/passkeys')
+	) {
+		window.dispatchEvent(new Event('mediarr:signedout'));
+	}
 	if (!response.ok) {
 		throw new ApiError(
 			response.status,

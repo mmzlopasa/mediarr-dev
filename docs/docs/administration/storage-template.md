@@ -4,7 +4,7 @@ title: Storage template
 
 # Storage template
 
-Originals are kept in `UPLOAD_LOCATION`, in a folder for each user. By default each user's folder is laid out by year and month, as `2024/07/0123456789abcdef-IMG_0042.jpg`. An administrator can choose another layout under **Administration → Storage → Storage template**, on the web or in the app under **Storage template**.
+Originals are kept in `UPLOAD_LOCATION`, in a folder for each user. By default each user's folder is laid out by year and month, as `2024/07/0123456789abcdef-IMG_0042.jpg`. An administrator can choose another layout under **Administration → Storage → Storage template**, on the web, or in the app under **Account → Storage template**.
 
 ## Fields
 
@@ -19,7 +19,7 @@ Originals are kept in `UPLOAD_LOCATION`, in a folder for each user. By default e
 | `{{album}}` | the first album it is in, or `No album` |
 | `{{hash}}` | the start of its checksum, which no other file has |
 
-The date is when the photo was taken, or when it came in if that is not known. A template is a path with `/` between folders, and its last part must contain `{{filename}}` or `{{hash}}`, for example:
+The date is when the photo was taken, or when it came in if that is not known. A template is a path with `/` between folders, and its last part must contain `{{filename}}` or `{{hash}}`. It can be up to 200 characters and 7 folders deep, for example:
 
 ```text
 {{y}}/{{y}}-{{MM}}-{{dd}}/{{filename}}.{{ext}}

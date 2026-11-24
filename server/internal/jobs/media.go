@@ -64,11 +64,7 @@ func runToolNoLimit(ctx context.Context, name string, args ...string) ([]byte, e
 		problem = "ffmpeg"
 	}
 
-	// A crafted file, such as a playlist named as a video, could otherwise make ffmpeg fetch addresses
-	// or read other files on the server.
-	if command == "ffmpeg" {
-		args = append([]string{"-protocol_whitelist", "file,pipe,crypto"}, args...)
-	}
+	args = withProtocolWhitelist(command, args)
 	var stdout, stderr bytes.Buffer
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Stdout = &stdout
@@ -86,6 +82,34 @@ func runToolNoLimit(ctx context.Context, name string, args ...string) ([]byte, e
 		return nil, fmt.Errorf("run %s: %w", command, err)
 	}
 	return stdout.Bytes(), nil
+}
+
+// ffmpegProtocols are all ffmpeg and ffprobe may open. A crafted file, such as a playlist named as a
+// video, could otherwise make them fetch addresses on the server's network.
+const ffmpegProtocols = "file,pipe,crypto"
+
+// withProtocolWhitelist puts the list first in every run of ffmpeg or ffprobe, also when it runs
+// under nice.
+func withProtocolWhitelist(command string, args []string) []string {
+	at := -1
+	switch command {
+	case "ffmpeg", "ffprobe":
+		at = 0
+	case "nice":
+		for i, arg := range args {
+			if arg == "ffmpeg" || arg == "ffprobe" {
+				at = i + 1
+				break
+			}
+		}
+	}
+	if at < 0 || (at < len(args) && args[at] == "-protocol_whitelist") {
+		return args
+	}
+	out := make([]string, 0, len(args)+2)
+	out = append(out, args[:at]...)
+	out = append(out, "-protocol_whitelist", ffmpegProtocols)
+	return append(out, args[at:]...)
 }
 
 // Metadata is what the worker keeps from exiftool's output.

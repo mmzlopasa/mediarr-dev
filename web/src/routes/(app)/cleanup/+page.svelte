@@ -42,22 +42,37 @@
 	const chosen = $derived((items ?? []).filter(isTicked));
 	const chosenBytes = $derived(chosen.reduce((sum, item) => sum + item.sizeBytes, 0));
 
+	// Each answer is for the choice it was asked with; one that comes after a newer choice is dropped,
+	// so moving the slider quickly never ends on the photos of an earlier step.
+	let summaryAsked = 0;
+	let itemsAsked = 0;
+
 	async function loadSummary() {
+		const asked = ++summaryAsked;
 		try {
-			summary = await api.cleanup(blur, videoMb);
+			const next = await api.cleanup(blur, videoMb);
+			if (asked !== summaryAsked) return;
+			summary = next;
 			failed = false;
 		} catch {
-			failed = true;
+			if (asked === summaryAsked) failed = true;
 		}
 	}
 
+	let loadingMore = $state(false);
+
 	async function loadItems(more = false) {
+		const asked = ++itemsAsked;
+		loadingMore = more;
 		try {
 			const page = await api.cleanupPage(category, blur, videoMb, more ? (nextOffset ?? 0) : 0);
+			if (asked !== itemsAsked) return;
 			items = more ? [...(items ?? []), ...page.items] : page.items;
 			nextOffset = page.nextOffset;
 		} catch {
-			failed = true;
+			if (asked === itemsAsked) failed = true;
+		} finally {
+			if (asked === itemsAsked) loadingMore = false;
 		}
 	}
 
@@ -211,7 +226,9 @@
 			</div>
 			{#if nextOffset !== undefined}
 				<div class="cln-more">
-					<Button onclick={() => loadItems(true)}>{t('cleanup.showMore')}</Button>
+					<Button disabled={loadingMore} onclick={() => loadItems(true)}
+						>{t('cleanup.showMore')}</Button
+					>
 				</div>
 			{/if}
 		{/if}

@@ -6,7 +6,7 @@ title: Library
 
 ## Uploading
 
-Drop files on the page, or choose **Add**, on the web; in the app, choose photos under **Upload**. Each file shows its progress. A file that is in leaves the list by itself a moment later, and when all are done a short note says how many were uploaded and how many were already there. A file that failed stays in the list with the reason, until you choose **Clear failed**.
+Drop files on the page, or choose **Add**, on the web; in the app, choose **Add**. Each file shows its progress. A file that is in leaves the list by itself a moment later, and when all are done a short note says how many were uploaded and how many were already there. A file that failed stays in the list with the reason, until you choose **Clear failed**.
 
 ## Recently added
 

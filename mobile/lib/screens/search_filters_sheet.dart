@@ -78,7 +78,7 @@ class _FilterSheetState extends State<_FilterSheet> {
       firstDate: DateTime(1900),
       lastDate: DateTime(DateTime.now().year + 1),
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(
       () => _q = start
           ? _q.copyWith(from: () => _day(picked))

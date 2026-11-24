@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -118,9 +119,27 @@ type Announcer struct {
 	Version string
 	Client  *http.Client
 
-	mu   sync.Mutex
-	udn  string
-	conn *net.UDPConn
+	mu      sync.Mutex
+	udn     string
+	conn    *net.UDPConn
+	replies chan struct{}
+}
+
+// maxReplies is how many answers may wait at once. Each waits up to 5 seconds, so a flood of
+// searches is dropped instead of piling up.
+const maxReplies = 32
+
+// FromHomeNetwork says whether a search may be answered: only from the home network. An answer goes
+// to whatever address the packet claims, and is larger than the search, so answering anyone would
+// let a stranger aim the answers at someone else.
+func FromHomeNetwork(ip net.IP) bool {
+	return ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast()
+}
+
+// IsDLNAPath says whether the announcer passes a path on to the server: only one under /dlna/, and
+// only as it is, so that no ".." can lead somewhere else.
+func IsDLNAPath(p string) bool {
+	return strings.HasPrefix(p, "/dlna/") && path.Clean(p) == p && !strings.Contains(p, "%")
 }
 
 var udnPattern = regexp.MustCompile(`<UDN>uuid:([0-9a-fA-F-]{36})</UDN>`)
@@ -174,6 +193,7 @@ func (a *Announcer) Run(ctx context.Context) error {
 		return fmt.Errorf("listen for SSDP (this needs network_mode: host): %w", err)
 	}
 	a.conn = conn
+	a.replies = make(chan struct{}, maxReplies)
 	defer func() { _ = conn.Close() }()
 
 	proxy := httputil.NewSingleHostReverseProxy(a.Upstream)
@@ -182,7 +202,7 @@ func (a *Announcer) Run(ctx context.Context) error {
 		ReadHeaderTimeout: 10 * time.Second,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Only what a TV needs: the rest of Mediarr is not reachable this way.
-			if !strings.HasPrefix(r.URL.Path, "/dlna/") {
+			if !IsDLNAPath(r.URL.Path) || !IsDLNAPath(r.URL.EscapedPath()) {
 				http.NotFound(w, r)
 				return
 			}
@@ -247,6 +267,9 @@ func (a *Announcer) answer(ctx context.Context, conn *net.UDPConn) {
 			}
 			continue
 		}
+		if !FromHomeNetwork(from.IP) {
+			continue
+		}
 		search, ok := ParseSearch(buffer[:n])
 		if !ok {
 			continue
@@ -261,7 +284,14 @@ func (a *Announcer) answer(ctx context.Context, conn *net.UDPConn) {
 		if len(kinds) == 0 {
 			continue
 		}
-		go a.reply(from, search, kinds, udn)
+		select {
+		case a.replies <- struct{}{}:
+			go func() {
+				defer func() { <-a.replies }()
+				a.reply(from, search, kinds, udn)
+			}()
+		default:
+		}
 	}
 }
 

@@ -18,7 +18,6 @@ import (
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
-	"github.com/mediarr-app/mediarr/server/internal/auth"
 )
 
 const (
@@ -136,8 +135,7 @@ func (s *apiServer) BeginPasskeyRegistration(w http.ResponseWriter, r *http.Requ
 	if !readJSON(w, r, &confirm) {
 		return
 	}
-	if !auth.VerifyPassword(user.PasswordHash, confirm.Password) {
-		writeError(w, http.StatusUnauthorized, "the password is wrong")
+	if !s.confirmPassword(w, user, confirm.Password, "the password is wrong") {
 		return
 	}
 	ctx := r.Context()
@@ -329,5 +327,6 @@ func (s *apiServer) FinishPasskeyLogin(w http.ResponseWriter, r *http.Request) {
 		internalError(w, r, err)
 		return
 	}
+	s.recordSecurity(r, eventLoginOK, owner.user.Email, "passkey")
 	writeJSON(w, http.StatusOK, toAPIUser(owner.user))
 }

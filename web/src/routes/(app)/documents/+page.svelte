@@ -60,7 +60,7 @@
 				aria-label={t('common.open')}
 				onclick={() => pushState('', { viewer: item.id })}
 			>
-				<img src="/api/assets/{item.id}/thumbnail" alt="" />
+				<img src="/api/assets/{item.id}/thumbnail" alt="" loading="lazy" decoding="async" />
 			</button>
 		{/each}
 	</div>

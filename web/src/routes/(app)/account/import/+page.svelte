@@ -13,6 +13,7 @@
 
 	type Source = 'takeout' | 'icloud';
 	type Picked = {
+		id: number;
 		file: File;
 		loaded: number;
 		state: 'waiting' | 'sending' | 'in' | 'failed';
@@ -26,6 +27,10 @@
 	let imports = $state<UserImport[] | undefined>();
 	let reports = $state<Record<string, ImportDetail>>({});
 	let timer: ReturnType<typeof setInterval> | undefined;
+	let nextId = 1;
+	// The file on its way, so that sending can be stopped; what was sent is kept for next time.
+	let sendingNow: { abort: () => void } | undefined;
+	let stopping = false;
 
 	const STATUS: Record<UserImport['status'], { label: Key; tone: string }> = {
 		uploading: { label: k('account.import.waitingForFiles'), tone: '' },
@@ -58,7 +63,10 @@
 		const files = [...(input.files ?? [])].filter(
 			(file) => !picked.some((p) => same(p.file, file))
 		);
-		picked = [...picked, ...files.map((file) => ({ file, loaded: 0, state: 'waiting' as const }))];
+		picked = [
+			...picked,
+			...files.map((file) => ({ id: nextId++, file, loaded: 0, state: 'waiting' as const }))
+		];
 		input.value = '';
 	}
 
@@ -76,19 +84,27 @@
 
 	/** One file at a time, so the first ones are complete early and a drop loses the least. */
 	async function send() {
+		if (sending) return;
 		sending = true;
+		stopping = false;
 		try {
 			current ??= await api.createMyImport(source);
 			for (let index = 0; index < picked.length; index++) {
+				if (stopping) break;
 				if (picked[index].state === 'in') continue;
 				update(index, { state: 'sending', error: undefined });
+				const part = uploadImportPart(current.id, picked[index].file, (loaded) =>
+					update(index, { loaded })
+				);
+				sendingNow = part;
 				try {
-					await uploadImportPart(current.id, picked[index].file, (loaded) =>
-						update(index, { loaded })
-					).done;
+					await part.done;
 					update(index, { state: 'in', loaded: picked[index].file.size });
 				} catch (cause) {
-					update(index, { state: 'failed', error: (cause as Error).message });
+					if (stopping) update(index, { state: 'waiting' });
+					else update(index, { state: 'failed', error: (cause as Error).message });
+				} finally {
+					sendingNow = undefined;
 				}
 			}
 		} catch (cause) {
@@ -97,6 +113,16 @@
 			sending = false;
 			load();
 		}
+	}
+
+	/** Stops sending; choosing Upload again goes on from where the file stopped. */
+	function stop() {
+		stopping = true;
+		const part = sendingNow;
+		sendingNow = undefined;
+		part?.abort();
+		picked = picked.map((p) => (p.state === 'sending' ? { ...p, state: 'waiting' } : p));
+		sending = false;
 	}
 
 	async function bringIn(id: string) {
@@ -127,7 +153,11 @@
 			reports = Object.fromEntries(Object.entries(reports).filter(([key]) => key !== id));
 			return;
 		}
-		reports = { ...reports, [id]: await api.importDetail(id) };
+		try {
+			reports = { ...reports, [id]: await api.importDetail(id) };
+		} catch (cause) {
+			showToast('err', (cause as Error).message);
+		}
 	}
 
 	const done = (entry: UserImport) => entry.added + entry.skipped + entry.failed;
@@ -183,7 +213,7 @@
 
 		{#if picked.length}
 			<ul class="set-list imp-parts" aria-label={t('account.import.chosenFiles')}>
-				{#each picked as part, index (part.file.name + part.file.size)}
+				{#each picked as part, index (part.id)}
 					<li data-part={part.state}>
 						<span class="set-list-t">
 							<b class="mono">{part.file.name}</b>
@@ -212,6 +242,9 @@
 						>{t('account.import.bringIn')}</Button
 					>
 				{:else}
+					{#if sending}
+						<Button small onclick={stop}>{t('common.stop')}</Button>
+					{/if}
 					<Button variant="gold" small disabled={sending} onclick={send}
 						>{sending ? t('account.import.uploading') : t('account.import.upload')}</Button
 					>

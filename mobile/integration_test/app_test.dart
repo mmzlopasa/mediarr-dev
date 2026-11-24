@@ -277,7 +277,7 @@ void main() {
     await waitFor(tester, find.text('Split, July 2024'));
     await tester.tap(find.text('Split, July 2024').last);
     await waitFor(tester, find.byTooltip('More'));
-    await tester.tap(find.byTooltip('More actions').last);
+    await tester.tap(find.byTooltip('More').last);
     await waitFor(tester, find.text('Hide this memory'));
     await tester.tap(find.text('Hide this memory').last);
     for (var i = 0; i < 50 && server.hiddenMemoryKey == null; i++) {
@@ -483,7 +483,7 @@ void main() {
     await waitFor(tester, find.text('Travels'));
     await tester.tap(find.text('Travels'));
     await waitFor(tester, find.byTooltip('More'));
-    await tester.tap(find.byTooltip('More actions').last);
+    await tester.tap(find.byTooltip('More').last);
     await waitFor(tester, find.text('Public links'));
     await tester.tap(find.text('Public links'));
     await waitFor(tester, find.text('Family'));

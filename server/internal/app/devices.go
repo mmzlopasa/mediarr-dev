@@ -18,6 +18,7 @@ const (
 	maxReportFailures  = 100
 	maxQuietDays       = 60
 	maxDeviceCount     = 10_000_000
+	maxReportBody      = 1 << 20
 )
 
 func deviceCount(value int) int32 {
@@ -117,7 +118,8 @@ func (s *apiServer) ReportBackupDevice(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 	var body api.BackupDeviceReport
-	if !readJSON(w, r, &body) {
+	// Five thousand checksums and a hundred failures do not fit in the usual limit on a request.
+	if !readJSONUpTo(w, r, &body, maxReportBody) {
 		return
 	}
 	var checksums []string

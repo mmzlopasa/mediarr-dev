@@ -22,12 +22,13 @@
 				failed = false;
 			}
 		} catch {
-			failed = true;
+			if (path === current) failed = true;
 		}
 	}
 
 	$effect(() => {
 		data = undefined;
+		failed = false;
 		load(current);
 	});
 
@@ -85,7 +86,7 @@
 	<div class="folder-grid">
 		{#each data.folders as folder (folder.name)}
 			<button type="button" class="folder-tile" onclick={() => open(join(folder.name))}>
-				<img src="/api/assets/{folder.coverId}/thumbnail" alt="" />
+				<img src="/api/assets/{folder.coverId}/thumbnail" alt="" loading="lazy" decoding="async" />
 				<b>{folder.name}</b>
 				<small>{folder.count}</small>
 			</button>
@@ -97,7 +98,7 @@
 				aria-label={t('common.open')}
 				onclick={() => pushState('', { viewer: item.id })}
 			>
-				<img src="/api/assets/{item.id}/thumbnail" alt="" />
+				<img src="/api/assets/{item.id}/thumbnail" alt="" loading="lazy" decoding="async" />
 			</button>
 		{/each}
 	</div>

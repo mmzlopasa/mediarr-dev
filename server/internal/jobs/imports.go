@@ -46,6 +46,7 @@ const (
 	fingerprintBatch    = 500
 	maxImportAnswer     = 64 << 20
 	maxSidecarBytes     = 1 << 20
+	maxListBytes        = 64 << 20
 	maxImportPages      = 200000
 	minImportFree       = 2 << 30
 	statusDone          = "done"
@@ -1175,6 +1176,23 @@ func (d *ICloudDetails) Find(name string) ICloudRow {
 	return ICloudRow{}
 }
 
+// openList opens a CSV list of an export. A list is a few lines a photo, so a far larger one is
+// left out: reading it would only fill the memory.
+func openList(tree exportTree, name string, limit int64) (io.ReadCloser, bool) {
+	opened, size, _, err := tree.open(name)
+	if err != nil {
+		return nil, false
+	}
+	if size > limit {
+		_ = opened.Close()
+		return nil, false
+	}
+	return struct {
+		io.Reader
+		io.Closer
+	}{io.LimitReader(opened, limit), opened}, true
+}
+
 func (i *importRun) icloud(ctx context.Context, tree exportTree) error {
 	var details ICloudDetails
 	albums := map[string][]pgtype.UUID{}
@@ -1182,8 +1200,8 @@ func (i *importRun) icloud(ctx context.Context, tree exportTree) error {
 		if !strings.EqualFold(path.Ext(name), ".csv") {
 			continue
 		}
-		source, _, _, err := tree.open(name)
-		if err != nil {
+		source, ok := openList(tree, name, maxListBytes)
+		if !ok {
 			continue
 		}
 		base := path.Base(name)

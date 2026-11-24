@@ -345,7 +345,10 @@ class TvBar extends ConsumerWidget {
                                     .clamp(0, total)
                                     .toDouble(),
                                 max: total.toDouble(),
-                                onChanged: (value) => controller.seek(
+                                onChanged: (value) => controller.preview(
+                                  Duration(milliseconds: value.round()),
+                                ),
+                                onChangeEnd: (value) => controller.seek(
                                   Duration(milliseconds: value.round()),
                                 ),
                               ),

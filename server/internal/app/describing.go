@@ -137,7 +137,7 @@ func cleanAskAnswer(answer string) string {
 		return ""
 	}
 	folded := strings.ToLower(line)
-	for _, refusal := range []string{"i can't", "i cannot", "i'm sorry", "i am sorry", "as an ai"} {
+	for _, refusal := range []string{"i can't", "i cannot", "i'm sorry", "i am sorry", "language model"} {
 		if strings.Contains(folded, refusal) {
 			return ""
 		}

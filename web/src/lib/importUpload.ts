@@ -14,7 +14,10 @@ export function uploadImportPart(
 	onProgress: (loaded: number, total: number) => void
 ): { done: Promise<void>; abort: () => void } {
 	let upload: Upload | undefined;
+	let stop: (() => void) | undefined;
 	const done = new Promise<void>((resolve, reject) => {
+		// Stopping ends the wait too; the part already sent stays on the server for the next try.
+		stop = () => reject(new Error('stopped'));
 		upload = new Upload(file, {
 			endpoint: '/api/uploads',
 			chunkSize: CHUNK_SIZE,
@@ -47,5 +50,11 @@ export function uploadImportPart(
 			})
 			.catch(reject);
 	});
-	return { done, abort: () => void upload?.abort() };
+	return {
+		done,
+		abort: () => {
+			void upload?.abort();
+			stop?.();
+		}
+	};
 }

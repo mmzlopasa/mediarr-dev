@@ -183,7 +183,12 @@
 								aria-pressed={keeps(group, item.id)}
 								onclick={() => (choices[item.id] = !keeps(group, item.id))}
 							>
-								<img src="/api/assets/{item.id}/thumbnail" alt={item.originalName} />
+								<img
+									src="/api/assets/{item.id}/thumbnail"
+									alt={item.originalName}
+									loading="lazy"
+									decoding="async"
+								/>
 								<span class="dup-state">
 									{#if keeps(group, item.id)}<Icon name="check" size={14} />
 										{t('duplicates.keep')}{:else}<Icon name="trash" size={14} />

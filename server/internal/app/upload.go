@@ -43,7 +43,10 @@ const (
 	metaGuest       = "guest"
 	metaImport      = "importId"
 	maxAssetListLen = 200
-	defaultListLen  = 50
+	// maxChecksumCheck is how many checksums the app asks about at once.
+	maxChecksumCheck = 1000
+	maxChecksumBody  = 128 << 10
+	defaultListLen   = 50
 )
 
 var (
@@ -374,10 +377,11 @@ func (s *apiServer) CheckAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body api.ChecksumCheckRequest
-	if !readJSON(w, r, &body) {
+	// A thousand checksums are larger than the usual limit on a request.
+	if !readJSONUpTo(w, r, &body, maxChecksumBody) {
 		return
 	}
-	if len(body.Checksums) > 1000 {
+	if len(body.Checksums) > maxChecksumCheck {
 		writeError(w, http.StatusBadRequest, "too many checksums")
 		return
 	}

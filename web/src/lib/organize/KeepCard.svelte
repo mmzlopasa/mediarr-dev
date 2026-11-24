@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import QRCode from 'qrcode';
 	import {
 		api,
 		formatBytes,
@@ -98,7 +97,14 @@
 
 	async function show(next: KeepInvite) {
 		invite = next;
-		qr = await QRCode.toString(next.code, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
+		qr = '';
+		// The code is shown as text as well, so a QR code that cannot be drawn loses nothing.
+		try {
+			const { default: QRCode } = await import('qrcode');
+			qr = await QRCode.toString(next.code, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
+		} catch {
+			qr = '';
+		}
 	}
 
 	async function inviteGuest(event: SubmitEvent) {
@@ -115,10 +121,20 @@
 		});
 	}
 
-	async function copyCode() {
+	async function copyCode(event: MouseEvent) {
 		if (!invite) return;
-		await navigator.clipboard.writeText(invite.code);
-		showToast('ok', t('keepCard.theCodeIsCopied'));
+		// On plain HTTP the browser has no clipboard; the code is selected to be copied by hand.
+		const box = (event.currentTarget as HTMLElement)
+			.closest('.keep-invite')
+			?.querySelector('.keep-codebox');
+		if (box) getSelection()?.selectAllChildren(box);
+		try {
+			if (!navigator.clipboard) return;
+			await navigator.clipboard.writeText(invite.code);
+			showToast('ok', t('keepCard.theCodeIsCopied'));
+		} catch {
+			// The code stays selected.
+		}
 	}
 
 	const when = (value?: string) =>
@@ -267,8 +283,15 @@
 								{/if}
 							</span>
 							<span class="imp-acts">
-								<Button small onclick={async () => show(await api.reinviteKeepGuest(guest.id))}
-									>{t('keepCard.newCode')}</Button
+								<Button
+									small
+									onclick={async () => {
+										try {
+											await show(await api.reinviteKeepGuest(guest.id));
+										} catch (cause) {
+											fail(cause);
+										}
+									}}>{t('keepCard.newCode')}</Button
 								>
 								{#if guest.status !== 'invited'}
 									<Button

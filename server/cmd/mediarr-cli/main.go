@@ -418,6 +418,15 @@ type refusedError struct{ err error }
 
 func (e *refusedError) Error() string { return e.err.Error() }
 
+// partClient sends one part of a file, which may take long on a slow line, but gives up on a
+// server that stops answering, so that the next try goes on from where it is.
+var partClient = &http.Client{Transport: &http.Transport{
+	Proxy:                 http.ProxyFromEnvironment,
+	ResponseHeaderTimeout: 5 * time.Minute,
+	IdleConnTimeout:       90 * time.Second,
+	TLSHandshakeTimeout:   30 * time.Second,
+}}
+
 func (c *client) part(ctx context.Context, location string, f *file, offset int64) (int64, error) {
 	source, err := os.Open(f.path)
 	if err != nil {
@@ -437,7 +446,7 @@ func (c *client) part(ctx context.Context, location string, f *file, offset int6
 	req.Header.Set("Tus-Resumable", tusVersion)
 	req.Header.Set("Upload-Offset", strconv.FormatInt(offset, 10))
 	req.Header.Set("Content-Type", "application/offset+octet-stream")
-	resp, err := (&http.Client{}).Do(req)
+	resp, err := partClient.Do(req)
 	if err != nil {
 		return 0, err
 	}

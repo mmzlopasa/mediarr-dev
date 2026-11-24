@@ -37,6 +37,9 @@ class BackupChannel(context: Context, messenger: BinaryMessenger) {
                     main.post { result.error("permission", cause.message, null) }
                 } catch (cause: android.database.SQLException) {
                     main.post { result.error("store", cause.message, null) }
+                } catch (cause: RuntimeException) {
+                    // An argument of the wrong type, say. Uncaught here it would stop the whole app.
+                    main.post { result.error("arguments", cause.message, null) }
                 }
             }
             when (call.method) {
@@ -45,12 +48,12 @@ class BackupChannel(context: Context, messenger: BinaryMessenger) {
                     val key = call.argument<String>("key")
                     val id = call.argument<String>("albumId")
                     val name = call.argument<String>("albumName") ?: ""
-                    if (server == null || key == null || (id == null && name.isEmpty())) {
+                    if (!isServerAddress(server) || key.isNullOrEmpty() || (id == null && name.isEmpty())) {
                         result.error("arguments", "server, key and album are required", null)
                     } else {
                         reply {
                             engine.enable(
-                                server, key,
+                                server!!.trimEnd('/'), key,
                                 call.argument<Boolean>("wifiOnly") ?: true,
                                 call.argument<Boolean>("onlyNew") ?: false,
                                 id, name,
@@ -82,12 +85,22 @@ class BackupChannel(context: Context, messenger: BinaryMessenger) {
                     null
                 }
                 "albumChecksums" -> reply { engine.albumChecksums() }
-                "setServer" -> reply { call.argument<String>("value")?.let(engine::setServer); null }
+                "setServer" -> {
+                    val value = call.argument<Any>("value") as? String
+                    if (!isServerAddress(value)) {
+                        result.error("arguments", "not a server address", null)
+                    } else {
+                        reply { engine.setServer(value!!.trimEnd('/')); null }
+                    }
+                }
                 "retryFailed" -> reply { engine.retryFailed(); null }
                 "status" -> reply { engine.status() }
                 "statuses" -> reply { engine.store.statuses(call.argument<List<String>>("ids") ?: emptyList()) }
                 "verifiedChecksums" -> reply { engine.store.verifiedChecksums() }
-                "waiting" -> reply { engine.store.waiting(call.argument<Int>("limit") ?: DEFAULT_LIMIT) }
+                "waiting" -> reply {
+                    val limit = (call.argument<Any>("limit") as? Number)?.toInt() ?: DEFAULT_LIMIT
+                    engine.store.waiting(limit.coerceIn(1, MAX_LIMIT))
+                }
                 else -> result.notImplemented()
             }
         }
@@ -109,5 +122,6 @@ class BackupChannel(context: Context, messenger: BinaryMessenger) {
     private companion object {
         const val CHECK_EVERY_MS = 60_000L
         const val DEFAULT_LIMIT = 60
+        const val MAX_LIMIT = 10_000
     }
 }

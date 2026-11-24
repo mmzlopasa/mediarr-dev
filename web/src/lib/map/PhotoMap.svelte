@@ -133,8 +133,12 @@
 			const clusterId = cluster?.properties?.cluster_id;
 			if (clusterId === undefined) return;
 			const source = view.getSource('photos') as GeoJSONSource;
-			const leaves = await source.getClusterLeaves(clusterId, LEAF_LIMIT, 0);
-			onCluster(leaves.map((leaf) => String(leaf.properties?.id)));
+			try {
+				const leaves = await source.getClusterLeaves(clusterId, LEAF_LIMIT, 0);
+				onCluster(leaves.map((leaf) => String(leaf.properties?.id)));
+			} catch {
+				// The points changed under the click; the next click finds the new group.
+			}
 		});
 		for (const layer of ['photo', 'clusters']) {
 			view.on('mouseenter', layer, () => (view.getCanvas().style.cursor = 'pointer'));

@@ -570,7 +570,7 @@ class _LinksSheetState extends State<LinksSheet> {
           askName: _privacy.askName,
         ),
       );
-      if (link?.token != null) {
+      if (link?.token != null && mounted) {
         setState(() {
           _created = publicLinkUrl(widget.session.serverUrl, link!.token!);
           _label.clear();

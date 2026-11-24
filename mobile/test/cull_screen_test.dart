@@ -92,7 +92,10 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byKey(const Key('cull-tally')), findsOneWidget);
 
-    await tester.drag(find.byKey(const Key('cull-stage')), const Offset(0, -300));
+    await tester.drag(
+      find.byKey(const Key('cull-stage')),
+      const Offset(0, -300),
+    );
     await tester.pump(const Duration(milliseconds: 100));
     expect(picks, [1]);
     expect(tester.takeException(), isNull);

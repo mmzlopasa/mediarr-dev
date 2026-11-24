@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Snippet } from 'svelte';
-	import { afterNavigate, goto } from '$app/navigation';
+	import { afterNavigate, goto, invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { api, ApiError, avatarOf, initialsOf, type User } from '#lib/api.ts';
@@ -75,6 +75,9 @@
 	onMount(() => {
 		const onMaintenance = () => (maintained = true);
 		window.addEventListener('mediarr:maintenance', onMaintenance);
+		// Asking again who is signed in sends a person whose session ended to sign-in.
+		const onSignedOut = () => void invalidate('app:session');
+		window.addEventListener('mediarr:signedout', onSignedOut);
 		let stopScroll: (() => void) | undefined;
 		let stopped = false;
 		void startSmoothScroll().then((stop) => {
@@ -87,6 +90,7 @@
 			stopScroll?.();
 			stopMotion?.();
 			window.removeEventListener('mediarr:maintenance', onMaintenance);
+			window.removeEventListener('mediarr:signedout', onSignedOut);
 		};
 	});
 

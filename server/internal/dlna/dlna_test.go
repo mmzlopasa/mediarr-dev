@@ -1,6 +1,7 @@
 package dlna
 
 import (
+	"net"
 	"strings"
 	"testing"
 	"time"
@@ -107,5 +108,28 @@ func TestASOAPActionIsRead(t *testing.T) {
 	}
 	if fault := Fault(701, "no such object"); !strings.Contains(fault, "<errorCode>701</errorCode>") {
 		t.Fatalf("fault: %s", fault)
+	}
+}
+
+func TestOnlyTheHomeNetworkIsAnswered(t *testing.T) {
+	for address, want := range map[string]bool{
+		"192.168.1.20": true, "10.0.0.5": true, "172.16.3.4": true, "127.0.0.1": true, "169.254.1.1": true,
+		"8.8.8.8": false, "203.0.113.9": false, "239.255.255.250": false,
+	} {
+		if got := FromHomeNetwork(net.ParseIP(address)); got != want {
+			t.Errorf("FromHomeNetwork(%s) = %v, want %v", address, got, want)
+		}
+	}
+}
+
+func TestOnlyDLNAPathsArePassedOn(t *testing.T) {
+	for p, want := range map[string]bool{
+		"/dlna/device.xml": true, "/dlna/media/abc": true,
+		"/api/users": false, "/dlna/../api/users": false, "/dlna/./x": false, "/dlna//x": false,
+		"/dlna/%2e%2e/api": false, "/dlna": false,
+	} {
+		if got := IsDLNAPath(p); got != want {
+			t.Errorf("IsDLNAPath(%q) = %v, want %v", p, got, want)
+		}
 	}
 }

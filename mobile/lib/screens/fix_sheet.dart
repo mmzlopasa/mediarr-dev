@@ -310,7 +310,7 @@ class _FixSheetState extends State<_FixSheet> {
         _setAt ?? DateTime(day.year, day.month, day.day, 12),
       ),
     );
-    if (time == null) return;
+    if (time == null || !mounted) return;
     setState(
       () => _setAt = DateTime(
         day.year,

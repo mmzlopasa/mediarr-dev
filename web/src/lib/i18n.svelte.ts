@@ -1,7 +1,4 @@
-import de from './i18n/de.json';
 import en from './i18n/en.json';
-import hr from './i18n/hr.json';
-import sl from './i18n/sl.json';
 
 /** Every text has a key; English is the source and what is shown when a translation is missing. */
 export type Key = keyof typeof en;
@@ -22,9 +19,25 @@ export const unreviewed: readonly Lang[] = ['de', 'sl'];
 
 const KEY = 'mediarr_lang';
 
-// All of them come with the page: loading one later could fail, and a page must never fail over its
-// words. Each is about 20 KB compressed.
-const catalogs: Record<Exclude<Lang, 'en'>, Catalog> = { hr, de, sl };
+// English comes with the page; another language is fetched only when it is chosen, so nobody loads
+// the words of all of them. If one cannot be fetched the page stays in English, which always works.
+const catalogs: Record<Exclude<Lang, 'en'>, () => Promise<{ default: Catalog }>> = {
+	hr: () => import('./i18n/hr.json'),
+	de: () => import('./i18n/de.json'),
+	sl: () => import('./i18n/sl.json')
+};
+// Not state: what has been fetched, kept so that switching back costs nothing.
+const fetched: Partial<Record<Lang, Catalog>> = { en: {} };
+
+async function fetchCatalog(language: Lang): Promise<Catalog | undefined> {
+	if (language === 'en') return fetched.en;
+	try {
+		fetched[language] ??= (await catalogs[language]()).default;
+	} catch {
+		// A failed fetch is tried again the next time the language is chosen.
+	}
+	return fetched[language];
+}
 
 /** English is the main language; other languages apply only when chosen. */
 export function parseLang(stored: string | null | undefined): Lang {
@@ -41,7 +54,8 @@ function initial(): Lang {
 }
 
 let current = $state<Lang>(initial());
-let catalog = $state<Catalog>(current === 'en' ? {} : catalogs[current]);
+// The words of the language they were fetched for; until then English is shown.
+let catalog = $state<{ lang: Lang; words: Catalog }>({ lang: 'en', words: {} });
 
 export function lang() {
 	return current;
@@ -55,12 +69,15 @@ export function dateLocale() {
 	return LOCALES[current];
 }
 
-/** Picks the texts of a language. Kept async for callers that awaited loading. */
+/** Fetches the texts of a language and shows them, if it is still the chosen one by then. */
 export async function loadLang(next: Lang = current) {
-	catalog = next === 'en' ? {} : catalogs[next];
+	const words = await fetchCatalog(next);
+	if (words && next === current) catalog = { lang: next, words };
 }
 
 export async function setLang(next: Lang) {
+	// Fetched first, so the page changes language at once and not word by word.
+	await fetchCatalog(next);
 	current = next;
 	if (typeof document !== 'undefined') document.documentElement.lang = next;
 	try {
@@ -139,7 +156,10 @@ function choices(body: string): Record<string, string> {
 
 /** The text of a key in the chosen language. */
 export function t(key: Key, params?: Params): string {
-	const text = (current === 'en' ? undefined : catalog[key]) ?? en[key] ?? key;
+	const text =
+		(current === 'en' || catalog.lang !== current ? undefined : catalog.words[key]) ??
+		en[key] ??
+		key;
 	return params || text.includes('{') ? format(text, params) : text;
 }
 

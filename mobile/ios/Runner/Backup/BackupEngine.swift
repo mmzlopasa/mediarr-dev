@@ -35,7 +35,7 @@ final class BackupEngine: NSObject {
 
   static let refreshTaskID = "app.mediarr.backup.refresh"
   static let processingTaskID = "app.mediarr.backup.processing"
-  private static let sessionID = "app.mediarr.backup"
+  static let sessionID = "app.mediarr.backup"
   private static let maxQueued = 6
   private static let maxAttempts = 5
   private static let checkInterval: TimeInterval = 60
@@ -589,17 +589,24 @@ final class BackupEngine: NSObject {
     }
 
     let resources = PHAssetResource.assetResources(for: asset)
-    guard let resource = BackupEngine.resource(in: resources, part: item.part, asset: asset) else {
+    let types = resources.map(\.type)
+    guard
+      let type = BackupEngine.resourceType(
+        in: types, part: item.part, isVideo: asset.mediaType == .video),
+      let resource = resources.first(where: { $0.type == type })
+    else {
       openStore()?.setStatus(
         .failed, assetID: item.assetID, part: item.part, error: "This item has no original file.")
       done()
       return
     }
-    // A Live Photo also sends its video, as a separate file on the server.
-    if item.part == BackupPart.main, resources.contains(where: { $0.type == .pairedVideo }) {
-      openStore()?.add(
-        [(item.assetID, asset.creationDate ?? Date(timeIntervalSince1970: 0))],
-        part: BackupPart.paired)
+    // A Live Photo also sends its video, and a RAW+JPEG photo its RAW, each as a separate file
+    // on the server. The photo only counts as safe once every part is.
+    if item.part == BackupPart.main {
+      for part in BackupEngine.extraParts(in: types, isVideo: asset.mediaType == .video) {
+        openStore()?.add(
+          [(item.assetID, asset.creationDate ?? Date(timeIntervalSince1970: 0))], part: part)
+      }
     }
 
     let file = temporaryFolder.appendingPathComponent(
@@ -636,19 +643,33 @@ final class BackupEngine: NSObject {
     }
   }
 
-  private static func resource(
-    in resources: [PHAssetResource], part: String, asset: PHAsset
-  ) -> PHAssetResource? {
-    if part == BackupPart.paired {
-      return resources.first { $0.type == .pairedVideo }
+  /// Which of an asset's files a part is. Always the original as taken, never the copy an edit
+  /// rendered (.fullSizePhoto, .fullSizeVideo, .fullSizePairedVideo) and never the edit's own data.
+  /// Only an asset whose original is gone falls back to the rendered copy.
+  static func resourceType(
+    in types: [PHAssetResourceType], part: String, isVideo: Bool
+  ) -> PHAssetResourceType? {
+    let wanted: [PHAssetResourceType]
+    switch part {
+    case BackupPart.paired: wanted = [.pairedVideo, .fullSizePairedVideo]
+    case BackupPart.alternate: wanted = [.alternatePhoto]
+    default: wanted = isVideo ? [.video, .fullSizeVideo] : [.photo, .alternatePhoto, .fullSizePhoto]
     }
-    // The original, not an edited copy: originals are never changed.
-    let wanted: [PHAssetResourceType] =
-      asset.mediaType == .video ? [.video, .fullSizeVideo] : [.photo, .fullSizePhoto, .alternatePhoto]
-    for type in wanted {
-      if let match = resources.first(where: { $0.type == type }) { return match }
+    return wanted.first { types.contains($0) }
+  }
+
+  /// The parts beside the main file: a Live Photo's video, and the RAW kept beside a JPEG.
+  static func extraParts(in types: [PHAssetResourceType], isVideo: Bool) -> [String] {
+    guard !isVideo else { return [] }
+    var parts: [String] = []
+    if types.contains(.pairedVideo) || types.contains(.fullSizePairedVideo) {
+      parts.append(BackupPart.paired)
     }
-    return resources.first
+    // When there is no .photo, the RAW is the main file itself.
+    if types.contains(.photo), types.contains(.alternatePhoto) {
+      parts.append(BackupPart.alternate)
+    }
+    return parts
   }
 
   private func send(_ item: BackupItem, file: URL, name: String, created: Date?) {

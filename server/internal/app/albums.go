@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
@@ -29,6 +30,7 @@ const (
 
 	maxAlbumTitle  = 200
 	maxCommentBody = 2000
+	maxDescription = 2000
 )
 
 var roleRank = map[string]int{roleViewer: 1, roleContributor: 2, roleEditor: 3, roleOwner: 4}
@@ -58,7 +60,7 @@ func (s *apiServer) album(w http.ResponseWriter, r *http.Request, id openapi_typ
 	return &row, user, true
 }
 
-func (s *apiServer) toAPIAlbum(ctx context.Context, row *db.GetAlbumForUserRow) (api.Album, error) {
+func (s *apiServer) toAPIAlbum(row *db.GetAlbumForUserRow) (api.Album, error) {
 	out := api.Album{
 		Id:          row.ID.Bytes,
 		Title:       row.Title,
@@ -85,20 +87,22 @@ func (s *apiServer) toAPIAlbum(ctx context.Context, row *db.GetAlbumForUserRow) 
 		out.Rules = &rules
 	}
 	cover := row.NewestAssetID
-	if row.CoverAssetID.Valid {
-		chosen, err := s.queries.AlbumHasAsset(ctx, db.AlbumHasAssetParams{PAlbum: row.ID, PAsset: row.CoverAssetID})
-		if err != nil {
-			return out, err
-		}
-		if chosen {
-			cover = row.CoverAssetID
-		}
+	if row.CoverInAlbum {
+		cover = row.CoverAssetID
 	}
 	if cover.Valid {
 		value := openapi_types.UUID(cover.Bytes)
 		out.CoverAssetId = &value
 	}
 	return out, nil
+}
+
+func cleanDescription(text string) (string, error) {
+	text = strings.TrimSpace(text)
+	if len([]rune(text)) > maxDescription {
+		return "", fmt.Errorf("the description may have at most %d characters", maxDescription)
+	}
+	return text, nil
 }
 
 func cleanTitle(title string) (string, error) {
@@ -176,7 +180,7 @@ func (s *apiServer) ListAlbums(w http.ResponseWriter, r *http.Request, params ap
 	out := make([]api.Album, len(rows))
 	for i := range rows {
 		row := db.GetAlbumForUserRow(rows[i])
-		if out[i], err = s.toAPIAlbum(ctx, &row); err != nil {
+		if out[i], err = s.toAPIAlbum(&row); err != nil {
 			internalError(w, r, err)
 			return
 		}
@@ -207,34 +211,43 @@ func (s *apiServer) CreateAlbum(w http.ResponseWriter, r *http.Request) {
 	}
 	description := ""
 	if body.Description != nil {
-		description = strings.TrimSpace(*body.Description)
+		if description, err = cleanDescription(*body.Description); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 	ctx := r.Context()
-	id, err := s.queries.CreateAlbum(ctx, db.CreateAlbumParams{OwnerID: user.ID, Title: title, Description: description, Rules: rules})
-	if err != nil {
-		internalError(w, r, err)
-		return
-	}
 	prefs, err := s.preferences(ctx, user.ID)
 	if err != nil {
 		internalError(w, r, err)
 		return
 	}
-	if err := s.queries.SetAlbumOrder(ctx, db.SetAlbumOrderParams{ID: id, AssetOrder: string(prefs.AlbumOrder)}); err != nil {
-		internalError(w, r, err)
-		return
-	}
+	// The album is made only where it was asked for. A new album holds nothing yet, so the parent
+	// cannot be inside it.
 	if body.ParentId != nil {
-		if code, message := s.checkParent(ctx, user.ID, id, *body.ParentId); code != 0 {
-			// The album is made only where it was asked for.
-			_ = s.queries.DeleteAlbum(ctx, id)
+		if code, message := s.checkParent(ctx, user.ID, pgtype.UUID{}, *body.ParentId); code != 0 {
 			writeError(w, code, message)
 			return
 		}
-		if err := s.queries.SetAlbumParent(ctx, db.SetAlbumParentParams{ID: id, ParentID: pgUUID(*body.ParentId)}); err != nil {
-			internalError(w, r, err)
-			return
+	}
+	var id pgtype.UUID
+	err = pgx.BeginFunc(ctx, s.Pool, func(tx pgx.Tx) error {
+		q := s.queries.WithTx(tx)
+		var err error
+		if id, err = q.CreateAlbum(ctx, db.CreateAlbumParams{OwnerID: user.ID, Title: title, Description: description, Rules: rules}); err != nil {
+			return err
 		}
+		if err := q.SetAlbumOrder(ctx, db.SetAlbumOrderParams{ID: id, AssetOrder: string(prefs.AlbumOrder)}); err != nil {
+			return err
+		}
+		if body.ParentId == nil {
+			return nil
+		}
+		return q.SetAlbumParent(ctx, db.SetAlbumParentParams{ID: id, ParentID: pgUUID(*body.ParentId)})
+	})
+	if err != nil {
+		internalError(w, r, err)
+		return
 	}
 	s.writeAlbum(w, r, http.StatusCreated, id, user.ID, false)
 }
@@ -295,7 +308,7 @@ func (s *apiServer) writeAlbum(w http.ResponseWriter, r *http.Request, code int,
 		internalError(w, r, err)
 		return
 	}
-	out, err := s.toAPIAlbum(ctx, &row)
+	out, err := s.toAPIAlbum(&row)
 	if err != nil {
 		internalError(w, r, err)
 		return
@@ -345,7 +358,10 @@ func (s *apiServer) UpdateAlbum(w http.ResponseWriter, r *http.Request, id opena
 		}
 	}
 	if body.Description != nil {
-		params.Description = strings.TrimSpace(*body.Description)
+		if params.Description, err = cleanDescription(*body.Description); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 	if body.Order != nil {
 		if !body.Order.Valid() {

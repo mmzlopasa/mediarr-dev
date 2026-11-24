@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http show get;
+import 'package:http/http.dart' as http show Client, get;
 import 'package:http/http.dart' show Response;
 import 'package:mediarr_api/api.dart';
 
@@ -24,8 +24,12 @@ class Session {
 
   Map<String, String> get headers => {'Cookie': cookie};
 
+  /// One connection pool for the whole session, so requests reuse open connections instead of
+  /// opening a new one each time. Each [api] still gets its own headers.
+  late final http.Client _http = http.Client();
+
   DefaultApi get api {
-    final client = ApiClient(basePath: serverUrl);
+    final client = ApiClient(basePath: serverUrl)..client = _http;
     client.addDefaultHeader('Cookie', cookie);
     return DefaultApi(client);
   }

@@ -96,7 +96,9 @@ class _FoundServersState extends State<FoundServers> {
       _searching = true;
     });
     _search = discoverServers().listen(
-      (server) => setState(() => _found.add(server)),
+      (server) {
+        if (mounted) setState(() => _found.add(server));
+      },
       onDone: () {
         if (mounted) setState(() => _searching = false);
       },
@@ -155,6 +157,8 @@ class _FoundServersState extends State<FoundServers> {
               server.name == 'Mediarr'
                   ? Uri.parse(server.url).authority
                   : '${server.name} · ${Uri.parse(server.url).authority}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text('Mediarr ${server.version}'),
             onTap: () => widget.onPick(server.url),
@@ -179,9 +183,10 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
   String? _error;
   Timer? _timer;
   bool _answering = false;
+  bool _polling = false;
   DateTime _now = DateTime.now();
 
-  DefaultApi get _api => ref.read(sessionProvider).value!.api;
+  late final DefaultApi _api = ref.read(sessionProvider).value!.api;
 
   @override
   void initState() {
@@ -224,12 +229,16 @@ class _ShowSignInCodeScreenState extends ConsumerState<ShowSignInCodeScreen> {
     if (!mounted) return;
     setState(() => _now = DateTime.now());
     final code = _code;
-    if (code == null || _status != 'waiting') return;
+    if (code == null || _status != 'waiting' || _polling) return;
+    // A slow server must not get a second question before it answered the first.
+    _polling = true;
     try {
       final state = await _api.getQRSignIn(code.id);
-      if (mounted) setState(() => _state = state);
+      if (mounted && _code == code) setState(() => _state = state);
     } on ApiException {
       // Asked again on the next tick.
+    } finally {
+      _polling = false;
     }
   }
 

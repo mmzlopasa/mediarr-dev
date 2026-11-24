@@ -138,3 +138,19 @@ def test_a_failed_unpacking_leaves_no_model(fake_faces, monkeypatch):
     assert not (folder / "det.onnx").exists()
     assert not (folder / "rec.onnx").exists()
     assert not any(path.name.startswith(".extract-") for path in folder.iterdir())
+
+
+def test_session_options_use_the_configured_threads(monkeypatch):
+    import onnxruntime as ort
+
+    monkeypatch.setattr(config, "THREADS", 3)
+    options = models.session_options()
+    assert options.intra_op_num_threads == 3
+    assert options.graph_optimization_level == ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    assert options.execution_mode == ort.ExecutionMode.ORT_SEQUENTIAL
+    assert options.get_session_config_entry("session.intra_op.allow_spinning") == "0"
+
+
+def test_without_a_thread_setting_the_runtime_chooses(monkeypatch):
+    monkeypatch.setattr(config, "THREADS", 0)
+    assert models.session_options().intra_op_num_threads == 0

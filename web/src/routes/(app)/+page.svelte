@@ -21,8 +21,10 @@
 	import MoveToVault from '#lib/organize/MoveToVault.svelte';
 	import TagButton from '#lib/organize/TagButton.svelte';
 	import {
+		cancelUpload,
 		clearFinishedUploads,
 		isPreparingUpload,
+		retryUpload,
 		uploads,
 		type UploadStatus
 	} from '#lib/uploads.svelte.ts';
@@ -117,6 +119,19 @@
 			<div class="kv">
 				<span>{upload.name}</span>
 				<b>{t(uploadLabels[upload.status])}</b>
+				{#if upload.status === 'failed'}
+					<Button
+						small
+						aria-label={t('home.upload.retryName', { name: upload.name })}
+						onclick={() => retryUpload(upload.id)}>{t('common.tryAgain')}</Button
+					>
+				{:else if upload.status === 'queued' || upload.status === 'uploading'}
+					<Button
+						small
+						aria-label={t('home.upload.cancelName', { name: upload.name })}
+						onclick={() => cancelUpload(upload.id)}>{t('common.cancel')}</Button
+					>
+				{/if}
 			</div>
 			{#if upload.status === 'uploading'}
 				<Bar

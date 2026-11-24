@@ -32,7 +32,7 @@ struct WidgetShare: Codable, Equatable {
       var add = probe
       add.removeValue(forKey: kSecReturnAttributes as String)
       add[kSecValueData as String] = Data()
-      add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+      add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
       SecItemAdd(add as CFDictionary, nil)
       status = SecItemCopyMatching(probe as CFDictionary, &found)
     }
@@ -73,7 +73,8 @@ struct WidgetShare: Codable, Equatable {
     guard let share, let data = try? JSONEncoder().encode(share) else { return true }
     var add = base
     add[kSecValueData as String] = data
-    add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+    // Never in a backup or on another phone; the widget reads it in the background after unlock.
+    add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
     return SecItemAdd(add as CFDictionary, nil) == errSecSuccess
   }
 }

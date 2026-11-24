@@ -11,7 +11,7 @@ A local model writes a short description of each photo, which makes it searchabl
 1. Add the profile to `.env`, together with `ml` if you use it:
 
    ```bash
-   COMPOSE_PROFILES=ml,ai
+   COMPOSE_PROFILES=ml,descriptions
    ```
 
 2. Apply it:

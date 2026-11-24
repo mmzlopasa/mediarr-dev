@@ -171,6 +171,7 @@ class _BackupCardState extends ConsumerState<BackupCard> {
     final service = ref.read(backupProvider);
     final permission = await service.requestAccess();
     if (permission != PermissionState.authorized) {
+      if (!mounted) return false;
       setState(() => _error = l.backupCardNeedsFullAccess);
       return false;
     }

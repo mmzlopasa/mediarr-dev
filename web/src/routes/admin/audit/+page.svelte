@@ -6,15 +6,18 @@
 	import Card from '#lib/design/components/Card.svelte';
 	import EmptyState from '#lib/design/components/EmptyState.svelte';
 	import Skeleton from '#lib/design/components/Skeleton.svelte';
-	import { t } from '#lib/i18n.svelte.ts';
+	import { dateLocale, t } from '#lib/i18n.svelte.ts';
 
 	let entries = $state<AuditEntry[]>();
 	let failed = $state(false);
 	let more = $state(false);
+	let loading = $state(false);
 
 	const PAGE = 100;
 
 	async function load(before?: number) {
+		if (loading) return;
+		loading = true;
 		try {
 			const page = await api.auditLog(before);
 			entries = before ? [...(entries ?? []), ...page] : page;
@@ -22,6 +25,8 @@
 			failed = false;
 		} catch {
 			failed = true;
+		} finally {
+			loading = false;
 		}
 	}
 
@@ -52,7 +57,7 @@
 		<div class="audit-list">
 			{#each entries as entry (entry.id)}
 				<div class="audit-row" class:audit-failed={entry.status >= 400}>
-					<small>{new Date(entry.at).toLocaleString()}</small>
+					<small>{new Date(entry.at).toLocaleString(dateLocale())}</small>
 					<b>{entry.userEmail || t('admin.audit.unknown')}</b>
 					<span>{entry.method} {entry.route}</span>
 					<small>{entry.target}</small>
@@ -61,7 +66,9 @@
 			{/each}
 		</div>
 		{#if more}
-			<Button small onclick={() => load(entries?.at(-1)?.id)}>{t('admin.audit.loadOlder')}</Button>
+			<Button small disabled={loading} onclick={() => load(entries?.at(-1)?.id)}
+				>{t('admin.audit.loadOlder')}</Button
+			>
 		{/if}
 	</Card>
 {/if}

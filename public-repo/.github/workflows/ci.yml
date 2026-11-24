@@ -5,14 +5,18 @@ on:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: read
+# Nothing by default; each job names what it reads.
+permissions: {}
 
 jobs:
   server:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Vet and test, with the same media tools as the image
         run: |
           docker run --rm -v "$PWD:/repo" -w /repo/server golang:1.27-alpine sh -c \
@@ -20,12 +24,16 @@ jobs:
 
   machine-learning:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: machine-learning
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           version: 0.13.6
       - run: uv run ruff check .
@@ -33,15 +41,19 @@ jobs:
 
   web:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           version: 12.16.1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: pnpm
@@ -52,8 +64,12 @@ jobs:
 
   compose:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - run: cp docker/example.env docker/.env
       - run: docker compose -f docker/docker-compose.yml config --quiet
       - run: docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml config --quiet

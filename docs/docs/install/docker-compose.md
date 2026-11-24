@@ -68,7 +68,7 @@ docker compose ps
 Go to `http://your-server-ip:9851` and create the first account, which becomes the administrator. Then continue with the [first steps](/install/post-install).
 
 :::warning Do not open this port to the internet
-Ports published by Docker bypass firewalls such as `ufw`. To reach Mediarr from outside, put a [reverse proxy with HTTPS](/administration/reverse-proxy) in front of it, or use a VPN.
+Ports published by Docker bypass firewalls such as `ufw`. To reach Mediarr from outside, put a [reverse proxy with HTTPS](/administration/reverse-proxy) in front of it, or use a VPN. Port `9851` is the only one the install file publishes; see [Security](/administration/security).
 :::
 
 ## Optional parts

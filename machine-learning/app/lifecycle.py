@@ -19,11 +19,13 @@ MAX_POLL_SECONDS = 30.0
 class Slot:
     """One model, opened by the first request that needs it."""
 
-    def __init__(self, name: str, loader: Callable[[], Any]) -> None:
+    def __init__(self, name: str, loader: Callable[[], Any], exclusive: bool = False) -> None:
         self.name = name
         self._loader = loader
         # Held while loading, so a second first request waits and shares the result.
         self._lock = threading.Lock()
+        # For a model that keeps the state of a call on itself: one request at a time uses it.
+        self._turn = threading.Lock() if exclusive else None
         self._value: Any = None
         self._users = 0
         self._last_used = 0.0
@@ -36,7 +38,12 @@ class Slot:
             self._users += 1
             value = self._value
         try:
-            yield value
+            # A request waiting for its turn counts as a user, so the model stays loaded meanwhile.
+            if self._turn is None:
+                yield value
+            else:
+                with self._turn:
+                    yield value
         finally:
             with self._lock:
                 self._users -= 1
@@ -82,8 +89,8 @@ class Registry:
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
 
-    def add(self, name: str, loader: Callable[[], Any]) -> Slot:
-        slot = Slot(name, loader)
+    def add(self, name: str, loader: Callable[[], Any], exclusive: bool = False) -> Slot:
+        slot = Slot(name, loader, exclusive)
         self.slots.append(slot)
         return slot
 

@@ -12,7 +12,7 @@ title: Monitoring
 
 ## Maintenance mode
 
-**Admin → Settings → Server → Maintenance mode** keeps everyone except administrators out while you work on the server. People who are signed in see a message, and only administrators can sign in. If you lock yourself out, this turns it off:
+**Admin → Settings → Server → Maintenance mode** keeps everyone except administrators out while you work on the server. People who are signed in see a message, and only administrators can sign in. If you lock yourself out, this turns it off, along with the rules under **Admin → Security**:
 
 ```bash
 docker compose exec server /mediarr security reset
@@ -20,13 +20,13 @@ docker compose exec server /mediarr security reset
 
 ## Background jobs
 
-**Admin → Settings → Server** sets how many background jobs, videos and analyses run at a time. These apply after the worker restarts:
+**Admin → Settings → Server** sets how many background jobs (0 uses `WORKER_CONCURRENCY` from `.env`, or the number of processors), **Videos at a time** and **Analyses at a time** (1 each by default) run. These apply after the worker restarts:
 
 ```bash
 docker compose restart worker
 ```
 
-The same place sets how sure a face must be, how alike two faces must be to be one person, and how often an external library is scanned. These apply to work done from then on.
+The same place sets how sure a face must be, how alike two faces must be to be one person, and how often an external library is scanned (every 6 hours by default). These apply to work done from then on.
 
 ## A dashboard for your services
 

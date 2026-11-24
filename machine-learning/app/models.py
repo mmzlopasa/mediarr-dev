@@ -182,8 +182,21 @@ def providers() -> list[str]:
     return [provider for provider in wanted if provider in available]
 
 
-def open_session(path: Path) -> ort.InferenceSession:
+def session_options() -> ort.SessionOptions:
+    """Settings that change how fast a model runs, never what it answers."""
     options = ort.SessionOptions()
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
     if config.THREADS > 0:
         options.intra_op_num_threads = config.THREADS
-    return ort.InferenceSession(str(path), options, providers=providers())
+        options.inter_op_num_threads = 1
+    # Idle threads sleep instead of spinning, which leaves the processor to the server's own work
+    # between pictures and to the other models when several requests run at once.
+    options.add_session_config_entry("session.intra_op.allow_spinning", "0")
+    # Warnings and errors only: the runtime's own notes would fill the log on every load.
+    options.log_severity_level = 2
+    return options
+
+
+def open_session(path: Path) -> ort.InferenceSession:
+    return ort.InferenceSession(str(path), session_options(), providers=providers())

@@ -8966,6 +8966,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Files that failed are tried again by themselves after a day.'**
   String get backupCardFailedRetryLater;
+
+  /// No description provided for @freeSpaceScreenKeptChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 photo was kept: it changed or is no longer on the server.} other{{count} photos were kept: they changed or are no longer on the server.}}'**
+  String freeSpaceScreenKeptChanged(int count);
 }
 
 class _AppLocalizationsDelegate

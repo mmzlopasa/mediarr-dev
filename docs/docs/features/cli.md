@@ -16,7 +16,8 @@ Download the one for your computer from `https://cdn.mediarr.app/install/cli/`:
 | Linux, ARM (Raspberry Pi) | `mediarr-cli-linux-arm64` |
 | macOS, Apple silicon | `mediarr-cli-darwin-arm64` |
 | macOS, Intel | `mediarr-cli-darwin-amd64` |
-| Windows | `mediarr-cli-windows-amd64.exe` |
+| Windows, Intel or AMD | `mediarr-cli-windows-amd64.exe` |
+| Windows, ARM | `mediarr-cli-windows-arm64.exe` |
 
 `SHA256SUMS` beside them lets you check the download. On Linux and macOS:
 
@@ -29,13 +30,13 @@ On macOS, if it is refused the first time, allow it under **System Settings → 
 
 ## Signing in
 
-Make an API key in Mediarr under **Account → API keys** with the **upload** right, and **read** and **write** too if you want to put files in an album. Then:
+Make an API key in Mediarr under **Account → API keys** with the **Upload** right, and **Read** and **Change and delete** too if you want to put files in an album. Then:
 
 ```bash
 ./mediarr-cli login http://192.168.1.10:9851
 ```
 
-It asks for the key and keeps it in your user's settings folder, readable only by you. Instead, `MEDIARR_SERVER` and `MEDIARR_API_KEY` can be set, for scripts.
+It asks for the key and keeps it in your user's settings folder, readable only by you. Instead, `MEDIARR_SERVER` and `MEDIARR_API_KEY` can both be set, for scripts.
 
 ## Uploading
 
@@ -46,7 +47,7 @@ It asks for the key and keeps it in your user's settings folder, readable only b
 ./mediarr-cli upload --delete-after ~/DCIM
 ```
 
-It looks through the folders and the ones inside them (`--recursive=false` for only the top), and takes photos and videos, leaving other files and hidden folders alone. Before sending, it asks the server which files it already has, by their checksum, and sends only the rest, so running the same command twice sends nothing twice.
+It takes folders or single files. It looks through the folders and the ones inside them (`--recursive=false` for only the top), and takes photos and videos, leaving other files and hidden folders alone. Before sending, it asks the server which files it already has, by their checksum, and sends only the rest, so running the same command twice sends nothing twice.
 
 | Flag | Does |
 | --- | --- |

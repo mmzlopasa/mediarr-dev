@@ -7,6 +7,8 @@ SELECT al.id, al.owner_id, al.title, al.description, al.cover_asset_id, al.asset
        album_asset_count(al.id)::bigint AS asset_count,
        album_newest_asset(al.id) AS newest_asset_id,
        (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at,
+       -- A chosen cover counts only while the album still shows it.
+       (al.cover_asset_id IS NOT NULL AND album_has_asset(al.id, al.cover_asset_id))::boolean AS cover_in_album,
        -- Sharing is per album: the one around it counts only when this user sees it too.
        (CASE WHEN EXISTS (
             SELECT 1 FROM albums p LEFT JOIN album_members pm ON pm.album_id = p.id AND pm.user_id = sqlc.arg('user_id')
@@ -26,6 +28,8 @@ SELECT al.id, al.owner_id, al.title, al.description, al.cover_asset_id, al.asset
        album_asset_count(al.id)::bigint AS asset_count,
        album_newest_asset(al.id) AS newest_asset_id,
        (SELECT n.local_at FROM assets n WHERE n.id = album_newest_asset(al.id)) AS newest_at,
+       -- A chosen cover counts only while the album still shows it.
+       (al.cover_asset_id IS NOT NULL AND album_has_asset(al.id, al.cover_asset_id))::boolean AS cover_in_album,
        -- Sharing is per album: the one around it counts only when this user sees it too.
        (CASE WHEN EXISTS (
             SELECT 1 FROM albums p LEFT JOIN album_members pm ON pm.album_id = p.id AND pm.user_id = sqlc.arg('user_id')

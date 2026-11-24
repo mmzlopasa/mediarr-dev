@@ -5,6 +5,7 @@
 	import Icon from '#lib/design/components/Icon.svelte';
 	import { showToast } from '#lib/design/components/toast.svelte.ts';
 	import { t } from '#lib/i18n.svelte.ts';
+	import { openLayer, trapFocus } from '#lib/design/layers.ts';
 	import { moveCrop, turnCrop, wholePicture, type Crop, type Corner } from './crop.ts';
 
 	const WAIT_MS = 500;
@@ -31,6 +32,31 @@
 	let canvas = $state<HTMLCanvasElement>();
 	let busy = $state(false);
 	let failed = $state(false);
+	let root = $state<HTMLDivElement>();
+
+	// Over the viewer, the editor is the top layer: Tab stays in it, Esc closes it, and focus goes
+	// back to where it was.
+	$effect(() => {
+		const node = root;
+		if (!node) return;
+		const previous = document.activeElement as HTMLElement | null;
+		const layer = openLayer();
+		const untrap = trapFocus(node, layer);
+		node.focus();
+		const key = (event: KeyboardEvent) => {
+			if (event.key !== 'Escape' || !layer.isTop() || busy) return;
+			event.preventDefault();
+			event.stopPropagation();
+			onClose();
+		};
+		window.addEventListener('keydown', key, true);
+		return () => {
+			window.removeEventListener('keydown', key, true);
+			untrap();
+			layer.close();
+			previous?.focus?.();
+		};
+	});
 
 	onMount(() => {
 		const edits = detail.edits;
@@ -144,6 +170,7 @@
 </script>
 
 <div
+	bind:this={root}
 	class="editor"
 	role="dialog"
 	tabindex="-1"

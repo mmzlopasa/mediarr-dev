@@ -17,6 +17,13 @@ object BackupStatus {
 
 data class BackupItem(val assetId: String, val attempts: Int)
 
+/**
+ * Whether a file was edited since it was verified. A size of 0 or a time of 0 is what MediaStore
+ * gives when it does not know, which is not taken for a change.
+ */
+fun changed(size: Long, modified: Long, nowSize: Long, nowModified: Long): Boolean =
+    (size > 0 && nowSize > 0 && size != nowSize) || (modified > 0 && nowModified > 0 && modified != nowModified)
+
 /** The wait before a file that failed is tried again: 1, 4, 16, 64 minutes, at most 6 hours. */
 fun backoffMs(attempts: Int): Long {
     var wait = 60_000L
@@ -26,7 +33,7 @@ fun backoffMs(attempts: Int): Long {
 
 /** What happened to each file, so that the same one is never sent twice. */
 class BackupStore(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "backup.sqlite", null, 2) {
+    SQLiteOpenHelper(context.applicationContext, "backup.sqlite", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -39,7 +46,9 @@ class BackupStore(context: Context) :
               error TEXT,
               checksum TEXT,
               finished INTEGER,
-              retry_after INTEGER
+              retry_after INTEGER,
+              size INTEGER,
+              modified INTEGER
             )
             """.trimIndent(),
         )
@@ -47,8 +56,13 @@ class BackupStore(context: Context) :
     }
 
     /** Version 2: when a waiting file may be tried again, or a failed one tried anew. Null is now. */
+    /** Version 3: the size and the modified time a file had when it was verified. */
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) db.execSQL("ALTER TABLE items ADD COLUMN retry_after INTEGER")
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE items ADD COLUMN size INTEGER")
+            db.execSQL("ALTER TABLE items ADD COLUMN modified INTEGER")
+        }
     }
 
     private fun insert(id: String, created: Long, status: String) {
@@ -124,17 +138,65 @@ class BackupStore(context: Context) :
         )
     }
 
-    fun markVerified(id: String, now: Long = System.currentTimeMillis()) {
+    fun markVerified(id: String, size: Long, modified: Long, now: Long = System.currentTimeMillis()) {
         writableDatabase.update(
             "items",
             ContentValues().apply {
                 put("status", BackupStatus.VERIFIED)
                 putNull("error")
                 put("finished", now)
+                put("size", size)
+                put("modified", modified)
             },
             "asset_id = ?",
             arrayOf(id),
         )
+    }
+
+    /**
+     * A verified file whose size or modified time is no longer the one it was sent with was edited
+     * in place: it waits to be sent again, and its old checksum no longer counts as safe on the
+     * server. A file verified before these were kept takes on what it has now.
+     */
+    fun resendChanged(current: Map<String, Pair<Long, Long>>) = transaction {
+        val db = writableDatabase
+        val known = db.query(
+            "items", arrayOf("asset_id", "size", "modified"), "status = ?", arrayOf(BackupStatus.VERIFIED),
+            null, null, null,
+        ).use {
+            buildList {
+                while (it.moveToNext()) {
+                    add(Triple(it.getString(0), if (it.isNull(1)) null else it.getLong(1), if (it.isNull(2)) null else it.getLong(2)))
+                }
+            }
+        }
+        for ((id, size, modified) in known) {
+            val (nowSize, nowModified) = current[id] ?: continue
+            if (size == null || modified == null) {
+                db.update(
+                    "items",
+                    ContentValues().apply {
+                        put("size", nowSize)
+                        put("modified", nowModified)
+                    },
+                    "asset_id = ?", arrayOf(id),
+                )
+            } else if (changed(size, modified, nowSize, nowModified)) {
+                db.update(
+                    "items",
+                    ContentValues().apply {
+                        put("status", BackupStatus.PENDING)
+                        put("attempts", 0)
+                        putNull("checksum")
+                        putNull("error")
+                        putNull("retry_after")
+                        putNull("size")
+                        putNull("modified")
+                    },
+                    "asset_id = ?", arrayOf(id),
+                )
+            }
+        }
     }
 
     /**
