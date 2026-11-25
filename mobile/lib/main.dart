@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'l10n/l10n.dart';
 
 import 'screens/home_screen.dart';
+import 'screens/lock_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/language.dart';
 import 'services/session.dart';
@@ -67,7 +68,9 @@ class MediarrApp extends ConsumerWidget {
             (_) => _redrawAll(context),
           );
         }
-        return SkyBackground(child: child ?? const SizedBox.shrink());
+        return SkyBackground(
+          child: LockGate(child: child ?? const SizedBox.shrink()),
+        );
       },
       home: session.when(
         loading: () => Scaffold(

@@ -1475,5 +1475,19 @@
   "backupCardWaitingForWifi": "{count, plural, one{{count} fotografija čeka Wi-Fi: nalazi se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.} few{{count} fotografije čekaju Wi-Fi: nalaze se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.} other{{count} fotografija čeka Wi-Fi: nalaze se samo u iCloudu, a sigurnosna kopija smije koristiti samo Wi-Fi.}}",
   "backupCardRetryingSoon": "{count, plural, one{{count} datoteka nije prošla i uskoro se sama ponovno šalje.} few{{count} datoteke nisu prošle i uskoro se same ponovno šalju.} other{{count} datoteka nije prošlo i uskoro se same ponovno šalju.}}",
   "backupCardFailedRetryLater": "Neuspjele datoteke same se ponovno pokušavaju nakon jednog dana.",
-  "freeSpaceScreenKeptChanged": "{count, plural, one{{count} fotka je zadržana: promijenila se ili više nije na serveru.} few{{count} fotke su zadržane: promijenile su se ili više nisu na serveru.} other{{count} fotki je zadržano: promijenile su se ili više nisu na serveru.}}"
+  "freeSpaceScreenKeptChanged": "{count, plural, one{{count} fotka je zadržana: promijenila se ili više nije na serveru.} few{{count} fotke su zadržane: promijenile su se ili više nisu na serveru.} other{{count} fotki je zadržano: promijenile su se ili više nisu na serveru.}}",
+  "appLockTitle": "Zaključavanje aplikacije",
+  "appLockHint": "Za otvaranje Mediarra traži otključavanje mobitela",
+  "appLockToggleHint": "Otvaranje Mediarra traži otisak prsta ili lice, odnosno PIN, uzorak ili lozinku mobitela",
+  "appLockNoScreenLock": "Ovaj mobitel nema zaključavanje zaslona. Prvo ga postavite u postavkama mobitela.",
+  "appLockAfter": "Zaključaj nakon izlaska iz aplikacije",
+  "appLockAtStart": "Mediarr se uvijek zaključa pri pokretanju.",
+  "appLockImmediately": "Odmah",
+  "appLockOneMinute": "Nakon 1 minute",
+  "appLockFiveMinutes": "Nakon 5 minuta",
+  "appLockUnlock": "Otključaj",
+  "appLockReasonOpen": "Otključajte Mediarr",
+  "appLockReasonOn": "Uključite zaključavanje aplikacije",
+  "appLockReasonOff": "Isključite zaključavanje aplikacije",
+  "appLockCancel": "Odustani"
 }

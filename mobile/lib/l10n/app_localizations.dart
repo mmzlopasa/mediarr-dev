@@ -8972,6 +8972,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 photo was kept: it changed or is no longer on the server.} other{{count} photos were kept: they changed or are no longer on the server.}}'**
   String freeSpaceScreenKeptChanged(int count);
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for the phone\'s lock to open Mediarr'**
+  String get appLockHint;
+
+  /// No description provided for @appLockToggleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Mediarr asks for your fingerprint or face, or the phone\'s PIN, pattern or password'**
+  String get appLockToggleHint;
+
+  /// No description provided for @appLockNoScreenLock.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone has no screen lock. Set one in the phone\'s settings first.'**
+  String get appLockNoScreenLock;
+
+  /// No description provided for @appLockAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock after leaving the app'**
+  String get appLockAfter;
+
+  /// No description provided for @appLockAtStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Mediarr always locks when it starts.'**
+  String get appLockAtStart;
+
+  /// No description provided for @appLockImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately'**
+  String get appLockImmediately;
+
+  /// No description provided for @appLockOneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'After 1 minute'**
+  String get appLockOneMinute;
+
+  /// No description provided for @appLockFiveMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'After 5 minutes'**
+  String get appLockFiveMinutes;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlock;
+
+  /// No description provided for @appLockReasonOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Mediarr'**
+  String get appLockReasonOpen;
+
+  /// No description provided for @appLockReasonOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on app lock'**
+  String get appLockReasonOn;
+
+  /// No description provided for @appLockReasonOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off app lock'**
+  String get appLockReasonOff;
+
+  /// No description provided for @appLockCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get appLockCancel;
 }
 
 class _AppLocalizationsDelegate

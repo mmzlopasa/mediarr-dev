@@ -1475,5 +1475,19 @@
   "backupCardWaitingForWifi": "{count, plural, =1{1 fotografija čaka na Wi-Fi: je le v iCloudu, varnostno kopiranje pa sme uporabljati le Wi-Fi.} other{{count} fotografij čaka na Wi-Fi: so le v iCloudu, varnostno kopiranje pa sme uporabljati le Wi-Fi.}}",
   "backupCardRetryingSoon": "{count, plural, =1{1 datoteka ni šla skozi in se kmalu sama poskusi znova.} other{{count} datotek ni šlo skozi in se kmalu same poskusijo znova.}}",
   "backupCardFailedRetryLater": "Neuspele datoteke se same poskusijo znova po enem dnevu.",
-  "freeSpaceScreenKeptChanged": "{count, plural, =1{1 fotografija je ostala: spremenila se je ali je ni več na strežniku.} other{{count} fotografij je ostalo: spremenile so se ali jih ni več na strežniku.}}"
+  "freeSpaceScreenKeptChanged": "{count, plural, =1{1 fotografija je ostala: spremenila se je ali je ni več na strežniku.} other{{count} fotografij je ostalo: spremenile so se ali jih ni več na strežniku.}}",
+  "appLockTitle": "Zaklepanje aplikacije",
+  "appLockHint": "Za odpiranje Mediarra zahtevaj odklepanje telefona",
+  "appLockToggleHint": "Odpiranje Mediarra zahteva prstni odtis ali obraz oziroma PIN, vzorec ali geslo telefona",
+  "appLockNoScreenLock": "Ta telefon nima zaklepanja zaslona. Najprej ga nastavite v nastavitvah telefona.",
+  "appLockAfter": "Zakleni po izhodu iz aplikacije",
+  "appLockAtStart": "Mediarr se ob zagonu vedno zaklene.",
+  "appLockImmediately": "Takoj",
+  "appLockOneMinute": "Po 1 minuti",
+  "appLockFiveMinutes": "Po 5 minutah",
+  "appLockUnlock": "Odkleni",
+  "appLockReasonOpen": "Odklenite Mediarr",
+  "appLockReasonOn": "Vklopite zaklepanje aplikacije",
+  "appLockReasonOff": "Izklopite zaklepanje aplikacije",
+  "appLockCancel": "Prekliči"
 }

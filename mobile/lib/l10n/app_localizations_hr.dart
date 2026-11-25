@@ -5256,4 +5256,49 @@ class AppLocalizationsHr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get appLockTitle => 'Zaključavanje aplikacije';
+
+  @override
+  String get appLockHint =>
+      'Za otvaranje Mediarra traži otključavanje mobitela';
+
+  @override
+  String get appLockToggleHint =>
+      'Otvaranje Mediarra traži otisak prsta ili lice, odnosno PIN, uzorak ili lozinku mobitela';
+
+  @override
+  String get appLockNoScreenLock =>
+      'Ovaj mobitel nema zaključavanje zaslona. Prvo ga postavite u postavkama mobitela.';
+
+  @override
+  String get appLockAfter => 'Zaključaj nakon izlaska iz aplikacije';
+
+  @override
+  String get appLockAtStart => 'Mediarr se uvijek zaključa pri pokretanju.';
+
+  @override
+  String get appLockImmediately => 'Odmah';
+
+  @override
+  String get appLockOneMinute => 'Nakon 1 minute';
+
+  @override
+  String get appLockFiveMinutes => 'Nakon 5 minuta';
+
+  @override
+  String get appLockUnlock => 'Otključaj';
+
+  @override
+  String get appLockReasonOpen => 'Otključajte Mediarr';
+
+  @override
+  String get appLockReasonOn => 'Uključite zaključavanje aplikacije';
+
+  @override
+  String get appLockReasonOff => 'Isključite zaključavanje aplikacije';
+
+  @override
+  String get appLockCancel => 'Odustani';
 }

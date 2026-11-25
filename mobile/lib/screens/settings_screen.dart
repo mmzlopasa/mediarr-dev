@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/l10n.dart';
 import '../services/account_preferences.dart';
+import '../services/app_lock.dart';
 import '../services/language.dart';
 import '../services/backup.dart';
 import '../services/session.dart';
@@ -130,6 +131,12 @@ class SettingsScreen extends StatelessWidget {
               l.settingsScreenNotificationsHint,
               const NotificationSettings(),
             ),
+            row(
+              Icons.lock_outline,
+              l.appLockTitle,
+              l.appLockHint,
+              const AppLockSettings(),
+            ),
           ]),
           group(l.settingsScreenServer, [
             row(
@@ -208,6 +215,103 @@ class _Toggle extends StatelessWidget {
     activeThumbColor: Palette.gold,
     onChanged: onChanged,
   );
+}
+
+/// App lock: opening Mediarr asks for the phone's own lock. Turning it on or off asks too.
+class AppLockSettings extends ConsumerStatefulWidget {
+  const AppLockSettings({super.key});
+
+  @override
+  ConsumerState<AppLockSettings> createState() => _AppLockSettingsState();
+}
+
+class _AppLockSettingsState extends ConsumerState<AppLockSettings> {
+  /// Whether the phone has a screen lock; null until it has said.
+  bool? _hasScreenLock;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    final has = await ref.read(authenticatorProvider).hasScreenLock();
+    if (mounted) setState(() => _hasScreenLock = has);
+  }
+
+  Future<void> _toggle(bool on) async {
+    setState(() => _busy = true);
+    try {
+      if (on) {
+        final has = await ref.read(authenticatorProvider).hasScreenLock();
+        if (!mounted) return;
+        setState(() => _hasScreenLock = has);
+        if (!has) return;
+      }
+      final passed = await ref
+          .read(appLockProvider.notifier)
+          .confirm(on ? l.appLockReasonOn : l.appLockReasonOff);
+      if (!passed || !mounted) return;
+      final settings = ref.read(settingsProvider);
+      await ref
+          .read(settingsProvider.notifier)
+          .change(settings.copyWith(appLock: on));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    final noScreenLock = _hasScreenLock == false && !settings.appLock;
+    return Scaffold(
+      appBar: AppBar(title: Text(l.appLockTitle)),
+      body: ListView(
+        children: [
+          SwitchListTile(
+            title: Text(l.appLockTitle),
+            subtitle: Text(
+              noScreenLock ? l.appLockNoScreenLock : l.appLockToggleHint,
+            ),
+            value: settings.appLock,
+            activeThumbColor: Palette.gold,
+            // Off while the phone is asked whether it has a lock, and when it has none.
+            onChanged: _busy || (!settings.appLock && _hasScreenLock != true)
+                ? null
+                : _toggle,
+          ),
+          const Divider(),
+          _Heading(Icons.timer_outlined, l.appLockAfter),
+          RadioGroup<LockAfter>(
+            groupValue: settings.appLockAfter,
+            onChanged: (after) {
+              if (after != null && settings.appLock) {
+                notifier.change(settings.copyWith(appLockAfter: after));
+              }
+            },
+            child: Column(
+              children: [
+                for (final after in LockAfter.values)
+                  RadioListTile<LockAfter>(
+                    value: after,
+                    title: Text(after.label),
+                    enabled: settings.appLock,
+                  ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Text(l.appLockAtStart, style: TextStyle(color: Palette.dim)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class AdvancedSettings extends ConsumerWidget {

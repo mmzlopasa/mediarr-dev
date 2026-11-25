@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../brand.dart';
 import '../l10n/l10n.dart';
+import '../services/app_lock.dart';
 import '../services/session.dart';
 import '../theme.dart';
 import 'qr_sign_in.dart';
@@ -55,6 +56,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final link = parseSignInLink(uri.toString());
     if (link == null || !mounted || _waiting || _asking) return;
     _asking = true;
+    // With the app lock on, the link is only followed once the lock has been passed.
+    await ref.read(appLockProvider.notifier).whenUnlocked();
+    if (!mounted || _waiting) {
+      _asking = false;
+      return;
+    }
     final agreed = await confirmSignInLink(context, link);
     _asking = false;
     if (agreed && mounted && !_waiting) await _signInWith(link);

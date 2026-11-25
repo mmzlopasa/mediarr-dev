@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mediarr_api/api.dart';
 
+import '../services/app_lock.dart';
 import '../services/backup.dart';
 import '../services/devices.dart';
 import '../services/session.dart';
@@ -35,15 +36,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      unawaited(_reportDevice());
+      // Notices and the phone's questions wait until the app lock has been passed.
+      await ref.read(appLockProvider.notifier).whenUnlocked();
       final session = ref.read(sessionProvider).value;
       if (mounted && session != null) {
         unawaited(showUpdateNoticeIfNew(context, session));
-        unawaited(_reportDevice());
         unawaited(ref.read(backupProvider).askLocationIfWaiting());
       }
     });
-    SharedFilesChannel.listen((files) {
+    SharedFilesChannel.listen((files) async {
+      // Files shared from another app are only taken in once the app lock has been passed.
+      if (!mounted) return;
+      await ref.read(appLockProvider.notifier).whenUnlocked();
       if (!mounted) return;
       ref.read(uploadsProvider.notifier).addShared(files);
       Navigator.of(context)

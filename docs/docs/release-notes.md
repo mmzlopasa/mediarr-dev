@@ -8,6 +8,9 @@ The server and the web come as one version, such as `v0.2.40`. The apps have ver
 
 ## Apps
 
+### app-v0.10.5
+- [App lock](/features/mobile-app#app-lock): the app opens only with your fingerprint, face or the phone's own PIN, at every start and after a time you choose away from it. The list of recent apps shows only the logo. Backup and the widget keep working while it is locked.
+
 ### app-v0.10.4
 - Android: a large photo or video whose upload was cut off goes on from where it stopped, instead of starting again.
 

@@ -43,6 +43,23 @@ enum AppTheme {
   };
 }
 
+/// How long the app may stay in the background before coming back asks for the phone's lock.
+enum LockAfter {
+  immediately(Duration.zero),
+  oneMinute(Duration(minutes: 1)),
+  fiveMinutes(Duration(minutes: 5));
+
+  const LockAfter(this.delay);
+
+  final Duration delay;
+
+  String get label => switch (this) {
+    immediately => l.appLockImmediately,
+    oneMinute => l.appLockOneMinute,
+    fiveMinutes => l.appLockFiveMinutes,
+  };
+}
+
 /// What Free up space must leave on the phone, whatever the server holds.
 class FreeSpaceRules {
   const FreeSpaceRules({
@@ -126,6 +143,8 @@ class AppSettings {
     this.shareRemoveLocation = true,
     this.shareRemoveCamera = true,
     this.shareHideFaces = false,
+    this.appLock = false,
+    this.appLockAfter = LockAfter.immediately,
   });
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
@@ -151,6 +170,11 @@ class AppSettings {
     shareRemoveLocation: json['shareRemoveLocation'] as bool? ?? true,
     shareRemoveCamera: json['shareRemoveCamera'] as bool? ?? true,
     shareHideFaces: json['shareHideFaces'] as bool? ?? false,
+    appLock: json['appLock'] as bool? ?? false,
+    appLockAfter: LockAfter.values.firstWhere(
+      (after) => after.name == json['appLockAfter'],
+      orElse: () => LockAfter.immediately,
+    ),
     freeSpace: FreeSpaceRules.fromJson(
       json['freeSpace'] as Map<String, dynamic>? ?? const {},
     ),
@@ -179,6 +203,10 @@ class AppSettings {
   final bool shareRemoveCamera;
   final bool shareHideFaces;
 
+  /// Whether opening the app asks for the phone's own lock: a fingerprint, a face, or its PIN.
+  final bool appLock;
+  final LockAfter appLockAfter;
+
   Map<String, dynamic> toJson() => {
     'perRow': perRow,
     'groupByDay': groupByDay,
@@ -197,6 +225,8 @@ class AppSettings {
     'shareRemoveLocation': shareRemoveLocation,
     'shareRemoveCamera': shareRemoveCamera,
     'shareHideFaces': shareHideFaces,
+    'appLock': appLock,
+    'appLockAfter': appLockAfter.name,
   };
 
   AppSettings copyWith({
@@ -217,6 +247,8 @@ class AppSettings {
     bool? shareRemoveLocation,
     bool? shareRemoveCamera,
     bool? shareHideFaces,
+    bool? appLock,
+    LockAfter? appLockAfter,
   }) => AppSettings(
     perRow: perRow ?? this.perRow,
     groupByDay: groupByDay ?? this.groupByDay,
@@ -235,6 +267,8 @@ class AppSettings {
     shareRemoveLocation: shareRemoveLocation ?? this.shareRemoveLocation,
     shareRemoveCamera: shareRemoveCamera ?? this.shareRemoveCamera,
     shareHideFaces: shareHideFaces ?? this.shareHideFaces,
+    appLock: appLock ?? this.appLock,
+    appLockAfter: appLockAfter ?? this.appLockAfter,
   );
 }
 
@@ -245,6 +279,10 @@ final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
 class SettingsNotifier extends Notifier<AppSettings> {
   static const _key = 'app_settings';
   static const _storage = FlutterSecureStorage();
+  final _loaded = Completer<void>();
+
+  /// Done once the saved settings have been read, or found to be missing.
+  Future<void> get loaded => _loaded.future;
 
   @override
   AppSettings build() {
@@ -253,14 +291,16 @@ class SettingsNotifier extends Notifier<AppSettings> {
   }
 
   Future<void> _load() async {
-    final saved = await _storage.read(key: _key);
-    if (saved == null) return;
     try {
+      final saved = await _storage.read(key: _key);
+      if (saved == null) return;
       state = AppSettings.fromJson(jsonDecode(saved) as Map<String, dynamic>);
     } on FormatException {
       // Unreadable settings are the same as none.
     } on TypeError {
       // The same.
+    } finally {
+      if (!_loaded.isCompleted) _loaded.complete();
     }
   }
 

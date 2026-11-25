@@ -2870,5 +2870,19 @@
   },
   "backupCardFailedRetryLater": "Files that failed are tried again by themselves after a day.",
   "freeSpaceScreenKeptChanged": "{count, plural, =1{1 photo was kept: it changed or is no longer on the server.} other{{count} photos were kept: they changed or are no longer on the server.}}",
-  "@freeSpaceScreenKeptChanged": {"placeholders": {"count": {"type": "int"}}}
+  "@freeSpaceScreenKeptChanged": {"placeholders": {"count": {"type": "int"}}},
+  "appLockTitle": "App lock",
+  "appLockHint": "Ask for the phone's lock to open Mediarr",
+  "appLockToggleHint": "Opening Mediarr asks for your fingerprint or face, or the phone's PIN, pattern or password",
+  "appLockNoScreenLock": "This phone has no screen lock. Set one in the phone's settings first.",
+  "appLockAfter": "Lock after leaving the app",
+  "appLockAtStart": "Mediarr always locks when it starts.",
+  "appLockImmediately": "Immediately",
+  "appLockOneMinute": "After 1 minute",
+  "appLockFiveMinutes": "After 5 minutes",
+  "appLockUnlock": "Unlock",
+  "appLockReasonOpen": "Unlock Mediarr",
+  "appLockReasonOn": "Turn on app lock",
+  "appLockReasonOff": "Turn off app lock",
+  "appLockCancel": "Cancel"
 }

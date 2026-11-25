@@ -78,6 +78,16 @@ On an iPhone the widget fetches its photos itself. It needs the app and the widg
 
 If the iPhone does not offer the widget at all, look at **Installation check** at the top of the same screen. It says whether the signing left the widget out, left it unsigned, or signed it with a profile that does not allow its identifier, and what to change in Feather.
 
+## App lock
+
+**Settings → App lock** makes opening Mediarr ask for the phone's own lock: a fingerprint or face, or else the phone's PIN, pattern or password. Mediarr keeps no PIN of its own. It is off until you turn it on, on the iPhone and on Android.
+
+- Turning it on, and turning it off, asks for the phone's lock once. A phone without any screen lock says so, and the setting stays off.
+- The app always locks when it starts. When you come back to it, it locks **Immediately**, **After 1 minute** or **After 5 minutes**, as you choose (immediately by default).
+- While locked, only the logo and **Unlock** show, with nothing of the library behind them. The phone asks by itself when the lock screen appears; if you cancel, tap **Unlock**.
+- In the list of recent apps only the logo shows, not your photos. Screenshots stay allowed.
+- Backup, the home screen widget, a photo already playing on a TV and notifications keep working while the app is locked. Photos shared to Mediarr from another app, and sign-in links, wait until you unlock.
+
 ## Administration
 
 Administrators find **Administration** in the account menu of the app, with what the web has:

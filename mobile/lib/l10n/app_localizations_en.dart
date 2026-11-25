@@ -5212,4 +5212,48 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get appLockTitle => 'App lock';
+
+  @override
+  String get appLockHint => 'Ask for the phone\'s lock to open Mediarr';
+
+  @override
+  String get appLockToggleHint =>
+      'Opening Mediarr asks for your fingerprint or face, or the phone\'s PIN, pattern or password';
+
+  @override
+  String get appLockNoScreenLock =>
+      'This phone has no screen lock. Set one in the phone\'s settings first.';
+
+  @override
+  String get appLockAfter => 'Lock after leaving the app';
+
+  @override
+  String get appLockAtStart => 'Mediarr always locks when it starts.';
+
+  @override
+  String get appLockImmediately => 'Immediately';
+
+  @override
+  String get appLockOneMinute => 'After 1 minute';
+
+  @override
+  String get appLockFiveMinutes => 'After 5 minutes';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String get appLockReasonOpen => 'Unlock Mediarr';
+
+  @override
+  String get appLockReasonOn => 'Turn on app lock';
+
+  @override
+  String get appLockReasonOff => 'Turn off app lock';
+
+  @override
+  String get appLockCancel => 'Cancel';
 }

@@ -47,6 +47,18 @@ class MainActivity : FlutterFragmentActivity() {
                 result.notImplemented()
             }
         }
+        // With the app lock on, the list of recent apps shows no picture of the app. Screenshots
+        // stay allowed, so this is not FLAG_SECURE.
+        MethodChannel(messenger, "app.mediarr/lock").setMethodCallHandler { call, result ->
+            if (call.method == "recents") {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    setRecentsScreenshotEnabled(call.argument<Any>("hidden") != true)
+                }
+                result.success(null)
+            } else {
+                result.notImplemented()
+            }
+        }
         // The home screen widget shows an album the user chooses here.
         MethodChannel(messenger, "app.mediarr/widget").setMethodCallHandler { call, result ->
             val store = WidgetStore(this)

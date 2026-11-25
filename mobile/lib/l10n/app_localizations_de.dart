@@ -5293,4 +5293,49 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get appLockTitle => 'App-Sperre';
+
+  @override
+  String get appLockHint =>
+      'Zum Öffnen von Mediarr die Displaysperre des Telefons verlangen';
+
+  @override
+  String get appLockToggleHint =>
+      'Beim Öffnen von Mediarr werden Fingerabdruck oder Gesicht verlangt, sonst PIN, Muster oder Passwort des Telefons';
+
+  @override
+  String get appLockNoScreenLock =>
+      'Dieses Telefon hat keine Displaysperre. Richte zuerst eine in den Einstellungen des Telefons ein.';
+
+  @override
+  String get appLockAfter => 'Sperren nach dem Verlassen der App';
+
+  @override
+  String get appLockAtStart => 'Mediarr wird beim Start immer gesperrt.';
+
+  @override
+  String get appLockImmediately => 'Sofort';
+
+  @override
+  String get appLockOneMinute => 'Nach 1 Minute';
+
+  @override
+  String get appLockFiveMinutes => 'Nach 5 Minuten';
+
+  @override
+  String get appLockUnlock => 'Entsperren';
+
+  @override
+  String get appLockReasonOpen => 'Mediarr entsperren';
+
+  @override
+  String get appLockReasonOn => 'App-Sperre einschalten';
+
+  @override
+  String get appLockReasonOff => 'App-Sperre ausschalten';
+
+  @override
+  String get appLockCancel => 'Abbrechen';
 }
