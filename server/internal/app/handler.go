@@ -57,7 +57,7 @@ type Deps struct {
 	ExternalPath string
 	// ProxyHops is how many reverse proxies stand in front of the bundled nginx.
 	ProxyHops int
-	// CheckUpdates asks the public repository now and then whether a newer version exists.
+	// CheckUpdates asks Mediarr's site now and then whether a newer version exists. Off, nothing is sent.
 	CheckUpdates bool
 	// DemoEmail is an account anyone may sign in to, so it can look at everything and change nothing.
 	DemoEmail string
@@ -132,9 +132,6 @@ func NewHandler(deps Deps) (http.Handler, error) {
 		keepPairs:         auth.NewLimiter(keepPairFailures, time.Hour),
 		keep:              newKeepState(),
 	}
-	if deps.CheckUpdates && Version != "dev" {
-		go server.watchUpdates()
-	}
 	if deps.Pool != nil {
 		server.queries = db.New(deps.Pool)
 		uploads, err := server.newUploadHandler()
@@ -142,6 +139,9 @@ func NewHandler(deps Deps) (http.Handler, error) {
 			return nil, err
 		}
 		server.uploads = uploads
+		if Version != "dev" {
+			go watchUpdates(server.queries, deps.CheckUpdates)
+		}
 	}
 
 	server.embeddings = ml.NewCache(ml.New(deps.MLURL, deps.MLToken))

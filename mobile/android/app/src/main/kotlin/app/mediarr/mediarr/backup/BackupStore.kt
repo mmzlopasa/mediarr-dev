@@ -18,6 +18,16 @@ object BackupStatus {
 data class BackupItem(val assetId: String, val attempts: Int)
 
 /**
+ * An upload the server has begun to receive, and the file it was begun with: the checksum and the
+ * length of the bytes that were hashed, and the modified time MediaStore gave. It is only carried
+ * on with while all three are still the same.
+ */
+data class StartedUpload(val uploadId: String, val checksum: String, val size: Long, val modified: Long) {
+    fun isFor(checksum: String, size: Long, modified: Long): Boolean =
+        this.checksum == checksum && this.size == size && this.modified == modified
+}
+
+/**
  * Whether a file was edited since it was verified. A size of 0 or a time of 0 is what MediaStore
  * gives when it does not know, which is not taken for a change.
  */
@@ -33,7 +43,7 @@ fun backoffMs(attempts: Int): Long {
 
 /** What happened to each file, so that the same one is never sent twice. */
 class BackupStore(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "backup.sqlite", null, 3) {
+    SQLiteOpenHelper(context.applicationContext, "backup.sqlite", null, 4) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -48,7 +58,11 @@ class BackupStore(context: Context) :
               finished INTEGER,
               retry_after INTEGER,
               size INTEGER,
-              modified INTEGER
+              modified INTEGER,
+              upload_id TEXT,
+              upload_checksum TEXT,
+              upload_size INTEGER,
+              upload_modified INTEGER
             )
             """.trimIndent(),
         )
@@ -57,12 +71,31 @@ class BackupStore(context: Context) :
 
     /** Version 2: when a waiting file may be tried again, or a failed one tried anew. Null is now. */
     /** Version 3: the size and the modified time a file had when it was verified. */
+    /**
+     * Version 4: the upload a file is being sent in, and the file it was begun with, so that an
+     * upload cut off half way goes on from where it stopped. All four are empty for existing rows,
+     * which only means those files start a new upload, as before.
+     */
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) db.execSQL("ALTER TABLE items ADD COLUMN retry_after INTEGER")
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE items ADD COLUMN size INTEGER")
             db.execSQL("ALTER TABLE items ADD COLUMN modified INTEGER")
         }
+        if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE items ADD COLUMN upload_id TEXT")
+            db.execSQL("ALTER TABLE items ADD COLUMN upload_checksum TEXT")
+            db.execSQL("ALTER TABLE items ADD COLUMN upload_size INTEGER")
+            db.execSQL("ALTER TABLE items ADD COLUMN upload_modified INTEGER")
+        }
+    }
+
+    /** Puts an empty upload in the values, for the updates that end one. */
+    private fun ContentValues.withoutUpload(): ContentValues = apply {
+        putNull("upload_id")
+        putNull("upload_checksum")
+        putNull("upload_size")
+        putNull("upload_modified")
     }
 
     private fun insert(id: String, created: Long, status: String) {
@@ -138,6 +171,46 @@ class BackupStore(context: Context) :
         )
     }
 
+    /** The upload begun for this file in an earlier attempt, if there is one. */
+    fun startedUpload(id: String): StartedUpload? =
+        readableDatabase.query(
+            "items",
+            arrayOf("upload_id", "upload_checksum", "upload_size", "upload_modified"),
+            "asset_id = ? AND upload_id IS NOT NULL AND upload_checksum IS NOT NULL",
+            arrayOf(id),
+            null,
+            null,
+            null,
+        ).use {
+            if (!it.moveToFirst()) return null
+            StartedUpload(
+                it.getString(0),
+                it.getString(1),
+                if (it.isNull(2)) -1 else it.getLong(2),
+                if (it.isNull(3)) -1 else it.getLong(3),
+            )
+        }
+
+    /** Kept as soon as the server has made the upload, before a byte of the file is sent. */
+    fun saveUpload(id: String, upload: StartedUpload) {
+        writableDatabase.update(
+            "items",
+            ContentValues().apply {
+                put("upload_id", upload.uploadId)
+                put("upload_checksum", upload.checksum)
+                put("upload_size", upload.size)
+                put("upload_modified", upload.modified)
+            },
+            "asset_id = ?",
+            arrayOf(id),
+        )
+    }
+
+    /** The upload is done with, or of no more use: the next attempt starts a new one. */
+    fun forgetUpload(id: String) {
+        writableDatabase.update("items", ContentValues().withoutUpload(), "asset_id = ?", arrayOf(id))
+    }
+
     fun markVerified(id: String, size: Long, modified: Long, now: Long = System.currentTimeMillis()) {
         writableDatabase.update(
             "items",
@@ -147,6 +220,7 @@ class BackupStore(context: Context) :
                 put("finished", now)
                 put("size", size)
                 put("modified", modified)
+                withoutUpload()
             },
             "asset_id = ?",
             arrayOf(id),
@@ -192,6 +266,7 @@ class BackupStore(context: Context) :
                         putNull("retry_after")
                         putNull("size")
                         putNull("modified")
+                        withoutUpload()
                     },
                     "asset_id = ?", arrayOf(id),
                 )

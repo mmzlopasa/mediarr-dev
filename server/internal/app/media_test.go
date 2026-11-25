@@ -85,7 +85,8 @@ func TestVideoGetsHLSAndAScrubStrip(t *testing.T) {
 	deadline := time.Now().Add(90 * time.Second)
 	for time.Now().Before(deadline) {
 		detail = c.detail(id)
-		if detail.HlsReady != nil && *detail.HlsReady {
+		// The scrub strip is its own step after the stream, and can come a moment later.
+		if detail.HlsReady != nil && *detail.HlsReady && detail.Sprite != nil {
 			break
 		}
 		time.Sleep(200 * time.Millisecond)

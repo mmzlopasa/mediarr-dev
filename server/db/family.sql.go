@@ -130,10 +130,13 @@ func (q *Queries) FamilyBucket(ctx context.Context, arg FamilyBucketParams) ([]F
 }
 
 const familyBuckets = `-- name: FamilyBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.id IN (SELECT album_item_ids(al.id) FROM albums al WHERE al.is_family)
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.id IN (SELECT album_item_ids(al.id) FROM albums al WHERE al.is_family)
+  GROUP BY 1
+) b
 ORDER BY 1 DESC
 `
 

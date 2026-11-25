@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -20,6 +19,7 @@ import (
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/auth"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 	"github.com/mediarr-app/mediarr/server/internal/storage"
 )
 
@@ -148,11 +148,8 @@ func (s *apiServer) SetAvatar(w http.ResponseWriter, r *http.Request) {
 
 // makeAvatar cuts a square with libvips, the tool the previews are made with.
 func makeAvatar(ctx context.Context, in, out string) error {
-	ctx, cancel := context.WithTimeout(ctx, avatarWait)
-	defer cancel()
-	//nolint:gosec // Both paths are made here, not taken from the request.
-	cmd := exec.CommandContext(ctx, "vipsthumbnail", in, "--size", avatarSize, "--smartcrop", "attention", "-o", out+"[Q=82,strip]")
-	return cmd.Run()
+	return jobs.RunToolWithin(ctx, avatarWait, "vipsthumbnail", jobs.FileArg(in), "--size", avatarSize,
+		"--smartcrop", "attention", "-o", jobs.FileArg(out)+"[Q=82,strip]")
 }
 
 func (s *apiServer) RemoveAvatar(w http.ResponseWriter, r *http.Request) {

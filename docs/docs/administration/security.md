@@ -61,7 +61,7 @@ A link to an album can have a password, an end date and a limit on downloads, an
 ## Backups and updates
 
 - Keep [backups](/administration/backup) on another disk or another server. They are encrypted with your backup password.
-- [Upgrade](/install/upgrading) when a new version comes out. The server asks the public repository now and then whether there is one; `UPDATE_CHECK=off` in `.env` stops the check.
+- [Upgrade](/install/upgrading) when a new version comes out. Every 6 hours the server asks `cdn.mediarr.app` whether there is one, and sends a random number for the installation, its version and how many accounts it has, so that installations can be counted; nothing else is sent. `UPDATE_CHECK=off` in `.env` stops the check and the count.
 - The database password in `.env` should be long and random. While it is still the one from the example file, the server says so in its log at every start.
 
 ## Reporting a vulnerability

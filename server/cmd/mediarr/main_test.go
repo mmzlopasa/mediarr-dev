@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 )
 
 func TestOpenPoolSetsSessionSettings(t *testing.T) {
@@ -18,5 +19,16 @@ func TestOpenPoolSetsSessionSettings(t *testing.T) {
 	}
 	if params["work_mem"] != "64MB" {
 		t.Errorf("work_mem = %q, want the 64MB the address asks for", params["work_mem"])
+	}
+}
+
+// The runtime image has no zoneinfo, so the zones must come with the binary.
+func TestTimeZonesComeWithTheBinary(t *testing.T) {
+	zone, err := time.LoadLocation("Europe/Zagreb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, offset := time.Date(2026, 7, 1, 12, 0, 0, 0, zone).Zone(); offset != 2*60*60 {
+		t.Fatalf("offset %d", offset)
 	}
 }

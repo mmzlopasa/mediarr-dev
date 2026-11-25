@@ -12,7 +12,7 @@ Run these in the folder with your `docker-compose.yml`.
 
 ### Set a forgotten password
 
-It makes the account if there is none. It also turns off two-factor sign-in, ends the account's sessions, and removes its API keys, passkeys and single sign-on links. It reads the new password from the input, so type it and press Enter, then Ctrl+D:
+It makes the account if there is none. It also turns off two-factor sign-in, ends the account's sessions, and removes its API keys, passkeys and single sign-on links. It reads the new password from the input, so type it and press Enter:
 
 ```bash
 docker compose exec -T server /mediarr user upsert you@example.com "Your Name" --admin

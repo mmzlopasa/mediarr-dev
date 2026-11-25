@@ -42,16 +42,34 @@ func (e *badFileError) Unreadable() bool { return true }
 
 // toolProblems are what a user sees. The tools' own output can hold internal paths, so it only goes to the log.
 var toolProblems = map[string]string{
-	"exiftool":  "the file is damaged or not a supported format",
-	"vips":      "the image could not be read; it may be damaged",
-	"ffmpeg":    "the video could not be read; it may be damaged",
-	"dcraw_emu": "the RAW file could not be read; it may be damaged or from an unsupported camera",
+	"exiftool":      "the file is damaged or not a supported format",
+	"vips":          "the image could not be read; it may be damaged",
+	"vipsthumbnail": "the image could not be read; it may be damaged",
+	"ffmpeg":        "the video could not be read; it may be damaged",
+	"dcraw_emu":     "the RAW file could not be read; it may be damaged or from an unsupported camera",
 }
 
 func runTool(ctx context.Context, name string, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, toolTimeout)
 	defer cancel()
 	return runToolNoLimit(ctx, name, args...)
+}
+
+// RunToolWithin runs a media tool for a request, never longer than limit. Every argument that is not
+// an option must already be a path that cannot be read as one; see FileArg.
+func RunToolWithin(ctx context.Context, limit time.Duration, name string, args ...string) error {
+	ctx, cancel := context.WithTimeout(ctx, limit)
+	defer cancel()
+	_, err := runToolNoLimit(ctx, name, args...)
+	return err
+}
+
+// FileArg keeps a file name from being read as an option by the tool it is given to.
+func FileArg(path string) string {
+	if strings.HasPrefix(path, "-") {
+		return "./" + path
+	}
+	return path
 }
 
 // runToolNoLimit leaves the time limit to the caller, for work that can take hours.

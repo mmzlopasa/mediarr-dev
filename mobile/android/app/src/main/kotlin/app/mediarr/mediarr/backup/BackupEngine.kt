@@ -47,6 +47,8 @@ sealed class Outcome {
     object Unauthorized : Outcome()
     /** The file could not be read to the end, or changed while it was sent. Not the server's fault. */
     data class Unreadable(val reason: String) : Outcome()
+    /** Android asked the work to stop between two parts. Not a failure: the next run goes on. */
+    object Paused : Outcome()
 }
 
 /** The file ended early, or could not be read, while it was being sent. */
@@ -69,6 +71,42 @@ fun copyExactly(input: InputStream, output: java.io.OutputStream, size: Long, bu
         output.write(bytes, 0, read)
         left -= read
     }
+}
+
+/**
+ * Passes over the first [count] bytes, for an upload that goes on from where the server got to.
+ * skip() may pass over fewer than asked, or none, without the file having ended: a read then tells
+ * which it is. The file ending first means it changed.
+ */
+fun skipExactly(input: InputStream, count: Long, buffer: Int = 64 * 1024) {
+    var left = count
+    var scratch: ByteArray? = null
+    while (left > 0) {
+        try {
+            val skipped = input.skip(left)
+            if (skipped > 0) {
+                left -= skipped
+                continue
+            }
+            val bytes = scratch ?: ByteArray(buffer).also { scratch = it }
+            val read = input.read(bytes, 0, minOf(bytes.size.toLong(), left).toInt())
+            if (read < 0) throw FileChanged("The file changed while it was being sent.")
+            left -= read
+        } catch (cause: java.io.IOException) {
+            throw FileChanged("The file could not be read: ${cause.message ?: cause.javaClass.simpleName}")
+        }
+    }
+}
+
+/**
+ * The upload's id from the Location the server gives when it makes one. Only the id is kept: the
+ * address is put together again from the server the app is set up with, as a proxy may report a
+ * host or a scheme this phone cannot reach. Letters, digits and dashes only, as it goes in a path.
+ */
+fun uploadIdFrom(location: String?): String? {
+    val id = location?.substringBefore('?')?.trimEnd('/')?.substringAfterLast('/') ?: return null
+    if (id.isEmpty() || id.length > 64) return null
+    return if (id.all { (it in 'a'..'z') || (it in 'A'..'Z') || (it in '0'..'9') || it == '-' }) id else null
 }
 
 /** The same meaning the iOS code gives to the server's answers. */
@@ -383,41 +421,295 @@ class BackupEngine(context: Context) {
         }
     }
 
-    private fun upload(asset: LocalAsset, hashed: Hashed): Outcome {
-        val checksum = hashed.checksum
-        val connection = URL("$server/api/uploads").openConnection() as HttpURLConnection
+    /** A connection with what every request to the upload address carries. */
+    private fun uploadConnection(path: String, method: String, readTimeout: Int): HttpURLConnection {
+        val connection = URL("$server/api/uploads$path").openConnection() as HttpURLConnection
+        connection.requestMethod = method
+        connection.connectTimeout = TIMEOUT_MS
+        connection.readTimeout = readTimeout
+        connection.setRequestProperty("X-Api-Key", key)
+        connection.setRequestProperty("Tus-Resumable", "1.0.0")
+        return connection
+    }
+
+    private fun metadata(asset: LocalAsset, hashed: Hashed) = encodeMetadata(
+        listOf(
+            "filename" to asset.name,
+            "checksum" to hashed.checksum,
+            "lastModified" to asset.createdMs.toString(),
+        ),
+    )
+
+    /** Any answer at all shows the server can be reached. */
+    private fun answered() = prefs.edit().putBoolean(KEY_UNREACHABLE, false).apply()
+
+    /**
+     * Sends the file, carrying on with an upload an earlier attempt began when it is still for the
+     * same file. The server compares the checksum of all it got and refuses a damaged file.
+     */
+    private fun upload(asset: LocalAsset, hashed: Hashed, stopped: () -> Boolean): Outcome {
         return try {
-            connection.requestMethod = "POST"
-            connection.doOutput = true
-            // Streamed as it is read, so a large video never has to fit in memory.
-            connection.setFixedLengthStreamingMode(hashed.size)
-            connection.connectTimeout = TIMEOUT_MS
-            connection.readTimeout = UPLOAD_TIMEOUT_MS
-            connection.setRequestProperty("X-Api-Key", key)
-            connection.setRequestProperty("Tus-Resumable", "1.0.0")
-            connection.setRequestProperty("Upload-Length", hashed.size.toString())
-            connection.setRequestProperty("Content-Type", "application/offset+octet-stream")
-            connection.setRequestProperty(
-                "Upload-Metadata",
-                encodeMetadata(
-                    listOf(
-                        "filename" to asset.name,
-                        "checksum" to checksum,
-                        "lastModified" to asset.createdMs.toString(),
-                    ),
-                ),
-            )
-            val source = open(asset.uri) ?: return Outcome.Retry("The file could not be read.")
-            source.use { input -> connection.outputStream.use { copyExactly(input, it, hashed.size, BUFFER) } }
-            val status = connection.responseCode
-            prefs.edit().putBoolean(KEY_UNREACHABLE, false).apply()
-            outcomeOf(status)
+            transfer(asset, hashed, stopped)
         } catch (cause: FileChanged) {
             Outcome.Unreadable(cause.message ?: "The file could not be read.")
         } catch (cause: java.io.IOException) {
-            // No answer from the server; cleared by the next answer of any kind.
+            // No answer from the server; cleared by the next answer of any kind. The upload is kept,
+            // so the next attempt goes on from what arrived.
             prefs.edit().putBoolean(KEY_UNREACHABLE, true).apply()
             Outcome.Retry(cause.message ?: "The connection was lost.")
+        }
+    }
+
+    private fun transfer(asset: LocalAsset, hashed: Hashed, stopped: () -> Boolean): Outcome {
+        var uploadId: String
+        var offset: Long
+        when (val resumed = resume(asset, hashed)) {
+            is Resume.Stop -> return resumed.outcome
+            is Resume.At -> {
+                uploadId = resumed.uploadId
+                offset = resumed.offset
+            }
+            Resume.Fresh -> {
+                // A small file goes whole in the request that makes the upload, as before: there is
+                // little to go on with if it is cut off.
+                if (hashed.size <= CHUNK) return sendWhole(asset, hashed)
+                when (val created = create(asset, hashed)) {
+                    is Created.Stop -> return created.outcome
+                    is Created.Made -> uploadId = created.uploadId
+                }
+                offset = 0
+            }
+        }
+        var input = openAt(asset.uri, offset) ?: return Outcome.Retry("The file could not be read.")
+        try {
+            var stalled = 0
+            while (true) {
+                if (stopped()) return Outcome.Paused
+                val length = minOf(CHUNK, hashed.size - offset)
+                val answer = patch(uploadId, input, offset, length)
+                val status = answer.status
+                val reached = answer.offset
+                if (status == 409) {
+                    // The server has a different amount than this phone thought: ask, and go on from there.
+                    val head = head(uploadId)
+                    if (head.status != 200 && head.status != 204) return endedBy(asset, head.status)
+                    val now = head.offset ?: return Outcome.Retry("The server did not say how much it has.")
+                    if (now >= hashed.size || now < 0) {
+                        dropUpload(asset.id, uploadId)
+                        return Outcome.Retry("The upload could not be finished; it starts again.")
+                    }
+                    if (++stalled > MAX_STALLS) return Outcome.Retry("The server did not take the rest of the file.")
+                    input.close()
+                    input = openAt(asset.uri, now) ?: return Outcome.Retry("The file could not be read.")
+                    offset = now
+                    continue
+                }
+                if (status != 204 && status != 200) return endedBy(asset, status)
+                if (reached == null || reached < offset || reached > hashed.size) {
+                    return Outcome.Retry("The server did not say how much it received.")
+                }
+                // The last part is answered only once the server has checked and kept the whole file.
+                if (reached == hashed.size) {
+                    store.forgetUpload(asset.id)
+                    return Outcome.Verified
+                }
+                if (reached != offset + length) {
+                    // Part of what was sent did not arrive: send it again from where the server got to.
+                    if (reached == offset && ++stalled > MAX_STALLS) {
+                        return Outcome.Retry("The server did not take the rest of the file.")
+                    }
+                    input.close()
+                    input = openAt(asset.uri, reached) ?: return Outcome.Retry("The file could not be read.")
+                }
+                offset = reached
+            }
+        } finally {
+            input.close()
+        }
+    }
+
+    /** What an answer other than "received" means for the upload, and for the file. */
+    private fun endedBy(asset: LocalAsset, status: Int): Outcome {
+        if (status == 404 || status == 410) {
+            // The server no longer has the upload, for example cleared as too old: the next
+            // attempt starts a new one.
+            store.forgetUpload(asset.id)
+            return Outcome.Retry("The server no longer had the upload; it starts again.")
+        }
+        // Locked: another request, perhaps one cut off a moment ago, still holds the upload.
+        if (status == 423) return Outcome.Retry("The server answered $status.")
+        val outcome = outcomeOf(status)
+        when (outcome) {
+            // A damaged file is removed by the server, and anything else refused is not tried again.
+            is Outcome.Rejected -> store.forgetUpload(asset.id)
+            // A success here is not one: only the last part's answer says the file was kept.
+            Outcome.Verified -> return Outcome.Retry("The server answered $status.")
+            else -> {}
+        }
+        return outcome
+    }
+
+    /** Where an upload begun in an earlier attempt stands. */
+    private sealed class Resume {
+        data class At(val uploadId: String, val offset: Long) : Resume()
+        object Fresh : Resume()
+        data class Stop(val outcome: Outcome) : Resume()
+    }
+
+    private sealed class Created {
+        data class Made(val uploadId: String) : Created()
+        data class Stop(val outcome: Outcome) : Created()
+    }
+
+    private class Answer(val status: Int, val offset: Long?, val length: Long?)
+
+    /**
+     * Asks the server how much of an upload begun earlier it has. Only while the file is still the
+     * one it was begun with: if it changed, the upload is dropped and a new one made.
+     */
+    private fun resume(asset: LocalAsset, hashed: Hashed): Resume {
+        val started = store.startedUpload(asset.id) ?: return Resume.Fresh
+        if (!started.isFor(hashed.checksum, hashed.size, asset.modifiedMs)) {
+            dropUpload(asset.id, started.uploadId)
+            return Resume.Fresh
+        }
+        val answer = head(started.uploadId)
+        return when (val status = answer.status) {
+            200, 204 -> {
+                val offset = answer.offset
+                if (offset != null && offset >= 0 && offset < hashed.size &&
+                    (answer.length == null || answer.length == hashed.size)
+                ) {
+                    Resume.At(started.uploadId, offset)
+                } else {
+                    // All of it arrived but it was never kept (the server failed as it finished),
+                    // or an answer that cannot be used: a new upload is the safe way.
+                    dropUpload(asset.id, started.uploadId)
+                    Resume.Fresh
+                }
+            }
+            401, 403 -> Resume.Stop(Outcome.Unauthorized)
+            408, 423, 429, in 500..599 -> Resume.Stop(Outcome.Retry("The server answered $status."))
+            // 404 or 410: the upload is gone, kept too long or already finished. Anything else is
+            // not an answer to go on from either.
+            else -> {
+                store.forgetUpload(asset.id)
+                Resume.Fresh
+            }
+        }
+    }
+
+    private fun head(uploadId: String): Answer {
+        val connection = uploadConnection("/$uploadId", "HEAD", TIMEOUT_MS)
+        return try {
+            val status = connection.responseCode
+            answered()
+            Answer(
+                status,
+                connection.getHeaderField("Upload-Offset")?.trim()?.toLongOrNull(),
+                connection.getHeaderField("Upload-Length")?.trim()?.toLongOrNull(),
+            )
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /**
+     * Makes an upload with nothing in it yet, and keeps its id before the file is sent, so a
+     * connection lost in the first part still leaves something to go on from.
+     */
+    private fun create(asset: LocalAsset, hashed: Hashed): Created {
+        val connection = uploadConnection("", "POST", TIMEOUT_MS)
+        return try {
+            connection.doOutput = true
+            connection.setFixedLengthStreamingMode(0L)
+            connection.setRequestProperty("Upload-Length", hashed.size.toString())
+            connection.setRequestProperty("Upload-Metadata", metadata(asset, hashed))
+            connection.outputStream.close()
+            val status = connection.responseCode
+            answered()
+            if (status != 201) {
+                val outcome = outcomeOf(status)
+                return Created.Stop(if (outcome == Outcome.Verified) Outcome.Retry("The server answered $status.") else outcome)
+            }
+            val uploadId = uploadIdFrom(connection.getHeaderField("Location"))
+                ?: return Created.Stop(Outcome.Retry("The server gave no address for the upload."))
+            store.saveUpload(asset.id, StartedUpload(uploadId, hashed.checksum, hashed.size, asset.modifiedMs))
+            Created.Made(uploadId)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /** One part of the file, streamed as it is read, so a large video never has to fit in memory. */
+    private fun patch(uploadId: String, input: InputStream, offset: Long, length: Long): Answer {
+        val connection = uploadConnection("/$uploadId", "PATCH", UPLOAD_TIMEOUT_MS)
+        return try {
+            connection.doOutput = true
+            connection.setFixedLengthStreamingMode(length)
+            connection.setRequestProperty("Upload-Offset", offset.toString())
+            connection.setRequestProperty("Content-Type", "application/offset+octet-stream")
+            connection.outputStream.use { copyExactly(input, it, length, BUFFER) }
+            val status = connection.responseCode
+            answered()
+            Answer(status, connection.getHeaderField("Upload-Offset")?.trim()?.toLongOrNull(), null)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /** The whole file in the request that makes the upload (tus creation-with-upload). */
+    private fun sendWhole(asset: LocalAsset, hashed: Hashed): Outcome {
+        val connection = uploadConnection("", "POST", UPLOAD_TIMEOUT_MS)
+        return try {
+            connection.doOutput = true
+            // Streamed as it is read, so a large video never has to fit in memory.
+            connection.setFixedLengthStreamingMode(hashed.size)
+            connection.setRequestProperty("Upload-Length", hashed.size.toString())
+            connection.setRequestProperty("Content-Type", "application/offset+octet-stream")
+            connection.setRequestProperty("Upload-Metadata", metadata(asset, hashed))
+            val source = open(asset.uri) ?: return Outcome.Retry("The file could not be read.")
+            source.use { input -> connection.outputStream.use { copyExactly(input, it, hashed.size, BUFFER) } }
+            val status = connection.responseCode
+            answered()
+            // Made, but not all of it arrived: the server cannot have kept it.
+            val reached = connection.getHeaderField("Upload-Offset")?.trim()?.toLongOrNull()
+            if (status == 201 && reached != null && reached != hashed.size) {
+                return Outcome.Retry("The server did not receive the whole file.")
+            }
+            outcomeOf(status)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /** The original, passed over up to [offset]. Null when it cannot be opened at all. */
+    private fun openAt(uri: Uri, offset: Long): InputStream? {
+        val input = open(uri) ?: return null
+        try {
+            skipExactly(input, offset)
+        } catch (cause: Throwable) {
+            input.close()
+            throw cause
+        }
+        return input
+    }
+
+    /**
+     * Forgets an upload that is no longer wanted, and asks the server to remove what it has of it.
+     * That is only a courtesy: the server also clears old uploads by itself, so no answer is needed.
+     */
+    private fun dropUpload(assetId: String, uploadId: String) {
+        store.forgetUpload(assetId)
+        val connection = try {
+            uploadConnection("/$uploadId", "DELETE", TIMEOUT_MS)
+        } catch (_: java.io.IOException) {
+            return
+        }
+        try {
+            connection.responseCode
+        } catch (_: java.io.IOException) {
+            // Left for the server to clear.
         } finally {
             connection.disconnect()
         }
@@ -518,7 +810,7 @@ class BackupEngine(context: Context) {
                 continue
             }
             val outcome = try {
-                upload(asset, hashed)
+                upload(asset, hashed, stopped)
             } catch (_: OriginalUnavailable) {
                 store.markWaiting(item.assetId, WAITING_FOR_LOCATION, System.currentTimeMillis() + WAIT_MS)
                 continue
@@ -535,6 +827,8 @@ class BackupEngine(context: Context) {
                 }
                 is Outcome.Rejected -> store.recordFailure(item.assetId, outcome.reason, 1)
                 is Outcome.Unreadable -> store.recordFailure(item.assetId, outcome.reason, MAX_ATTEMPTS)
+                // Left uploading, which the next run puts back in the queue, with its upload kept.
+                Outcome.Paused -> return false
                 Outcome.Unauthorized -> {
                     prefs.edit().putBoolean(KEY_UNAUTHORIZED, true).apply()
                     store.recoverInterrupted()
@@ -584,6 +878,10 @@ class BackupEngine(context: Context) {
         private const val WAIT_MS = 60 * 60_000L
         private const val FAILURES_SHOWN = 5
         private const val BUFFER = 1024 * 1024
+        /** How much one request sends. A connection lost costs at most this much again. */
+        private const val CHUNK = 8L * 1024 * 1024
+        /** How often the server may take nothing of a part before the attempt counts as failed. */
+        private const val MAX_STALLS = 3
         private const val TIMEOUT_MS = 20_000
         private const val UPLOAD_TIMEOUT_MS = 10 * 60_000
         private const val WORK_ONCE = "mediarr-backup-once"

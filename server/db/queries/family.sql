@@ -38,10 +38,13 @@ SELECT id, title, rules FROM albums WHERE is_family AND owner_id = $1 ORDER BY c
 DELETE FROM albums WHERE id = $1 AND owner_id = $2 AND is_family;
 
 -- name: FamilyBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.id IN (SELECT album_item_ids(al.id) FROM albums al WHERE al.is_family)
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.id IN (SELECT album_item_ids(al.id) FROM albums al WHERE al.is_family)
+  GROUP BY 1
+) b
 ORDER BY 1 DESC;
 
 -- name: FamilyBucket :many

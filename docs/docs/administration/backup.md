@@ -4,7 +4,7 @@ title: Backup and restore
 
 # Backup and restore
 
-Mediarr makes encrypted backups of your database and originals with [restic](https://restic.net). Set them up under **Admin → Settings → Backup**: the **Destination**, the **Backup password**, an **Access key** and **Secret key** for S3 or B2, and the **Hour of the day (0-23)**, 3 by default. Then turn on **Scheduled backup** under **Admin → Settings → Additions**: without it, backups run only when you choose **Back up now**.
+Mediarr makes encrypted backups of your database and originals with [restic](https://restic.net). Set them up under **Admin → Settings → Backup**: the **Destination**, the **Backup password**, an **Access key** and **Secret key** for S3 or B2, and the **Hour of the day (0-23)**, 3 by default. The hour is in the time zone set with `TZ` in `.env`, for example `TZ=Europe/Zagreb`; without it, in UTC. Then turn on **Scheduled backup** under **Admin → Settings → Additions**: without it, backups run only when you choose **Back up now**.
 
 :::danger Keep the backup password somewhere safe
 Without it, a backup cannot be opened by anyone. If you lose the server, you need this password and the destination to get your library back.

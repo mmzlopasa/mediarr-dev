@@ -18,6 +18,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	// The image has no zoneinfo; without this a TZ set in .env would be ignored and every hour UTC.
+	_ "time/tzdata"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"

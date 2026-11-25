@@ -11,7 +11,7 @@ GO_TOOL := go tool -modfile=tools.mod
 GENERATOR_IMAGE := openapitools/openapi-generator-cli:v7.17.0
 PLAYWRIGHT_VERSION = $(shell cd web && node -p "require('@playwright/test/package.json').version")
 
-.PHONY: dev down deploy landing docs cli testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e e2e-design-update lighthouse
+.PHONY: dev down deploy landing docs stats cli testdata uploadtest seed-large clean-test-users bench gen web-build lint test e2e e2e-design-update lighthouse
 
 dev:
 	mkdir -p .dev/cache .dev/web-cache .dev/web-node_modules .dev/web-svelte-kit web/node_modules web/.svelte-kit .dev/library .dev/media-cache .dev/models .dev/external .dev/backup .dev/ollama
@@ -46,6 +46,9 @@ docs: $(if $(RELEASE_VERSION),cli)
 	@if [ -n "$(RELEASE_VERSION)" ]; then \
 		mkdir -p $(HOME)/mediarr-apps/install && \
 		cp docker/docker-compose.yml docker/example.env $(HOME)/mediarr-apps/install/ && \
+		mkdir -p $(HOME)/mediarr-apps/install/cli && \
+		printf '{"version":"%s"}\n' "$(RELEASE_VERSION)" > $(HOME)/mediarr-apps/install/cli/latest.json.tmp && \
+		mv $(HOME)/mediarr-apps/install/cli/latest.json.tmp $(HOME)/mediarr-apps/install/cli/latest.json && \
 		echo "install files published for $(RELEASE_VERSION)"; \
 	else \
 		echo "install files left as they are: pass CLI_VERSION=vX.Y.Z to publish them with a release"; \
@@ -54,6 +57,12 @@ docs: $(if $(RELEASE_VERSION),cli)
 	docker compose -f docker/docker-compose.docs.yml up -d --force-recreate --wait
 
 # Publishes landing/ on mediarr.app.
+# Counts installations and downloads for the owner's dashboard; prints the address of its numbers.
+stats:
+	mkdir -p $(HOME)/.local/share/mediarr-stats $(HOME)/mediarr-apps/install/cli
+	docker compose -f docker/docker-compose.stats.yml up -d --force-recreate
+	@sleep 5; echo "numbers: https://cdn.mediarr.app/install/cli/$$(ls $(HOME)/mediarr-apps/install/cli | grep '^stats-' | head -1)"
+
 landing:
 	docker compose -f docker/docker-compose.landing.yml up -d --wait --force-recreate
 

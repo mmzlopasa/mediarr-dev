@@ -91,16 +91,19 @@ func (q *Queries) CollectionBucket(ctx context.Context, arg CollectionBucketPara
 }
 
 const collectionBuckets = `-- name: CollectionBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
-  AND CASE $2::text
-        WHEN 'favorites' THEN a.is_favorite AND a.deleted_at IS NULL AND a.vault_at IS NULL
-        WHEN 'archive' THEN a.archived_at IS NOT NULL AND a.deleted_at IS NULL AND a.vault_at IS NULL
-        WHEN 'trash' THEN a.deleted_at IS NOT NULL AND a.vault_at IS NULL
-        WHEN 'vault' THEN a.vault_at IS NOT NULL AND a.deleted_at IS NULL
-        ELSE false END
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
+    AND CASE $2::text
+          WHEN 'favorites' THEN a.is_favorite AND a.deleted_at IS NULL AND a.vault_at IS NULL
+          WHEN 'archive' THEN a.archived_at IS NOT NULL AND a.deleted_at IS NULL AND a.vault_at IS NULL
+          WHEN 'trash' THEN a.deleted_at IS NOT NULL AND a.vault_at IS NULL
+          WHEN 'vault' THEN a.vault_at IS NOT NULL AND a.deleted_at IS NULL
+          ELSE false END
+  GROUP BY 1
+) b
 ORDER BY 1 DESC
 `
 
@@ -778,11 +781,14 @@ func (q *Queries) RecentBucket(ctx context.Context, arg RecentBucketParams) ([]R
 }
 
 const recentBuckets = `-- name: RecentBuckets :many
-SELECT to_char(date_trunc('month', a.created_at AT TIME ZONE 'UTC'), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
-  AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.created_at AT TIME ZONE 'UTC') AS month, count(*) AS count
+  FROM assets a
+  WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
+    AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
+  GROUP BY 1
+) b
 ORDER BY 1 DESC
 `
 
@@ -948,10 +954,13 @@ func (q *Queries) TagBucket(ctx context.Context, arg TagBucketParams) ([]TagBuck
 }
 
 const tagBuckets = `-- name: TagBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a JOIN asset_tags x ON x.asset_id = a.id
-WHERE x.tag_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a JOIN asset_tags x ON x.asset_id = a.id
+  WHERE x.tag_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  GROUP BY 1
+) b
 ORDER BY 1 DESC
 `
 

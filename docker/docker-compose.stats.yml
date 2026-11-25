@@ -1,0 +1,26 @@
+# Counts Mediarr installations and downloads for the owner's dashboard. Not part of what users
+# install. Reads the host's web server log, keeps only random install numbers and totals, and writes
+# its JSON next to latest.json on cdn.mediarr.app. Run through `make stats`.
+name: mediarr-stats
+
+services:
+  stats:
+    image: python:3.12.11-alpine
+    user: "${STATS_UID:-1000}:${STATS_GID:-1000}"
+    # The log belongs to the adm group.
+    group_add: ["4"]
+    command: ["python", "/app/install-stats.py"]
+    volumes:
+      - ../scripts/install-stats.py:/app/install-stats.py:ro
+      - /var/log/nginx/access.log:/logs/access.log:ro
+      - ${HOME}/.local/share/mediarr-stats:/state
+      - ${HOME}/mediarr-apps/install/cli:/out
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    network_mode: none
+    mem_limit: 256m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "1m", max-file: "3" }

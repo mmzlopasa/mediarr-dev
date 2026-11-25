@@ -5,7 +5,6 @@ import (
 	"mime"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
+	"github.com/mediarr-app/mediarr/server/internal/jobs"
 	"github.com/mediarr-app/mediarr/server/internal/storage"
 )
 
@@ -93,12 +93,9 @@ func (s *apiServer) shareSource(ctx context.Context, row *db.Asset, small bool) 
 
 // toJPEG writes a JPEG with libvips, without metadata, so no location goes with it.
 func toJPEG(ctx context.Context, source, dest string, small bool) error {
-	ctx, cancel := context.WithTimeout(ctx, shareWait)
-	defer cancel()
+	source, dest = jobs.FileArg(source), jobs.FileArg(dest)
 	if small {
-		//nolint:gosec // Both paths are made here, not taken from the request.
-		return exec.CommandContext(ctx, "vipsthumbnail", source, "--size", shareSmallSize, "-o", dest+"[Q=85,strip]").Run()
+		return jobs.RunToolWithin(ctx, shareWait, "vipsthumbnail", source, "--size", shareSmallSize, "-o", dest+"[Q=85,strip]")
 	}
-	//nolint:gosec // As above.
-	return exec.CommandContext(ctx, "vips", "copy", source, dest+"[Q=90,strip]").Run()
+	return jobs.RunToolWithin(ctx, shareWait, "vips", "copy", source, dest+"[Q=90,strip]")
 }

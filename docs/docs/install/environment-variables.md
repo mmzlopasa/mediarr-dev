@@ -38,7 +38,8 @@ Mediarr reads these from `.env`. After changing them, apply them with `docker co
 | `WORKER_CONCURRENCY` | Background jobs at once. Default: half of the processor cores |
 | `VIDEO_ACCEL` | Video encoding hardware: `qsv`, `nvenc` or `vaapi`. Empty or anything else encodes on the processor, which is the only way that works with the install file alone: it does not pass a graphics device into the containers |
 | `METRICS_TOKEN` | Turns on `/metrics` for Prometheus, using this as a bearer token |
-| `UPDATE_CHECK` | `off` stops the check for a new version |
+| `TZ` | The time zone for the hour of scheduled backups and other daily work, such as `Europe/Zagreb`; UTC when not set |
+| `UPDATE_CHECK` | `off` stops the check for a new version, and with it the count of installations it sends: a random number for this installation, its version and how many accounts it has |
 | `MEDIARR_UPGRADE_SNAPSHOT` | `false` upgrades without a snapshot of the database first. See [Upgrading](/install/upgrading) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Sends traces to an OpenTelemetry collector |
 | `DLNA_PORT`, `DLNA_MEDIARR_URL` | Settings of the [DLNA server](/features/tv#dlna-server) |

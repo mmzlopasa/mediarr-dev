@@ -128,7 +128,7 @@ Smart search, faces and automatic descriptions are optional. Everything else wor
 - Your files stay on your disk, and originals are read only.
 - Search, faces, places and automatic descriptions all run on your server.
 - A copy kept by another Mediarr is encrypted with your password before it leaves; the other server cannot open it.
-- None of the outside requests carries your photos: the map's background from `cdn.mediarr.app`, a check for a new version on GitHub, a list of places for showing where a shared link was opened from, and, only when you cast to a TV, Google's cast library in your browser. You can change the map, and `UPDATE_CHECK=off` turns off the check and the list.
+- None of the outside requests carries your photos: the map's background from `cdn.mediarr.app`, a check for a new version at `cdn.mediarr.app` (with a random number for the installation, its version and how many accounts it has, so installations can be counted), a list of places for showing where a shared link was opened from, and, only when you cast to a TV, Google's cast library in your browser. You can change the map, and `UPDATE_CHECK=off` turns off the check and the list.
 
 ## How much it needs
 

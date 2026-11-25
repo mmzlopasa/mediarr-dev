@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -276,12 +275,10 @@ func tvJPEG(ctx context.Context, source, dest string) error {
 	if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil { //nolint:gosec // As above.
 		return err
 	}
-	ctx, cancel := context.WithTimeout(ctx, shareWait)
-	defer cancel()
 	tmp := strings.TrimSuffix(dest, ".jpg") + fmt.Sprintf(".tmp%d.jpg", time.Now().UnixNano())
-	//nolint:gosec // Both paths are made here, not taken from the request.
-	if err := exec.CommandContext(ctx, "vipsthumbnail", source, "--size", castImageSize+">", "-o", tmp+"[Q=88,strip]").Run(); err != nil {
-		_ = os.Remove(tmp)
+	err := jobs.RunToolWithin(ctx, shareWait, "vipsthumbnail", jobs.FileArg(source), "--size", castImageSize+">", "-o", jobs.FileArg(tmp)+"[Q=88,strip]")
+	if err != nil {
+		_ = os.Remove(tmp) //nolint:gosec // As above.
 		return err
 	}
 	return os.Rename(tmp, dest) //nolint:gosec // As above.

@@ -1,14 +1,17 @@
 -- name: CollectionBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.live_photo_of IS NULL
-  AND CASE sqlc.arg('scope')::text
-        WHEN 'favorites' THEN a.is_favorite AND a.deleted_at IS NULL AND a.vault_at IS NULL
-        WHEN 'archive' THEN a.archived_at IS NOT NULL AND a.deleted_at IS NULL AND a.vault_at IS NULL
-        WHEN 'trash' THEN a.deleted_at IS NOT NULL AND a.vault_at IS NULL
-        WHEN 'vault' THEN a.vault_at IS NOT NULL AND a.deleted_at IS NULL
-        ELSE false END
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.user_id = sqlc.arg('user_id') AND a.status = 'ready' AND a.live_photo_of IS NULL
+    AND CASE sqlc.arg('scope')::text
+          WHEN 'favorites' THEN a.is_favorite AND a.deleted_at IS NULL AND a.vault_at IS NULL
+          WHEN 'archive' THEN a.archived_at IS NOT NULL AND a.deleted_at IS NULL AND a.vault_at IS NULL
+          WHEN 'trash' THEN a.deleted_at IS NOT NULL AND a.vault_at IS NULL
+          WHEN 'vault' THEN a.vault_at IS NOT NULL AND a.deleted_at IS NULL
+          ELSE false END
+  GROUP BY 1
+) b
 ORDER BY 1 DESC;
 
 -- name: CollectionBucket :many
@@ -131,10 +134,13 @@ WHERE x.asset_id = a.id AND x.tag_id = t.id AND a.user_id = sqlc.arg('user_id')
 SELECT t.name FROM asset_tags x JOIN tags t ON t.id = x.tag_id WHERE x.asset_id = $1 ORDER BY lower(t.name);
 
 -- name: TagBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a JOIN asset_tags x ON x.asset_id = a.id
-WHERE x.tag_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a JOIN asset_tags x ON x.asset_id = a.id
+  WHERE x.tag_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL
+  GROUP BY 1
+) b
 ORDER BY 1 DESC;
 
 -- name: TagBucket :many
@@ -168,11 +174,14 @@ ON CONFLICT DO NOTHING;
 
 -- name: RecentBuckets :many
 -- Recently added goes by when a photo reached the server, not when it was taken.
-SELECT to_char(date_trunc('month', a.created_at AT TIME ZONE 'UTC'), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
-  AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.created_at AT TIME ZONE 'UTC') AS month, count(*) AS count
+  FROM assets a
+  WHERE a.user_id = $1 AND a.status = 'ready' AND a.live_photo_of IS NULL
+    AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.archived_at IS NULL
+  GROUP BY 1
+) b
 ORDER BY 1 DESC;
 
 -- name: RecentBucket :many

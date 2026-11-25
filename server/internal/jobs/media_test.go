@@ -375,3 +375,40 @@ func TestAVideoWithoutAReadablePictureSaysSo(t *testing.T) {
 		t.Fatalf("a good video: %v", err)
 	}
 }
+
+func TestRunToolWithinStopsAtTheLimit(t *testing.T) {
+	start := time.Now()
+	err := RunToolWithin(context.Background(), 100*time.Millisecond, "sleep", "10")
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("err = %v", err)
+	}
+	if took := time.Since(start); took > 5*time.Second {
+		t.Fatalf("took %s", took)
+	}
+}
+
+func TestFileArgIsNeverAnOption(t *testing.T) {
+	for in, want := range map[string]string{
+		"-o":             "./-o",
+		"--size=1":       "./--size=1",
+		"/library/a.jpg": "/library/a.jpg",
+		"a.jpg":          "a.jpg",
+	} {
+		if got := FileArg(in); got != want {
+			t.Errorf("%s: %s", in, got)
+		}
+	}
+	requireTools(t)
+	dir := t.TempDir()
+	t.Chdir(dir)
+	source := filepath.Join(dir, "source.png")
+	if err := exec.Command("vips", "black", source, "16", "16").Run(); err != nil {
+		t.Fatal(err)
+	}
+	if err := RunToolWithin(context.Background(), time.Minute, "vipsthumbnail", source, "--size", "8", "-o", FileArg("-x.jpg")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "-x.jpg")); err != nil {
+		t.Fatal(err)
+	}
+}

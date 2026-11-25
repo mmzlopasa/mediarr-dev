@@ -3,28 +3,36 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/mediarr-app/mediarr/server/db"
 	"github.com/mediarr-app/mediarr/server/internal/api"
 	"github.com/mediarr-app/mediarr/server/internal/jobs"
 )
 
 const (
-	releasesURL     = "https://api.github.com/repos/mediarr-app/mediarr/tags?per_page=30"
-	updateEvery     = 6 * time.Hour
-	updateWait      = 15 * time.Second
-	maxUpdateAnswer = 1 << 20
-	versionParts    = 3
+	updateEvery        = 6 * time.Hour
+	updateWait         = 15 * time.Second
+	maxUpdateAnswer    = 1 << 16
+	maxUpdateRedirects = 3
+	versionParts       = 3
+	stateInstallID     = "install_id"
 )
 
-// latestVersion is what the public repository last said. Empty until it has answered.
+// updateURL is where the newest version is read. Only tests change it.
+var updateURL = "https://cdn.mediarr.app/install/cli/latest.json"
+
+// latestVersion is what Mediarr's site last said. Empty until it has answered.
 var latestVersion atomic.Pointer[string]
 
 func (s *apiServer) GetServerStatus(w http.ResponseWriter, r *http.Request) {
@@ -54,9 +62,13 @@ func (s *apiServer) GetServerStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-func (s *apiServer) watchUpdates() {
+// watchUpdates checks every few hours until the server stops. Turned off, it sends nothing.
+func watchUpdates(store updateStore, on bool) {
+	if !on {
+		return
+	}
 	for {
-		latest, err := fetchLatestVersion(context.Background())
+		latest, err := checkForUpdate(context.Background(), store)
 		if err != nil {
 			slog.Info("could not check for a new version", "error", err)
 		} else if latest != "" {
@@ -66,39 +78,87 @@ func (s *apiServer) watchUpdates() {
 	}
 }
 
-func fetchLatestVersion(ctx context.Context) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, updateWait)
-	defer cancel()
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, releasesURL, http.NoBody)
+// updateStore is the part of the database the check needs.
+type updateStore interface {
+	GetState(ctx context.Context, key string) (string, error)
+	SetState(ctx context.Context, arg db.SetStateParams) error
+	CountUsers(ctx context.Context) (int64, error)
+}
+
+// checkForUpdate asks Mediarr's site for the newest version. It sends only the install number, the
+// version running here and how many accounts there are, so installs can be counted without
+// knowing anything about them.
+func checkForUpdate(ctx context.Context, store updateStore) (string, error) {
+	install, err := installID(ctx, store)
 	if err != nil {
 		return "", err
 	}
-	response, err := http.DefaultClient.Do(request)
+	users, err := store.CountUsers(ctx)
+	if err != nil {
+		return "", err
+	}
+	address, err := url.Parse(updateURL)
+	if err != nil {
+		return "", err
+	}
+	address.RawQuery = url.Values{
+		"i": {install}, "v": {Version}, "u": {strconv.FormatInt(users, 10)},
+	}.Encode()
+
+	ctx, cancel := context.WithTimeout(ctx, updateWait)
+	defer cancel()
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, address.String(), http.NoBody)
+	if err != nil {
+		return "", err
+	}
+	request.Header.Set("User-Agent", "Mediarr/"+Version)
+	response, err := updateClient.Do(request)
 	if err != nil {
 		return "", err
 	}
 	defer func() { _ = response.Body.Close() }()
-	var tags []struct {
-		Name string `json:"name"`
+	if response.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("the site answered %s", response.Status)
 	}
-	if err := json.NewDecoder(io.LimitReader(response.Body, maxUpdateAnswer)).Decode(&tags); err != nil {
+	var answer struct {
+		Version string `json:"version"`
+	}
+	if err := json.NewDecoder(io.LimitReader(response.Body, maxUpdateAnswer)).Decode(&answer); err != nil {
 		return "", err
 	}
-	names := make([]string, len(tags))
-	for i := range tags {
-		names[i] = tags[i].Name
+	if _, ok := parseVersion(answer.Version); !ok {
+		return "", fmt.Errorf("the site named no version: %q", answer.Version)
 	}
-	return newestVersion(names), nil
+	return answer.Version, nil
 }
 
-func newestVersion(names []string) string {
-	newest := ""
-	for _, name := range names {
-		if _, ok := parseVersion(name); ok && (newest == "" || isNewerVersion(name, newest)) {
-			newest = name
+// installID is a random number made the first time this installation checks. It says nothing about
+// the server; it only lets the same install be counted once.
+func installID(ctx context.Context, store updateStore) (string, error) {
+	value, err := store.GetState(ctx, stateInstallID)
+	if err == nil {
+		if _, bad := uuid.Parse(value); bad == nil {
+			return value, nil
 		}
+	} else if !db.IsNotFound(err) {
+		return "", err
 	}
-	return newest
+	value = uuid.NewString()
+	if err := store.SetState(ctx, db.SetStateParams{Key: stateInstallID, Value: value}); err != nil {
+		return "", err
+	}
+	return value, nil
+}
+
+// updateClient sends no cookies, asks for no compression and follows a redirect only on the same host.
+var updateClient = &http.Client{
+	Transport: &http.Transport{Proxy: http.ProxyFromEnvironment, DisableCompression: true},
+	CheckRedirect: func(next *http.Request, via []*http.Request) error {
+		if len(via) >= maxUpdateRedirects || next.URL.Host != via[0].URL.Host {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	},
 }
 
 func parseVersion(text string) ([versionParts]int, bool) {

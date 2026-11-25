@@ -110,11 +110,14 @@ func (q *Queries) AlbumBucket(ctx context.Context, arg AlbumBucketParams) ([]Alb
 }
 
 const albumBuckets = `-- name: AlbumBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.id IN (SELECT album_item_ids($1))
-  AND ($2::smallint IS NULL OR (a.pick = $2 AND a.user_id = $3))
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.id IN (SELECT album_item_ids($1))
+    AND ($2::smallint IS NULL OR (a.pick = $2 AND a.user_id = $3))
+  GROUP BY 1
+) b
 ORDER BY 1 DESC
 `
 
@@ -1205,11 +1208,14 @@ func (q *Queries) PartnerBucket(ctx context.Context, arg PartnerBucketParams) ([
 }
 
 const partnerBuckets = `-- name: PartnerBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
-  AND ($2::timestamp IS NULL OR a.local_at >= $2)
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.user_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+    AND ($2::timestamp IS NULL OR a.local_at >= $2)
+  GROUP BY 1
+) b
 ORDER BY 1 DESC
 `
 
@@ -1492,14 +1498,17 @@ func (q *Queries) TimelineBucketWithPartners(ctx context.Context, arg TimelineBu
 }
 
 const timelineBucketsWithPartners = `-- name: TimelineBucketsWithPartners :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
-  AND (a.user_id = $1 OR EXISTS (
-      SELECT 1 FROM partner_shares ps
-      WHERE ps.owner_id = a.user_id AND ps.partner_id = $1 AND ps.in_timeline
-        AND (ps.since_at IS NULL OR a.local_at >= ps.since_at)))
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+    AND (a.user_id = $1 OR EXISTS (
+        SELECT 1 FROM partner_shares ps
+        WHERE ps.owner_id = a.user_id AND ps.partner_id = $1 AND ps.in_timeline
+          AND (ps.since_at IS NULL OR a.local_at >= ps.since_at)))
+  GROUP BY 1
+) b
 ORDER BY 1 DESC
 `
 

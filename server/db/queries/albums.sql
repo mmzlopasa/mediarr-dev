@@ -86,11 +86,14 @@ SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)::boolean;
 SELECT id, name FROM users WHERE id <> $1 ORDER BY name, id;
 
 -- name: AlbumBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.id IN (SELECT album_item_ids(sqlc.arg('album_id')))
-  AND (sqlc.narg('pick')::smallint IS NULL OR (a.pick = sqlc.narg('pick') AND a.user_id = sqlc.narg('viewer')))
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.id IN (SELECT album_item_ids(sqlc.arg('album_id')))
+    AND (sqlc.narg('pick')::smallint IS NULL OR (a.pick = sqlc.narg('pick') AND a.user_id = sqlc.narg('viewer')))
+  GROUP BY 1
+) b
 ORDER BY 1 DESC;
 
 -- name: AlbumBucket :many
@@ -161,11 +164,14 @@ SELECT since_at FROM partner_shares WHERE owner_id = $1 AND partner_id = $2;
 SELECT count(*) FROM partner_shares WHERE partner_id = $1 AND in_timeline;
 
 -- name: PartnerBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
-  AND (sqlc.narg('since_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('since_at'))
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+    AND (sqlc.narg('since_at')::timestamp IS NULL OR a.local_at >= sqlc.narg('since_at'))
+  GROUP BY 1
+) b
 ORDER BY 1 DESC;
 
 -- name: PartnerBucket :many
@@ -180,14 +186,17 @@ WHERE a.user_id = sqlc.arg('owner_id') AND a.status = 'ready' AND a.deleted_at I
 ORDER BY a.local_at DESC, a.id DESC;
 
 -- name: TimelineBucketsWithPartners :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets a
-WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
-  AND (a.user_id = $1 OR EXISTS (
-      SELECT 1 FROM partner_shares ps
-      WHERE ps.owner_id = a.user_id AND ps.partner_id = $1 AND ps.in_timeline
-        AND (ps.since_at IS NULL OR a.local_at >= ps.since_at)))
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(*) AS count
+  FROM assets a
+  WHERE a.status = 'ready' AND a.deleted_at IS NULL AND a.archived_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+    AND (a.user_id = $1 OR EXISTS (
+        SELECT 1 FROM partner_shares ps
+        WHERE ps.owner_id = a.user_id AND ps.partner_id = $1 AND ps.in_timeline
+          AND (ps.since_at IS NULL OR a.local_at >= ps.since_at)))
+  GROUP BY 1
+) b
 ORDER BY 1 DESC;
 
 -- name: TimelineBucketWithPartners :many

@@ -8,6 +8,9 @@ The server and the web come as one version, such as `v0.2.40`. The apps have ver
 
 ## Apps
 
+### app-v0.10.4
+- Android: a large photo or video whose upload was cut off goes on from where it stopped, instead of starting again.
+
 ### app-v0.10.3
 - A button saves photos to the phone, in the viewer and when choosing several.
 - Free up space asks the server again right before it removes anything, and on Android checks the photo on the phone again, so nothing that changed or is missing on the server is removed.
@@ -33,6 +36,12 @@ Everything from the server versions up to v0.2.40: culling, smart memories, expo
 Everything up to v0.2.35: duplicates and Clean up, dates and places of many photos, signing in with a QR code, administration in the app, four languages, and private links.
 
 ## Server and web
+
+### v0.2.45
+- The check for a new version asks `cdn.mediarr.app` instead of GitHub, and sends a random number for the installation, its version and how many accounts it has, so the number of installations can be counted. Nothing else is sent; `UPDATE_CHECK=off` stops the check and the count.
+- `TZ` in `.env` sets the time zone for the hour of scheduled backups; without it, the hour is in UTC.
+- The timeline and the other month lists are grouped up to twice as fast.
+- Pictures made while you wait (for sharing, the TV and profile photos) go through the same time limit and safe file names as the background work.
 
 ### v0.2.44
 - The descriptions a local model writes are called automatic descriptions. **If `COMPOSE_PROFILES` in `.env` lists `ai`, change it to `descriptions`.**

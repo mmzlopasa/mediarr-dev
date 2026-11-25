@@ -92,10 +92,13 @@ DELETE FROM users WHERE id = $1;
 UPDATE assets SET deleted_at = NULL, updated_at = now() WHERE id = $1 AND deleted_at IS NOT NULL;
 
 -- name: TimelineBuckets :many
-SELECT to_char(date_trunc('month', local_at), 'YYYY-MM')::text AS month, count(*) AS count
-FROM assets
-WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND vault_at IS NULL AND live_photo_of IS NULL AND stack_parent IS NULL
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', local_at) AS month, count(*) AS count
+  FROM assets
+  WHERE user_id = $1 AND status = 'ready' AND deleted_at IS NULL AND archived_at IS NULL AND vault_at IS NULL AND live_photo_of IS NULL AND stack_parent IS NULL
+  GROUP BY 1
+) b
 ORDER BY 1 DESC;
 
 -- name: TimelineBucket :many

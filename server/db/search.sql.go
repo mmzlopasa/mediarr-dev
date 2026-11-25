@@ -671,10 +671,13 @@ func (q *Queries) PersonBucket(ctx context.Context, arg PersonBucketParams) ([]P
 }
 
 const personBuckets = `-- name: PersonBuckets :many
-SELECT to_char(date_trunc('month', a.local_at), 'YYYY-MM')::text AS month, count(DISTINCT a.id) AS count
-FROM assets a JOIN faces f ON f.asset_id = a.id
-WHERE f.person_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
-GROUP BY 1
+SELECT to_char(b.month, 'YYYY-MM')::text AS month, b.count
+FROM (
+  SELECT date_trunc('month', a.local_at) AS month, count(DISTINCT a.id) AS count
+  FROM assets a JOIN faces f ON f.asset_id = a.id
+  WHERE f.person_id = $1 AND a.status = 'ready' AND a.deleted_at IS NULL AND a.vault_at IS NULL AND a.live_photo_of IS NULL AND a.stack_parent IS NULL
+  GROUP BY 1
+) b
 ORDER BY 1 DESC
 `
 
