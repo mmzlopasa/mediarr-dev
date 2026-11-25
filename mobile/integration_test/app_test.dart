@@ -9,12 +9,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mediarr/main.dart';
 import 'package:mediarr/screens/asset_picture.dart';
-import 'package:mediarr/screens/lock_screen.dart';
 import 'package:mediarr/screens/panorama_view.dart';
 import 'package:mediarr/services/app_lock.dart';
 import 'package:mediarr/services/backup.dart';
 import 'package:mediarr/services/session.dart';
-import 'package:mediarr/services/settings.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 import 'fake_server.dart';
@@ -961,19 +959,17 @@ void main() {
     await const FlutterSecureStorage().delete(key: 'app_settings');
   });
 
-  testWidgets('the app lock hides the library after a return, until unlocked', (
-    tester,
-  ) async {
-    final auth = FakeAuthenticator();
+  testWidgets('the app lock is offered in the settings', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [authenticatorProvider.overrideWithValue(auth)],
+        overrides: [
+          authenticatorProvider.overrideWithValue(FakeAuthenticator()),
+        ],
         child: const MediarrApp(),
       ),
     );
     await signIn(tester, server.address, password);
     await waitFor(tester, find.byType(AssetPicture));
-
     await tester.tap(find.byTooltip('Account').first);
     await waitFor(tester, find.text('Settings'));
     await tester.ensureVisible(find.text('Settings'));
@@ -988,44 +984,12 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.tap(find.text('App lock').last, warnIfMissed: false);
     await waitFor(tester, find.byType(Switch));
-    // The switch waits until the phone has said it has a screen lock.
-    final end = DateTime.now().add(const Duration(seconds: 10));
-    while (tester.widget<Switch>(find.byType(Switch).last).onChanged == null &&
-        DateTime.now().isBefore(end)) {
-      await tester.pump(const Duration(milliseconds: 200));
-    }
-    await tester.tap(find.byType(Switch).last);
-    final element = tester.element(find.byType(Switch).last);
-    final container = ProviderScope.containerOf(element);
-    await waitUntil(tester, () => container.read(settingsProvider).appLock);
-    await tester.pageBack();
+    // Turning it on and the lock itself are covered by the widget tests in test/app_lock_test.dart.
+    expect(find.byType(Switch), findsWidgets);
+    tester
+        .state<NavigatorState>(find.byType(Navigator).first)
+        .popUntil((route) => route.isFirst);
     await tester.pump(const Duration(seconds: 1));
-    await tester.pageBack();
-    await tester.pump(const Duration(seconds: 1));
-
-    // To the background and back; the prompt that starts by itself is cancelled.
-    auth.passes = false;
-    for (final state in [
-      AppLifecycleState.inactive,
-      AppLifecycleState.hidden,
-      AppLifecycleState.paused,
-      AppLifecycleState.hidden,
-      AppLifecycleState.inactive,
-      AppLifecycleState.resumed,
-    ]) {
-      tester.binding.handleAppLifecycleStateChanged(state);
-      await tester.pump();
-    }
-    await waitFor(tester, find.text('Unlock'));
-    expect(find.byType(LockScreen), findsOneWidget);
-    expect(find.byType(AssetPicture), findsNothing);
-
-    auth.passes = true;
-    await tester.tap(find.text('Unlock'));
-    await waitFor(tester, find.byType(AssetPicture));
-    expect(find.byType(LockScreen), findsNothing);
-
-    await const FlutterSecureStorage().delete(key: 'app_settings');
   });
 
   testWidgets('a second album is sent too', (tester) async {
