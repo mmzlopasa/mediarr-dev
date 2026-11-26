@@ -152,6 +152,7 @@ def summary(state, now):
             "everSeen": len(installs),
         },
         "users": {
+            "active1d": sum(v["users"] for v in active(1)),
             "active7d": sum(v["users"] for v in week),
             "active30d": sum(v["users"] for v in active(30)),
         },
@@ -160,18 +161,148 @@ def summary(state, now):
     }
 
 
+def remember_day(state, numbers):
+    """Keeps one row per day of how many installations and people were active, for the graph."""
+    day = numbers["updatedAt"][:10]
+    history = state.setdefault("history", {})
+    history[day] = {"installs": numbers["installs"]["active1d"], "users": numbers["users"]["active1d"]}
+    for old in sorted(history)[:-400]:
+        del history[old]
+
+
 def run_once():
     state = load_state()
     if "secret" not in state:
         state["secret"] = secrets.token_urlsafe(24)
     for line in read_new_lines(state):
         take(state, line)
+    numbers = summary(state, datetime.now(UTC))
+    remember_day(state, numbers)
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
     save(STATE, state)
-    out = os.path.join(OUT_DIR, f"stats-{state['secret']}.json")
-    save(out, summary(state, datetime.now(UTC)))
-    os.chmod(out, 0o644)
-    return out
+    base = os.path.join(OUT_DIR, f"stats-{state['secret']}")
+    save(base + ".json", numbers)
+    os.chmod(base + ".json", 0o644)
+    write_page(base + ".html", numbers, state)
+    os.chmod(base + ".html", 0o644)
+    return base + ".json"
+
+
+NAMES = {
+    "compose": "docker-compose.yml",
+    "apk": "Android",
+    "apkDev": "Android Dev",
+    "ipa": "iPhone",
+    "ipaDev": "iPhone Dev",
+}
+
+
+def line_chart(rows, keys, colors, width=480, height=200):
+    """An SVG line chart of daily numbers; rows are (day, {key: n})."""
+    if not rows:
+        return '<p class="empty">No days counted yet.</p>'
+    top = max(1, max(r[1].get(k, 0) for r in rows for k in keys))
+    pad = 30
+    step = (width - 2 * pad) / max(1, len(rows) - 1)
+
+    def point(i, v):
+        # A single day sits in the middle rather than against the left edge.
+        x = width / 2 if len(rows) == 1 else pad + i * step
+        return f"{x:.1f},{height - pad - v / top * (height - 2 * pad):.1f}"
+
+    parts = [f'<svg viewBox="0 0 {width} {height}" role="img" aria-label="Daily numbers">']
+    # Whole numbers only: a middle line only when it falls on one.
+    for frac in (0, 0.5, 1) if top % 2 == 0 else (0, 1):
+        y = height - pad - frac * (height - 2 * pad)
+        parts.append(f'<line x1="{pad}" x2="{width - pad}" y1="{y:.1f}" y2="{y:.1f}" class="grid"/>')
+        parts.append(f'<text x="4" y="{y + 4:.1f}" class="axis">{round(top * frac)}</text>')
+    for key, color in zip(keys, colors, strict=True):
+        pts = " ".join(point(i, r[1].get(key, 0)) for i, r in enumerate(rows))
+        parts.append(f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="2.5"/>')
+        for i, r in enumerate(rows):
+            parts.append(f'<circle cx="{point(i, r[1].get(key, 0)).split(",")[0]}" '
+                         f'cy="{point(i, r[1].get(key, 0)).split(",")[1]}" r="2.5" fill="{color}"/>')
+    parts.append(f'<text x="{pad}" y="{height - 6}" class="axis">{rows[0][0]}</text>')
+    parts.append(f'<text x="{width - pad}" y="{height - 6}" class="axis" text-anchor="end">{rows[-1][0]}</text>')
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def bar_chart(rows, width=480, height=180):
+    """An SVG bar chart of daily totals; rows are (day, total)."""
+    if not rows:
+        return '<p class="empty">No downloads counted yet.</p>'
+    top = max(1, max(n for _, n in rows))
+    pad = 28
+    slot = (width - 2 * pad) / len(rows)
+    parts = [f'<svg viewBox="0 0 {width} {height}" role="img" aria-label="Downloads per day">']
+    parts.append(f'<text x="4" y="{pad + 4}" class="axis">{top}</text>')
+    for i, (day, n) in enumerate(rows):
+        h = n / top * (height - 2 * pad)
+        x = pad + i * slot + slot * 0.15
+        parts.append(f'<rect x="{x:.1f}" y="{height - pad - h:.1f}" width="{slot * 0.7:.1f}" height="{h:.1f}" '
+                     f'rx="2" class="bar"><title>{day}: {n}</title></rect>')
+    parts.append(f'<text x="{pad}" y="{height - 6}" class="axis">{rows[0][0]}</text>')
+    parts.append(f'<text x="{width - pad}" y="{height - 6}" class="axis" text-anchor="end">{rows[-1][0]}</text>')
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def write_page(path, numbers, state):
+    inst, users, dl = numbers["installs"], numbers["users"], numbers["downloads"]
+    history = state.get("history", {})
+    days = sorted(history)[-90:]
+    line_rows = [(d, history[d]) for d in days]
+    since = (datetime.now(UTC) - timedelta(days=29)).date()
+    daily = state.get("downloads", {})
+    bar_rows = []
+    for i in range(30):
+        d = (since + timedelta(days=i)).isoformat()
+        bar_rows.append((d, sum(daily.get(d, {}).values())))
+    month = dl.get("last30d", {})
+    total = dl.get("total", {})
+    rows = "".join(
+        f"<tr><td>{NAMES[k]}</td><td>{month.get(k, 0)}</td><td>{total.get(k, 0)}</td></tr>" for k in NAMES
+    )
+    versions = "".join(f"<tr><td>{v}</td><td>{n}</td></tr>" for v, n in numbers["versions"].items()) or (
+        '<tr><td colspan="2" class="empty">No installation has reported yet.</td></tr>'
+    )
+    updated = numbers["updatedAt"].replace("T", " ").replace("+00:00", " UTC")
+    page = f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta http-equiv="refresh" content="600">
+<title>Mediarr: installations</title>
+<style>
+:root{{color-scheme:dark;--bg:#0d0f14;--card:#151821;--line:#262b38;--ink:#eceae4;--dim:#9a9890;--gold:#ffc83d;--blue:#5aa9ff}}
+*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}}
+main{{max-width:820px;margin:0 auto;padding:28px 18px 48px}}h1{{font-size:22px;margin:0 0 4px}}h2{{font-size:15px;margin:28px 0 10px;color:var(--dim);font-weight:600}}
+.sub{{color:var(--dim);margin:0 0 22px}}.cards{{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}}
+.card{{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}}.n{{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}}
+.card .l{{color:var(--dim);font-size:13px}}.card .s{{color:var(--dim);font-size:12px;margin-top:6px}}
+.panel{{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}}svg{{width:100%;height:auto;display:block}}
+.grid{{stroke:var(--line)}}.axis{{fill:var(--dim);font-size:13px}}.bar{{fill:var(--gold)}}.key{{display:flex;gap:16px;font-size:13px;color:var(--dim);margin:0 0 8px}}
+.key i{{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}}
+table{{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}}td,th{{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}}
+th{{color:var(--dim);font-weight:600;font-size:13px}}td+td,th+th{{text-align:right}}.empty{{color:var(--dim)}}footer{{color:var(--dim);font-size:12px;margin-top:28px}}
+</style></head><body><main>
+<h1>Mediarr installations</h1><p class="sub">Updated {updated}. The page refreshes itself every 10 minutes.</p>
+<div class="cards">
+<div class="card"><div class="n">{inst["active7d"]}</div><div class="l">installations, last 7 days</div><div class="s">{inst["active1d"]} today · {inst["active30d"]} in 30 days · {inst["everSeen"]} ever</div></div>
+<div class="card"><div class="n">{users["active7d"]}</div><div class="l">people, last 7 days</div><div class="s">{users.get("active1d", 0)} today · {users["active30d"]} in 30 days</div></div>
+<div class="card"><div class="n">{sum(month.values())}</div><div class="l">downloads, last 30 days</div><div class="s">{month.get("compose", 0)} installs started · {month.get("apk", 0) + month.get("ipa", 0) + month.get("apkDev", 0) + month.get("ipaDev", 0)} apps</div></div>
+</div>
+<h2>Installations and people per day</h2><div class="panel"><div class="key"><span><i style="background:var(--gold)"></i>Installations</span><span><i style="background:var(--blue)"></i>People</span></div>
+{line_chart(line_rows, ["installs", "users"], ["#ffc83d", "#5aa9ff"])}{'<p class="empty">The graph fills in one day at a time.</p>' if len(line_rows) < 2 else ''}</div>
+<h2>Downloads per day, last 30 days</h2><div class="panel">{bar_chart(bar_rows)}</div>
+<h2>Downloads</h2><div class="panel"><table><tr><th>File</th><th>30 days</th><th>Total</th></tr>{rows}</table></div>
+<h2>Versions in use, last 7 days</h2><div class="panel"><table><tr><th>Version</th><th>Installations</th></tr>{versions}</table></div>
+<footer>Installations are counted from the version check each Mediarr server sends every 6 hours: a random number for the installation, its version and how many accounts it has. Downloads are counted once per address and day. No address is kept.</footer>
+</main></body></html>
+"""
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        f.write(page)
+    os.replace(tmp, path)
 
 
 if __name__ == "__main__":
